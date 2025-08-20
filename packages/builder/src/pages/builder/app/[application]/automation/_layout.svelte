@@ -3,7 +3,7 @@
   import NewLayout from "./_flagged/layout.new.svelte"
   import OldLayout from "./_flagged/layout.old.svelte"
 
-  $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
+  $: layout = $featureFlags.WORKSPACES ? NewLayout : OldLayout
 </script>
 
 <!-- routify:options index=3 -->

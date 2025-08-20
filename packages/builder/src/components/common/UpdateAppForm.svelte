@@ -50,7 +50,7 @@
   let initialised = false
 
   let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps[0]

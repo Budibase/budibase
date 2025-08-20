@@ -258,7 +258,7 @@
     }
   })
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
 </script>
 
 {#if loaded}

@@ -49,7 +49,7 @@
   $: publishedApps = $enrichedApps.filter(
     app => app.status === AppStatus.DEPLOYED
   )
-  $: userApps = $featureFlags.WORKSPACE_APPS
+  $: userApps = $featureFlags.WORKSPACES
     ? $clientAppsStore.apps
     : getUserApps(publishedApps, userGroups, $auth.user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud

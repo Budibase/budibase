@@ -87,7 +87,7 @@
   on:click
 >
   <div class="buttons">
-    {#if $featureFlags.WORKSPACE_APPS}
+    {#if $featureFlags.WORKSPACES}
       <FavouriteResourceButton
         favourite={favourite || {
           resourceType: WorkspaceResource.TABLE,

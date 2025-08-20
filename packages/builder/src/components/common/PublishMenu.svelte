@@ -20,7 +20,7 @@
   let seedProductionTables = false
   let menuOpen = false
 
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACES
   $: workspaceOrApp = workspaceAppsEnabled ? "workspace" : "app"
 
   const publish = async () => {

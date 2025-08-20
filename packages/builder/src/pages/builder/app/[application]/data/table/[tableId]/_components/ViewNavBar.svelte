@@ -123,7 +123,7 @@
     contextMenuStore.open(
       view.id,
       [
-        ...($featureFlags.WORKSPACE_APPS
+        ...($featureFlags.WORKSPACES
           ? [
               {
                 icon: "star",

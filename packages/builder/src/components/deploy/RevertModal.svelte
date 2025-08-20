@@ -10,7 +10,7 @@
   let appName
 
   $: appId = $appStore.appId
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const revert = async () => {
     try {
