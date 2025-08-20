@@ -227,7 +227,8 @@
         on:click={() => {
           window.open("/builder/apps", "_blank")
         }}
-        >View apps portal
+      >
+        View app portal
       </Button>
       <Button
         icon="lightbulb"
