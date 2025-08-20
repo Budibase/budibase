@@ -214,10 +214,16 @@ export const renderChain = (
   baseX: number,
   startY: number,
   deps: GraphBuildDeps
-): { lastNodeId: string; lastNodeBlock: any; bottomY: number } => {
+): {
+  lastNodeId: string
+  lastNodeBlock: any
+  bottomY: number
+  branched: boolean
+} => {
   let lastNodeId = parentNodeId
   let lastNodeBlock = parentBlock
   let currentY = startY
+  let branched = false
 
   for (let i = 0; i < chain.length; i++) {
     const step = chain[i]
@@ -232,7 +238,8 @@ export const renderChain = (
         currentY,
         deps
       )
-      return { lastNodeId, lastNodeBlock, bottomY: bottom }
+      branched = true
+      return { lastNodeId, lastNodeBlock, bottomY: bottom, branched }
     }
 
     const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
@@ -259,7 +266,7 @@ export const renderChain = (
     currentY += deps.ySpacing
   }
 
-  return { lastNodeId, lastNodeBlock, bottomY: currentY }
+  return { lastNodeId, lastNodeBlock, bottomY: currentY, branched }
 }
 
 export const renderBranches = (
@@ -327,6 +334,7 @@ export const renderBranches = (
     let lastNodeBlock: any = branchBlockRef
     let bottomY = startY + deps.ySpacing
 
+    let encounteredBranch = false
     if (childSteps.length > 0) {
       const result = renderChain(
         childSteps,
@@ -339,24 +347,31 @@ export const renderBranches = (
       lastNodeId = result.lastNodeId
       lastNodeBlock = result.lastNodeBlock
       bottomY = result.bottomY
+      encounteredBranch = result.branched
     }
 
-    // Terminate branch visually with an anchor
-    const anchorId = `anchor-${branchNodeId}`
-    const anchorPos = deps.ensurePosition(anchorId, { x: branchX, y: bottomY })
-    deps.newNodes.push({
-      id: anchorId,
-      type: "anchor-node",
-      data: { viewMode: deps.viewMode },
-      position: anchorPos,
-    })
-    deps.newEdges.push({
-      id: `edge-${lastNodeId}-${anchorId}`,
-      type: "add-item",
-      source: lastNodeId,
-      target: anchorId,
-      data: { block: lastNodeBlock, viewMode: deps.viewMode },
-    })
+    // Add a terminal anchor only when this branch path doesn't immediately split again.
+    // This avoids showing an extra edge under a node that fans out to branches.
+    if (!encounteredBranch) {
+      const terminalId = `anchor-${lastNodeId}`
+      const terminalPos = deps.ensurePosition(terminalId, {
+        x: branchX,
+        y: bottomY,
+      })
+      deps.newNodes.push({
+        id: terminalId,
+        type: "anchor-node",
+        data: { viewMode: deps.viewMode },
+        position: terminalPos,
+      })
+      deps.newEdges.push({
+        id: `edge-${lastNodeId}-${terminalId}`,
+        type: "add-item",
+        source: lastNodeId,
+        target: terminalId,
+        data: { block: lastNodeBlock, viewMode: deps.viewMode },
+      })
+    }
 
     clusterBottomY = Math.max(clusterBottomY, bottomY + deps.ySpacing)
   })

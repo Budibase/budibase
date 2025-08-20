@@ -274,6 +274,8 @@
     automationStore.actions.closeLogPanel()
     viewMode = ViewMode.EDITOR
   }
+
+  $: console.log($edges)
 </script>
 
 <div class="automation-heading">
