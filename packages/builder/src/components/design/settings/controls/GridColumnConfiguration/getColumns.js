@@ -14,11 +14,7 @@ export const modernize = columns => {
   return columns
 }
 
-export const removeInvalidAddMissing = (
-  columns = [],
-  defaultColumns = [],
-  primaryDisplayColumnName
-) => {
+export const removeInvalidAddMissing = (columns = [], defaultColumns = []) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
 
@@ -35,14 +31,6 @@ export const removeInvalidAddMissing = (
   }
 
   const combinedColumns = [...validColumns, ...missingColumns]
-
-  // Ensure the primary display column is always visible
-  const primaryDisplayIndex = combinedColumns.findIndex(
-    column => column.field === primaryDisplayColumnName
-  )
-  if (primaryDisplayIndex > -1) {
-    combinedColumns[primaryDisplayIndex].active = true
-  }
 
   return combinedColumns
 }

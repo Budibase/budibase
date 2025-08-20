@@ -3,13 +3,13 @@ import { DeploymentDoc, DeploymentStatus } from "../../../documents"
 export interface PublishAppRequest {
   automationIds?: string[]
   workspaceAppIds?: string[]
+  seedProductionTables?: boolean
 }
 
 export interface PublishAppResponse extends DeploymentDoc {}
 
 export enum PublishResourceState {
   PUBLISHED = "published",
-  UNPUBLISHED = "unpublished",
   DISABLED = "disabled",
 }
 
@@ -24,6 +24,7 @@ export type PublishStatusResource = {
 export interface PublishStatusResponse {
   workspaceApps: Record<string, PublishStatusResource>
   automations: Record<string, PublishStatusResource>
+  tables: Record<string, PublishStatusResource>
 }
 
 export interface DeploymentProgressResponse {

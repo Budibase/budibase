@@ -6,6 +6,10 @@
   const actionMenu = getContext("actionMenu")
 
   export let icon: string | undefined = undefined
+  export let iconWeight: "regular" | "bold" | "fill" = "regular"
+  export let iconColour: string | undefined = undefined
+  export let iconHidden: boolean = false
+  export let iconAlign: "center" | "start" = "center"
   export let disabled: boolean | undefined = undefined
   export let noClose: boolean = false
   export let keyBind: string | undefined = undefined
@@ -42,11 +46,12 @@
   tabindex="0"
 >
   {#if icon}
-    <div class="icon">
+    <div class="icon" class:iconHidden style="align-self: {iconAlign}">
       <Icon
         name={icon}
+        weight={iconWeight}
         size="S"
-        color="var(--spectrum-global-color-gray-700)"
+        color={iconColour || "var(--spectrum-global-color-gray-700)"}
       />
     </div>
   {/if}
@@ -57,7 +62,7 @@
       {#each keys as key}
         <div class="key">
           {#if key.startsWith("!")}
-            <Icon size="XS" name={key.split("!")[1]} />
+            <Icon size="XS" weight={iconWeight} name={key.split("!")[1]} />
           {:else}
             {key}
           {/if}
@@ -69,8 +74,10 @@
 
 <style>
   .icon {
-    align-self: center;
     margin-right: var(--spacing-s);
+  }
+  .iconHidden {
+    opacity: 0;
   }
   .keys {
     margin-left: 30px;

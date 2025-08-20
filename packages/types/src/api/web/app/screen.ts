@@ -21,6 +21,7 @@ export interface DeleteScreenResponse {
 export interface ScreenUsage {
   url: string
   _id: string
+  workspaceAppId: string
 }
 
 export interface UsageInScreensResponse {

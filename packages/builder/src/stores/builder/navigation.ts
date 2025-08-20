@@ -25,7 +25,7 @@ export class NavigationStore extends DerivedBudiStore<
       return derived(
         [store, workspaceAppStore, featureFlags],
         ([$store, $workspaceAppStore, $featureFlags]) => {
-          if (!$featureFlags.WORKSPACE_APPS) {
+          if (!$featureFlags.WORKSPACES) {
             return $store
           }
           const navigation = $workspaceAppStore.selectedWorkspaceApp?.navigation

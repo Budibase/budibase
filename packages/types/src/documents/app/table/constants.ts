@@ -12,9 +12,10 @@ export enum AutoReason {
 
 export type FieldSubType =
   | AutoFieldSubType
-  | JsonFieldSubType
-  | BBReferenceFieldSubType
   | AttachmentSubType
+  | BBReferenceFieldSubType
+  | JsonFieldSubType
+  | StringFieldSubType
 
 export enum AutoFieldSubType {
   CREATED_BY = "createdBy",
@@ -42,6 +43,10 @@ export enum BBReferenceFieldSubType {
 
 export enum AttachmentSubType {
   IMAGE = "image",
+}
+
+export enum StringFieldSubType {
+  ARRAY = "array",
 }
 
 export type SupportedSqlTypes =

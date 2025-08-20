@@ -26,6 +26,7 @@ export default class DocumentUpdateProcessor implements EventProcessor {
           await processor({
             id: docId,
             tenantId,
+            appId: properties.appId,
           })
         })
       }

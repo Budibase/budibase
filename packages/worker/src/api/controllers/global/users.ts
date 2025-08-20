@@ -250,7 +250,8 @@ export const adminUser = async (
 
       await events.identification.identifyTenantGroup(
         tenantId,
-        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD,
+        Date.now()
       )
 
       ctx.body = {

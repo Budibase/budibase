@@ -46,6 +46,7 @@ export interface SettingsInnerConfig {
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
+  createdVersion?: string
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}
