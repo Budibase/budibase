@@ -7,6 +7,7 @@ import { Duration } from "../utils"
 import { cloneDeep } from "lodash"
 import { FeatureFlagDefaults } from "@budibase/types"
 import * as configs from "../configs"
+import { isSelfHostUsingCloud } from "../context"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -93,6 +94,11 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       const flagValues = this.defaults()
       const currentTenantId = context.getTenantId()
       const specificallySetFalse = new Set<string>()
+
+      // flags can't be worked out is self hoster accessing the cloud - no global DB
+      if (context.isSelfHostUsingCloud()) {
+        return flagValues
+      }
 
       for (const { tenantId, key, value } of getEnvFlags()) {
         if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
