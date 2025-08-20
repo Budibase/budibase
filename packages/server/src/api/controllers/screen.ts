@@ -171,6 +171,7 @@ export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
       response.push({
         url: screen.routing.route,
         _id: screen._id!,
+        workspaceAppId: screen.workspaceAppId,
       })
     }
   }

@@ -1,6 +1,5 @@
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import * as screenTemplating from "@/templates/screenTemplating"
 import {
   InsertWorkspaceAppRequest,
   PublishResourceState,
@@ -9,9 +8,9 @@ import {
   UpdateWorkspaceAppRequest,
   WorkspaceApp,
 } from "@budibase/types"
-import { derived, Readable, get } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { appStore } from "./app"
-import { screenStore, sortedScreens } from "./screens"
+import { sortedScreens } from "./screens"
 import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
@@ -110,14 +109,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       ...state,
       workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
     }))
-    return await screenStore.save({
-      ...screenTemplating.blank({
-        route: "/",
-        screens: [],
-        workspaceAppId: createdWorkspaceApp._id,
-      })[0].data,
-      workspaceAppId: createdWorkspaceApp._id,
-    })
+    return createdWorkspaceApp
   }
 
   async edit(workspaceApp: WorkspaceApp) {

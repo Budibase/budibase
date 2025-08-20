@@ -6,7 +6,7 @@
   let newScreenModal: NewScreen
   $: workspaceAppId =
     $workspaceAppStore.selectedWorkspaceApp?._id ||
-    $workspaceAppStore.workspaceApps[0]._id!
+    $workspaceAppStore.workspaceApps[0]?._id
 
   onMount(() => {
     newScreenModal.open()
