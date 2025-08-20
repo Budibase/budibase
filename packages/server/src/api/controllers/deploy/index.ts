@@ -5,6 +5,7 @@ import {
   events,
   cache,
   errors,
+  features,
 } from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
@@ -24,6 +25,7 @@ import {
   Automation,
   PublishAppRequest,
   PublishStatusResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -201,6 +203,29 @@ export const publishApp = async function (
     try {
       const devAppId = dbCore.getDevelopmentAppID(appId)
       const productionAppId = dbCore.getProdAppID(appId)
+
+      if (
+        (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+        !(await sdk.applications.isAppPublished(productionAppId))
+      ) {
+        const allWorkspaceApps = await sdk.workspaceApps.fetch()
+        for (const workspaceApp of allWorkspaceApps) {
+          if (workspaceApp.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+        }
+
+        const allAutomations = await sdk.automations.fetch()
+        for (const automation of allAutomations) {
+          if (automation.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.automations.update({ ...automation, disabled: true })
+        }
+      }
 
       const isPublished = await sdk.applications.isAppPublished(productionAppId)
 

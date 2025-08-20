@@ -469,13 +469,13 @@ export default class TestConfiguration {
     })
   }
 
-  async withHeaders(
+  async withHeaders<T>(
     headers: Record<string, string | string[]>,
-    cb: () => Promise<unknown>
+    cb: () => Promise<T>
   ) {
     this.temporaryHeaders = headers
     try {
-      await cb()
+      return await cb()
     } finally {
       this.temporaryHeaders = undefined
     }

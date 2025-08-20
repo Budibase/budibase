@@ -59,7 +59,27 @@ export async function create(
     return
   }
 
-  const createdAutomation = await sdk.automations.create(automation)
+  let createdAutomation: Automation
+
+  if (coreSdk.automations.isRowAction(automation)) {
+    const rowAction = await sdk.rowActions.create(
+      automation.definition.trigger.inputs.tableId,
+      {
+        name: ctx.request.body.name,
+      }
+    )
+    automation.definition.trigger.inputs.rowActionId = rowAction.id
+
+    createdAutomation = await sdk.automations.get(rowAction.automationId)
+    createdAutomation = await sdk.automations.create({
+      ...automation,
+      _id: createdAutomation._id,
+      _rev: createdAutomation._rev,
+      createdAt: createdAutomation.createdAt,
+    })
+  } else {
+    createdAutomation = await sdk.automations.create(automation)
+  }
 
   ctx.body = {
     message: "Automation created successfully",

@@ -32,10 +32,7 @@
       subLink.id = generate()
     }
   })
-  $: urlOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
-    .sort()
+  $: urlOptions = screenStore.routes
 
   const addSubLink = () => {
     subLinks = [...subLinks, {}]
@@ -83,7 +80,7 @@
                   value={subLink.url}
                   on:change={e => (subLink.url = e.detail)}
                   placeholder="Link"
-                  options={urlOptions}
+                  options={$urlOptions}
                   {bindings}
                   appendBindingsAsOptions={false}
                 />

@@ -60,6 +60,9 @@
     padding: 50px 50px 0 50px;
     z-index: 1;
   }
+  .content.noPadding {
+    padding: 0;
+  }
   .fix-scroll-padding {
     content: "";
     display: block;

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { notifications } from "@budibase/bbui"
   import {
     admin,
@@ -54,10 +54,6 @@
 
 <style>
   .page {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
+    margin: 20px 0;
   }
 </style>
