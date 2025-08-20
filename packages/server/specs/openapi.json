@@ -4692,11 +4692,6 @@
         "tags": [
           "workspaces"
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {

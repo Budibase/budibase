@@ -2145,12 +2145,6 @@ export interface operations {
     };
   };
   workspaceCreate: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
     responses: {
       /** Returns the created workspace. */
       200: {
