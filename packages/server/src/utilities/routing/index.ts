@@ -12,9 +12,7 @@ export async function getRoutingInfo(
   if (!workspaceApps.length) {
     return []
   }
-  const workspaceAppsEnabled = await features.isEnabled(
-    FeatureFlag.WORKSPACE_APPS
-  )
+  const workspaceAppsEnabled = await features.isEnabled(FeatureFlag.WORKSPACES)
   const db = context.getAppDB()
   try {
     const result: ScreenRoutesViewOutput[] = []

@@ -27,7 +27,7 @@
         return `../${workspaceAppScreens[0]._id}`
       }
 
-      if ($featureFlags.WORKSPACE_APPS) {
+      if ($featureFlags.WORKSPACES) {
         return "../new"
       }
 
@@ -45,7 +45,7 @@
 
 {#if $selectedScreen}
   <div class="design">
-    {#if $featureFlags.WORKSPACE_APPS}
+    {#if $featureFlags.WORKSPACES}
       <TopBar
         breadcrumbs={[
           { text: "Apps", url: "../../" },

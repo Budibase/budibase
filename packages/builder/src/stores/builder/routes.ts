@@ -22,7 +22,7 @@ export class RoutesStore extends DerivedBudiStore<
           const workspaceApp = $wsa.selectedWorkspaceApp
           return $screenStore.screens
             .filter((s: Screen) =>
-              $featureFlags.WORKSPACE_APPS
+              $featureFlags.WORKSPACES
                 ? workspaceApp && workspaceApp._id === s.workspaceAppId
                 : true
             )

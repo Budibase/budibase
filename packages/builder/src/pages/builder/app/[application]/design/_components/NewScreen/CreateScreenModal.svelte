@@ -70,7 +70,7 @@
 
     modals = []
     stepIndex = 0
-    if (!workspaceAppId && $featureFlags.WORKSPACE_APPS) {
+    if (!workspaceAppId && $featureFlags.WORKSPACES) {
       modals.push(appSelectionModal)
     }
 

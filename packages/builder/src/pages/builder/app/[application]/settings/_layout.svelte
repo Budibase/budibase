@@ -5,7 +5,7 @@
   import { Page, Layout } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
 
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACES
 </script>
 
 {#if workspaceAppsEnabled}

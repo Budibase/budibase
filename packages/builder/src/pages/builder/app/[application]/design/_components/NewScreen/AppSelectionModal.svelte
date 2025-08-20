@@ -43,7 +43,7 @@
       bind:value={selectedAppId}
     />
   </ModalContent>
-{:else if $featureFlags.WORKSPACE_APPS}
+{:else if $featureFlags.WORKSPACES}
   <ModalContent
     title="Create App"
     confirmText="Create app"

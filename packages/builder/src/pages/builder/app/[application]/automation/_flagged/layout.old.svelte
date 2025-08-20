@@ -39,7 +39,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags.WORKSPACE_APPS}
+  {#if $featureFlags.WORKSPACES}
     <TopBar breadcrumbs={[{ text: "Automations" }]} icon="path"></TopBar>
   {/if}
   <div class="root">

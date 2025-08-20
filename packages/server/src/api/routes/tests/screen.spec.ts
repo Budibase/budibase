@@ -234,7 +234,7 @@ describe("/screens", () => {
       let featureCleanup: () => void
       beforeAll(() => {
         featureCleanup = features.testutils.setFeatureFlags("*", {
-          WORKSPACE_APPS: true,
+          WORKSPACES: true,
         })
       })
 
