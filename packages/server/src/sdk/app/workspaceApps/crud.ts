@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, events } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
@@ -50,7 +50,13 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  const persisted = (await get(workspaceApp._id!))!
+  const persisted = await get(workspaceApp._id!)
+  if (!persisted) {
+    throw new HTTPError(
+      `Project app with id '${workspaceApp._id}' not found.`,
+      404
+    )
+  }
   if (workspaceApp.name !== persisted.name) {
     await guardName(workspaceApp.name, workspaceApp._id)
   }
@@ -78,7 +84,17 @@ export async function remove(
 ): Promise<void> {
   const db = context.getAppDB()
   try {
+    const existing = await db.tryGet<WorkspaceApp>(workspaceAppId)
+    if (!existing)
+      throw new HTTPError(
+        `Project app with id '${workspaceAppId}' not found.`,
+        404
+      )
+
     await db.remove(workspaceAppId, _rev)
+
+    // Clear out any favourites related to this
+    events.workspace.deleted(existing, context.getAppId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

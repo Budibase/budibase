@@ -17,6 +17,7 @@ import * as common from "./app/common"
 import * as oauth2 from "./app/oauth2"
 import * as ai from "./app/ai"
 import * as workspaceApps from "./app/workspaceApps"
+import * as workspace from "./workspace"
 import * as navigation from "./app/navigation"
 import * as resources from "./app/resources"
 import * as dev from "./dev"
@@ -44,6 +45,7 @@ const sdk = {
   resources,
   deployment,
   dev,
+  workspace,
 }
 
 // default export for TS

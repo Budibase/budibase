@@ -219,7 +219,7 @@ class StepBuilder<
         trigger: this._trigger,
         stepNames: this.stepNames,
       },
-      disabled: opts?.disabled || undefined,
+      disabled: opts?.disabled,
       type: "automation",
       appId: this.config.getAppId(),
     }

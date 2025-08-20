@@ -1,4 +1,9 @@
-import { prefixed, DocumentType } from "@budibase/types"
+import {
+  prefixed,
+  DocumentType,
+  SEPARATOR,
+  InternalTable,
+} from "@budibase/types"
 
 export {
   SEPARATOR,
@@ -78,6 +83,7 @@ export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
 export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
 export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
+export const USER_METADATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
 
 export const enum DesignDocuments {
   SQLITE = SQLITE_DESIGN_DOC_ID,

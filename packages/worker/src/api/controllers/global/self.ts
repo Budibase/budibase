@@ -126,7 +126,7 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
       }
     : undefined
 
-  if (flags?.WORKSPACE_APPS) {
+  if (flags?.WORKSPACES) {
     // TODO: once the flag is clean, we should rename the original object instead
     sessionAttributes.license.quotas[QuotaType.USAGE][QuotaUsageType.STATIC][
       StaticQuotaName.APPS

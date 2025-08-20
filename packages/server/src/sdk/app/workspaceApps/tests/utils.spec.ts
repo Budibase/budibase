@@ -14,7 +14,7 @@ describe("workspaceApps utils", () => {
     await config.init()
 
     featureCleanup = features.testutils.setFeatureFlags("*", {
-      WORKSPACE_APPS: true,
+      WORKSPACES: true,
     })
     workspaceApps = (await config.api.workspaceApp.fetch()).workspaceApps
     expect(workspaceApps).toHaveLength(1)

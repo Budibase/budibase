@@ -5,10 +5,18 @@
     userSelectedResourceMap,
     contextMenuStore,
     appStore,
+    workspaceFavouriteStore,
     dataEnvironmentStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionButton,
+    ActionMenu,
+    MenuItem,
+    notifications,
+  } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import EditTableModal from "@/components/backend/TableNavigator/TableNavItem/EditModal.svelte"
@@ -20,7 +28,10 @@
   import { tick, onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
-  import { DataEnvironmentMode } from "@budibase/types"
+  import { WorkspaceResource, DataEnvironmentMode } from "@budibase/types"
+  import { API } from "@/api"
+
+  const favourites = workspaceFavouriteStore.lookup
 
   // View overflow
   let observer
@@ -108,9 +119,43 @@
     e.stopPropagation()
     editableView = view
     await tick()
+    const fav = $favourites[view?.id]
     contextMenuStore.open(
       view.id,
       [
+        ...($featureFlags.WORKSPACES
+          ? [
+              {
+                icon: "star",
+                iconWeight: fav ? "fill" : "regular",
+                iconColour: fav
+                  ? "var(--spectrum-global-color-yellow-1000)"
+                  : undefined,
+                name: fav ? "Remove from favourites" : "Add to favourites",
+                keyBind: null,
+                visible: true,
+                disabled: false,
+                callback: async () => {
+                  try {
+                    if (fav?._id && fav?._rev) {
+                      await API.workspace.delete(fav._id, fav._rev)
+                      notifications.success("View removed to favourites")
+                    } else {
+                      await API.workspace.create({
+                        resourceId: view?.id,
+                        resourceType: WorkspaceResource.VIEW,
+                      })
+                      notifications.success("View added to favourites")
+                    }
+                    await workspaceFavouriteStore.sync()
+                  } catch (e) {
+                    notifications.error("Failed to update favourite")
+                    console.error("Failed to update favourite", e)
+                  }
+                },
+              },
+            ]
+          : []),
         {
           icon: "pencil",
           name: "Edit",
@@ -278,9 +323,6 @@
   {/if}
   {#if !hasViews && tableEditable}
     <CreateViewButton firstView {table} />
-    <span>
-      To create subsets of data, control access and more, create a view.
-    </span>
   {/if}
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>

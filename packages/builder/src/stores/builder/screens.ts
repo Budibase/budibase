@@ -25,6 +25,7 @@ import {
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
+import { RoutesStore } from "./routes"
 
 interface ScreenState {
   screens: Screen[]
@@ -35,13 +36,24 @@ export const initialScreenState: ScreenState = {
   screens: [],
 }
 
-// Review the nulls
 export class ScreenStore extends BudiStore<ScreenState> {
+  private _routes: RoutesStore | null = null
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
   save: (
     screen: WithRequired<SaveScreenRequest, "workspaceAppId">
   ) => Promise<Screen>
+
+  /**
+    List all availables screen routes in the current app
+   */
+  get routes(): RoutesStore {
+    // lazy load
+    if (!this._routes) {
+      this._routes = new RoutesStore()
+    }
+    return this._routes
+  }
 
   constructor() {
     super(initialScreenState)
@@ -77,7 +89,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
     this.save = this.history.wrapSaveDoc(this.saveScreen)
   }
-
   /**
    * Reset entire store back to base config
    */

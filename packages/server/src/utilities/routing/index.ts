@@ -1,21 +1,23 @@
+import { context, db as coreDb, features } from "@budibase/backend-core"
+import { FeatureFlag, ScreenRoutesViewOutput } from "@budibase/types"
+import { getQueryIndex, UNICODE_MAX, ViewName } from "../../db/utils"
 import { createRoutingView } from "../../db/views/staticViews"
-import { ViewName, getQueryIndex, UNICODE_MAX } from "../../db/utils"
-import { context } from "@budibase/backend-core"
-import { ScreenRoutesViewOutput } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function getRoutingInfo(
   urlPath: string
 ): Promise<ScreenRoutesViewOutput[]> {
+  const isDev = coreDb.isDevAppID(context.getAppId())
   const workspaceApps = await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
   if (!workspaceApps.length) {
     return []
   }
+  const workspaceAppsEnabled = await features.isEnabled(FeatureFlag.WORKSPACES)
   const db = context.getAppDB()
   try {
     const result: ScreenRoutesViewOutput[] = []
     for (const workspaceApp of workspaceApps) {
-      if (workspaceApp.disabled) {
+      if (!isDev && workspaceApp.disabled && workspaceAppsEnabled) {
         continue
       }
       const allRouting = await db.query<ScreenRoutesViewOutput>(

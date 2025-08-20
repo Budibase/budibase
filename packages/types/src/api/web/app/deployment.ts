@@ -10,7 +10,6 @@ export interface PublishAppResponse extends DeploymentDoc {}
 
 export enum PublishResourceState {
   PUBLISHED = "published",
-  UNPUBLISHED = "unpublished",
   DISABLED = "disabled",
 }
 
