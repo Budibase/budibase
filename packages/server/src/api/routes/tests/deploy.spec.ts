@@ -16,7 +16,7 @@ describe("/api/deploy", () => {
 
   beforeAll(async () => {
     cleanup = features.testutils.setFeatureFlags("*", {
-      WORKSPACE_APPS: true,
+      WORKSPACES: true,
     })
     await config.init()
   })
@@ -243,7 +243,7 @@ describe("/api/deploy", () => {
 
     beforeAll(async () => {
       cleanup = features.testutils.setFeatureFlags("*", {
-        WORKSPACE_APPS: workspaceAppsFlag,
+        WORKSPACES: workspaceAppsFlag,
       })
 
       await config.init()
@@ -392,7 +392,7 @@ describe("/api/deploy", () => {
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
         {
-          WORKSPACE_APPS: false,
+          WORKSPACES: false,
         },
         () => publishProdApp()
       )
@@ -423,7 +423,7 @@ describe("/api/deploy", () => {
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
         {
-          WORKSPACE_APPS: false,
+          WORKSPACES: false,
         },
         () => publishProdApp()
       )

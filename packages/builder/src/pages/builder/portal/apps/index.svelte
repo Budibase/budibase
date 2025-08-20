@@ -64,7 +64,7 @@
     templatesModal.show()
   }
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -268,7 +268,7 @@
   })
 </script>
 
-{#if $featureFlags.WORKSPACE_APPS}
+{#if $featureFlags.WORKSPACES}
   <HeroBanner
     title="Workspaces are live"
     linkTitle="Learn about workspaces"
@@ -333,7 +333,7 @@
         <Layout noPadding gap="XS">
           <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
-            {#if $featureFlags.WORKSPACE_APPS}
+            {#if $featureFlags.WORKSPACES}
               Below you'll find the list of workspaces that you have access to
             {:else}
               Below you'll find the list of apps that you have access to
@@ -353,7 +353,7 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                {#if $featureFlags.WORKSPACE_APPS}
+                {#if $featureFlags.WORKSPACES}
                   Create new workspace
                 {:else}
                   Create new app

@@ -48,7 +48,7 @@ class DeploymentStore extends DerivedBudiStore<
           let lastPublished = undefined
           if (isPublished) {
             lastPublished = processStringSync(
-              `Your ${$featureFlags.WORKSPACE_APPS ? "apps and automations were" : "app was"} last published {{ duration time 'millisecond' }} ago`,
+              `Your ${$featureFlags.WORKSPACES ? "apps and automations were" : "app was"} last published {{ duration time 'millisecond' }} ago`,
               {
                 time:
                   new Date().getTime() -

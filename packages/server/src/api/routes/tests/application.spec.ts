@@ -55,7 +55,7 @@ describe.each([false, true])(
 
       cleanup.push(
         features.testutils.setFeatureFlags("*", {
-          WORKSPACE_APPS: workspaceAppsFlag,
+          WORKSPACES: workspaceAppsFlag,
         })
       )
       await config.init()
@@ -759,7 +759,7 @@ describe.each([false, true])(
           let featureCleanup: () => void
           beforeAll(() => {
             featureCleanup = features.testutils.setFeatureFlags("*", {
-              WORKSPACE_APPS: true,
+              WORKSPACES: true,
             })
           })
 

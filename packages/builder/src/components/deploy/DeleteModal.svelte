@@ -13,7 +13,7 @@
 
   let deleting = false
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   export const show = () => {
     deletionModal.show()

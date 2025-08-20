@@ -3,7 +3,7 @@
   import NewIndex from "./_flagged/index.new.svelte"
   import OldIndex from "./_flagged/index.old.svelte"
 
-  $: layout = $featureFlags.WORKSPACE_APPS ? NewIndex : OldIndex
+  $: layout = $featureFlags.WORKSPACES ? NewIndex : OldIndex
 </script>
 
 <svelte:component this={layout}>

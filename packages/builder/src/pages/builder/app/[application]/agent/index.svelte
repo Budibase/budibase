@@ -447,7 +447,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags.WORKSPACE_APPS}
+  {#if $featureFlags.WORKSPACES}
     <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
   {/if}
   <div class="page">

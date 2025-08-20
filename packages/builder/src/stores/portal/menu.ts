@@ -34,7 +34,7 @@ export const menu: Readable<MenuItem[]> = derived(
     // Pages that all devs and admins can access
     let menu: MenuItem[] = [
       {
-        title: $featureFlags.WORKSPACE_APPS ? "Workspaces" : "Apps",
+        title: $featureFlags.WORKSPACES ? "Workspaces" : "Apps",
         href: "/builder/portal/apps",
       },
     ]

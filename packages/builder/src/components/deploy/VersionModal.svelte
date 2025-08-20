@@ -27,7 +27,7 @@
 
   let updateModal
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
   $: appId = $appStore.appId
   $: updateAvailable =
     $appStore.upgradableVersion &&
