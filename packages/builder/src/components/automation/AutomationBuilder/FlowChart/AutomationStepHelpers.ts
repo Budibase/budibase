@@ -1,6 +1,8 @@
 import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
 import { ViewMode } from "@/types/automations"
+import dagre from "@dagrejs/dagre"
+import { Position } from "@xyflow/svelte"
 import {
   Automation,
   AutomationActionStepId,
@@ -205,6 +207,67 @@ export interface GraphBuildDeps {
   testDataModal?: any
   newNodes: any[]
   newEdges: any[]
+}
+
+// Dagre layout for automation flow
+export interface DagreLayoutOptions {
+  rankdir?: "TB" | "BT" | "LR" | "RL"
+  ranksep?: number
+  nodesep?: number
+}
+
+const DEFAULT_NODE_WIDTH = 150
+const DEFAULT_STEP_HEIGHT = 100
+const DEFAULT_BRANCH_HEIGHT = 180
+const DEFAULT_ANCHOR_SIZE = 1
+
+export const dagreLayoutAutomation = (
+  graph: { nodes: any[]; edges: any[] },
+  opts?: DagreLayoutOptions
+) => {
+  const rankdir = opts?.rankdir || "TB"
+  const ranksep = opts?.ranksep ?? 260
+  const nodesep = opts?.nodesep ?? 220
+
+  const dagreGraph = new dagre.graphlib.Graph()
+  dagreGraph.setDefaultEdgeLabel(() => ({}))
+  dagreGraph.setGraph({ rankdir, ranksep, nodesep })
+
+  // Add nodes with estimated sizes for layout
+  graph.nodes.forEach(node => {
+    let width = DEFAULT_NODE_WIDTH
+    let height = DEFAULT_STEP_HEIGHT
+    if (node.type === "branch-node") {
+      height = DEFAULT_BRANCH_HEIGHT
+    } else if (node.type === "anchor-node") {
+      width = DEFAULT_ANCHOR_SIZE
+      height = DEFAULT_ANCHOR_SIZE
+    }
+    dagreGraph.setNode(node.id, { width, height })
+  })
+
+  // Add edges
+  graph.edges.forEach(edge => {
+    dagreGraph.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(dagreGraph)
+
+  // Apply computed positions (top/bottom orientation)
+  graph.nodes.forEach(node => {
+    const dims = dagreGraph.node(node.id)
+    if (!dims) return
+    const width = dims.width
+    const height = dims.height
+    node.targetPosition = Position.Top
+    node.sourcePosition = Position.Bottom
+    node.position = {
+      x: Math.round(dims.x - width / 2),
+      y: Math.round(dims.y - height / 2),
+    }
+  })
+
+  return graph
 }
 
 export const renderChain = (

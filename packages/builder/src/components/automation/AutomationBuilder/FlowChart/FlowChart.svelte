@@ -25,6 +25,7 @@
     getBlocks as getBlocksHelper,
     renderBranches,
     type GraphBuildDeps,
+    dagreLayoutAutomation,
   } from "./AutomationStepHelpers"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
 
@@ -95,38 +96,16 @@
 
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
-  const handleNodeDrag = (event: CustomEvent) => {
-    const { targetNode } = event.detail
-    if (targetNode) {
-      nodes.update(n => {
-        return n.map(node => {
-          if (node.id === targetNode.id) {
-            return {
-              ...node,
-              position: targetNode.position,
-            }
-          }
-          return node
-        })
-      })
-    }
-  }
-
   function updateGraph(blocks: AutomationStep[], currentViewMode: ViewMode) {
-    const prevNodes = get(nodes)
-    const byId = new Map(prevNodes.map(n => [n.id, n]))
-
-    const xSpacing = 400
-    const ySpacing = 300
+    const xSpacing = 300
+    const ySpacing = 240
 
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
 
     // helper to get or create position
-    const ensurePosition = (id: string, fallback: { x: number; y: number }) => {
-      const existing = byId.get(id)
-      return existing?.position ?? fallback
-    }
+    const ensurePosition = (_id: string, fallback: { x: number; y: number }) =>
+      fallback
 
     const deps: GraphBuildDeps = {
       ensurePosition,
@@ -140,7 +119,6 @@
     }
 
     // Build linear chain of top-level steps first
-    let currentY = 0
     blocks.forEach((block, idx) => {
       const baseId = block.id
       const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
@@ -199,7 +177,7 @@
       if (isBranchStep) {
         const sourceForBranches = idx > 0 ? blocks[idx - 1].id : baseId
         const sourceBlock = idx > 0 ? blocks[idx - 1] : block
-        const bottom = renderBranches(
+        renderBranches(
           block,
           sourceForBranches,
           sourceBlock,
@@ -207,12 +185,17 @@
           pos.y + ySpacing,
           deps
         )
-        currentY = Math.max(currentY, bottom)
       }
     })
 
-    nodes.set(newNodes)
-    edges.set(newEdges)
+    // Run Dagre layout (top-to-bottom, tighter spacing)
+    const laidOut = dagreLayoutAutomation(
+      { nodes: newNodes, edges: newEdges },
+      { rankdir: "TB", ranksep: 150, nodesep: 200 }
+    )
+
+    nodes.set(laidOut.nodes)
+    edges.set(laidOut.edges)
   }
 
   // Check if automation has unpublished changes
@@ -380,7 +363,7 @@
         {edgeTypes}
         fitView
         colorMode="dark"
-        on:nodedrag={handleNodeDrag}
+        nodesDraggable={false}
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} gap={25} />

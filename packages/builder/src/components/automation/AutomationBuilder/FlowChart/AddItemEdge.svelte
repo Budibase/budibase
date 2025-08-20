@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { getBezierPath, EdgeLabelRenderer, BaseEdge } from "@xyflow/svelte"
+  import {
+    getSmoothStepPath,
+    EdgeLabelRenderer,
+    BaseEdge,
+  } from "@xyflow/svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import FlowItemActions from "./FlowItemActions.svelte"
   import { ActionButton } from "@budibase/bbui"
@@ -13,7 +17,10 @@
   $: automation = $selectedAutomation?.data
 
   // full path to compute label position
-  $: basePath = getBezierPath($$props as any)
+  $: basePath = getSmoothStepPath({
+    ...(($$props as any) || {}),
+    borderRadius: 12,
+  })
   $: labelX = basePath[1]
   $: labelY = basePath[2]
 
@@ -21,8 +28,9 @@
   $: edgeTarget = target ?? $$props.target
   $: isBranchTarget = edgeTarget?.startsWith("branch-")
   $: path = edgeTarget.startsWith("anchor-")
-    ? getBezierPath({
-        ...($$props as any),
+    ? getSmoothStepPath({
+        ...(($$props as any) || {}),
+        borderRadius: 12,
         targetX: labelX,
         targetY: labelY,
       })
