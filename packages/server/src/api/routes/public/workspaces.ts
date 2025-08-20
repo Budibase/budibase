@@ -13,8 +13,6 @@ const read = [],
  *     summary: Create a workspace
  *     tags:
  *       - workspaces
- *     parameters:
- *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       required: true
  *       content:
