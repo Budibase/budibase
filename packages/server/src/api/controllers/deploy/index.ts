@@ -251,6 +251,9 @@ export const publishApp = async function (
         replication.appReplicateOpts({
           isCreation: !isPublished,
           tablesToSync,
+          // don't use checkpoints, this can stop data that was previous ignored
+          // getting written - if not seeding tables we don't need to worry about it
+          checkpoint: !seedProductionTables,
         })
       )
       // app metadata is excluded as it is likely to be in conflict
