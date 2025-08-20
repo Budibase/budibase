@@ -380,34 +380,32 @@
               {/if}
             </div>
           {/if}
-          {#if $appsStore.apps.length > 1}
-            <div class="app-actions">
-              <Select
-                autoWidth
-                value={$sortBy}
-                on:change={e => {
-                  appsStore.updateSort(e.detail)
-                }}
-                placeholder={null}
-                options={[
-                  { label: "Sort by name", value: "name" },
-                  { label: "Sort by recently updated", value: "updated" },
-                  { label: "Sort by status", value: "status" },
-                ]}
-              />
-              <Search
-                placeholder="Search"
-                on:input={e => {
-                  searchTerm = e.target.value
-                }}
-                on:change={e => {
-                  if (!e.detail) {
-                    searchTerm = null
-                  }
-                }}
-              />
-            </div>
-          {/if}
+          <div class="app-actions">
+            <Select
+              autoWidth
+              value={$sortBy}
+              on:change={e => {
+                appsStore.updateSort(e.detail)
+              }}
+              placeholder={null}
+              options={[
+                { label: "Sort by name", value: "name" },
+                { label: "Sort by recently updated", value: "updated" },
+                { label: "Sort by status", value: "status" },
+              ]}
+            />
+            <Search
+              placeholder="Search"
+              on:input={e => {
+                searchTerm = e.target.value
+              }}
+              on:change={e => {
+                if (!e.detail) {
+                  searchTerm = null
+                }
+              }}
+            />
+          </div>
         </div>
 
         <div class="app-table">
