@@ -196,9 +196,11 @@ export class DatasourceStore extends DerivedBudiStore<
   async create({
     integration,
     config,
+    name,
   }: {
     integration: UIIntegration
     config: Record<string, any>
+    name?: string
   }) {
     const count = this.sourceCount(integration.name)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
@@ -207,7 +209,7 @@ export class DatasourceStore extends DerivedBudiStore<
       type: "datasource",
       source: integration.name as SourceName,
       config,
-      name: `${integration.friendlyName}${nameModifier}`,
+      name: name || `${integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
     }

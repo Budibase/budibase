@@ -70,6 +70,7 @@
       const datasource = await datasources.create({
         integration: restIntegration,
         config,
+        name: template.name,
       })
 
       // Import queries from the OpenAPI specification
