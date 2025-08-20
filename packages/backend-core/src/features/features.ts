@@ -6,6 +6,7 @@ import tracer from "dd-trace"
 import { Duration } from "../utils"
 import { cloneDeep } from "lodash"
 import { FeatureFlagDefaults } from "@budibase/types"
+import * as configs from "../configs"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -142,10 +143,21 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       if (posthog && userId) {
         tags[`readFromPostHog`] = true
 
+        const config = await configs.getSettingsConfigDoc()
         const personProperties: Record<string, string> = { tenantId }
         const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
           onlyEvaluateLocally: true,
+          groups: {
+            tenant: tenantId,
+          },
+          groupProperties: {
+            tenant: {
+              id: tenantId,
+              createdVersion: config.config.createdVersion,
+              createdAt: `${config.createdAt ?? ""} `,
+            },
+          },
         })
 
         for (const [name, value] of Object.entries(posthogFlags)) {
