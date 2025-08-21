@@ -18,7 +18,6 @@
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
   import RestTemplateModal from "./_components/RestTemplateModal.svelte"
-  import { featureFlags } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
   import { configFromIntegration } from "@/stores/selectors"
 
@@ -32,7 +31,6 @@
 
   $: disabled =
     sampleDataLoading || externalDatasourceLoading || templateLoading
-  $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -128,11 +126,9 @@
   </div>
 
   <div class="options bb-options">
-    {#if aiTableGenerationEnabled}
-      <div class="ai-generation">
-        <AiTableGeneration />
-      </div>
-    {/if}
+    <div class="ai-generation">
+      <AiTableGeneration />
+    </div>
     <DatasourceOption
       on:click={() => internalTableModal.show()}
       title="Create new table"
