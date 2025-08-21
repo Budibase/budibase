@@ -35,6 +35,34 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/twilio.com/api/1.55.0/openapi.yaml",
       icon: "/builder/assets/rest-template-icons/twilio.svg",
     },
+    {
+      name: "Stripe",
+      description:
+        "Secure payment processing, subscriptions and financial data management",
+      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/stripe.svg",
+    },
+    {
+      name: "Salesforce",
+      description:
+        "CRM data management, lead tracking, and customer relationship automation",
+      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/salesforce.png",
+    },
+    {
+      name: "Zendesk",
+      description:
+        "Customer support ticket management, user data, and service analytics",
+      url: "https://developer.zendesk.com/zendesk/oas.yaml",
+      icon: "/builder/assets/rest-template-icons/zendesk.png",
+    },
+    {
+      name: "Intercom",
+      description:
+        "Customer messaging, user engagement, and support conversation management",
+      url: "https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/refs/heads/main/descriptions/2.14/api.intercom.io.yaml",
+      icon: "/builder/assets/rest-template-icons/intercom.svg",
+    },
   ],
 }
 
