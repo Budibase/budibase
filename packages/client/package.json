@@ -16,6 +16,8 @@
   },
   "scripts": {
     "build": "vite build",
+    "build:components": "vite build --config vite.component-bundles.config.mjs",
+    "build:components:iife": "node scripts/bundle-components-iife.mjs",
     "dev": "vite build --watch --mode=dev",
     "check:types": "yarn svelte-check"
   },
@@ -40,7 +42,14 @@
     "@svelte-put/qr": "^1.2.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "rollup-plugin-svelte": "^7.2.0",
     "@sveltejs/vite-plugin-svelte": "1.4.0",
+    "glob": "^10.3.10",
+    "rollup": "^4.0.0",
+    "rollup-plugin-visualizer": "^5.12.0",
     "vite": "^4.5.0",
     "vite-plugin-css-injected-by-js": "3.5.2"
   },

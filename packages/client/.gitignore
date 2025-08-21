@@ -4,3 +4,4 @@ package-lock.json
 release/
 dist/
 stats.html
+temp-component-entries/

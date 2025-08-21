@@ -152,6 +152,10 @@
       <script type="application/javascript" src={plugin.jsUrl}></script>
     {/each}
   {/if}
+  <script
+    type="application/javascript"
+    src="http://localhost:10000/components-bundle.iife.js"
+  ></script>
   <script type="application/javascript" nonce={props.nonce}>
     if (window.loadBudibase) {
       window.loadBudibase()

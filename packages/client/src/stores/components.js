@@ -12,6 +12,7 @@ export const BudibasePrefix = "@budibase/standard-components/"
 
 const createComponentStore = () => {
   const store = writable({
+    componentManifest: {},
     customComponentManifest: {},
     customComponentMap: {},
     mountedComponents: {},
@@ -134,7 +135,13 @@ const createComponentStore = () => {
     if (type.startsWith(BudibasePrefix)) {
       const split = type.split("/")
       const name = split[split.length - 1]
-      return AppComponents[name]
+      // return AppComponents[name]
+      // debugger
+      // // const { componentManifest } = get(store)
+      if (!window.BudibaseComponents[name]) {
+        console.error(`Component ${name} is missing`)
+      }
+      return window.BudibaseComponents[name]
     }
 
     // Handle custom components

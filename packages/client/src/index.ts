@@ -46,8 +46,10 @@ if (typeof window !== "undefined") {
 import * as svelte from "svelte"
 // @ts-ignore
 import * as internal from "svelte/internal"
+import * as store from "svelte/store"
 window.svelte_internal = internal
 window.svelte = svelte
+window.svelte_store = store
 
 // Extend global window scope
 declare global {
@@ -81,6 +83,7 @@ declare global {
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+    svelte_store: typeof store
     INIT_TIME: number
   }
 }
