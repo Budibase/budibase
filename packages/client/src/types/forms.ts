@@ -1,21 +1,20 @@
 import { Readable } from "svelte/store"
-import { FieldSchema, FieldType } from "@budibase/types"
+import { FieldSchema, FieldType, UIFieldValidationRule } from "@budibase/types"
 
 export interface FormContext {
   formApi?: {
     registerField: (
       field: string,
       type: FieldType,
-      defaultValue: string | undefined,
+      defaultValue: string | string[] | undefined,
       disabled: boolean,
       readonly: boolean,
-      validation: FieldValidation | undefined,
+      validation: UIFieldValidationRule[] | undefined,
       formStep: number
     ) => Readable<FormField>
   }
+  setStep: (step: number) => void
 }
-
-export type FieldValidation = () => string | undefined
 
 export interface FormField {
   fieldState: FieldState

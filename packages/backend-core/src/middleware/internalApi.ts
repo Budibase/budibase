@@ -5,7 +5,7 @@ import { isValidInternalAPIKey } from "../utils"
 /**
  * API Key only endpoint.
  */
-export default async (ctx: Ctx, next: any) => {
+export async function internalApi(ctx: Ctx, next: any) {
   const apiKey = ctx.request.headers[Header.API_KEY]
   if (!apiKey) {
     ctx.throw(403, "Unauthorized")

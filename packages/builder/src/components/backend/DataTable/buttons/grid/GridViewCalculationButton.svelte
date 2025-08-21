@@ -13,7 +13,7 @@
     isNumeric,
     isNumericStaticFormula,
   } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -201,7 +201,13 @@
 
 <DetailPopover bind:this={popover} title="Configure calculations" width={480}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="browser" quiet on:click={openPopover} selected={open}>
+    <ActionButton
+      icon="browser"
+      quiet
+      on:click={openPopover}
+      selected={open}
+      accentColor="#4b75ff"
+    >
       Configure calculations{count ? `: ${count}` : ""}
     </ActionButton>
   </svelte:fragment>

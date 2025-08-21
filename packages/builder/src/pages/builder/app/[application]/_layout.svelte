@@ -5,7 +5,7 @@
 
   export let application: string
 
-  $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
+  $: layout = $featureFlags.WORKSPACES ? NewLayout : OldLayout
 </script>
 
 <svelte:component this={layout} {application}>

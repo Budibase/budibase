@@ -23,12 +23,11 @@
 
 <label
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
-  class:checked={value}
-  class:is-indeterminate={indeterminate}
+  class:checked={value || indeterminate}
   class:readonly
 >
   <input
-    checked={value}
+    checked={value || indeterminate}
     {disabled}
     on:change={onChange}
     type="checkbox"
@@ -36,20 +35,23 @@
     {id}
   />
   <span class="spectrum-Checkbox-box">
-    <span class="icon check">
-      <Icon
-        name="check"
-        weight="bold"
-        color="var(--spectrum-global-color-gray-50)"
-      />
-    </span>
-    <span class="icon indeterminate">
-      <Icon
-        name="minus"
-        weight="bold"
-        color="var(--spectrum-global-color-gray-50)"
-      />
-    </span>
+    {#if indeterminate}
+      <span class="icon">
+        <Icon
+          name="minus"
+          weight="bold"
+          color="var(--spectrum-global-color-gray-50)"
+        />
+      </span>
+    {:else if value}
+      <span class="icon">
+        <Icon
+          name="check"
+          weight="bold"
+          color="var(--spectrum-global-color-gray-50)"
+        />
+      </span>
+    {/if}
   </span>
   {#if text}
     <span class="spectrum-Checkbox-label">{text}</span>
@@ -58,15 +60,8 @@
 
 <style>
   .icon {
-    display: none;
-    left: 50%;
-    top: 50%;
     position: absolute;
-    transform: translate(-50%, -50%);
-  }
-  .checked .check.icon,
-  .is-indeterminate .indeterminate.icon {
-    display: block;
+    margin: 0 !important;
   }
   .spectrum-Checkbox--sizeS :global(i) {
     font-size: 12px;

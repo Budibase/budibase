@@ -5,9 +5,18 @@
     userSelectedResourceMap,
     contextMenuStore,
     appStore,
+    workspaceFavouriteStore,
+    dataEnvironmentStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionButton,
+    ActionMenu,
+    MenuItem,
+    notifications,
+  } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import EditTableModal from "@/components/backend/TableNavigator/TableNavItem/EditModal.svelte"
@@ -19,6 +28,10 @@
   import { tick, onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
+  import { WorkspaceResource, DataEnvironmentMode } from "@budibase/types"
+  import { API } from "@/api"
+
+  const favourites = workspaceFavouriteStore.lookup
 
   // View overflow
   let observer
@@ -39,7 +52,8 @@
   $: table = $tables.list.find(table => table._id === tableId)
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
-  $: tableEditable = table?._id !== TableNames.USERS
+  $: isDevMode = $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
+  $: tableEditable = table?._id !== TableNames.USERS && isDevMode
   $: activeId = decodeURIComponent(
     $params.viewName ?? $params.viewId ?? $params.tableId
   )
@@ -105,9 +119,43 @@
     e.stopPropagation()
     editableView = view
     await tick()
+    const fav = $favourites[view?.id]
     contextMenuStore.open(
       view.id,
       [
+        ...($featureFlags.WORKSPACES
+          ? [
+              {
+                icon: "star",
+                iconWeight: fav ? "fill" : "regular",
+                iconColour: fav
+                  ? "var(--spectrum-global-color-yellow-1000)"
+                  : undefined,
+                name: fav ? "Remove from favourites" : "Add to favourites",
+                keyBind: null,
+                visible: true,
+                disabled: false,
+                callback: async () => {
+                  try {
+                    if (fav?._id && fav?._rev) {
+                      await API.workspace.delete(fav._id, fav._rev)
+                      notifications.success("View removed to favourites")
+                    } else {
+                      await API.workspace.create({
+                        resourceId: view?.id,
+                        resourceType: WorkspaceResource.VIEW,
+                      })
+                      notifications.success("View added to favourites")
+                    }
+                    await workspaceFavouriteStore.sync()
+                  } catch (e) {
+                    notifications.error("Failed to update favourite")
+                    console.error("Failed to update favourite", e)
+                  }
+                },
+              },
+            ]
+          : []),
         {
           icon: "pencil",
           name: "Edit",
@@ -229,15 +277,17 @@
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
-          <Icon
-            on:click={e => openViewContextMenu(e, view)}
-            hoverable
-            size="M"
-            weight="bold"
-            name="dots-three"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverColor="var(--spectrum-global-color-gray-900)"
-          />
+          {#if isDevMode}
+            <Icon
+              on:click={e => openViewContextMenu(e, view)}
+              hoverable
+              size="M"
+              weight="bold"
+              name="dots-three"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverColor="var(--spectrum-global-color-gray-900)"
+            />
+          {/if}
         </a>
       {/each}
       {#each views as view (view.id)}
@@ -256,24 +306,23 @@
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
-          <Icon
-            on:click={e => openViewContextMenu(e, view)}
-            hoverable
-            size="M"
-            weight="bold"
-            name="dots-three"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverColor="var(--spectrum-global-color-gray-900)"
-          />
+          {#if isDevMode}
+            <Icon
+              on:click={e => openViewContextMenu(e, view)}
+              hoverable
+              size="M"
+              weight="bold"
+              name="dots-three"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverColor="var(--spectrum-global-color-gray-900)"
+            />
+          {/if}
         </a>
       {/each}
     </div>
   {/if}
   {#if !hasViews && tableEditable}
     <CreateViewButton firstView {table} />
-    <span>
-      To create subsets of data, control access and more, create a view.
-    </span>
   {/if}
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>
@@ -312,7 +361,7 @@
       {/each}
     </ActionMenu>
   {/if}
-  {#if hasViews}
+  {#if hasViews && isDevMode}
     <CreateViewButton firstView={false} {table} />
   {/if}
 </div>
@@ -364,15 +413,21 @@
       background 130ms ease-out,
       color 130ms ease-out;
     color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
+    border: 0.5px solid transparent;
+    border-radius: 8px;
   }
   .nav-item.hidden {
     visibility: hidden;
   }
   .nav-item.active,
   .nav-item:hover {
-    background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
+    background: var(--spectrum-global-color-gray-200);
+    cursor: default;
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
     color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
   }
   .nav-item:not(.active) :global(.icon) {
     display: none;

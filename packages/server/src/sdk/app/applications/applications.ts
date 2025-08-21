@@ -35,8 +35,8 @@ export async function fetch(status: AppStatus, user: ContextUser) {
   apps = filterAppList(enrichedUser, apps)
 
   const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
+    .filter(app => app.status === "development")
+    .map(app => app.appId)
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -60,7 +60,7 @@ export async function fetch(status: AppStatus, user: ContextUser) {
 
 export async function enrichWithDefaultWorkspaceAppUrl(apps: App[]) {
   const result = []
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (await features.isEnabled(FeatureFlag.WORKSPACES)) {
     for (const app of apps) {
       const workspaceApps = await db.doWithDB(app.appId, db =>
         sdk.workspaceApps.fetch(db)

@@ -3,7 +3,7 @@ import { context } from "@budibase/backend-core"
 import { tracer } from "dd-trace"
 import type { Middleware, Next } from "koa"
 
-const middleware = (async (ctx: Ctx, next: Next) => {
+export const cleanupMiddleware = (async (ctx: Ctx, next: Next) => {
   const resp = await next()
 
   const current = context.getCurrentContext()
@@ -32,5 +32,3 @@ const middleware = (async (ctx: Ctx, next: Next) => {
 
   return resp
 }) as Middleware
-
-export default middleware

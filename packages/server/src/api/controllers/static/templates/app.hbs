@@ -1,7 +1,8 @@
 <html>
   <script nonce="{{ nonce }}">
     document.fonts.ready.then(() => {
-      window.parent.postMessage({ type: "docLoaded" });
+      // Safari requires that the origin be configured
+      window.parent.postMessage({ type: "docLoaded" }, "*"); 
     })
   </script>
   <head>

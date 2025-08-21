@@ -186,7 +186,7 @@ export function processDates<T extends Row | Row[]>(
 ): T {
   let rows = Array.isArray(inputRows) ? inputRows : [inputRows]
   let datesWithTZ: string[] = []
-  for (let [column, schema] of Object.entries(table.schema)) {
+  for (const [column, schema] of Object.entries(table.schema)) {
     if (schema.type !== FieldType.DATETIME) {
       continue
     }
@@ -198,10 +198,17 @@ export function processDates<T extends Row | Row[]>(
     }
   }
 
-  for (let row of rows) {
-    for (let col of datesWithTZ) {
+  for (const row of rows) {
+    for (const col of datesWithTZ) {
       if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
-        row[col] = new Date(row[col]).toISOString()
+        let date = new Date(row[col] + "Z")
+        if (isNaN(date.getTime())) {
+          date = new Date(row[col])
+        }
+        if (isNaN(date.getTime())) {
+          throw new Error(`Invalid date format for column ${col}: ${row[col]}`)
+        }
+        row[col] = date.toISOString()
       }
     }
   }

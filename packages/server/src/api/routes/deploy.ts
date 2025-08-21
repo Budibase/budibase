@@ -1,25 +1,7 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/deploy"
-import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
+import { builderRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router
-  .get(
-    "/api/deployments",
-    authorized(permissions.BUILDER),
-    controller.fetchDeployments
-  )
-  .get(
-    "/api/deploy/status",
-    authorized(permissions.BUILDER),
-    controller.publishStatus
-  )
-  .get(
-    "/api/deploy/:deploymentId",
-    authorized(permissions.BUILDER),
-    controller.deploymentProgress
-  )
-
-export default router
+builderRoutes
+  .get("/api/deployments", controller.fetchDeployments)
+  .get("/api/deploy/status", controller.publishStatus)
+  .get("/api/deploy/:deploymentId", controller.deploymentProgress)

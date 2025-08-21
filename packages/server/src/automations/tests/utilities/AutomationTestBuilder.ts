@@ -14,6 +14,8 @@ import {
   AutomationTriggerStepId,
   BranchStepInputs,
   isDidNotTriggerResponse,
+  LoopStepType,
+  LoopV2StepInputs,
   SearchFilters,
   TestAutomationRequest,
   TriggerAutomationRequest,
@@ -30,6 +32,18 @@ type BranchConfig = {
   [key: string]: {
     steps: StepBuilderFunction
     condition: SearchFilters
+  }
+}
+
+type LoopConfig = {
+  option: LoopStepType
+  binding: any
+  steps: StepBuilderFunction
+  iterations?: number
+  failure?: any
+  resultOptions?: {
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
   }
 }
 
@@ -100,9 +114,11 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
+  loopv2 = this.step(AutomationActionStepId.LOOP_V2)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
   executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
+  extractState = this.step(AutomationActionStepId.EXTRACT_STATE)
   filter = this.step(AutomationActionStepId.FILTER)
   bash = this.step(AutomationActionStepId.EXECUTE_BASH)
   openai = this.step(AutomationActionStepId.OPENAI)
@@ -117,6 +133,31 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
   extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
+
+  protected addLoopStep(loopConfig: LoopConfig): void {
+    const inputs: LoopV2StepInputs = {
+      option: loopConfig.option,
+      binding: loopConfig.binding,
+      children: [],
+      iterations: loopConfig.iterations,
+      failure: loopConfig.failure,
+      resultOptions: loopConfig.resultOptions || {
+        storeFullResults: true,
+        summarizeOnly: false,
+      },
+    }
+
+    const builder = new BranchStepBuilder<TStep>()
+    loopConfig.steps(builder)
+    inputs.children = builder.steps
+    let id = uuidv4()
+    this.steps.push({
+      ...automations.steps.loopV2.definition,
+      id,
+      stepId: AutomationActionStepId.LOOP_V2,
+      inputs,
+    })
+  }
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
@@ -144,6 +185,11 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
     this.addBranchStep(branchConfig)
     return this
   }
+
+  loopV2(loopConfig: LoopConfig): this {
+    this.addLoopStep(loopConfig)
+    return this
+  }
 }
 
 class StepBuilder<
@@ -164,7 +210,7 @@ class StepBuilder<
     return this
   }
 
-  build(): Automation {
+  build(opts?: { disabled?: boolean }): Automation {
     const name = this._name || `Test Automation ${uuidv4()}`
     return {
       name,
@@ -173,13 +219,16 @@ class StepBuilder<
         trigger: this._trigger,
         stepNames: this.stepNames,
       },
+      disabled: opts?.disabled,
       type: "automation",
       appId: this.config.getAppId(),
     }
   }
 
-  async save() {
-    const { automation } = await this.config.api.automation.post(this.build())
+  async save(opts?: { disabled?: boolean }) {
+    const { automation } = await this.config.api.automation.post(
+      this.build(opts)
+    )
     return new AutomationRunner<TStep>(this.config, automation)
   }
 

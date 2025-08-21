@@ -43,7 +43,12 @@ export interface BBRequest<RequestBody> extends Request {
 /**
  * Basic context with no user.
  */
-export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
+export interface Ctx<
+  RequestBody = any,
+  ResponseBody = any,
+  Params extends Record<string, any> = any,
+> extends Context {
+  params: Params
   request: BBRequest<RequestBody>
   body: ResponseBody
   userAgent: UserAgentContext["userAgent"]
@@ -53,8 +58,11 @@ export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
 /**
  * Authenticated context.
  */
-export interface UserCtx<RequestBody = any, ResponseBody = any>
-  extends Ctx<RequestBody, ResponseBody> {
+export interface UserCtx<
+  RequestBody = any,
+  ResponseBody = any,
+  Params extends Record<string, any> = any,
+> extends Ctx<RequestBody, ResponseBody, Params> {
   user: ContextUser
   state: { nonce?: string }
   roleId?: string

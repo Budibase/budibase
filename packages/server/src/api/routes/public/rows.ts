@@ -1,5 +1,5 @@
 import controller, { viewSearch } from "../../controllers/public/rows"
-import Endpoint from "./utils/Endpoint"
+import { Endpoint } from "@budibase/backend-core"
 import { externalSearchValidator } from "../utils/validators"
 
 const read = [],

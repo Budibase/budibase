@@ -7,6 +7,7 @@ import {
   OIDCConfig,
   OIDCInnerConfig,
   OIDCLogosConfig,
+  RecaptchaConfig,
   SCIMConfig,
   SCIMInnerConfig,
   SettingsConfig,
@@ -264,4 +265,12 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 
 export async function getAIConfig(): Promise<AIConfig | undefined> {
   return getConfig<AIConfig>(ConfigType.AI)
+}
+
+// RECAPTCHA
+
+export async function getRecaptchaConfig(): Promise<
+  RecaptchaConfig | undefined
+> {
+  return getConfig<RecaptchaConfig>(ConfigType.RECAPTCHA)
 }

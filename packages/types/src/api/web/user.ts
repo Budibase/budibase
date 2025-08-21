@@ -112,6 +112,11 @@ export interface CreateAdminUserRequest {
   familyName?: string
   givenName?: string
 }
+export interface CreateAdminUserResponse {
+  _id: string
+  _rev: string
+  email: string
+}
 
 export interface AddSSoUserRequest {
   ssoId: string
@@ -121,19 +126,12 @@ export interface AddSSoUserResponse {
   message: string
 }
 
-export interface CreateAdminUserResponse {
-  _id: string
-  _rev: string
-  email: string
-}
-
 export interface AcceptUserInviteRequest {
   inviteCode: string
   password: string
   firstName: string
   lastName?: string
 }
-
 export interface AcceptUserInviteResponse {
   _id: string
   _rev: string
@@ -169,3 +167,9 @@ export interface UpdateInviteRequest extends Omit<Invite, "email"> {
 export interface UpdateInviteResponse extends Invite {}
 
 export type LookupAccountHolderResponse = AccountMetadata | null
+
+export interface ChangeTenantOwnerEmailRequest {
+  newAccountEmail: string
+  originalEmail: string
+  tenantIds: string[]
+}

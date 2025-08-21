@@ -36,7 +36,7 @@
   let filterMeta: string | undefined
   let filterTitle: string | undefined
 
-  $: iconName = !filter ? "plus-circle" : "x-circle"
+  $: iconName = !filter ? "sliders-horizontal" : "x-circle"
   $: fieldSchema = config ? schema?.[config?.field] : undefined
   $: filterOp = filter
     ? operators?.find(op => op.value === filter.operator)
@@ -55,7 +55,7 @@
     if (filter.operator === RangeOperator.RANGE) {
       const enableTime = !fieldSchema.dateOnly
       const { high, low } = filter.value
-      return `${Helpers.getDateDisplayValue(low, { enableTime })} 
+      return `${Helpers.getDateDisplayValue(low, { enableTime })}
         - ${Helpers.getDateDisplayValue(high, { enableTime })}`
     }
 

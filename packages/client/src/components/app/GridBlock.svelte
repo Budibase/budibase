@@ -76,6 +76,10 @@
       callback: addFilterExtension,
     },
     {
+      type: ActionTypes.ClearRowSelection,
+      callback: () => gridContext?.selectedRows?.set?.({}),
+    },
+    {
       type: ActionTypes.RemoveDataProviderFilterExtension,
       callback: removeFilterExtension,
     },

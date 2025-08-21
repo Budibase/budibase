@@ -12,6 +12,7 @@ interface AppStoreState {
   layouts?: Layout[]
   application?: App
   pageWidth?: string
+  recaptchaKey?: string
 }
 
 const initialState: AppStoreState = {

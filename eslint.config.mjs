@@ -38,10 +38,11 @@ export default [
         ...globals.jest,
         ...globals.node,
         GeolocationPositionError: true,
+        RequestInit: true,
       },
 
       parser: babelParser,
-      ecmaVersion: 2019,
+      ecmaVersion: 2020,
       sourceType: "module",
 
       parserOptions: {

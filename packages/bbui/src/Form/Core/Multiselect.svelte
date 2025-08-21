@@ -4,9 +4,10 @@
 
 <script lang="ts">
   import Picker from "./Picker.svelte"
+  import type { Primitive } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
-  export let value: string[] = []
+  export let value: Primitive[] = []
   export let id: string | undefined = undefined
   export let placeholder: string | null = null
   export let disabled: boolean = false
@@ -36,7 +37,7 @@
   $: toggleOption = makeToggleOption(selectedLookupMap, arrayValue)
 
   const getFieldText = (
-    value: string[],
+    value: Primitive[],
     map: Record<string, any> | null,
     placeholder: string | null
   ) => {
@@ -44,19 +45,25 @@
       if (!map) {
         return ""
       }
-      const vals = value.map(option => map[option] || option).join(", ")
+      const vals = value
+        .map(v => {
+          const str = typeof v === "string" ? v : v.toString()
+          return map[str] || v
+        })
+        .join(", ")
       return `(${value.length}) ${vals}`
     } else {
       return placeholder || "Choose some options"
     }
   }
 
-  const getSelectedLookupMap = (value: string[]) => {
+  const getSelectedLookupMap = (value: Primitive[]) => {
     const map: Record<string, boolean> = {}
     if (Array.isArray(value) && value.length > 0) {
-      value.forEach(option => {
-        if (option) {
-          map[option] = true
+      value.forEach(v => {
+        if (v) {
+          const str = typeof v === "string" ? v : v.toString()
+          map[str] = true
         }
       })
     }
@@ -78,10 +85,16 @@
     return map
   }
 
-  const makeToggleOption = (map: Record<string, boolean>, value: string[]) => {
+  const makeToggleOption = (
+    map: Record<string, boolean>,
+    value: Primitive[]
+  ) => {
     return (optionValue: string) => {
       if (map[optionValue]) {
-        const filtered = value.filter(option => option !== optionValue)
+        // comparison needs to take into account different types, always compare them as strings
+        const filtered = value.filter(
+          option => option.toString() !== optionValue.toString()
+        )
         dispatch("change", filtered)
       } else {
         dispatch("change", [...value, optionValue])

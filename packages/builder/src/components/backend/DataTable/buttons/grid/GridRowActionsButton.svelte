@@ -73,19 +73,16 @@
       icon="cursor-click"
       selected={open || actionCount}
       quiet
-      accentColor="#A24400"
+      accentColor="#4b75ff"
     >
       Row actions{actionCount ? `: ${actionCount}` : ""}
     </ActionButton>
   </svelte:fragment>
   A row action is a user-triggered automation for a chosen row.
   {#if isView && rowActions.length}
-    <br />
     Use the toggle to enable/disable row actions for this view.
-    <br />
   {/if}
   {#if !tableRowActions.length}
-    <br />
     You haven't created any row actions.
   {:else}
     <List>

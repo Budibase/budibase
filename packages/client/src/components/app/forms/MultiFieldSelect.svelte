@@ -1,30 +1,38 @@
-<script>
+<script lang="ts">
   import { CoreMultiselect, CoreCheckboxGroup } from "@budibase/bbui"
+  import {
+    type UIFieldValidationRule,
+    type UIFieldDataProviderContext,
+    type UIFieldOnChange,
+    type FieldSchema,
+    FieldType,
+  } from "@budibase/types"
+  import type { FieldApi, FieldState } from "@/types"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
 
-  export let field
-  export let label
-  export let placeholder
-  export let disabled = false
-  export let readonly = false
-  export let validation
-  export let defaultValue
-  export let optionsSource = "schema"
-  export let dataProvider
-  export let labelColumn
-  export let valueColumn
+  export let field: string
+  export let label: string | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let validation: UIFieldValidationRule[] | undefined = undefined
+  export let defaultValue: string | undefined = undefined
+  export let optionsSource: string = "schema"
+  export let dataProvider: UIFieldDataProviderContext | undefined = undefined
+  export let labelColumn: string | undefined = undefined
+  export let valueColumn: string | undefined = undefined
   export let customOptions
-  export let autocomplete = false
-  export let onChange
-  export let optionsType = "select"
-  export let direction = "vertical"
-  export let span
-  export let helpText = null
+  export let autocomplete: boolean = false
+  export let onChange: UIFieldOnChange | undefined = undefined
+  export let optionsType: "select" | "checkbox" = "select"
+  export let direction: "horizontal" | "vertical" = "vertical"
+  export let span: number | undefined = undefined
+  export let helpText: string | undefined = undefined
 
-  let fieldState
-  let fieldApi
-  let fieldSchema
+  let fieldState: FieldState | undefined
+  let fieldApi: FieldApi | undefined
+  let fieldSchema: FieldSchema | undefined
 
   $: flatOptions = optionsSource == null || optionsSource === "schema"
   $: expandedDefaultValue = expand(defaultValue)
@@ -37,7 +45,7 @@
     customOptions
   )
 
-  const expand = values => {
+  const expand = (values?: string[] | string): string[] => {
     if (!values) {
       return []
     }
@@ -47,8 +55,12 @@
     return values.split(",").map(value => value.trim())
   }
 
-  const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
+  const getProp = (prop: "label" | "value", x: any) => {
+    return x[prop]
+  }
+
+  const handleChange = (e: any) => {
+    const changed = fieldApi?.setValue(e.detail)
     if (onChange && changed) {
       onChange({ value: e.detail })
     }
@@ -64,7 +76,7 @@
   {span}
   {helpText}
   defaultValue={expandedDefaultValue}
-  type="array"
+  type={FieldType.ARRAY}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
@@ -73,7 +85,6 @@
     {#if !optionsType || optionsType === "select"}
       <CoreMultiselect
         value={fieldState.value || []}
-        error={fieldState.error}
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         id={fieldState.fieldId}
@@ -87,15 +98,13 @@
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup
         value={fieldState.value || []}
-        id={fieldState.fieldId}
         disabled={fieldState.disabled}
         readonly={fieldState.readonly}
-        error={fieldState.error}
         {options}
         {direction}
         on:change={handleChange}
-        getOptionLabel={flatOptions ? x => x : x => x.label}
-        getOptionValue={flatOptions ? x => x : x => x.value}
+        getOptionLabel={flatOptions ? x => x : x => getProp("label", x)}
+        getOptionValue={flatOptions ? x => x : x => getProp("value", x)}
       />
     {/if}
   {/if}

@@ -10,11 +10,6 @@ import {
 /**
  * Creates a validation function from a combination of schema-level constraints
  * and custom validation rules
- * @param schemaConstraints any schema level constraints from the datasource
- * @param customRules any custom validation rules
- * @param field the field name we are evaluating
- * @param definition the definition of the datasource we are evaluating
- * @returns {function} a validator function which accepts test values
  */
 export const createValidatorFromConstraints = (
   schemaConstraints: FieldConstraints | null | undefined,
@@ -33,7 +28,10 @@ export const createValidatorFromConstraints = (
       schemaConstraints.presence === true
     ) {
       rules.push({
-        type: schemaConstraints.type == "array" ? "array" : "string",
+        type:
+          schemaConstraints.type == FieldType.ARRAY
+            ? FieldType.ARRAY
+            : FieldType.STRING,
         constraint: "required",
         error: "Required",
       })
@@ -43,7 +41,7 @@ export const createValidatorFromConstraints = (
     if (exists(schemaConstraints.length?.maximum)) {
       const length = schemaConstraints.length.maximum
       rules.push({
-        type: "string",
+        type: FieldType.STRING,
         constraint: "maxLength",
         value: length,
         error: `Maximum length is ${length}`,
@@ -54,7 +52,7 @@ export const createValidatorFromConstraints = (
     if (exists(schemaConstraints.numericality?.greaterThanOrEqualTo)) {
       const min = schemaConstraints.numericality.greaterThanOrEqualTo
       rules.push({
-        type: "number",
+        type: FieldType.NUMBER,
         constraint: "minValue",
         value: min,
         error: `Minimum value is ${min}`,
@@ -63,7 +61,7 @@ export const createValidatorFromConstraints = (
     if (exists(schemaConstraints.numericality?.lessThanOrEqualTo)) {
       const max = schemaConstraints.numericality.lessThanOrEqualTo
       rules.push({
-        type: "number",
+        type: FieldType.NUMBER,
         constraint: "maxValue",
         value: max,
         error: `Maximum value is ${max}`,
@@ -77,7 +75,7 @@ export const createValidatorFromConstraints = (
     ) {
       const options = schemaConstraints.inclusion || []
       rules.push({
-        type: "string",
+        type: FieldType.STRING,
         constraint: "inclusion",
         value: options,
         error: "Invalid value",
@@ -89,7 +87,7 @@ export const createValidatorFromConstraints = (
       const limit = schemaConstraints.datetime.earliest
       const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
-        type: "datetime",
+        type: FieldType.DATETIME,
         constraint: "minValue",
         value: limit,
         error: `Earliest date is ${limitString}`,
@@ -99,7 +97,7 @@ export const createValidatorFromConstraints = (
       const limit = schemaConstraints.datetime.latest
       const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
-        type: "datetime",
+        type: FieldType.DATETIME,
         constraint: "maxValue",
         value: limit,
         error: `Latest date is ${limitString}`,

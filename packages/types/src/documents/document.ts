@@ -43,6 +43,7 @@ export enum DocumentType {
   AGENT_CHAT = "agentchat",
   AGENT_TOOL_SOURCE = "agenttoolsource",
   WORKSPACE_APP = "workspace_app",
+  WORKSPACE_FAVOURITE = "workspace_favourite",
 }
 
 // these are the core documents that make up the data, design
@@ -60,6 +61,7 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.METADATA,
   DocumentType.MEM_VIEW,
   DocumentType.WORKSPACE_APP,
+  DocumentType.WORKSPACE_FAVOURITE,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,

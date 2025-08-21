@@ -127,6 +127,8 @@ async function getTemplateStream(template: TemplateType) {
     const [type, name] = template.key.split("/")
     const tmpPath = await downloadTemplate(type, name)
     return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
+  } else {
+    throw new Error("Either file or key is required.")
   }
 }
 
@@ -177,7 +179,7 @@ export async function importApp(
   } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
-  let dbStream: any
+  let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && (await fsp.lstat(template.file.path)).isDirectory()

@@ -98,17 +98,26 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  put(
-    document: AnyDocument,
-    opts?: DatabasePutOpts | undefined
-  ): Promise<DocumentInsertResponse> {
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc: true }
+  ): Promise<DocumentInsertResponse & { doc: T }>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc?: false }
+  ): Promise<DocumentInsertResponse>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts
+  ): Promise<DocumentInsertResponse | (DocumentInsertResponse & { doc: T })> {
     return tracer.trace("db.put", async span => {
       span.addTags({
         db_name: this.name,
         doc_id: document._id,
         force: opts?.force,
+        return_doc: opts?.returnDoc,
       })
-      const resp = await this.db.put(document, opts)
+      const resp = await this.db.put(document, opts as any)
       span.addTags({ ok: resp.ok })
       return resp
     })
@@ -183,7 +192,10 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  dump(stream: Writable, opts?: DatabaseDumpOpts | undefined): Promise<any> {
+  dump(
+    stream: Writable,
+    opts?: DatabaseDumpOpts | undefined
+  ): ReturnType<Database["dump"]> {
     return tracer.trace("db.dump", span => {
       span.addTags({
         db_name: this.name,
@@ -198,28 +210,34 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  load(...args: any[]): Promise<any> {
+  load(...args: Parameters<Database["load"]>): ReturnType<Database["load"]> {
     return tracer.trace("db.load", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.load(...args)
     })
   }
 
-  createIndex(...args: any[]): Promise<any> {
+  createIndex(
+    ...args: Parameters<Database["createIndex"]>
+  ): ReturnType<Database["createIndex"]> {
     return tracer.trace("db.createIndex", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.createIndex(...args)
     })
   }
 
-  deleteIndex(...args: any[]): Promise<any> {
+  deleteIndex(
+    ...args: Parameters<Database["deleteIndex"]>
+  ): ReturnType<Database["deleteIndex"]> {
     return tracer.trace("db.deleteIndex", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.deleteIndex(...args)
     })
   }
 
-  getIndexes(...args: any[]): Promise<any> {
+  getIndexes(
+    ...args: Parameters<Database["getIndexes"]>
+  ): ReturnType<Database["getIndexes"]> {
     return tracer.trace("db.getIndexes", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.getIndexes(...args)

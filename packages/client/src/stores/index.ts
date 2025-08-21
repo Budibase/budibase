@@ -23,6 +23,7 @@ export { dndStore, dndIndex, dndParent, dndIsDragging, dndSource } from "./dnd"
 export { sidePanelStore } from "./sidePanel"
 export { modalStore } from "./modal"
 export { hoverStore } from "./hover"
+export { recaptchaStore } from "./recaptcha"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

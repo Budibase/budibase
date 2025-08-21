@@ -357,8 +357,8 @@ export default class TestConfiguration {
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
     return {
-      _rev: resp.rev,
       ...user,
+      _rev: resp.rev,
     }
   }
 
@@ -469,13 +469,13 @@ export default class TestConfiguration {
     })
   }
 
-  async withHeaders(
+  async withHeaders<T>(
     headers: Record<string, string | string[]>,
-    cb: () => Promise<unknown>
+    cb: () => Promise<T>
   ) {
     this.temporaryHeaders = headers
     try {
-      await cb()
+      return await cb()
     } finally {
       this.temporaryHeaders = undefined
     }
@@ -494,9 +494,27 @@ export default class TestConfiguration {
     }
     const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
+    let cookie: (string | string[])[] = [
+      `${constants.Cookie.Auth}=${authToken}`,
+    ]
+    const tempHeaderCookie = this.temporaryHeaders?.["Cookie"]
+    let hasAuth = false
+    if (Array.isArray(tempHeaderCookie)) {
+      hasAuth = !!tempHeaderCookie.find(cookie =>
+        cookie.includes(constants.Cookie.Auth)
+      )
+    } else if (typeof tempHeaderCookie === "string") {
+      hasAuth = tempHeaderCookie.includes(constants.Cookie.Auth)
+    }
+    if (tempHeaderCookie && hasAuth) {
+      cookie = [tempHeaderCookie]
+    } else if (tempHeaderCookie) {
+      cookie.push(tempHeaderCookie)
+      delete this.temporaryHeaders?.["Cookie"]
+    }
     const headers: any = {
       Accept: "application/json",
-      Cookie: [`${constants.Cookie.Auth}=${authToken}`],
+      Cookie: cookie,
       [constants.Header.CSRF_TOKEN]: this.csrfToken,
       Host: this.tenantHost(),
       ...extras,
@@ -624,7 +642,35 @@ export default class TestConfiguration {
 
     const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
       .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+
+    return await context.doInAppContext(this.app.appId!, async () => {
+      // create production app
+      this.prodApp = await this.publish()
+
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app!)
+
+      return this.app!
+    })
+  }
+
+  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+    this.appId = undefined
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+          url,
+          isOnboarding: "true",
+        })) as App
+    )
+    this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app

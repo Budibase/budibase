@@ -105,6 +105,7 @@
 <style>
   .abs-tooltip {
     display: contents;
+    pointer-events: all;
   }
   .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
     width: max-content;

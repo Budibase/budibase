@@ -21,6 +21,14 @@ const copyFonts = dest =>
         dest,
       },
       {
+        src: "./assets/phosphor-icons",
+        dest,
+      },
+      {
+        src: "./assets/inter",
+        dest,
+      },
+      {
         src: "../../node_modules/remixicon/fonts/*",
         dest,
       },

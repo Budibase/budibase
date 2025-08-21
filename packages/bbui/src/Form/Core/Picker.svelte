@@ -16,6 +16,7 @@
   import Tags from "../../Tags/Tags.svelte"
   import Tag from "../../Tags/Tag.svelte"
   import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+  import AbsTooltip from "../../Tooltip/AbsTooltip.svelte"
   import { PopoverAlignment } from "../../constants"
 
   export let id: string | undefined = undefined
@@ -29,6 +30,9 @@
   export let isOptionSelected = (option: O) => option as unknown as boolean
   export let isOptionEnabled = (option: O, _index?: number) =>
     option as unknown as boolean
+  export let tooltipMessage:
+    | ((_option: O, _index?: number) => string)
+    | undefined = undefined
   export let onSelectOption: (_value: V) => void = () => {}
   export let getOptionLabel = (option: O, _index?: number) => `${option}`
   export let getOptionValue = (option: O, _index?: number) =>
@@ -148,7 +152,7 @@
       </span>
     {:else}
       <span class="option-extra icon field-icon">
-        <img src={fieldIcon} alt="icon" width="15" height="15" />
+        <img src={fieldIcon} alt="icon" style="height: 15px; width: auto;" />
       </span>
     {/if}
   {/if}
@@ -233,8 +237,7 @@
                   <img
                     src={getOptionIcon(option, idx)}
                     alt="icon"
-                    width="15"
-                    height="15"
+                    style="height: 15px; width: auto;"
                   />
                 {:else}
                   <Icon
@@ -264,6 +267,11 @@
                   <Tag icon="lock">{option.tag}</Tag>
                 </Tags>
               </span>
+            {/if}
+            {#if tooltipMessage && tooltipMessage(option).length > 0}
+              <AbsTooltip text={tooltipMessage(option)}>
+                <Icon size="XS" name="info" />
+              </AbsTooltip>
             {/if}
             <div class="check">
               <Icon
@@ -316,7 +324,6 @@
   /* Icon and colour alignment */
   .check {
     display: none;
-    margin-right: -8px;
     padding-left: 8px;
   }
   li.is-selected .check {
@@ -335,7 +342,7 @@
   }
   .popover-content.auto-width .spectrum-Menu-itemLabel {
     white-space: nowrap;
-    overflow: none;
+    overflow: hidden;
     text-overflow: ellipsis;
   }
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {

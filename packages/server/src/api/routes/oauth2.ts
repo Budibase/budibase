@@ -1,11 +1,6 @@
-import Router from "@koa/router"
-import {
-  OAuth2CredentialsMethod,
-  OAuth2GrantType,
-  PermissionType,
-} from "@budibase/types"
+import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
-import authorized from "../../middleware/authorized"
+import { builderRoutes } from "./endpointGroups"
 
 import * as controller from "../controllers/oauth2"
 import Joi from "joi"
@@ -46,31 +41,13 @@ function oAuth2ConfigValidator(
   return middleware.joiValidator.body(schema, { allowUnknown: false })
 }
 
-const router: Router = new Router()
-
-router.get("/api/oauth2", authorized(PermissionType.BUILDER), controller.fetch)
-router.post(
-  "/api/oauth2",
-  authorized(PermissionType.BUILDER),
-  oAuth2ConfigValidator(insertSchema),
-  controller.create
-)
-router.put(
-  "/api/oauth2/:id",
-  authorized(PermissionType.BUILDER),
-  oAuth2ConfigValidator(updateSchema),
-  controller.edit
-)
-router.delete(
-  "/api/oauth2/:id/:rev",
-  authorized(PermissionType.BUILDER),
-  controller.remove
-)
-router.post(
-  "/api/oauth2/validate",
-  authorized(PermissionType.BUILDER),
-  oAuth2ConfigValidator(validationSchema),
-  controller.validate
-)
-
-export default router
+builderRoutes
+  .get("/api/oauth2", controller.fetch)
+  .post("/api/oauth2", oAuth2ConfigValidator(insertSchema), controller.create)
+  .put("/api/oauth2/:id", oAuth2ConfigValidator(updateSchema), controller.edit)
+  .delete("/api/oauth2/:id/:rev", controller.remove)
+  .post(
+    "/api/oauth2/validate",
+    oAuth2ConfigValidator(validationSchema),
+    controller.validate
+  )

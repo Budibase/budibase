@@ -8,7 +8,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import * as utils from "../../db/utils"
-import trimViewRowInfoMiddleware from "../trimViewRowInfo"
+import { trimViewRowInfoMiddleware } from "../trimViewRowInfo"
 
 jest.mock("../../sdk", () => ({
   views: {

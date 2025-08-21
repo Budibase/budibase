@@ -166,7 +166,7 @@ const SCHEMA: Integration = {
       fields: {
         domain: {
           type: DatasourceFieldType.STRING,
-          required: false,
+          required: true,
           display: "Domain",
         },
         trustServerCertificate: {

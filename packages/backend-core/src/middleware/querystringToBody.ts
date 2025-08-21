@@ -5,7 +5,7 @@ import { Ctx } from "@budibase/types"
  * of the request, which has to be sent via query string due to the requirement
  * of making an endpoint a GET request e.g. downloading a file stream.
  */
-export default function (ctx: Ctx, next: any) {
+export function querystringToBody(ctx: Ctx, next: any) {
   const queryString = ctx.request.query?.query as string | undefined
   if (ctx.request.method.toLowerCase() !== "get") {
     ctx.throw(

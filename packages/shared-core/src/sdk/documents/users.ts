@@ -5,15 +5,15 @@ import {
   User,
   InternalTable,
   UserGroup,
+  UserBuilderInfo,
+  UserAdminInfo,
+  UserRoleInfo,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
 
 // checks if a user is specifically a builder, given an app ID
-export function isBuilder(
-  user: User | ContextUser | undefined,
-  appId?: string
-): boolean {
+export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
   }
@@ -25,7 +25,9 @@ export function isBuilder(
   return false
 }
 
-export function isGlobalBuilder(user: User | ContextUser): boolean {
+export function isGlobalBuilder(
+  user: UserBuilderInfo & UserAdminInfo
+): boolean {
   return (isBuilder(user) && !hasAppBuilderPermissions(user)) || isAdmin(user)
 }
 
@@ -36,7 +38,7 @@ export function canCreateApps(user: User | ContextUser): boolean {
 // alias for hasAdminPermission, currently do the same thing
 // in future whether someone has admin permissions and whether they are
 // an admin for a specific resource could be separated
-export function isAdmin(user: User | ContextUser | undefined): boolean {
+export function isAdmin(user?: UserAdminInfo): boolean {
   if (!user) {
     return false
   }
@@ -44,18 +46,20 @@ export function isAdmin(user: User | ContextUser | undefined): boolean {
 }
 
 export function isAdminOrBuilder(
-  user: User | ContextUser,
+  user: UserBuilderInfo & UserAdminInfo,
   appId?: string
 ): boolean {
   return isBuilder(user, appId) || isAdmin(user)
 }
 
-export function isAdminOrGlobalBuilder(user: User | ContextUser): boolean {
+export function isAdminOrGlobalBuilder(
+  user: UserBuilderInfo & UserAdminInfo
+): boolean {
   return isGlobalBuilder(user) || isAdmin(user)
 }
 
 // check if they are a builder within an app (not necessarily a global builder)
-export function hasAppBuilderPermissions(user?: User | ContextUser): boolean {
+export function hasAppBuilderPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
   }
@@ -64,7 +68,9 @@ export function hasAppBuilderPermissions(user?: User | ContextUser): boolean {
   return !isGlobalBuilder && appLength != null && appLength > 0
 }
 
-export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
+export function hasAppCreatorPermissions(
+  user?: Partial<UserRoleInfo>
+): boolean {
   if (!user) {
     return false
   }
@@ -77,7 +83,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
 }
 
 // checks if a user is capable of building any app
-export function hasBuilderPermissions(user?: User | ContextUser): boolean {
+export function hasBuilderPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
   }
@@ -89,21 +95,23 @@ export function hasBuilderPermissions(user?: User | ContextUser): boolean {
 }
 
 // checks if a user is capable of being an admin
-export function hasAdminPermissions(user?: User | ContextUser): boolean {
+export function hasAdminPermissions(user?: UserAdminInfo): boolean {
   if (!user) {
     return false
   }
   return !!user.admin?.global
 }
 
-export function hasCreatorPermissions(user?: User | ContextUser): boolean {
+export function hasCreatorPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
   }
   return !!user.builder?.creator
 }
 
-export function isCreator(user?: User | ContextUser): boolean {
+export function isCreator(
+  user?: UserBuilderInfo & UserAdminInfo & Partial<UserRoleInfo>
+): boolean {
   if (!user) {
     return false
   }

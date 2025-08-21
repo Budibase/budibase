@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { notifications } from "@budibase/bbui"
   import {
     admin,
@@ -11,7 +11,6 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
-  import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
   let loaded = !!$appsStore.apps?.length
@@ -49,19 +48,12 @@
 
 {#if loaded}
   <div class="page">
-    {#if $appsStore.apps.length > 0}
-      <PortalSideBar />
-    {/if}
     <slot />
   </div>
 {/if}
 
 <style>
   .page {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
+    margin: 20px 0;
   }
 </style>

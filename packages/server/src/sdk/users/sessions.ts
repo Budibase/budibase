@@ -4,8 +4,8 @@ import { App, SocketSession } from "@budibase/types"
 export const enrichApps = async (apps: App[]) => {
   // Sessions can only exist for dev app IDs
   const devAppIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
+    .filter(app => app.status === "development")
+    .map(app => app.appId)
 
   // Get all sessions for all apps and enrich app list
   const sessions = await builderSocket?.getRoomSessions(devAppIds)

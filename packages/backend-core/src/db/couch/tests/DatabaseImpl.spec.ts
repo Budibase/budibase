@@ -43,6 +43,72 @@ describe("DatabaseImpl", () => {
         updatedAt: new Date().toISOString(),
       })
     })
+
+    describe("returnDoc option", () => {
+      it("returns standard response when returnDoc is not provided", async () => {
+        const id = generator.guid()
+        const response = await db.put({ _id: id })
+
+        expect(response).toEqual({
+          id,
+          rev: expect.any(String),
+          ok: true,
+        })
+        expect(response).not.toHaveProperty("doc")
+      })
+
+      it("returns standard response when returnDoc is false", async () => {
+        const id = generator.guid()
+        const response = await db.put({ _id: id }, { returnDoc: false })
+
+        expect(response).toEqual({
+          id,
+          rev: expect.any(String),
+          ok: true,
+        })
+        expect(response).not.toHaveProperty("doc")
+      })
+
+      it("returns document with updated _rev when returnDoc is true", async () => {
+        const id = generator.guid()
+        const originalDoc = { _id: id, value: "test" }
+        const response = await db.put(originalDoc, { returnDoc: true })
+
+        expect(response).toEqual({
+          id,
+          rev: expect.any(String),
+          ok: true,
+          doc: {
+            _id: id,
+            _rev: response.rev,
+            value: "test",
+            createdAt: initialTime.toISOString(),
+            updatedAt: initialTime.toISOString(),
+          },
+        })
+      })
+
+      it("includes all document fields in returned doc", async () => {
+        const id = generator.guid()
+        const originalDoc = {
+          _id: id,
+          name: "test",
+          count: 42,
+          nested: { value: "nested" },
+        }
+        const response = await db.put(originalDoc, { returnDoc: true })
+
+        expect(response.doc).toEqual({
+          _id: id,
+          _rev: response.rev,
+          name: "test",
+          count: 42,
+          nested: { value: "nested" },
+          createdAt: initialTime.toISOString(),
+          updatedAt: initialTime.toISOString(),
+        })
+      })
+    })
   })
 
   describe("bulkDocs", () => {

@@ -66,7 +66,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
   })
 }
 
-export default async function builder(ctx: UserCtx) {
+export async function builderMiddleware(ctx: UserCtx) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {

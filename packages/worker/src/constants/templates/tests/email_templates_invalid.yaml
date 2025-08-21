@@ -1,0 +1,4 @@
+templates:
+  test: "open quote
+  base: |-
+    <div>Invalid structure</div>

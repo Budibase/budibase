@@ -63,7 +63,7 @@ export function buildAutoColumn(
         constraints: FIELDS.LINK.constraints,
         tableId: TableNames.USERS,
         fieldName: `${tableName}-${name}`,
-        relationshipType: RelationshipType.MANY_TO_ONE,
+        relationshipType: RelationshipType.ONE_TO_MANY,
       }
 
     case AUTO_COLUMN_SUB_TYPES.AUTO_ID:

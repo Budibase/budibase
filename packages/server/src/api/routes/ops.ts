@@ -1,6 +1,6 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/ops"
 import { middleware } from "@budibase/backend-core"
+import { publicRoutes } from "./endpointGroups"
 import Joi from "joi"
 
 export function logsValidator() {
@@ -20,11 +20,7 @@ export function errorValidator() {
   )
 }
 
-const router: Router = new Router()
-
-router
+publicRoutes
   .post("/api/ops/log", logsValidator(), controller.log)
   .post("/api/ops/error", errorValidator(), controller.error)
   .post("/api/ops/alert", errorValidator(), controller.alert)
-
-export default router

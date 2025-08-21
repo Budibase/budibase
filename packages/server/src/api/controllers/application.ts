@@ -17,6 +17,7 @@ import {
   generateAppID,
   generateDevAppID,
   getLayoutParams,
+  isDevAppID,
 } from "../../db/utils"
 import {
   cache,
@@ -26,12 +27,13 @@ import {
   docIds,
   env as envCore,
   events,
-  features,
   objectStore,
   roles,
   tenancy,
   users,
   utils,
+  configs,
+  features,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -69,8 +71,8 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   ErrorCode,
-  FeatureFlag,
   FetchPublishedAppsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -183,51 +185,42 @@ async function addSampleDataDocs() {
   }
 }
 
-async function addSampleDataScreen() {
+async function createDefaultWorkspaceApp(): Promise<string> {
   const appMetadata = await sdk.applications.metadata.get()
   const workspaceApp = await sdk.workspaceApps.create({
     name: appMetadata.name,
     url: "/",
-    icon: "Monitoring",
     navigation: {
       ...defaultAppNavigator(appMetadata.name),
-      links: [
-        {
-          text: "Inventory",
-          url: "/inventory",
-          type: "link",
-          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-        },
-      ],
+      links: [],
     },
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACES),
     isDefault: true,
   })
 
+  return workspaceApp._id!
+}
+
+async function addSampleDataScreen() {
+  const workspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
+  const workspaceApp = workspaceApps.find(wa => wa.isDefault)
+
+  if (!workspaceApp) {
+    throw new Error("Default workspace app not found")
+  }
+
+  workspaceApp.navigation.links = workspaceApp.navigation.links || []
+  workspaceApp.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  await sdk.workspaceApps.update(workspaceApp)
+
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
-
-  {
-    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
-    const db = context.getAppDB()
-    let app = await sdk.applications.metadata.get()
-    if (!app.navigation) {
-      return
-    }
-    if (!app.navigation.links) {
-      app.navigation.links = []
-    }
-    app.navigation.links.push({
-      text: "Inventory",
-      url: "/inventory",
-      type: "link",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    })
-
-    await db.put(app)
-
-    // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateAppMetadata(app.appId)
-  }
 }
 
 export const addSampleData = async (
@@ -256,6 +249,10 @@ export async function fetchClientApps(
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
+      // don't return disabled workspace apps
+      if (workspaceApp.disabled) {
+        continue
+      }
       result.push({
         // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
@@ -292,10 +289,14 @@ export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const appId = context.getAppId()
-  const application = await sdk.applications.metadata.get()
-  const layouts = await getLayouts()
-  let screens = await sdk.screens.fetch()
-  const license = await licensing.cache.getCachedLicense()
+  let [application, layouts, screens, license, recaptchaConfig] =
+    await Promise.all([
+      sdk.applications.metadata.get(),
+      getLayouts(),
+      sdk.screens.fetch(),
+      licensing.cache.getCachedLicense(),
+      configs.getRecaptchaConfig(),
+    ])
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
@@ -311,23 +312,23 @@ export async function fetchAppPackage(
 
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+
+  const isDev = isDevAppID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
-  }
 
-  if (
-    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    !isBuilder
-  ) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-    if (!matchedWorkspaceApp) {
+
+    // disabled workspace apps should appear to not exist
+    // if the dev app is being served, allow the request regardless
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
@@ -347,6 +348,7 @@ export async function fetchAppPackage(
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
+    recaptchaKey: recaptchaConfig?.config.siteKey,
   }
 }
 
@@ -356,6 +358,13 @@ async function performAppCreate(
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
+
+  let isOnboarding = false
+  if (typeof body.isOnboarding === "string") {
+    isOnboarding = body.isOnboarding === "true"
+  } else if (typeof body.isOnboarding === "boolean") {
+    isOnboarding = body.isOnboarding
+  }
 
   let useTemplate = false
   if (typeof body.useTemplate === "string") {
@@ -390,7 +399,7 @@ async function performAppCreate(
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
     const isImport = !!instanceConfig.file
-    const addSampleData = !isImport && !useTemplate
+    const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(appId, db, ctx.user._id!)
@@ -475,6 +484,7 @@ async function performAppCreate(
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
       try {
+        await createDefaultWorkspaceApp()
         await addSampleDataDocs()
         await addSampleDataScreen()
 
@@ -499,9 +509,33 @@ async function performAppCreate(
       }
     }
 
+    if (
+      !addSampleData &&
+      !(await features.isEnabled(FeatureFlag.WORKSPACES)) &&
+      !(await sdk.workspaceApps.fetch()).length
+    ) {
+      await createDefaultWorkspaceApp()
+    }
+
+    if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
+      await disableAllAppsAndAutomations()
+    }
+
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
+}
+
+async function disableAllAppsAndAutomations() {
+  const workspaceApps = await sdk.workspaceApps.fetch()
+  for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+    await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+  }
+
+  const automations = await sdk.automations.fetch()
+  for (const automation of automations.filter(a => !a.disabled)) {
+    await sdk.automations.update({ ...automation, disabled: true })
+  }
 }
 
 async function updateUserColumns(
@@ -636,6 +670,10 @@ export async function create(
   ctx.body = newApplication
 }
 
+export async function find(ctx: UserCtx) {
+  ctx.body = await sdk.applications.metadata.get()
+}
+
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
@@ -751,6 +789,10 @@ async function unpublishApp(ctx: UserCtx) {
   // automations only in production
   await cleanupAutomations(appId)
 
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
+    await disableAllAppsAndAutomations()
+  }
+
   await cache.app.invalidateAppMetadata(appId)
   return result
 }
@@ -768,7 +810,9 @@ async function destroyApp(ctx: UserCtx) {
   // check if we need to unpublish first
   if (await dbCore.dbExists(appId)) {
     // app is deployed, run through unpublish flow
-    await sdk.applications.syncApp(devAppId)
+    await sdk.applications.syncApp(devAppId, {
+      automationOnly: true,
+    })
     await unpublishApp(ctx)
   }
 
@@ -821,9 +865,11 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
     return ctx.throw(400, "App has not been published.")
   }
 
-  await preDestroyApp(ctx)
-  await unpublishApp(ctx)
-  await postDestroyApp(ctx)
+  await appMigrations.doInMigrationLock(prodAppId, async () => {
+    await preDestroyApp(ctx)
+    await unpublishApp(ctx)
+    await postDestroyApp(ctx)
+  })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "App unpublished." }
 }

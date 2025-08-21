@@ -1,12 +1,9 @@
 <script lang="ts">
-  import "@phosphor-icons/web/regular"
-  import "@phosphor-icons/web/bold"
-  import "@phosphor-icons/web/fill"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition, TooltipType } from "../constants"
   import InnerIcon from "./InnerIcon.svelte"
 
-  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
+  export let size: "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
   export let name: string = "plus"
   export let hidden: boolean = false
   export let hoverable: boolean = false

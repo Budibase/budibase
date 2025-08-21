@@ -43,6 +43,11 @@
     href="/builder/fonts/source-sans-3/source-sans-3.css"
     rel="stylesheet"
   />
+  <link href="/builder/fonts/inter/inter.css" rel="stylesheet" />
+  <link
+    href="/builder/fonts/phosphor-icons/phosphor-icons.css"
+    rel="stylesheet"
+  />
   <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
 
   <style>
@@ -127,6 +132,9 @@
       <p />
     {/if}
   </div>
+  {#if props.recaptchaKey}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+  {/if}
   <script type="application/javascript" nonce={props.nonce}>
     window.INIT_TIME = Date.now()
   </script>

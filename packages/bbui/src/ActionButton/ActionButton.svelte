@@ -24,9 +24,14 @@
     if (!color) {
       return ""
     }
+    if (!color.startsWith("rgba")) {
+      color = color.startsWith("rgb")
+        ? `${color.substring(0, color.length - 1)}, 0.2)`
+        : hexToRGBA(color, 0.2)
+    }
     let style = ""
-    style += `--accent-bg-color:${hexToRGBA(color, 0.15)};`
-    style += `--accent-border-color:${hexToRGBA(color, 0.35)};`
+    style += `--accent-bg-color:${color};`
+    style += `--accent-border-color:${color};`
     return style
   }
 </script>
@@ -50,7 +55,7 @@
   {#if icon}
     <Icon
       name={icon}
-      size="M"
+      {size}
       color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
     />
   {/if}
@@ -75,32 +80,50 @@
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-s);
+    border-radius: 8px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .fullWidth {
     width: 100%;
   }
   .active,
   .active :global(i) {
-    color: var(--spectrum-global-color-blue-600);
+    background-color: rgba(75, 117, 255, 0.1);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .active:hover:not(:disabled) {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.3);
   }
   :global([dir="ltr"] .spectrum-ActionButton i) {
     margin-left: 0;
     transition: color ease-out 130ms;
   }
   .is-selected:not(.spectrum-ActionButton--quiet) {
-    background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-gray-500);
+    border-color: var(--spectrum-global-color-gray-300);
   }
   .spectrum-ActionButton--quiet {
     padding: 0 8px;
+    border: 1px dashed transparent;
+  }
+  .spectrum-ActionButton--quiet:hover:not(:disabled) {
+    background-color: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .spectrum-ActionButton--quiet.is-selected {
     color: var(--spectrum-global-color-gray-900);
-    background: var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .noPadding {
     padding: 0;
     min-width: 0;
+  }
+  .noPadding:hover:not(:disabled) {
+    padding: 0;
+    min-width: 0;
+    background-color: transparent;
+    border: 1px solid transparent;
   }
   .is-selected :global(i) {
     color: var(--spectrum-global-color-gray-900);
@@ -109,7 +132,7 @@
     color: var(--spectrum-global-color-gray-500);
   }
   .spectrum-ActionButton-label {
-    font-weight: 550;
+    font-weight: 600;
   }
   .tooltip {
     position: absolute;
@@ -127,7 +150,7 @@
     border: 1px solid var(--accent-border-color);
     background: var(--accent-bg-color);
   }
-  .accent:hover {
+  .accent:hover:not(:disabled) {
     filter: brightness(1.2);
   }
 </style>

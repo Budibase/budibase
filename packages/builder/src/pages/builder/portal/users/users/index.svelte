@@ -44,31 +44,10 @@
     BulkUserCreated,
     InviteUsersResponse,
     InviteWithCode,
-    User as UserDoc,
     UserGroup,
   } from "@budibase/types"
   import { InternalTable } from "@budibase/types"
-  import type { UserInfo } from "@/types"
-
-  interface User extends UserDoc {
-    tenantOwnerEmail?: string
-  }
-
-  interface EnrichedUser extends Omit<User, "userGroups"> {
-    name: string
-    userGroups: UserGroup[]
-    apps: string[]
-    access: number
-  }
-
-  interface ParsedInvite {
-    _id: string
-    email: string
-    builder?: boolean
-    admin?: boolean
-    userGroups?: UserGroup[]
-    apps?: string[]
-  }
+  import type { UserInfo, EnrichedUser, User, ParsedInvite } from "@/types"
 
   const fetch = fetchData({
     API,
@@ -101,7 +80,7 @@
   let selectedInvites: EnrichedUser[] = []
   let bulkSaveResponse: BulkUserCreated
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
@@ -186,17 +165,17 @@
     return pendingSchema
   }
 
-  const invitesToSchema = (invites: InviteWithCode[]) => {
+  const invitesToSchema = (invites: InviteWithCode[]): ParsedInvite[] => {
     return invites.map(invite => {
       const { admin, builder, userGroups, apps } = invite.info
 
       return {
         _id: invite.code,
         email: invite.email,
-        builder,
-        admin,
+        builder: { global: builder },
+        admin: { global: admin },
         userGroups: userGroups,
-        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
+        apps: apps ? [...new Set(Object.keys(apps))] : [],
       }
     })
   }
@@ -274,8 +253,13 @@
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
+      // Skip empty or whitespace-only emails
+      if (!email || !email.trim()) {
+        continue
+      }
+
       const newUser = {
-        email: email,
+        email: email.trim(),
         role: usersRole,
         password: generatePassword(12),
         forceResetPassword: true,

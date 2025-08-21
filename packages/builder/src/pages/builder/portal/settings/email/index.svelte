@@ -12,7 +12,9 @@
     Body,
     Table,
     Checkbox,
+    ButtonGroup,
   } from "@budibase/bbui"
+  import { downloadFile } from "@budibase/frontend-core"
   import { email, admin } from "@/stores/portal"
   import { API } from "@/api"
   import { cloneDeep } from "lodash/fp"
@@ -33,6 +35,7 @@
   }
 
   $: emailInfo = getEmailInfo($email.definitions)
+  $: hasCustom = ($email.templates || []).find(template => template._id)
 
   let smtpConfig
   let loading
@@ -190,6 +193,41 @@
         with user onboarding.
       </Body>
     </Layout>
+    <div>
+      <ButtonGroup>
+        <Button
+          quiet
+          on:click={async () => {
+            const downloaded = await downloadFile(
+              "/api/global/template/email/export"
+            )
+            if (!downloaded) {
+              notifications.error("Could not download email templates")
+            }
+          }}
+        >
+          Export default
+        </Button>
+        {#if !!hasCustom}
+          <Button
+            secondary
+            on:click={async () => {
+              const downloaded = await downloadFile(
+                "/api/global/template/email/export",
+                {
+                  type: "custom",
+                }
+              )
+              if (!downloaded) {
+                notifications.error("Could not download email templates")
+              }
+            }}
+          >
+            Export
+          </Button>
+        {/if}
+      </ButtonGroup>
+    </div>
     <Table
       data={emailInfo}
       schema={templateSchema}

@@ -15,6 +15,7 @@ export interface CreateAppRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
+  isOnboarding?: string
 }
 
 export interface CreateAppResponse extends App {}
@@ -42,6 +43,7 @@ export interface FetchAppPackageResponse {
   layouts: Layout[]
   clientLibPath: string
   hasLock: boolean
+  recaptchaKey?: string
 }
 
 export interface AddAppSampleDataResponse {

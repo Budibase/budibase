@@ -3,21 +3,14 @@ import env from "../../environment"
 import { checkSlashesInUrl } from "../../utilities"
 import { createRequest } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
-import { DocumentType } from "../../db/utils"
+import { env as envCore, events } from "@budibase/backend-core"
 import {
-  context,
-  env as envCore,
-  events,
-  db as dbCore,
-  cache,
-} from "@budibase/backend-core"
-import {
-  App,
   ClearDevLockResponse,
   Ctx,
   GetVersionResponse,
   RevertAppResponse,
 } from "@budibase/types"
+import sdk from "../../sdk"
 
 async function redirect(
   ctx: any,
@@ -89,51 +82,20 @@ export async function clearLock(ctx: Ctx<void, ClearDevLockResponse>) {
 
 export async function revert(ctx: Ctx<void, RevertAppResponse>) {
   const { appId } = ctx.params
-  const productionAppId = dbCore.getProdAppID(appId)
 
-  // App must have been deployed first
-  try {
-    const db = context.getProdAppDB({ skip_setup: true })
-    const exists = await db.exists()
-    if (!exists) {
-      throw new Error("App must be deployed to be reverted.")
-    }
-    const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
-    if (
-      !deploymentDoc.history ||
-      Object.keys(deploymentDoc.history).length === 0
-    ) {
-      throw new Error("No deployments for app")
-    }
-  } catch (err) {
-    return ctx.throw(400, "App has not yet been deployed")
-  }
-
-  const replication = new dbCore.Replication({
-    source: productionAppId,
-    target: appId,
+  const result = await sdk.dev.revertDevChanges({
+    appId,
+    userId: ctx.user?._id,
   })
-  try {
-    if (env.COUCH_DB_URL) {
-      // in-memory db stalls on rollback
-      await replication.rollback()
-    }
 
-    // update appID in reverted app to be dev version again
-    const db = context.getAppDB()
-    const appDoc = await db.get<App>(DocumentType.APP_METADATA)
-    appDoc.appId = appId
-    appDoc.instance._id = appId
-    await db.put(appDoc)
-    await cache.app.invalidateAppMetadata(appId)
-    ctx.body = {
-      message: "Reverted changes successfully.",
-    }
-    await events.app.reverted(appDoc)
-  } catch (err) {
-    ctx.throw(400, `Unable to revert. ${err}`)
-  } finally {
-    await replication.close()
+  if (!result.success) {
+    ctx.throw(
+      500,
+      "Revert it's taking too long, please refresh or try again later."
+    )
+  }
+  ctx.body = {
+    status: "applied",
   }
 }
 

@@ -4,40 +4,43 @@
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+  import {
+    summariseBranch,
+    getCurrentStepData,
+    getBranchConditionDetails,
+  } from "./AutomationStepHelpers"
 
   export let log
   export let selectedStep = null
   export let onBack = () => {}
 
-  let selectedTab = "Data in"
+  $: selectedTab = isBranchStep ? "Branch Info" : "Data in"
 
   $: hasInputData =
     currentStepData?.inputs && Object.keys(currentStepData.inputs).length > 0
-  $: availableTabs = ["Data in", "Data out", "Issues"]
+  $: isBranchStep = selectedStep?.stepId === "BRANCH"
+  $: availableTabs = isBranchStep
+    ? ["Branch Info"]
+    : ["Data in", "Data out", "Issues"]
 
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
-  function getCurrentStepData(step) {
-    if (!step) return null
+  $: branchDetails = getBranchConditionDetails(selectedStep)
 
-    return {
-      inputs: step.inputs || {},
-      outputs: step.outputs || {},
-      errors: getStepErrors(step),
+  let expandedBranches = new Set()
+
+  function toggleBranch(id) {
+    if (expandedBranches.has(id)) {
+      expandedBranches.delete(id)
+    } else {
+      expandedBranches.add(id)
     }
-  }
-  function getStepErrors(step) {
-    if (!step || step.outputs?.success !== false) return []
-
-    return [
-      {
-        message: step.outputs?.message || "Step failed",
-        type: "error",
-      },
-    ]
+    expandedBranches = new Set(expandedBranches)
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="container">
   <Panel customWidth={400} borderLeft>
     <div slot="panel-title-content" class="log-header-container">
@@ -96,6 +99,36 @@
             {/if}
           {:else if selectedTab === "Data out"}
             <JSONViewer value={currentStepData?.outputs} />
+          {:else if selectedTab === "Branch Info"}
+            {#if branchDetails}
+              <div class="branch-list">
+                {#each branchDetails.allBranches as branch (branch.id)}
+                  <div
+                    class="branch-row {branch.id ===
+                    branchDetails.executedBranchId
+                      ? 'executed'
+                      : 'skipped'}"
+                    on:click={() => toggleBranch(branch.id)}
+                  >
+                    <div class="row-content">
+                      <Body size="S"><strong>{branch.name}</strong></Body>
+                      <Body
+                        size="XS"
+                        color="var(--spectrum-global-color-gray-600)"
+                      >
+                        {summariseBranch(branch)}
+                      </Body>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="no-data-message">
+                <Body size="S" textAlign="center"
+                  >No branch information available</Body
+                >
+              </div>
+            {/if}
           {:else if selectedTab === "Issues"}
             <div class="issues" class:empty={!currentStepData?.errors?.length}>
               {#if currentStepData?.errors?.length === 0}
@@ -256,5 +289,41 @@
     margin-left: var(--spacing-xs);
     font-size: 0.8em;
     opacity: 0.8;
+  }
+
+  .branch-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .branch-row {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+    padding: var(--spacing-s) 0;
+    transition: background-color 130ms ease-in-out;
+    border-bottom: var(--border-light);
+  }
+
+  .branch-row:hover {
+    background-color: var(--spectrum-global-color-gray-200);
+  }
+
+  .branch-row.executed {
+    border-left: 2px solid var(--spectrum-global-color-green-600);
+    padding-left: var(--spacing-m);
+  }
+
+  .branch-row.skipped {
+    opacity: 0.6;
+  }
+
+  .row-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
   }
 </style>

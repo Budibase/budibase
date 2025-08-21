@@ -4,7 +4,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
   import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
-  import FavouriteAppButton from "../FavouriteAppButton.svelte"
+  import FavouriteAppButton from "./FavouriteAppButton.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Icon } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
@@ -58,7 +58,7 @@
           on:click={e => openContextMenu(e, app)}
           size="S"
           hoverable
-          name="dots-three-horizontal"
+          name="dots-three"
         />
       {/if}
     </div>

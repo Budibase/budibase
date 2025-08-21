@@ -23,6 +23,7 @@
     PROTECTED_INTERNAL_COLUMNS,
     SWITCHABLE_TYPES,
     ValidColumnNameRegex,
+    isAllowedDisplayField,
   } from "@budibase/shared-core"
   import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
@@ -693,6 +694,9 @@
   onMount(() => {
     mounted = true
   })
+
+  // Helper: checks if it's the first column being added
+  $: isFirstColumn = Object.keys(table?.schema || {}).length === 0
 </script>
 
 <Layout noPadding gap="S">
@@ -715,7 +719,15 @@
     getOptionLabel={field => field.name}
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
+    tooltipMessage={option =>
+      isFirstColumn && !isAllowedDisplayField(option.name, option.type)
+        ? "Cannot create this column until a primary display field has been created."
+        : ""}
     isOptionEnabled={option => {
+      // Disable certain fields if they are the first column
+      if (isFirstColumn && !isAllowedDisplayField(option.name, option.type)) {
+        return false
+      }
       if (option.type === FieldType.AUTO) {
         return availableAutoColumnKeys?.length > 0
       }

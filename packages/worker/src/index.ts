@@ -21,6 +21,7 @@ import {
   features,
 } from "@budibase/backend-core"
 import RedisStore from "koa-redis"
+import { loadTemplateConfig } from "./constants/templates"
 
 db.init()
 import koaBody from "koa-body"
@@ -53,12 +54,18 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
+let store: any
+
 const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
-  const redisClient = await redis.clients.getSessionClient()
+  if (!store) {
+    const redisClient = await redis.clients.getSessionClient()
+    // @ts-expect-error - koa-redis types are weird
+    store = RedisStore({ client: redisClient.client })
+  }
+
   return koaSession(
     {
-      // @ts-ignore
-      store: new RedisStore({ client: redisClient.client }),
+      store,
       key: "koa:sess",
       maxAge: 86400000, // one day
     },
@@ -131,6 +138,11 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   await initPro()
   await redis.clients.init()
   features.init()
+
+  if (env.EMAIL_TEMPLATE_PATH) {
+    await loadTemplateConfig(env.EMAIL_TEMPLATE_PATH)
+  }
+
   cache.docWritethrough.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues

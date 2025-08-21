@@ -4,11 +4,30 @@ import {
   SaveTableRequest,
   Table,
 } from "@budibase/types"
-import { SWITCHABLE_TYPES } from "@budibase/shared-core"
+import {
+  SWITCHABLE_TYPES,
+  canBeDisplayColumn,
+  isAllowedDisplayField,
+} from "@budibase/shared-core"
 import { get, derived, Writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+
+function pickFallbackDisplayField(
+  draft: SaveTableRequest,
+  ...exclude: string[]
+): string | undefined {
+  for (const [name, field] of Object.entries(draft.schema)) {
+    if (exclude.includes(name)) {
+      continue
+    }
+    if (isAllowedDisplayField(name, field.type)) {
+      return name
+    }
+  }
+  return undefined
+}
 
 interface BuilderTableStore {
   list: Table[]
@@ -145,6 +164,13 @@ export class TableStore extends DerivedBudiStore<
     this.replaceTable(table._id, null)
   }
 
+  async duplicate(tableId: string) {
+    const duplicatedTable = await API.duplicateTable(tableId)
+    this.replaceTable(duplicatedTable._id, duplicatedTable)
+    this.select(duplicatedTable._id)
+    return duplicatedTable
+  }
+
   async saveField({
     originalName,
     field,
@@ -167,14 +193,18 @@ export class TableStore extends DerivedBudiStore<
     }
 
     // Optionally set display column
-    if (hasPrimaryDisplay) {
+    const isEligible = canBeDisplayColumn(field.type)
+
+    if (!draft.primaryDisplay && isEligible) {
+      // No display yet > use new eligible field
       draft.primaryDisplay = field.name
-    } else if (draft.primaryDisplay === originalName) {
-      const fields = Object.keys(draft.schema)
-      // pick another display column randomly if unselecting
-      draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field.name
-      )[0]
+    } else if (hasPrimaryDisplay) {
+      // Current primary is being renamed or removed
+      draft.primaryDisplay = isEligible
+        ? field.name // keep pointing to the renamed field if valid
+        : originalName
+          ? pickFallbackDisplayField(draft, originalName)
+          : pickFallbackDisplayField(draft) // find another fallback
     }
     draft.schema = {
       ...draft.schema,

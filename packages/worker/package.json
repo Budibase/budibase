@@ -68,7 +68,8 @@
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
     "server-destroy": "1.0.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@jest/types": "^29.6.3",
@@ -92,6 +93,7 @@
     "rimraf": "3.0.2",
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
+    "testcontainers": "10.16.0",
     "timekeeper": "2.2.0",
     "typescript": "5.7.2"
   },

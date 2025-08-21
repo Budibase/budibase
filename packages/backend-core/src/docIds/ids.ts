@@ -140,3 +140,7 @@ export const generateAgentToolSourceID = () => {
 export const generateWorkspaceAppID = () => {
   return `${DocumentType.WORKSPACE_APP}${SEPARATOR}${newid()}`
 }
+
+export const generateWorkspaceFavouriteID = () => {
+  return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
+}

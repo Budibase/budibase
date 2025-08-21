@@ -1,5 +1,5 @@
 import controller from "../../controllers/public/queries"
-import Endpoint from "./utils/Endpoint"
+import { Endpoint } from "@budibase/backend-core"
 import { nameValidator } from "../utils/validators"
 
 const read = [],

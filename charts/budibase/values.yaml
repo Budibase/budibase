@@ -641,6 +641,13 @@ services:
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:
 #   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
+# Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
+#
+# To have a specific password persist, you can set the adminPassword value.
+# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
+#
+# adminPassword: ""
+
 couchdb:
   # -- The number of replicas to run in the CouchDB cluster. We set this to
   # 1 by default to make things simpler, but you can set it to 3 if you need

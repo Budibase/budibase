@@ -58,7 +58,7 @@
             </div>
           </div>
         {/if}
-        <Icon size="L" name="caret-down" />
+        <Icon size="S" name="caret-down" color="var(--navTextColor)" />
       </div>
     </svelte:fragment>
 

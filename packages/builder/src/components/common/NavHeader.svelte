@@ -56,7 +56,9 @@
     {#if $$slots.default}
       <slot></slot>
     {:else}
-      <Body size="S">{title}</Body>
+      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
+        {title}</Body
+      >
     {/if}
   </div>
 

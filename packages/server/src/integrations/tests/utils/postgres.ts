@@ -14,6 +14,8 @@ async function datasourceWithImage(image: string): Promise<Datasource> {
         .withExposedPorts(5432)
         .withEnvironment({ POSTGRES_PASSWORD: "password" })
         .withWaitStrategy(
+          // Legacy Postgres images can be slow to initialize on CI/arm64
+          // Increase startup timeout to reduce flakiness
           Wait.forSuccessfulCommand(
             "pg_isready -h localhost -p 5432"
           ).withStartupTimeout(20000)

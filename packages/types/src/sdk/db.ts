@@ -8,6 +8,7 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
+import { ReadStream } from "fs"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -41,6 +42,10 @@ export type DBView = {
   version?: number
 }
 
+export type DatabaseOpts = {
+  skip_setup?: boolean
+}
+
 export interface DesignDocument extends Document {
   // we use this static reference for all design documents
   _id: "_design/database"
@@ -58,12 +63,9 @@ export interface DesignDocument extends Document {
   }
 }
 
-export type DatabaseOpts = {
-  skip_setup?: boolean
-}
-
 export type DatabasePutOpts = {
   force?: boolean
+  returnDoc?: boolean
 }
 
 export type DatabaseCreateIndexOpts = {
@@ -134,9 +136,13 @@ export interface Database {
     documents: Document[],
     opts?: { silenceErrors?: boolean }
   ): Promise<void>
-  put(
-    document: AnyDocument,
-    opts?: DatabasePutOpts
+  put<T extends AnyDocument>(
+    document: T,
+    opts: DatabasePutOpts & { returnDoc: true }
+  ): Promise<Nano.DocumentInsertResponse & { doc: T }>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc?: false }
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
   sql<T extends Document>(
@@ -160,10 +166,10 @@ export interface Database {
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
   dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>
-  load(...args: any[]): Promise<any>
-  createIndex(...args: any[]): Promise<any>
-  deleteIndex(...args: any[]): Promise<any>
-  getIndexes(...args: any[]): Promise<any>
+  load(stream: ReadStream): Promise<any>
+  createIndex(opts: DatabaseCreateIndexOpts): Promise<any>
+  deleteIndex(opts: DatabaseDeleteIndexOpts): Promise<any>
+  getIndexes(): Promise<any>
 }
 
 export interface DBError extends Error {

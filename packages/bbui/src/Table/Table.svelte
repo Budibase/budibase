@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
@@ -49,6 +49,8 @@
   export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
 
   const dispatch = createEventDispatcher()
+
+  let ref: HTMLDivElement
 
   // Config
   const headerHeight: number = 36
@@ -330,16 +332,37 @@
     })
     return styles
   }
+
+  // Instead of svelte bind:offsetWidth
+  // Svelte injects an iframe causing issues with CSP, this avoids it
+  const setupResizeObserver = (element: HTMLElement) => {
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries?.[0]) {
+        return
+      }
+      const bounds = entries[0].target.getBoundingClientRect()
+      height = bounds.height //the offsetHeight
+    })
+    resizeObserver.observe(element)
+    return resizeObserver
+  }
+
+  onMount(() => {
+    let resizeObserver = setupResizeObserver(ref)
+    return () => {
+      resizeObserver.disconnect()
+    }
+  })
 </script>
 
 {#key fields?.length}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
+    bind:this={ref}
     class="wrapper"
     class:wrapper--quiet={quiet}
     class:wrapper--compact={compact}
-    bind:offsetHeight={height}
     style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
   >
     {#if loading}
@@ -539,6 +562,12 @@
     border-left: 1px solid transparent;
     padding-left: var(--cell-padding);
   }
+
+  .spectrum-Table-head > .spectrum-Table-headCell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+    /* adding 1px to compensate for lack of right border in header */
+    padding-right: calc(var(--cell-padding) / 1.33 + 1px);
+  }
   .spectrum-Table-head > :last-child {
     border-right: 1px solid transparent;
     padding-right: var(--cell-padding);
@@ -588,6 +617,9 @@
     position: sticky;
     left: 0;
     z-index: 3;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
   .spectrum-Table-headCell .title {
     overflow: visible;
@@ -621,6 +653,9 @@
     border-left: var(--table-border);
     padding-left: var(--cell-padding);
   }
+  .spectrum-Table-row > .spectrum-Table-cell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+  }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
     padding-right: var(--cell-padding);
@@ -650,6 +685,9 @@
     position: sticky;
     left: 0;
     z-index: 2;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
 
   /* Placeholder  */

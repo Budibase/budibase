@@ -11,8 +11,6 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   > = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
-    icon: "monitor",
-    iconColor: undefined,
 
     _id: undefined,
     _rev: undefined,
@@ -22,7 +20,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
       navigation: "Top",
     },
     isDefault: false,
-
+    disabled: false,
     ...props,
   }
   return result
@@ -36,8 +34,7 @@ export function createRequest(
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
     name: workspace.name,
     url: workspace.url,
-    icon: workspace.icon,
-    iconColor: workspace.iconColor,
+    disabled: workspace.disabled,
   }
   return result
 }

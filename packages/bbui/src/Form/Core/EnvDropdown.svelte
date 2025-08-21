@@ -115,7 +115,7 @@
       disabled={!!hbsValue.length || disabled}
       {readonly}
       {id}
-      {value}
+      value={value ?? ""}
       placeholder={placeholder || ""}
       on:click
       on:blur

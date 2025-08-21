@@ -110,8 +110,8 @@
   on:contextmenu={openContextMenu}
   {icon}
   iconColor={automation.disabled
-    ? "var(--spectrum-global-color-gray-600)"
-    : "var(--spectrum-global-color-gray-900)"}
+    ? "var(--spectrum-global-color-gray-500)"
+    : "var(--spectrum-global-color-gray-600)"}
   text={automation.name}
   selected={automation._id === $selectedAutomation?.data?._id}
   hovering={automation._id === $contextMenuStore.id}

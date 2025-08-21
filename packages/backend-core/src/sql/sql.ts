@@ -109,8 +109,8 @@ function wrap(value: string, quoteChar = '"'): string {
   return `${quoteChar}${escapeQuotes(value, quoteChar)}${quoteChar}`
 }
 
-function stringifyArray(value: any[], quoteStyle = '"'): string {
-  for (let i in value) {
+function stringifyArray(value: unknown[], quoteStyle = '"'): string {
+  for (const i in value) {
     if (typeof value[i] === "string") {
       value[i] = wrap(value[i], quoteStyle)
     }
@@ -162,10 +162,23 @@ class InternalBuilder {
 
   // states the various situations in which we need a full mapped select statement
   private readonly SPECIAL_SELECT_CASES = {
+    POSTGRES_ARRAY: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "array"
+      )
+    },
     POSTGRES_MONEY: (field: FieldSchema | undefined) => {
       return (
         this.client === SqlClient.POSTGRES &&
         field?.externalType?.includes("money")
+      )
+    },
+    POSTGRES_ENUM: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "user-defined" &&
+        field?.type === FieldType.OPTIONS
       )
     },
     MSSQL_DATES: (field: FieldSchema | undefined) => {
@@ -224,11 +237,6 @@ class InternalBuilder {
       key = this.splitIdentifier(key)
     }
     return key.map(part => this.quote(part)).join(".")
-  }
-
-  private quotedValue(value: string): string {
-    const formatter = this.knexClient.formatter(this.knexClient.queryBuilder())
-    return formatter.wrap(value, false)
   }
 
   private castIntToString(identifier: string | Knex.Raw): Knex.Raw {
@@ -402,6 +410,10 @@ class InternalBuilder {
       return JSON.stringify(input)
     }
 
+    if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+      return `{${input}}`
+    }
+
     if (
       this.client === SqlClient.ORACLE &&
       schema.type === FieldType.DATETIME &&
@@ -431,9 +443,9 @@ class InternalBuilder {
         return new Date(date)
       } else if (schema.ignoreTimezones) {
         if (isValidISODateString(input)) {
-          return new Date(input.trim())
+          return new Date(input)
         } else if (isValidISODateStringWithoutTimezone(input)) {
-          return new Date(input.trim() + "Z")
+          return new Date(input + "Z")
         } else {
           return null
         }
@@ -759,15 +771,33 @@ class InternalBuilder {
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           q = addModifiers(q)
+          const schema = this.getFieldSchema(key)
+          let cast = "::jsonb"
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+            cast = ""
+            const values = (value as string[]).map(value =>
+              value.substring(1, value.length - 1)
+            )
+            value = `{${values}}`
+          }
           if (any) {
-            return q.whereRaw(`COALESCE(??::jsonb \\?| array??, FALSE)`, [
-              this.rawQuotedIdentifier(key),
-              this.knex.raw(stringifyArray(value, "'")),
-            ])
+            return q.whereRaw(
+              cast
+                ? `COALESCE(??::jsonb \\?| array??, FALSE)`
+                : `COALESCE(?? && '??', FALSE)`,
+              [
+                this.rawQuotedIdentifier(key),
+                cast
+                  ? this.knex.raw(stringifyArray(value, "'"))
+                  : this.knex.raw(value),
+              ]
+            )
           } else {
-            return q.whereRaw(`COALESCE(??::jsonb @> '??', FALSE)`, [
+            return q.whereRaw(`COALESCE(??${cast} @> '??', FALSE)`, [
               this.rawQuotedIdentifier(key),
-              this.knex.raw(stringifyArray(value)),
+              cast
+                ? this.knex.raw(stringifyArray(value))
+                : this.knex.raw(value),
             ])
           }
         })
@@ -901,7 +931,14 @@ class InternalBuilder {
             `${value.toLowerCase()}%`,
           ])
         } else {
-          return q.whereILike(key, `${value}%`)
+          const schema = this.getFieldSchema(key)
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
+            return q.whereRaw(`??::text ilike '${value}%'`, [
+              this.knex.raw(this.quote(schema!.name)),
+            ])
+          } else {
+            return q.whereILike(key, `${value}%`)
+          }
         }
       })
     }

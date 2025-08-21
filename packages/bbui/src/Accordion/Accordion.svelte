@@ -71,17 +71,16 @@
     gap: var(--spacing-m);
     padding-left: 0;
   }
-  .spectrum-Accordion-itemHeader:hover {
-    background-color: transparent;
-  }
   .spectrum-Accordion-itemHeaderS {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
   .spectrum-Accordion-itemHeaderM {
     font-size: 1.2rem;
-    font-weight: 500;
   }
   .spectrum-Accordion-itemHeaderL {
     font-size: 1.5rem;
+  }
+  button:hover {
+    background-color: transparent;
   }
 </style>

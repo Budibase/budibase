@@ -160,7 +160,11 @@ if (descriptions.length) {
             expect(queries).not.toContainEqual(query)
 
             expect(events.query.deleted).toHaveBeenCalledTimes(1)
-            expect(events.query.deleted).toHaveBeenCalledWith(datasource, query)
+            expect(events.query.deleted).toHaveBeenCalledWith(
+              datasource,
+              query,
+              config.appId
+            )
           })
         })
 

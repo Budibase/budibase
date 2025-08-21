@@ -1,7 +1,15 @@
 <script>
   import EditUserPicker from "./EditUserPicker.svelte"
+  import BulkAddUsersModal from "./BulkAddUsersModal.svelte"
 
-  import { Heading, Pagination, Table, Search } from "@budibase/bbui"
+  import {
+    Button,
+    Heading,
+    Modal,
+    Pagination,
+    Table,
+    Search,
+  } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { API } from "@/api"
@@ -17,6 +25,7 @@
 
   let emailSearch
   let fetchGroupUsers
+  let bulkAddModal
   $: fetchGroupUsers = fetchData({
     API,
     datasource: {
@@ -65,7 +74,15 @@
   {#if isScimGroup}
     <ActiveDirectoryInfo text="Users synced from your AD" />
   {:else if !readonly}
-    <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
+    <div class="controls-left">
+      <EditUserPicker
+        {groupId}
+        onUsersUpdated={fetchGroupUsers.getInitialData}
+      />
+      <Button secondary on:click={() => bulkAddModal.show()}>
+        Bulk assign
+      </Button>
+    </div>
   {/if}
 
   <div class="controls-right">
@@ -105,6 +122,10 @@
   />
 </div>
 
+<Modal bind:this={bulkAddModal}>
+  <BulkAddUsersModal {groupId} onUsersAdded={fetchGroupUsers.getInitialData} />
+</Modal>
+
 <style>
   .header {
     display: flex;
@@ -119,6 +140,13 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+
+  .controls-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 
   .controls-right {

@@ -83,6 +83,8 @@ COPY hosting/single/redis.conf /etc/redis/redis.conf
 WORKDIR /
 COPY hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
+COPY hosting/single/redis-runner.sh .
+RUN chmod +x ./redis-runner.sh
 COPY hosting/single/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
 

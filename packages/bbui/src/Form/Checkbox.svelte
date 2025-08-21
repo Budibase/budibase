@@ -5,6 +5,7 @@
   import type { LabelPosition } from "../types"
 
   export let value: boolean | undefined = undefined
+  export let indeterminate: boolean | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: LabelPosition = "above"
   export let text: string | undefined = undefined
@@ -21,5 +22,12 @@
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
-  <Checkbox {disabled} {text} {value} {size} on:change={onChange} />
+  <Checkbox
+    {disabled}
+    {text}
+    {value}
+    {size}
+    {indeterminate}
+    on:change={onChange}
+  />
 </Field>

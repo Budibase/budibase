@@ -50,7 +50,7 @@
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
-  import { featureFlags, themeStore } from "@/stores/portal"
+  import { themeStore } from "@/stores/portal"
   import { type EnrichedBinding, type EditorMode } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
@@ -87,8 +87,7 @@
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
-  $: aiGenEnabled =
-    $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
+  $: aiGenEnabled = mode.name === "javascript" && !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -137,7 +136,11 @@
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: value },
+        changes: {
+          from: 0,
+          to: editor.state.doc.length,
+          insert: String(value),
+        },
       })
       queuedRefresh = false
     }

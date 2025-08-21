@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, tick } from "svelte"
   import {
     Button,
@@ -14,25 +14,64 @@
   import Editor from "@/components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
   import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
+  import type { Template, GlobalTemplateBinding } from "@budibase/types"
+
+  // QueryEditor component interface based on exposed methods
+  interface QueryEditor {
+    // eslint-disable-next-line no-unused-vars
+    set: (newValue: string, opts?: string) => Promise<void>
+    update: (_: string) => void
+    resize: () => void
+    focus: () => void
+    insertAtCursor: (_: string) => void
+  }
+
+  // Tab select event interface
+  interface TabSelectEvent {
+    detail: string
+  }
+
+  // Binding tab select event handler
+  function handleBindingTabSelect(event: TabSelectEvent): void {
+    selectedBindingTab = event.detail
+  }
+
+  // Editor change event interface
+  interface EditorChangeEvent {
+    detail: {
+      value: string
+    }
+  }
 
   // this is the email purpose
-  export let template
+  export let template: string
 
-  let htmlEditor
-  let mounted = false
+  let htmlEditor: QueryEditor | null = null
+  let mounted: boolean = false
+  let selectedBindingTab: string = ""
 
   $: selectedTemplate = $email.templates?.find(
-    ({ purpose }) => purpose === template
-  )
-  $: name = $email.definitions?.info[template]?.name
-  $: description = $email.definitions?.info[template]?.description
-  $: baseTemplate = $email.templates?.find(({ purpose }) => purpose === "base")
-  $: templateBindings =
-    $email.definitions?.bindings?.[selectedTemplate?.purpose] || []
+    ({ purpose }: Template) => purpose === template
+  ) as Template | undefined
+  $: name = $email.definitions?.info[template]?.name as string | undefined
+  $: description = $email.definitions?.info[template]?.description as
+    | string
+    | undefined
+  $: baseTemplate = $email.templates?.find(
+    ({ purpose }: Template) => purpose === "base"
+  ) as Template | undefined
+  $: templateBindings = selectedTemplate?.purpose
+    ? (($email.definitions?.bindings?.[selectedTemplate.purpose] ||
+        []) as GlobalTemplateBinding[])
+    : []
   $: previewContent = makePreviewContent(baseTemplate, selectedTemplate)
 
-  async function saveTemplate() {
+  async function saveTemplate(): Promise<void> {
     try {
+      if (!selectedTemplate) {
+        notifications.error("No template selected to save")
+        return
+      }
       // Save your template config
       await email.saveTemplate(selectedTemplate)
       notifications.success("Template saved")
@@ -41,31 +80,59 @@
     }
   }
 
-  function setTemplateBinding(binding) {
-    htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
+  function setTemplateBinding(binding: GlobalTemplateBinding): void {
+    if (!selectedTemplate) {
+      console.warn("No template selected")
+      return
+    }
+    if (!htmlEditor) {
+      console.warn("Editor not available")
+      return
+    }
+
+    // Insert the binding at the current cursor position
+    const bindingText = `{{ ${binding.name} }}`
+    htmlEditor.insertAtCursor(bindingText)
   }
 
-  const makePreviewContent = (baseTemplate, selectedTemplate) => {
+  function makePreviewContent(
+    baseTemplate: Template | undefined,
+    selectedTemplate: Template | undefined
+  ): string {
     if (!selectedTemplate) {
       return ""
     }
     if (selectedTemplate.purpose === "base") {
       return selectedTemplate.contents
     }
-    const base = baseTemplate?.contents ?? ""
+    const base: string = baseTemplate?.contents ?? ""
     return base.replace("{{ body }}", selectedTemplate?.contents ?? "")
+  }
+
+  // Set initial binding tab based on available bindings, only if not already set
+  $: {
+    if (!selectedBindingTab && templateBindings) {
+      selectedBindingTab = templateBindings.length ? "Template" : "Common"
+    }
   }
 
   onMount(() => {
     mounted = true
   })
 
-  async function fixMountBug({ detail }) {
+  async function fixMountBug(event: TabSelectEvent): Promise<void> {
+    const { detail } = event
     if (detail === "Edit") {
       await tick()
       mounted = true
     } else {
       mounted = false
+    }
+  }
+
+  function handleEditorChange(event: EditorChangeEvent): void {
+    if (selectedTemplate) {
+      selectedTemplate.contents = event.detail.value
     }
   }
 </script>
@@ -95,27 +162,27 @@
               editorHeight={640}
               bind:this={htmlEditor}
               mode="handlebars"
-              on:change={e => {
-                selectedTemplate.contents = e.detail.value
-              }}
+              on:change={handleEditorChange}
               value={selectedTemplate?.contents}
             />
           </div>
           <div class="bindings-editor">
             <Heading size="XS">Bindings</Heading>
             {#if mounted}
-              <Tabs noHorizPadding selected="Template">
+              <Tabs
+                noHorizPadding
+                selected={selectedBindingTab}
+                on:select={handleBindingTabSelect}
+              >
                 <Tab title="Template">
                   <TemplateBindings
-                    title="Template Bindings"
                     bindings={templateBindings}
                     onBindingClick={setTemplateBinding}
                   />
                 </Tab>
                 <Tab title="Common">
                   <TemplateBindings
-                    title="Common Bindings"
-                    bindings={$email?.definitions?.bindings?.common}
+                    bindings={$email?.definitions?.bindings?.common || []}
                     onBindingClick={setTemplateBinding}
                   />
                 </Tab>

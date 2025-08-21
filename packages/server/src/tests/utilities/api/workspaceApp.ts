@@ -1,7 +1,10 @@
 import {
   FetchWorkspaceAppResponse,
+  FindWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
   InsertWorkspaceAppResponse,
+  UpdateWorkspaceAppRequest,
+  UpdateWorkspaceAppResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -26,5 +29,30 @@ export class WorkspaceAppAPI extends TestAPI {
         ...expectations,
       },
     })
+  }
+
+  update = async (
+    app: UpdateWorkspaceAppRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._put<UpdateWorkspaceAppResponse>(
+      `/api/workspaceApp/${app._id}`,
+      {
+        body: app,
+        expectations,
+      }
+    )
+  }
+
+  find = async (id: string, expectations?: Expectations) => {
+    return await this._get<FindWorkspaceAppResponse>(
+      `/api/workspaceApp/${id}`,
+      {
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
+      }
+    )
   }
 }

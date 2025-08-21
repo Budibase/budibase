@@ -75,8 +75,31 @@
     })
   }
 
+  // Instead of svelte bind:clientWidth/bind:clientHeight
+  // Svelte injects an iframe causing issues with CSP, this avoids it
+  const setupResizeObserver = element => {
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries?.[0]) {
+        return
+      }
+      const element = entries[0].target
+
+      width = element.clientWidth
+      height = element.clientHeight
+    })
+
+    resizeObserver.observe(element)
+    return resizeObserver
+  }
+
   onMount(() => {
     let observer
+    let resizeObserver
+
+    // Track width and height with an observer.
+    // Svelte clientWidth and clientHeight inject an iframe that violates CSP
+    resizeObserver = setupResizeObserver(ref)
+
     // Set up an observer to watch for changes in metadata attributes of child
     // components, as well as child addition and deletion
     observer = new MutationObserver(mutations => {
@@ -119,6 +142,7 @@
     // Cleanup our observer
     return () => {
       observer?.disconnect()
+      resizeObserver?.disconnect()
     }
   })
 </script>
@@ -130,8 +154,6 @@
   class="grid"
   class:mobile
   class:clickable={!!onClick}
-  bind:clientWidth={width}
-  bind:clientHeight={height}
   use:styleable={$styles}
   data-cols={GridColumns}
   data-col-size={colSize}

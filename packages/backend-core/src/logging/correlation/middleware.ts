@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid"
 
 const correlator = require("correlation-id")
 
-const correlation = (ctx: any, next: any) => {
+export const correlationMiddleware = (ctx: any, next: any) => {
   // use the provided correlation id header if present
   let correlationId = ctx.headers[Header.CORRELATION_ID]
   if (!correlationId) {
@@ -14,5 +14,3 @@ const correlation = (ctx: any, next: any) => {
     return next()
   })
 }
-
-export default correlation

@@ -6,6 +6,4 @@ export interface ClearDevLockResponse {
   message: string
 }
 
-export interface RevertAppResponse {
-  message: string
-}
+export interface RevertAppResponse {}

@@ -112,3 +112,4 @@ budibase-datasource
 
 *.iml
 .nx
+.claude

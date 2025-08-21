@@ -4,6 +4,7 @@ import {
   db as dbCore,
   events,
   cache,
+  errors,
   features,
 } from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
@@ -28,7 +29,8 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { buildPublishFilter } from "./filters"
+import { doInMigrationLock } from "../../../appMigrations"
+import env from "../../../environment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -156,119 +158,171 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {} })
-  }
-
-  const { automations, workspaceApps } = await sdk.deployment.status()
+  const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
     automations,
     workspaceApps,
+    tables,
   }
 }
 
 export const publishApp = async function (
   ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
-  let automationIds: string[] | undefined, workspaceAppIds: string[] | undefined
-  if (ctx.request.body) {
-    automationIds = ctx.request.body.automationIds
-    workspaceAppIds = ctx.request.body.workspaceAppIds
+  if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
+    throw new errors.NotImplementedError(
+      "Publishing resources by ID not currently supported"
+    )
   }
+  const seedProductionTables = ctx.request.body?.seedProductionTables
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
+  let tablesToSync: "all" | string[] | undefined
+  if (env.isTest()) {
+    // TODO: a lot of tests depend on old behaviour of data being published
+    // we could do with going through the tests and updating them all to write
+    // data to production instead of development - but doesn't improve test
+    // quality - so keep publishing data in dev for now
+    tablesToSync = "all"
+  } else if (seedProductionTables) {
+    try {
+      tablesToSync = await sdk.tables.listEmptyProductionTables()
+    } catch (e) {
+      tablesToSync = []
+    }
+  }
 
-  let app
-  let replication
-  try {
-    const appId = context.getAppId()!
-    const devAppId = dbCore.getDevelopmentAppID(appId)
-    const productionAppId = dbCore.getProdAppID(appId)
+  const appId = context.getAppId()!
 
-    // don't try this if feature isn't allowed, will error
-    if (await backups.isEnabled()) {
-      // trigger backup initially
-      await backups.triggerAppBackup(
-        productionAppId,
-        AppBackupTrigger.PUBLISH,
-        {
-          createdBy: ctx.user._id,
+  // Wrap the entire publish operation in migration lock to prevent race conditions
+  const result = await doInMigrationLock(appId, async () => {
+    let app
+    let replication
+    try {
+      const devAppId = dbCore.getDevelopmentAppID(appId)
+      const productionAppId = dbCore.getProdAppID(appId)
+
+      if (
+        (await features.isEnabled(FeatureFlag.WORKSPACES)) &&
+        !(await sdk.applications.isAppPublished(productionAppId))
+      ) {
+        const allWorkspaceApps = await sdk.workspaceApps.fetch()
+        for (const workspaceApp of allWorkspaceApps) {
+          if (workspaceApp.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
         }
-      )
-    }
-    const config = {
-      source: devAppId,
-      target: productionAppId,
-    }
-    replication = new dbCore.Replication(config)
-    const devDb = context.getDevAppDB()
-    const publishFilter =
-      automationIds || workspaceAppIds
-        ? await buildPublishFilter({
-            automationIds,
-            workspaceAppIds,
-          })
-        : undefined
-    await devDb.compact()
-    await replication.replicate(
-      replication.appReplicateOpts({
-        // filters automations, screen and workspace documents based on supplied filters
-        filter: publishFilter,
-      })
-    )
-    // app metadata is excluded as it is likely to be in conflict
-    // replicate the app metadata document manually
-    const db = context.getProdAppDB()
-    const appDoc = await sdk.applications.metadata.tryGet({ production: false })
-    if (!appDoc) {
-      throw new Error(
-        "Unable to publish - cannot retrieve development app metadata"
-      )
-    }
-    const prodAppDoc = await sdk.applications.metadata.tryGet({
-      production: true,
-    })
-    if (prodAppDoc) {
-      appDoc._rev = prodAppDoc._rev
-    } else {
-      delete appDoc._rev
-    }
 
-    // switch to production app ID
-    deployment.appUrl = appDoc.url
-    appDoc.appId = productionAppId
-    appDoc.instance._id = productionAppId
-    if (automationIds?.length || workspaceAppIds?.length) {
-      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+        const allAutomations = await sdk.automations.fetch()
+        for (const automation of allAutomations) {
+          if (automation.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.automations.update({ ...automation, disabled: true })
+        }
+      }
+
+      const isPublished = await sdk.applications.isAppPublished(productionAppId)
+
+      // don't try this if feature isn't allowed, will error
+      if (await backups.isEnabled()) {
+        // trigger backup initially
+        await backups.triggerAppBackup(
+          productionAppId,
+          AppBackupTrigger.PUBLISH,
+          {
+            createdBy: ctx.user._id,
+          }
+        )
+      }
+      const config = {
+        source: devAppId,
+        target: productionAppId,
+      }
+      replication = new dbCore.Replication(config)
+      const devDb = context.getDevAppDB()
+      await devDb.compact()
+      await replication.replicate(
+        replication.appReplicateOpts({
+          isCreation: !isPublished,
+          tablesToSync,
+          // don't use checkpoints, this can stop data that was previous ignored
+          // getting written - if not seeding tables we don't need to worry about it
+          checkpoint: !seedProductionTables,
+        })
+      )
+      // app metadata is excluded as it is likely to be in conflict
+      // replicate the app metadata document manually
+      const db = context.getProdAppDB()
+      const appDoc = await sdk.applications.metadata.tryGet({
+        production: false,
+      })
+      if (!appDoc) {
+        throw new Error(
+          "Unable to publish - cannot retrieve development app metadata"
+        )
+      }
+      const prodAppDoc = await sdk.applications.metadata.tryGet({
+        production: true,
+      })
+      if (prodAppDoc) {
+        appDoc._rev = prodAppDoc._rev
+      } else {
+        delete appDoc._rev
+      }
+
+      // switch to production app ID
+      deployment.appUrl = appDoc.url
+      appDoc.appId = productionAppId
+      appDoc.instance._id = productionAppId
+      const [automations, workspaceApps, tables] = await Promise.all([
+        sdk.automations.fetch(),
+        sdk.workspaceApps.fetch(),
+        sdk.tables.getAllInternalTables(),
+      ])
+      const automationIds = automations.map(auto => auto._id!)
+      const workspaceAppIds = workspaceApps.map(app => app._id!)
+      const tableIds = tables.map(table => table._id!)
+      const fullMap = [
+        ...(automationIds ?? []),
+        ...(workspaceAppIds ?? []),
+        ...(tableIds ?? []),
+      ]
+      // if resource publishing, need to restrict this list
       appDoc.resourcesPublishedAt = {
         ...prodAppDoc?.resourcesPublishedAt,
         ...Object.fromEntries(
           fullMap.map(id => [id, new Date().toISOString()])
         ),
       }
-    }
-    // remove automation errors if they exist
-    delete appDoc.automationErrors
-    await db.put(appDoc)
-    await cache.app.invalidateAppMetadata(productionAppId)
-    await initDeployedApp(productionAppId)
-    deployment.setStatus(DeploymentStatus.SUCCESS)
-    await storeDeploymentHistory(deployment)
-    app = appDoc
-  } catch (err: any) {
-    deployment.setStatus(DeploymentStatus.FAILURE, err.message)
-    await storeDeploymentHistory(deployment)
+      // remove automation errors if they exist
+      delete appDoc.automationErrors
+      await db.put(appDoc)
+      await cache.app.invalidateAppMetadata(productionAppId)
+      await initDeployedApp(productionAppId)
+      deployment.setStatus(DeploymentStatus.SUCCESS)
+      await storeDeploymentHistory(deployment)
+      app = appDoc
+    } catch (err: any) {
+      deployment.setStatus(DeploymentStatus.FAILURE, err.message)
+      await storeDeploymentHistory(deployment)
 
-    throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
-  } finally {
-    if (replication) {
-      await replication.close()
+      throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
+    } finally {
+      if (replication) {
+        await replication.close()
+      }
     }
-  }
 
-  await events.app.published(app)
-  ctx.body = deployment
+    await events.app.published(app)
+    return { deployment }
+  })
+
+  ctx.body = result.deployment
   builderSocket?.emitAppPublish(ctx)
 }

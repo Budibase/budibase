@@ -290,6 +290,8 @@
     justify-content: center;
     align-items: flex-start;
     gap: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
   }
   .buttons {
     display: flex;

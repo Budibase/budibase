@@ -30,8 +30,16 @@ export class BackupStore extends BudiStore<BackupState> {
     return API.deleteBackup(appId, backupId)
   }
 
+  async deleteBackups(appId: string, backupIds: string[]) {
+    return API.deleteBackups(appId, backupIds)
+  }
+
   async createManualBackup(appId: string) {
     return API.createManualBackup(appId)
+  }
+
+  async clearBackupErrors(appId: string, backupId?: string) {
+    return API.clearBackupErrors(appId, backupId)
   }
 }
 

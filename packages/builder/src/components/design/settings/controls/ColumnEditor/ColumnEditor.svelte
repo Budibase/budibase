@@ -22,6 +22,7 @@
   export let allowReorder = true
   export let getSchemaFields = getSearchableFields
   export let placeholder = "All columns"
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
 
@@ -100,7 +101,7 @@
 </script>
 
 <div class="column-editor">
-  <ActionButton on:click={open}>{text}</ActionButton>
+  <ActionButton on:click={open} {disabled}>{text}</ActionButton>
 </div>
 <Drawer bind:this={drawer} title="Columns">
   <Button cta slot="buttons" on:click={save}>Save</Button>

@@ -1,0 +1,196 @@
+name: Upgrade Tests
+
+on:
+  pull_request:
+    paths:
+      # Server-side packages that affect upgrade compatibility
+      - "packages/worker/**"
+      - "packages/server/**"
+      - "packages/backend-core/**"
+      - "packages/shared-core/**"
+      # The upgrade tests themselves
+      - "packages/upgrade-tests/**"
+      # Docker and hosting changes that affect the build
+      - "hosting/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      # This workflow file
+      - ".github/workflows/upgrade-tests.yml"
+      # Root package changes
+      - "package.json"
+      - "yarn.lock"
+  workflow_dispatch:
+
+env:
+  INTERNAL_API_KEY: budibase
+  BB_ADMIN_USER_EMAIL: admin@example.com
+  BB_ADMIN_USER_PASSWORD: admin123!
+  VERSION_COUNT: 5 # Number of versions to test
+
+# Cancel in-progress runs when a new run is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-current-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build --ignore @budibase/upgrade-tests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and export Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: hosting/single/Dockerfile
+          tags: budibase:current
+          build-args: |
+            BUDIBASE_VERSION=0.0.0+local
+            TARGETBUILD=single
+          outputs: type=docker,dest=/tmp/budibase-current.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: budibase-current-image
+          path: /tmp/budibase-current.tar
+          retention-days: 1
+
+  get-test-config:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.versions.outputs.versions }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            packages/upgrade-tests/src/fixtures
+
+      - name: Get versions to test
+        id: versions
+        run: |
+          # Fetch versions from Docker Hub across multiple pages if needed
+          VERSION_COUNT=${VERSION_COUNT:-5}
+          echo "Fetching last $VERSION_COUNT minor versions from Docker Hub"
+
+          # Collect all version tags across pages
+          ALL_TAGS="[]"
+          PAGE=1
+          MAX_PAGES=5  # Limit pages to avoid infinite loops
+
+          while [ $PAGE -le $MAX_PAGES ]; do
+            echo "Fetching page $PAGE..."
+            RESPONSE=$(curl -s "https://hub.docker.com/v2/repositories/budibase/budibase/tags?page_size=100&page=$PAGE")
+            
+            # Extract tags from this page
+            PAGE_TAGS=$(echo "$RESPONSE" | jq -c '[.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name]')
+            
+            # Merge with existing tags
+            ALL_TAGS=$(echo "$ALL_TAGS" "$PAGE_TAGS" | jq -s -c 'add')
+            
+            # Check if we have enough unique minor versions
+            UNIQUE_MINORS=$(echo "$ALL_TAGS" | jq -r '
+              map(split(".") | .[0] + "." + .[1]) 
+              | unique 
+              | length
+            ')
+            
+            echo "Found $UNIQUE_MINORS unique minor versions so far"
+            
+            # Stop if we have enough minor versions
+            if [ $UNIQUE_MINORS -ge $VERSION_COUNT ]; then
+              break
+            fi
+            
+            # Check if there's a next page
+            HAS_NEXT=$(echo "$RESPONSE" | jq -r '.next // "null"')
+            if [ "$HAS_NEXT" = "null" ]; then
+              break
+            fi
+            
+            PAGE=$((PAGE + 1))
+          done
+
+          # Process all collected tags to get the latest patch for each minor version
+          VERSIONS=$(echo "$ALL_TAGS" | jq -c "
+            map(split(\".\") | {major: .[0] | tonumber, minor: .[1] | tonumber, patch: .[2] | tonumber, version: .}) 
+            | group_by(\"\(.major).\(.minor)\") 
+            | map(max_by(.patch)) 
+            | sort_by(.major, .minor) 
+            | reverse 
+            | .[0:$VERSION_COUNT] 
+            | map(.version | join(\".\"))
+          ")
+
+          echo "versions=${VERSIONS}" >> $GITHUB_OUTPUT
+          echo "Testing versions: ${VERSIONS}"
+
+  test-upgrade:
+    needs: [build-current-version, get-test-config]
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.get-test-config.outputs.versions) }}
+    runs-on: ubuntu-latest
+    name: ${{ matrix.version }} → current
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Build upgrade tests
+        run: |
+          # Build types package first as upgrade-tests depends on it
+          cd packages/types
+          yarn build
+          cd ../upgrade-tests
+          yarn build
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: budibase-current-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load -i /tmp/budibase-current.tar
+          echo "✅ Docker image loaded successfully"
+
+      - name: Run upgrade test
+        env:
+          BUDIBASE_TIMEOUT: 180000 # 3 minutes timeout for app imports
+        run: |
+          cd packages/upgrade-tests
+          yarn test:upgrade --from ${{ matrix.version }} --no-build

@@ -116,7 +116,7 @@
       <span />
     {/if}
     {#if blockResult && flowStatus && !hideStatus}
-      <span class={`flow-${flowStatus.type}`}>
+      <span class={`flow-${flowStatus.type} flow-status-btn`}>
         <ActionButton
           size="S"
           icon={flowStatus.icon}
@@ -169,5 +169,9 @@
   }
   .flow-warn :global(.spectrum-ActionButton i) {
     color: var(--spectrum-global-color-yellow-600);
+  }
+
+  .flow-status-btn :global(.spectrum-ActionButton i) {
+    color: unset;
   }
 </style>

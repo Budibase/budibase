@@ -8,7 +8,6 @@ import {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
   shouldServeLocally,
-  TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
 import {
@@ -37,7 +36,6 @@ import {
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
-  ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
 import { isAppFullyMigrated } from "../../../appMigrations"
@@ -47,36 +45,6 @@ import { getThemeVariables } from "../../../constants/themes"
 import path from "path"
 import extract from "extract-zip"
 import { tmpdir } from "os"
-
-export const toggleBetaUiFeature = async function (
-  ctx: Ctx<void, ToggleBetaFeatureResponse>
-) {
-  const cookieName = `beta:${ctx.params.feature}`
-
-  if (ctx.cookies.get(cookieName)) {
-    utils.clearCookie(ctx, cookieName)
-    ctx.body = {
-      message: `${ctx.params.feature} disabled`,
-    }
-    return
-  }
-
-  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
-
-  // // download it from S3
-  if (!fs.existsSync(builderPath)) {
-    fs.mkdirSync(builderPath)
-  }
-  await objectStore.downloadTarballDirect(
-    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
-    builderPath
-  )
-  utils.setCookie(ctx, {}, cookieName)
-
-  ctx.body = {
-    message: `${ctx.params.feature} enabled`,
-  }
-}
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -228,10 +196,6 @@ const getAppScriptHTML = (
 }
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
-  if (ctx.url.includes("apple-touch-icon.png")) {
-    ctx.redirect("/builder/bblogo.png")
-    return
-  }
   // No app ID found, cannot serve - return message instead
   const appId = context.getAppId()
   if (!appId) {
@@ -239,28 +203,33 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     return
   }
 
-  const fullyMigrated = await isAppFullyMigrated(appId)
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
-
-  //Public Settings
-  const { config } = await configs.getSettingsConfigDoc()
-  const branding = await pro.branding.getBrandingConfig(config)
+  const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
+    isAppFullyMigrated(appId),
+    configs.getSettingsConfigDoc(),
+    configs.getRecaptchaConfig(),
+  ])
+  const branding = await pro.branding.getBrandingConfig(settingsConfig.config)
   // incase running direct from TS
   let appHbsPath = join(__dirname, "app.hbs")
   if (!fs.existsSync(appHbsPath)) {
     appHbsPath = join(__dirname, "templates", "app.hbs")
   }
 
-  let db
   try {
-    db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+    context.getAppDB({ skip_setup: true })
+
+    const [workspaceApp] = await sdk.workspaceApps.getMatchedWorkspaceApp(
+      ctx.url
+    )
+
+    const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
-    const sideNav = appInfo.navigation.navigation === "Left"
+    const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
+    const themeVariables = getThemeVariables(appInfo.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     const addAppScripts =
@@ -275,9 +244,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
+      const appName = workspaceApp?.name || `${appInfo.name}`
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title: branding?.platformTitle || `${appInfo.name}`,
+        title: branding?.platformTitle || appName,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
@@ -286,8 +256,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle:
-          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
+        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
@@ -295,6 +264,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: !fullyMigrated,
+        recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
       }
 
@@ -309,7 +279,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       let extraHead = ""
       const pwaEnabled = await pro.features.isPWAEnabled()
-      if (hasPWA && pwaEnabled) {
+      if (hasPWA && appInfo.pwa && pwaEnabled) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content=${

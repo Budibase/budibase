@@ -5,6 +5,7 @@ import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
 import { Readable } from "stream"
+import { LoopSummary } from "./StepInputsOutputs"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -84,6 +85,8 @@ export enum AutomationActionStepId {
   SUMMARISE = "SUMMARISE",
   GENERATE_TEXT = "GENERATE_TEXT",
   EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
+  EXTRACT_STATE = "EXTRACT_STATE",
+  LOOP_V2 = "LOOP_V2",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -208,6 +211,8 @@ export interface AutomationStepResultInputs {
 
 export interface AutomationStepResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationActionStepId
   inputs: AutomationStepResultInputs
   outputs: AutomationStepResultOutputs
@@ -218,6 +223,8 @@ export type AutomationTriggerResultOutputs = Record<string, any>
 
 export interface AutomationTriggerResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationTriggerStepId
   inputs?: AutomationTriggerResultInputs | null
   outputs: AutomationTriggerResultOutputs
@@ -228,6 +235,7 @@ export interface AutomationResults {
   status: AutomationStatus
   trigger: AutomationTriggerResult
   steps: [AutomationTriggerResult, ...AutomationStepResult[]]
+  state?: Record<string, any>
 }
 
 export interface DidNotTriggerResponse {
@@ -346,3 +354,10 @@ export const ImageContentTypes = [
   "image/jpg",
   "image/jpeg",
 ]
+
+export interface LoopStorage {
+  results: Record<string, AutomationStepResult[]>
+  summary: LoopSummary
+  nestedSummaries: Record<string, LoopSummary[]>
+  maxStoredResults: number
+}

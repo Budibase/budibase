@@ -38,6 +38,7 @@ export interface TableEndpoints {
   getTable: (tableId: string) => Promise<FindTableResponse>
   saveTable: (table: SaveTableRequest) => Promise<SaveTableResponse>
   deleteTable: (id: string, rev: string) => Promise<DeleteTableResponse>
+  duplicateTable: (tableId: string) => Promise<SaveTableResponse>
   validateNewTableImport: (
     rows: Row[],
     schema: TableSchema
@@ -187,6 +188,16 @@ export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
         oldColumn,
         newColumn,
       },
+    })
+  },
+
+  /**
+   * Duplicates a table without its data.
+   * @param tableId the ID of the table to duplicate
+   */
+  duplicateTable: async tableId => {
+    return await API.post({
+      url: `/api/tables/${tableId}/duplicate`,
     })
   },
 })

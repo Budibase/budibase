@@ -67,6 +67,7 @@ const environment = {
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   TOP_LEVEL_PATH: TOP_LEVEL_PATH,
+  EMAIL_TEMPLATE_PATH: process.env.EMAIL_TEMPLATE_PATH,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */

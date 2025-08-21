@@ -3,10 +3,11 @@ import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 import { UserCtx } from "@budibase/types"
-import { Header } from "@budibase/backend-core"
+import { db, Header } from "@budibase/backend-core"
 import environment from "../environment"
 
 export * from "./appMigrationMetadata"
+export * from "./migrationLock"
 
 export type AppMigration = {
   id: string
@@ -74,8 +75,10 @@ const waitForMigration = async (
 ): Promise<{ applied: boolean }> => {
   const start = Date.now()
 
+  const devAppId = db.getDevAppID(appId)
+
   while (Date.now() - start < timeoutMs) {
-    if (await isAppFullyMigrated(appId)) {
+    if (await isAppFullyMigrated(devAppId)) {
       console.log(`Migration ran in ${Date.now() - start}ms`)
       return { applied: true }
     }

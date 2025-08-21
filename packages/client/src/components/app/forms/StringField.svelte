@@ -12,6 +12,7 @@
   export let defaultValue = ""
   export let align
   export let onChange
+  export let runOnInput = false
   export let span
   export let helpText = null
 
@@ -20,9 +21,13 @@
 
   const handleChange = e => {
     const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
+    if (changed) {
+      onChange?.({ value: e.detail })
     }
+  }
+
+  const handleInput = e => {
+    onChange?.({ value: e.target.value })
   }
 </script>
 
@@ -44,6 +49,7 @@
       updateOnChange={false}
       value={fieldState.value}
       on:change={handleChange}
+      on:input={runOnInput ? handleInput : undefined}
       disabled={fieldState.disabled}
       readonly={fieldState.readonly}
       id={fieldState.fieldId}
