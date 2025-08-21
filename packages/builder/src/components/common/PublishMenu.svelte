@@ -80,7 +80,7 @@
     <div>
       <div class="menu-item-header">Seed and publish</div>
       <div class="menu-item-text">
-        Seed prod tables with dev data and publish {workspaceOrApp}
+        Seed internal prod tables with dev data and publish {workspaceOrApp}
       </div>
     </div>
   </MenuItem>
