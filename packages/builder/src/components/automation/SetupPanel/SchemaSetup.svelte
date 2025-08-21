@@ -39,15 +39,6 @@
     lastValueRef = value
   }
 
-  const emit = () => {
-    const update = {}
-    for (const f of fields) {
-      const name = (f.name || "").trim()
-      if (name) update[name] = f.type || "string"
-    }
-    dispatch("change", update)
-  }
-
   function addField() {
     fields = [...fields, { name: "", type: "string" }]
   }
@@ -55,25 +46,53 @@
   function removeField(idx) {
     const removed = fields[idx]
     fields = fields.filter((_, i) => i !== idx)
-    if (removed?.name) emit()
+    if ((removed?.name || "").trim()) {
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
+      dispatch("change", update)
+    }
   }
 
   const fieldNameChanged = idx => e => {
     const newName = (e.detail || "").trim()
+    const hadName = (fields[idx]?.name || "").trim()
     const copy = [...fields]
     if (newName) {
       copy[idx] = { ...copy[idx], name: newName }
       fields = copy
-      emit()
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
+      dispatch("change", update)
     } else {
       fields = copy.filter((_, i) => i !== idx)
+      if (hadName) {
+        const update = {}
+        for (const f of fields) {
+          const name = (f.name || "").trim()
+          if (name) update[name] = f.type || "string"
+        }
+        dispatch("change", update)
+      }
     }
   }
 
   const typeChanged = idx => e => {
     const newType = e.detail
     fields = fields.map((f, i) => (i === idx ? { ...f, type: newType } : f))
-    if ((fields[idx]?.name || "").trim()) emit()
+    if ((fields[idx]?.name || "").trim()) {
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
+      dispatch("change", update)
+    }
   }
 </script>
 
@@ -109,7 +128,6 @@
 <style>
   .root {
     max-width: 100%;
-    /* so we can show the "+" button beside the "fields" label*/
     top: -26px;
   }
 
