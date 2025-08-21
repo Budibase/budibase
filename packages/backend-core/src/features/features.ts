@@ -94,6 +94,11 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       const currentTenantId = context.getTenantId()
       const specificallySetFalse = new Set<string>()
 
+      // flags can't be worked out is self hoster accessing the cloud - no global DB
+      if (context.isSelfHostUsingCloud()) {
+        return flagValues
+      }
+
       for (const { tenantId, key, value } of getEnvFlags()) {
         if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
           continue
