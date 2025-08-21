@@ -90,6 +90,7 @@
   $: aiGenEnabled =
     $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
 
+  $: console.log("aiGenEnabled", aiGenEnabled)
   $: {
     if (autofocus && isEditorInitialised) {
       editor.focus()

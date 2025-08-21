@@ -48,6 +48,9 @@
     idByName = nextIdByName
   }
 
+  // Drop any extra fields that have now been committed in value (by id)
+  $: extraFields = extraFields.filter(f => !fieldsFromValue.some(v => v.id === f.id))
+
   // Combined fields for rendering
   $: fieldsArray = [...fieldsFromValue, ...extraFields]
 
@@ -94,9 +97,12 @@
     // If it existed under a different name, remove old key
     if (field.name && field.name !== newName) {
       delete update[field.name]
+      // migrate id mapping to new name to avoid flicker
+      idByName.set(newName, field.id)
+      idByName.delete(field.name)
     } else if (!field.name) {
-      // was an extra field, remove local placeholder
-      extraFields = extraFields.filter(f => f.id !== field.id)
+      // committing an extra field: set id mapping so the row keeps its id
+      idByName.set(newName, field.id)
     }
 
     update[newName] = type
