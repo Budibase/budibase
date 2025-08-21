@@ -1,7 +1,6 @@
 <script>
   import { Input, Select, Button } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { memo } from "@budibase/frontend-core"
   import { generate } from "shortid"
 
   export let value = {}
@@ -30,68 +29,89 @@
   ]
 
   const dispatch = createEventDispatcher()
-  const memoValue = memo({ data: {} })
-  let initialized = false
 
+  // Maintain stable IDs for fields keyed by name
+  let idByName = new Map()
+  let fieldsFromValue = []
+  let extraFields = [] // fields not yet committed (no name)
+
+  // Rebuild fields from incoming value while preserving IDs
   $: {
-    if (!initialized || Object.keys($memoValue.data).length === 0) {
-      memoValue.set({ data: value })
-      initialized = true
+    const next = []
+    const nextIdByName = new Map()
+    for (const [name, type] of Object.entries(value || {})) {
+      const id = idByName.get(name) || generate()
+      next.push({ id, name, type })
+      nextIdByName.set(name, id)
     }
+    fieldsFromValue = next
+    idByName = nextIdByName
   }
 
-  $: fieldsArray = $memoValue.data
-    ? Object.entries($memoValue.data).map(([name, type]) => ({
-        name,
-        type,
-        id: generate(),
-      }))
-    : []
+  // Combined fields for rendering
+  $: fieldsArray = [...fieldsFromValue, ...extraFields]
 
   function addField() {
-    const newValue = { ...$memoValue.data }
-    newValue[""] = "string"
-    fieldsArray = [...fieldsArray, { name: "", type: "string", id: generate() }]
+    extraFields = [...extraFields, { id: generate(), name: "", type: "string" }]
   }
 
   function removeField(idx) {
-    const entries = [...fieldsArray]
+    const field = fieldsArray[idx]
+    if (!field) return
 
-    // Remove empty field
-    if (!entries[idx]?.name) {
-      fieldsArray.splice(idx, 1)
-      fieldsArray = [...fieldsArray]
+    // Remove empty/uncommitted field locally
+    if (!field.name) {
+      extraFields = extraFields.filter(f => f.id !== field.id)
       return
     }
 
-    entries.splice(idx, 1)
-
-    const update = entries.reduce((newVals, current) => {
-      newVals[current.name.trim()] = current.type
-      return newVals
-    }, {})
+    // Remove committed field and notify parent
+    const update = { ...value }
+    delete update[field.name]
     dispatch("change", update)
   }
 
-  const fieldNameChanged = originalName => e => {
-    // reconstruct using fieldsArray, so field order is preserved
-    let entries = [...fieldsArray]
-    const newName = e.detail
-    if (newName) {
-      entries.find(f => f.name === originalName).name = newName
-    } else {
-      entries = entries.filter(f => f.name !== originalName)
+  const fieldNameChanged = field => e => {
+    const newName = (e.detail || "").trim()
+
+    // If cleared, remove field
+    if (!newName) {
+      if (!field.name) {
+        // was an extra field
+        extraFields = extraFields.filter(f => f.id !== field.id)
+        return
+      }
+      const update = { ...value }
+      delete update[field.name]
+      dispatch("change", update)
+      return
     }
 
-    const update = entries
-      .filter(entry => entry.name)
-      .reduce((newVals, current) => {
-        newVals[current.name.trim()] = current.type
-        return newVals
-      }, {})
-    if (Object.keys(update).length) {
-      dispatch("change", update)
+    // Renaming or creating a new named field
+    const update = { ...value }
+    const type = field.type || "string"
+
+    // If it existed under a different name, remove old key
+    if (field.name && field.name !== newName) {
+      delete update[field.name]
+    } else if (!field.name) {
+      // was an extra field, remove local placeholder
+      extraFields = extraFields.filter(f => f.id !== field.id)
     }
+
+    update[newName] = type
+    dispatch("change", update)
+  }
+
+  const typeChanged = field => e => {
+    const newType = e.detail
+    if (!field.name) {
+      // Update local extra field type until it has a name
+      extraFields = extraFields.map(f => (f.id === field.id ? { ...f, type: newType } : f))
+      return
+    }
+    const update = { ...value, [field.name]: newType }
+    dispatch("change", update)
   }
 </script>
 
@@ -105,17 +125,10 @@
         value={field.name}
         secondary
         placeholder="Enter field name"
-        on:change={fieldNameChanged(field.name)}
+        on:change={fieldNameChanged(field)}
         updateOnChange={false}
       />
-      <Select
-        value={field.type}
-        on:change={e => {
-          value[field.name] = e.detail
-          dispatch("change", value)
-        }}
-        options={typeOptions}
-      />
+      <Select value={field.type} on:change={typeChanged(field)} options={typeOptions} />
       <i
         class="remove-field ri-delete-bin-line"
         on:click={() => {
