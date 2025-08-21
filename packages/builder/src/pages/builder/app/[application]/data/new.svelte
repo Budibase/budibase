@@ -16,7 +16,6 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -25,7 +24,6 @@
   let externalDatasourceLoading = false
 
   $: disabled = sampleDataLoading || externalDatasourceLoading
-  $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -62,11 +60,9 @@
   </div>
 
   <div class="options bb-options">
-    {#if aiTableGenerationEnabled}
-      <div class="ai-generation">
-        <AiTableGeneration />
-      </div>
-    {/if}
+    <div class="ai-generation">
+      <AiTableGeneration />
+    </div>
     <DatasourceOption
       on:click={() => internalTableModal.show()}
       title="Create new table"
