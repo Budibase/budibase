@@ -6,7 +6,6 @@
     tables,
     builderStore,
     viewsV2,
-    workspaceAppStore,
   } from "@/stores/builder"
   import { TriggerStepID } from "@/constants/backend/automations"
   import { goto } from "@roxi/routify"
@@ -24,10 +23,6 @@
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
-
-  $: workspaceAppId = $workspaceAppStore.workspaceApps.find(
-    a => a.isDefault
-  )?._id!
 
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
@@ -91,7 +86,7 @@
     } else {
       preSelected = $viewsV2.list.find(x => x.id === $datasource.id)
     }
-    createScreenModal.show(autoScreenType, preSelected)
+    createScreenModal.show(autoScreenType, undefined, preSelected)
   }
 </script>
 
@@ -171,7 +166,7 @@
   {/if}
 </DetailPopover>
 
-<CreateScreenModal bind:this={createScreenModal} {workspaceAppId} />
+<CreateScreenModal bind:this={createScreenModal} />
 
 <style>
   .center {

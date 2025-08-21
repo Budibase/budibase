@@ -116,7 +116,7 @@
   </div>
   {#if isStep}
     <div class="step-actions">
-      {#if $memoBlock && !isBranchStep($memoBlock) && ($memoBlock.features?.[AutomationFeature.LOOPING] || !$memoBlock.features)}
+      {#if $memoBlock && !isBranchStep($memoBlock) && $memoBlock.features?.[AutomationFeature.LOOPING]}
         <ActionButton
           quiet
           noPadding
@@ -283,6 +283,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
     overflow: auto;
     overflow-x: hidden;
   }

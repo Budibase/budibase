@@ -11,6 +11,7 @@
   export let validation
   export let defaultValue
   export let onChange
+  export let span
   export let helpText = null
 
   let fieldState
@@ -43,6 +44,7 @@
   {disabled}
   {readonly}
   {validation}
+  {span}
   {helpText}
   defaultValue={isTruthy(defaultValue)}
   type="boolean"

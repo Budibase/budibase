@@ -43,15 +43,17 @@
   let inactive = true
 
   const buildDraggable = items => {
+    const seenIds = new Set()
     return items
       .map(item => {
+        let id = listItemKey ? item[listItemKey] : generate()
         return {
-          id: listItemKey ? item[listItemKey] : generate(),
+          id,
           item,
           type: zoneType,
         }
       })
-      .filter(item => item.id)
+      .filter(({ id }) => id && !seenIds.has(id) && seenIds.add(id))
   }
 
   $: if (items) {

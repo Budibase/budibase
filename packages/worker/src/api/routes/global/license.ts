@@ -18,6 +18,7 @@ const activateOfflineLicenseValidator = middleware.joiValidator.body(
 loggedInRoutes
   .post("/api/global/license/refresh", controller.refresh)
   .get("/api/global/license/usage", controller.getQuotaUsage)
+  .get("/api/global/install", controller.getInstallInfo)
   // LICENSE KEY
   .post(
     "/api/global/license/key",

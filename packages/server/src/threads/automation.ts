@@ -21,13 +21,14 @@ import {
   AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
-  LoopStep,
+  LoopV2StepInputs,
   ContextEmitter,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
   isLogicalFilter,
   Branch,
+  LoopV2Step,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -41,65 +42,35 @@ import { cloneDeep } from "lodash/fp"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
-import { isPlainObject } from "lodash"
 import { quotas } from "@budibase/pro"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
-  const { failure } = step.inputs
-  if (!failure) {
-    return false
-  }
-
-  if (isPlainObject(currentItem)) {
-    return Object.values(currentItem).some(e => e === failure)
-  }
-
-  return currentItem === failure
-}
-
-// Returns an array of the things to loop over for a given LoopStep.  This
-// function handles the various ways that a LoopStep can be configured, parsing
-// the input and returning an array of items to loop over.
-function getLoopIterable(step: LoopStep): any[] {
-  let input = step.inputs.binding
-
-  if (Array.isArray(input)) {
-    return input
-  } else if (typeof input === "string") {
-    if (input === "") {
-      input = []
-    } else {
-      try {
-        input = JSON.parse(input)
-      } catch (e) {
-        input = automationUtils.stringSplit(input)
-      }
-    }
-  }
-
-  return Array.isArray(input) ? input : [input]
-}
-
-function getLoopMaxIterations(loopStep: LoopStep): number {
-  const loopMaxIterations =
-    typeof loopStep.inputs.iterations === "string"
-      ? parseInt(loopStep.inputs.iterations)
-      : loopStep.inputs.iterations
-  return Math.min(
-    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
-    env.AUTOMATION_MAX_ITERATIONS
-  )
-}
-
 function stepSuccess(
   step: Readonly<AutomationStep>,
-  outputs: Readonly<Record<string, any>>,
-  inputs?: Readonly<Record<string, any>>
+  outputs: Record<string, any>,
+  inputs?: Record<string, any>
 ): AutomationStepResult {
+  if (step.isLegacyLoop) {
+    outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+
+    const legacyChild: any = (step as LoopV2Step)?.inputs?.children?.[0]
+    const legacyId = legacyChild?.id || step.id
+    const legacyStepId = legacyChild?.stepId || step.stepId
+    const legacyInputs = inputs || legacyChild?.inputs || step.inputs
+
+    return {
+      id: legacyId,
+      stepId: legacyStepId,
+      inputs: legacyInputs,
+      outputs: {
+        success: true,
+        ...outputs,
+      },
+    }
+  }
   return {
     id: step.id,
     stepId: step.stepId,
@@ -113,9 +84,28 @@ function stepSuccess(
 
 function stepFailure(
   step: Readonly<AutomationStep>,
-  outputs: Readonly<Record<string, any>>,
-  inputs?: Readonly<Record<string, any>>
+  outputs: Record<string, any>,
+  inputs?: Record<string, any>
 ): AutomationStepResult {
+  if (step.isLegacyLoop) {
+    // Convert items structure and surface the child step identity for legacy loops
+    outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+
+    const legacyChild: any = (step as any)?.inputs?.children?.[0]
+    const legacyId = legacyChild?.id || step.id
+    const legacyStepId = legacyChild?.stepId || step.stepId
+    const legacyInputs = inputs || legacyChild?.inputs || step.inputs
+
+    return {
+      id: legacyId,
+      stepId: legacyStepId,
+      inputs: legacyInputs,
+      outputs: {
+        success: false,
+        ...outputs,
+      },
+    }
+  }
   return {
     id: step.id,
     stepId: step.stepId,
@@ -209,6 +199,11 @@ class Orchestrator {
   constructor(job: Readonly<AutomationJob>) {
     this.job = job
     this.stopped = false
+
+    // Pre-process the automation to transform legacy loops
+    this.job.data.automation = automationUtils.preprocessAutomation(
+      job.data.automation
+    )
 
     // create an emitter which has the chain count for this automation run in
     // it, so it can block excessive chaining if required
@@ -324,6 +319,7 @@ class Orchestrator {
         stepsByName: {},
         stepsById: {},
         user: trigger.outputs.user,
+        state: {},
         _error: false,
         _stepIndex: 1,
         _stepResults: [],
@@ -369,6 +365,11 @@ class Orchestrator {
         await this.logResult(result)
       }
 
+      // Return any content pushed to state.
+      if (Object.keys(ctx?.state || {}).length > 0) {
+        result.state = ctx.state
+      }
+
       return result
     })
   }
@@ -383,8 +384,15 @@ class Orchestrator {
 
       function addToContext(
         step: AutomationStep,
-        result: AutomationStepResult
+        result: AutomationStepResult,
+        looped = false
       ) {
+        // Put State block data into the state
+        if (step.stepId === AutomationActionStepId.EXTRACT_STATE && !looped) {
+          ctx.state ??= {}
+          ctx.state[result.inputs.key] = result.outputs.value
+        }
+
         ctx.steps[step.id] = result.outputs
         ctx.steps[step.name || step.id] = result.outputs
 
@@ -417,17 +425,17 @@ class Orchestrator {
             stepIndex++
             break
           }
-          case AutomationActionStepId.LOOP: {
-            const stepToLoop = steps[stepIndex + 1]
-            addToContext(
-              stepToLoop,
-              await this.executeLoopStep(ctx, step, stepToLoop)
-            )
-            // We increment by 2 here because the way loops work is that the
-            // step immediately following the loop step is what gets looped.
-            // So when we're done looping, to advance correctly we need to
-            // skip the step that was looped.
-            stepIndex += 2
+          case AutomationActionStepId.LOOP_V2: {
+            const result = await this.executeLoopStep(ctx, step)
+            if (step.isLegacyLoop) {
+              const childStep = step.inputs.children?.[0]
+              if (childStep) {
+                addToContext(childStep, result, true)
+              }
+            } else {
+              addToContext(step, result, true)
+            }
+            stepIndex++
             break
           }
           default: {
@@ -435,6 +443,11 @@ class Orchestrator {
               step,
               await quotas.addAction(async () => {
                 const response = await this.executeStep(ctx, step)
+                if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
+                  ctx.state ??= {}
+                  ctx.state[response.inputs.key] = response.outputs.value
+                }
+
                 events.action.automationStepExecuted({ stepId: step.stepId })
                 return response
               })
@@ -451,70 +464,124 @@ class Orchestrator {
 
   private async executeLoopStep(
     ctx: AutomationContext,
-    step: LoopStep,
-    stepToLoop: AutomationStep
+    step: LoopV2Step
   ): Promise<AutomationStepResult> {
     return await tracer.trace("executeLoopStep", async span => {
-      await processObject(step.inputs, ctx)
+      // Clone the children to avoid processObject modifying them
+      let children = cloneDeep(step.inputs.children) || []
 
-      const maxIterations = getLoopMaxIterations(step)
-      const items: Record<string, any>[] = []
-      let iterations = 0
-      let iterable: any[] = []
+      const inputs = step.inputs as LoopV2StepInputs
+      await processObject(inputs, ctx)
+
+      const maxIterations = automationUtils.getLoopMaxIterations(step)
+
+      // Track loop depth for nested loops
+      const loopDepth = (ctx._loopDepth || 0) + 1
+      ctx._loopDepth = loopDepth
+
       try {
-        iterable = getLoopIterable(step)
-      } catch (err) {
-        span.addTags({
-          status: AutomationStepStatus.INCORRECT_TYPE,
-          iterations,
-        })
-        return stepFailure(stepToLoop, {
-          status: AutomationStepStatus.INCORRECT_TYPE,
-        })
-      }
-
-      for (; iterations < iterable.length; iterations++) {
-        const currentItem = iterable[iterations]
-
-        if (iterations === maxIterations) {
-          span.addTags({
-            status: AutomationStepStatus.MAX_ITERATIONS,
-            iterations,
-          })
-          return stepFailure(stepToLoop, {
-            status: AutomationStepStatus.MAX_ITERATIONS,
-            iterations,
-            items,
-          })
-        }
-
-        if (matchesLoopFailureCondition(step, currentItem)) {
-          span.addTags({
-            status: AutomationStepStatus.FAILURE_CONDITION,
-            iterations,
-          })
-          return stepFailure(stepToLoop, {
-            status: AutomationStepStatus.FAILURE_CONDITION,
-            iterations,
-            items,
-          })
-        }
-
-        ctx.loop = { currentItem }
+        let iterations = 0
+        let iterable: any[] = []
         try {
-          const result = await this.executeStep(ctx, stepToLoop)
-          items.push(result.outputs)
-          if (result.outputs.success === false) {
-            return stepFailure(stepToLoop, { iterations, items })
-          }
-        } finally {
-          ctx.loop = undefined
+          iterable = automationUtils.getLoopIterable(step)
+        } catch (err) {
+          span.addTags({
+            status: AutomationStepStatus.INCORRECT_TYPE,
+            iterations,
+          })
+          return stepFailure(step, {
+            status: AutomationStepStatus.INCORRECT_TYPE,
+          })
         }
-      }
+        const isLegacyLoop = step.isLegacyLoop
 
-      const status =
-        iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
-      return stepSuccess(stepToLoop, { status, iterations, items })
+        const maxStoredResults = isLegacyLoop
+          ? Number.MAX_SAFE_INTEGER
+          : automationUtils.getMaxStoredResults(step)
+
+        const storage = automationUtils.initializeLoopStorage(
+          children,
+          maxStoredResults
+        )
+
+        for (; iterations < iterable.length; iterations++) {
+          const currentItem = iterable[iterations]
+
+          if (iterations === maxIterations) {
+            span.addTags({
+              status: AutomationStepStatus.MAX_ITERATIONS,
+              iterations,
+            })
+            return stepFailure(
+              step,
+              automationUtils.buildLoopOutput(
+                storage,
+                AutomationStepStatus.MAX_ITERATIONS,
+                iterations
+              )
+            )
+          }
+
+          if (automationUtils.matchesLoopFailureCondition(step, currentItem)) {
+            span.addTags({
+              status: AutomationStepStatus.FAILURE_CONDITION,
+              iterations,
+            })
+            return stepFailure(
+              step,
+              automationUtils.buildLoopOutput(
+                storage,
+                AutomationStepStatus.FAILURE_CONDITION,
+                iterations
+              )
+            )
+          }
+
+          // Save the current loop context to support nested loops
+          const savedLoopContext = ctx.loop
+          ctx.loop = { currentItem }
+          try {
+            // For both legacy and new loops, we need to preserve the step index
+            // so child steps don't affect the main step numbering
+            const savedStepIndex = ctx._stepIndex
+            const iterationResults = await this.executeSteps(ctx, children)
+            ctx._stepIndex = savedStepIndex
+
+            // Process results based on their type
+            for (const result of iterationResults) {
+              automationUtils.processStandardResult(storage, result, iterations)
+            }
+
+            const hasFailures = iterationResults.some(
+              result => result.outputs.success === false
+            )
+            if (hasFailures) {
+              return stepFailure(
+                step,
+                automationUtils.buildLoopOutput(
+                  storage,
+                  undefined,
+                  undefined,
+                  true
+                )
+              )
+            }
+          } finally {
+            // Restore the previous loop context (for nested loops)
+            ctx.loop = savedLoopContext
+          }
+        }
+
+        const status =
+          iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
+
+        return stepSuccess(
+          step,
+          automationUtils.buildLoopOutput(storage, status, iterations)
+        )
+      } finally {
+        ctx._loopDepth = loopDepth - 1
+      }
     })
   }
 
@@ -573,7 +640,10 @@ class Orchestrator {
       }
 
       let inputs = cloneDeep(step.inputs)
-      if (step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2) {
+      if (
+        step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+      ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
         // function that runs it. So we skip this next bit for that step.

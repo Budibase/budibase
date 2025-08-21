@@ -9,7 +9,7 @@ import {
   UpdateEnvironmentVariableRequest,
 } from "@budibase/types"
 
-type EnvVar = {
+export type EnvVar = {
   name: string
 }
 

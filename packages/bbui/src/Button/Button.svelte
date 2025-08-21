@@ -110,7 +110,15 @@
     border-color: transparent;
     color: var(--spectrum-global-color-gray-900);
   }
-  .spectrum-Button--warning.new-styles:hover {
+  .spectrum-Button--warning.new-styles:not(.is-disabled):hover {
     background: var(--spectrum-global-color-red-500);
+  }
+  .spectrum-Button--primary.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-Button--warning.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>

@@ -111,6 +111,10 @@ export const useRecaptcha = () => {
   return useFeature(Feature.RECAPTCHA)
 }
 
+export const usePkceOidc = () => {
+  return useFeature(Feature.PKCE_OIDC)
+}
+
 export const useBudibaseAI = (opts?: { monthlyQuota?: number }) => {
   return useFeature(Feature.BUDIBASE_AI, {
     monthlyQuotas: [

@@ -7,7 +7,7 @@
   import { sdk } from "@budibase/shared-core"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-  import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
+  import FavouriteAppButton from "@/pages/builder/portal/apps/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
   export let app

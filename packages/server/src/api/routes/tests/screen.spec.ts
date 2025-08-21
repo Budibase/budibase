@@ -30,6 +30,12 @@ describe("/screens", () => {
 
   beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
+    await config.newTenant()
+    // Replace the regular app with an onboarding app to get sample data
+    await config.createAppWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -65,7 +71,7 @@ describe("/screens", () => {
     let screen1: Screen, screen2: Screen
     let role1: Role, role2: Role, multiRole: Role
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       role1 = await config.api.roles.save({
         name: "role1",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -195,6 +201,10 @@ describe("/screens", () => {
   })
 
   describe("destroy", () => {
+    beforeEach(async () => {
+      await config.newTenant()
+    })
+
     it("should be able to delete the screen", async () => {
       const [{ _id: workspaceAppId }] = (await config.api.workspaceApp.fetch())
         .workspaceApps
@@ -224,7 +234,7 @@ describe("/screens", () => {
       let featureCleanup: () => void
       beforeAll(() => {
         featureCleanup = features.testutils.setFeatureFlags("*", {
-          WORKSPACE_APPS: true,
+          WORKSPACES: true,
         })
       })
 
@@ -232,22 +242,7 @@ describe("/screens", () => {
         featureCleanup()
       })
 
-      it("should not allow deleting the last screen", async () => {
-        const { workspaceApp } = await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest()
-        )
-        const screen = await config.api.screen.save({
-          ...basicScreen(),
-          workspaceAppId: workspaceApp._id,
-        })
-
-        await config.api.screen.destroy(screen._id!, screen._rev!, {
-          status: 409,
-          body: { message: "Cannot delete the last screen in a workspace app" },
-        })
-      })
-
-      it("should allow deleting other screens", async () => {
+      it("should allow deleting screens", async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest()
         )
@@ -265,20 +260,24 @@ describe("/screens", () => {
           screenToDelete._id!,
           screenToDelete._rev!
         )
+        expect(await config.api.screen.list()).toHaveLength(2)
+
         screenToDelete = popRandomScreen(screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
           screenToDelete._rev!
         )
+        expect(await config.api.screen.list()).toHaveLength(1)
+
         screenToDelete = popRandomScreen(screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
-          screenToDelete._rev!,
-          { status: 409 }
+          screenToDelete._rev!
         )
+        expect(await config.api.screen.list()).toHaveLength(0)
       })
 
-      it("should allow deleting screens for other apps", async () => {
+      it("should allow deleting screens across all apps", async () => {
         const { workspaceApp: workspaceApp1 } =
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest()
@@ -318,9 +317,9 @@ describe("/screens", () => {
         screenToDelete = popRandomScreen(app1Screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
-          screenToDelete._rev!,
-          { status: 409 }
+          screenToDelete._rev!
         )
+        expect(await config.api.screen.list()).toHaveLength(2)
       })
     })
   })

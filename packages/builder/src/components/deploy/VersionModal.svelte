@@ -7,8 +7,10 @@
     Button,
     StatusLight,
     Link,
+    Helpers,
   } from "@budibase/bbui"
   import { appStore, initialise } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { API } from "@/api"
   import { ChangelogURL } from "@/constants"
 
@@ -25,6 +27,7 @@
 
   let updateModal
 
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
   $: appId = $appStore.appId
   $: updateAvailable =
     $appStore.upgradableVersion &&
@@ -64,7 +67,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$appStore.revertableVersion}`
+        `${Helpers.capitalise(appOrWorkspace)} reverted successfully to version ${$appStore.revertableVersion}`
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
@@ -78,7 +81,7 @@
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
-    title="App version"
+    title={"Client version"}
     confirmText="Update"
     cancelText={updateAvailable ? "Cancel" : "Close"}
     onConfirm={update}
@@ -91,15 +94,15 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b>, but
-        version
+        This {appOrWorkspace} is currently using version
+        <b>{$appStore.version}</b>, but version
         <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
         features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b> which is the
-        latest version available.
+        This {appOrWorkspace} is currently using version
+        <b>{$appStore.version}</b> which is the latest version available.
       </Body>
     {/if}
     <Body size="S">
@@ -108,7 +111,8 @@
     </Body>
     {#if revertAvailable}
       <Body size="S">
-        You can revert this app to version
+        You can revert this {appOrWorkspace}
+        to client version
         <b>{$appStore.revertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>

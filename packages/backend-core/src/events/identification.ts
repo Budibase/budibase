@@ -122,7 +122,8 @@ const identifyInstallationGroup = async (
 const identifyTenantGroup = async (
   tenantId: string,
   hosting: Hosting,
-  timestamp?: string | number
+  timestamp: number,
+  version = env.VERSION
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
@@ -135,6 +136,8 @@ const identifyTenantGroup = async (
     hosting,
     environment,
     installationId,
+    createdAt: timestamp,
+    createdVersion: version,
   }
 
   await identifyGroup(group, timestamp)
@@ -265,6 +268,7 @@ export const getUniqueTenantId = async (tenantId: string): Promise<string> => {
       } else {
         uniqueTenantId = `${newid()}_${tenantId}`
         config.config.uniqueTenantId = uniqueTenantId
+        config.config.createdVersion = env.VERSION
         await db.put(config)
         return uniqueTenantId
       }
