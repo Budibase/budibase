@@ -38,10 +38,8 @@ export interface UpdateSelfRequest {
   lastName?: string
   password?: string
   forceResetPassword?: boolean
-  onboardedAt?: string
   freeTrialConfirmedAt?: string
   appFavourites?: string[]
-  tours?: Record<string, Date>
   appSort?: string
 }
 

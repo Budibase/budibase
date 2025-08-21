@@ -45,7 +45,6 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
       {bindings}
       {parseSettings}
       on:change

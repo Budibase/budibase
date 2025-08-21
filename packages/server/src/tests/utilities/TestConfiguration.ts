@@ -35,7 +35,6 @@ import {
   automation as automationController,
   webhook as webhookController,
   query as queryController,
-  screen as screenController,
   layout as layoutController,
   view as viewController,
 } from "./controllers"
@@ -67,6 +66,7 @@ import {
   View,
   Webhook,
   WithRequired,
+  DevInfo,
 } from "@budibase/types"
 
 import API from "./api"
@@ -98,6 +98,8 @@ export default class TestConfiguration {
   request?: supertest.SuperTest<supertest.Test>
   started: boolean
   appId?: string
+  defaultWorkspaceAppId?: string
+  name?: string
   allApps: App[]
   app?: App
   prodApp?: App
@@ -158,6 +160,15 @@ export default class TestConfiguration {
     return this.appId
   }
 
+  getDefaultWorkspaceAppId() {
+    if (!this.defaultWorkspaceAppId) {
+      throw new Error(
+        "appId has not been initialised, call config.init() first"
+      )
+    }
+    return this.defaultWorkspaceAppId
+  }
+
   getProdAppId() {
     if (!this.prodAppId) {
       throw new Error(
@@ -167,11 +178,11 @@ export default class TestConfiguration {
     return this.prodAppId
   }
 
-  getUser(): User {
+  getUser() {
     if (!this.user) {
       throw new Error("User has not been initialised, call config.init() first")
     }
-    return this.user
+    return { ...this.user, _id: this.user._id! }
   }
 
   getUserDetails() {
@@ -248,7 +259,7 @@ export default class TestConfiguration {
     }
   }
 
-  async withUser(user: User, f: () => Promise<void>) {
+  async withUser<T>(user: User, f: () => Promise<T>): Promise<T> {
     const oldUser = this.user
     this.user = user
     try {
@@ -261,11 +272,13 @@ export default class TestConfiguration {
   async withApp<R>(app: App | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
-    try {
-      return await f()
-    } finally {
-      this.appId = oldAppId
-    }
+    return await context.doInAppContext(this.appId, async () => {
+      try {
+        return await f()
+      } finally {
+        this.appId = oldAppId
+      }
+    })
   }
 
   async withProdApp<R>(f: () => Promise<R>) {
@@ -344,8 +357,8 @@ export default class TestConfiguration {
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
     return {
-      _rev: resp.rev,
       ...user,
+      _rev: resp.rev,
     }
   }
 
@@ -412,6 +425,7 @@ export default class TestConfiguration {
           sessionId: this.sessionIdForUser(userId),
           tenantId: this.getTenantId(),
           email: user.email,
+          csrfToken: this.csrfToken,
         })
       }
       // have to fake this
@@ -455,19 +469,22 @@ export default class TestConfiguration {
     })
   }
 
-  async withHeaders(
+  async withHeaders<T>(
     headers: Record<string, string | string[]>,
-    cb: () => Promise<unknown>
+    cb: () => Promise<T>
   ) {
     this.temporaryHeaders = headers
     try {
-      await cb()
+      return await cb()
     } finally {
       this.temporaryHeaders = undefined
     }
   }
 
-  defaultHeaders(extras = {}, prodApp = false) {
+  defaultHeaders(
+    extras: Record<string, string | string[]> = {},
+    prodApp = false
+  ) {
     const tenantId = this.getTenantId()
     const user = this.getUser()
     const authObj: AuthToken = {
@@ -477,9 +494,27 @@ export default class TestConfiguration {
     }
     const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
+    let cookie: (string | string[])[] = [
+      `${constants.Cookie.Auth}=${authToken}`,
+    ]
+    const tempHeaderCookie = this.temporaryHeaders?.["Cookie"]
+    let hasAuth = false
+    if (Array.isArray(tempHeaderCookie)) {
+      hasAuth = !!tempHeaderCookie.find(cookie =>
+        cookie.includes(constants.Cookie.Auth)
+      )
+    } else if (typeof tempHeaderCookie === "string") {
+      hasAuth = tempHeaderCookie.includes(constants.Cookie.Auth)
+    }
+    if (tempHeaderCookie && hasAuth) {
+      cookie = [tempHeaderCookie]
+    } else if (tempHeaderCookie) {
+      cookie.push(tempHeaderCookie)
+      delete this.temporaryHeaders?.["Cookie"]
+    }
     const headers: any = {
       Accept: "application/json",
-      Cookie: [`${constants.Cookie.Auth}=${authToken}`],
+      Cookie: cookie,
       [constants.Header.CSRF_TOKEN]: this.csrfToken,
       Host: this.tenantHost(),
       ...extras,
@@ -496,10 +531,13 @@ export default class TestConfiguration {
     }
   }
 
-  publicHeaders({ prodApp = true } = {}) {
+  publicHeaders({
+    prodApp = true,
+    extras = {},
+  }: { prodApp?: boolean; extras?: Record<string, string | string[]> } = {}) {
     const appId = prodApp ? this.prodAppId : this.appId
 
-    const headers: any = {
+    const headers: Record<string, string> = {
       Accept: "application/json",
       Cookie: "",
     }
@@ -512,6 +550,7 @@ export default class TestConfiguration {
     return {
       ...headers,
       ...this.temporaryHeaders,
+      ...extras,
     }
   }
 
@@ -575,17 +614,17 @@ export default class TestConfiguration {
     }
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
-    let devInfo: any
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
+    const devInfo = await db.tryGet<DevInfo>(id)
+    if (devInfo && devInfo.apiKey) {
+      return devInfo.apiKey
     }
-    devInfo.apiKey = encryption.encrypt(
+
+    const apiKey = encryption.encrypt(
       `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
     )
-    await db.put(devInfo)
-    return devInfo.apiKey
+    const newDevInfo: DevInfo = { _id: id, userId, apiKey }
+    await db.put(newDevInfo)
+    return apiKey
   }
 
   // APP
@@ -600,6 +639,38 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+
+    return await context.doInAppContext(this.app.appId!, async () => {
+      // create production app
+      this.prodApp = await this.publish()
+
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app!)
+
+      return this.app!
+    })
+  }
+
+  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+    this.appId = undefined
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+          url,
+          isOnboarding: "true",
+        })) as App
+    )
+    this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -910,7 +981,7 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
-    return this._req(screenController.save, config)
+    return this.api.screen.save(config)
   }
 
   // LAYOUT

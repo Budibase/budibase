@@ -6,9 +6,11 @@
   export let vertical = false
   export let noMargin = false
   export let noGrid = false
+  export let id: string | undefined = undefined
 </script>
 
 <hr
+  {id}
   class:noMargin
   class:noGrid
   class="spectrum-Divider spectrum-Divider--{vertical

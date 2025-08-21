@@ -11,6 +11,7 @@ import {
   UploadPluginResponse,
   FetchPluginResponse,
   DeletePluginResponse,
+  PluginMetadata,
 } from "@budibase/types"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
@@ -53,10 +54,11 @@ export async function create(
   const { source, url, headers, githubToken } = ctx.request.body
 
   try {
-    let metadata
-    let directory
+    let metadata: PluginMetadata
+    let directory: string
+
     // Generating random name as a backup and needed for url
-    let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
+    const name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
     switch (source) {
       case PluginSource.NPM: {
@@ -81,12 +83,14 @@ export async function create(
         directory = directoryUrl
         break
       }
+      default:
+        ctx.throw(400, "Invalid source")
     }
 
-    pluginCore.validate(metadata?.schema)
+    pluginCore.validate(metadata.schema)
 
     // Only allow components in cloud
-    if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
+    if (!env.SELF_HOSTED && metadata.schema?.type !== PluginType.COMPONENT) {
       throw new Error(
         "Only component plugins are supported outside of self-host"
       )

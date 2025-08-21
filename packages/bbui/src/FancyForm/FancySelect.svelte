@@ -90,7 +90,7 @@
   </div>
 
   <div class="align arrow-alignment">
-    <Icon name="ChevronDown" />
+    <Icon name="caret-down" />
   </div>
 </FancyField>
 
@@ -125,7 +125,9 @@
     font-size: 15px;
     line-height: 17px;
     color: var(--spectrum-global-color-gray-900);
-    transition: transform 130ms ease-out, opacity 130ms ease-out;
+    transition:
+      transform 130ms ease-out,
+      opacity 130ms ease-out;
     opacity: 1;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -139,7 +141,9 @@
     font-size: 15px;
     line-height: 17px;
     color: var(--spectrum-global-color-gray-900);
-    transition: transform 130ms ease-out, opacity 130ms ease-out;
+    transition:
+      transform 130ms ease-out,
+      opacity 130ms ease-out;
     transform: translateY(9px);
   }
 

@@ -11,7 +11,7 @@ export interface SaveQueryRequest extends Query {}
 export interface SaveQueryResponse extends Query {}
 
 export interface ImportRestQueryRequest {
-  datasourceId: string
+  datasourceId?: string
   data: string
   datasource: Datasource
 }
@@ -34,7 +34,7 @@ export interface PreviewQueryResponse {
 }
 
 export interface ExecuteQueryRequest {
-  parameters?: Record<string, string>
+  parameters?: Record<string, string | number | null>
   pagination?: any
 }
 export type ExecuteV1QueryResponse = Record<string, any>[]

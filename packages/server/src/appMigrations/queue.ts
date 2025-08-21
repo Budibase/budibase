@@ -1,6 +1,5 @@
 import { queue, logging } from "@budibase/backend-core"
 import { Job } from "bull"
-import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"
 
 const MAX_ATTEMPTS = 3
@@ -13,7 +12,7 @@ export type AppMigrationJob = {
 
 // always create app migration queue - so that events can be pushed and read from it
 // across the different api and automation services
-const appMigrationQueue = queue.createQueue<AppMigrationJob>(
+const appMigrationQueue = new queue.BudibaseQueue<AppMigrationJob>(
   queue.JobQueue.APP_MIGRATION,
   {
     jobOptions: {
@@ -37,7 +36,7 @@ export function init() {
 async function processMessage(job: Job<AppMigrationJob>) {
   const { appId } = job.data
 
-  await processMigrations(appId, MIGRATIONS)
+  await processMigrations(appId)
 }
 
 export function getAppMigrationQueue() {

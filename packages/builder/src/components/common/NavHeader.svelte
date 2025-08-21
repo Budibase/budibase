@@ -1,15 +1,17 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte"
   import { Icon, Body } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
-  export let title
-  export let placeholder
-  export let value
-  export let onAdd
-  export let search
+  export let title: string
+  export let placeholder: string = ""
+  export let value: string | undefined = undefined
+  export let onAdd: (_e: Event) => void
+  export let search: boolean = false
+  export let searchable = true
+  export let showAddIcon = true
 
-  let searchInput
+  let searchInput: HTMLInputElement
 
   const openSearch = async () => {
     search = true
@@ -22,17 +24,17 @@
     value = ""
   }
 
-  const onKeyDown = e => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       closeSearch()
     }
   }
 
-  const handleAddButton = () => {
+  const handleAddButton = (e: Event) => {
     if (search) {
       closeSearch()
     } else {
-      onAdd()
+      onAdd(e)
     }
   }
 </script>
@@ -51,25 +53,43 @@
   />
 
   <div class="title" class:hide={search}>
-    <Body size="S">{title}</Body>
-  </div>
-  <div
-    on:click={openSearch}
-    on:keydown={keyUtils.handleEnter(openSearch)}
-    class="searchButton"
-    class:hide={search}
-  >
-    <Icon size="S" name="Search" hoverable hoverColor="var(--ink)" />
+    {#if $$slots.default}
+      <slot></slot>
+    {:else}
+      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
+        {title}</Body
+      >
+    {/if}
   </div>
 
-  <div
-    on:click={handleAddButton}
-    on:keydown={keyUtils.handleEnter(handleAddButton)}
-    class="addButton"
-    class:rotate={search}
-  >
-    <Icon name="Add" hoverable hoverColor="var(--ink)" />
-  </div>
+  {#if searchable}
+    <div
+      on:click={openSearch}
+      on:keydown={keyUtils.handleEnter(openSearch)}
+      class="searchButton"
+      class:hide={search}
+    >
+      <Icon
+        size="S"
+        name="magnifying-glass"
+        hoverable
+        hoverColor="var(--ink)"
+      />
+    </div>
+  {/if}
+
+  {#if showAddIcon}
+    <div
+      on:click={handleAddButton}
+      on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
+      class="addButton"
+      class:rotate={search}
+    >
+      <Icon name="plus" hoverable hoverColor="var(--ink)" />
+    </div>
+  {/if}
+
+  <slot name="right" />
 </div>
 
 <style>

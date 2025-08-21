@@ -74,8 +74,8 @@
           flex: 3;
           overflow: scroll;
           {{#if (and ${safe("state")}.${safe(stateKey)} ${safe(
-          "device"
-        )}.${safe("mobile")}) }}
+            "device"
+          )}.${safe("mobile")}) }}
             display: none;
           {{/if}}
         `,
@@ -124,6 +124,7 @@
       >
         <BlockComponent
           type="spectrumcard"
+          context="repeater"
           props={{
             title: cardTitle,
             subtitle: cardSubtitle,
@@ -168,8 +169,8 @@
           border-radius: 4px;
           flex: 4;
           {{#if (or ${safe("state")}.${safe(stateKey)} ${safe("device")}.${safe(
-          "mobile"
-        )}) }}
+            "mobile"
+          )}) }}
             display: none;
           {{/if}}
           `,
@@ -190,7 +191,7 @@
         }}
       />
       <BlockComponent
-        type="text"
+        type="textv2"
         order={1}
         props={{
           text: "Select a row to view its fields",

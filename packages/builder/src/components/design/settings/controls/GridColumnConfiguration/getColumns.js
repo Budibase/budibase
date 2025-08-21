@@ -1,4 +1,4 @@
-const modernize = columns => {
+export const modernize = columns => {
   if (!columns) {
     return []
   }
@@ -14,11 +14,7 @@ const modernize = columns => {
   return columns
 }
 
-const removeInvalidAddMissing = (
-  columns = [],
-  defaultColumns,
-  primaryDisplayColumnName
-) => {
+export const removeInvalidAddMissing = (columns = [], defaultColumns = []) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
 
@@ -36,25 +32,17 @@ const removeInvalidAddMissing = (
 
   const combinedColumns = [...validColumns, ...missingColumns]
 
-  // Ensure the primary display column is always visible
-  const primaryDisplayIndex = combinedColumns.findIndex(
-    column => column.field === primaryDisplayColumnName
-  )
-  if (primaryDisplayIndex > -1) {
-    combinedColumns[primaryDisplayIndex].active = true
-  }
-
   return combinedColumns
 }
 
-const getDefault = (schema = {}) => {
+export const getDefault = (schema = {}) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
     .map(column => ({
       label: column.name,
       field: column.name,
       active: column.visible ?? true,
-      order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
+      order: column.visible ? (column.order ?? -1) : Number.MAX_SAFE_INTEGER,
     }))
 
   defaultValues.sort((a, b) => a.order - b.order)
@@ -93,7 +81,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
   })
 }
 
-const getColumns = ({
+export const getColumns = ({
   columns,
   schema,
   primaryDisplayColumnName,
@@ -132,5 +120,3 @@ const getColumns = ({
     },
   }
 }
-
-export default getColumns

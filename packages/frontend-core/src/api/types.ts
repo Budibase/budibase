@@ -10,12 +10,14 @@ import { ConfigEndpoints } from "./configs"
 import { DatasourceEndpoints } from "./datasources"
 import { EnvironmentVariableEndpoints } from "./environmentVariables"
 import { EventEndpoints } from "./events"
+import { FeatureFlagEndpoints } from "./features"
 import { FlagEndpoints } from "./flags"
 import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
 import { LicensingEndpoints } from "./licensing"
 import { LogEndpoints } from "./logs"
 import { MigrationEndpoints } from "./migrations"
+import { OAuth2Endpoints } from "./oauth2"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
 import { PluginEndpoins } from "./plugins"
@@ -32,6 +34,13 @@ import { TemplateEndpoints } from "./templates"
 import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
+import { AgentEndpoints } from "./agents"
+import { NavigationEndpoints } from "./navigation"
+import { WorkspaceAppEndpoints } from "./workspaceApps"
+import { ResourceEndpoints } from "./resource"
+import { DeploymentEndpoints } from "./deploy"
+import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
+import { RecaptchaEndpoints } from "./recaptcha"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -63,7 +72,7 @@ export type APICallConfig<RequestT, ResponseT> = {
 
 export type APICallParams<
   RequestT = null,
-  ResponseT = void
+  ResponseT = void,
 > = RequestT extends null
   ? Pick<APICallConfig<RequestT, ResponseT>, "url"> &
       Partial<APICallConfig<RequestT, ResponseT>>
@@ -102,6 +111,7 @@ export type APIError = {
 
 export type APIClient = BaseAPIClient &
   AIEndpoints &
+  AgentEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
@@ -132,4 +142,15 @@ export type APIClient = BaseAPIClient &
   TableEndpoints &
   TemplateEndpoints &
   UserEndpoints &
-  ViewEndpoints & { rowActions: RowActionEndpoints; viewV2: ViewV2Endpoints }
+  FeatureFlagEndpoints &
+  ViewEndpoints & {
+    resource: ResourceEndpoints
+    rowActions: RowActionEndpoints
+    viewV2: ViewV2Endpoints
+    oauth2: OAuth2Endpoints
+    navigation: NavigationEndpoints
+    workspaceApp: WorkspaceAppEndpoints
+    workspace: WorkspaceFavouriteEndpoints
+    deployment: DeploymentEndpoints
+    recaptcha: RecaptchaEndpoints
+  }

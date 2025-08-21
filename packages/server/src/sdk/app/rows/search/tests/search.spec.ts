@@ -10,16 +10,13 @@ import {
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
 
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../../../tests/utilities/structures"
 
 // These test cases are only for things that cannot be tested through the API
 // (e.g. limiting searches to returning specific fields). If it's possible to
 // test through the API, it should be done there instead.
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -188,14 +185,36 @@ if (descriptions.length) {
         })
       })
 
-      it.each([
-        [["id", "name", "age"], 3],
-        [["name", "age"], 10],
-      ])(
-        "cannot query by non search fields (fields: %s)",
-        async (queryFields, expectedRows) => {
-          await config.doInContext(config.appId, async () => {
-            const { rows } = await search({
+      it("should return results when querying valid fields", async () => {
+        await config.doInContext(config.appId, async () => {
+          const { rows } = await search({
+            tableId: table._id!,
+            query: {
+              $or: {
+                conditions: [
+                  {
+                    $and: {
+                      conditions: [
+                        { range: { id: { low: 2, high: 4 } } },
+                        { range: { id: { low: 3, high: 5 } } },
+                      ],
+                    },
+                  },
+                  { equal: { id: 7 } },
+                ],
+              },
+            },
+            fields: ["id", "name", "age"],
+          })
+
+          expect(rows).toHaveLength(3)
+        })
+      })
+
+      it("should throw 400 when querying fields not in the restricted field list", async () => {
+        await config.doInContext(config.appId, async () => {
+          await expect(
+            search({
               tableId: table._id!,
               query: {
                 $or: {
@@ -212,13 +231,11 @@ if (descriptions.length) {
                   ],
                 },
               },
-              fields: queryFields,
+              fields: ["name", "age"], // id is not in this list
             })
-
-            expect(rows).toHaveLength(expectedRows)
-          })
-        }
-      )
+          ).rejects.toThrow("Invalid filter field: id")
+        })
+      })
     }
   )
 }

@@ -1,25 +1,19 @@
-<script>
-  import {
-    keepOpen,
-    Modal,
-    notifications,
-    Body,
-    Layout,
-    ModalContent,
-  } from "@budibase/bbui"
-  import { processStringSync } from "@budibase/string-templates"
-  import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
+<script lang="ts">
+  import { keepOpen, Body, Layout, ModalContent } from "@budibase/bbui"
   import ConfigInput from "./ConfigInput.svelte"
   import { createValidatedConfigStore } from "./stores/validatedConfig"
   import { createValidatedNameStore } from "./stores/validatedName"
   import { get } from "svelte/store"
-  import { environment } from "@/stores/portal"
+  import type { UIIntegration } from "@budibase/types"
 
-  export let integration
-  export let config
-  export let onSubmit = () => {}
-  export let showNameField = false
-  export let nameFieldValue = ""
+  export let integration: UIIntegration
+  export let config: Record<string, any>
+  export let onSubmit: (_value: {
+    config: Record<string, any>
+    name: string
+  }) => Promise<void> | void = () => {}
+  export let showNameField: boolean = false
+  export let nameFieldValue: string = ""
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
@@ -38,24 +32,6 @@
     }
 
     return keepOpen
-  }
-
-  let createVariableModal
-  let configValueSetterCallback = () => {}
-
-  const showModal = setter => {
-    configValueSetterCallback = setter
-    createVariableModal.show()
-  }
-
-  async function saveVariable(data) {
-    try {
-      await environment.createVariable(data)
-      configValueSetterCallback(`{{ env.${data.name} }}`)
-      createVariableModal.hide()
-    } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
   }
 </script>
 
@@ -79,30 +55,23 @@
       value={$nameStore.name}
       error={$nameStore.error}
       name="Name"
-      showModal={() => showModal(nameStore.updateValue)}
       on:blur={nameStore.markActive}
       on:change={e => nameStore.updateValue(e.detail)}
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, hidden, config, placeholder }}
-    {#if hidden === undefined || !eval(processStringSync(hidden, $configStore.config))}
-      <ConfigInput
-        {type}
-        {value}
-        {error}
-        {name}
-        {config}
-        {placeholder}
-        showModal={() =>
-          showModal(newValue => configStore.updateFieldValue(key, newValue))}
-        on:blur={() => configStore.markFieldActive(key)}
-        on:change={e => configStore.updateFieldValue(key, e.detail)}
-      />
-    {/if}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+    <ConfigInput
+      {type}
+      {value}
+      {error}
+      {name}
+      {config}
+      {placeholder}
+      on:blur={() => configStore.markFieldActive(key)}
+      on:change={e => configStore.updateFieldValue(key, e.detail)}
+      on:nestedFieldBlur={e =>
+        configStore.markFieldActive(`${key}.${e.detail}`)}
+    />
   {/each}
 </ModalContent>
-
-<Modal bind:this={createVariableModal}>
-  <CreateEditVariableModal save={saveVariable} />
-</Modal>

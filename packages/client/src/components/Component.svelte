@@ -196,8 +196,6 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  const checkGrid = x =>
-    x?._component?.endsWith("/container") && x?.layout === "grid"
   $: insideGrid = checkGrid(parent)
   $: isGrid = checkGrid(instance)
   $: gridMetadata = {
@@ -601,6 +599,18 @@
     }
   }
 
+  const checkGrid = x => {
+    // Check for a grid container
+    if (x?._component?.endsWith("/container") && x?.layout === "grid") {
+      return true
+    }
+    // Check for a PDF (always grid)
+    if (x?._component?.endsWith("/pdf")) {
+      return true
+    }
+    return false
+  }
+
   onMount(() => {
     // Register this component instance for external access
     if ($appStore.isDevApp) {
@@ -680,7 +690,9 @@
     gap: var(--spacing-m) !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
-    transition: padding 260ms ease-out, border 260ms ease-out;
+    transition:
+      padding 260ms ease-out,
+      border 260ms ease-out;
   }
   .interactive {
     cursor: default !important;

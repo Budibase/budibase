@@ -105,6 +105,7 @@
 <style>
   .abs-tooltip {
     display: contents;
+    pointer-events: all;
   }
   .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
     width: max-content;
@@ -115,7 +116,9 @@
     pointer-events: none;
     margin: 0;
     max-width: 280px;
-    transition: top 130ms ease-out, left 130ms ease-out;
+    transition:
+      top 130ms ease-out,
+      left 130ms ease-out;
   }
   .spectrum-Tooltip-label {
     display: -webkit-box;

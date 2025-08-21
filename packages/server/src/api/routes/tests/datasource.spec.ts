@@ -77,7 +77,7 @@ describe("/datasources", () => {
 
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
-      nock("http://www.example.com/")
+      nock("http://www.example.com")
         .get("/")
         .reply(200, [{ value: "test" }])
         .get("/?test=test")
@@ -165,7 +165,8 @@ describe("/datasources", () => {
 })
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
@@ -192,6 +193,7 @@ if (descriptions.length) {
           expect(ds).toEqual({
             config: expect.any(Object),
             plus: datasource.plus,
+            usesEnvironmentVariables: false,
             source: datasource.source,
             isSQL: true,
             type: "datasource_plus",
@@ -590,7 +592,8 @@ if (descriptions.length) {
 }
 
 const datasources = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS, DatabaseName.ORACLE],
+  plus: true,
+  exclude: [DatabaseName.SQS, DatabaseName.ORACLE],
 })
 
 if (datasources.length) {
@@ -638,14 +641,16 @@ if (datasources.length) {
         })
 
         it("should be able to export and reimport a schema", async () => {
-          let { schema } = await config.api.datasource.externalSchema(
-            datasource
-          )
+          let { schema } =
+            await config.api.datasource.externalSchema(datasource)
 
           if (isPostgres) {
             // pg_dump 17 puts this config parameter into the dump but no DB < 17
             // can load it. We're using postgres 16 in tests at the time of writing.
             schema = schema.replace("SET transaction_timeout = 0;", "")
+            // Remove \restrict and \unrestrict commands that are not valid in older PostgreSQL versions
+            schema = schema.replace(/\\restrict\s+[^\n]+\n?/g, "")
+            schema = schema.replace(/\\unrestrict\s+[^\n]+\n?/g, "")
           }
           if (isPostgres && isLegacy) {
             // in older versions of Postgres, this is not a valid option - Postgres 9.5 does not support this.

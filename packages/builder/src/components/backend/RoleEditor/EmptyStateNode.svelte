@@ -16,7 +16,8 @@
     font-size: 16px;
     text-align: center;
     color: var(--spectrum-global-color-gray-800);
-    text-shadow: 4px 4px 10px var(--background-color),
+    text-shadow:
+      4px 4px 10px var(--background-color),
       4px -4px 10px var(--background-color),
       -4px 4px 10px var(--background-color),
       -4px -4px 10px var(--background-color);

@@ -12,7 +12,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <ActionButton on:click={() => (open = true)} icon="Help" quiet>
+  <ActionButton on:click={() => (open = true)} icon="question" quiet>
     Why can't I edit this table?
   </ActionButton>
 </div>

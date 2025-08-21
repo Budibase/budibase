@@ -6,7 +6,7 @@
 
 <div class="align">
   <div class="spacing">
-    <Icon name="User" />
+    <Icon name="user" />
   </div>
   {parseInt(value?.length) || 0}
 </div>

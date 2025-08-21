@@ -15,7 +15,7 @@
 </script>
 
 <Panel>
-  <div slot="controls">
+  <div class="controls" slot="controls">
     <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
       Create new query
     </Button>
@@ -41,3 +41,10 @@
     customRenderers={[{ column: "queryVerb", component: CapitaliseRenderer }]}
   />
 </Panel>
+
+<style>
+  .controls {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+</style>

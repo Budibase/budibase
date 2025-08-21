@@ -7,6 +7,7 @@ import {
   OIDCConfig,
   OIDCInnerConfig,
   OIDCLogosConfig,
+  RecaptchaConfig,
   SCIMConfig,
   SCIMInnerConfig,
   SettingsConfig,
@@ -47,6 +48,9 @@ export async function getConfig<T extends Config>(
 export async function save(
   config: Config
 ): Promise<{ id: string; rev: string }> {
+  if (!config._id) {
+    config._id = generateConfigID(config.type)
+  }
   const db = context.getGlobalDB()
   return db.put(config)
 }
@@ -245,6 +249,7 @@ export async function getSMTPConfig(
         user: env.SMTP_USER!,
         pass: env.SMTP_PASSWORD!,
       },
+      fallback: true,
     }
   }
 }
@@ -260,4 +265,12 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 
 export async function getAIConfig(): Promise<AIConfig | undefined> {
   return getConfig<AIConfig>(ConfigType.AI)
+}
+
+// RECAPTCHA
+
+export async function getRecaptchaConfig(): Promise<
+  RecaptchaConfig | undefined
+> {
+  return getConfig<RecaptchaConfig>(ConfigType.RECAPTCHA)
 }

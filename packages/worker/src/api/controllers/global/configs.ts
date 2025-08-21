@@ -1,7 +1,9 @@
 import * as email from "../../../utilities/email"
 import env from "../../../environment"
-import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
+import * as auth from "./auth"
 import {
+  BadRequestError,
+  ForbiddenError,
   cache,
   configs,
   db as dbCore,
@@ -12,7 +14,6 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
-  AIConfig,
   AIInnerConfig,
   Config,
   ConfigChecklistResponse,
@@ -26,19 +27,20 @@ import {
   isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
+  isRecaptchaConfig,
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
-  QuotaUsageType,
+  RecaptchaInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
+  SMTPInnerConfig,
   SSOConfig,
   SSOConfigType,
-  StaticQuotaName,
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
@@ -52,7 +54,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPCreated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigCreated)
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -91,12 +92,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPUpdated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigUpdated)
-      if (
-        Object.keys(existing.config).length > Object.keys(config.config).length
-      ) {
-        fns.push(() => pro.quotas.removeCustomAIConfig())
-      }
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -166,7 +161,23 @@ async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
   return !!Object.values(ssoConfigs).find(c => c?.activated)
 }
 
-async function verifySettingsConfig(
+async function processSMTPConfig(
+  config: SMTPInnerConfig,
+  existingConfig?: SMTPInnerConfig
+) {
+  await email.verifyConfig(config)
+  if (config.auth?.pass === PASSWORD_REPLACEMENT) {
+    // if the password is being replaced, use the existing password
+    if (existingConfig && existingConfig.auth?.pass) {
+      config.auth.pass = existingConfig.auth.pass
+    } else {
+      // otherwise, throw an error
+      throw new BadRequestError("SMTP password is required")
+    }
+  }
+}
+
+async function processSettingsConfig(
   config: SettingsInnerConfig & SettingsBrandingConfig,
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
 ) {
@@ -211,23 +222,77 @@ async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
   }
 }
 
-async function verifyGoogleConfig(config: GoogleInnerConfig) {
-  await verifySSOConfig(ConfigType.GOOGLE, config)
-}
-
-async function verifyOIDCConfig(config: OIDCConfigs) {
-  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
-}
-
-export async function verifyAIConfig(
-  configToSave: AIInnerConfig,
-  existingConfig: AIConfig
+async function processGoogleConfig(
+  config: GoogleInnerConfig,
+  existing?: GoogleInnerConfig
 ) {
-  // ensure that the redacted API keys are not overwritten in the DB
-  for (const uuid in existingConfig.config) {
-    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
-      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+  await verifySSOConfig(ConfigType.GOOGLE, config)
+
+  if (existing && config.clientSecret === PASSWORD_REPLACEMENT) {
+    config.clientSecret = existing.clientSecret
+  }
+}
+
+async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
+  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+
+  const anyPkceSettings = config.configs.find(cfg => cfg.pkce)
+  if (anyPkceSettings && !(await pro.features.isPkceOidcEnabled())) {
+    throw new Error("License does not allow OIDC PKCE method support")
+  }
+
+  if (existing) {
+    for (const c of config.configs) {
+      const existingConfig = existing.configs.find(e => e.uuid === c.uuid)
+      if (!existingConfig) {
+        continue
+      }
+      if (c.clientSecret === PASSWORD_REPLACEMENT) {
+        c.clientSecret = existingConfig.clientSecret
+      }
     }
+  }
+}
+
+export async function processAIConfig(
+  newConfig: AIInnerConfig,
+  existingConfig: AIInnerConfig
+) {
+  for (const key in existingConfig) {
+    if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
+      newConfig[key].apiKey = existingConfig[key].apiKey
+    }
+  }
+
+  let numBudibaseAI = 0
+  for (const config of Object.values(newConfig)) {
+    if (config.provider === "BudibaseAI") {
+      numBudibaseAI++
+      if (numBudibaseAI > 1) {
+        throw new BadRequestError("Only one Budibase AI provider is allowed")
+      }
+    } else {
+      if (!config.apiKey) {
+        throw new BadRequestError(
+          `API key is required for provider ${config.provider}`
+        )
+      }
+    }
+  }
+}
+
+export async function processRecaptchaConfig(
+  config: RecaptchaInnerConfig,
+  existingConfig?: RecaptchaInnerConfig
+) {
+  if (!(await pro.features.isRecaptchaEnabled())) {
+    throw new ForbiddenError("License does not allow use of recaptcha")
+  }
+  if (config.secretKey === PASSWORD_REPLACEMENT && !existingConfig) {
+    throw new BadRequestError("No secret key provided")
+  }
+  if (config.secretKey === PASSWORD_REPLACEMENT && existingConfig) {
+    config.secretKey = existingConfig.secretKey
   }
 }
 
@@ -246,24 +311,26 @@ export async function save(
   }
 
   try {
-    // verify the configuration
     switch (type) {
       case ConfigType.SMTP:
-        await email.verifyConfig(config)
+        await processSMTPConfig(config, existingConfig?.config)
         break
       case ConfigType.SETTINGS:
-        await verifySettingsConfig(config, existingConfig?.config)
+        await processSettingsConfig(config, existingConfig?.config)
         break
       case ConfigType.GOOGLE:
-        await verifyGoogleConfig(config)
+        await processGoogleConfig(config, existingConfig?.config)
         break
       case ConfigType.OIDC:
-        await verifyOIDCConfig(config)
+        await processOIDCConfig(config, existingConfig?.config)
         break
       case ConfigType.AI:
         if (existingConfig) {
-          await verifyAIConfig(config, existingConfig)
+          await processAIConfig(config, existingConfig.config)
         }
+        break
+      case ConfigType.RECAPTCHA:
+        await processRecaptchaConfig(config, existingConfig?.config)
         break
     }
   } catch (err: any) {
@@ -346,46 +413,51 @@ async function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
 }
 
 export async function find(ctx: UserCtx<void, FindConfigResponse>) {
-  try {
-    // Find the config with the most granular scope based on context
-    const type = ctx.params.type
-    let scopedConfig = await configs.getConfig(type)
+  // Find the config with the most granular scope based on context
+  const type = ctx.params.type
+  let config = await configs.getConfig(type)
 
-    if (scopedConfig) {
-      await handleConfigType(type, scopedConfig)
-    } else if (type === ConfigType.AI) {
-      scopedConfig = { config: {} } as AIConfig
-      await handleAIConfig(scopedConfig)
-    } else {
-      // If no config found and not AI type, just return an empty body
-      ctx.body = {}
-      return
-    }
-
-    ctx.body = scopedConfig
-  } catch (err: any) {
-    ctx.throw(err?.status || 400, err)
+  if (!config && type === ConfigType.AI) {
+    config = { type: ConfigType.AI, config: {} }
   }
-}
 
-async function handleConfigType(type: ConfigType, config: Config) {
-  if (type === ConfigType.OIDC_LOGOS) {
-    await enrichOIDCLogos(config)
-  } else if (type === ConfigType.AI) {
-    await handleAIConfig(config)
+  if (!config) {
+    ctx.body = {}
+    return
   }
+
+  switch (type) {
+    case ConfigType.OIDC_LOGOS:
+      await enrichOIDCLogos(config)
+      break
+    case ConfigType.AI:
+      await pro.sdk.ai.enrichAIConfig(config)
+      break
+  }
+
+  stripSecrets(config)
+  ctx.body = config
 }
 
-async function handleAIConfig(config: AIConfig) {
-  await pro.sdk.ai.enrichAIConfig(config)
-  stripApiKeys(config)
-}
-
-function stripApiKeys(config: AIConfig) {
-  for (const key in config?.config) {
-    if (config.config[key].apiKey) {
-      config.config[key].apiKey = PASSWORD_REPLACEMENT
+function stripSecrets(config: Config) {
+  if (isAIConfig(config)) {
+    for (const key in config.config) {
+      if (config.config[key].apiKey) {
+        config.config[key].apiKey = PASSWORD_REPLACEMENT
+      }
     }
+  } else if (isSMTPConfig(config)) {
+    if (config.config.auth?.pass) {
+      config.config.auth.pass = PASSWORD_REPLACEMENT
+    }
+  } else if (isGoogleConfig(config)) {
+    config.config.clientSecret = PASSWORD_REPLACEMENT
+  } else if (isOIDCConfig(config)) {
+    for (const c of config.config.configs) {
+      c.clientSecret = PASSWORD_REPLACEMENT
+    }
+  } else if (isRecaptchaConfig(config)) {
+    config.config.secretKey = PASSWORD_REPLACEMENT
   }
 }
 
@@ -420,19 +492,57 @@ export async function publicSettings(
 ) {
   try {
     // settings
-    const configDoc = await configs.getSettingsConfigDoc()
+    const [configDoc, googleConfig] = await Promise.all([
+      configs.getSettingsConfigDoc(),
+      configs.getGoogleConfig(),
+    ])
     const config = configDoc.config
 
-    const branding = await pro.branding.getBrandingConfig(config)
+    const brandingPromise = pro.branding.getBrandingConfig(config)
 
-    // enrich the logo url - empty url means deleted
-    if (config.logoUrl && config.logoUrl !== "") {
-      config.logoUrl = await objectStore.getGlobalFileUrl(
-        "settings",
-        "logoUrl",
-        config.logoUrlEtag
-      )
+    const getLogoUrl = () => {
+      // enrich the logo url - empty url means deleted
+      if (config.logoUrl && config.logoUrl !== "") {
+        return objectStore.getGlobalFileUrl(
+          "settings",
+          "logoUrl",
+          config.logoUrlEtag
+        )
+      }
     }
+
+    // google
+    const googleDatasourcePromise = configs.getGoogleDatasourceConfig()
+    const preActivated = googleConfig && googleConfig.activated == null
+    const google = preActivated || !!googleConfig?.activated
+    const googleCallbackUrlPromise = auth.googleCallbackUrl(googleConfig)
+
+    // oidc
+    const oidcConfigPromise = configs.getOIDCConfig()
+    const oidcCallbackUrlPromise = auth.oidcCallbackUrl()
+
+    // sso enforced
+    const isSSOEnforcedPromise = pro.features.isSSOEnforced({ config })
+
+    // performance all async work at same time, there is no need for all of these
+    // operations to occur in sync, slowing the endpoint down significantly
+    const [
+      branding,
+      googleDatasource,
+      googleCallbackUrl,
+      oidcConfig,
+      oidcCallbackUrl,
+      isSSOEnforced,
+      logoUrl,
+    ] = await Promise.all([
+      brandingPromise,
+      googleDatasourcePromise,
+      googleCallbackUrlPromise,
+      oidcConfigPromise,
+      oidcCallbackUrlPromise,
+      isSSOEnforcedPromise,
+      getLogoUrl(),
+    ])
 
     // enrich the favicon url - empty url means deleted
     const faviconUrl =
@@ -444,21 +554,11 @@ export async function publicSettings(
           )
         : undefined
 
-    // google
-    const googleConfig = await configs.getGoogleConfig()
-    const googleDatasourceConfigured =
-      !!(await configs.getGoogleDatasourceConfig())
-    const preActivated = googleConfig && googleConfig.activated == null
-    const google = preActivated || !!googleConfig?.activated
-    const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
-
-    // oidc
-    const oidcConfig = await configs.getOIDCConfig()
     const oidc = oidcConfig?.activated || false
-    const _oidcCallbackUrl = await oidcCallbackUrl()
-
-    // sso enforced
-    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+    const googleDatasourceConfigured = !!googleDatasource
+    if (logoUrl) {
+      config.logoUrl = logoUrl
+    }
 
     ctx.body = {
       type: ConfigType.SETTINGS,
@@ -472,8 +572,8 @@ export async function publicSettings(
         googleDatasourceConfigured,
         oidc,
         isSSOEnforced,
-        oidcCallbackUrl: _oidcCallbackUrl,
-        googleCallbackUrl: _googleCallbackUrl,
+        oidcCallbackUrl,
+        googleCallbackUrl,
       },
     }
   } catch (err: any) {
@@ -532,13 +632,6 @@ export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
-    if (id === configs.generateConfigID(ConfigType.AI)) {
-      await pro.quotas.set(
-        StaticQuotaName.AI_CUSTOM_CONFIGS,
-        QuotaUsageType.STATIC,
-        0
-      )
-    }
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
@@ -586,6 +679,7 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
             checked: !!smtpConfig,
             label: "Set up email",
             link: "/builder/portal/settings/email",
+            fallback: smtpConfig?.fallback || false,
           },
           adminUser: {
             checked: userExists,

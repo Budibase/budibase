@@ -1,3 +1,6 @@
+import { Message } from "../api"
+import { AgentChat, AIProvider } from "../documents"
+
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
   CLEAN_DATA = "CLEAN_DATA",
@@ -89,3 +92,40 @@ export type AIColumnSchema =
   | SentimentAnalysisSchema
   | PromptSchema
   | SearchWebSchema
+
+export interface LLMConfigOptions {
+  model: string
+  apiKey?: string
+  maxTokens?: number
+  max_completion_tokens?: number
+  // Primarily here for Azure OpenAI, because each customer has their own endpoint
+  baseUrl?: string
+}
+
+export interface LLMProviderConfig extends LLMConfigOptions {
+  provider: AIProvider
+}
+
+export interface LLMStreamChunk {
+  type:
+    | "content"
+    | "tool_call_start"
+    | "tool_call_result"
+    | "done"
+    | "error"
+    | "chat_saved"
+  content?: string
+  toolCall?: {
+    id: string
+    name: string
+    arguments: string
+  }
+  toolResult?: {
+    id: string
+    result: string
+    error?: string
+  }
+  messages?: Message[]
+  chat?: AgentChat
+  tokensUsed?: number
+}

@@ -1,9 +1,11 @@
-<script>
-  export let selected = false
-  export let open = false
-  export let href = false
-  export let title
-  export let icon
+<script lang="ts">
+  import Icon from "../Icon/Icon.svelte"
+
+  export let selected: boolean = false
+  export let open: boolean = false
+  export let href: string | null = null
+  export let title: string
+  export let icon: string | undefined
 </script>
 
 <li
@@ -13,23 +15,10 @@
 >
   <a on:click class="spectrum-TreeView-itemLink" {href}>
     {#if $$slots.default}
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-TreeView-itemIndicator"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
+      <Icon name="caret-right" size="M" />
     {/if}
     {#if icon}
-      <svg
-        class="spectrum-TreeView-itemIcon spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Layers"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-TreeView-itemLabel">{title}</span>
   </a>
@@ -39,3 +28,6 @@
     </ul>
   {/if}
 </li>
+
+<style>
+</style>

@@ -1,18 +1,22 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher, getContext } from "svelte"
   import Icon from "../Icon/Icon.svelte"
 
   const dispatch = createEventDispatcher()
   const actionMenu = getContext("actionMenu")
 
-  export let icon = undefined
-  export let disabled = undefined
-  export let noClose = false
-  export let keyBind = undefined
+  export let icon: string | undefined = undefined
+  export let iconWeight: "regular" | "bold" | "fill" = "regular"
+  export let iconColour: string | undefined = undefined
+  export let iconHidden: boolean = false
+  export let iconAlign: "center" | "start" = "center"
+  export let disabled: boolean | undefined = undefined
+  export let noClose: boolean = false
+  export let keyBind: string | undefined = undefined
 
   $: keys = getKeys(keyBind)
 
-  const getKeys = keyBind => {
+  const getKeys = (keyBind: string | undefined): string[] => {
     let keys = keyBind?.split("+") || []
     for (let i = 0; i < keys.length; i++) {
       if (
@@ -42,8 +46,13 @@
   tabindex="0"
 >
   {#if icon}
-    <div class="icon">
-      <Icon name={icon} size="S" />
+    <div class="icon" class:iconHidden style="align-self: {iconAlign}">
+      <Icon
+        name={icon}
+        weight={iconWeight}
+        size="S"
+        color={iconColour || "var(--spectrum-global-color-gray-700)"}
+      />
     </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
@@ -53,7 +62,7 @@
       {#each keys as key}
         <div class="key">
           {#if key.startsWith("!")}
-            <Icon size="XS" name={key.split("!")[1]} />
+            <Icon size="XS" weight={iconWeight} name={key.split("!")[1]} />
           {:else}
             {key}
           {/if}
@@ -65,8 +74,10 @@
 
 <style>
   .icon {
-    align-self: center;
     margin-right: var(--spacing-s);
+  }
+  .iconHidden {
+    opacity: 0;
   }
   .keys {
     margin-left: 30px;
@@ -90,7 +101,10 @@
     display: grid;
     place-items: center;
   }
-  .is-disabled .key {
+  .is-disabled .spectrum-Menu-itemLabel {
     color: var(--spectrum-global-color-gray-600);
+  }
+  .spectrum-Menu-itemLabel {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

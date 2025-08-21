@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { getContext } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
-  import {
-    LogicalOperator,
-    EmptyFilterOption,
+  import type {
     TableSchema,
     SortOrder,
     SearchFilters,
@@ -14,6 +12,7 @@
     GroupUserDatasource,
     DataFetchOptions,
   } from "@budibase/types"
+  import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   type ProviderDatasource = Exclude<
     DataFetchDatasource,
@@ -101,6 +100,7 @@
     },
     limit,
     primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
+    loaded: $fetch.loaded,
   }
 
   const createFetch = (datasource: ProviderDatasource) => {
@@ -175,6 +175,10 @@
       interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
     }
   }
+
+  onDestroy(() => {
+    clearInterval(interval) // Clears auto-refresh when navigating away
+  })
 </script>
 
 <div use:styleable={$component.styles} class="container">

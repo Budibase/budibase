@@ -35,19 +35,17 @@ import {
   ViewV2,
   ViewV2Schema,
   ViewV2Type,
+  FormulaType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { context, db, events, roles, setEnv } from "@budibase/backend-core"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -946,7 +944,12 @@ if (descriptions.length) {
                   OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
                 })
 
-                mockChatGPTResponse(prompt => {
+                // Ensure MockAgent is installed for OpenAI interceptors
+                const { installHttpMocking } = require("../../../tests/jestEnv")
+                installHttpMocking()
+
+                // Set up 3 interceptors for the 3 animals that will be processed
+                const responseFunction = (prompt: string) => {
                   if (prompt.includes("elephant")) {
                     return "big"
                   }
@@ -957,7 +960,12 @@ if (descriptions.length) {
                     return "big"
                   }
                   return "unknown"
-                })
+                }
+
+                // Each row save will trigger AI processing
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
               })
 
               afterAll(() => {
@@ -1799,11 +1807,19 @@ if (descriptions.length) {
             const getPersistedView = async () =>
               (await config.api.table.get(tableId)).views![view.name]
 
-            expect(await getPersistedView()).toBeDefined()
+            const first = (await getPersistedView()) as ViewV2
+            expect(first).toBeDefined()
 
             await config.api.viewV2.delete(view.id)
 
             expect(await getPersistedView()).toBeUndefined()
+
+            expect(events.view.deleted).toHaveBeenCalledTimes(1)
+
+            expect(events.view.deleted).toHaveBeenCalledWith(
+              expect.objectContaining({ name: first.name, id: first.id }),
+              config.appId
+            )
           })
         })
 
@@ -2829,34 +2845,44 @@ if (descriptions.length) {
             return total
           }
 
-          const assertRowUsage = async (expected: number) => {
-            const usage = await getRowUsage()
+          async function expectRowUsage<T>(
+            expected: number,
+            f: () => Promise<T>
+          ): Promise<T> {
+            const before = await getRowUsage()
+            const result = await f()
+            const after = await getRowUsage()
+            const usage = after - before
             expect(usage).toBe(expected)
+            return result
           }
 
           it("should be able to delete a row", async () => {
-            const createdRow = await config.api.row.save(table._id!, {})
-            const rowUsage = await getRowUsage()
-            await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
-            await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+            const createdRow = await expectRowUsage(isInternal ? 1 : 0, () =>
+              config.api.row.save(table._id!, {})
+            )
+            await expectRowUsage(isInternal ? -1 : 0, () =>
+              config.api.row.bulkDelete(view.id, { rows: [createdRow] })
+            )
             await config.api.row.get(table._id!, createdRow._id!, {
               status: 404,
             })
           })
 
           it("should be able to delete multiple rows", async () => {
-            const rows = await Promise.all([
-              config.api.row.save(table._id!, {}),
-              config.api.row.save(table._id!, {}),
-              config.api.row.save(table._id!, {}),
-            ])
-            const rowUsage = await getRowUsage()
-
-            await config.api.row.bulkDelete(view.id, {
-              rows: [rows[0], rows[2]],
+            const rows = await expectRowUsage(isInternal ? 3 : 0, async () => {
+              return [
+                await config.api.row.save(table._id!, {}),
+                await config.api.row.save(table._id!, {}),
+                await config.api.row.save(table._id!, {}),
+              ]
             })
 
-            await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
+            await expectRowUsage(isInternal ? -2 : 0, async () => {
+              await config.api.row.bulkDelete(view.id, {
+                rows: [rows[0], rows[2]],
+              })
+            })
 
             await config.api.row.get(table._id!, rows[0]._id!, {
               status: 404,
@@ -3148,7 +3174,7 @@ if (descriptions.length) {
               order?: SortOrder
               type?: SortType
             },
-            string[]
+            string[],
           ][] = [
             [
               {
@@ -3857,6 +3883,48 @@ if (descriptions.length) {
               expect(rows).toHaveLength(1)
               expect(rows[0].count).toEqual(2)
             })
+
+            isInternal &&
+              it("should be able to max a static formula field", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      string: {
+                        type: FieldType.STRING,
+                        name: "string",
+                      },
+                      formula: {
+                        type: FieldType.FORMULA,
+                        name: "formula",
+                        formulaType: FormulaType.STATIC,
+                        responseType: FieldType.NUMBER,
+                        formula: "{{ string }}",
+                      },
+                    },
+                  })
+                )
+                await config.api.row.save(table._id!, {
+                  string: "1",
+                })
+                await config.api.row.save(table._id!, {
+                  string: "2",
+                })
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  schema: {
+                    maxFormula: {
+                      visible: true,
+                      calculationType: CalculationType.MAX,
+                      field: "formula",
+                    },
+                  },
+                })
+                const { rows } = await config.api.row.search(view.id)
+                expect(rows.length).toEqual(1)
+                expect(rows[0].maxFormula).toEqual(2)
+              })
 
             it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
               await config.api.viewV2.create(
@@ -4806,6 +4874,62 @@ if (descriptions.length) {
                 expect(rows).toEqual(
                   expected.map(r => expect.objectContaining(r))
                 )
+              }
+            )
+          })
+
+          it("should return 400 when searching for non-existent fields", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                one: { visible: true },
+                two: { visible: true },
+              },
+            })
+
+            await config.api.viewV2.search(
+              view.id,
+              {
+                query: {
+                  equal: {
+                    nonExistentField: "value",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: expect.stringContaining("nonExistentField"),
+                },
+              }
+            )
+          })
+
+          it("should return 400 when searching for non-visible field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                one: { visible: true },
+                two: { visible: false },
+              },
+            })
+
+            await config.api.viewV2.search(
+              view.id,
+              {
+                query: {
+                  equal: {
+                    two: "value",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: expect.stringContaining("two"),
+                },
               }
             )
           })

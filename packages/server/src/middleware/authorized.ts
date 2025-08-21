@@ -6,7 +6,7 @@ import {
   users,
 } from "@budibase/backend-core"
 import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
-import builderMiddleware from "./builder"
+import { builderMiddleware } from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"
 import sdk from "../sdk"
@@ -34,7 +34,7 @@ const checkAuthorized = async (
   const isCreatorApi = permType === PermissionType.CREATOR
   const isBuilderApi = permType === PermissionType.BUILDER
   const isGlobalBuilder = users.isGlobalBuilder(ctx.user)
-  const isCreator = await users.isCreator(ctx.user)
+  const isCreator = await users.isCreatorAsync(ctx.user)
   const isBuilder = appId
     ? users.isBuilder(ctx.user, appId)
     : users.hasBuilderPermissions(ctx.user)
@@ -177,7 +177,7 @@ const authorized =
     return csrf(ctx, next)
   }
 
-export default (
+export const authorizedMiddleware = (
   permType: PermissionType,
   permLevel?: PermissionLevel,
   opts = { schema: false }

@@ -1,38 +1,55 @@
-<script>
+<script lang="ts" context="module">
+  export interface ModalAPI {
+    show: () => void
+    hide: () => void
+    toggle: () => void
+    cancel: (_: ModalCancelFrom) => void
+  }
+</script>
+
+<script lang="ts">
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
   import { createEventDispatcher, setContext, tick, onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
+  import { ModalCancelFrom } from "../constants"
 
-  export let fixed = false
-  export let inline = false
-  export let disableCancel = false
-  export let autoFocus = true
-  export let zIndex = 1001
+  export let fixed: boolean = false
+  export let inline: boolean = false
+  export let disableCancel: boolean = false
+  export let autoFocus: boolean = true
+  export let zIndex: number = 1001
 
-  const dispatch = createEventDispatcher()
-  let visible = fixed || inline
-  let modal
+  // Ensure any popovers inside this modal are rendered inside this modal
+  setContext(Context.PopoverRoot, ".spectrum-Modal")
+
+  const dispatch = createEventDispatcher<{
+    show: void
+    hide: void
+    cancel: ModalCancelFrom
+  }>()
+  let visible: boolean = fixed || inline
+  let modal: HTMLElement | undefined
 
   $: dispatch(visible ? "show" : "hide")
 
-  export function show() {
+  export function show(): void {
     if (visible) {
       return
     }
     visible = true
   }
 
-  export function hide() {
+  export function hide(): void {
     if (!visible || fixed || inline) {
       return
     }
     visible = false
   }
 
-  export function toggle() {
+  export function toggle(): void {
     if (visible) {
       hide()
     } else {
@@ -40,42 +57,46 @@
     }
   }
 
-  export function cancel() {
+  export function cancel(from: ModalCancelFrom): void {
     if (!visible || disableCancel) {
       return
     }
-    dispatch("cancel")
+    dispatch("cancel", from)
     hide()
   }
 
-  function handleKey(e) {
+  function handleKey(e: KeyboardEvent): void {
     if (visible && e.key === "Escape") {
-      cancel()
+      cancel(ModalCancelFrom.ESCAPE_KEY)
     }
   }
 
-  async function focusModal(node) {
-    if (!autoFocus) {
-      return
-    }
-    await tick()
-
-    // Try to focus first input
-    const inputs = node.querySelectorAll("input")
-    if (inputs?.length) {
-      inputs[0].focus()
-    }
-
-    // Otherwise try to focus confirmation button
-    else if (modal) {
-      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
-      if (confirm) {
-        confirm.focus()
+  function focusModal(node: HTMLElement): void {
+    if (!autoFocus) return
+    tick().then(() => {
+      const inputs = node.querySelectorAll("input")
+      if (inputs?.length) {
+        inputs[0].focus()
+      } else if (modal) {
+        const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+        if (confirm) {
+          ;(confirm as HTMLElement).focus()
+        }
       }
-    }
+    })
   }
 
-  setContext(Context.Modal, { show, hide, toggle, cancel })
+  setContext(Context.Modal, {
+    show,
+    hide,
+    toggle,
+    cancel,
+  } as {
+    show: () => void
+    hide: () => void
+    toggle: () => void
+    cancel: () => void
+  })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)
@@ -99,36 +120,44 @@
     It still breaks the modal animation, but its better than soft bricking the
     screen.
   -->
-  <Portal target=".modal-container">
-    {#if visible}
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div
-        class="spectrum-Underlay is-open"
-        on:mousedown|self={cancel}
-        style="z-index:{zIndex || 999}"
-      >
+  <div class="portal">
+    <Portal target=".modal-container">
+      {#if visible}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
-          class="background"
-          in:fade={{ duration: 200 }}
-          out:fade|local={{ duration: 200 }}
-        />
-        <div class="modal-wrapper" on:mousedown|self={cancel}>
-          <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
-            <slot name="outside" />
+          class="spectrum-Underlay is-open"
+          on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+          style="z-index:{zIndex || 999}"
+        >
+          <div
+            class="background"
+            in:fade={{ duration: 200 }}
+            out:fade|local={{ duration: 200 }}
+          />
+          <div
+            class="modal-wrapper"
+            on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+          >
             <div
-              use:focusModal
-              bind:this={modal}
-              class="spectrum-Modal is-open"
-              in:fly={{ y: 30, duration: 200 }}
-              out:fly|local={{ y: 30, duration: 200 }}
+              class="modal-inner-wrapper"
+              on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
             >
-              <slot />
+              <slot name="outside" />
+              <div
+                use:focusModal
+                bind:this={modal}
+                class="spectrum-Modal is-open"
+                in:fly={{ y: 30, duration: 200 }}
+                out:fly|local={{ y: 30, duration: 200 }}
+              >
+                <slot />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    {/if}
-  </Portal>
+      {/if}
+    </Portal>
+  </div>
 {/if}
 
 <style>
@@ -185,5 +214,10 @@
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);
+  }
+
+  .portal,
+  .portal :global(> div) {
+    display: contents;
   }
 </style>

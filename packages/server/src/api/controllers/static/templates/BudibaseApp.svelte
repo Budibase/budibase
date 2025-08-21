@@ -39,9 +39,15 @@
     <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
 
-  <link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
-  <link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
-  <link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
+  <link
+    href="/builder/fonts/source-sans-3/source-sans-3.css"
+    rel="stylesheet"
+  />
+  <link href="/builder/fonts/inter/inter.css" rel="stylesheet" />
+  <link
+    href="/builder/fonts/phosphor-icons/phosphor-icons.css"
+    rel="stylesheet"
+  />
   <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
 
   <style>
@@ -65,7 +71,7 @@
       height: 100vh;
       width: 100vw;
       display: none;
-      font-family: "Source Sans Pro", sans-serif;
+      font-family: "Source Sans 3", sans-serif;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -87,7 +93,23 @@
       color: #888;
       font-weight: 400;
     }
+
+    /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
+    .spectrum {
+      --font-sans:
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --font-accent:
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+      --spectrum-global-font-family-base: var(--font-sans) !important;
+      --spectrum-global-font-line-height-small: 1.4 !important;
+    }
   </style>
+
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html props.headAppScripts || ""}
 </svelte:head>
 
 <body id="app">
@@ -110,6 +132,9 @@
       <p />
     {/if}
   </div>
+  {#if props.recaptchaKey}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+  {/if}
   <script type="application/javascript" nonce={props.nonce}>
     window.INIT_TIME = Date.now()
   </script>
@@ -135,4 +160,7 @@
       document.getElementById("error").style.display = "flex"
     }
   </script>
+
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html props.bodyAppScripts || ""}
 </body>

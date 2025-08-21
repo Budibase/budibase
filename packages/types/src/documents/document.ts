@@ -14,7 +14,6 @@ export enum DocumentType {
   APP_DEV = "app_dev",
   APP_METADATA = "app_metadata",
   ROLE = "role",
-  MIGRATIONS = "migrations",
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
@@ -37,20 +36,14 @@ export enum DocumentType {
   USER_FLAG = "flag",
   AUTOMATION_METADATA = "meta_au",
   AUDIT_LOG = "al",
-  APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
   ROW_ACTIONS = "ra",
-}
-
-// Because DocumentTypes can overlap, we need to make sure that we search
-// longest first to ensure we get the correct type.
-const sortedDocumentTypes = Object.values(DocumentType).sort(
-  (a, b) => b.length - a.length // descending
-)
-export function getDocumentType(id: string): DocumentType | undefined {
-  return sortedDocumentTypes.find(docType =>
-    id.startsWith(`${docType}${SEPARATOR}`)
-  )
+  OAUTH2_CONFIG = "oauth2",
+  OAUTH2_CONFIG_LOG = "oauth2log",
+  AGENT_CHAT = "agentchat",
+  AGENT_TOOL_SOURCE = "agenttoolsource",
+  WORKSPACE_APP = "workspace_app",
+  WORKSPACE_FAVOURITE = "workspace_favourite",
 }
 
 // these are the core documents that make up the data, design
@@ -67,6 +60,8 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.QUERY,
   DocumentType.METADATA,
   DocumentType.MEM_VIEW,
+  DocumentType.WORKSPACE_APP,
+  DocumentType.WORKSPACE_FAVOURITE,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
@@ -83,22 +78,11 @@ export enum VirtualDocumentType {
   ROW_ACTION = "row_action",
 }
 
-// Because VirtualDocumentTypes can overlap, we need to make sure that we search
-// longest first to ensure we get the correct type.
-const sortedVirtualDocumentTypes = Object.values(VirtualDocumentType).sort(
-  (a, b) => b.length - a.length // descending
-)
-export function getVirtualDocumentType(
-  id: string
-): VirtualDocumentType | undefined {
-  return sortedVirtualDocumentTypes.find(docType =>
-    id.startsWith(`${docType}${SEPARATOR}`)
-  )
-}
-
 export interface Document {
   _id?: string
   _rev?: string
+  // document has been tombstoned - needed for replication
+  _deleted?: boolean
   createdAt?: string | number
   updatedAt?: string
 }

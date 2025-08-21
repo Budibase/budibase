@@ -1,12 +1,4 @@
-export const TriggerStepID = {
-  ROW_SAVED: "ROW_SAVED",
-  ROW_UPDATED: "ROW_UPDATED",
-  ROW_DELETED: "ROW_DELETED",
-  ROW_ACTION: "ROW_ACTION",
-  WEBHOOK: "WEBHOOK",
-  APP: "APP",
-  CRON: "CRON",
-}
+export { AutomationTriggerStepId as TriggerStepID } from "@budibase/types"
 
 export const ActionStepID = {
   SEND_EMAIL_SMTP: "SEND_EMAIL_SMTP",
@@ -14,7 +6,9 @@ export const ActionStepID = {
   UPDATE_ROW: "UPDATE_ROW",
   DELETE_ROW: "DELETE_ROW",
   OUTGOING_WEBHOOK: "OUTGOING_WEBHOOK",
+  API_REQUEST: "API_REQUEST",
   EXECUTE_SCRIPT: "EXECUTE_SCRIPT",
+  EXECUTE_SCRIPT_V2: "EXECUTE_SCRIPT_V2",
   EXECUTE_QUERY: "EXECUTE_QUERY",
   SERVER_LOG: "SERVER_LOG",
   DELAY: "DELAY",

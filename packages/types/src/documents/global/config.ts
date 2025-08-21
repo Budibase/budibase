@@ -16,6 +16,7 @@ export interface SMTPInnerConfig {
     pass: string
   }
   connectionTimeout?: any
+  fallback?: boolean
 }
 
 export interface SMTPConfig extends Config<SMTPInnerConfig> {}
@@ -45,6 +46,7 @@ export interface SettingsInnerConfig {
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
+  createdVersion?: string
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}
@@ -72,6 +74,7 @@ export interface OIDCStrategyConfiguration {
   clientID: string
   clientSecret: string
   callbackURL: string
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfigs {
@@ -93,6 +96,7 @@ export interface OIDCInnerConfig {
   uuid: string
   activated: boolean
   scopes: string[]
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfig extends Config<OIDCConfigs> {}
@@ -110,21 +114,36 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
-export type AIProvider = "OpenAI" | "Anthropic" | "TogetherAI" | "Custom"
+export type AIProvider =
+  | "OpenAI"
+  | "Anthropic"
+  | "AzureOpenAI"
+  | "TogetherAI"
+  | "Custom"
+  | "BudibaseAI"
+
+export interface ProviderConfig {
+  provider: AIProvider
+  isDefault: boolean
+  name: string
+  active: boolean
+  baseUrl?: string
+  apiKey?: string
+  defaultModel?: string
+}
 
 export interface AIInnerConfig {
-  [key: string]: {
-    provider: AIProvider
-    isDefault: boolean
-    name: string
-    active: boolean
-    baseUrl?: string
-    apiKey?: string
-    defaultModel?: string
-  }
+  [key: string]: ProviderConfig
 }
 
 export interface AIConfig extends Config<AIInnerConfig> {}
+
+export interface RecaptchaInnerConfig {
+  siteKey: string
+  secretKey: string
+}
+
+export interface RecaptchaConfig extends Config<RecaptchaInnerConfig> {}
 
 export const isConfig = (config: Object): config is Config =>
   "type" in config && "config" in config
@@ -147,6 +166,14 @@ export const isSCIMConfig = (config: Config): config is SCIMConfig =>
 export const isAIConfig = (config: Config): config is AIConfig =>
   config.type === ConfigType.AI
 
+export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
+  config.type === ConfigType.RECAPTCHA
+
+export enum PKCEMethod {
+  S256 = "S256",
+  PLAIN = "plain",
+}
+
 export enum ConfigType {
   SETTINGS = "settings",
   ACCOUNT = "account",
@@ -156,4 +183,22 @@ export enum ConfigType {
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
   AI = "ai",
+  RECAPTCHA = "recaptcha",
 }
+
+export type ConfigTypeToConfig<T extends ConfigType> =
+  T extends ConfigType.SETTINGS
+    ? SettingsConfig
+    : T extends ConfigType.SMTP
+      ? SMTPConfig
+      : T extends ConfigType.GOOGLE
+        ? GoogleConfig
+        : T extends ConfigType.OIDC
+          ? OIDCConfig
+          : T extends ConfigType.OIDC_LOGOS
+            ? OIDCLogosConfig
+            : T extends ConfigType.SCIM
+              ? SCIMConfig
+              : T extends ConfigType.AI
+                ? AIConfig
+                : never

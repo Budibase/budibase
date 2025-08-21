@@ -1,0 +1,13 @@
+{
+  "id": "myrealm",
+  "realm": "myrealm",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "my-client",
+      "secret": "my-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ]
+}

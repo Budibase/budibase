@@ -140,13 +140,13 @@
   div {
     position: absolute;
     background: var(--spectrum-global-color-gray-500);
-    opacity: 0.5;
+    opacity: 0.35;
     border-radius: 4px;
     transition: opacity 130ms ease-out;
   }
   div:hover,
   div.dragging {
-    opacity: 1;
+    opacity: 0.8;
   }
   .v-scrollbar {
     width: var(--scroll-bar-size);

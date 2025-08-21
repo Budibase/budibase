@@ -27,7 +27,7 @@
 <ScreensPopover
   bind:this={popover}
   {screens}
-  icon="WebPage"
+  icon="browser"
   accentColor="#364800"
   showCount
 />

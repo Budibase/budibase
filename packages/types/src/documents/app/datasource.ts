@@ -13,12 +13,14 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
 }
 
 export enum RestAuthType {
   BASIC = "basic",
   BEARER = "bearer",
+  OAUTH2 = "oauth2",
 }
 
 export interface RestBasicAuthConfig {
@@ -30,12 +32,21 @@ export interface RestBearerAuthConfig {
   token: string
 }
 
-export interface RestAuthConfig {
+export interface BasicRestAuthConfig {
   _id: string
   name: string
-  type: RestAuthType
-  config: RestBasicAuthConfig | RestBearerAuthConfig
+  type: RestAuthType.BASIC
+  config: RestBasicAuthConfig
 }
+
+export interface BearerRestAuthConfig {
+  _id: string
+  name: string
+  type: RestAuthType.BEARER
+  config: RestBearerAuthConfig
+}
+
+export type RestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
 
 export interface DynamicVariable {
   name: string

@@ -11,6 +11,7 @@ describe("row saved trigger", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
     table = await config.api.table.save(basicTable())
     automation = await createAutomationBuilder(config)
       .onRowSaved({ tableId: table._id! })

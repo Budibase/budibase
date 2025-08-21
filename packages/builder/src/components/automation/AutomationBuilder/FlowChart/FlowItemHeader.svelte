@@ -1,6 +1,13 @@
 <script>
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
+  import {
+    Icon,
+    Body,
+    AbsTooltip,
+    StatusLight,
+    Tags,
+    Tag,
+  } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "@/constants/backend/automations"
@@ -24,6 +31,7 @@
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
+  $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
@@ -116,26 +124,31 @@
       {#if externalActions[block.stepId]}
         <img
           alt={externalActions[block.stepId].name}
-          width="28px"
-          height="28px"
+          width="22px"
+          height="22px"
           src={externalActions[block.stepId].icon}
         />
       {:else}
-        <svg
-          width="28px"
-          height="28px"
-          class="spectrum-Icon"
-          style="color:var(--spectrum-global-color-gray-700);"
-          focusable="false"
-        >
-          <use xlink:href="#spectrum-icon-18-{block.icon}" />
-        </svg>
+        <Icon
+          name={block.icon}
+          size="M"
+          color="var(--spectrum-global-color-gray-700)"
+        />
       {/if}
       <div class="iconAlign">
         {#if isHeaderTrigger}
           <Body size="XS"><b>Trigger</b></Body>
         {:else}
-          <Body size="XS"><b>{isBranch ? "Branch" : "Step"}</b></Body>
+          <Body size="XS">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <b>{isBranch ? "Branch" : "Step"}</b>
+              {#if blockDefinition.deprecated}
+                <Tags>
+                  <Tag invalid>Deprecated</Tag>
+                </Tags>
+              {/if}
+            </div>
+          </Body>
         {/if}
 
         {#if enableNaming}
@@ -201,12 +214,12 @@
         {#if !showTestStatus}
           {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
             <AbsTooltip type="info" text="Add looping">
-              <Icon on:click={addLooping} hoverable name="RotateCW" />
+              <Icon on:click={addLooping} hoverable name="arrow-clockwise" />
             </AbsTooltip>
           {/if}
           {#if !isHeaderTrigger}
             <AbsTooltip type="negative" text="Delete step">
-              <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
+              <Icon on:click={deleteStep} hoverable name="trash" />
             </AbsTooltip>
           {/if}
         {/if}
@@ -228,7 +241,7 @@
         <div class="error-container">
           <AbsTooltip type="negative" text={automationNameError}>
             <div class="error-icon">
-              <Icon size="S" name="Alert" />
+              <Icon size="S" name="warning" />
             </div>
           </AbsTooltip>
         </div>
@@ -319,7 +332,7 @@
     border-radius: 4px 4px 4px 4px;
   }
 
-  .error-icon :global(.spectrum-Icon) {
+  .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-400);
   }
 

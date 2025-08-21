@@ -76,10 +76,13 @@ export default class BaseCache {
     opts = { useTenancy: true }
   ) {
     if (opts.useTenancy) {
-      data = Object.entries(data).reduce((acc, [key, value]) => {
-        acc[generateTenantKey(key)] = value
-        return acc
-      }, {} as Record<string, any>)
+      data = Object.entries(data).reduce(
+        (acc, [key, value]) => {
+          acc[generateTenantKey(key)] = value
+          return acc
+        },
+        {} as Record<string, any>
+      )
     }
 
     const client = await this.getClient()
@@ -123,6 +126,29 @@ export default class BaseCache {
 
       await this.store(key, fetchedValue, ttl, opts)
       return fetchedValue
+    } catch (err) {
+      console.error("Error fetching before cache - ", err)
+      throw err
+    }
+  }
+
+  async withCacheWithDynamicTTL<T>(
+    key: string,
+    fetchFn: () => Promise<{ value: T; ttl: number | null }>,
+    opts = { useTenancy: true }
+  ): Promise<T> {
+    const cachedValue = await this.get(key, opts)
+    if (cachedValue) {
+      return cachedValue
+    }
+
+    try {
+      const fetchedResponse = await fetchFn()
+      const { value, ttl } = fetchedResponse
+      await this.store(key, value, ttl, {
+        useTenancy: opts.useTenancy,
+      })
+      return value
     } catch (err) {
       console.error("Error fetching before cache - ", err)
       throw err

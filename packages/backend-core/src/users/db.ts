@@ -26,8 +26,9 @@ import {
 import {
   getAccountHolderFromUsers,
   isAdmin,
-  isCreator,
+  creatorsInList,
   validateUniqueUser,
+  isCreatorAsync,
 } from "./utils"
 import {
   getFirstPlatformUser,
@@ -260,9 +261,21 @@ export class UserDB {
       }
     }
 
-    const change = dbUser ? 0 : 1 // no change if there is existing user
-    const creatorsChange =
-      (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
+    let change = 1
+    let creatorsChange = 0
+    if (opts.isAccountHolder || dbUser) {
+      change = 0
+      creatorsChange = 1
+    }
+
+    if (dbUser) {
+      const [isDbUserCreator, isUserCreator] = await creatorsInList([
+        dbUser,
+        user,
+      ])
+      creatorsChange = isDbUserCreator !== isUserCreator ? 1 : 0
+    }
+
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
       if (!opts.isAccountHolder) {
         await validateUniqueUser(email, tenantId)
@@ -330,54 +343,52 @@ export class UserDB {
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
-    let usersToSave: any[] = []
-    let newUsers: any[] = []
-    let newCreators: any[] = []
+    let usersToSave: Promise<User>[] = []
+    let newUsers: User[] = []
+    let newCreators: User[] = []
 
     const emails = newUsersRequested.map((user: User) => user.email)
     const existingEmails = await searchExistingEmails(emails)
     const unsuccessful: { email: string; reason: string }[] = []
 
     for (const newUser of newUsersRequested) {
-      if (
-        newUsers.find(
-          (x: User) => x.email.toLowerCase() === newUser.email.toLowerCase()
-        ) ||
-        existingEmails.includes(newUser.email.toLowerCase())
-      ) {
-        unsuccessful.push({
-          email: newUser.email,
-          reason: `Unavailable`,
-        })
+      const duplicateUser = newUsers.find(
+        user => user.email.toLowerCase() === newUser.email.toLowerCase()
+      )
+      const userExists = existingEmails.includes(newUser.email.toLowerCase())
+      if (duplicateUser || userExists) {
+        unsuccessful.push({ email: newUser.email, reason: `Unavailable` })
         continue
       }
       newUser.userGroups = groups || []
       newUsers.push(newUser)
-      if (await isCreator(newUser)) {
+      if (await isCreatorAsync(newUser)) {
         newCreators.push(newUser)
       }
     }
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
+    const isSSOEnforced = await UserDB.features.isSSOEnforced()
+
     return UserDB.quotas.addUsers(
       newUsers.length,
       newCreators.length,
       async () => {
-        // create the promises array that will be called by bulkDocs
-        newUsers.forEach((user: any) => {
+        for (const user of newUsers) {
+          if (isSSOEnforced) {
+            delete user.password
+          }
+
           usersToSave.push(
             UserDB.buildUser(
               user,
-              {
-                hashPassword: true,
-                requirePassword: user.requirePassword,
-              },
+              { hashPassword: true, requirePassword: !isSSOEnforced },
               tenantId,
-              undefined, // no dbUser
+              undefined,
               account
             )
           )
-        })
+        }
 
         const usersToBulkSave = await Promise.all(usersToSave)
         await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
@@ -386,7 +397,7 @@ export class UserDB {
         for (const user of usersToBulkSave) {
           // TODO: Refactor to bulk insert users into the info db
           // instead of relying on looping tenant creation
-          await platform.users.addUser(tenantId, user._id, user.email)
+          await platform.users.addUser(tenantId, user._id!, user.email)
           await eventHelpers.handleSaveEvents(user, undefined)
         }
 
@@ -400,7 +411,7 @@ export class UserDB {
         // now update the groups
         if (Array.isArray(saved) && groups) {
           const groupPromises = []
-          const createdUserIds = saved.map(user => user._id)
+          const createdUserIds = saved.map(user => user._id!)
           for (let groupId of groups) {
             groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
           }
@@ -453,10 +464,8 @@ export class UserDB {
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
 
-    const creatorsEval = await Promise.all(usersToDelete.map(isCreator))
-    const creatorsToDeleteCount = creatorsEval.filter(
-      creator => !!creator
-    ).length
+    const creatorsEval = await creatorsInList(usersToDelete)
+    const creatorsToDeleteCount = creatorsEval.filter(creator => creator).length
 
     const ssoUsersToDelete: AnyDocument[] = []
     for (let user of usersToDelete) {
@@ -533,7 +542,7 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev!)
 
-    const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
+    const creatorsToDelete = (await isCreatorAsync(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)

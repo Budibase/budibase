@@ -13,6 +13,7 @@ describe("test the delete row action", () => {
     await config.init()
     table = await config.api.table.save(basicTable())
     row = await config.api.row.save(table._id!, {})
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

@@ -68,7 +68,7 @@
   <div class="header" class:success class:error>
     <div class="header-content">
       {#if error}
-        <Icon name="Alert" color="var(--error-content)" />
+        <Icon name="warning" color="var(--error-content)" />
         <div>Error</div>
         {#if evaluating}
           <div transition:fade|local={{ duration: 130 }}>
@@ -76,7 +76,7 @@
           </div>
         {/if}
         <span />
-        <Icon name="Copy" size="S" hoverable on:click={copy} />
+        <Icon name="copy" size="S" hoverable on:click={copy} />
       {:else}
         <div>Preview</div>
         {#if evaluating}
@@ -86,7 +86,7 @@
         {/if}
         <span />
         {#if !empty}
-          <Icon name="Copy" newStyles size="S" hoverable on:click={copy} />
+          <Icon name="copy" size="S" hoverable on:click={copy} />
         {/if}
       {/if}
     </div>
@@ -108,13 +108,9 @@
           >
             <div class="icon-log">
               {#if logLine.type === "error"}
-                <Icon
-                  size="XS"
-                  name="CloseCircle"
-                  color="var(--error-content)"
-                />
+                <Icon size="XS" name="xcircle" color="var(--error-content)" />
               {:else if logLine.type === "warn"}
-                <Icon size="XS" name="Alert" color="var(--warning-content)" />
+                <Icon size="XS" name="warning" color="var(--warning-content)" />
               {/if}
               <!-- eslint-disable-next-line svelte/no-at-html-tags-->
               <span>{@html logLine.log}</span>

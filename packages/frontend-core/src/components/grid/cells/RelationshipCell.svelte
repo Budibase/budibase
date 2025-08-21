@@ -273,10 +273,12 @@
             </span>
             {#if editable}
               <Icon
-                name="Close"
+                name="x"
                 size="XS"
                 hoverable
                 on:click={() => toggleRow(relationship)}
+                color="var(--spectrum-global-color-gray-800)"
+                weight="bold"
               />
             {/if}
           </div>
@@ -284,7 +286,12 @@
       {/each}
       {#if editable}
         <div class="add" on:click={open}>
-          <Icon name="Add" size="S" />
+          <Icon
+            name="plus"
+            size="S"
+            color="var(--spectrum-global-color-gray-800)"
+            weight="bold"
+          />
         </div>
       {/if}
     </div>
@@ -329,7 +336,7 @@
                 </span>
               </div>
               {#if isRowSelected(row)}
-                <Icon size="S" name="Checkmark" color="var(--accent-color)" />
+                <Icon size="S" name="check" color="var(--accent-color)" />
               {/if}
             </div>
           {/each}
@@ -440,13 +447,10 @@
 
   .add {
     background: var(--spectrum-global-color-gray-200);
-    padding: 4px;
+    padding: 3px;
     border-radius: 4px;
   }
-  .add :global(.spectrum-Icon) {
-    width: 12px;
-    height: 12px;
-  }
+
   .add:hover {
     background: var(--spectrum-global-color-gray-300);
     cursor: pointer;

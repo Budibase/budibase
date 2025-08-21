@@ -1,6 +1,6 @@
-<script>
-  export let text
-  export let url
+<script lang="ts">
+  export let text = ""
+  export let url = ""
   export let active = false
   export let disabled = false
 </script>
@@ -29,6 +29,7 @@
     color: var(--spectrum-global-color-gray-900);
     border-radius: 4px;
     transition: background 130ms ease-out;
+    font-weight: 500;
   }
   .active,
   .text:hover {

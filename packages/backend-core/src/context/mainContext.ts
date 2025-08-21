@@ -10,7 +10,14 @@ import {
   StaticDatabases,
   DEFAULT_TENANT_ID,
 } from "../constants"
-import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
+import {
+  Database,
+  IdentityContext,
+  Snippet,
+  App,
+  Table,
+  License,
+} from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -123,7 +130,7 @@ export async function doInAutomationContext<T>(params: {
   task: () => T
 }): Promise<T> {
   await ensureSnippetContext()
-  return newContext(
+  return await newContext(
     {
       tenantId: getTenantIDFromAppID(params.appId),
       appId: params.appId,
@@ -155,6 +162,45 @@ export async function doInTenant<T>(
 
   const updates = tenantId ? { tenantId } : {}
   return newContext(updates, task)
+}
+
+// We allow self-host licensed users to make use of some Budicloud services
+// (e.g. Budibase AI). When they do this, they use their license key as an API
+// key. We use that license key to identify the tenant ID, and we set the
+// context to be self-host using cloud. This affects things like where their
+// quota documents get stored (because we want to avoid creating a new global
+// DB for each self-host tenant).
+export async function doInSelfHostTenantUsingCloud<T>(
+  tenantId: string,
+  task: () => T
+): Promise<T> {
+  const updates = { tenantId, isSelfHostUsingCloud: true }
+  return newContext(updates, task)
+}
+
+export async function doInLicenseContext<T>(
+  license: License,
+  task: () => T
+): Promise<T> {
+  return newContext({ license }, task)
+}
+
+export function getLicense(): License | undefined {
+  const context = Context.get()
+  return context?.license
+}
+
+export function isSelfHostUsingCloud() {
+  const context = Context.get()
+  return !!context?.isSelfHostUsingCloud
+}
+
+export function getSelfHostCloudDB() {
+  const context = Context.get()
+  if (!context || !context.isSelfHostUsingCloud) {
+    throw new Error("Self-host cloud DB not found")
+  }
+  return getDB(StaticDatabases.SELF_HOST_CLOUD.name)
 }
 
 export async function doInAppContext<T>(
@@ -258,6 +304,14 @@ export function getIP(): string | undefined {
   return context?.ip
 }
 
+export const getDevAppId = () => {
+  const appId = getAppId()
+  if (!appId) {
+    throw new Error("Could not get appId")
+  }
+  return conversions.getDevAppID(appId)
+}
+
 export const getProdAppId = () => {
   const appId = getAppId()
   if (!appId) {
@@ -266,9 +320,9 @@ export const getProdAppId = () => {
   return conversions.getProdAppID(appId)
 }
 
-export function doInEnvironmentContext(
+export function doInEnvironmentContext<T>(
   values: Record<string, string>,
-  task: any
+  task: () => T
 ) {
   if (!values) {
     throw new Error("Must supply environment variables.")
@@ -290,7 +344,7 @@ export function doInIPContext(ip: string, task: any) {
   return newContext({ ip }, task)
 }
 
-export async function ensureSnippetContext(enabled = !env.isTest()) {
+export async function ensureSnippetContext() {
   const ctx = getCurrentContext()
 
   // If we've already added snippets to context, continue
@@ -301,9 +355,9 @@ export async function ensureSnippetContext(enabled = !env.isTest()) {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db && enabled) {
-    const app = await db.get<App>(DocumentType.APP_METADATA)
-    snippets = app.snippets
+  if (db) {
+    const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+    snippets = app?.snippets
   }
 
   // Always set snippets to a non-null value so that we can tell we've attempted
@@ -325,6 +379,11 @@ export function getGlobalDB(): Database {
   if (!context || (env.MULTI_TENANCY && !context.tenantId)) {
     throw new Error("Global DB not found")
   }
+  if (context.isSelfHostUsingCloud) {
+    throw new Error(
+      "Global DB not found - self-host users using cloud don't have a global DB"
+    )
+  }
   return getDB(baseGlobalDBName(context?.tenantId))
 }
 
@@ -343,6 +402,11 @@ export function getAppDB(opts?: any): Database {
   const appId = getAppId()
   if (!appId) {
     throw new Error("Unable to retrieve app DB - no app ID.")
+  }
+  if (isSelfHostUsingCloud()) {
+    throw new Error(
+      "App DB not found - self-host users using cloud don't have app DBs"
+    )
   }
   return getDB(appId, opts)
 }
@@ -402,6 +466,17 @@ export function setFeatureFlags(key: string, value: Record<string, boolean>) {
   }
   context.featureFlagCache ??= {}
   context.featureFlagCache[key] = value
+}
+
+export function getFeatureFlagOverrides(): Record<string, boolean> {
+  return getCurrentContext()?.featureFlagOverrides || {}
+}
+
+export async function doInFeatureFlagOverrideContext<T>(
+  value: Record<string, boolean>,
+  callback: () => Promise<T>
+) {
+  return await newContext({ featureFlagOverrides: value }, callback)
 }
 
 export function getTableForView(viewId: string): Table | undefined {

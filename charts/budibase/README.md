@@ -137,9 +137,9 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.smtp.password | string | `""` | The password to use when authenticating with your SMTP server. |
 | globals.smtp.port | string | `"587"` | The port of your SMTP server. |
 | globals.smtp.user | string | `""` | The username to use when authenticating with your SMTP server. |
-| globals.sqs.enabled | bool | `false` | Whether to use the CouchDB "structured query service" or not. This is disabled by default for now, but will become the default in a future release. |
+| globals.sqs | object | `{}` |  |
 | globals.tempBucketName | string | `""` |  |
-| globals.tenantFeatureFlags | string | `` | Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be changed. |
+| globals.tenantFeatureFlags | string | `""` | Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be changed. |
 | imagePullSecrets | list | `[]` | Passed to all pods created by this chart. Should not ordinarily need to be changed. |
 | ingress.className | string | `""` | What ingress class to use. |
 | ingress.enabled | bool | `true` | Whether to create an Ingress resource pointing to the Budibase proxy. |
@@ -166,6 +166,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.apps.replicaCount | int | `1` | The number of apps replicas to run. |
 | services.apps.resources | object | `{}` | The resources to use for apps pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.apps.startupProbe | object | HTTP health checks. | Startup probe configuration for apps pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.apps.terminationGracePeriodSeconds | int | `60` | The amount of time to wait between requesting a shutdown and killing the container. This is used to give the apps service time to finish processing any requests before shutting down. You shouldn't need to change this. |
 | services.automationWorkers.autoscaling.enabled | bool | `false` | Whether to enable horizontal pod autoscaling for the apps service. |
 | services.automationWorkers.autoscaling.maxReplicas | int | `10` |  |
 | services.automationWorkers.autoscaling.minReplicas | int | `1` |  |
@@ -182,6 +183,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.automationWorkers.replicaCount | int | `1` | The number of automation worker replicas to run. |
 | services.automationWorkers.resources | object | `{}` | The resources to use for automation worker pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.automationWorkers.startupProbe | object | HTTP health checks. | Startup probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.automationWorkers.terminationGracePeriodSeconds | int | `60` | The amount of time to wait between requesting a shutdown and killing the container. This is used to give the automation worker service time to finish processing any requests before shutting down. You shouldn't need to change this. |
 | services.couchdb.backup.enabled | bool | `false` | Whether or not to enable periodic CouchDB backups. This works by replicating to another CouchDB instance. |
 | services.couchdb.backup.interval | string | `""` | Backup interval in seconds |
 | services.couchdb.backup.resources | object | `{}` | The resources to use for CouchDB backup pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
@@ -243,6 +245,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.worker.replicaCount | int | `1` | The number of worker replicas to run. |
 | services.worker.resources | object | `{}` | The resources to use for worker pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.worker.startupProbe | object | HTTP health checks. | Startup probe configuration for worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.worker.terminationGracePeriodSeconds | int | `60` | The amount of time to wait between requesting a shutdown and killing the container. This is used to give the worker service time to finish processing any requests before shutting down. You shouldn't need to change this. |
 | tolerations | list | `[]` | Sets the tolerations for all pods created by this chart. Should not ordinarily need to be changed. See <https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/> for more information on tolerations. |
 
 ## Uninstalling
@@ -254,4 +257,4 @@ $ helm uninstall --namespace budibase budibase
 ```
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.13.1](https://github.com/norwoodj/helm-docs/releases/v1.13.1)
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

@@ -5,14 +5,14 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 mocks.licenses.useSyncAutomations()
 
-describe("Branching automations", () => {
+describe("Webhook trigger test", () => {
   const config = new TestConfiguration()
   let table: Table
   let webhook: Webhook
 
   async function createWebhookAutomation() {
     const { automation } = await createAutomationBuilder(config)
-      .onWebhook({ fields: { parameter: "string" } })
+      .onWebhook({ body: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
       })
@@ -37,6 +37,7 @@ describe("Branching automations", () => {
 
   beforeEach(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
     table = await config.createTable()
   })
 

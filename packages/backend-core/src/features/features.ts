@@ -6,6 +6,7 @@ import tracer from "dd-trace"
 import { Duration } from "../utils"
 import { cloneDeep } from "lodash"
 import { FeatureFlagDefaults } from "@budibase/types"
+import * as configs from "../configs"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -53,6 +54,10 @@ export function parseEnvFlags(flags: string): EnvFlagEntry[] {
   return result
 }
 
+export function getEnvFlags() {
+  return parseEnvFlags(env.TENANT_FEATURE_FLAGS || "")
+}
+
 export class FlagSet<T extends { [name: string]: boolean }> {
   // This is used to safely cache flags sets in the current request context.
   // Because multiple sets could theoretically exist, we don't want the cache of
@@ -89,9 +94,12 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       const currentTenantId = context.getTenantId()
       const specificallySetFalse = new Set<string>()
 
-      for (const { tenantId, key, value } of parseEnvFlags(
-        env.TENANT_FEATURE_FLAGS || ""
-      )) {
+      // flags can't be worked out is self hoster accessing the cloud - no global DB
+      if (context.isSelfHostUsingCloud()) {
+        return flagValues
+      }
+
+      for (const { tenantId, key, value } of getEnvFlags()) {
         if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
           continue
         }
@@ -140,16 +148,38 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       if (posthog && userId) {
         tags[`readFromPostHog`] = true
 
+        const config = await configs.getSettingsConfigDoc()
         const personProperties: Record<string, string> = { tenantId }
+
+        const groupProperties: {
+          tenant: {
+            id: string
+            createdVersion?: string
+            createdAt?: string
+          }
+        } = {
+          tenant: {
+            id: tenantId,
+          },
+        }
+        if (config.config.createdVersion) {
+          groupProperties.tenant.createdVersion = config.config.createdVersion
+        }
+        if (config.createdAt) {
+          groupProperties.tenant.createdAt = `${config.createdAt}`
+        }
         const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
+          onlyEvaluateLocally: true,
+          groups: {
+            tenant: tenantId,
+          },
+          groupProperties,
         })
 
         for (const [name, value] of Object.entries(posthogFlags)) {
           if (!this.isFlagName(name)) {
-            // We don't want an unexpected PostHog flag to break the app, so we
-            // just log it and continue.
-            console.warn(`Unexpected posthog flag "${name}": ${value}`)
+            // We don't want an unexpected PostHog flag to break the app
             continue
           }
 
@@ -174,6 +204,21 @@ export class FlagSet<T extends { [name: string]: boolean }> {
             console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
           }
         }
+      }
+
+      const overrides = context.getFeatureFlagOverrides()
+      for (const [key, value] of Object.entries(overrides)) {
+        if (!this.isFlagName(key)) {
+          continue
+        }
+
+        if (typeof value !== "boolean") {
+          continue
+        }
+
+        // @ts-expect-error - TS does not like you writing into a generic type.
+        flagValues[key] = value
+        tags[`flags.${key}.source`] = "override"
       }
 
       context.setFeatureFlags(this.setId, flagValues)

@@ -16,6 +16,7 @@ describe("Execute Bash Automations", () => {
       name: "test row",
       description: "test description",
     })
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

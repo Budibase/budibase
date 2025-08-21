@@ -1,7 +1,11 @@
+import jestOpenAPI from "jest-openapi"
+import { spec } from "../../../../specs/generate"
 import TestConfiguration from "../TestConfiguration"
 import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 import { getServer } from "../../../app"
+
+jestOpenAPI(spec() as any)
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"
@@ -46,6 +50,7 @@ export interface RequestOpts {
 export abstract class TestAPI {
   config: TestConfiguration
   request: SuperTest<Test>
+  prefix = ""
 
   constructor(config: TestConfiguration) {
     this.config = config
@@ -53,26 +58,26 @@ export abstract class TestAPI {
   }
 
   protected _get = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
-    return await this._request<T>("get", url, opts)
+    return await this._request<T>("get", `${this.prefix}${url}`, opts)
   }
 
   protected _post = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
-    return await this._request<T>("post", url, opts)
+    return await this._request<T>("post", `${this.prefix}${url}`, opts)
   }
 
   protected _put = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
-    return await this._request<T>("put", url, opts)
+    return await this._request<T>("put", `${this.prefix}${url}`, opts)
   }
 
   protected _patch = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
-    return await this._request<T>("patch", url, opts)
+    return await this._request<T>("patch", `${this.prefix}${url}`, opts)
   }
 
   protected _delete = async <T>(
     url: string,
     opts?: RequestOpts
   ): Promise<T> => {
-    return await this._request<T>("delete", url, opts)
+    return await this._request<T>("delete", `${this.prefix}${url}`, opts)
   }
 
   protected _requestRaw = async (
@@ -88,7 +93,6 @@ export abstract class TestAPI {
       fields = {},
       files = {},
       expectations,
-      publicUser = false,
     } = opts || {}
     const { status = 200 } = expectations || {}
     const expectHeaders = expectations?.headers || {}
@@ -97,7 +101,7 @@ export abstract class TestAPI {
       expectHeaders["Content-Type"] = /^application\/json/
     }
 
-    let queryParams = []
+    let queryParams: string[] = []
     for (const [key, value] of Object.entries(query)) {
       if (value) {
         queryParams.push(`${key}=${value}`)
@@ -107,18 +111,10 @@ export abstract class TestAPI {
       url += `?${queryParams.join("&")}`
     }
 
-    const headersFn = publicUser
-      ? (_extras = {}) =>
-          this.config.publicHeaders.bind(this.config)({
-            prodApp: opts?.useProdApp,
-          })
-      : (extras = {}) =>
-          this.config.defaultHeaders.bind(this.config)(extras, opts?.useProdApp)
-
     const app = getServer()
     let req = request(app)[method](url)
     req = req.set(
-      headersFn({
+      await this.getHeaders(opts, {
         "x-budibase-include-stacktrace": "true",
       })
     )
@@ -150,8 +146,9 @@ export abstract class TestAPI {
       }
     }
 
+    let resp: Response | undefined = undefined
     try {
-      return await req
+      resp = await req
     } catch (e: any) {
       // We've found that occasionally the connection between supertest and the
       // server supertest starts gets reset. Not sure why, but retrying it
@@ -165,12 +162,21 @@ export abstract class TestAPI {
       }
       throw e
     }
+    return resp
   }
 
-  protected _checkResponse = (
-    response: Response,
-    expectations?: Expectations
-  ) => {
+  protected async getHeaders(
+    opts?: RequestOpts,
+    extras?: Record<string, string | string[]>
+  ): Promise<Record<string, string | string[]>> {
+    if (opts?.publicUser) {
+      return this.config.publicHeaders({ prodApp: opts?.useProdApp, extras })
+    } else {
+      return this.config.defaultHeaders(extras, opts?.useProdApp)
+    }
+  }
+
+  protected _checkResponse(response: Response, expectations?: Expectations) {
     const { status = 200 } = expectations || {}
 
     if (response.status !== status) {
@@ -234,5 +240,36 @@ export abstract class TestAPI {
       await this._requestRaw(method, url, opts),
       opts?.expectations
     ).body
+  }
+}
+
+export abstract class PublicAPI extends TestAPI {
+  prefix = "/api/public/v1"
+
+  protected async getHeaders(
+    opts?: RequestOpts,
+    extras?: Record<string, string | string[]>
+  ): Promise<Record<string, string | string[]>> {
+    const apiKey = await this.config.generateApiKey()
+
+    const headers: Record<string, string | string[]> = {
+      Accept: "application/json",
+      Host: this.config.tenantHost(),
+      "x-budibase-api-key": apiKey,
+      "x-budibase-app-id": this.config.getAppId(),
+      ...extras,
+    }
+
+    return headers
+  }
+
+  protected _checkResponse(response: Response, expectations?: Expectations) {
+    const checked = super._checkResponse(response, expectations)
+    if (checked.status >= 200 && checked.status < 300) {
+      // We don't seem to have documented our errors yet, so for the time being
+      // we'll only do the schema check for successful responses.
+      expect(checked).toSatisfyApiSpec()
+    }
+    return checked
   }
 }

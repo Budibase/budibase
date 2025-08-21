@@ -4,6 +4,7 @@ import nock from "nock"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   Datasource,
+  FieldSchema,
   FieldType,
   Row,
   SourceName,
@@ -312,6 +313,31 @@ describe("Google Sheets Integration", () => {
       expect(mock.cell("B3")).toEqual("original description")
     })
 
+    it("should be able to add new rows outside of the size limits of the sheet", async () => {
+      const schema: Record<string, FieldSchema> = table.schema
+      for (let i = 0; i < 100; i++) {
+        schema[`field_${i}`] = {
+          name: `field_${i}`,
+          type: FieldType.STRING,
+        }
+      }
+      await config.api.table.save({ ...table, schema })
+
+      const row: Row = {
+        name: "Test Contact",
+        description: "original description",
+      }
+      for (let i = 0; i < 100; i++) {
+        row[`field_${i}`] = `value_${i}`
+      }
+      const createdRow = await config.api.row.save(table._id!, row)
+      expect(createdRow.name).toEqual("Test Contact")
+      expect(createdRow.description).toEqual("original description")
+      for (let i = 0; i < 100; i++) {
+        expect(createdRow[`field_${i}`]).toEqual(`value_${i}`)
+      }
+    })
+
     it("should be able to add multiple rows", async () => {
       await config.api.row.bulkImport(table._id!, {
         rows: [
@@ -382,14 +408,13 @@ describe("Google Sheets Integration", () => {
       expect(mock.cell("A3")).toEqual(null)
       expect(mock.cell("B3")).toEqual(null)
 
-      const renamedRow = await config.api.row.get(table._id!, row._id!)
+      const renamedRow = await config.api.row.get(renamedTable._id!, row._id!)
       expect(renamedRow.renamed).toEqual("Test Contact")
       expect(renamedRow.description).toEqual("original description")
       expect(renamedRow.name).not.toBeDefined()
     })
 
-    // TODO: this gets the error "Sheet is not large enough to fit 27 columns. Resize the sheet first."
-    it.skip("should be able to add a new column", async () => {
+    it("should be able to add a new column", async () => {
       const updatedTable = await config.api.table.save({
         ...table,
         schema: {
@@ -434,6 +459,56 @@ describe("Google Sheets Integration", () => {
       const updatedRow = await config.api.row.get(table._id!, row._id!)
       expect(updatedRow.name).toEqual("Test Contact")
       expect(updatedRow.description).not.toBeDefined()
+    })
+
+    it("should be able to add a new column and then move it", async () => {
+      await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      const updatedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          newColumn: {
+            name: "newColumn",
+            type: FieldType.STRING,
+          },
+        },
+      })
+
+      expect(updatedTable.schema.newColumn).toBeDefined()
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("C1")).toEqual("newColumn")
+
+      mock.swapColumns(`${updatedTable.name}!B1`, `${updatedTable.name}!C1`)
+
+      let rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0].name).toEqual("Test Contact")
+      expect(rows[0].description).toEqual("original description")
+      expect(rows[0].newColumn).toEqual(undefined)
+
+      await config.api.row.save(table._id!, {
+        ...rows[0],
+        newColumn: "new value",
+      })
+
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("newColumn")
+      expect(mock.cell("C1")).toEqual("description")
+
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("new value")
+      expect(mock.cell("C2")).toEqual("original description")
+
+      rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0].name).toEqual("Test Contact")
+      expect(rows[0].description).toEqual("original description")
+      expect(rows[0].newColumn).toEqual("new value")
     })
   })
 
@@ -785,6 +860,145 @@ describe("Google Sheets Integration", () => {
         }, {})
       )
       expect(ids.length).toEqual(50)
+    })
+  })
+
+  describe("queries", () => {
+    let table: Table
+    let rows: Row[]
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      rows = []
+      rows.push(
+        await config.api.row.save(table._id!, {
+          name: "Test Contact 1",
+          description: "original description 1",
+        })
+      )
+      rows.push(
+        await config.api.row.save(table._id!, {
+          name: "Test Contact 2",
+          description: "original description 2",
+        })
+      )
+    })
+
+    describe("read", () => {
+      it("should be able to read data from a sheet", async () => {
+        const { rows } = await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "read",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        expect(rows).toHaveLength(2)
+        expect(rows[0].name).toEqual("Test Contact 2")
+        expect(rows[0].description).toEqual("original description 2")
+        expect(rows[1].name).toEqual("Test Contact 1")
+        expect(rows[1].description).toEqual("original description 1")
+      })
+    })
+
+    describe("update", () => {
+      it("should be able to update data in a sheet", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            rowIndex: "2",
+            row: { name: "updated name", description: "updated description" },
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "update",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+
+        expect(rows).toHaveLength(2)
+        expect(rows[0].name).toEqual("updated name")
+        expect(rows[0].description).toEqual("updated description")
+        expect(rows[1].name).toEqual("Test Contact 1")
+        expect(rows[1].description).toEqual("original description 1")
+      })
+    })
+
+    describe("create", () => {
+      it("should be able to create new rows", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            row: { name: "new name", description: "new description" },
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "create",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(3)
+        expect(rows[0].name).toEqual("new name")
+        expect(rows[0].description).toEqual("new description")
+      })
+    })
+
+    describe("delete", () => {
+      it("should be able to delete rows", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            rowIndex: "2",
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "delete",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(1)
+        expect(rows[0].name).toEqual("Test Contact 1")
+        expect(rows[0].description).toEqual("original description 1")
+      })
     })
   })
 })

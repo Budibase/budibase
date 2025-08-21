@@ -1,8 +1,6 @@
 import env from "../environment"
 import * as Redis from "ioredis"
 
-const SLOT_REFRESH_MS = 2000
-const CONNECT_TIMEOUT_MS = 10000
 export const SEPARATOR = "-"
 
 /**
@@ -31,6 +29,7 @@ export enum Databases {
   SOCKET_IO = "socket_io",
   BPM_EVENTS = "bpmEvents",
   DOC_WRITE_THROUGH = "docWriteThrough",
+  RECAPTCHA_SESSION = "recaptchaSession",
 }
 
 /**
@@ -86,34 +85,25 @@ export function getRedisConnectionDetails() {
   }
 }
 
-export function getRedisOptions() {
+export function getRedisClusterOptions(): Redis.ClusterOptions {
+  return {
+    slotsRefreshTimeout: 2000,
+    dnsLookup: (address: string, callback: any) => callback(null, address),
+    redisOptions: {
+      ...getRedisOptions(),
+      tls: {},
+    },
+  }
+}
+
+export function getRedisOptions(): Redis.RedisOptions {
   const { host, password, port } = getRedisConnectionDetails()
-  let redisOpts: Redis.RedisOptions = {
-    connectTimeout: CONNECT_TIMEOUT_MS,
+  return {
+    connectTimeout: 30000,
     port: port,
     host,
     password,
   }
-  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
-  if (env.REDIS_CLUSTERED) {
-    opts = {
-      connectTimeout: CONNECT_TIMEOUT_MS,
-      redisOptions: {
-        ...redisOpts,
-        tls: {},
-      },
-      slotsRefreshTimeout: SLOT_REFRESH_MS,
-      dnsLookup: (address: string, callback: any) => callback(null, address),
-    } as Redis.ClusterOptions
-  }
-  return opts
-}
-
-export function addDbPrefix(db: string, key: string) {
-  if (key.includes(db)) {
-    return key
-  }
-  return `${db}${SEPARATOR}${key}`
 }
 
 export function removeDbPrefix(key: string) {

@@ -8,7 +8,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Collect Data",
   tagline: "Collect data to be sent to design",
-  icon: "Collection",
+  icon: "stack",
   description:
     "Collects specified data so it can be provided to the design section",
   type: AutomationStepType.ACTION,

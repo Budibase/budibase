@@ -121,11 +121,13 @@
       <div class="binding-arrow" class:expanded>
         {#if expandable}
           <Icon
-            name="Play"
+            name="play"
             hoverable
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
             on:click={() => (expanded = !expanded)}
+            size="XXS"
+            weight="fill"
           />
         {/if}
       </div>
@@ -151,7 +153,7 @@
       {#if showCopyIcon}
         <div class="copy-value-icon">
           <Icon
-            name="Copy"
+            name="copy"
             size="XS"
             hoverable
             color="var(--spectrum-global-color-gray-600)"
@@ -187,18 +189,24 @@
     flex-direction: column;
     gap: 8px;
     overflow: hidden;
+    min-height: 0;
   }
 
   /* Expand arrow */
   .binding-arrow {
-    margin: -3px 6px -2px 4px;
-    flex: 0 0 9px;
+    margin: 0 6px 0 4px;
+    flex: 0 0 10px;
+    display: flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .binding-arrow :global(i) {
+    display: inline-block;
+    transform-origin: 50% 50%;
     transition: transform 130ms ease-out;
   }
-  .binding-arrow :global(svg) {
-    width: 9px;
-  }
-  .binding-arrow.expanded {
+
+  .binding-arrow.expanded :global(i) {
     transform: rotate(90deg);
   }
 
@@ -208,7 +216,7 @@
     flex-direction: row;
     font-family: monospace;
     font-size: 12px;
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
   }
 

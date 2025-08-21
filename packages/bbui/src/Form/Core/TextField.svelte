@@ -13,7 +13,7 @@
   export let quiet = false
   export let align: "left" | "right" | "center" | undefined = undefined
   export let autofocus: boolean | null = false
-  export let autocomplete: boolean | undefined
+  export let autocomplete: boolean | string | undefined
 
   const dispatch = createEventDispatcher()
 
@@ -104,6 +104,7 @@
     on:focus
     on:input
     on:keyup
+    on:keydown
     on:blur={onBlur}
     on:focus={onFocus}
     on:input={onInput}
@@ -114,11 +115,13 @@
     inputmode={getInputMode(type)}
     autocomplete={autocompleteValue}
   />
+  <slot />
 </div>
 
 <style>
   .spectrum-Textfield {
     width: 100%;
+    --spectrum-textfield-padding-bottom: var(--spectrum-textfield-padding-top);
   }
 
   input::placeholder {

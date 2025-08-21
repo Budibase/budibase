@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     ModalContent,
@@ -8,24 +8,26 @@
     Icon,
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "@/stores/portal"
-  import { emailValidator } from "@/helpers/validation"
-  import { Constants } from "@budibase/frontend-core"
-  import { capitalise } from "@/helpers"
-
+  import { emailValidator, Constants } from "@budibase/frontend-core"
+  import { capitalise, parseUserEmailsFromCSV } from "@/helpers"
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
 
-  export let createUsersFromCsv
+  export let createUsersFromCsv: (_data: {
+    userEmails: string[]
+    usersRole: string
+    userGroups: string[]
+  }) => void
 
-  let files = []
-  let csvString = undefined
-  let userEmails = []
-  let userGroups = []
-  let usersRole = null
+  let files: File[] = []
+  let csvString: string | undefined = undefined
+  let userEmails: string[] = []
+  let userGroups: string[] = []
+  let usersRole: string | undefined = undefined
+  let invalidEmails: string[] = []
 
-  $: invalidEmails = []
-  $: userCount = $licensing.userCount + userEmails.length
+  $: userCount = ($licensing?.userCount || 0) + userEmails.length
   $: exceed = licensing.usersLimitExceeded(userCount)
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
@@ -36,7 +38,8 @@
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
-  const validEmails = userEmails => {
+  const validEmails = (userEmails: string[]): boolean => {
+    invalidEmails = [] // Reset invalid emails
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
       notifications.error(
         `Max limit for upload is 1000 users. Please reduce file size and try again.`
@@ -58,8 +61,11 @@
     return false
   }
 
-  async function handleFile(evt) {
-    const fileArray = Array.from(evt.target.files)
+  async function handleFile(evt: Event): Promise<void> {
+    const target = evt.target as HTMLInputElement
+    if (!target.files) return
+
+    const fileArray = Array.from(target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
         `Files cannot exceed ${
@@ -70,12 +76,14 @@
     }
 
     // Read CSV as plain text to upload alongside schema
-    let reader = new FileReader()
+    const reader = new FileReader()
     reader.addEventListener("load", function (e) {
-      csvString = e.target.result
-      files = fileArray
-
-      userEmails = csvString.split(/\r?\n/)
+      const result = e.target?.result
+      if (typeof result === "string") {
+        csvString = result
+        files = fileArray
+        userEmails = parseUserEmailsFromCSV(csvString)
+      }
     })
     reader.readAsText(fileArray[0])
   }
@@ -87,7 +95,8 @@
   confirmText="Done"
   cancelText="Cancel"
   showCloseIcon={false}
-  onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
+  onConfirm={() =>
+    createUsersFromCsv({ userEmails, usersRole: usersRole || "", userGroups })}
   disabled={importDisabled}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
@@ -101,21 +110,21 @@
 
   {#if exceed}
     <div class="user-notification">
-      <Icon name="Info" />
-      {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+      <Icon name="info" />
+      {capitalise($licensing?.license?.plan?.type || "")} plan is limited to {$licensing?.userLimit}
       users. Upgrade your plan to add more users
     </div>
   {/if}
   <RadioGroup bind:value={usersRole} options={roleOptions} />
 
-  {#if $licensing.groupsEnabled && internalGroups?.length}
+  {#if $licensing?.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
       label="Groups"
       options={internalGroups}
-      getOptionLabel={option => option.name}
-      getOptionValue={option => option._id}
+      getOptionLabel={option => option?.name || ""}
+      getOptionValue={option => option?._id || ""}
     />
   {/if}
 </ModalContent>
@@ -151,7 +160,10 @@
     text-rendering: optimizeLegibility;
     min-width: auto;
     outline: none;
-    font-feature-settings: "case" 1, "rlig" 1, "calt" 0;
+    font-feature-settings:
+      "case" 1,
+      "rlig" 1,
+      "calt" 0;
     -webkit-box-align: center;
     user-select: none;
     flex-shrink: 0;

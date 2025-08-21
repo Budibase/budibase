@@ -22,9 +22,8 @@ function checkForSchemaErrors(schema: Record<string, Table>) {
         columnName.includes(".")
       )
       if (invalidColumnName) {
-        errors[
-          tableName
-        ] = `Column '${invalidColumnName}' is not supported as it contains a dot.`
+        errors[tableName] =
+          `Column '${invalidColumnName}' is not supported as it contains a dot.`
       }
     }
   }
@@ -35,7 +34,7 @@ export async function buildFilteredSchema(
   datasource: Datasource,
   filter?: string[]
 ): Promise<Schema> {
-  const schema = await buildSchemaHelper(datasource)
+  const schema = await buildSchemaHelper(datasource, filter)
   if (!filter) {
     return schema
   }
@@ -62,9 +61,16 @@ export async function buildFilteredSchema(
   }
 }
 
-async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
+async function buildSchemaHelper(
+  datasource: Datasource,
+  filter?: string[]
+): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(datasource._id!, datasource.entities!)
+  return await connector.buildSchema(
+    datasource._id!,
+    datasource.entities!,
+    filter
+  )
 }
 
 export async function getConnector(

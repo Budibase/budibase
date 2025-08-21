@@ -1,7 +1,9 @@
 import { constants, utils } from "@budibase/backend-core"
 import { Ctx } from "@budibase/types"
 
-export default function ({ requiresAppId }: { requiresAppId?: boolean } = {}) {
+export function publicApiMiddleware({
+  requiresAppId,
+}: { requiresAppId?: boolean } = {}) {
   return async (ctx: Ctx, next: any) => {
     const appId = await utils.getAppIdFromCtx(ctx)
     if (requiresAppId && !appId) {

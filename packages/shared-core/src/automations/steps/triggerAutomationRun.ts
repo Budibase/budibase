@@ -9,7 +9,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Trigger an automation",
   tagline: "Triggers an automation synchronously",
-  icon: "Sync",
+  icon: "arrows-clockwise",
   description: "Triggers an automation synchronously",
   type: AutomationStepType.ACTION,
   internal: true,
@@ -28,7 +28,7 @@ export const definition: AutomationStepDefinition = {
             },
           },
           customType: AutomationCustomIOType.AUTOMATION_FIELDS,
-          title: "automatioFields",
+          title: "Automation Fields",
           required: ["automationId"],
         },
         timeout: {

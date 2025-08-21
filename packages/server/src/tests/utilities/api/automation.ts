@@ -33,7 +33,7 @@ export class AutomationAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<GetAutomationActionDefinitionsResponse> => {
     return await this._get<GetAutomationActionDefinitionsResponse>(
-      `/api/automations/actions/list`,
+      `/api/automations/action/list`,
       {
         expectations,
       }
@@ -44,7 +44,7 @@ export class AutomationAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<GetAutomationTriggerDefinitionsResponse> => {
     return await this._get<GetAutomationTriggerDefinitionsResponse>(
-      `/api/automations/triggers/list`,
+      `/api/automations/trigger/list`,
       {
         expectations,
       }
@@ -131,6 +131,13 @@ export class AutomationAPI extends TestAPI {
       {
         expectations,
       }
+    )
+  }
+
+  deleteAll = async (expectations?: Expectations): Promise<void> => {
+    const { automations } = await this.fetch()
+    await Promise.all(
+      automations.map(automation => this.delete(automation, expectations))
     )
   }
 }

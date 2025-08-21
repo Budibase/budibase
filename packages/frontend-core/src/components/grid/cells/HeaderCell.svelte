@@ -303,11 +303,19 @@
       />
     {/if}
 
-    <div class="column-icon">
-      <Icon size="S" name={getColumnIcon(column)} />
-    </div>
+    {#if !$config.quiet}
+      <div class="column-icon">
+        <Icon
+          name={getColumnIcon(column)}
+          size="M"
+          color="var(--spectrum-global-color-gray-600)"
+          hoverable
+          hoverColor="var(--spectrum-global-color-gray-800)"
+        />
+      </div>
+    {/if}
     <div class="search-icon" on:click={startSearching}>
-      <Icon hoverable size="S" name="Search" />
+      <Icon hoverable size="S" name="magnifying-glass" />
     </div>
 
     <div class="name">
@@ -316,7 +324,7 @@
 
     {#if searching}
       <div class="clear-icon" on:click={stopSearching}>
-        <Icon hoverable size="S" name="Close" />
+        <Icon hoverable size="S" name="x" />
       </div>
     {:else}
       {#if sortedBy}
@@ -325,13 +333,13 @@
             hoverable
             size="S"
             name={$sort.order === SortOrder.DESCENDING
-              ? "SortOrderDown"
-              : "SortOrderUp"}
+              ? "sort-descending"
+              : "sort-ascending"}
           />
         </div>
       {/if}
       <div class="more-icon" on:click={() => (open = true)}>
-        <Icon hoverable size="S" name="MoreVertical" />
+        <Icon hoverable size="S" name="dots-three-vertical" />
       </div>
     {/if}
   </GridCell>
@@ -351,25 +359,25 @@
       </div>
     {:else}
       <Menu>
-        <MenuItem icon="Edit" on:click={editColumn} disabled={!editable}>
-          Edit column
-        </MenuItem>
+        {#if $config.canEditColumns}
+          <MenuItem icon="pencil" on:click={editColumn} disabled={!editable}>
+            Edit column
+          </MenuItem>
+          <MenuItem icon="copy" on:click={duplicateColumn}>
+            Duplicate column
+          </MenuItem>
+          <MenuItem
+            icon="tag"
+            on:click={makeDisplayColumn}
+            disabled={!$config.canEditColumns ||
+              column.primaryDisplay ||
+              !canBeDisplayColumn(column.schema)}
+          >
+            Use as display column
+          </MenuItem>
+        {/if}
         <MenuItem
-          icon="Duplicate"
-          on:click={duplicateColumn}
-          disabled={!$config.canEditColumns}
-        >
-          Duplicate column
-        </MenuItem>
-        <MenuItem
-          icon="Label"
-          on:click={makeDisplayColumn}
-          disabled={column.primaryDisplay || !canBeDisplayColumn(column.schema)}
-        >
-          Use as display column
-        </MenuItem>
-        <MenuItem
-          icon="SortOrderUp"
+          icon="sort-ascending"
           on:click={sortAscending}
           disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column &&
@@ -378,7 +386,7 @@
           Sort {sortingLabels.ascending}
         </MenuItem>
         <MenuItem
-          icon="SortOrderDown"
+          icon="sort-descending"
           on:click={sortDescending}
           disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column &&
@@ -386,31 +394,35 @@
         >
           Sort {sortingLabels.descending}
         </MenuItem>
-        <MenuItem
-          disabled={!canMoveLeft}
-          icon="ChevronLeft"
-          on:click={moveLeft}
-        >
-          Move left
-        </MenuItem>
-        <MenuItem
-          disabled={!canMoveRight}
-          icon="ChevronRight"
-          on:click={moveRight}
-        >
-          Move right
-        </MenuItem>
-        <MenuItem
-          disabled={column.primaryDisplay || !$config.showControls}
-          icon="VisibilityOff"
-          on:click={hideColumn}
-        >
-          Hide column
-        </MenuItem>
-        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
-          <MenuItem icon="User" on:click={openMigrationModal}>
-            Migrate to user column
+        {#if $config.canEditColumns}
+          <MenuItem
+            disabled={!canMoveLeft}
+            icon="caret-left"
+            on:click={moveLeft}
+          >
+            Move left
           </MenuItem>
+          <MenuItem
+            disabled={!canMoveRight}
+            icon="caret-right"
+            on:click={moveRight}
+          >
+            Move right
+          </MenuItem>
+          <MenuItem
+            disabled={!$config.canEditColumns ||
+              column.primaryDisplay ||
+              !$config.canHideColumns}
+            icon="eye-slash"
+            on:click={hideColumn}
+          >
+            Hide column
+          </MenuItem>
+          {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
+            <MenuItem icon="user" on:click={openMigrationModal}>
+              Migrate to user column
+            </MenuItem>
+          {/if}
         {/if}
       </Menu>
     {/if}
@@ -430,22 +442,29 @@
   }
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
-    gap: calc(2 * var(--cell-spacing));
-    background: var(--grid-background-alt);
+    gap: calc(1.5 * var(--cell-spacing));
+    background: var(--header-cell-background);
   }
 
   /* Icon colors */
-  .header-cell :global(.spectrum-Icon) {
+  .header-cell :global(.icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .header-cell :global(.spectrum-Icon.hoverable:hover) {
+  .header-cell :global(.icon.hoverable:hover) {
     color: var(--spectrum-global-color-gray-800) !important;
     cursor: pointer;
   }
 
   /* Search icon */
+  .column-icon {
+    width: 18px;
+  }
   .search-icon {
     display: none;
+    width: 18px;
+  }
+  .clear-icon {
+    z-index: 99;
   }
   .header-cell.searchable:not(.open):hover .search-icon,
   .header-cell.searchable.searching .search-icon {
@@ -463,6 +482,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    font-weight: 500;
   }
   .header-cell.searching .name {
     opacity: 0;

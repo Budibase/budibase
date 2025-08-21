@@ -8,7 +8,7 @@ import { constants, context, events, utils } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import {
-  ConfigType,
+  ContextUser,
   CreateDatasourceRequest,
   Datasource,
   ExecuteQueryRequest,
@@ -31,15 +31,26 @@ import {
   SourceName,
   UserCtx,
   DeleteQueryResponse,
+  SSOProviderType,
 } from "@budibase/types"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
 import { ObjectId } from "mongodb"
 import { merge } from "lodash"
+import { quotas } from "@budibase/pro"
+import { cloneDeep } from "lodash"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
+
+function sanitiseUserStructure(user: ContextUser) {
+  const copiedUser = cloneDeep(user)
+  delete copiedUser.roles
+  delete copiedUser.account
+  delete copiedUser.license
+  return copiedUser
+}
 
 function validateQueryInputs(parameters: QueryEventParameters) {
   for (let entry of Object.entries(parameters)) {
@@ -146,18 +157,18 @@ export async function find(ctx: UserCtx<void, FindQueryResponse>) {
 }
 
 //Required to discern between OIDC OAuth config entries
-function getOAuthConfigCookieId(ctx: UserCtx) {
-  if (ctx.user.providerType === ConfigType.OIDC) {
-    return utils.getCookie(ctx, constants.Cookie.OIDC_CONFIG)
+function getOAuthConfigCookieId(ctx: UserCtx): string | undefined {
+  if (ctx.user.providerType === SSOProviderType.OIDC) {
+    return utils.getCookie<string>(ctx, constants.Cookie.OIDC_CONFIG)
   }
 }
 
 function getAuthConfig(ctx: UserCtx) {
   const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
-  let authConfigCtx: any = {}
-  authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
-  authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
-  return authConfigCtx
+  return {
+    configId: getOAuthConfigCookieId(ctx),
+    sessionId: authCookie ? authCookie.sessionId : undefined,
+  }
 }
 
 function enrichParameters(
@@ -169,8 +180,10 @@ function enrichParameters(
   validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
   for (const parameter of query.parameters) {
-    let value: string | null =
-      requestParameters[parameter.name] || parameter.default
+    let value = requestParameters[parameter.name]
+    if (value == null || value === "") {
+      value = parameter.default
+    }
     if (query.nullDefaultSupport && paramNotSet(value)) {
       value = null
     }
@@ -208,7 +221,7 @@ export async function preview(
     }
   }
 
-  const authConfigCtx: any = getAuthConfig(ctx)
+  const authConfigCtx = getAuthConfig(ctx)
 
   function getFieldMetadata(field: any, key: string): QuerySchema {
     const makeQuerySchema = (
@@ -315,7 +328,8 @@ export async function preview(
     // have to pass down to the thread runner - can't put into context now
     environmentVariables: envVars,
     ctx: {
-      user: ctx.user,
+      // sanitise the user object to remove circular references
+      user: sanitiseUserStructure(ctx.user),
       auth: { ...authConfigCtx },
     },
   }
@@ -364,7 +378,7 @@ async function execute(
     query.datasourceId
   )
 
-  let authConfigCtx: any = {}
+  let authConfigCtx = {}
   if (!opts.isAutomation) {
     authConfigCtx = getAuthConfig(ctx)
   }
@@ -384,15 +398,21 @@ async function execute(
       environmentVariables: envVars,
       nullDefaultSupport: query.nullDefaultSupport,
       ctx: {
-        user: ctx.user,
+        // sanitise the user object to remove circular references
+        user: sanitiseUserStructure(ctx.user),
         auth: { ...authConfigCtx },
       },
       schema: query.schema,
     }
 
-    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
-      inputs
-    )
+    const { rows, pagination, extra, info } =
+      query.queryVerb === "read" || opts.isAutomation
+        ? await Runner.run<QueryResponse>(inputs)
+        : await quotas.addAction(async () => {
+            const response = await Runner.run<QueryResponse>(inputs)
+            events.action.crudExecuted({ type: query.queryVerb })
+            return response
+          })
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw
@@ -454,5 +474,5 @@ export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }
-  await events.query.deleted(datasource, query)
+  await events.query.deleted(datasource, query, context.getAppId()!)
 }

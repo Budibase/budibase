@@ -54,4 +54,4 @@
     zIndex={selected ? 890 : 910}
     allowResizeAnchors
   />
-{/if}}
+{/if}

@@ -200,7 +200,7 @@
       <GridStylesButton
         style={gridHAlignVar}
         value="start"
-        icon="AlignLeft"
+        icon="align-left"
         title="Align left"
         active={gridHAlign === "start"}
         componentId={id}
@@ -208,7 +208,7 @@
       <GridStylesButton
         style={gridHAlignVar}
         value="center"
-        icon="AlignCenter"
+        icon="align-center-horizontal"
         title="Align center"
         active={gridHAlign === "center"}
         componentId={id}
@@ -216,7 +216,7 @@
       <GridStylesButton
         style={gridHAlignVar}
         value="end"
-        icon="AlignRight"
+        icon="align-right"
         title="Align right"
         active={gridHAlign === "end"}
         componentId={id}
@@ -224,7 +224,7 @@
       <GridStylesButton
         style={gridHAlignVar}
         value="stretch"
-        icon="MoveLeftRight"
+        icon="arrows-left-right"
         title="Stretch horizontally"
         active={gridHAlign === "stretch"}
         componentId={id}
@@ -233,7 +233,7 @@
       <GridStylesButton
         style={gridVAlignVar}
         value="start"
-        icon="AlignTop"
+        icon="align-top"
         title="Align top"
         active={gridVAlign === "start"}
         componentId={id}
@@ -241,7 +241,7 @@
       <GridStylesButton
         style={gridVAlignVar}
         value="center"
-        icon="AlignMiddle"
+        icon="align-center-vertical"
         title="Align middle"
         active={gridVAlign === "center"}
         componentId={id}
@@ -249,7 +249,7 @@
       <GridStylesButton
         style={gridVAlignVar}
         value="end"
-        icon="AlignBottom"
+        icon="align-bottom"
         title="Align bottom"
         active={gridVAlign === "end"}
         componentId={id}
@@ -257,7 +257,7 @@
       <GridStylesButton
         style={gridVAlignVar}
         value="stretch"
-        icon="MoveUpDown"
+        icon="arrows-up-down"
         title="Stretch vertically"
         active={gridVAlign === "stretch"}
         componentId={id}
@@ -308,7 +308,7 @@
     {/each}
     {#if !isRoot}
       <SettingsButton
-        icon="Duplicate"
+        icon="copy"
         on:click={() => {
           builderStore.actions.duplicateComponent(
             $builderStore.selectedComponentId
@@ -317,7 +317,7 @@
         title="Duplicate component"
       />
       <SettingsButton
-        icon="Delete"
+        icon="trash"
         on:click={() => {
           builderStore.actions.deleteComponent(
             $builderStore.selectedComponentId

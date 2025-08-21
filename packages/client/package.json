@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch --mode=dev"
+    "dev": "vite build --watch --mode=dev",
+    "check:types": "yarn svelte-check"
   },
   "dependencies": {
     "@budibase/bbui": "*",
@@ -28,12 +29,15 @@
     "apexcharts": "^3.48.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
-    "html5-qrcode": "^2.2.1",
+    "html2pdf.js": "^0.9.3",
+    "html5-qrcode": "^2.3.8",
     "leaflet": "^1.7.1",
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "jsbarcode": "^3.11.6",
+    "@svelte-put/qr": "^1.2.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "1.4.0",

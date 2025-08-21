@@ -5,6 +5,8 @@ import {
   EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
+  LockName,
+  LockType,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -30,6 +32,7 @@ import {
 } from "../../../tables/internal/sqs"
 import {
   context,
+  locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
@@ -332,10 +335,13 @@ export async function search(
   }
 
   const allTables = await sdk.tables.getAllInternalTables()
-  const allTablesMap = allTables.reduce((acc, table) => {
-    acc[table._id!] = table
-    return acc
-  }, {} as Record<string, Table>)
+  const allTablesMap = allTables.reduce(
+    (acc, table) => {
+      acc[table._id!] = table
+      return acc
+    },
+    {} as Record<string, Table>
+  )
 
   // make sure we have the mapped/latest table
   if (table._id) {
@@ -509,7 +515,14 @@ export async function search(
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
-      await sdk.tables.sqs.syncDefinition()
+      await locks.doWithLock(
+        {
+          type: LockType.AUTO_EXTEND,
+          name: LockName.SQS_SYNC_DEFINITIONS,
+          resource: context.getAppId(),
+        },
+        sdk.tables.sqs.syncDefinition
+      )
       return search(options, source, { retrying: true })
     }
     // previously the internal table didn't error when a column didn't exist in search

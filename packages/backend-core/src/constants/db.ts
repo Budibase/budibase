@@ -1,4 +1,9 @@
-import { prefixed, DocumentType } from "@budibase/types"
+import {
+  prefixed,
+  DocumentType,
+  SEPARATOR,
+  InternalTable,
+} from "@budibase/types"
 
 export {
   SEPARATOR,
@@ -21,7 +26,7 @@ export enum ViewName {
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   LINK = "by_link",
-  ROUTING = "screen_routes",
+  ROUTING = "screen_routes_2",
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
@@ -60,6 +65,11 @@ export const StaticDatabases = {
   SCIM_LOGS: {
     name: "scim-logs",
   },
+  // Used by self-host users making use of Budicloud resources. Introduced when
+  // we started letting self-host users use Budibase AI in the cloud.
+  SELF_HOST_CLOUD: {
+    name: "self-host-cloud",
+  },
 }
 
 export const APP_PREFIX = prefixed(DocumentType.APP)
@@ -73,3 +83,9 @@ export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
 export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
 export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
+export const USER_METADATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+
+export const enum DesignDocuments {
+  SQLITE = SQLITE_DESIGN_DOC_ID,
+  MIGRATIONS = "_design/migrations",
+}

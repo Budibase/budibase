@@ -1,4 +1,5 @@
-export * from "./sidepanel"
+import { FieldType } from "@budibase/types"
+
 export * from "./codeEditor"
 export * from "./errors"
 
@@ -24,10 +25,13 @@ export interface ComponentDefinition {
   requiredAncestors?: string[]
   illegalChildren: string[]
   icon?: string
+  new?: boolean
   size?: {
     width: number
     height: number
   }
+  context?: ComponentContext | ComponentContext[]
+  actions?: (string | any)[]
 }
 
 export type DependsOnComponentSetting =
@@ -48,6 +52,44 @@ export interface ComponentSetting {
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
+  nested?: boolean
   dependsOn?: DependsOnComponentSetting
   sectionDependsOn?: DependsOnComponentSetting
+  contextAccess?: {
+    global: boolean
+    self: boolean
+  }
+}
+interface ComponentAction {
+  type: string
+  suffix?: string
+}
+
+interface ComponentStaticContextValue {
+  label: string
+  key: string
+  type: string // technically this is a long list of options but there are too many to enumerate
+}
+
+export interface ComponentContext {
+  type: ComponentContextType
+  scope?: ComponentContextScopes
+  actions?: ComponentAction[]
+  suffix?: string
+  values?: ComponentStaticContextValue[]
+}
+
+export type ComponentContextType = "action" | "static" | "schema" | "form"
+
+export const enum ComponentContextScopes {
+  Local = "local",
+  Global = "global",
+}
+
+export type FilterConfig = {
+  active: boolean
+  field: string
+  label?: string
+  _id?: string
+  columnType?: FieldType
 }

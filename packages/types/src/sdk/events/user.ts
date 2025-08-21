@@ -24,14 +24,6 @@ export interface UserDeletedEvent extends BaseEvent {
   }
 }
 
-export interface UserOnboardingEvent extends BaseEvent {
-  userId: string
-  step?: string
-  audited: {
-    email: string
-  }
-}
-
 export interface UserPermissionAssignedEvent extends BaseEvent {
   userId: string
   audited: {

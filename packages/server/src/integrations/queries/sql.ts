@@ -1,10 +1,33 @@
 import { findHBSBlocks } from "@budibase/string-templates"
-import { DatasourcePlus } from "@budibase/types"
+import { DatasourcePlus, SourceName } from "@budibase/types"
 import sdk from "../../sdk"
 
-const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
+const MYSQL_CONST_CHAR_REGEX = new RegExp(`"[^"]*"|'[^']*'`, "g")
+const CONST_CHAR_REGEX = new RegExp(`'[^']*'`, "g")
+
+function getConstCharRegex(sourceName: SourceName) {
+  // MySQL clients support ANSI_QUOTES mode off, this is by default
+  // but " and ' count as string literals
+  if (sourceName === SourceName.MYSQL) {
+    return MYSQL_CONST_CHAR_REGEX
+  } else {
+    return CONST_CHAR_REGEX
+  }
+}
+
+function getBindingWithinConstCharRegex(
+  sourceName: SourceName,
+  binding: string
+) {
+  if (sourceName === SourceName.MYSQL) {
+    return new RegExp(`[^']*${binding}[^']*'|"[^"]*${binding}[^"]*"`, "g")
+  } else {
+    return new RegExp(`'[^']*${binding}[^']*'`)
+  }
+}
 
 export async function interpolateSQL(
+  sourceName: SourceName,
   fields: { sql: string; bindings: any[] },
   parameters: { [key: string]: any },
   integration: DatasourcePlus,
@@ -24,10 +47,10 @@ export async function interpolateSQL(
     )
     // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
     // start by finding all the instances of const character strings
-    const charConstMatch = sql.match(CONST_CHAR_REGEX) || []
+    const charConstMatch = sql.match(getConstCharRegex(sourceName)) || []
     // now look within them to see if a binding is used
     const charConstBindingMatch = charConstMatch.find((string: any) =>
-      string.match(new RegExp(`'[^']*${binding}[^']*'`))
+      string.match(getBindingWithinConstCharRegex(sourceName, binding))
     )
     if (charConstBindingMatch) {
       let [part1, part2] = charConstBindingMatch.split(binding)

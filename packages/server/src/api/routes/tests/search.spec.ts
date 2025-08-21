@@ -1,14 +1,11 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
-  docIds,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
@@ -40,27 +37,15 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, isViewId } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
-jest.mock("@budibase/pro", () => ({
-  ...jest.requireActual("@budibase/pro"),
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => `Mock LLM Response`),
-        buildPromptFromAIOperation: jest.fn(),
-      }),
-    },
-  },
-}))
-
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -79,28 +64,35 @@ if (descriptions.length) {
           otherColumn?: string
         }
       ) {
-        const relatedTable = await createTable({
-          name: { name: opts?.tableName || "name", type: FieldType.STRING },
-        })
+        const relatedTable = await config.api.table.save(
+          tableForDatasource(datasource, {
+            name: opts?.tableName,
+            schema: { name: { name: "name", type: FieldType.STRING } },
+          })
+        )
 
         const columnName = opts?.primaryColumn || "productCat"
-        //@ts-ignore - API accepts this structure, will build out rest of definition
-        const tableId = await createTable({
-          name: { name: opts?.tableName || "name", type: FieldType.STRING },
-          [columnName]: {
-            type: FieldType.LINK,
-            relationshipType: type,
-            name: columnName,
-            fieldName: opts?.otherColumn || "product",
-            tableId: relatedTable,
-            constraints: {
-              type: "array",
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            // @ts-expect-error - API accepts this structure, will build out rest of definition
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              [columnName]: {
+                type: FieldType.LINK,
+                relationshipType: type,
+                name: columnName,
+                fieldName: opts?.otherColumn || "product",
+                tableId: relatedTable._id!,
+                constraints: {
+                  type: "array",
+                },
+              },
             },
-          },
-        })
+          })
+        )
         return {
-          relatedTable: await config.api.table.get(relatedTable),
-          tableId,
+          relatedTable: await config.api.table.get(relatedTable._id!),
+          tableId: table._id!,
         }
       }
 
@@ -125,14 +117,17 @@ if (descriptions.length) {
         })
       })
 
-      async function createTable(schema?: TableSchema) {
+      async function createTableWithSchema(schema?: TableSchema) {
         const table = await config.api.table.save(
           tableForDatasource(datasource, { schema })
         )
         return table._id!
       }
 
-      async function createView(tableId: string, schema?: ViewV2Schema) {
+      async function createViewWithSchema(
+        tableId: string,
+        schema?: ViewV2Schema
+      ) {
         const view = await config.api.viewV2.create({
           tableId: tableId,
           name: generator.guid(),
@@ -150,7 +145,7 @@ if (descriptions.length) {
       }
 
       async function getTable(tableOrViewId: string): Promise<Table> {
-        if (docIds.isViewId(tableOrViewId)) {
+        if (isViewId(tableOrViewId)) {
           const view = await config.api.viewV2.get(tableOrViewId)
           return await config.api.table.get(view.tableId)
         } else {
@@ -182,14 +177,16 @@ if (descriptions.length) {
         }
 
         type CreateFn = (schema?: TableSchema) => Promise<string>
-        let tableOrView: [string, CreateFn][] = [["table", createTable]]
+        let tableOrView: [string, CreateFn][] = [
+          ["table", createTableWithSchema],
+        ]
 
         if (!isInMemory) {
           tableOrView.push([
             "view",
             async (schema?: TableSchema) => {
-              const tableId = await createTable(schema)
-              const viewId = await createView(
+              const tableId = await createTableWithSchema(schema)
+              const viewId = await createViewWithSchema(
                 tableId,
                 Object.keys(schema || {}).reduce<ViewV2Schema>(
                   (viewSchema, fieldName) => {
@@ -866,7 +863,11 @@ if (descriptions.length) {
                 })
               })
 
-            const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
+            const stringTypes = [
+              FieldType.STRING,
+              FieldType.LONGFORM,
+              FieldType.BARCODEQR,
+            ] as const
             describe.each(stringTypes)("%s", type => {
               beforeAll(async () => {
                 tableOrViewId = await createTableOrView({
@@ -937,6 +938,25 @@ if (descriptions.length) {
                     allOr: true,
                     equal: { "1:name": "foo", "2:name": "bar" },
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                })
+              })
+
+              describe("non-existent fields", () => {
+                it("should return 400 when searching for non-existent fields", async () => {
+                  await config.api.row.search(
+                    tableOrViewId,
+                    {
+                      query: {
+                        equal: { nonExistentField: "value" },
+                      },
+                    },
+                    {
+                      status: 400,
+                      body: {
+                        message: expect.stringContaining("nonExistentField"),
+                      },
+                    }
+                  )
                 })
               })
 
@@ -1899,15 +1919,28 @@ if (descriptions.length) {
               !isInMemory &&
               describe("AI Column", () => {
                 const UNEXISTING_AI_COLUMN = "Real LLM Response"
+                let envCleanup: () => void
 
                 beforeAll(async () => {
                   mocks.licenses.useBudibaseAI()
                   mocks.licenses.useAICustomConfigs()
 
+                  envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
+
+                  // Ensure MockAgent is installed for OpenAI interceptors
+                  const {
+                    installHttpMocking,
+                  } = require("../../../tests/jestEnv")
+                  installHttpMocking()
+
+                  // Set up 2 interceptors for the 2 rows that will be processed
+                  mockChatGPTResponse("Mock LLM Response")
+                  mockChatGPTResponse("Mock LLM Response")
+
                   tableOrViewId = await createTableOrView({
                     product: { name: "product", type: FieldType.STRING },
                     ai: {
-                      name: "AI",
+                      name: "ai",
                       type: FieldType.AI,
                       operation: AIOperationEnum.PROMPT,
                       prompt: "Translate '{{ product }}' into German",
@@ -1918,6 +1951,10 @@ if (descriptions.length) {
                     { product: "Big Mac" },
                     { product: "McCrispy" },
                   ])
+                })
+
+                afterAll(() => {
+                  envCleanup()
                 })
 
                 describe("equal", () => {
@@ -2433,7 +2470,7 @@ if (descriptions.length) {
             isSql &&
               describe("related formulas", () => {
                 beforeAll(async () => {
-                  const arrayTable = await createTable({
+                  const arrayTable = await createTableWithSchema({
                     name: { name: "name", type: FieldType.STRING },
                     array: {
                       name: "array",
@@ -2999,14 +3036,16 @@ if (descriptions.length) {
 
             isSql &&
               describe("relationship - table with spaces", () => {
-                let primaryTable: Table, row: Row
+                let primaryTable: Table, row: Row, name: string
 
                 beforeAll(async () => {
+                  name = `${utils.newid().substring(0, 16)} space`
+
                   const { relatedTable, tableId } =
                     await basicRelationshipTables(
                       RelationshipType.ONE_TO_MANY,
                       {
-                        tableName: "table with spaces",
+                        tableName: name,
                         primaryColumn: "related",
                         otherColumn: "related",
                       }
@@ -3022,12 +3061,17 @@ if (descriptions.length) {
                     name: "foo",
                     related: [row._id],
                   })
+
+                  await config.api.row.save(tableOrViewId, {
+                    name: "bar",
+                    related: [row._id],
+                  })
                 })
 
                 it("should be able to search by table name with spaces", async () => {
                   await expectQuery({
                     equal: {
-                      ["table with spaces.name"]: "foo",
+                      [`${name}.name`]: "foo",
                     },
                   }).toContain([{ name: "foo" }])
                 })
@@ -3078,7 +3122,7 @@ if (descriptions.length) {
                 let relatedTable: string, relatedRows: Row[]
 
                 beforeAll(async () => {
-                  relatedTable = await createTable({
+                  relatedTable = await createTableWithSchema({
                     name: { name: "name", type: FieldType.STRING },
                   })
                   tableOrViewId = await createTableOrView({
@@ -3189,28 +3233,6 @@ if (descriptions.length) {
                       name: "test2",
                     },
                   ])
-                })
-              })
-
-            isInternal &&
-              describe("no column error backwards compat", () => {
-                beforeAll(async () => {
-                  tableOrViewId = await createTableOrView({
-                    name: {
-                      name: "name",
-                      type: FieldType.STRING,
-                    },
-                  })
-                })
-
-                it("shouldn't error when column doesn't exist", async () => {
-                  await expectSearch({
-                    query: {
-                      string: {
-                        "1:something": "a",
-                      },
-                    },
-                  }).toMatch({ rows: [] })
                 })
               })
 
@@ -3516,7 +3538,7 @@ if (descriptions.length) {
                 let row: Row
 
                 beforeAll(async () => {
-                  const toRelateTable = await createTable({
+                  const toRelateTable = await createTableWithSchema({
                     name: {
                       name: "name",
                       type: FieldType.STRING,
@@ -3553,6 +3575,31 @@ if (descriptions.length) {
                     limit: 1,
                   }).toContainExactly([row])
                 })
+
+                isInternal &&
+                  describe("search by _id for relations", () => {
+                    it("can filter by the related _id", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[0]._id },
+                        },
+                      }).toContainExactly([row])
+
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[1]._id },
+                        },
+                      }).toContainExactly([row])
+                    })
+
+                    it("can filter by the related _id and find nothing", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": "rel_none" },
+                        },
+                      }).toFindNothing()
+                    })
+                  })
               })
 
             !isInternal &&
@@ -3595,7 +3642,7 @@ if (descriptions.length) {
             isSql &&
               describe("primaryDisplay", () => {
                 beforeAll(async () => {
-                  let toRelateTableId = await createTable({
+                  let toRelateTableId = await createTableWithSchema({
                     name: {
                       name: "name",
                       type: FieldType.STRING,
@@ -3615,9 +3662,8 @@ if (descriptions.length) {
                     },
                   })
 
-                  const toRelateTable = await config.api.table.get(
-                    toRelateTableId
-                  )
+                  const toRelateTable =
+                    await config.api.table.get(toRelateTableId)
                   await config.api.table.save({
                     ...toRelateTable,
                     primaryDisplay: "name",
@@ -3956,7 +4002,8 @@ if (descriptions.length) {
                     relatedSchema[name] = { name, type: FieldType.NUMBER }
                     row[name] = i
                   }
-                  const relatedTable = await createTable(relatedSchema)
+                  const relatedTable =
+                    await createTableWithSchema(relatedSchema)
                   tableOrViewId = await createTableOrView({
                     name: { name: "name", type: FieldType.STRING },
                     related1: {
@@ -4033,10 +4080,9 @@ if (descriptions.length) {
                           },
                         })
 
-                        if (docIds.isViewId(tableOrViewId)) {
-                          const view = await config.api.viewV2.get(
-                            tableOrViewId
-                          )
+                        if (isViewId(tableOrViewId)) {
+                          const view =
+                            await config.api.viewV2.get(tableOrViewId)
                           await config.api.viewV2.update({
                             ...view,
                             schema: {

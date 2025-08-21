@@ -2,11 +2,12 @@
   import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import FieldLabel from "./FieldLabel.svelte"
   import Icon from "../Icon/Icon.svelte"
+  import type { LabelPosition } from "../types"
 
   export let id: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: string = "above"
-  export let error: string | undefined = undefined
+  export let labelPosition: LabelPosition = "above"
+  export let error: string | undefined | false = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
 </script>
@@ -21,7 +22,7 @@
       <div class="error">{error}</div>
     {:else if helpText}
       <div class="helpText">
-        <Icon name="HelpOutline" /> <span>{helpText}</span>
+        <Icon name="question" /> <span>{helpText}</span>
       </div>
     {/if}
   </div>

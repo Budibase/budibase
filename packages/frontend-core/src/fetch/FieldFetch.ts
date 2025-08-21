@@ -18,7 +18,7 @@ export default class FieldFetch<
   TDatasource extends
     | FieldDatasource
     | QueryArrayFieldDatasource
-    | JSONArrayFieldDatasource = FieldDatasource
+    | JSONArrayFieldDatasource = FieldDatasource,
 > extends BaseDataFetch<TDatasource, FieldDefinition> {
   async getDefinition(): Promise<FieldDefinition | null> {
     const { datasource } = this.options

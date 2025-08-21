@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { ContextUser } from "../../sdk"
 
 // SSO
 
@@ -32,7 +33,23 @@ export interface UserSSO {
 
 export type SSOUser = User & UserSSO
 
-export function isSSOUser(user: User): user is SSOUser {
+export type OIDCUser = User & {
+  provider: string | undefined
+  providerType: SSOProviderType | undefined
+  oauth2?: OAuth2 | undefined
+  profile?:
+    | {
+        displayName?: string
+        name?: {
+          givenName?: string
+          familyName?: string
+        }
+      }
+    | undefined
+  thirdPartyProfile?: object | undefined
+}
+
+export function isSSOUser(user: User | ContextUser): user is SSOUser {
   return !!(user as SSOUser).providerType
 }
 
@@ -43,7 +60,29 @@ export interface UserIdentifier {
   email: string
 }
 
-export interface User extends Document {
+export interface UserBuilderInfo {
+  builder?: {
+    global?: boolean
+    apps?: string[]
+    creator?: boolean
+  }
+}
+
+export interface UserAdminInfo {
+  admin?: {
+    global: boolean
+  }
+}
+
+export interface UserRoleInfo {
+  roles: UserRoles
+}
+
+export interface User
+  extends Document,
+    UserBuilderInfo,
+    UserAdminInfo,
+    UserRoleInfo {
   tenantId: string
   email: string
   userId?: string
@@ -51,28 +90,22 @@ export interface User extends Document {
   lastName?: string
   forceResetPassword?: boolean
   roles: UserRoles
-  builder?: {
-    global?: boolean
-    apps?: string[]
-    creator?: boolean
-  }
-  admin?: {
-    global: boolean
-  }
   password?: string
   status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   userGroups?: string[]
-  onboardedAt?: string
   freeTrialConfirmedAt?: string
-  tours?: Record<string, Date>
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
   budibaseAccess?: boolean
   accountPortalAccess?: boolean
+  onboardedAt?: string // deprecated and no longer saved
+  tours?: Record<string, Date> // deprecated and no longer saved
 }
+
+export type StrippedUser = Pick<User, "_id" | "tenantId" | "email" | "userId">
 
 export interface UserBindings extends Document {
   firstName?: string
@@ -82,6 +115,9 @@ export interface UserBindings extends Document {
   roleId?: string | null
   globalId?: string
   userId?: string
+  oauth2?: OAuth2
+  provider?: string
+  providerType?: SSOProviderType
 }
 
 export enum UserStatus {

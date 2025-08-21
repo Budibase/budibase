@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 const compose = require("docker-compose")
 const path = require("path")
-const { parsed: existingConfig } = require("dotenv").config()
-const updateDotEnv = require("update-dotenv")
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -17,46 +15,8 @@ const Commands = {
   Nuke: "nuke",
 }
 
-async function init() {
-  let config = {
-    PORT: "4001",
-    MINIO_URL: "http://localhost:4004",
-    COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
-    REDIS_URL: "localhost:6379",
-    WORKER_URL: "http://localhost:4002",
-    INTERNAL_API_KEY: "budibase",
-    ACCOUNT_PORTAL_URL: "http://localhost:10001",
-    ACCOUNT_PORTAL_API_KEY: "budibase",
-    PLATFORM_URL: "http://localhost:10000",
-    JWT_SECRET: "testsecret",
-    ENCRYPTION_KEY: "testsecret",
-    REDIS_PASSWORD: "budibase",
-    MINIO_ACCESS_KEY: "budibase",
-    MINIO_SECRET_KEY: "budibase",
-    COUCH_DB_PASSWORD: "budibase",
-    COUCH_DB_USER: "budibase",
-    SELF_HOSTED: "1",
-    DISABLE_ACCOUNT_PORTAL: "1",
-    MULTI_TENANCY: "",
-    SERVICE: "app-service",
-    DEPLOYMENT_ENVIRONMENT: "development",
-    BB_ADMIN_USER_EMAIL: "",
-    BB_ADMIN_USER_PASSWORD: "",
-    PLUGINS_DIR: "",
-    HTTP_LOGGING: "0",
-    VERSION: "0.0.0+local",
-    PASSWORD_MIN_LENGTH: "1",
-    OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
-  }
-
-  config = { ...config, ...existingConfig }
-
-  await updateDotEnv(config)
-}
-
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
-  await init()
   await compose.upAll(CONFIG)
 
   // We always ensure to restart the proxy service in case of nginx conf changes

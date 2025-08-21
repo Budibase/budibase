@@ -1,56 +1,61 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value
-  export let size = "M"
-  export let alignRight = false
+  export let value: string | undefined
+  export let size: "S" | "M" | "L" = "M"
+  export let alignRight: boolean = false
 
-  let open = false
+  let open: boolean = false
 
   const dispatch = createEventDispatcher()
 
-  const iconList = [
+  interface IconCategory {
+    label: string
+    icons: string[]
+  }
+
+  const iconList: IconCategory[] = [
     {
       label: "Icons",
       icons: [
-        "Apps",
-        "Actions",
-        "ConversionFunnel",
-        "App",
-        "Briefcase",
-        "Money",
-        "ShoppingCart",
-        "Form",
-        "Help",
-        "Monitoring",
-        "Sandbox",
-        "Project",
-        "Organisations",
-        "Magnify",
-        "Launch",
-        "Car",
-        "Camera",
-        "Bug",
-        "Channel",
-        "Calculator",
-        "Calendar",
-        "GraphDonut",
-        "GraphBarHorizontal",
-        "Demographic",
+        "squares-four",
+        "cursor-click",
+        "funnel",
+        "squares-four",
+        "briefcase",
+        "coins",
+        "shopping-cart",
+        "note",
+        "question",
+        "activity",
+        "flask",
+        "briefcase",
+        "tree-structure",
+        "magnifying-glass-plus",
+        "rocket-launch",
+        "car",
+        "camera",
+        "bug",
+        "share-network",
+        "calculator",
+        "calendar",
+        "chart-donut",
+        "chart-bar-horizontal",
+        "users-three",
       ],
     },
   ]
 
-  const onChange = value => {
+  const onChange = (value: string) => {
     dispatch("change", value)
     open = false
   }
 
-  const handleOutsideClick = event => {
+  const handleOutsideClick = (event: MouseEvent) => {
     if (open) {
       event.stopPropagation()
       open = false
@@ -67,7 +72,7 @@
       style={value ? `background: ${value};` : ""}
       class:placeholder={!value}
     >
-      <Icon name={value || "UserGroup"} />
+      <Icon name={value || "users-three"} />
     </div>
   </div>
   {#if open}
@@ -77,11 +82,11 @@
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:spectrum-Popover--align-right={alignRight}
     >
-      {#each iconList as icon}
+      {#each iconList as iconList}
         <div class="category">
-          <div class="heading">{icon.label}</div>
+          <div class="heading">{iconList.label}</div>
           <div class="icons">
-            {#each icon.icons as icon}
+            {#each iconList.icons as icon}
               <div
                 on:click={() => {
                   onChange(icon)

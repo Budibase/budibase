@@ -30,6 +30,7 @@ import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
+import tracer from "dd-trace"
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -312,7 +313,6 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     if (id) {
       table._id = id
     }
-    // build schema from headers
     for (let header of headerValues) {
       table.schema[header] = {
         name: header,
@@ -324,7 +324,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
+    entities: Record<string, Table>,
+    filter?: string[]
   ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
@@ -332,7 +333,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     }
     await this.connect()
 
-    const sheets = this.client.sheetsByIndex
+    const sheets = this.client.sheetsByIndex.filter(
+      s => !filter || filter.includes(s.title)
+    )
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
@@ -352,9 +355,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             err.message.startsWith("No values in the header row") ||
             err.message.startsWith("All your header cells are blank")
           ) {
-            errors[
-              sheet.title
-            ] = `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
+            errors[sheet.title] =
+              `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
             return
           }
 
@@ -383,6 +385,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.table.name
+
     switch (json.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
@@ -461,7 +464,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   private async updateTable(table: TableRequest) {
     await this.connect()
-    const sheet = this.client.sheetsByTitle[table.name]
+    let sheet = this.client.sheetsByTitle[table.name]
     await sheet.loadHeaderRow()
 
     if (table._rename) {
@@ -499,6 +502,18 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       try {
+        if (updatedHeaderValues.length > sheet.gridProperties.columnCount) {
+          await sheet.resize({
+            rowCount: sheet.rowCount,
+            columnCount: updatedHeaderValues.length,
+          })
+
+          this.client.resetLocalCache()
+          await this.client.loadInfo()
+          sheet = this.client.sheetsByTitle[table.name]
+          await sheet.loadHeaderRow()
+        }
+
         await sheet.setHeaderRow(updatedHeaderValues)
       } catch (err) {
         console.error("Error updating table in google sheets", err)
@@ -558,11 +573,24 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     sort?: SortJson
     paginate?: PaginationJson
   }) {
-    try {
+    return await tracer.trace("googlesheets.read", async span => {
+      span.addTags({
+        sheet: query.sheet,
+        filters: query.filters,
+        sort: query.sort,
+        paginate: query.paginate,
+      })
+
       await this.connect()
       const hasFilters = dataFilters.hasFilters(query.filters)
       const limit = query.paginate?.limit || 100
       let offset = query.paginate?.offset || 0
+
+      span.addTags({
+        hasFilters,
+        limit,
+        offset,
+      })
 
       let page = query.paginate?.page
       if (typeof page === "string") {
@@ -573,6 +601,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       const sheet = this.client.sheetsByTitle[query.sheet]
+      span.addTags({ rowCount: sheet.rowCount })
+
       let rows: GoogleSpreadsheetRow[] = []
       if (query.paginate && !hasFilters) {
         rows = await sheet.getRows({
@@ -582,6 +612,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         rows = await sheet.getRows()
       }
+
+      span.addTags({ totalRowsRead: rows.length })
 
       let response = rows.map(row =>
         this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber)
@@ -607,11 +639,12 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         )
       }
 
+      span.addTags({
+        totalRowsReturned: response.length,
+      })
+
       return response
-    } catch (err) {
-      console.error("Error reading from google sheets", err)
-      throw err
-    }
+    })
   }
 
   private async getRowByIndex(sheetTitle: string, rowIndex: number) {
@@ -626,7 +659,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     sheet: string
     rowIndex: number
     row: any
-    table: Table
+    table?: Table
   }) {
     try {
       await this.connect()
@@ -644,13 +677,15 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             row.set(key, "")
           }
 
-          const { type, subtype, constraints } = query.table.schema[key]
-          const isDeprecatedSingleUser =
-            type === FieldType.BB_REFERENCE &&
-            subtype === BBReferenceFieldSubType.USER &&
-            constraints?.type !== "array"
-          if (isDeprecatedSingleUser && Array.isArray(row.get(key))) {
-            row.set(key, row.get(key)[0])
+          if (query.table) {
+            const { type, subtype, constraints } = query.table.schema[key]
+            const isDeprecatedSingleUser =
+              type === FieldType.BB_REFERENCE &&
+              subtype === BBReferenceFieldSubType.USER &&
+              constraints?.type !== "array"
+            if (isDeprecatedSingleUser && Array.isArray(row.get(key))) {
+              row.set(key, row.get(key)[0])
+            }
           }
         }
         await row.save()

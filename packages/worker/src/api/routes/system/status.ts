@@ -1,8 +1,4 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/system/status"
+import { loggedInRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router.get("/api/system/status", controller.fetch)
-
-export default router
+loggedInRoutes.get("/api/system/status", controller.fetch)

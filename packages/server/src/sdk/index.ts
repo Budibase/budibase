@@ -7,12 +7,20 @@ import { default as queries } from "./app/queries"
 import { default as rows } from "./app/rows"
 import { default as links } from "./app/links"
 import { default as users } from "./users"
-import { default as plugins } from "./plugins"
+import { default as deployment } from "./app/deployment"
+import * as plugins from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
 import * as rowActions from "./app/rowActions"
 import * as screens from "./app/screens"
 import * as common from "./app/common"
+import * as oauth2 from "./app/oauth2"
+import * as ai from "./app/ai"
+import * as workspaceApps from "./app/workspaceApps"
+import * as workspace from "./workspace"
+import * as navigation from "./app/navigation"
+import * as resources from "./app/resources"
+import * as dev from "./dev"
 
 const sdk = {
   backups,
@@ -30,6 +38,14 @@ const sdk = {
   links,
   rowActions,
   common,
+  oauth2,
+  ai,
+  workspaceApps,
+  navigation,
+  resources,
+  deployment,
+  dev,
+  workspace,
 }
 
 // default export for TS

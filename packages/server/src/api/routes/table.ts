@@ -1,63 +1,65 @@
-import Router from "@koa/router"
 import * as tableController from "../controllers/table"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { tableValidator } from "./utils/validators"
+import recaptcha from "../../middleware/recaptcha"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const { BUILDER, PermissionLevel, PermissionType } = permissions
+const { PermissionLevel, PermissionType } = permissions
 
-const router: Router = new Router()
+const routes = endpointGroupList.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.READ, {
+      schema: true,
+    }),
+    first: false,
+  },
+  recaptcha
+)
 
-router
-  .get("/api/tables", authorized(BUILDER), tableController.fetch)
-  .get(
-    "/api/tables/:tableId",
-    paramResource("tableId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ, { schema: true }),
-    tableController.find
-  )
+routes.get(
+  "/api/tables/:tableId",
+  paramResource("tableId"),
+  tableController.find
+)
+
+builderRoutes
+  .get("/api/tables", tableController.fetch)
   .post(
     "/api/tables",
     // allows control over updating a table
     bodyResource("_id"),
-    authorized(BUILDER),
     tableValidator(),
     tableController.save
   )
-  .post(
-    "/api/convert/csvToJson",
-    authorized(BUILDER),
-    tableController.csvToJson
-  )
+  .post("/api/convert/csvToJson", tableController.csvToJson)
   .post(
     "/api/tables/validateNewTableImport",
-    authorized(BUILDER),
     tableController.validateNewTableImport
   )
   .post(
     "/api/tables/validateExistingTableImport",
-    authorized(BUILDER),
     tableController.validateExistingTableImport
   )
   .delete(
     "/api/tables/:tableId/:revId",
     paramResource("tableId"),
-    authorized(BUILDER),
     tableController.destroy
   )
   .post(
     "/api/tables/:tableId/import",
     paramResource("tableId"),
-    authorized(BUILDER),
     tableController.bulkImport
   )
 
   .post(
     "/api/tables/:tableId/migrate",
     paramResource("tableId"),
-    authorized(BUILDER),
     tableController.migrate
   )
-
-export default router
+  .post(
+    "/api/tables/:tableId/duplicate",
+    paramResource("tableId"),
+    tableController.duplicate
+  )

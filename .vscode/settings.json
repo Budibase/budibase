@@ -27,5 +27,6 @@
   },
   "[handlebars]": {
     "editor.formatOnSave": false
-  }
+  },
+  "eslint.validate": ["javascript", "typescript", "svelte"]
 }

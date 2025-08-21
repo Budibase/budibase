@@ -9,7 +9,7 @@
   <div class="placeholder">
     <Heading size="L">Your screen is empty</Heading>
     <Body>Bring your app to life by adding some components!</Body>
-    <Button cta icon="Add" on:click={builderStore.actions.requestAddComponent}
+    <Button cta icon="plus" on:click={builderStore.actions.requestAddComponent}
       >Add component</Button
     >
   </div>

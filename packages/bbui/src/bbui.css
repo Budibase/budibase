@@ -1,3 +1,4 @@
+/* Custom variables */
 :root {
   --background: #ffffff;
   --ink: #000000;
@@ -10,6 +11,18 @@
   --bb-lime: #ecffb5;
   --bb-forest-green: #053835;
   --bb-beige: #f6efea;
+  --bb-blue: #6a9bcc;
+  --bb-green: #788c5d;
+
+  /* Custom spectrum additions */
+  --spectrum-global-color-static-red-1200: #740000;
+  --spectrum-global-color-static-orange-1200: #612300;
+  --spectrum-global-color-static-yellow-1200: #483300;
+  --spectrum-global-color-static-green-1200: #053f27;
+  --spectrum-global-color-static-seafoam-1200: #123c3a;
+  --spectrum-global-color-static-blue-1200: #003571;
+  --spectrum-global-color-static-indigo-1200: #262986;
+  --spectrum-global-color-static-magenta-1200: #700037;
 
   --grey-1: #fafafa;
   --grey-2: #f5f5f5;
@@ -54,14 +67,15 @@
   --rounded-medium: 8px;
   --rounded-large: 16px;
 
-  --font-sans: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
-    "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-accent: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
-    "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  --font-accent:
+    "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
-  --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-    monospace;
-  --spectrum-alias-body-text-font-family: var(--font-sans);
+  --font-mono:
+    Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   font-size: 16px;
   --font-size-xs: 0.75rem;
@@ -105,10 +119,40 @@
   --border-light-2: 2px var(--grey-3) solid;
   --border-blue: 2px var(--blue) solid;
   --border-transparent: 2px transparent solid;
-
-  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600);
 }
 
+/* Spectrum overrides */
+.spectrum {
+  --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+  --spectrum-global-font-family-base: var(--font-sans) !important;
+  --spectrum-global-font-line-height-small: 1.4 !important;
+  --spectrum-alias-text-color-disabled: var(
+    --spectrum-global-color-gray-600
+  ) !important;
+  --spectrum-global-dimension-font-size-25: 9px !important;
+  --spectrum-global-dimension-font-size-50: 11px !important;
+  --spectrum-global-dimension-font-size-75: 12px !important;
+  --spectrum-global-dimension-font-size-100: 13px !important;
+  --spectrum-global-dimension-font-size-150: 15px !important;
+  --spectrum-global-dimension-font-size-200: 16px !important;
+  --spectrum-global-dimension-font-size-300: 18px !important;
+  --spectrum-global-dimension-font-size-400: 20px !important;
+  --spectrum-global-dimension-font-size-500: 22px !important;
+  --spectrum-global-dimension-font-size-600: 25px !important;
+  --spectrum-global-dimension-font-size-700: 28px !important;
+  --spectrum-global-dimension-font-size-800: 32px !important;
+  --spectrum-global-dimension-font-size-900: 36px !important;
+  --spectrum-global-dimension-font-size-1000: 40px !important;
+  --spectrum-global-dimension-font-size-1100: 45px !important;
+  --spectrum-global-dimension-font-size-1200: 50px !important;
+  --spectrum-global-dimension-font-size-1300: 60px !important;
+  --spectrum-alias-font-size-default: 14px !important;
+}
+* {
+  font-style: normal !important;
+}
+
+/* Generic styles */
 a {
   text-decoration: none;
 }

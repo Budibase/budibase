@@ -48,7 +48,7 @@ function getUser(ctx: UserCtx, userId?: string) {
   if (userId) {
     ctx.params = { userId }
   } else if (!ctx.params?.userId) {
-    throw "No user ID provided for getting"
+    throw new Error("No user ID provided for getting")
   }
   return readGlobalUser(ctx)
 }

@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import { copyToClipboard } from "../helpers"
   import { notifications } from "../Stores/notifications"
 
-  export let value
+  export let value: string
 
-  const onClick = async e => {
+  const onClick = async (e: MouseEvent): Promise<void> => {
     e.stopPropagation()
     try {
       await copyToClipboard(value)
@@ -22,5 +22,5 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click|stopPropagation={onClick}>
-  <Icon size="S" name="Copy" />
+  <Icon size="S" name="copy" />
 </div>

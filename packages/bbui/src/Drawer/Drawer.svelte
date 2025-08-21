@@ -64,7 +64,7 @@
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
 
-  export let title
+  export let title = ""
   export let forceModal = false
 
   const dispatch = createEventDispatcher()
@@ -202,7 +202,10 @@
                 selected={$modal}
                 on:click={() => modal.set(!$modal)}
               >
-                <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
+                <Icon
+                  name={$modal ? "arrows-in-simple" : "arrows-out-simple"}
+                  size="S"
+                />
               </ActionButton>
             {/if}
           </div>
@@ -227,8 +230,12 @@
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
-    transition: transform 260ms ease-out, bottom 260ms ease-out,
-      left 260ms ease-out, width 260ms ease-out, height 260ms ease-out;
+    transition:
+      transform 260ms ease-out,
+      bottom 260ms ease-out,
+      left 260ms ease-out,
+      width 260ms ease-out,
+      height 260ms ease-out;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -283,6 +290,8 @@
     justify-content: center;
     align-items: flex-start;
     gap: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
   }
   .buttons {
     display: flex;

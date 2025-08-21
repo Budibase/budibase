@@ -11,12 +11,12 @@
 <div class="control top-right">
   <div class="group">
     <ActionButton
-      icon="Add"
+      icon="plus"
       quiet
       on:click={() => flow.zoomIn({ duration: ZoomDuration })}
     />
     <ActionButton
-      icon="Remove"
+      icon="minus"
       quiet
       on:click={() => flow.zoomOut({ duration: ZoomDuration })}
     />
@@ -24,7 +24,7 @@
   <Button secondary on:click={layoutAndFit}>Auto layout</Button>
 </div>
 <div class="control bottom-right">
-  <Button icon="Add" cta on:click={createRole}>Add role</Button>
+  <Button icon="plus" cta on:click={createRole}>Add role</Button>
 </div>
 
 <style>
@@ -46,7 +46,7 @@
   }
   .top-right :global(.spectrum-Button),
   .top-right :global(.spectrum-ActionButton),
-  .top-right :global(.spectrum-Icon) {
+  .top-right :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .top-right :global(.spectrum-Button),

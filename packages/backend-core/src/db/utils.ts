@@ -48,17 +48,34 @@ export async function getAllDbs(opts = { efficient: false }) {
  *
  * @return returns the app information document stored in each app database.
  */
+export async function getAllApps(opts: {
+  dev?: boolean
+  all?: boolean
+  idsOnly: true
+  efficient?: boolean
+}): Promise<string[]>
+export async function getAllApps(opts?: {
+  dev?: boolean
+  all?: boolean
+  idsOnly?: false
+  efficient?: boolean
+}): Promise<App[]>
 export async function getAllApps({
   dev,
   all,
   idsOnly,
   efficient,
-}: any = {}): Promise<App[] | string[]> {
+}: {
+  dev?: boolean
+  all?: boolean
+  idsOnly?: boolean
+  efficient?: boolean
+} = {}): Promise<App[] | string[]> {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  let dbs = await getAllDbs({ efficient })
+  let dbs = await getAllDbs({ efficient: efficient || false })
   const appDbNames = dbs.filter((dbName: any) => {
     if (env.isTest() && !dbName) {
       return false
@@ -141,7 +158,7 @@ export async function getAppsByIDs(appIds: string[]) {
  * Utility function for getAllApps but filters to production apps only.
  */
 export async function getProdAppIDs() {
-  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  const apps = await getAllApps({ idsOnly: true })
   return apps.filter((id: any) => !isDevAppID(id))
 }
 
@@ -149,7 +166,7 @@ export async function getProdAppIDs() {
  * Utility function for the inverse of above.
  */
 export async function getDevAppIDs() {
-  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  const apps = await getAllApps({ idsOnly: true })
   return apps.filter((id: any) => isDevAppID(id))
 }
 

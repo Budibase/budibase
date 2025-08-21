@@ -8,7 +8,7 @@
     notifications,
   } from "@budibase/bbui"
   import { API } from "@/api"
-  import { goto } from "@roxi/routify"
+  import { goto, params, isActive } from "@roxi/routify"
   import {
     automationStore,
     previewStore,
@@ -19,159 +19,271 @@
     queries,
     tables,
     views,
+    viewsV2,
   } from "@/stores/builder"
-  import { themeStore } from "@/stores/portal"
+  import { themeStore, featureFlags } from "@/stores/portal"
   import { getContext } from "svelte"
   import { ThemeOptions } from "@budibase/shared-core"
+  import { FeatureFlag } from "@budibase/types"
 
   const modalContext = getContext(Context.Modal)
-  const commands = [
+
+  let search
+  let selected = null
+
+  $: inApp = $isActive("/builder/app/:application")
+  $: commands = [
     {
       type: "Access",
       name: "Invite users and manage app access",
       description: "",
-      icon: "User",
+      icon: "user",
       action: () => builderStore.showBuilderSidePanel(),
+      requiresApp: true,
     },
-    {
-      type: "Navigate",
-      name: "Portal",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("../../portal"),
-    },
-    {
-      type: "Navigate",
-      name: "Data",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./data"),
-    },
-    {
-      type: "Navigate",
-      name: "Design",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./design"),
-    },
-    {
-      type: "Navigate",
-      name: "Automations",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./automation"),
-    },
+    ...navigationCommands(),
     {
       type: "Publish",
       name: "App",
       description: "Deploy your application",
-      icon: "Box",
+      icon: "cube",
       action: deployApp,
+      requiresApp: true,
     },
     {
       type: "Preview",
       name: "App",
       description: "",
-      icon: "Play",
+      icon: "play",
       action: () => previewStore.showPreview(true),
+      requiresApp: true,
     },
     {
       type: "Preview",
       name: "Published App",
-      icon: "Play",
+      icon: "play",
       action: () => window.open(`/app${$appStore.url}`),
+      requiresApp: true,
     },
     {
       type: "Support",
       name: "Raise Github Discussion",
-      icon: "Help",
+      icon: "question",
       action: () =>
         window.open(`https://github.com/Budibase/budibase/discussions/new`),
+      requiresApp: true,
     },
     {
       type: "Support",
       name: "Raise A Bug",
-      icon: "Bug",
+      icon: "bug",
       action: () =>
         window.open(
           `https://github.com/Budibase/budibase/issues/new?assignees=&labels=bug&template=bug_report.md&title=`
         ),
+      requiresApp: true,
     },
-    ...($datasources?.list?.map(datasource => ({
+    ...datasourceCommands($datasources?.list || []),
+    ...tableCommands($tables?.list || []),
+    ...viewCommands($views?.list || []),
+    ...viewV2Commands($viewsV2?.list || []),
+    ...queryCommands($queries?.list || []),
+    ...screenCommands($sortedScreens),
+    ...automationCommands($automationStore?.automations || []),
+    ...themeCommands(),
+    ...featureFlagCommands($featureFlags),
+  ]
+  $: enrichedCommands = commands.map(cmd => ({
+    ...cmd,
+    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase().replace(/_/g, " "),
+  }))
+  $: results = filterResults(enrichedCommands, search, inApp)
+  $: categories = groupResults(results)
+
+  const navigationCommands = () => {
+    const routes = [
+      {
+        name: "Portal",
+        url: "/builder/portal",
+      },
+      {
+        name: "Data",
+        url: "/builder/app/:application/data",
+      },
+      {
+        name: "Design",
+        url: "/builder/app/:application/design",
+      },
+      {
+        name: "Automations",
+        url: "/builder/app/:application/automation",
+      },
+      {
+        name: "Settings",
+        url: "/builder/app/:application/settings",
+      },
+    ]
+    return routes.map(route => ({
+      type: "Navigate",
+      name: route.name,
+      icon: "compass",
+      action: () => {
+        const gotoParams = route.url.includes(":application")
+          ? { application: $params.application }
+          : {}
+        $goto(route.url, gotoParams)
+      },
+      requiresApp: true,
+    }))
+  }
+
+  const datasourceCommands = datasources => {
+    return datasources.map(datasource => ({
       type: "Datasource",
-      name: `${datasource.name}`,
-      icon: "Data",
-      action: () => $goto(`./data/datasource/${datasource._id}`),
-    })) ?? []),
-    ...($tables?.list?.map(table => ({
+      name: datasource.name,
+      icon: "database",
+      action: () =>
+        $goto(`/builder/app/:application/data/datasource/:id`, {
+          application: $params.application,
+          id: datasource._id,
+        }),
+      requiresApp: true,
+    }))
+  }
+
+  const tableCommands = tables => {
+    return tables.map(table => ({
       type: "Table",
       name: table.name,
-      icon: "Table",
-      action: () => $goto(`./data/table/${table._id}`),
-    })) ?? []),
-    ...($views?.list?.map(view => ({
+      icon: "table",
+      action: () =>
+        $goto(`/builder/app/:application/data/table/:id`, {
+          application: $params.application,
+          id: table._id,
+        }),
+      requiresApp: true,
+    }))
+  }
+
+  const viewCommands = views => {
+    return views.map(view => ({
       type: "View",
       name: view.name,
-      icon: "Remove",
+      icon: "minus",
       action: () => {
-        if (view.version === 2) {
-          $goto(`./data/view/v2/${view.id}`)
-        } else {
-          $goto(`./data/view/${view.name}`)
-        }
+        $goto(`/builder/app/:application/data/view/:name`, {
+          application: $params.application,
+          name: view.name,
+        })
       },
-    })) ?? []),
-    ...($queries?.list?.map(query => ({
+      requiresApp: true,
+    }))
+  }
+
+  const viewV2Commands = views => {
+    return views.map(view => ({
+      type: "View",
+      name: view.name,
+      icon: "minus",
+      action: () => {
+        $goto(`/builder/app/:application/data/table/:tableId/:viewId`, {
+          application: $params.application,
+          x: view.tableId,
+          viewId: view.id,
+        })
+      },
+      requiresApp: true,
+    }))
+  }
+
+  const queryCommands = queries => {
+    return queries.map(query => ({
       type: "Query",
       name: query.name,
-      icon: "SQLQuery",
-      action: () => $goto(`./data/query/${query._id}`),
-    })) ?? []),
-    ...$sortedScreens.map(screen => ({
+      icon: "database",
+      action: () =>
+        $goto(`/builder/app/:application/data/query/:id`, {
+          application: $params.application,
+          id: query._id,
+        }),
+      requiresApp: true,
+    }))
+  }
+
+  const screenCommands = screens => {
+    return screens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
-      icon: "WebPage",
-      action: () => {
-        $goto(`./design/${screen._id}/${screen._id}-screen`)
-      },
-    })),
-    ...($automationStore?.automations?.map(automation => ({
+      icon: "browser",
+      action: () =>
+        $goto(`/builder/app/:application/design/:screenId/:componentId`, {
+          application: $params.application,
+          screenId: screen._id,
+          componentId: `${screen._id}-screen`,
+        }),
+      requiresApp: true,
+    }))
+  }
+
+  const automationCommands = automations => {
+    return automations.map(automation => ({
       type: "Automation",
       name: automation.name,
-      icon: "ShareAndroid",
-      action: () => $goto(`./automation/${automation._id}`),
-    })) ?? []),
-    ...ThemeOptions.map(themeMeta => ({
+      icon: "share-network",
+      action: () =>
+        $goto(`/builder/app/:application/automation/:id`, {
+          application: $params.application,
+          id: automation._id,
+        }),
+      requiresApp: true,
+    }))
+  }
+
+  const themeCommands = () => {
+    return ThemeOptions.map(themeMeta => ({
       type: "Change Builder Theme",
       name: themeMeta.name,
-      icon: "ColorPalette",
+      icon: "palette",
       action: () =>
         themeStore.update(state => {
           state.theme = themeMeta.id
           return state
         }),
-    })),
-  ]
+    }))
+  }
 
-  let search
-  let selected = null
-
-  $: enrichedCommands = commands.map(cmd => ({
-    ...cmd,
-    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase(),
-  }))
-  $: results = filterResults(enrichedCommands, search)
-  $: categories = groupResults(results)
-
-  const filterResults = (commands, search) => {
-    if (!search) {
-      selected = null
-      return commands
+  const featureFlagCommands = flags => {
+    if (!flags.DEBUG_UI) {
+      return []
     }
-    selected = 0
-    search = search.toLowerCase()
+    return Object.entries(flags)
+      .filter(([flag]) => flag !== FeatureFlag.DEBUG_UI)
+      .map(([flag, value]) => ({
+        type: "Feature Flag",
+        name: `${value ? "Disable" : "Enable"} <code>${flag}</code>`,
+        icon: "flag",
+        action: () => {
+          featureFlags.setFlag(flag, !value)
+        },
+      }))
+  }
+
+  const filterResults = (commands, search, inApp) => {
+    if (search) {
+      selected = 0
+      search = search.toLowerCase().replace(/_/g, " ")
+    } else {
+      selected = null
+    }
     return commands
-      .filter(cmd => cmd.searchValue.includes(search))
+      .filter(cmd => {
+        // Handle searching
+        if (search && !cmd.searchValue.includes(search)) {
+          return false
+        }
+        // Handle commands that require an app
+        return inApp || !cmd.requiresApp
+      })
       .map((cmd, idx) => ({
         ...cmd,
         idx,
@@ -247,7 +359,7 @@
 >
   <div class="content">
     <div class="title">
-      <Icon size="XL" name="Search" />
+      <Icon size="XL" name="magnifying-glass" />
       <Input bind:value={search} quiet placeholder="Search for command" />
     </div>
     <div class="commands">
@@ -264,7 +376,8 @@
                 <Icon size="M" name={command.icon} />
                 <strong>{command.type}:&nbsp;</strong>
                 <div class="name">
-                  {command.name}
+                  <!--eslint-disable-next-line svelte/no-at-html-tags-->
+                  {@html command.name}
                 </div>
               </div>
             {/each}
@@ -324,7 +437,9 @@
     padding: var(--spacing-s) var(--spacing-xl);
     cursor: pointer;
     overflow: hidden;
-    transition: color 130ms ease-out, background-color 130ms ease-out;
+    transition:
+      color 130ms ease-out,
+      background-color 130ms ease-out;
   }
   .command:hover,
   .selected {
@@ -338,5 +453,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .name :global(code) {
+    font-size: 12px;
+    background: var(--background-alt);
+    padding: 4px;
+    border-radius: 4px;
   }
 </style>

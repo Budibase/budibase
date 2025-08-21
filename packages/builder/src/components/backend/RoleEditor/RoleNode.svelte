@@ -43,7 +43,7 @@
 
   const validateDescription = description => {
     if (!description?.length) {
-      return "Please enter a name"
+      return "Please enter a description"
     }
     return null
   }
@@ -89,8 +89,8 @@
     </div>
     {#if data.custom}
       <div class="buttons">
-        <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-        <Icon size="S" name="Delete" hoverable on:click={deleteModal?.show} />
+        <Icon size="S" name="pencil" hoverable on:click={openPopover} />
+        <Icon size="S" name="trash" hoverable on:click={deleteModal?.show} />
       </div>
     {/if}
   </div>
@@ -197,6 +197,10 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
+  .name {
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    font-weight: 600;
+  }
   .description {
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
@@ -209,7 +213,7 @@
     align-items: center;
     gap: 6px;
   }
-  .buttons :global(.spectrum-Icon) {
+  .buttons :global(i) {
     color: var(--spectrum-global-color-gray-600);
   }
 

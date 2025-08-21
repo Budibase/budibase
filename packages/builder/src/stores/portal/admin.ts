@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "@/stores/portal"
+import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
@@ -8,6 +8,7 @@ import {
   SystemStatusResponse,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import Analytics from "../../analytics"
 
 interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
@@ -33,6 +34,8 @@ export class AdminStore extends BudiStore<AdminState> {
     await this.getEnvironment()
     // enable system status checks in the cloud
     if (get(this.store).cloud) {
+      // in cloud allow this
+      Analytics.enableSessionRecording()
       await this.getSystemStatus()
       this.checkStatus()
     }

@@ -48,13 +48,14 @@ export const BudibaseRoleOptionsOld = [
   {
     label: "Developer",
     value: BudibaseRoles.Developer,
+    sortOrder: 2,
   },
 ]
 export const BudibaseRoleOptions = [
   {
-    label: "Account admin",
+    label: "Tenant admin",
     value: BudibaseRoles.Admin,
-    subtitle: "Has full access to all apps and settings in your account",
+    subtitle: "Has full access to all workspaces in your tenant",
     sortOrder: 1,
   },
   {
@@ -86,6 +87,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   PREMIUM: "premium",
+  PREMIUM_PLUS: "premium_plus",
   ENTERPRISE: "enterprise",
   ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }
@@ -106,41 +108,39 @@ export const Roles = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
   CREATOR: "CREATOR",
+  GROUP: "GROUP",
 }
 
 export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }
 
-export const ContextScopes = {
-  Local: "local",
-  Global: "global",
-}
+export { ComponentContextScopes as ContextScopes } from "@budibase/types"
 
 export const TypeIconMap = {
-  [FieldType.STRING]: "Text",
-  [FieldType.OPTIONS]: "Dropdown",
-  [FieldType.DATETIME]: "Calendar",
-  [FieldType.BARCODEQR]: "Camera",
-  [FieldType.SIGNATURE_SINGLE]: "AnnotatePen",
-  [FieldType.LONGFORM]: "TextAlignLeft",
-  [FieldType.ARRAY]: "Duplicate",
-  [FieldType.NUMBER]: "123",
-  [FieldType.BOOLEAN]: "Boolean",
-  [FieldType.ATTACHMENTS]: "DocumentFragmentGroup",
-  [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
-  [FieldType.LINK]: "DataCorrelated",
-  [FieldType.FORMULA]: "Calculator",
-  [FieldType.AI]: "MagicWand",
-  [FieldType.JSON]: "Brackets",
-  [FieldType.BIGINT]: "TagBold",
-  [FieldType.AUTO]: "Shapes",
+  [FieldType.STRING]: "text-align-left",
+  [FieldType.OPTIONS]: "caret-circle-down",
+  [FieldType.DATETIME]: "calendar",
+  [FieldType.BARCODEQR]: "barcode",
+  [FieldType.SIGNATURE_SINGLE]: "pen-nib",
+  [FieldType.LONGFORM]: "text-align-left",
+  [FieldType.ARRAY]: "list-checks",
+  [FieldType.NUMBER]: "hash",
+  [FieldType.BOOLEAN]: "toggle-right",
+  [FieldType.ATTACHMENTS]: "files",
+  [FieldType.ATTACHMENT_SINGLE]: "file",
+  [FieldType.LINK]: "arrow-circle-up-right",
+  [FieldType.FORMULA]: "calculator",
+  [FieldType.AI]: "sparkle",
+  [FieldType.JSON]: "brackets-angle",
+  [FieldType.BIGINT]: "text-bolder",
+  [FieldType.AUTO]: "shapes",
   [FieldType.BB_REFERENCE]: {
-    [BBReferenceFieldSubType.USER]: "UserGroup",
-    [BBReferenceFieldSubType.USERS]: "UserGroup",
+    [BBReferenceFieldSubType.USER]: "users-three",
+    [BBReferenceFieldSubType.USERS]: "users-three",
   },
   [FieldType.BB_REFERENCE_SINGLE]: {
-    [BBReferenceFieldSubType.USER]: "User",
+    [BBReferenceFieldSubType.USER]: "user",
   },
 }
 
@@ -168,3 +168,9 @@ export const FieldPermissions = {
   READONLY: "readonly",
   HIDDEN: "hidden",
 }
+
+// one or more word characters and whitespace
+export const APP_NAME_REGEX = /^[\w\s]+$/
+
+// zero or more non-whitespace characters
+export const APP_URL_REGEX = /^[0-9a-zA-Z-_]+$/

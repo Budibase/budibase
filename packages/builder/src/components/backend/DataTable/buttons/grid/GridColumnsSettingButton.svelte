@@ -33,13 +33,13 @@
 <DetailPopover bind:this={popover} title="Column settings">
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="ColumnSettings"
+      icon="columns"
       quiet
       size="M"
       on:click={popover?.open}
       selected={open || anyRestricted}
       disabled={!$tableColumns.length}
-      accentColor="#674D00"
+      accentColor="#4b75ff"
     >
       {text}
     </ActionButton>

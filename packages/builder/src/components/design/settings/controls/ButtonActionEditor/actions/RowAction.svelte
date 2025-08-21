@@ -1,20 +1,29 @@
 <script>
   import { Select, Label, Checkbox } from "@budibase/bbui"
-  import { tables, viewsV2, rowActions } from "@/stores/builder"
+  import { tables, datasources, viewsV2, rowActions } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []
 
-  $: tableOptions = $tables.list.map(table => ({
-    label: table.name,
-    resourceId: table._id,
-  }))
-  $: viewOptions = $viewsV2.list.map(view => ({
-    label: view.name,
-    tableId: view.tableId,
-    resourceId: view.id,
-  }))
+  $: datasourceMap = Object.fromEntries(
+    ($datasources.list || []).map(ds => [ds._id, ds.name])
+  )
+  $: tableOptions = $tables.list.map(table => {
+    const datasourceName = datasourceMap[table.sourceId] || "Unknown"
+    return {
+      label: `${datasourceName} - ${table.name}`,
+      resourceId: table._id,
+    }
+  })
+  $: viewOptions = $viewsV2.list.map(view => {
+    const table = $tables.list.find(t => t._id === view.tableId)
+    const datasourceName = datasourceMap[table.sourceId] || "Unknown"
+    return {
+      label: `${datasourceName} - ${view.name}`,
+      resourceId: view.id,
+    }
+  })
   $: datasourceOptions = [...(tableOptions || []), ...(viewOptions || [])]
   $: resourceId = parameters.resourceId
   $: rowActions.refreshRowActions(resourceId)

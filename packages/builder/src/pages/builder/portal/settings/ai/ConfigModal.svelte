@@ -1,93 +1,67 @@
-<script>
-  import { ModalContent, Label, Input, Select, Toggle } from "@budibase/bbui"
-  import { ConfigMap, Providers } from "./constants"
+<script lang="ts">
+  import { ModalContent, Label, Input, Select } from "@budibase/bbui"
+  import { ConfigMap, Models } from "./constants"
+  import type { ProviderConfig } from "@budibase/types"
 
-  export let config = {
-    active: false,
-    isDefault: false,
-  }
+  export let config: ProviderConfig
+  export let updateHandler: (_config: ProviderConfig) => void
+  export let enableHandler: (_config: ProviderConfig) => void
+  export let disableHandler: (_config: ProviderConfig) => void
 
-  export let saveHandler
-  export let deleteHandler
+  let complete: boolean
 
-  let validation
+  $: isEnabled = config.active && config.isDefault
 
   $: {
     const { provider, defaultModel, name, apiKey } = config
-    validation = provider && defaultModel && name && apiKey
+    complete = Boolean(provider && name && defaultModel && apiKey)
   }
   $: canEditBaseUrl =
-    config.provider && ConfigMap[config.provider].baseUrl === ""
+    config.provider &&
+    ConfigMap[config.provider as keyof typeof ConfigMap].baseUrl === ""
 
-  function prefillConfig(evt) {
-    const provider = evt.detail
-    // grab the preset config from the constants for that provider and fill it in
-    if (ConfigMap[provider]) {
-      config = {
-        ...config,
-        ...ConfigMap[provider],
-        provider,
-      }
-    } else {
-      config.provider = provider
-    }
-  }
+  $: placeholder =
+    config.provider === "AzureOpenAI"
+      ? "https://<name>.openai.azure.com/openai/deployments/<deployment>"
+      : "https://budibase.ai"
 </script>
 
 <ModalContent
-  confirmText={"Save"}
-  cancelText={"Delete"}
-  onConfirm={saveHandler}
-  onCancel={deleteHandler}
-  disabled={!validation}
+  cancelText={isEnabled ? "Disable" : "Update"}
+  confirmText={isEnabled ? "Update" : "Enable"}
+  onConfirm={isEnabled
+    ? () => updateHandler(config)
+    : () => enableHandler(config)}
+  onCancel={isEnabled
+    ? () => disableHandler(config)
+    : () => updateHandler(config)}
+  disabled={!complete}
   size="M"
-  title="Custom AI Configuration"
+  title={`Set up ${config.name}`}
 >
-  <div class="form-row">
-    <Label size="M">Provider</Label>
-    <Select
-      placeholder={null}
-      bind:value={config.provider}
-      options={Object.keys(Providers)}
-      on:change={prefillConfig}
-    />
-  </div>
-  <div class="form-row">
-    <Label size="M">Name</Label>
-    <Input
-      error={config.name === "Budibase AI" ? "Cannot use this name" : null}
-      placeholder={"Enter a name"}
-      bind:value={config.name}
-    />
-  </div>
-  <div class="form-row">
-    <Label size="M">Default Model</Label>
-    {#if config.provider !== Providers.Custom.name}
-      <Select
-        placeholder={config.provider ? "Choose an option" : "Select a provider"}
-        bind:value={config.defaultModel}
-        options={config.provider ? Providers[config.provider].models : []}
-      />
-    {:else}
-      <Input bind:value={config.defaultModel} />
-    {/if}
-  </div>
-  <div class="form-row">
-    <Label size="M">Base URL</Label>
-    <Input
-      disabled={!canEditBaseUrl}
-      placeholder={"https://budibase.ai"}
-      bind:value={config.baseUrl}
-    />
-  </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
     <Input type="password" bind:value={config.apiKey} />
   </div>
   <div class="form-row">
-    <Toggle text="Active" bind:value={config.active} />
-    <Toggle text="Set as default" bind:value={config.isDefault} />
+    <Label size="M">Base URL</Label>
+    <Input
+      disabled={!canEditBaseUrl}
+      {placeholder}
+      bind:value={config.baseUrl}
+    />
   </div>
+
+  {#if config.provider !== "AzureOpenAI"}
+    <div class="form-row">
+      <Label size="M">Default Model</Label>
+      <Select
+        placeholder={config.provider ? "Choose an option" : "Select a provider"}
+        bind:value={config.defaultModel}
+        options={Models}
+      />
+    </div>
+  {/if}
 </ModalContent>
 
 <style>

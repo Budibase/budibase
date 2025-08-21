@@ -10,8 +10,7 @@
     Icon,
   } from "@budibase/bbui"
   import { groups, licensing } from "@/stores/portal"
-  import { Constants } from "@budibase/frontend-core"
-  import { emailValidator } from "@/helpers/validation"
+  import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
 
   export let showOnboardingTypeModal
@@ -119,7 +118,7 @@
         </div>
         <div class="icon">
           <Icon
-            name="Close"
+            name="x"
             hoverable
             size="S"
             on:click={() => removeInput(index)}
@@ -130,7 +129,7 @@
 
     {#if reached}
       <div class="user-notification">
-        <Icon name="Info" />
+        <Icon name="info" />
         <span>
           {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
           users. Upgrade your plan to add more users</span
@@ -138,7 +137,8 @@
       </div>
     {:else}
       <div>
-        <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
+        <ActionButton on:click={addNewInput} icon="plus">Add email</ActionButton
+        >
       </div>
     {/if}
   </Layout>

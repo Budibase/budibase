@@ -37,13 +37,13 @@
   {#if showButtonGroup}
     <div class="group">
       <ActionButton
-        icon="Undo"
+        icon="arrow-counter-clockwise"
         quiet
         on:click={store.undo}
         disabled={!$store.canUndo}
       />
       <ActionButton
-        icon="Redo"
+        icon="arrow-clockwise"
         quiet
         on:click={store.redo}
         disabled={!$store.canRedo}
@@ -51,13 +51,13 @@
     </div>
   {:else}
     <Icon
-      name="Undo"
+      name="arrow-counter-clockwise"
       hoverable
       on:click={store.undo}
       disabled={!$store.canUndo}
     />
     <Icon
-      name="Redo"
+      name="arrow-clockwise"
       hoverable
       on:click={store.redo}
       disabled={!$store.canRedo}
@@ -71,9 +71,8 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding-right: var(--spacing-xl);
-    border-right: var(--border-light);
+    gap: var(--spacing-m);
+    padding-right: var(--spacing-m);
   }
   .undo-redo :global(svg) {
     padding: 6px;

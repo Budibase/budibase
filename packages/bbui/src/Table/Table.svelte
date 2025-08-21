@@ -1,13 +1,15 @@
-<script>
-  import { createEventDispatcher } from "svelte"
+<script lang="ts">
+  import { createEventDispatcher, onMount } from "svelte"
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   /**
+   /**
    * The expected schema is our normal couch schemas for our tables.
    * Each field schema can be enriched with a few extra properties to customise
    * the behaviour.
@@ -24,42 +26,44 @@
    * borderLeft: show a left border
    * borderRight: show a right border
    */
-  export let data = []
-  export let schema = {}
-  export let showAutoColumns = false
-  export let rowCount = 0
-  export let quiet = false
-  export let loading = false
-  export let allowSelectRows
-  export let allowEditRows = true
-  export let allowEditColumns = true
-  export let allowClickRows = true
-  export let selectedRows = []
-  export let customRenderers = []
-  export let disableSorting = false
-  export let autoSortColumns = true
-  export let compact = false
-  export let customPlaceholder = false
-  export let showHeaderBorder = true
-  export let placeholderText = "No rows found"
-  export let snippets = []
-  export let defaultSortColumn = undefined
-  export let defaultSortOrder = "Ascending"
+  export let data: any[] = []
+  export let schema: Record<string, any> = {}
+  export let showAutoColumns: boolean = false
+  export let rowCount: number = 0
+  export let quiet: boolean = false
+  export let loading: boolean = false
+  export let allowSelectRows: boolean = false
+  export let allowEditRows: boolean = true
+  export let allowEditColumns: boolean = true
+  export let allowClickRows: boolean = true
+  export let selectedRows: any[] = []
+  export let customRenderers: any[] = []
+  export let disableSorting: boolean = false
+  export let autoSortColumns: boolean = true
+  export let compact: boolean = false
+  export let customPlaceholder: boolean = false
+  export let showHeaderBorder: boolean = true
+  export let placeholderText: string = "No rows found"
+  export let snippets: any[] = []
+  export let defaultSortColumn: string | undefined = undefined
+  export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
 
   const dispatch = createEventDispatcher()
 
+  let ref: HTMLDivElement
+
   // Config
-  const headerHeight = 36
+  const headerHeight: number = 36
   $: rowHeight = compact ? 46 : 55
 
   // Sorting state
-  let sortColumn
-  let sortOrder
+  let sortColumn: string | undefined
+  let sortOrder: "Ascending" | "Descending" | undefined
 
   // Table state
-  let height = 0
-  let loaded = false
-  let checkboxStatus = false
+  let height: number = 0
+  let loaded: boolean = false
+  let checkboxStatus: boolean = false
 
   $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
@@ -95,8 +99,8 @@
     }
   }
 
-  const fixSchema = schema => {
-    let fixedSchema = {}
+  const fixSchema = (schema: Record<string, any>): Record<string, any> => {
+    let fixedSchema: Record<string, any> = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
@@ -120,7 +124,13 @@
     return fixedSchema
   }
 
-  const getVisibleRowCount = (loaded, height, allRows, rowCount, rowHeight) => {
+  const getVisibleRowCount = (
+    loaded: boolean,
+    height: number,
+    allRows: number,
+    rowCount: number,
+    rowHeight: number
+  ): number => {
     if (!loaded) {
       return rowCount || 0
     }
@@ -131,12 +141,12 @@
   }
 
   const getHeightStyle = (
-    visibleRowCount,
-    rowCount,
-    totalRowCount,
-    rowHeight,
-    loading
-  ) => {
+    visibleRowCount: number,
+    rowCount: number,
+    totalRowCount: number,
+    rowHeight: number,
+    loading: boolean
+  ): string => {
     if (loading) {
       return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
     }
@@ -146,7 +156,11 @@
     return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
   }
 
-  const getGridStyle = (fields, schema, showEditColumn) => {
+  const getGridStyle = (
+    fields: string[],
+    schema: Record<string, any>,
+    showEditColumn: boolean
+  ): string => {
     let style = "grid-template-columns:"
     if (showEditColumn) {
       style += " auto"
@@ -163,7 +177,11 @@
     return style
   }
 
-  const sortRows = (rows, sortColumn, sortOrder) => {
+  const sortRows = (
+    rows: any[],
+    sortColumn: string | undefined,
+    sortOrder: string | undefined
+  ): any[] => {
     sortColumn = sortColumn ?? defaultSortColumn
     sortOrder = sortOrder ?? defaultSortOrder
     if (!sortColumn || !sortOrder || disableSorting) {
@@ -180,7 +198,7 @@
     })
   }
 
-  const sortBy = fieldSchema => {
+  const sortBy = (fieldSchema: Record<string, any>): void => {
     if (fieldSchema.sortable === false) {
       return
     }
@@ -193,7 +211,7 @@
     dispatch("sort", { column: sortColumn, order: sortOrder })
   }
 
-  const getDisplayName = schema => {
+  const getDisplayName = (schema: Record<string, any>): string => {
     let name = schema?.displayName
     if (schema && name === undefined) {
       name = schema.name
@@ -201,9 +219,13 @@
     return name || ""
   }
 
-  const getFields = (schema, showAutoColumns, autoSortColumns) => {
-    let columns = []
-    let autoColumns = []
+  const getFields = (
+    schema: Record<string, any>,
+    showAutoColumns: boolean,
+    autoSortColumns: boolean
+  ): string[] => {
+    let columns: any[] = []
+    let autoColumns: any[] = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
@@ -235,17 +257,17 @@
       .map(column => column.name)
   }
 
-  const editColumn = (e, field) => {
+  const editColumn = (e: Event, field: any): void => {
     e.stopPropagation()
     dispatch("editcolumn", field)
   }
 
-  const editRow = (e, row) => {
+  const editRow = (e: Event, row: any): void => {
     e.stopPropagation()
     dispatch("editrow", cloneDeep(row))
   }
 
-  const toggleSelectRow = row => {
+  const toggleSelectRow = (row: any): void => {
     if (!allowSelectRows) {
       return
     }
@@ -258,7 +280,7 @@
     }
   }
 
-  const toggleSelectAll = e => {
+  const toggleSelectAll = (e: CustomEvent): void => {
     const select = !!e.detail
     if (select) {
       // Add any rows which are not already in selected rows
@@ -278,8 +300,10 @@
     }
   }
 
-  const computeCellStyles = schema => {
-    let styles = {}
+  const computeCellStyles = (
+    schema: Record<string, any>
+  ): Record<string, string> => {
+    let styles: Record<string, string> = {}
     Object.keys(schema || {}).forEach(field => {
       styles[field] = ""
       if (schema[field].color) {
@@ -308,16 +332,37 @@
     })
     return styles
   }
+
+  // Instead of svelte bind:offsetWidth
+  // Svelte injects an iframe causing issues with CSP, this avoids it
+  const setupResizeObserver = (element: HTMLElement) => {
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries?.[0]) {
+        return
+      }
+      const bounds = entries[0].target.getBoundingClientRect()
+      height = bounds.height //the offsetHeight
+    })
+    resizeObserver.observe(element)
+    return resizeObserver
+  }
+
+  onMount(() => {
+    let resizeObserver = setupResizeObserver(ref)
+    return () => {
+      resizeObserver.disconnect()
+    }
+  })
 </script>
 
 {#key fields?.length}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
+    bind:this={ref}
     class="wrapper"
     class:wrapper--quiet={quiet}
     class:wrapper--compact={compact}
-    bind:offsetHeight={height}
     style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
   >
     {#if loading}
@@ -364,33 +409,33 @@
                   sortOrder === "Ascending"}
                 on:click={() => sortBy(schema[field])}
               >
-                <div class="title">{getDisplayName(schema[field])}</div>
-                {#if schema[field]?.autocolumn}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-autoIcon"
-                    focusable="false"
-                  >
-                    <use xlink:href="#spectrum-icon-18-MagicWand" />
-                  </svg>
-                {/if}
-                {#if sortColumn === field}
-                  <svg
-                    class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                    focusable="false"
-                    aria-hidden="true"
-                  >
-                    <use xlink:href="#spectrum-css-icon-Arrow100" />
-                  </svg>
-                {/if}
-                {#if allowEditColumns && schema[field]?.editable !== false}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-editIcon"
-                    focusable="false"
-                    on:click={e => editColumn(e, field)}
-                  >
-                    <use xlink:href="#spectrum-icon-18-Edit" />
-                  </svg>
-                {/if}
+                <div class="title" title={field}>
+                  {getDisplayName(schema[field])}
+                  {#if schema[field]?.autocolumn}
+                    <Icon
+                      name="magic-wand"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  {/if}
+                  {#if sortColumn === field}
+                    <Icon
+                      name="caret-down"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    />
+                  {/if}
+                  {#if allowEditColumns && schema[field]?.editable !== false}
+                    <Icon
+                      name="pencil"
+                      size="S"
+                      hoverable
+                      color="var(--spectrum-global-color-gray-600)"
+                      hoverColor="var(--spectrum-global-color-gray-900)"
+                      on:click={e => editColumn(e, field)}
+                    />
+                  {/if}
+                </div>
               </div>
             {/each}
           </div>
@@ -458,12 +503,11 @@
               <slot name="placeholder" />
             {:else}
               <div class="placeholder-content">
-                <svg
-                  class="spectrum-Icon spectrum-Icon--sizeXXL"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
+                <Icon
+                  name="table"
+                  size="XXL"
+                  color="var(--spectrum-global-color-gray-600)"
+                />
                 <div>{placeholderText}</div>
               </div>
             {/if}
@@ -518,6 +562,12 @@
     border-left: 1px solid transparent;
     padding-left: var(--cell-padding);
   }
+
+  .spectrum-Table-head > .spectrum-Table-headCell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+    /* adding 1px to compensate for lack of right border in header */
+    padding-right: calc(var(--cell-padding) / 1.33 + 1px);
+  }
   .spectrum-Table-head > :last-child {
     border-right: 1px solid transparent;
     padding-right: var(--cell-padding);
@@ -567,29 +617,21 @@
     position: sticky;
     left: 0;
     z-index: 3;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
   .spectrum-Table-headCell .title {
     overflow: visible;
     text-overflow: ellipsis;
+    display: flex;
+    gap: 4px;
   }
-  .spectrum-Table-headCell:hover .spectrum-Table-editIcon {
-    opacity: 1;
-    transition: opacity 0.2s ease;
-  }
-  .spectrum-Table-headCell .spectrum-Icon {
-    pointer-events: all;
+  .spectrum-Table-headCell :global(.icon) {
     margin-left: var(
       --spectrum-table-header-sort-icon-gap,
       var(--spectrum-global-dimension-size-125)
     );
-  }
-  .spectrum-Table-editIcon,
-  .spectrum-Table-autoIcon {
-    width: var(--spectrum-global-dimension-size-150);
-    height: var(--spectrum-global-dimension-size-150);
-  }
-  .spectrum-Table-editIcon {
-    opacity: 0;
   }
 
   /* Table rows */
@@ -610,6 +652,9 @@
   .spectrum-Table-row > :first-child {
     border-left: var(--table-border);
     padding-left: var(--cell-padding);
+  }
+  .spectrum-Table-row > .spectrum-Table-cell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
   }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
@@ -640,6 +685,9 @@
     position: sticky;
     left: 0;
     z-index: 2;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
 
   /* Placeholder  */

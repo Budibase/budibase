@@ -5,15 +5,25 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import {
+  Automation,
+  AutomationActionStepId,
   AutomationAttachment,
+  AutomationStep,
+  AutomationStepResult,
+  AutomationStepStatus,
+  BaseIOStructure,
+  BranchStep,
+  FieldSchema,
   FieldType,
+  LoopV2Step,
   Row,
-  LoopStepType,
-  LoopStepInputs,
+  LoopStorage,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"
+import { isPlainObject, cloneDeep } from "lodash"
+import env from "../environment"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -32,33 +42,34 @@ import path from "path"
  * primitive types.
  */
 export function cleanInputValues<T extends Record<string, any>>(
-  inputs: any,
-  schema?: any
+  inputs: T,
+  schema?: Partial<Record<keyof T, FieldSchema | BaseIOStructure>>
 ): T {
-  if (schema == null) {
-    return inputs
-  }
-  for (let inputKey of Object.keys(inputs)) {
+  const keys = Object.keys(inputs) as (keyof T)[]
+  for (let inputKey of keys) {
     let input = inputs[inputKey]
     if (typeof input !== "string") {
       continue
     }
-    let propSchema = schema.properties[inputKey]
+    let propSchema = schema?.[inputKey]
     if (!propSchema) {
       continue
     }
     if (propSchema.type === "boolean") {
       let lcInput = input.toLowerCase()
       if (lcInput === "true") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = true
       }
       if (lcInput === "false") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = false
       }
     }
     if (propSchema.type === "number") {
       let floatInput = parseFloat(input)
       if (!isNaN(floatInput)) {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = floatInput
       }
     }
@@ -93,7 +104,7 @@ export function cleanInputValues<T extends Record<string, any>>(
  */
 export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
-  return cleanInputValues(row, { properties: table.schema })
+  return cleanInputValues(row, table.schema)
 }
 
 export function getError(err: any) {
@@ -197,9 +208,8 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
     if (extension.startsWith(".")) {
       extension = extension.substring(1, extension.length)
     }
-    const attachmentResult = await objectStore.processAutomationAttachment(
-      attachment
-    )
+    const attachmentResult =
+      await objectStore.processAutomationAttachment(attachment)
 
     let s3Key = ""
     if (
@@ -272,35 +282,250 @@ export function stringSplit(value: string | string[]) {
   return value.split(",")
 }
 
-export function typecastForLooping(input: LoopStepInputs) {
-  if (!input || !input.binding) {
-    return null
+export function matchesLoopFailureCondition(
+  step: LoopV2Step,
+  currentItem: any
+) {
+  const { failure } = step.inputs
+  if (!failure) {
+    return false
   }
-  try {
-    switch (input.option) {
-      case LoopStepType.ARRAY:
-        if (typeof input.binding === "string") {
-          return JSON.parse(input.binding)
-        }
-        break
-      case LoopStepType.STRING:
-        if (Array.isArray(input.binding)) {
-          return input.binding.join(",")
-        }
-        break
-    }
-  } catch (err) {
-    throw new Error("Unable to cast to correct type")
+
+  if (isPlainObject(currentItem)) {
+    return Object.values(currentItem).some(e => e === failure)
   }
-  return input.binding
+
+  return currentItem === failure
 }
 
-export function ensureMaxIterationsAsNumber(
-  value: number | string | undefined
-): number | undefined {
-  if (typeof value === "number") return value
-  if (typeof value === "string") {
-    return parseInt(value)
+// Returns an array of the things to loop over for a given LoopStep.  This
+// function handles the various ways that a LoopStep can be configured, parsing
+// the input and returning an array of items to loop over.
+export function getLoopIterable(step: LoopV2Step): any[] {
+  let input = step.inputs.binding
+
+  if (Array.isArray(input)) {
+    return input
+  } else if (typeof input === "string") {
+    if (input === "") {
+      input = []
+    } else {
+      try {
+        input = JSON.parse(input)
+      } catch (e) {
+        input = stringSplit(input)
+      }
+    }
   }
-  return undefined
+
+  return Array.isArray(input) ? input : [input]
+}
+
+export function getLoopMaxIterations(loopStep: LoopV2Step): number {
+  const loopMaxIterations =
+    typeof loopStep.inputs.iterations === "string"
+      ? parseInt(loopStep.inputs.iterations)
+      : loopStep.inputs.iterations
+  return Math.min(
+    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
+    env.AUTOMATION_MAX_ITERATIONS
+  )
+}
+
+export function getMaxStoredResults(step: LoopV2Step): number {
+  const DEFAULT_MAX_STORED_RESULTS = env.AUTOMATION_MAX_STORED_LOOP_RESULTS
+
+  const options = step.inputs.resultOptions
+
+  // If summarizeOnly is true, don't store any results
+  if (options?.summarizeOnly) {
+    return 0
+  }
+
+  const userMax = options?.maxStoredIterations
+  if (userMax !== undefined && userMax > 0) {
+    return Math.min(userMax, DEFAULT_MAX_STORED_RESULTS)
+  }
+  return DEFAULT_MAX_STORED_RESULTS
+}
+
+export function convertLegacyLoopOutputs(items: Record<string, any>) {
+  const itemKey = Object.keys(items)[0]
+  items = items[itemKey].map(({ outputs }: AutomationStepResult) => {
+    return outputs
+  })
+
+  return items
+}
+
+export function initializeLoopStorage(
+  children: AutomationStep[],
+  maxStoredResults: number
+): LoopStorage {
+  const storage: LoopStorage = {
+    results: {},
+    summary: {
+      totalProcessed: 0,
+      successCount: 0,
+      failureCount: 0,
+    },
+    nestedSummaries: {},
+    maxStoredResults,
+  }
+
+  // Initialize result arrays for each child step
+  for (const { id } of children) {
+    storage.results[id] = []
+    storage.nestedSummaries[id] = []
+  }
+
+  return storage
+}
+
+export function processStandardResult(
+  storage: LoopStorage,
+  result: AutomationStepResult,
+  iteration: number
+): void {
+  storage.summary.totalProcessed++
+  if (result.outputs.success) {
+    storage.summary.successCount++
+  } else {
+    storage.summary.failureCount++
+    if (!storage.summary.firstFailure) {
+      storage.summary.firstFailure = {
+        iteration,
+        error:
+          result.outputs.response ||
+          result.outputs.error ||
+          result.outputs.response?.message ||
+          "Unknown error",
+      }
+    }
+  }
+
+  if (result.outputs.summary) {
+    storage.nestedSummaries[result.id].push(result.outputs.summary)
+  }
+
+  storage.results[result.id].push(result)
+  // If we exceed max, remove the oldest
+  if (storage.results[result.id].length > storage.maxStoredResults) {
+    storage.results[result.id].shift()
+  }
+}
+
+export function buildLoopOutput(
+  storage: LoopStorage,
+  status?: AutomationStepStatus,
+  iterations?: number,
+  forceFailure = false
+): Record<string, any> {
+  let { summary } = storage
+  let success = summary.failureCount === 0
+  if (
+    forceFailure ||
+    status === AutomationStepStatus.MAX_ITERATIONS ||
+    status === AutomationStepStatus.FAILURE_CONDITION
+  ) {
+    success = false
+  }
+
+  const output: Record<string, any> = {
+    success,
+    iterations: iterations || summary.totalProcessed,
+    summary,
+  }
+
+  if (status) {
+    output.status = status
+  }
+
+  // Only include items if we have stored results (not when summarizeOnly)
+  if (Object.keys(storage.results).length > 0 && storage.maxStoredResults > 0) {
+    output.items = storage.results
+  }
+
+  if (Object.values(storage.nestedSummaries).some(arr => arr.length > 0)) {
+    output.nestedSummaries = storage.nestedSummaries
+  }
+
+  return output
+}
+
+/**
+ * Pre-processes an automation definition to transform legacy LOOP steps
+ * into the new LOOP_V2 format. This allows the execution engine to only
+ * handle LOOP_V2 steps, simplifying the runtime logic.
+ *
+ * @param automation The automation to preprocess
+ * @returns A new automation with legacy loops transformed
+ */
+export function preprocessAutomation(automation: Automation): Automation {
+  const processed = cloneDeep(automation)
+  processed.definition.steps = preprocessSteps(processed.definition.steps)
+  return processed
+}
+
+/**
+ * Recursively processes an array of automation steps to transform legacy LOOP steps
+ * into LOOP_V2 format. This handles both main step arrays and nested children in
+ * branch steps and existing loop steps.
+ *
+ * @param steps Array of automation steps to process
+ * @returns Transformed array of steps
+ */
+function preprocessSteps(steps: AutomationStep[]): AutomationStep[] {
+  const transformedSteps: AutomationStep[] = []
+
+  let i = 0
+  while (i < steps.length) {
+    const step = steps[i]
+
+    if (step.stepId === AutomationActionStepId.LOOP) {
+      const nextStep = steps[i + 1]
+
+      const processedChildStep = preprocessSteps([nextStep])[0]
+
+      const loopV2Step: LoopV2Step = {
+        ...step,
+        stepId: AutomationActionStepId.LOOP_V2,
+        inputs: {
+          ...step.inputs,
+          children: [processedChildStep],
+        },
+        isLegacyLoop: true,
+      }
+      transformedSteps.push(loopV2Step)
+
+      // Skip the next step since it's now a child of the loop
+      i += 2
+    } else if (step.stepId === AutomationActionStepId.BRANCH) {
+      const branchStep = step as BranchStep
+      const processedBranchStep = { ...branchStep }
+
+      if (branchStep.inputs?.children) {
+        const processedChildren: Record<string, AutomationStep[]> = {}
+        for (const [branchId, branchSteps] of Object.entries(
+          branchStep.inputs.children
+        )) {
+          processedChildren[branchId] = preprocessSteps(
+            branchSteps as AutomationStep[]
+          )
+        }
+        processedBranchStep.inputs = {
+          ...branchStep.inputs,
+          children: processedChildren,
+        }
+      }
+
+      transformedSteps.push(processedBranchStep)
+      i++
+    } else {
+      transformedSteps.push(step)
+      i++
+    }
+  }
+
+  return transformedSteps
 }

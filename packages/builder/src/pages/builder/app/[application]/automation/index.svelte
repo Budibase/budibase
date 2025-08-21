@@ -1,10 +1,11 @@
-<script>
-  import { redirect } from "@roxi/routify"
-  import { automationStore } from "@/stores/builder"
+<script lang="ts">
+  import { featureFlags } from "@/stores/portal"
+  import NewIndex from "./_flagged/index.new.svelte"
+  import OldIndex from "./_flagged/index.old.svelte"
 
-  $: {
-    if ($automationStore.automations?.length) {
-      $redirect(`./${$automationStore.automations[0]._id}`)
-    }
-  }
+  $: layout = $featureFlags.WORKSPACES ? NewIndex : OldIndex
 </script>
+
+<svelte:component this={layout}>
+  <slot />
+</svelte:component>

@@ -69,7 +69,7 @@
 <DetailPopover bind:this={popover} title="Column and row size" width={300}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="MoveUpDown"
+      icon="arrows-vertical"
       quiet
       size="M"
       on:click={popover?.open}

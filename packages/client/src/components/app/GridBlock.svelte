@@ -5,7 +5,8 @@
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
-  // import { processStringSync } from "@budibase/string-templates"
+  import { processStringSync } from "@budibase/string-templates"
+  import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -43,22 +44,86 @@
   let gridContext
   let minHeight = 0
 
+  let filterExtensions = {}
+
   $: id = $component.id
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns, $context)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
-  $: data = { selectedRows: $selectedRows }
+  $: rowMap = gridContext?.rowLookupMap
+
+  $: data = {
+    selectedRows: $selectedRows,
+    embeddedData: {
+      dataSource: table,
+      componentId: $component.id,
+      loaded: !!$rowMap,
+    },
+  }
+
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
       callback: () => gridContext?.rows.actions.refreshData(),
       metadata: { dataSource: table },
     },
+    {
+      type: ActionTypes.AddDataProviderFilterExtension,
+      callback: addFilterExtension,
+    },
+    {
+      type: ActionTypes.ClearRowSelection,
+      callback: () => gridContext?.selectedRows?.set?.({}),
+    },
+    {
+      type: ActionTypes.RemoveDataProviderFilterExtension,
+      callback: removeFilterExtension,
+    },
   ]
+
+  $: extendedFilter = extendFilter(initialFilter, filterExtensions)
+
+  /**
+   *
+   * @param componentId Originating Component id
+   * @param extension Filter extension
+   */
+  const addFilterExtension = (componentId, extension) => {
+    if (!componentId || !extension) {
+      return
+    }
+    filterExtensions = { ...filterExtensions, [componentId]: extension }
+  }
+
+  /**
+   *
+   * @param componentId Originating Component id
+   * @param extension Filter extension
+   */
+  const removeFilterExtension = componentId => {
+    if (!componentId) {
+      return
+    }
+    const { [componentId]: removed, ...rest } = filterExtensions
+    filterExtensions = { ...rest }
+  }
+
+  const extendFilter = (initialFilter, extensions) => {
+    if (!Object.keys(extensions || {}).length) {
+      return initialFilter
+    }
+    return {
+      groups: (initialFilter ? [initialFilter] : []).concat(
+        Object.values(extensions)
+      ),
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+    }
+  }
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -97,15 +162,19 @@
     }))
   }
 
-  const getSchemaOverrides = columns => {
+  const getSchemaOverrides = (columns, context) => {
     let overrides = {}
     columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
         order: idx,
-        conditions: column.conditions,
         visible: !!column.active,
-        // format: createFormatter(column),
+        conditions: enrichConditions(column.conditions, context),
+        format: createFormatter(column),
+
+        // Small hack to ensure we react to all changes, as our
+        // memoization cannot compare differences in functions
+        rand: column.conditions?.length ? Math.random() : null,
       }
       if (column.width) {
         overrides[column.field].width = column.width
@@ -114,12 +183,24 @@
     return overrides
   }
 
-  // const createFormatter = column => {
-  //   if (typeof column.format !== "string" || !column.format.trim().length) {
-  //     return null
-  //   }
-  //   return row => processStringSync(column.format, { [id]: row })
-  // }
+  const enrichConditions = (conditions, context) => {
+    return conditions?.map(condition => {
+      return {
+        ...condition,
+        referenceValue: processStringSync(
+          condition.referenceValue || "",
+          context
+        ),
+      }
+    })
+  }
+
+  const createFormatter = column => {
+    if (typeof column.format !== "string" || !column.format.trim().length) {
+      return null
+    }
+    return row => processStringSync(column.format, { [id]: row })
+  }
 
   const enrichButtons = buttons => {
     if (!buttons?.length) {
@@ -181,7 +262,7 @@
     {stripeRows}
     {quiet}
     {darkMode}
-    {initialFilter}
+    initialFilter={extendedFilter}
     {initialSortColumn}
     {initialSortOrder}
     {fixedRowHeight}
@@ -192,7 +273,6 @@
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
-    showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}

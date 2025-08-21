@@ -6,6 +6,7 @@ import {
   QueryEvent,
   QueryVariable,
   QueryResponse,
+  QueryEventCtx,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
 import { iifeWrapper, processStringSync } from "@budibase/string-templates"
@@ -14,21 +15,29 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName, Row } from "@budibase/types"
+import {
+  Datasource,
+  Query,
+  SourceName,
+  Row,
+  QueryVerb,
+  DatasourcePlus,
+  SSOUser,
+} from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: Datasource
-  queryVerb: string
+  queryVerb: QueryVerb
   queryId: string
   fields: any
   parameters: any
   pagination: any
   transformer: string | null
   cachedVariables: any[]
-  ctx: any
+  ctx?: QueryEventCtx
   queryResponse: any
   nullDefaultSupport: boolean
   noRecursiveQuery: boolean
@@ -112,9 +121,17 @@ class QueryRunner {
     let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
-        nullDefaultSupport,
-      })
+      query = await interpolateSQL(
+        datasource.source,
+        fieldsClone,
+        enrichedContext,
+        // Bit hacky because currently all of our SQL datasources are
+        // DatasourcePluses.
+        integration as DatasourcePlus,
+        {
+          nullDefaultSupport,
+        }
+      )
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
@@ -124,7 +141,14 @@ class QueryRunner {
       query.paginationValues = this.pagination
     }
 
-    let output = threadUtils.formatResponse(await integration[queryVerb](query))
+    const fn = integration[queryVerb]
+    if (!fn) {
+      throw new Error(
+        `Datasource integration does not support verb: ${queryVerb}`
+      )
+    }
+
+    let output = threadUtils.formatResponse(await fn.bind(integration)(query))
     let rows = output as Row[],
       info = undefined,
       extra = undefined,
@@ -158,17 +182,15 @@ class QueryRunner {
     // if the request fails we retry once, invalidating the cached value
     if (info && info.code >= 400 && !this.hasRerun) {
       if (
-        this.ctx.user?.provider &&
+        this.ctx?.user?.provider &&
         info.code === 401 &&
         !this.hasRefreshedOAuth
       ) {
         await this.refreshOAuth2(this.ctx)
-        // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
       } else {
         this.hasRerun = true
       }
-
       await threadUtils.invalidateCachedVariable(this.cachedVariables)
       return this.execute()
     }
@@ -193,7 +215,7 @@ class QueryRunner {
     })
     const keys: string[] = [...keysSet]
 
-    if (integration.end) {
+    if ("end" in integration && typeof integration.end === "function") {
       integration.end()
     }
 
@@ -251,9 +273,12 @@ class QueryRunner {
     if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await auth.updateUserOAuth(globalUserId, resp)
-      this.ctx.user = await cache.user.getUser({
+      if (!this.ctx) {
+        this.ctx = {}
+      }
+      this.ctx.user = (await cache.user.getUser({
         userId: globalUserId,
-      })
+      })) as SSOUser
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.

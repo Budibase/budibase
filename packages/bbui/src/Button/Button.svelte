@@ -2,6 +2,7 @@
   import "@spectrum-css/button/dist/index-vars.css"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { createEventDispatcher } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let type = undefined
   export let disabled = false
@@ -48,14 +49,9 @@
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
-        aria-hidden="true"
-        aria-label={icon}
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <span class="icon">
+        <Icon name={icon} size={size.toUpperCase()} />
+      </span>
     {/if}
     {#if $$slots && !reverse}
       <span class="spectrum-Button-label"><slot /></span>
@@ -66,18 +62,30 @@
 <style>
   button {
     position: relative;
+    display: flex;
+    gap: var(--spacing-s);
   }
   button.is-disabled {
     cursor: default;
+  }
+  .spectrum-Button {
+    padding-bottom: calc(var(--spectrum-button-padding-y) - 1px);
   }
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600 !important;
+    line-height: 20px;
+    letter-spacing: -0.02em;
+  }
+  .spectrum-Button--sizeM {
+    font-size: 14px;
   }
   .active {
     color: var(--spectrum-global-color-blue-600) !important;
   }
+
   .spectrum-Button--primary.new-styles {
     background: var(--spectrum-global-color-gray-800);
     border-color: transparent;
@@ -97,11 +105,20 @@
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
   }
-  .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
-    margin-left: var(--spectrum-button-primary-icon-gap);
-    margin-right: calc(
-      -1 * (var(--spectrum-button-primary-textonly-padding-left-adjusted) -
-            var(--spectrum-button-primary-padding-left-adjusted))
-    );
+  .spectrum-Button--warning.new-styles {
+    background: var(--spectrum-global-color-red-400);
+    border-color: transparent;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .spectrum-Button--warning.new-styles:not(.is-disabled):hover {
+    background: var(--spectrum-global-color-red-500);
+  }
+  .spectrum-Button--primary.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-Button--warning.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>

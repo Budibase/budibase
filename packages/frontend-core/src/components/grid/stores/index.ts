@@ -26,6 +26,8 @@ import * as Cache from "./cache"
 import * as Conditions from "./conditions"
 import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
 import * as Constants from "../lib/constants"
+import * as GridClipboard from "../../../stores/gridClipboard"
+import { ExternalClipboardData } from "../../../stores/gridClipboard"
 
 const DependencyOrderedStores = [
   Sort,
@@ -36,6 +38,7 @@ const DependencyOrderedStores = [
   NonPlus,
   Datasource,
   Columns,
+  Config as any,
   Scroll,
   Validation,
   Rows,
@@ -47,7 +50,6 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
-  Config as any,
   Clipboard,
   Notifications,
   Cache,
@@ -75,6 +77,8 @@ export interface BaseStoreProps {
   canExpandRows?: boolean
   canSaveSchema?: boolean
   minHeight?: number
+  canHideColumns?: boolean
+  externalClipboard?: ExternalClipboardData
 }
 
 export interface BaseStore {
@@ -108,7 +112,8 @@ export type Store = BaseStore &
   Viewport.Store &
   Notifications.Store &
   Sort.Store &
-  Bounds.Store
+  Bounds.Store &
+  GridClipboard.Store
 
 export const attachStores = (context: BaseStore): Store => {
   // Atomic store creation

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { writable, get as svelteGet } from "svelte/store"
   import {
     notifications,
@@ -9,24 +9,39 @@
   } from "@budibase/bbui"
   import { initialise } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, admin, auth } from "@/stores/portal"
+  import {
+    appsStore,
+    admin,
+    auth,
+    featureFlags,
+    appCreationStore,
+  } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { createValidationStore } from "@/helpers/validation/yup"
-  import * as appValidation from "@/helpers/validation/yup/app"
+  import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
+  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import TemplateCard from "@/components/common/TemplateCard.svelte"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
-
-  export let template
+  import type { AppTemplate } from "@/types"
 
   let creating = false
-  let defaultAppName
+  let defaultAppName: string
 
-  const values = writable({ name: "", url: null })
+  const values = writable<{
+    name: string
+    url: string | null
+    file?: File
+    encryptionPassword?: string
+  }>({
+    name: "",
+    url: null,
+  })
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
   const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
+
+  $: template = $appCreationStore.template
 
   $: {
     const { url } = $values
@@ -40,27 +55,27 @@
 
   // filename should be separated to avoid updates everytime any other form element changes
   $: filename = $values.file?.name
-  $: encryptedFile = isEncryptedRegex.test(filename)
+  $: encryptedFile = !!filename && isEncryptedRegex.test(filename)
 
   onMount(async () => {
-    const lastChar = $auth.user?.firstName
-      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
-      : null
+    if ($auth.user?.firstName) {
+      const lastChar = $auth.user?.firstName
+        ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+        : null
+      defaultAppName =
+        lastChar && lastChar.toLowerCase() == "s"
+          ? `${$auth.user.firstName} ${appOrWorkspace}`
+          : `${$auth.user.firstName}s ${appOrWorkspace}`
+    } else {
+      defaultAppName = `My ${appOrWorkspace}`
+    }
 
-    defaultAppName =
-      lastChar && lastChar.toLowerCase() == "s"
-        ? `${$auth.user?.firstName} app`
-        : `${$auth.user.firstName}s app`
-
-    $values.name = resolveAppName(
-      template,
-      !$auth.user?.firstName ? "My app" : defaultAppName
-    )
+    $values.name = resolveAppName(template, defaultAppName)
     nameToUrl($values.name)
     await setupValidation()
   })
 
-  const appPrefix = "/app"
+  $: appPrefix = `/${appOrWorkspace}`
 
   $: appUrl = `${window.location.origin}${
     $values.url
@@ -68,7 +83,7 @@
       : `${appPrefix}${resolveAppUrl(template, $values.name)}`
   }`
 
-  const resolveAppUrl = (template, name) => {
+  const resolveAppUrl = (template: AppTemplate | null, name: string) => {
     let parsedName
     const resolvedName = resolveAppName(template, name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -76,29 +91,29 @@
     return encodeURI(parsedUrl)
   }
 
-  const resolveAppName = (template, name) => {
+  const resolveAppName = (template: AppTemplate | null, name: string) => {
     if (template && !template.fromFile) {
       return template.name
     }
-    return name ? name.trim() : null
+    return name ? name.trim() : ""
   }
 
-  const tidyUrl = url => {
+  const tidyUrl = (url: string | null) => {
     if (url && !url.startsWith("/")) {
       url = `/${url}`
     }
     $values.url = url === "" ? null : url
   }
 
-  const nameToUrl = appName => {
+  const nameToUrl = (appName: string) => {
     let resolvedUrl = resolveAppUrl(template, appName)
     tidyUrl(resolvedUrl)
   }
 
   const setupValidation = async () => {
     const applications = svelteGet(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
+    appValidation.name(validation, { apps: applications }, appOrWorkspace)
+    appValidation.url(validation, { apps: applications }, appOrWorkspace)
     appValidation.file(validation, { template })
 
     encryptionValidation.addValidatorType("encryptionPassword", "text", true)
@@ -123,16 +138,18 @@
       }
 
       if (template?.fromFile) {
-        data.append("useTemplate", true)
-        data.append("fileToImport", $values.file)
+        data.append("useTemplate", "true")
+        data.append("fileToImport", $values.file!)
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
-      } else if (template) {
-        data.append("useTemplate", true)
+      } else if (template && !template.fromFile) {
+        data.append("useTemplate", "true")
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
       }
+
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
@@ -162,10 +179,16 @@
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
+
+  let appOrWorkspace: "workspace" | "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
+
   $: stepConfig = {
     [Step.CONFIG]: {
-      title: "Create your app",
-      confirmText: template?.fromFile ? "Import app" : "Create app",
+      title: `Create your ${appOrWorkspace}`,
+      confirmText: template?.fromFile
+        ? `Import ${appOrWorkspace}`
+        : `Create ${appOrWorkspace}`,
       onConfirm: async () => {
         if (encryptedFile) {
           currentStep = Step.SET_PASSWORD
@@ -173,8 +196,10 @@
         } else {
           try {
             await createNewApp()
-          } catch (error) {
-            notifications.error(`Error creating app - ${error.message}`)
+          } catch (error: any) {
+            notifications.error(
+              `Error creating ${appOrWorkspace} - ${error.message}`
+            )
           }
         }
       },
@@ -182,12 +207,12 @@
     },
     [Step.SET_PASSWORD]: {
       title: "Provide the export password",
-      confirmText: "Import app",
+      confirmText: `Import ${appOrWorkspace}`,
       onConfirm: async () => {
         try {
           await createNewApp()
-        } catch (e) {
-          let message = "Error creating app"
+        } catch (e: any) {
+          let message = `Error creating ${appOrWorkspace}`
           if (e.message) {
             message += `: ${lowercase(e.message)}`
           }
@@ -197,6 +222,11 @@
       },
       isValid: $encryptionValidation.valid,
     },
+  }
+
+  function onDropFile(e: CustomEvent<any[]>) {
+    $values.file = e.detail?.[0]
+    $validation.touched.file = true
   }
 </script>
 
@@ -221,11 +251,8 @@
         error={$validation.touched.file && $validation.errors.file}
         gallery={false}
         label="File to import"
-        value={[$values.file]}
-        on:change={e => {
-          $values.file = e.detail?.[0]
-          $validation.touched.file = true
-        }}
+        value={$values.file ? [$values.file] : []}
+        on:change={onDropFile}
       />
     {/if}
     <Input
@@ -234,7 +261,7 @@
       disabled={creating}
       error={$validation.touched.name && $validation.errors.name}
       on:blur={() => ($validation.touched.name = true)}
-      on:change={nameToUrl($values.name)}
+      on:change={() => nameToUrl($values.name)}
       label="Name"
       placeholder={defaultAppName}
     />
@@ -244,7 +271,7 @@
         disabled={creating}
         error={$validation.touched.url && $validation.errors.url}
         on:blur={() => ($validation.touched.url = true)}
-        on:change={tidyUrl($values.url)}
+        on:change={() => tidyUrl($values.url)}
         label="URL"
         placeholder={$values.url
           ? $values.url

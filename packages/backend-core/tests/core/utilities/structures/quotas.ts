@@ -17,6 +17,7 @@ export const usage = (users = 0, creators = 0): QuotaUsage => {
         automations: 0,
         queries: 0,
         budibaseAICredits: 0,
+        actions: 0,
         triggers: {},
         breakdown: {
           rowQueries: {
@@ -46,12 +47,14 @@ export const usage = (users = 0, creators = 0): QuotaUsage => {
         automations: 0,
         queries: 0,
         budibaseAICredits: 0,
+        actions: 0,
         triggers: {},
       },
       current: {
         automations: 0,
         queries: 0,
         budibaseAICredits: 0,
+        actions: 0,
         triggers: {},
       },
     },

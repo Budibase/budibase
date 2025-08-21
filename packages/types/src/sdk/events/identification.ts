@@ -19,6 +19,8 @@ export interface TenantGroup extends Group {
   // as we don't have this at the user level
   profession?: string // only available in cloud
   companySize?: string // only available in cloud
+  createdAt?: string | number
+  createdVersion: string
   installationId: string
 }
 

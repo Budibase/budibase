@@ -5,7 +5,7 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
-import { docIds, HTTPError } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"
 import sdk from "../../../sdk"
@@ -15,7 +15,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { tryExtractingTableAndViewId } from "./utils"
-import { helpers } from "@budibase/shared-core"
+import { helpers, isViewId } from "@budibase/shared-core"
 
 export async function getRow(
   sourceId: string | Table | ViewV2,
@@ -24,7 +24,7 @@ export async function getRow(
 ) {
   let source: Table | ViewV2
   if (typeof sourceId === "string") {
-    if (docIds.isViewId(sourceId)) {
+    if (isViewId(sourceId)) {
       source = await sdk.views.get(sourceId)
     } else {
       source = await sdk.tables.getTable(sourceId)

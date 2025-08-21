@@ -9,7 +9,7 @@ import {
   PermissionSource,
 } from "@budibase/types"
 
-import authorizedMiddleware from "../authorized"
+import { authorizedMiddleware } from "../authorized"
 import env from "../../environment"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { initProMocks } from "../../tests/utilities/mocks/pro"

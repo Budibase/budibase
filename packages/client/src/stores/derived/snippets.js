@@ -1,5 +1,5 @@
-import { appStore } from "../app.js"
-import { builderStore } from "../builder.js"
+import { appStore } from "../app"
+import { builderStore } from "../builder"
 import { derivedMemo } from "@budibase/frontend-core"
 
 export const snippets = derivedMemo(

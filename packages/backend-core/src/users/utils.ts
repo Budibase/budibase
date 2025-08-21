@@ -4,7 +4,6 @@ import env from "../environment"
 import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
 import { EmailUnavailableError } from "../errors"
 import { sdk } from "@budibase/shared-core"
-import { BUILTIN_ROLE_IDS } from "../security/roles"
 import * as context from "../context"
 
 // extract from shared-core to make easily accessible from backend-core
@@ -16,31 +15,48 @@ export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
-export async function isCreator(user?: User | ContextUser) {
+export async function creatorsInList(
+  users: (User | ContextUser)[],
+  groups?: UserGroup[]
+) {
+  const groupIds = [
+    ...new Set(
+      users.filter(user => user.userGroups).flatMap(user => user.userGroups!)
+    ),
+  ]
+  const db = context.getGlobalDB()
+  groups = await db.getMultiple<UserGroup>(groupIds, { allowMissing: true })
+  return users.map(user => isCreatorSync(user, groups))
+}
+
+// fetches groups if no provided, but is async and shouldn't be looped with
+export async function isCreatorAsync(user: User | ContextUser) {
+  let groups: UserGroup[] = []
+  if (user.userGroups) {
+    const db = context.getGlobalDB()
+    groups = await db.getMultiple<UserGroup>(user.userGroups)
+  }
+  return isCreatorSync(user, groups)
+}
+
+export function isCreatorSync(user: User | ContextUser, groups?: UserGroup[]) {
   const isCreatorByUserDefinition = sdk.users.isCreator(user)
   if (!isCreatorByUserDefinition && user) {
-    return await isCreatorByGroupMembership(user)
+    return isCreatorByGroupMembership(user, groups)
   }
   return isCreatorByUserDefinition
 }
 
-async function isCreatorByGroupMembership(user?: User | ContextUser) {
-  const userGroups = user?.userGroups || []
-  if (userGroups.length > 0) {
-    const db = context.getGlobalDB()
-    const groups: UserGroup[] = []
-    for (let groupId of userGroups) {
-      try {
-        const group = await db.get<UserGroup>(groupId)
-        groups.push(group)
-      } catch (e: any) {
-        if (e.error !== "not_found") {
-          throw e
-        }
-      }
-    }
-    return groups.some(group =>
-      Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.ADMIN)
+function isCreatorByGroupMembership(
+  user: User | ContextUser,
+  groups?: UserGroup[]
+) {
+  const userGroups = groups?.filter(
+    group => user.userGroups?.indexOf(group._id!) !== -1
+  )
+  if (userGroups && userGroups.length > 0) {
+    return userGroups.some(group =>
+      Object.values(group.roles || {}).includes("CREATOR")
     )
   }
   return false

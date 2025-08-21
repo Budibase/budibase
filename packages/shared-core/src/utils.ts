@@ -39,42 +39,37 @@ export function unreachable(
 }
 
 export async function parallelForeach<T>(
-  items: T[],
+  items: Iterable<T> | AsyncIterable<T>,
   task: (item: T) => Promise<void>,
   maxConcurrency: number
 ): Promise<void> {
-  const promises: Promise<void>[] = []
-  let index = 0
+  const results: Promise<void>[] = []
 
-  const processItem = async (item: T) => {
-    try {
-      await task(item)
-    } finally {
-      processNext()
+  // Check if it's an async iterable
+  const isAsyncIterable = Symbol.asyncIterator in items
+  const iterator = isAsyncIterable
+    ? (items as AsyncIterable<T>)[Symbol.asyncIterator]()
+    : (items as Iterable<T>)[Symbol.iterator]()
+
+  const executeNext = async (): Promise<void> => {
+    let result = await (isAsyncIterable
+      ? (iterator as AsyncIterator<T>).next()
+      : Promise.resolve((iterator as Iterator<T>).next()))
+
+    while (!result.done) {
+      await task(result.value)
+      result = await (isAsyncIterable
+        ? (iterator as AsyncIterator<T>).next()
+        : Promise.resolve((iterator as Iterator<T>).next()))
     }
   }
 
-  const processNext = () => {
-    if (index >= items.length) {
-      // No more items to process
-      return
-    }
-
-    const item = items[index]
-    index++
-
-    const promise = processItem(item)
-    promises.push(promise)
-
-    if (promises.length >= maxConcurrency) {
-      Promise.race(promises).then(processNext)
-    } else {
-      processNext()
-    }
+  for (let i = 0; i < maxConcurrency; i++) {
+    results.push(executeNext())
   }
-  processNext()
 
-  await Promise.all(promises)
+  // Wait for all workers to complete, this will throw if any task failed
+  await Promise.all(results)
 }
 
 export function filterValueToLabel() {
@@ -117,7 +112,8 @@ export function isSupportedUserSearch(
     { op: BasicOperator.EQUAL, key: "_id" },
     { op: ArrayOperator.ONE_OF, key: "_id" },
   ]
-  for (const [key, operation] of Object.entries(query)) {
+  const { allOr, onEmptyFilter, ...filters } = query
+  for (const [key, operation] of Object.entries(filters)) {
     if (typeof operation !== "object") {
       return false
     }
@@ -172,4 +168,14 @@ export function processSearchFilters(
       },
     ],
   }
+}
+
+export function toMap<TKey extends keyof TItem, TItem extends {}>(
+  key: TKey,
+  list: TItem[]
+): Record<string, TItem> {
+  return list.reduce<Record<string, TItem>>((result, item) => {
+    result[item[key] as string] = item
+    return result
+  }, {})
 }

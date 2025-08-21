@@ -1,16 +1,16 @@
 <script>
   import {
+    Body,
+    CopyInput,
+    Divider,
     Layout,
     Heading,
-    Body,
-    Divider,
     Link,
     Button,
     Input,
     Label,
     ButtonGroup,
     notifications,
-    CopyInput,
     File,
   } from "@budibase/bbui"
   import { auth, admin } from "@/stores/portal"
@@ -20,6 +20,7 @@
   import { API } from "@/api"
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
+  import { getFormattedPlanName } from "@/helpers/planTitle"
 
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
@@ -37,6 +38,8 @@
   let offlineLicenseIdentifier = ""
   let offlineLicense = undefined
   const offlineLicenseExtensions = [".txt"]
+
+  let installInfo
 
   // Make sure page can't be visited directly in cloud
   $: {
@@ -70,7 +73,11 @@
       notifications.success("Successfully activated")
     } catch (e) {
       console.error(e)
-      notifications.error("Error activating license key")
+      if (e?.status === 409) {
+        notifications.error(e.message)
+      } else {
+        notifications.error("Error activating license key")
+      }
     }
   }
 
@@ -173,6 +180,7 @@
       await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
     } else {
       await getLicenseKey()
+      installInfo = await API.getInstallInfo()
     }
   })
 </script>
@@ -260,7 +268,11 @@
     <Layout gap="XS" noPadding>
       <Heading size="XS">Plan</Heading>
       <Layout noPadding gap="S">
-        <Body size="S">You are currently on the {license.plan.type} plan</Body>
+        <Body size="S"
+          >You are currently on the <b
+            >{getFormattedPlanName(license.plan.type)}</b
+          ></Body
+        >
         <div>
           <Body size="S"
             >If you purchase or update your plan on the account</Body
@@ -280,6 +292,29 @@
     <div>
       <Button secondary on:click={refresh}>Refresh</Button>
     </div>
+
+    {#if !$admin.offlineMode}
+      <Divider />
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">
+          <div class="split-heading">
+            <span> Installation </span>
+            <span>{installInfo?.version ? `v${installInfo.version}` : ""}</span>
+          </div>
+        </Heading>
+      </Layout>
+      <Layout noPadding gap="S">
+        <Body size="S">Useful information to share with the support team.</Body>
+        <Layout paddingX="none">
+          <div class="fields">
+            <div class="field">
+              <Label size="L">Install ID</Label>
+              <CopyInput value={installInfo?.installId} />
+            </div>
+          </div>
+        </Layout>
+      </Layout>
+    {/if}
   </Layout>
 {/if}
 
@@ -296,5 +331,9 @@
   }
   .identifier-input {
     width: 300px;
+  }
+  .split-heading {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

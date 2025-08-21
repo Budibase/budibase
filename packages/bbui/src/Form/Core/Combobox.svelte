@@ -4,7 +4,6 @@
 
 <script lang="ts" generics="O">
   import type { ChangeEventHandler } from "svelte/elements"
-
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
@@ -12,6 +11,7 @@
   import clickOutside from "../../Actions/click_outside"
   import Popover from "../../Popover/Popover.svelte"
   import { PopoverAlignment } from "../../constants"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let value: string | undefined = undefined
   export let id: string | undefined = undefined
@@ -84,13 +84,7 @@
     {disabled}
     on:click={() => (open = !open)}
   >
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon spectrum-InputGroup-icon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Chevron100" />
-    </svg>
+    <Icon name="caret-down" size="S" />
   </button>
 </div>
 
@@ -121,13 +115,9 @@
           >
             <span class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span
             >
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
+            <div class="check">
+              <Icon name="check" size="S" />
+            </div>
           </li>
         {/each}
       {/if}
@@ -145,6 +135,12 @@
   }
   .spectrum-Textfield-input {
     width: 0;
+  }
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 
   /* Popover */

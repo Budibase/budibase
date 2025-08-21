@@ -124,3 +124,23 @@ export const generateDevInfoID = (userId: string) => {
 export const generatePluginID = (name: string) => {
   return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
 }
+
+export const generateOAuth2LogID = (id: string) => {
+  return `${DocumentType.OAUTH2_CONFIG_LOG}${SEPARATOR}${id}`
+}
+
+export const generateAgentChatID = () => {
+  return `${DocumentType.AGENT_CHAT}${SEPARATOR}${newid()}`
+}
+
+export const generateAgentToolSourceID = () => {
+  return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
+}
+
+export const generateWorkspaceAppID = () => {
+  return `${DocumentType.WORKSPACE_APP}${SEPARATOR}${newid()}`
+}
+
+export const generateWorkspaceFavouriteID = () => {
+  return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
+}

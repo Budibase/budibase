@@ -1,6 +1,12 @@
 import { context } from "@budibase/backend-core"
 import { SEPARATOR, ViewName } from "../utils"
-import { DocumentType, LinkDocument, Row, SearchIndex } from "@budibase/types"
+import {
+  DBView,
+  DocumentType,
+  LinkDocument,
+  Row,
+  SearchIndex,
+} from "@budibase/types"
 
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
@@ -60,17 +66,19 @@ export async function createLinkView() {
 export async function createRoutingView() {
   const db = context.getAppDB()
   const designDoc = await db.get<any>("_design/database")
-  const view = {
+  const view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
       if (doc._id.startsWith("${SCREEN_PREFIX}")) {
-        emit(doc._id, {
+        emit([doc.workspaceAppId, doc._id], {
           id: doc._id,
           routing: doc.routing,
         })
       }
     }`,
+    version: 2,
   }
+
   designDoc.views = {
     ...designDoc.views,
     [ViewName.ROUTING]: view,

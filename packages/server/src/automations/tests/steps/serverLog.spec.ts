@@ -6,6 +6,7 @@ describe("test the server log action", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

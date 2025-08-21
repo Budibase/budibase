@@ -1,5 +1,4 @@
 <script>
-  import { admin } from "@/stores/portal"
   import {
     Modal,
     notifications,
@@ -8,10 +7,11 @@
     Button,
     StatusLight,
     Link,
+    Helpers,
   } from "@budibase/bbui"
   import { appStore, initialise } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { API } from "@/api"
-  import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
   import { ChangelogURL } from "@/constants"
 
   export function show() {
@@ -27,14 +27,13 @@
 
   let updateModal
 
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
   $: appId = $appStore.appId
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable =
-    $appStore.revertableVersion != null ||
-    ($admin.isDev && $appStore.version === "0.0.0")
+  $: revertAvailable = $appStore.revertableVersion != null
 
   const refreshAppPackage = async () => {
     try {
@@ -56,7 +55,7 @@
       )
       onComplete()
     } catch (err) {
-      notifications.error(`Error updating app: ${err}`)
+      notifications.error(err?.message || err || "Error updating app")
     }
     updateModal.hide()
   }
@@ -68,12 +67,10 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        $appStore.revertableVersion
-          ? `App reverted successfully to version ${$appStore.revertableVersion}`
-          : "App reverted successfully"
+        `${Helpers.capitalise(appOrWorkspace)} reverted successfully to version ${$appStore.revertableVersion}`
       )
     } catch (err) {
-      notifications.error(`Error reverting app: ${err}`)
+      notifications.error(err?.message || err || "Error reverting app")
     }
     updateModal.hide()
   }
@@ -84,7 +81,7 @@
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
-    title="App version"
+    title={"Client version"}
     confirmText="Update"
     cancelText={updateAvailable ? "Cancel" : "Close"}
     onConfirm={update}
@@ -97,15 +94,15 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b>, but
-        version
+        This {appOrWorkspace} is currently using version
+        <b>{$appStore.version}</b>, but version
         <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
         features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b> which is the
-        latest version available.
+        This {appOrWorkspace} is currently using version
+        <b>{$appStore.version}</b> which is the latest version available.
       </Body>
     {/if}
     <Body size="S">
@@ -114,14 +111,9 @@
     </Body>
     {#if revertAvailable}
       <Body size="S">
-        You can revert this app to version
-        {#if $admin.isDev}
-          <RevertModalVersionSelect
-            revertableVersion={$appStore.revertableVersion}
-          />
-        {:else}
-          <b>{$appStore.revertableVersion}</b>
-        {/if}
+        You can revert this {appOrWorkspace}
+        to client version
+        <b>{$appStore.revertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>
     {/if}

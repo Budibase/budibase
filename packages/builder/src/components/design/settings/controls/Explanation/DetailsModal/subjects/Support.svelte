@@ -5,14 +5,14 @@
 
 <Subject heading="Data/Component Compatibility">
   <Section>
-    <InfoWord icon="CheckmarkCircle" color="var(--green)" text="Compatible" />
+    <InfoWord icon="check-circle" color="var(--green)" text="Compatible" />
     <span class="body"
       >Fully compatible with the input as long as the data is present.</span
     >
   </Section>
   <Section>
     <InfoWord
-      icon="AlertCheck"
+      icon="warning-circle"
       color="var(--yellow)"
       text="Partially compatible"
     />
@@ -22,7 +22,7 @@
     >
   </Section>
   <Section>
-    <InfoWord icon="Alert" color="var(--red)" text="Not compatible" />
+    <InfoWord icon="warning" color="var(--red)" text="Not compatible" />
     <span class="body">Incompatible with the component.</span>
   </Section>
 </Subject>

@@ -2,12 +2,14 @@
 // column size, position and whether it can be viewed
 import { FieldType, FormulaResponseType } from "../row"
 import {
+  AttachmentSubType,
   AutoFieldSubType,
   AutoReason,
   BBReferenceFieldSubType,
   FormulaType,
   JsonFieldSubType,
   RelationshipType,
+  StringFieldSubType,
 } from "./constants"
 import { AIOperationEnum } from "../../../sdk/ai"
 
@@ -106,8 +108,9 @@ export interface LongFormFieldMetadata extends BaseFieldSchema {
   default?: string
 }
 
-export interface StringFieldMetadata extends BaseFieldSchema {
+export interface StringFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.STRING
+  subtype?: StringFieldSubType.ARRAY
   default?: string
 }
 
@@ -142,8 +145,15 @@ export interface BBReferenceSingleFieldMetadata
   default?: string
 }
 
-export interface AttachmentFieldMetadata extends BaseFieldSchema {
+export interface AttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.ATTACHMENTS
+  subtype?: AttachmentSubType
+}
+export interface SingleAttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ATTACHMENT_SINGLE
+  subtype?: AttachmentSubType
 }
 
 export interface FieldConstraints {
@@ -156,8 +166,8 @@ export interface FieldConstraints {
     message?: string
   }
   numericality?: {
-    greaterThanOrEqualTo: string | null
-    lessThanOrEqualTo: string | null
+    greaterThanOrEqualTo?: string | null
+    lessThanOrEqualTo?: string | null
   }
   presence?:
     | boolean
@@ -165,8 +175,8 @@ export interface FieldConstraints {
         allowEmpty?: boolean
       }
   datetime?: {
-    latest: string
-    earliest: string
+    latest?: string
+    earliest?: string
   }
 }
 
@@ -197,7 +207,7 @@ export interface BigIntFieldMetadata extends BaseFieldSchema {
   default?: string
 }
 
-interface BaseFieldSchema extends UIFieldMetadata {
+export interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
   sortable?: boolean
@@ -207,6 +217,9 @@ interface BaseFieldSchema extends UIFieldMetadata {
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
   subtype?: never
+  // added when enriching nested JSON fields into schema
+  nestedJSON?: boolean
+  aiGenerated?: boolean
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
@@ -244,6 +257,7 @@ export type FieldSchema =
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | SingleAttachmentFieldMetadata
   | BBReferenceSingleFieldMetadata
   | ArrayFieldMetadata
   | OptionsFieldMetadata

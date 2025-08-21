@@ -18,6 +18,18 @@ vi.mock("@/api", () => {
   }
 })
 
+vi.mock("@/stores/builder", async () => {
+  const navigationStore = {
+    syncAppNavigation: vi.fn(),
+  }
+  const workspaceAppStore = {}
+
+  return {
+    navigationStore,
+    workspaceAppStore,
+  }
+})
+
 describe("Application Meta Store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()
@@ -66,6 +78,7 @@ describe("Application Meta Store", () => {
       appId,
       url,
       features,
+      pwa,
       componentLibraries,
     } = app
 
@@ -88,6 +101,7 @@ describe("Application Meta Store", () => {
       hasLock,
       initialised: true,
       hasAppPackage: true,
+      pwa,
     })
   })
 

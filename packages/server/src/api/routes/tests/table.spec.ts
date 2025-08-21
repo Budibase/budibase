@@ -22,23 +22,21 @@ import {
   ViewV2Enriched,
   RowExportFormat,
   PermissionLevel,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
 import { generator } from "@budibase/backend-core/tests"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -240,6 +238,48 @@ if (descriptions.length) {
               },
             }
           )
+        })
+
+        describe("primaryDisplay validation", () => {
+          it("should not allow primaryDisplay field of type 'attachments'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "attachments",
+                schema: {
+                  attachments: {
+                    name: "attachments",
+                    type: FieldType.ATTACHMENTS,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "attachments" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
+
+          it("should not allow primaryDisplay field of type 'json'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "json",
+                schema: {
+                  json: {
+                    name: "json",
+                    type: FieldType.JSON,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "json" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
         })
       })
 
@@ -847,22 +887,90 @@ if (descriptions.length) {
         it("should be able to create a table with indexes", async () => {
           await context.doInAppContext(config.getAppId(), async () => {
             const db = context.getAppDB()
-            const indexCount = (await db.getIndexes()).total_rows
+            const initialIndexes = await db.getIndexes()
+            const initialIndexCount = initialIndexes.total_rows
+
             const table = basicTable()
             table.indexes = ["name"]
-            const res = await config.api.table.save(table)
-            expect(res._id).toBeDefined()
-            expect(res._rev).toBeDefined()
-            expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-            // update index to see what happens
-            table.indexes = ["name", "description"]
-            await config.api.table.save({
-              ...table,
-              _id: res._id,
-              _rev: res._rev,
-            })
-            // shouldn't have created a new index
-            expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
+            const savedTable = await config.api.table.save(table)
+
+            expect(savedTable._id).toBeDefined()
+            expect(savedTable._rev).toBeDefined()
+            expect(savedTable.indexes).toEqual(["name"])
+
+            const indexesAfterCreate = await db.getIndexes()
+            expect(indexesAfterCreate.total_rows).toEqual(initialIndexCount + 1)
+
+            expect(indexesAfterCreate.indexes).toEqual([
+              {
+                ddoc: null,
+                def: {
+                  fields: [
+                    {
+                      _id: "asc",
+                    },
+                  ],
+                },
+                name: "_all_docs",
+                type: "special",
+              },
+              {
+                ddoc: "_design/search_ddoc",
+                def: {
+                  fields: [
+                    {
+                      name: "asc",
+                    },
+                  ],
+                },
+                name: `search:${savedTable._id}`,
+                partitioned: false,
+                type: "json",
+              },
+            ])
+
+            // Update table with multiple indexes
+            const updatedTable = {
+              ...savedTable,
+              indexes: ["name", "description"],
+            }
+            const resUpdated = await config.api.table.save(updatedTable)
+
+            expect(resUpdated.indexes).toEqual(["name", "description"])
+
+            // Should still have same number of indexes (recreated, not added)
+            const indexesAfterUpdate = await db.getIndexes()
+
+            expect(indexesAfterUpdate.indexes).toEqual([
+              {
+                ddoc: null,
+                def: {
+                  fields: [
+                    {
+                      _id: "asc",
+                    },
+                  ],
+                },
+                name: "_all_docs",
+                type: "special",
+              },
+              {
+                ddoc: "_design/search_ddoc",
+                def: {
+                  fields: [
+                    {
+                      name: "asc",
+                    },
+                    {
+                      description: "asc",
+                    },
+                  ],
+                },
+                name: `search:${savedTable._id}`,
+                partitioned: false,
+                type: "json",
+              },
+            ])
           })
         })
       })
@@ -883,7 +991,8 @@ if (descriptions.length) {
             expect.objectContaining({
               ...testTable,
               tableId: testTable._id,
-            })
+            }),
+            config.appId
           )
         })
 
@@ -927,6 +1036,170 @@ if (descriptions.length) {
           })
         })
       })
+
+      isInternal &&
+        describe("duplicate", () => {
+          let testTable: Table
+
+          beforeEach(async () => {
+            testTable = await config.createTable({
+              name: "TestTable",
+              type: "table",
+              schema: {
+                name: {
+                  type: FieldType.STRING,
+                  name: "name",
+                },
+                description: {
+                  type: FieldType.STRING,
+                  name: "description",
+                },
+              },
+            })
+
+            // Add some test data to ensure it's not duplicated
+            await config.api.row.save(testTable._id!, {
+              name: "Test Row 1",
+              description: "This should not be duplicated",
+            })
+            await config.api.row.save(testTable._id!, {
+              name: "Test Row 2",
+              description: "This should also not be duplicated",
+            })
+          })
+
+          it("should duplicate a table without data", async () => {
+            const duplicatedTable = await config.api.table.duplicate(
+              testTable._id!
+            )
+
+            // Should have a different ID and name
+            expect(duplicatedTable._id).not.toEqual(testTable._id)
+            expect(duplicatedTable.name).toBe("TestTable 1")
+
+            // Should have the same schema
+            expect(duplicatedTable.schema).toEqual(testTable.schema)
+
+            // Should have the same source type and properties
+            expect(duplicatedTable.sourceType).toEqual(testTable.sourceType)
+            expect(duplicatedTable.type).toEqual(testTable.type)
+
+            // Verify the original table still exists
+            const originalTable = await config.api.table.get(testTable._id!)
+            expect(originalTable._id).toEqual(testTable._id)
+            expect(originalTable.name).toEqual(testTable.name)
+          })
+
+          it("should duplicate a table with complex column types", async () => {
+            const complexTable = await config.createTable({
+              name: "ComplexTable",
+              type: "table",
+              schema: {
+                name: {
+                  type: FieldType.STRING,
+                  name: "name",
+                  constraints: { type: "string" },
+                },
+                singleSelect: {
+                  type: FieldType.OPTIONS,
+                  name: "singleSelect",
+                  constraints: {
+                    type: "string",
+                    inclusion: ["option1", "option2", "option3"],
+                  },
+                },
+                multiSelect: {
+                  type: FieldType.ARRAY,
+                  name: "multiSelect",
+                  constraints: {
+                    type: JsonFieldSubType.ARRAY,
+                    inclusion: ["choice1", "choice2", "choice3"],
+                  },
+                },
+                numberField: {
+                  type: FieldType.NUMBER,
+                  name: "numberField",
+                  constraints: { type: "number" },
+                },
+              },
+            })
+
+            const duplicatedTable = await config.api.table.duplicate(
+              complexTable._id!
+            )
+
+            expect(duplicatedTable.name).toBe("ComplexTable 1")
+            expect(duplicatedTable.schema.singleSelect).toEqual(
+              complexTable.schema.singleSelect
+            )
+            expect(duplicatedTable.schema.multiSelect).toEqual(
+              complexTable.schema.multiSelect
+            )
+            expect(duplicatedTable.schema.numberField).toEqual(
+              complexTable.schema.numberField
+            )
+          })
+
+          it("should not duplicate data rows", async () => {
+            const duplicatedTable = await config.api.table.duplicate(
+              testTable._id!
+            )
+
+            // Check that the duplicated table has no rows
+            const rows = await config.api.row.fetch(duplicatedTable._id!)
+            expect(rows.length).toBe(0)
+
+            // Verify original table still has its data
+            const originalRows = await config.api.row.fetch(testTable._id!)
+            expect(originalRows.length).toBe(2)
+          })
+
+          it("should apply authorization to endpoint", async () => {
+            await checkBuilderEndpoint({
+              config,
+              method: "POST",
+              url: `/api/tables/${testTable._id}/duplicate`,
+            })
+          })
+
+          if (!isInternal) {
+            it("should not allow duplicating external tables", async () => {
+              // Create an external table for this test
+              const externalTable = await config.api.table.save(
+                tableForDatasource(datasource, { name: "ExternalTable" })
+              )
+
+              await config.api.table.duplicate(externalTable._id!, {
+                status: 400,
+                body: {
+                  message: "Cannot duplicate external tables",
+                },
+              })
+            })
+          }
+
+          it("should generate unique names for multiple duplicates", async () => {
+            // Create three duplicates
+            const firstDuplicate = await config.api.table.duplicate(
+              testTable._id!
+            )
+            const secondDuplicate = await config.api.table.duplicate(
+              testTable._id!
+            )
+            const thirdDuplicate = await config.api.table.duplicate(
+              testTable._id!
+            )
+
+            expect(
+              new Set([
+                testTable.name,
+                firstDuplicate.name,
+                secondDuplicate.name,
+                thirdDuplicate.name,
+              ]).size
+            ).toBe(4)
+          })
+        })
 
       describe("migrate", () => {
         let users: User[]
@@ -1249,10 +1522,7 @@ if (descriptions.length) {
       })
 
       describe.each([
-        [
-          RowExportFormat.CSV,
-          (val: any) => JSON.stringify(val).replace(/"/g, "'"),
-        ],
+        [RowExportFormat.CSV, (val: any) => JSON.stringify(val)],
         [RowExportFormat.JSON, (val: any) => val],
       ])("import validation (%s)", (_, userParser) => {
         const basicSchema: TableSchema = {
@@ -1271,7 +1541,7 @@ if (descriptions.length) {
           (
             rows: Row[],
             schema: TableSchema
-          ) => Promise<ValidateTableImportResponse>
+          ) => Promise<ValidateTableImportResponse>,
         ][] = [
           [
             "validateNewTableImport",

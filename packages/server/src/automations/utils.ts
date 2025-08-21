@@ -1,25 +1,21 @@
 import { Thread, ThreadType } from "../threads"
-import { automations } from "@budibase/shared-core"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
-import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import {
   Automation,
-  AutomationActionStepId,
   AutomationJob,
-  AutomationStepDefinition,
-  AutomationTriggerDefinition,
-  AutomationTriggerStepId,
+  CronTriggerInputs,
+  isCronTrigger,
   MetadataType,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
+import { JobId } from "bull"
 
-const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
@@ -39,40 +35,40 @@ function loggingArgs(job: AutomationJob) {
 }
 
 export async function processEvent(job: AutomationJob) {
-  return tracer.trace(
-    "processEvent",
-    { resource: "automation" },
-    async span => {
-      const appId = job.data.event.appId!
-      const automationId = job.data.automation._id!
+  return tracer.trace("processEvent", async span => {
+    const appId = job.data.event.appId!
+    const automationId = job.data.automation._id!
 
-      span?.addTags({
-        appId,
-        automationId,
-        job: {
-          id: job.id,
-          name: job.name,
-          attemptsMade: job.attemptsMade,
-          opts: {
-            attempts: job.opts.attempts,
-            priority: job.opts.priority,
-            delay: job.opts.delay,
-            repeat: job.opts.repeat,
-            backoff: job.opts.backoff,
-            lifo: job.opts.lifo,
-            timeout: job.opts.timeout,
-            jobId: job.opts.jobId,
-            removeOnComplete: job.opts.removeOnComplete,
-            removeOnFail: job.opts.removeOnFail,
-            stackTraceLimit: job.opts.stackTraceLimit,
-            preventParsingData: job.opts.preventParsingData,
-          },
-        },
-      })
+    span.addTags({
+      appId,
+      automationId,
+      job: {
+        id: job.id,
+        name: job.name,
+        attemptsMade: job.attemptsMade,
+        attempts: job.opts.attempts,
+        priority: job.opts.priority,
+        delay: job.opts.delay,
+        repeat: job.opts.repeat,
+        backoff: job.opts.backoff,
+        lifo: job.opts.lifo,
+        timeout: job.opts.timeout,
+        jobId: job.opts.jobId,
+        removeOnComplete: job.opts.removeOnComplete,
+        removeOnFail: job.opts.removeOnFail,
+        stackTraceLimit: job.opts.stackTraceLimit,
+        preventParsingData: job.opts.preventParsingData,
+      },
+    })
 
-      const task = async () => {
-        try {
-          if (isCronTrigger(job.data.automation)) {
+    const task = async () => {
+      try {
+        return await tracer.trace("task", async () => {
+          const trigger = job.data.automation
+            ? job.data.automation.definition.trigger
+            : null
+          const isCron = trigger && isCronTrigger(trigger)
+          if (isCron && !job.data.event.timestamp) {
             // Requires the timestamp at run time
             job.data.event.timestamp = Date.now()
           }
@@ -80,25 +76,19 @@ export async function processEvent(job: AutomationJob) {
           console.log("automation running", ...loggingArgs(job))
 
           const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, {
-            automationId,
-          })
+          const result = await quotas.addAutomation(runFn, { automationId })
           console.log("automation completed", ...loggingArgs(job))
           return result
-        } catch (err) {
-          span?.addTags({ error: true })
-          console.error(
-            `automation was unable to run`,
-            err,
-            ...loggingArgs(job)
-          )
-          return { err }
-        }
+        })
+      } catch (err) {
+        span.addTags({ error: true })
+        console.error(`automation was unable to run`, err, ...loggingArgs(job))
+        return { err }
       }
-
-      return await context.doInAutomationContext({ appId, automationId, task })
     }
-  )
+
+    return await context.doInAutomationContext({ appId, automationId, task })
+  })
 }
 
 export async function updateTestHistory(
@@ -122,32 +112,17 @@ export async function updateTestHistory(
   )
 }
 
-export function removeDeprecated<
-  T extends
-    | Record<keyof typeof AutomationTriggerStepId, AutomationTriggerDefinition>
-    | Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
->(definitions: T): T {
-  const base: Record<
-    string,
-    AutomationTriggerDefinition | AutomationStepDefinition
-  > = cloneDeep(definitions)
-  for (let key of Object.keys(base)) {
-    if (base[key].deprecated) {
-      delete base[key]
-    }
-  }
-  return base as T
-}
-
 // end the repetition and the job itself
 export async function disableAllCrons(appId: any) {
   const promises = []
-  const jobs = await automationQueue.getRepeatableJobs()
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
-      promises.push(automationQueue.removeRepeatableByKey(job.key))
+      promises.push(
+        automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+      )
       if (job.id) {
-        promises.push(automationQueue.removeJobs(job.id))
+        promises.push(automationQueue.getBullQueue().removeJobs(job.id))
       }
     }
   }
@@ -155,11 +130,11 @@ export async function disableAllCrons(appId: any) {
   return { count: results.length / 2 }
 }
 
-export async function disableCronById(jobId: number | string) {
-  const repeatJobs = await automationQueue.getRepeatableJobs()
-  for (let repeatJob of repeatJobs) {
-    if (repeatJob.id === jobId) {
-      await automationQueue.removeRepeatableByKey(repeatJob.key)
+export async function disableCronById(jobId: JobId) {
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
+  for (const job of jobs) {
+    if (job.id === jobId) {
+      await automationQueue.getBullQueue().removeRepeatableByKey(job.key)
     }
   }
   console.log(`jobId=${jobId} disabled`)
@@ -180,17 +155,14 @@ export async function clearMetadata() {
   await db.bulkDocs(automationMetadata)
 }
 
-export function isCronTrigger(auto: Automation) {
-  return (
-    auto &&
-    auto.definition.trigger &&
-    auto.definition.trigger.stepId === CRON_STEP_ID
-  )
-}
-
 export function isRebootTrigger(auto: Automation) {
   const trigger = auto ? auto.definition.trigger : null
-  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
+  const isCron = trigger && isCronTrigger(trigger)
+  if (!isCron) {
+    return false
+  }
+  const inputs = trigger?.inputs as CronTriggerInputs
+  return inputs.cron === REBOOT_CRON
 }
 
 /**
@@ -204,12 +176,13 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
 
   // need to create cron job
   if (
-    isCronTrigger(automation) &&
+    trigger &&
+    isCronTrigger(trigger) &&
     !isRebootTrigger(automation) &&
-    !automation.disabled &&
-    trigger?.inputs.cron
+    !automation.disabled
   ) {
-    const cronExp = trigger.inputs.cron
+    const inputs = trigger.inputs as CronTriggerInputs
+    const cronExp = inputs.cron || ""
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(
@@ -247,34 +220,4 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
-}
-
-/**
- * Checks if the supplied automation is of a recurring type.
- * @param automation The automation to check.
- * @return if it is recurring (cron).
- */
-export function isRecurring(automation: Automation) {
-  return (
-    automation.definition.trigger.stepId ===
-    automations.triggers.definitions.CRON.stepId
-  )
-}
-
-export function isErrorInOutput(output: {
-  steps: { outputs?: { success: boolean } }[]
-}) {
-  let first = true,
-    error = false
-  for (let step of output.steps) {
-    // skip the trigger, its always successful if automation ran
-    if (first) {
-      first = false
-      continue
-    }
-    if (!step.outputs?.success) {
-      error = true
-    }
-  }
-  return error
 }

@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -7,7 +7,7 @@
   import { sdk } from "@budibase/shared-core"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-  import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
+  import FavouriteAppButton from "@/pages/builder/portal/apps/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
   export let app
@@ -75,12 +75,16 @@
 >
   <div class="title">
     <div class="app-icon">
-      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
+      <Icon
+        size="L"
+        name={app.icon?.name || "squares-four"}
+        color={app.icon?.color || "var(--spectrum-global-color-gray-700)"}
+      />
     </div>
     <div class="name">
-      <Heading size="S">
+      <Body size="M" weight="500">
         {app.name}
-      </Heading>
+      </Body>
     </div>
   </div>
 
@@ -98,7 +102,7 @@
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Icon size="L" name={app.deployed ? "globe-check" : "globe-slash"} />
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
@@ -115,7 +119,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="MoreSmallList"
+            name="dots-three"
           />
         </div>
       {:else}
@@ -134,10 +138,10 @@
 <style>
   .app-row {
     background: var(--background);
-    padding: 24px 32px;
+    padding: 8px 24px;
     border-radius: 8px;
     display: grid;
-    grid-template-columns: 35% 25% 15% auto;
+    grid-template-columns: 45% 20% 10% auto;
     align-items: center;
     gap: var(--spacing-m);
     transition: border 130ms ease-out;
@@ -183,12 +187,11 @@
   }
 
   .title :global(.spectrum-Heading),
-  .title :global(.spectrum-Icon),
   .title :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .app-status:not(.deployed) :global(.spectrum-Icon),
+  .app-status:not(.deployed) :global(i),
   .app-status:not(.deployed) :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
   }

@@ -1,13 +1,9 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { setEnv as setCoreEnv } from "@budibase/backend-core"
+import { setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
 import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
-import {
-  mockChatGPTError,
-  mockChatGPTResponse,
-} from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
-import { mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
 
 describe("test the openai action", () => {
@@ -16,6 +12,7 @@ describe("test the openai action", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   beforeEach(() => {
@@ -82,7 +79,9 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockChatGPTError()
+    mockChatGPTResponse(() => {
+      throw new Error("oh no")
+    })
 
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)
@@ -91,27 +90,24 @@ describe("test the openai action", () => {
         .test({ fields: {} })
     )
 
-    expect(result.steps[0].outputs.response).toEqual(
-      "Error: 500 Internal Server Error"
-    )
+    expect(result.steps[0].outputs.response).toEqual("Error: No response found")
     expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
-    mocks.licenses.useBudibaseAI()
-    mocks.licenses.useAICustomConfigs()
-
     mockChatGPTResponse("This is a test")
 
     // We expect a non-0 AI usage here because it goes through the @budibase/pro
     // path, because we've enabled Budibase AI. The exact value depends on a
     // calculation we use to approximate cost. This uses Budibase's OpenAI API
     // key, so we charge users for it.
-    const result = await expectAIUsage(14, () =>
-      createAutomationBuilder(config)
-        .onAppAction()
-        .openai({ model: Model.GPT_4O_MINI, prompt: "Hello, world" })
-        .test({ fields: {} })
+    const result = await withEnv({ SELF_HOSTED: false }, async () =>
+      expectAIUsage(14, () =>
+        createAutomationBuilder(config)
+          .onAppAction()
+          .openai({ model: Model.GPT_4O_MINI, prompt: "Hello, world" })
+          .test({ fields: {} })
+      )
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")

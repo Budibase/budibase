@@ -26,18 +26,19 @@ import {
   getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
-import { JSONUtils, Constants } from "@budibase/frontend-core"
+import { JSONUtils, Constants, SchemaUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "@/components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
 import { FieldType } from "@budibase/types"
+import { getTableIdFromViewId } from "@budibase/shared-core"
 
 const { ContextScopes } = Constants
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
-const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
+const CAPTURE_VAR_INSIDE_JS = /\$\((["'`])([^"'`]+)\1\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 const UpdateReferenceAction = {
@@ -126,7 +127,7 @@ export const getEnvironmentBindings = () => {
       runtimeBinding: `env.${makePropSafe(variable.name)}`,
       readableBinding: `env.${variable.name}`,
       category: "Environment",
-      icon: "Key",
+      icon: "key",
       display: { type: "string", name: variable.name },
     }
   })
@@ -150,7 +151,7 @@ export const toBindingsArray = (valueMap, prefix, category) => {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-      icon: "Brackets",
+      icon: "brackets-angle",
     }
     if (category) {
       config.category = category
@@ -373,6 +374,18 @@ const getContextBindings = (asset, componentId) => {
     .flat()
 }
 
+export const makeReadableKeyPropSafe = key => {
+  if (!key.includes(" ")) {
+    return key
+  }
+
+  if (new RegExp(/^\[(.+)\]$/).test(key.test)) {
+    return key
+  }
+
+  return `[${key}]`
+}
+
 /**
  * Generates a set of bindings for a given component context
  */
@@ -457,11 +470,11 @@ const generateComponentContextBindings = (asset, componentContext) => {
       const runtimeBinding = `${safeComponentId}.${safeKey}`
 
       // Optionally use a prefix with readable bindings
-      let readableBinding = component._instanceName
+      let readableBinding = makeReadableKeyPropSafe(component._instanceName)
       if (readablePrefix) {
         readableBinding += `.${readablePrefix}`
       }
-      readableBinding += `.${fieldSchema.name || key}`
+      readableBinding += `.${makeReadableKeyPropSafe(fieldSchema.name || key)}`
 
       // Determine which category this binding belongs in
       const bindingCategory = getComponentBindingCategory(
@@ -473,7 +486,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
       bindings.push({
         type: "context",
         runtimeBinding,
-        readableBinding: `${readableBinding}`,
+        readableBinding,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -529,10 +542,10 @@ const getComponentBindingCategory = (component, context, def) => {
   if (component._component.endsWith("formblock")) {
     if (context.type === "form") {
       category = `${component._instanceName} - Fields`
-      icon = "Form"
+      icon = "list"
     } else if (context.type === "schema") {
       category = `${component._instanceName} - Row`
-      icon = "Data"
+      icon = "database"
     }
   }
 
@@ -565,7 +578,7 @@ export const getUserBindings = () => {
       fieldSchema,
       providerId: "user",
       category: "Current User",
-      icon: "User",
+      icon: "user",
       display: {
         name: key,
       },
@@ -590,7 +603,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
         readableBinding: `Device.Mobile`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "boolean", name: "mobile" },
       },
       {
@@ -598,7 +611,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
         readableBinding: `Device.Tablet`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "boolean", name: "tablet" },
       },
       {
@@ -606,7 +619,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("theme")}`,
         readableBinding: `App.Theme`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "string", name: "App Theme" },
       },
     ]
@@ -624,7 +637,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("url")}`,
       readableBinding: `Settings.url`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "url" },
     },
     {
@@ -632,7 +645,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("logo")}`,
       readableBinding: `Settings.logo`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "logo" },
     },
     {
@@ -640,7 +653,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("company")}`,
       readableBinding: `Settings.company`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "company" },
     },
   ]
@@ -669,7 +682,7 @@ const getSelectedRowsBindings = asset => {
         )}`,
         readableBinding: `${table._instanceName}.Selected Row IDs (deprecated)`,
         category: "Selected Row IDs (deprecated)",
-        icon: "ViewRow",
+        icon: "rows",
         display: { name: table._instanceName },
       }))
     )
@@ -686,7 +699,7 @@ const getSelectedRowsBindings = asset => {
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected Row IDs (deprecated)`,
         category: "Selected Row IDs (deprecated)",
-        icon: "ViewRow",
+        icon: "rows",
         display: { name: block._instanceName },
       }))
     )
@@ -703,7 +716,7 @@ export const makeStateBinding = key => {
     runtimeBinding: `${makePropSafe("state")}.${makePropSafe(key)}`,
     readableBinding: `State.${key}`,
     category: "State",
-    icon: "AutomatedSegment",
+    icon: "funnel",
     display: { name: key },
   }
 }
@@ -737,7 +750,7 @@ const getUrlBindings = asset => {
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
     category: "URL",
-    icon: "RailTop",
+    icon: "align-top",
     display: { type: "string", name: param },
   }))
   const queryParamsBinding = {
@@ -745,7 +758,7 @@ const getUrlBindings = asset => {
     runtimeBinding: makePropSafe("query"),
     readableBinding: "Query params",
     category: "URL",
-    icon: "RailTop",
+    icon: "align-top",
     display: { type: "object", name: "Query params" },
   }
   return urlParamBindings.concat([queryParamsBinding])
@@ -761,7 +774,7 @@ const getRoleBindings = () => {
       runtimeBinding: `'${role._id}'`,
       readableBinding: `Role.${role.uiMetadata.displayName}`,
       category: "Role",
-      icon: "UserGroup",
+      icon: "users-three",
       display: { type: "string", name: role.uiMetadata.displayName },
     }
   })
@@ -838,7 +851,7 @@ export const getActionBindings = (actions, actionId) => {
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
           category: "Actions",
-          icon: "JourneyAction",
+          icon: "path",
           display: {
             name: contextValue.label,
           },
@@ -862,7 +875,7 @@ const getEmbedBindings = () => {
       runtimeBinding: `${safeEmbed}`,
       readableBinding: `ParentWindow`,
       category: "Embed",
-      icon: "DistributeVertically",
+      icon: "code",
     },
   ]
   return bindings
@@ -884,7 +897,7 @@ export const getSchemaForDatasourcePlus = (resourceId, options) => {
     ? {
         type: "viewV2",
         id: resourceId,
-        tableId: resourceId.split("_").slice(1, 3).join("_"),
+        tableId: getTableIdFromViewId(resourceId),
       }
     : { type: "table", tableId: resourceId }
   return getSchemaForDatasource(null, datasource, options)
@@ -1014,25 +1027,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Check for any JSON fields so we can add any top level properties
     if (schema) {
-      let jsonAdditions = {}
-      Object.keys(schema).forEach(fieldKey => {
-        const fieldSchema = schema[fieldKey]
-        if (fieldSchema?.type === "json") {
-          const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(
-            fieldSchema,
-            {
-              squashObjects: true,
-            }
-          )
-          Object.keys(jsonSchema).forEach(jsonKey => {
-            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-              type: jsonSchema[jsonKey].type,
-              nestedJSON: true,
-            }
-          })
-        }
-      })
-      schema = { ...schema, ...jsonAdditions }
+      schema = SchemaUtils.addNestedJSONSchemaFields(schema)
     }
 
     // Determine if we should add ID and rev to the schema
@@ -1323,6 +1318,25 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
+// If converting readable to runtime we need to ensure we don't replace words
+// which are substrings of other words - e.g. a binding of `a` would turn
+// `hah` into `h[a]h` which is obviously wrong. To avoid this we can remove all
+// expanded versions of the binding to be replaced.
+const excludeReadableExtensions = (string, binding) => {
+  // Escape any special chars in the binding so we can treat it as a literal
+  // string match in the regexes below
+  const escaped = binding.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  // Regex to find prefixed bindings (e.g. exclude xfoo for foo)
+  const regex1 = new RegExp(`[a-zA-Z0-9-_]+${escaped}[a-zA-Z0-9-_]*`, "g")
+  // Regex to find prefixed bindings (e.g. exclude foox for foo)
+  const regex2 = new RegExp(`[a-zA-Z0-9-_]*${escaped}[a-zA-Z0-9-_]+`, "g")
+  const matches = [...string.matchAll(regex1), ...string.matchAll(regex2)]
+  for (const match of matches) {
+    string = string.replace(match[0], new Array(match[0].length + 1).join("*"))
+  }
+  return string
+}
+
 /**
  * Utility function which replaces a string between given indices.
  */
@@ -1354,18 +1368,24 @@ const bindingReplacement = (
   }
   // work from longest to shortest
   const convertFromProps = bindableProperties
+    // TODO check whitespaces
     .map(el => el[convertFrom])
     .sort((a, b) => {
       return b.length - a.length
     })
   const boundValues = textWithBindings.match(regex) || []
   let result = textWithBindings
-  for (let boundValue of boundValues) {
+  for (const boundValue of boundValues) {
     let newBoundValue = boundValue
     // we use a search string, where any time we replace something we blank it out
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
+      // If converting readable > runtime, blank out all extensions of this
+      // string to avoid partial matches
+      if (convertTo === "runtimeBinding") {
+        searchString = excludeReadableExtensions(searchString, from)
+      }
       const binding = bindableProperties.find(el => el[convertFrom] === from)
       if (
         isJS ||
@@ -1405,7 +1425,7 @@ const bindingReplacement = (
  * Extracts a component ID from a handlebars expression setting of
  * {{ literal [componentId] }}
  */
-const extractLiteralHandlebarsID = value => {
+export const extractLiteralHandlebarsID = value => {
   if (!value || typeof value !== "string") {
     return null
   }

@@ -23,7 +23,7 @@ export async function getDatasource(): Promise<Datasource> {
         })
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
-            "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123 -q 'SELECT 1'"
+            "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Password_123 -q 'SELECT 1'"
           ).withStartupTimeout(20000)
         )
     )
@@ -44,7 +44,8 @@ export async function getDatasource(): Promise<Datasource> {
       user: "sa",
       password: "Password_123",
       options: {
-        encrypt: false,
+        encrypt: true,
+        trustServerCertificate: true,
       },
     },
   }

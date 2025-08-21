@@ -3,12 +3,16 @@ import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
-import { join } from "path"
+import { join, resolve } from "path"
 
+const TOP_LEVEL_PATH =
+  process.env.TOP_LEVEL_PATH ||
+  process.env.SERVER_TOP_LEVEL_PATH ||
+  resolve(join(__dirname, "..", "..", ".."))
 let LOADED = false
 if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
-    path: join(__dirname, "..", ".env"),
+    path: join(TOP_LEVEL_PATH, ".env"),
   })
   LOADED = true
 }
@@ -21,8 +25,7 @@ function parseIntSafe(number?: string) {
 
 const DEFAULTS = {
   QUERY_THREAD_TIMEOUT: 15000,
-  AUTOMATION_THREAD_TIMEOUT: 15000,
-  AUTOMATION_SYNC_TIMEOUT: 120000,
+  AUTOMATION_THREAD_TIMEOUT: 120000,
   AUTOMATION_MAX_ITERATIONS: 200,
   JS_PER_EXECUTION_TIME_LIMIT_MS: 1500,
   TEMPLATE_REPOSITORY: "app",
@@ -30,6 +33,9 @@ const DEFAULTS = {
   FORKED_PROCESS_NAME: "main",
   JS_RUNNER_MEMORY_LIMIT: 64,
   USE_LOCAL_COMPONENT_LIBS: coreEnv.isDev() || coreEnv.isTest(),
+  RECAPTCHA_SESSION_SECONDS: 1800,
+  AUTOMATION_MAX_NESTED_LOOPS: 3,
+  AUTOMATION_MAX_STORED_LOOP_RESULTS: 50,
 }
 
 const QUERY_THREAD_TIMEOUT =
@@ -42,8 +48,9 @@ const DEFAULT_AUTOMATION_TIMEOUT =
 const environment = {
   // features
   APP_FEATURES: process.env.APP_FEATURES,
-  // important - prefer app port to generic port
-  PORT: process.env.APP_PORT || process.env.PORT,
+  // important - prefer app port to generic port, APPS_PORT to align with other APPS
+  // named environment variables, APP_PORT deprecated
+  PORT: process.env.APP_PORT || process.env.APPS_PORT || process.env.PORT,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -59,6 +66,13 @@ const environment = {
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  // atlassian
+  ATLASSIAN_API_TOKEN: process.env.ATLASSIAN_API_TOKEN,
+  ATLASSIAN_EMAIL: process.env.ATLASSIAN_EMAIL,
+  ATLASSIAN_BASE_URL: process.env.ATLASSIAN_BASE_URL,
+  // bamboohr
+  BAMBOOHR_API_KEY: process.env.BAMBOOHR_API_KEY,
+  BAMBOOHR_SUBDOMAIN: process.env.BAMBOOHR_SUBDOMAIN,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
@@ -68,10 +82,16 @@ const environment = {
     process.env.TEMPLATE_REPOSITORY || DEFAULTS.TEMPLATE_REPOSITORY,
   DISABLE_AUTO_PROD_APP_SYNC: process.env.DISABLE_AUTO_PROD_APP_SYNC,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
+  RECAPTCHA_SITE_KEY: process.env.RECAPTCHA_SITE_KEY,
+  RECAPTCHA_SESSION_SECONDS:
+    process.env.RECAPTCHA_SESSION_SECONDS || DEFAULTS.RECAPTCHA_SESSION_SECONDS,
   // minor
+  APPS_SERVICE: process.env.APPS_SERVICE,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  INTERNAL_ACCOUNT_PORTAL_URL:
+    process.env.INTERNAL_ACCOUNT_PORTAL_URL || process.env.ACCOUNT_PORTAL_URL,
   AUTOMATION_MAX_ITERATIONS:
     parseIntSafe(process.env.AUTOMATION_MAX_ITERATIONS) ||
     DEFAULTS.AUTOMATION_MAX_ITERATIONS,
@@ -80,6 +100,12 @@ const environment = {
   AUTOMATION_THREAD_TIMEOUT:
     parseIntSafe(process.env.AUTOMATION_THREAD_TIMEOUT) ||
     DEFAULT_AUTOMATION_TIMEOUT,
+  AUTOMATION_MAX_NESTED_LOOPS:
+    parseIntSafe(process.env.AUTOMATION_MAX_NESTED_LOOPS) ||
+    DEFAULTS.AUTOMATION_MAX_NESTED_LOOPS,
+  AUTOMATION_MAX_STORED_LOOP_RESULTS:
+    parseIntSafe(process.env.AUTOMATION_MAX_STORED_LOOP_RESULTS) ||
+    DEFAULTS.AUTOMATION_MAX_STORED_LOOP_RESULTS,
   PLUGINS_DIR: process.env.PLUGINS_DIR || DEFAULTS.PLUGINS_DIR,
   MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
@@ -106,8 +132,7 @@ const environment = {
   JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
     process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),
-  TOP_LEVEL_PATH:
-    process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
+  TOP_LEVEL_PATH: TOP_LEVEL_PATH,
   APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
   JS_RUNNER_MEMORY_LIMIT:
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) ||
@@ -116,6 +141,8 @@ const environment = {
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
   USE_LOCAL_COMPONENT_LIBS:
     process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
+  SYNC_MIGRATION_CHECKS_MS:
+    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

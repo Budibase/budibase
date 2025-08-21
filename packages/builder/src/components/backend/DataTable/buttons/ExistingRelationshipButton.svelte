@@ -43,7 +43,7 @@
 {#if datasource}
   <div>
     <ActionButton
-      icon="DataCorrelated"
+      icon="database"
       primary
       quiet
       on:click={() => modal.show({ fromTable: table })}

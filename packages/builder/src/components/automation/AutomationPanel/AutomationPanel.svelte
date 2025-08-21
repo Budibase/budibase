@@ -32,7 +32,6 @@
     })
 
   $: groupedAutomations = groupAutomations(filteredAutomations)
-
   $: showNoResults = searchString && !filteredAutomations.length
 
   const groupAutomations = automations => {
@@ -41,7 +40,6 @@
     for (let auto of automations) {
       let category = null
       let dataTrigger = false
-
       // Group by datasource if possible
       if (dsTriggers.includes(auto.definition?.trigger?.stepId)) {
         if (auto.definition.trigger.inputs?.tableId) {
@@ -51,7 +49,13 @@
       }
       // Otherwise group by trigger
       if (!category) {
-        category = auto.definition?.trigger?.name || "No Trigger"
+        let triggerName = auto.definition?.trigger?.name || "No Trigger"
+        // The definition was changed from "App Action" to "User action" in the definition
+        // so we need to normalize it to User action for consistent grouping
+        if (triggerName === "App Action") {
+          triggerName = "User action"
+        }
+        category = triggerName
       } else {
         dataTrigger = true
       }
@@ -97,7 +101,10 @@
           {triggerGroup?.name}
         </div>
         {#each triggerGroup.entries as automation}
-          <AutomationNavItem {automation} icon={triggerGroup.icon} />
+          <AutomationNavItem
+            {automation}
+            icon={automation?.definition?.trigger?.icon}
+          />
         {/each}
       </div>
     {/each}
@@ -162,6 +169,7 @@
     flex: 1 1 auto;
     overflow: auto;
     overflow-x: hidden;
+    max-height: calc(100vh - 118px);
   }
 
   .no-results {

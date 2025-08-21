@@ -8,13 +8,16 @@ import {
   auth as authCore,
 } from "@budibase/backend-core"
 import env from "../../../environment"
-import { groups } from "@budibase/pro"
+import { ai, groups } from "@budibase/pro"
 import {
   DevInfo,
   FetchAPIKeyResponse,
   GenerateAPIKeyRequest,
   GenerateAPIKeyResponse,
   GetGlobalSelfResponse,
+  QuotaType,
+  QuotaUsageType,
+  StaticQuotaName,
   UpdateSelfRequest,
   UpdateSelfResponse,
   User,
@@ -86,12 +89,12 @@ export async function fetchAPIKey(ctx: UserCtx<void, FetchAPIKeyResponse>) {
 /**
  *
  */
-const getUserSessionAttributes = (ctx: any) => ({
+const getUserSessionAttributes = (ctx: UserCtx) => ({
   account: ctx.user.account,
-  license: ctx.user.license,
+  license: ctx.user.license!,
   budibaseAccess: !!ctx.user.budibaseAccess,
   accountPortalAccess: !!ctx.user.accountPortalAccess,
-  csrfToken: ctx.user.csrfToken,
+  csrfToken: ctx.user.csrfToken!,
 })
 
 export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
@@ -115,11 +118,26 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
 
   // add the feature flags for this tenant
   const flags = await features.flags.fetch()
+  const llmConfig = await ai.getLLMConfig()
+  const sanitisedLLMConfig = llmConfig
+    ? {
+        provider: llmConfig.provider,
+        model: llmConfig.model,
+      }
+    : undefined
+
+  if (flags?.WORKSPACES) {
+    // TODO: once the flag is clean, we should rename the original object instead
+    sessionAttributes.license.quotas[QuotaType.USAGE][QuotaUsageType.STATIC][
+      StaticQuotaName.APPS
+    ].name = "Workspaces"
+  }
 
   ctx.body = {
     ...enrichedUser,
     ...sessionAttributes,
     flags,
+    llm: sanitisedLLMConfig,
   }
 }
 

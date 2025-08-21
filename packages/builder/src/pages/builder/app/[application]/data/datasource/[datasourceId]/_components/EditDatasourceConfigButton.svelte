@@ -1,6 +1,5 @@
 <script>
-  import { Body } from "@budibase/bbui"
-  import FontAwesomeIcon from "@/components/common/FontAwesomeIcon.svelte"
+  import { Body, Icon } from "@budibase/bbui"
   import { IntegrationTypes } from "@/constants/backend"
 
   export let datasource
@@ -60,7 +59,7 @@
   <div class="left">
     {#if datasource.source !== IntegrationTypes.REST}
       <div class="connected">
-        <FontAwesomeIcon name="fa-solid fa-circle-check" />
+        <Icon name="check-circle" />
         <Body size="S">Connected</Body>
       </div>
     {/if}
@@ -76,7 +75,7 @@
     </div>
   </div>
   <div class="right">
-    <FontAwesomeIcon name="fa-solid fa-gear" />
+    <Icon name="gear" color="var(--spectrum-global-color-gray-600)" />
   </div>
 </div>
 
@@ -102,9 +101,6 @@
     align-items: center;
     margin-left: 16px;
   }
-  .right :global(svg) {
-    color: var(--spectrum-global-color-gray-600);
-  }
   .button:hover {
     cursor: pointer;
     background: var(--spectrum-global-color-gray-100);
@@ -113,11 +109,9 @@
     display: flex;
     align-items: center;
     margin-bottom: 4px;
+    gap: 4px;
   }
-  .connected :global(svg) {
-    margin-right: 6px;
-    color: #009562;
-  }
+  .connected,
   .connected :global(p) {
     color: #009562;
   }

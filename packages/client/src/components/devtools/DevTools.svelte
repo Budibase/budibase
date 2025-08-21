@@ -19,7 +19,7 @@
         <Heading size="XS">Budibase DevTools</Heading>
         <Icon
           hoverable
-          name="Close"
+          name="x"
           on:click={() => devToolsStore.actions.setVisible(false)}
         />
       </div>

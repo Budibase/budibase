@@ -8,3 +8,4 @@ db/dev.db/
 dist
 coverage/
 watchtower-hook.json
+.claude

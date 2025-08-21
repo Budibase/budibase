@@ -11,10 +11,12 @@ export async function run({
   inputs,
   appId,
   emitter,
+  context,
 }: {
   inputs: ExecuteQueryStepInputs
   appId: string
   emitter: ContextEmitter
+  context: Record<string, any>
 }): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {
@@ -34,6 +36,7 @@ export async function run({
     params: {
       queryId,
     },
+    user: context.user,
   })
 
   try {

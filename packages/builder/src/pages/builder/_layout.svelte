@@ -2,12 +2,20 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
   import { onMount } from "svelte"
-  import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import {
+    CookieUtils,
+    Constants,
+    popNumSessionsInvalidated,
+    invalidationMessage,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
+  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
+  import { Modal, notifications } from "@budibase/bbui"
 
   let loaded = false
+  let commandPaletteModal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -95,6 +103,13 @@
     }
     loaded = true
 
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notifications.info(invalidationMessage(invalidated), {
+        duration: 5000,
+      })
+    }
+
     // lastly
     await analyticsPing()
   })
@@ -157,11 +172,24 @@
       }
     }
   }
+
+  // Event handler for the command palette
+  const handleKeyDown = e => {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      commandPaletteModal.toggle()
+    }
+  }
 </script>
 
 <!--Portal branding overrides -->
 <Branding />
 <ContextMenu />
+
+<svelte:window on:keydown={handleKeyDown} />
+<Modal bind:this={commandPaletteModal} zIndex={999999}>
+  <CommandPalette />
+</Modal>
 
 {#if loaded}
   <slot />

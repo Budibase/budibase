@@ -45,7 +45,7 @@
     min-height: calc(var(--spectrum-global-dimension-size-225) + 12px);
     min-width: 100%;
     background-color: rgba(28, 168, 114, 0.2);
-    border-radius: 4px;
+    border-radius: 12px;
     border: 1px dashed #1ca872;
     position: relative;
     text-align: center;

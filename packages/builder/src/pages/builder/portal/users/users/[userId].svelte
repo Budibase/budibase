@@ -18,7 +18,14 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
+  import {
+    users,
+    auth,
+    groups,
+    appsStore,
+    licensing,
+    featureFlags,
+  } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
@@ -32,6 +39,7 @@
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
+  import { capitalise } from "@/helpers"
 
   export let userId
 
@@ -98,7 +106,9 @@
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
-  $: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
+  $: availableApps = user
+    ? getApps(user, sdk.users.userAppAccessList(user, $groups || []))
+    : []
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -107,23 +117,19 @@
   $: globalRole = users.getUserRole(user)
   $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
 
-  const getAvailableApps = (appList, privileged, roles) => {
-    let availableApps = appList.slice()
-    if (!privileged) {
-      availableApps = availableApps.filter(x => {
-        let roleKeys = Object.keys(roles || {})
-        return roleKeys.concat(user?.builder?.apps).find(y => {
-          return x.appId === appsStore.extractAppId(y)
-        })
-      })
-    }
+  const getApps = (user, appIds) => {
+    let availableApps = $appsStore.apps
+      .slice()
+      .filter(app =>
+        appIds.find(id => id === appsStore.getProdAppID(app.devId))
+      )
     return availableApps.map(app => {
       const prodAppId = appsStore.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: getRole(prodAppId, roles),
+        role: getRole(prodAppId, user),
       }
     })
   }
@@ -136,7 +142,7 @@
     return groups.filter(group => group.name?.toLowerCase().includes(search))
   }
 
-  const getRole = (prodAppId, roles) => {
+  const getRole = (prodAppId, user) => {
     if (privileged) {
       return Constants.Roles.ADMIN
     }
@@ -145,7 +151,21 @@
       return Constants.Roles.CREATOR
     }
 
-    return roles[prodAppId]
+    if (user?.roles?.[prodAppId]) {
+      return user.roles[prodAppId]
+    }
+
+    // check if access via group for creator
+    const foundGroup = $groups?.find(
+      group => group.roles?.[prodAppId] || group.builder?.apps[prodAppId]
+    )
+    if (foundGroup.builder?.apps[prodAppId]) {
+      return Constants.Roles.CREATOR
+    }
+    // can't tell how groups will control role
+    if (foundGroup.roles[prodAppId]) {
+      return Constants.Roles.GROUP
+    }
   }
 
   const getNameLabel = user => {
@@ -237,6 +257,8 @@
       notifications.error("Error getting user groups")
     }
   })
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -260,15 +282,18 @@
         <div>
           <ActionMenu align="right">
             <span slot="control">
-              <Icon hoverable name="More" />
+              <Icon hoverable name="dots-three" />
             </span>
             {#if !isSSO}
-              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+              <MenuItem
+                on:click={resetPasswordModal.show}
+                icon="arrow-clockwise"
+              >
                 Force password reset
               </MenuItem>
             {/if}
             {#if !isTenantOwner}
-              <MenuItem on:click={deleteModal.show} icon="Delete">
+              <MenuItem on:click={deleteModal.show} icon="trash">
                 Delete
               </MenuItem>
             {/if}
@@ -357,6 +382,7 @@
           schema={groupSchema}
           data={userGroups}
           allowEditRows={false}
+          allowEditColumns={false}
           customPlaceholder
           customRenderers={customGroupTableRenderers}
           on:click={e => $goto(`../groups/${e.detail._id}`)}
@@ -369,10 +395,10 @@
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="S">Apps</Heading>
+      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
       {#if privileged}
         <Banner showCloseButton={false}>
-          This user's role grants admin access to all apps
+          This user's role grants admin access to all {appsOrWorkspaces}
         </Banner>
       {:else}
         <Table
@@ -380,12 +406,13 @@
           data={availableApps}
           customPlaceholder
           allowEditRows={false}
+          allowEditColumns={false}
           customRenderers={customAppTableRenderers}
           on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">
-              This user doesn't have access to any apps
+              This user doesn't have access to any {appsOrWorkspaces}
             </Heading>
           </div>
         </Table>

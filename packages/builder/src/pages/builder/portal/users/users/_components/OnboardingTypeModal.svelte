@@ -27,7 +27,7 @@
       }}
     >
       <div class="content onboarding-type-wrap">
-        <Icon name="WebPage" />
+        <Icon name="envelope-simple" />
         <div class="onboarding-type-text">
           <Body size="S">Send email invites</Body>
         </div>
@@ -35,7 +35,7 @@
       <div style="color: var(--spectrum-global-color-green-600); float: right">
         {#if selectedOnboardingType == OnboardingType.EMAIL}
           <div class="checkmark-spacing">
-            <Icon size="S" name="CheckmarkCircle" />
+            <Icon size="S" name="check-circle" />
           </div>
         {/if}
       </div>
@@ -49,7 +49,7 @@
       }}
     >
       <div class="content onboarding-type-wrap">
-        <Icon name="Key" />
+        <Icon name="key" />
         <div class="onboarding-type-text">
           <Body size="S">Generate passwords for each user</Body>
         </div>
@@ -57,7 +57,7 @@
       <div style="color: var(--spectrum-global-color-green-600); float: right">
         {#if selectedOnboardingType == OnboardingType.PASSWORD}
           <div class="checkmark-spacing">
-            <Icon size="S" name="CheckmarkCircle" />
+            <Icon size="S" name="check-circle" />
           </div>
         {/if}
       </div>
@@ -100,7 +100,7 @@
   .onboarding-type-wrap .onboarding-type-text {
     padding-left: var(--spectrum-alias-item-padding-xl);
   }
-  .onboarding-type-wrap :global(.spectrum-Icon) {
+  .onboarding-type-wrap :global(i) {
     min-width: var(--spectrum-icon-size-m);
   }
   .onboarding-type-wrap :global(.spectrum-Heading) {

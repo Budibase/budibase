@@ -23,6 +23,6 @@ nock.enableNetConnect(host => {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
-afterAll(() => {
+afterAll(async () => {
   timers.cleanup()
 })

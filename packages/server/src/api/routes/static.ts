@@ -1,50 +1,40 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/static"
-import { budibaseTempDir } from "../../utilities/budibaseDir"
-import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
-import env from "../../environment"
+import { addFileManagement } from "../utils"
 import { paramResource } from "../../middleware/resourceId"
-import { devClientLibPath } from "../../utilities/fileSystem"
+import { devAppIdPath } from "../../constants/paths"
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
 
-/* istanbul ignore next */
-router.param("file", async (file: any, ctx: any, next: any) => {
-  ctx.file = file && file.includes(".") ? file : "index.html"
-  if (!ctx.file.startsWith("budibase-client")) {
-    return next()
-  }
-  // test serves from require
-  if (env.isTest()) {
-    const path = devClientLibPath()
-    ctx.devPath = path.split(ctx.file)[0]
-  } else if (env.isDev()) {
-    // Serving the client library from your local dir in dev
-    ctx.devPath = budibaseTempDir()
-  }
-  return next()
-})
+addFileManagement(router)
 
 router
-  .get("/builder/:file*", controller.serveBuilder)
+  .get("/apple-touch-icon.png", async ctx => {
+    ctx.redirect("/builder/bblogo.png")
+  })
   .get("/api/assets/client", controller.serveClientLibrary)
+  .get("/api/apps/:appId/manifest.json", controller.servePwaManifest)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
-  .post("/api/beta/:feature", controller.toggleBetaUiFeature)
+  .post("/api/pwa/process-zip", authorized(BUILDER), controller.processPWAZip)
   .post(
     "/api/attachments/:tableId/upload",
+    recaptcha,
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.uploadFile
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
+  .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl/:path*", controller.serveApp)
-  .get("/:appId/:path*", controller.serveApp)
+  .get(`/${devAppIdPath}/:path*`, controller.serveApp)
   .post(
     "/api/attachments/:datasourceId/url",
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
+    recaptcha,
     controller.getSignedUploadURL
   )
 

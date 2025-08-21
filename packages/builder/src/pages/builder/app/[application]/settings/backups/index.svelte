@@ -11,6 +11,7 @@
     Tags,
     Tag,
     Table,
+    ButtonGroup,
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin } from "@/stores/portal"
   import { appStore } from "@/stores/builder"
@@ -25,12 +26,15 @@
   import { BackupTrigger, BackupType } from "@/constants/backend/backups"
   import { onMount } from "svelte"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
   let dateRange = []
+  let selectedRows = []
+  let bulkDeleteDialog
   let filters = [
     {
       label: "Manual backup",
@@ -98,6 +102,35 @@
     })
   }
 
+  function deselectAll() {
+    selectedRows = []
+  }
+
+  async function bulkDeleteBackups() {
+    if (selectedRows.length === 0) return
+
+    try {
+      loading = true
+      const backupIds = selectedRows.map(row => row._id)
+      const response = await backups.deleteBackups($appStore.appId, backupIds)
+
+      if (response.failureCount > 0) {
+        notifications.warning(response.message)
+      } else {
+        notifications.success(response.message)
+      }
+
+      deselectAll()
+      await fetchBackups(filterOpt, page)
+    } catch (err) {
+      notifications.error("Error while deleting the selected backups")
+    } finally {
+      loading = false
+    }
+  }
+
+  $: hasSelection = selectedRows.length > 0
+
   async function fetchBackups(filters, page, dateRange = []) {
     const opts = {
       ...filters,
@@ -115,6 +148,9 @@
 
     // flatten so we have an easier structure to use for the table schema
     backupData = flattenBackups(response.data)
+
+    // Clear selections when fetching new data
+    deselectAll()
   }
 
   async function createManualBackup() {
@@ -168,7 +204,7 @@
       <Heading>Backups</Heading>
       {#if !$licensing.backupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Premium</Tag>
+          <Tag icon="lock" emphasized>Premium</Tag>
         </Tags>
       {/if}
     </div>
@@ -180,25 +216,17 @@
     {#if !$auth.accountPortalAccess && $admin.cloud}
       <Body>Contact your account holder to upgrade your plan.</Body>
     {/if}
-    <div class="pro-buttons">
-      {#if $auth.accountPortalAccess}
-        <Button
-          primary
-          disabled={!$auth.accountPortalAccess && $admin.cloud}
-          on:click={$licensing.goToUpgradePage()}
-        >
-          Upgrade
-        </Button>
+    <ButtonGroup>
+      {#if $admin.cloud && $auth.accountPortalAccess}
+        <Button primary on:click={$licensing.goToUpgradePage}>Upgrade</Button>
       {/if}
       <Button
         secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}
+        on:click={() => window.open("https://budibase.com/pricing/", "_blank")}
       >
         View plans
       </Button>
-    </div>
+    </ButtonGroup>
   {:else if !backupData?.length && !loading && !filterOpt && !dateRange?.length}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
@@ -228,14 +256,23 @@
               bind:value={filterOpt}
             />
           </div>
-          <DateRangePicker
-            value={dateRange}
-            on:change={e => (dateRange = e.detail)}
-          />
+          <div class="date-range-compact">
+            <DateRangePicker
+              value={dateRange}
+              on:change={e => (dateRange = e.detail)}
+            />
+          </div>
         </div>
-        <div>
+        <div class="actions">
+          {#if hasSelection}
+            <div class="selection-controls">
+              <Button warning on:click={bulkDeleteDialog.show}>
+                Delete selected ({selectedRows.length})
+              </Button>
+            </div>
+          {/if}
           <Button cta disabled={loading} on:click={createManualBackup}>
-            Create new backup
+            Create backup
           </Button>
         </div>
       </div>
@@ -243,13 +280,14 @@
         <Table
           {schema}
           disableSorting
-          allowSelectRows={false}
+          allowSelectRows={true}
           allowEditColumns={false}
           allowEditRows={false}
           data={backupData}
           {customRenderers}
           placeholderText="No backups found"
           border={false}
+          bind:selectedRows
           on:buttonclick={handleButtonClick}
         />
         <div class="pagination">
@@ -265,6 +303,18 @@
     </Layout>
   {/if}
 </Layout>
+
+<ConfirmDialog
+  bind:this={bulkDeleteDialog}
+  okText="Delete backups"
+  onOk={bulkDeleteBackups}
+  title="Confirm backup deletion"
+>
+  Are you sure you wish to delete {selectedRows.length} backup{selectedRows.length ===
+  1
+    ? ""
+    : "s"}? This action cannot be undone.
+</ConfirmDialog>
 
 <style>
   .title {
@@ -284,11 +334,35 @@
     flex-wrap: wrap;
   }
 
+  .actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-m);
+    align-items: flex-end;
+  }
+
+  .selection-controls {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
+  }
+
   .search {
     flex: 1 1 auto;
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-end;
+  }
+  .date-range-compact :global(.date-range-picker) {
+    max-width: 280px;
+    flex: 0 0 280px;
+  }
+  .date-range-compact :global(.date-range-picker > *) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .date-range-compact :global(.date-range-picker .spectrum-InputGroup) {
+    width: 100%;
   }
   .search :global(.spectrum-InputGroup) {
     min-width: 100px;
@@ -311,12 +385,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .pro-buttons {
-    display: flex;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
 
   .center {

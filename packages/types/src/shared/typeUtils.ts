@@ -1,3 +1,5 @@
+import { Document } from "../documents"
+
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }
@@ -32,3 +34,10 @@ export type RequiredKeys<T> = {
 }
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
+
+export type WithoutDocMetadata<T extends Document> = Omit<
+  T,
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+
+export type Primitive = string | number | boolean | object

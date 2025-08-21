@@ -6,8 +6,14 @@
     Multiselect,
     Button,
   } from "@budibase/bbui"
-  import { CalculationType, canGroupBy, isNumeric } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import {
+    CalculationType,
+    canGroupBy,
+    FieldType,
+    isNumeric,
+    isNumericStaticFormula,
+  } from "@budibase/types"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -94,10 +100,15 @@
         if (fieldSchema.calculationType) {
           return false
         }
+        // static numeric formulas will work
+        if (isNumericStaticFormula(fieldSchema)) {
+          return true
+        }
         // Only allow numeric columns for most calculation types
         if (
           self.type !== CalculationType.COUNT &&
-          !isNumeric(fieldSchema.type)
+          !isNumeric(fieldSchema.type) &&
+          fieldSchema.responseType !== FieldType.NUMBER
         ) {
           return false
         }
@@ -190,7 +201,13 @@
 
 <DetailPopover bind:this={popover} title="Configure calculations" width={480}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="WebPage" quiet on:click={openPopover} selected={open}>
+    <ActionButton
+      icon="browser"
+      quiet
+      on:click={openPopover}
+      selected={open}
+      accentColor="#4b75ff"
+    >
       Configure calculations{count ? `: ${count}` : ""}
     </ActionButton>
   </svelte:fragment>
@@ -212,7 +229,7 @@
         />
         <Icon
           hoverable
-          name="Delete"
+          name="trash"
           size="S"
           on:click={() => deleteCalc(idx)}
           color="var(--spectrum-global-color-gray-700)"
@@ -231,7 +248,7 @@
   <div class="buttons">
     <ActionButton
       quiet
-      icon="Add"
+      icon="plus"
       on:click={addCalc}
       disabled={calculations.length >= 5}
     >
@@ -239,7 +256,7 @@
     </ActionButton>
   </div>
   <InfoDisplay
-    icon="Help"
+    icon="question"
     quiet
     body="Most calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
   />

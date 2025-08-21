@@ -120,6 +120,10 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/users/accountholder",
     method: "GET",
   },
+  {
+    route: "/api/global/users/tenant/owner",
+    method: "PUT",
+  },
 ]
 
 // most public endpoints are gets, but some are posts
@@ -130,6 +134,7 @@ const router: Router = new Router()
 
 router
   .use(middleware.errorHandling)
+  .use(middleware.featureFlagCookie)
   .use(
     compress({
       threshold: 2048,

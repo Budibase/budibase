@@ -1,6 +1,5 @@
 import { roles, utils } from "@budibase/backend-core"
-import { createHomeScreen } from "../../constants/screens"
-import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { BASE_LAYOUT_PROP_IDS, EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import {
   BUILTIN_ACTION_DEFINITIONS,
@@ -35,6 +34,10 @@ import {
   WebhookActionType,
   BuiltinPermissionID,
   DeepPartial,
+  FilterCondition,
+  AutomationTriggerResult,
+  CreateEnvironmentVariableRequest,
+  Screen,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -43,7 +46,7 @@ export {
   createTableScreen,
   createQueryScreen,
   createViewScreen,
-} from "../../constants/screens"
+} from "./structures/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -201,8 +204,7 @@ export function newAutomation({
 export function rowActionAutomation() {
   const automation = newAutomation({
     trigger: {
-      ...automationTrigger(),
-      stepId: AutomationTriggerStepId.ROW_ACTION,
+      ...automationTrigger(TRIGGER_DEFINITIONS.ROW_ACTION),
     },
   })
   return automation
@@ -372,7 +374,11 @@ export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
-          inputs: { field: "name", value: "test", condition: "EQ" },
+          inputs: {
+            field: "name",
+            value: "test",
+            condition: FilterCondition.EQUAL,
+          },
           schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
         },
       ],
@@ -437,15 +443,24 @@ export function updateRowAutomationWithFilters(
 export function basicAutomationResults(
   automationId: string
 ): AutomationResults {
+  const trigger: AutomationTriggerResult = {
+    id: "trigger",
+    stepId: AutomationTriggerStepId.APP,
+    outputs: {},
+  }
   return {
     automationId,
     status: AutomationStatus.SUCCESS,
-    trigger: "trigger" as any,
+    trigger,
     steps: [
+      trigger,
       {
+        id: "step1",
         stepId: AutomationActionStepId.SERVER_LOG,
         inputs: {},
-        outputs: {},
+        outputs: {
+          success: true,
+        },
       },
     ],
   }
@@ -522,6 +537,61 @@ export function basicUser(role: string) {
   }
 }
 
+export const TEST_WORKSPACEAPPID_PLACEHOLDER = "workspaceAppId"
+
+function createHomeScreen(
+  config: {
+    roleId: string
+    route: string
+  } = {
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    route: "/",
+  }
+): Screen {
+  return {
+    layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
+    props: {
+      _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
+      _component: "@budibase/standard-components/container",
+      _styles: {
+        normal: {},
+        hover: {},
+        active: {},
+        selected: {},
+      },
+      _transition: "fade",
+      _children: [
+        {
+          _id: "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
+          _component: "@budibase/standard-components/heading",
+          _styles: {
+            hover: {},
+            active: {},
+            selected: {},
+          },
+          text: "Welcome to your Budibase App 👋",
+          size: "M",
+          align: "left",
+          _instanceName: "Heading",
+          _children: [],
+        },
+      ],
+      _instanceName: "Home",
+      direction: "column",
+      hAlign: "stretch",
+      vAlign: "top",
+      size: "grow",
+      gap: "M",
+    },
+    routing: {
+      route: config.route,
+      roleId: config.roleId,
+    },
+    name: "home-screen",
+    workspaceAppId: TEST_WORKSPACEAPPID_PLACEHOLDER,
+  }
+}
+
 export function basicScreen(route = "/") {
   return createHomeScreen({
     roleId: BUILTIN_ROLE_IDS.BASIC,
@@ -559,7 +629,7 @@ export function basicEnvironmentVariable(
   name: string,
   prod: string,
   dev?: string
-) {
+): CreateEnvironmentVariableRequest {
   return {
     name,
     production: prod,

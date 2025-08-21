@@ -107,7 +107,7 @@
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
-    "icon": "Sandbox",
+    "icon": "columns",
     "hasChildren": true,
     "styles": ["padding", "background"],
     "settings": [
@@ -163,7 +163,7 @@
   "container": {
     "name": "Container",
     "description": "This component contains things within itself",
-    "icon": "Selection",
+    "icon": "selection",
     "hasChildren": true,
     "size": {
       "width": 500,
@@ -180,19 +180,15 @@
         "label": "Layout",
         "key": "layout",
         "showInBar": true,
-        "barStyle": "buttons",
+        "placeholder": false,
         "options": [
           {
             "label": "Flex",
-            "value": "flex",
-            "barIcon": "ModernGridView",
-            "barTitle": "Flex layout"
+            "value": "flex"
           },
           {
             "label": "Grid",
-            "value": "grid",
-            "barIcon": "ViewGrid",
-            "barTitle": "Grid layout"
+            "value": "grid"
           }
         ],
         "defaultValue": "grid"
@@ -207,13 +203,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "TableSelectColumn",
+            "barIcon": "rows-plus-bottom",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "TableSelectRow",
+            "barIcon": "columns-plus-right",
             "barTitle": "Row layout"
           }
         ],
@@ -383,7 +379,7 @@
   "section": {
     "name": "Section",
     "description": "Add a section to your application",
-    "icon": "ColumnTwoB",
+    "icon": "columns",
     "hasChildren": true,
     "illegalChildren": ["section"],
     "showEmptyState": false,
@@ -406,13 +402,13 @@
   },
   "screenslot": {
     "name": "Screenslot",
-    "icon": "WebPage",
+    "icon": "browser",
     "description": "Contains your app screens",
     "static": true
   },
   "buttongroup": {
     "name": "Button group",
-    "icon": "Button",
+    "icon": "circles-three-plus",
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -470,13 +466,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "TableSelectColumn",
+                "barIcon": "rows-plus-bottom",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "TableSelectRow",
+                "barIcon": "columns-plus-right",
                 "barTitle": "Row layout"
               }
             ],
@@ -628,8 +624,8 @@
   },
   "button": {
     "name": "Button",
-    "description": "A basic html button that is ready for styling",
-    "icon": "Button",
+    "description": "This component is a button",
+    "icon": "circle",
     "editable": true,
     "size": {
       "width": 120,
@@ -639,6 +635,7 @@
       "hAlign": "center",
       "vAlign": "center"
     },
+    "styles": ["margin", "background", "font"],
     "settings": [
       {
         "type": "text",
@@ -759,7 +756,7 @@
   "divider": {
     "name": "Divider",
     "description": "A basic divider",
-    "icon": "Separator",
+    "icon": "line-segments",
     "illegalChildren": ["section"],
     "size": {
       "width": 400,
@@ -796,7 +793,7 @@
   "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
-    "icon": "JourneyData",
+    "icon": "list-dashes",
     "illegalChildren": ["section"],
     "hasChildren": true,
     "size": {
@@ -958,7 +955,7 @@
   "stackedlist": {
     "deprecated": true,
     "name": "Stacked List",
-    "icon": "TaskList",
+    "icon": "list-checks",
     "description": "A basic card component that can contain content and actions.",
     "illegalChildren": ["section"],
     "settings": [
@@ -989,7 +986,7 @@
     "deprecated": true,
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
-    "icon": "ViewColumn",
+    "icon": "cards",
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1048,8 +1045,9 @@
   },
   "text": {
     "name": "Paragraph",
+    "deprecated": true,
     "description": "A component for displaying paragraph text.",
-    "icon": "TextParagraph",
+    "icon": "text-t",
     "illegalChildren": ["section"],
     "editable": true,
     "size": {
@@ -1171,8 +1169,9 @@
   },
   "heading": {
     "name": "Headline",
-    "icon": "TextBold",
+    "deprecated": true,
     "description": "A component for displaying heading text",
+    "icon": "text-b",
     "illegalChildren": ["section"],
     "editable": true,
     "size": {
@@ -1294,7 +1293,8 @@
   },
   "tag": {
     "name": "Tag",
-    "icon": "Label",
+    "description": "This component is a tag",
+    "icon": "tag",
     "size": {
       "width": 100,
       "height": 25
@@ -1359,7 +1359,7 @@
   "image": {
     "name": "Image",
     "description": "A basic component for displaying images",
-    "icon": "Image",
+    "icon": "image",
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -1377,7 +1377,7 @@
   "backgroundimage": {
     "name": "Background Image",
     "description": "A background image",
-    "icon": "Images",
+    "icon": "image-square",
     "hasChildren": true,
     "styles": ["size"],
     "showEmptyState": false,
@@ -1441,7 +1441,7 @@
   "icon": {
     "name": "Icon",
     "description": "A basic component for displaying icons",
-    "icon": "Shapes",
+    "icon": "shapes",
     "size": {
       "width": 25,
       "height": 25
@@ -1562,7 +1562,7 @@
   "link": {
     "name": "Link",
     "description": "A basic link component for internal and external links",
-    "icon": "Link",
+    "icon": "link",
     "editable": true,
     "size": {
       "width": 200,
@@ -1680,7 +1680,7 @@
     "deprecated": true,
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
-    "icon": "ViewRow",
+    "icon": "cards",
     "settings": [
       {
         "type": "text",
@@ -1759,7 +1759,7 @@
   "cardstat": {
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
-    "icon": "Card",
+    "icon": "cards",
     "size": {
       "width": 260,
       "height": 143
@@ -1794,7 +1794,7 @@
   },
   "embed": {
     "name": "Embed",
-    "icon": "Code",
+    "icon": "code",
     "description": "Embed content from 3rd party sources",
     "styles": ["size"],
     "size": {
@@ -1818,7 +1818,7 @@
     "documentationLink": "https://docs.budibase.com/docs/bar-chart",
     "name": "Bar Chart",
     "description": "Bar chart",
-    "icon": "GraphBarVertical",
+    "icon": "chart-bar",
     "size": {
       "width": 600,
       "height": 420
@@ -1862,6 +1862,17 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click bar",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bar",
+            "key": "bar"
+          }
+        ]
       },
       {
         "type": "select",
@@ -1991,7 +2002,7 @@
     "documentationLink": "https://docs.budibase.com/docs/line-chart",
     "name": "Line Chart",
     "description": "Line chart",
-    "icon": "GraphTrend",
+    "icon": "chart-line",
     "size": {
       "width": 600,
       "height": 420
@@ -2035,6 +2046,17 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click marker",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
       },
       {
         "type": "select",
@@ -2159,7 +2181,7 @@
     "documentationLink": "https://docs.budibase.com/docs/area-chart",
     "name": "Area Chart",
     "description": "Line chart",
-    "icon": "GraphAreaStacked",
+    "icon": "chart-line-up",
     "size": {
       "width": 600,
       "height": 420
@@ -2203,6 +2225,17 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click marker",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
       },
       {
         "type": "select",
@@ -2339,7 +2372,7 @@
     "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Pie Chart",
     "description": "Pie chart",
-    "icon": "GraphPie",
+    "icon": "chart-pie",
     "size": {
       "width": 600,
       "height": 420
@@ -2383,6 +2416,25 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click segment",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked segment",
+            "key": "segment"
+          },
+          {
+            "label": "Segment Index",
+            "key": "index"
+          },
+          {
+            "label": "Segment Percentage",
+            "key": "percentage"
+          }
+        ]
       },
       {
         "type": "text",
@@ -2477,13 +2529,19 @@
         "key": "legend",
         "defaultValue": false
       }
+    ],
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      }
     ]
   },
   "donut": {
     "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Donut Chart",
     "description": "Donut chart",
-    "icon": "GraphDonut",
+    "icon": "chart-donut",
     "size": {
       "width": 600,
       "height": 420
@@ -2527,6 +2585,25 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click segment",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked segment",
+            "key": "segment"
+          },
+          {
+            "label": "Segment Index",
+            "key": "index"
+          },
+          {
+            "label": "Segment Percentage",
+            "key": "percentage"
+          }
+        ]
       },
       {
         "type": "text",
@@ -2627,7 +2704,7 @@
     "documentationLink": "https://docs.budibase.com/docs/candlestick-chart",
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
-    "icon": "GraphBarVerticalStacked",
+    "icon": "chart-bar",
     "size": {
       "width": 600,
       "height": 420
@@ -2709,6 +2786,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click candlestick",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked candlestick",
+            "key": "candlestick"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
@@ -2748,7 +2836,7 @@
     "documentationLink": "https://docs.budibase.com/docs/histogram-chart",
     "name": "Histogram Chart",
     "description": "Histogram chart",
-    "icon": "Histogram",
+    "icon": "chart-bar",
     "size": {
       "width": 600,
       "height": 420
@@ -2798,6 +2886,25 @@
         "key": "bucketCount",
         "defaultValue": 10,
         "min": 2
+      },
+      {
+        "type": "event",
+        "label": "On click bucket",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bucket rows",
+            "key": "rowsInBucket"
+          },
+          {
+            "label": "Lower limit",
+            "key": "lowerLimit"
+          },
+          {
+            "label": "Upper limit",
+            "key": "upperLimit"
+          }
+        ]
       },
       {
         "type": "boolean",
@@ -2896,7 +3003,8 @@
   },
   "form": {
     "name": "Form",
-    "icon": "Form",
+    "description": "This component is a form",
+    "icon": "list",
     "hasChildren": true,
     "illegalChildren": ["section", "form", "formblock"],
     "actions": [
@@ -3005,7 +3113,7 @@
   },
   "formstep": {
     "name": "Form Step",
-    "icon": "AssetsAdded",
+    "icon": "steps",
     "hasChildren": true,
     "requiredAncestors": ["form"],
     "illegalChildren": ["section", "form", "formstep", "formblock"],
@@ -3026,7 +3134,7 @@
   },
   "fieldgroup": {
     "name": "Field Group",
-    "icon": "Group",
+    "icon": "stack",
     "requiredAncestors": ["form"],
     "illegalChildren": ["section"],
     "styles": ["size"],
@@ -3066,7 +3174,7 @@
   },
   "labelfield": {
     "name": "Text Field",
-    "icon": "Text",
+    "icon": "text-t",
     "editable": true,
     "size": {
       "width": 400,
@@ -3089,13 +3197,27 @@
       {
         "type": "tableConditions",
         "label": "Conditions",
-        "key": "conditions"
+        "key": "conditions",
+        "contextAccess": {
+          "global": true,
+          "self": false
+        }
+      },
+      {
+        "type": "text",
+        "label": "Format",
+        "key": "format",
+        "info": "Changing format will display values as text",
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
   "stringfield": {
     "name": "Text Field",
-    "icon": "Text",
+    "icon": "text-t",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3139,6 +3261,14 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -3198,7 +3328,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3208,19 +3338,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3239,7 +3369,7 @@
   },
   "numberfield": {
     "name": "Number Field",
-    "icon": "123",
+    "icon": "number-circle-nine",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3286,6 +3416,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3308,7 +3446,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3318,19 +3456,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3349,7 +3487,7 @@
   },
   "bigintfield": {
     "name": "BigInt Field",
-    "icon": "TagBold",
+    "icon": "hash-straight",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3396,13 +3534,21 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3412,19 +3558,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3443,7 +3589,7 @@
   },
   "passwordfield": {
     "name": "Password Field",
-    "icon": "LockClosed",
+    "icon": "password",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3485,6 +3631,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3496,7 +3650,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3506,19 +3660,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3537,7 +3691,7 @@
   },
   "optionsfield": {
     "name": "Options Picker",
-    "icon": "Menu",
+    "icon": "list-plus",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3718,7 +3872,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3728,19 +3882,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3759,7 +3913,7 @@
   },
   "multifieldselect": {
     "name": "Multi-select Picker",
-    "icon": "ViewList",
+    "icon": "list-checks",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -3934,7 +4088,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3944,19 +4098,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3975,7 +4129,7 @@
   },
   "booleanfield": {
     "name": "Checkbox",
-    "icon": "SelectBox",
+    "icon": "check-square",
     "editable": true,
     "size": {
       "width": 400,
@@ -4067,7 +4221,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4077,19 +4231,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4108,7 +4262,7 @@
   },
   "longformfield": {
     "name": "Long Form Field",
-    "icon": "TextAlignLeft",
+    "icon": "text-align-left",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -4199,7 +4353,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4209,19 +4363,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4240,7 +4394,7 @@
   },
   "datetimefield": {
     "name": "Date Picker",
-    "icon": "Date",
+    "icon": "calendar",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -4327,7 +4481,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4337,19 +4491,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4368,7 +4522,7 @@
   },
   "codescanner": {
     "name": "Barcode/QR Scanner",
-    "icon": "Camera",
+    "icon": "barcode",
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -4479,6 +4633,12 @@
         ]
       },
       {
+        "type": "text",
+        "label": "Zoom level",
+        "key": "defaultZoom",
+        "defaultValue": "1"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -4496,7 +4656,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4506,19 +4666,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4535,9 +4695,111 @@
       ]
     }
   },
+  "codegenerator": {
+    "name": "Barcode/QR Generator",
+    "icon": "Vignette",
+    "new": true,
+    "settings": [
+      {
+        "type": "radio",
+        "label": "Barcode/QR",
+        "key": "codeType",
+        "options": ["QR Code", "Barcode"],
+        "defaultValue": "QR Code"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": 200,
+        "required": true,
+        "options": [
+          {
+            "label": "X Small",
+            "value": 75
+          },
+          {
+            "label": "Small",
+            "value": 150
+          },
+          {
+            "label": "Medium",
+            "value": 200
+          },
+          {
+            "label": "Large",
+            "value": 250
+          },
+          {
+            "label": "X Large",
+            "value": 300
+          },
+          {
+            "label": "XX Large",
+            "value": 350
+          },
+          {
+            "label": "XXX Large",
+            "value": 400
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "key": "value",
+        "label": "Value",
+        "defaultValue": "https://docs.budibase.com/"
+      },
+      {
+        "type": "boolean",
+        "key": "showValue",
+        "label": "Display value",
+        "defaultValue": true
+      },
+
+      {
+        "section": true,
+        "name": "Customisation",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showLogo",
+            "label": "Show Logo",
+            "defaultValue": true
+          },
+          {
+            "type": "text",
+            "key": "customLogo",
+            "label": "Logo",
+            "dependsOn": {
+              "setting": "showLogo",
+              "value": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Appearance",
+        "settings": [
+          {
+            "type": "color",
+            "label": "Primary color",
+            "key": "primColor",
+            "defaultValue": "#000",
+            "dependsOn": {
+              "setting": "codeType",
+              "value": "QR Code",
+              "invert": false
+            }
+          }
+        ]
+      }
+    ]
+  },
   "signaturesinglefield": {
     "name": "Signature",
-    "icon": "AnnotatePen",
+    "icon": "signature",
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -4559,6 +4821,13 @@
         "type": "text",
         "label": "Help text",
         "key": "helpText"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Add signature",
+        "placeholder": "Add signature"
       },
       {
         "type": "boolean",
@@ -4586,7 +4855,7 @@
   },
   "embeddedmap": {
     "name": "Embedded Map",
-    "icon": "Location",
+    "icon": "map-pin",
     "styles": ["size"],
     "draggable": false,
     "size": {
@@ -4702,7 +4971,7 @@
   },
   "attachmentfield": {
     "name": "Attachment List",
-    "icon": "DocumentFragmentGroup",
+    "icon": "files",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4768,7 +5037,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4778,20 +5047,55 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
           }
         ]
       }
@@ -4799,7 +5103,7 @@
   },
   "attachmentsinglefield": {
     "name": "Single Attachment",
-    "icon": "DocumentFragment",
+    "icon": "file",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4859,7 +5163,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4869,20 +5173,55 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
           }
         ]
       }
@@ -4890,7 +5229,7 @@
   },
   "relationshipfield": {
     "name": "Relationship Picker",
-    "icon": "TaskList",
+    "icon": "git-fork",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4972,7 +5311,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4982,19 +5321,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -5003,7 +5342,7 @@
   },
   "jsonfield": {
     "name": "JSON Field",
-    "icon": "Brackets",
+    "icon": "brackets-curly",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -5067,7 +5406,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -5077,19 +5416,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -5108,7 +5447,7 @@
   },
   "s3upload": {
     "name": "S3 File Upload",
-    "icon": "UploadToCloud",
+    "icon": "cloud-arrow-up",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -5179,10 +5518,10 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "icon": "Data",
+    "icon": "database",
     "illegalChildren": ["section"],
     "hasChildren": true,
-    "actions": ["RefreshDatasource"],
+    "actions": ["RefreshDatasource", "AddDataProviderQueryExtension"],
     "size": {
       "width": 500,
       "height": 200
@@ -5294,7 +5633,7 @@
   "table": {
     "deprecated": true,
     "name": "Table",
-    "icon": "Table",
+    "icon": "table",
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
@@ -5398,7 +5737,7 @@
   },
   "daterangepicker": {
     "name": "Date Range",
-    "icon": "Calendar",
+    "icon": "calendar-plus",
     "styles": ["size"],
     "hasChildren": false,
     "size": {
@@ -5437,7 +5776,7 @@
   },
   "spectrumcard": {
     "name": "Card",
-    "icon": "PersonalizationField",
+    "icon": "cards",
     "styles": ["size"],
     "size": {
       "width": 300,
@@ -5488,8 +5827,8 @@
       },
       {
         "type": "boolean",
-        "label": "Show button",
-        "key": "showButton"
+        "key": "showButton",
+        "label": "Show button"
       },
       {
         "type": "text",
@@ -5504,9 +5843,90 @@
       }
     ]
   },
+
+  "filter": {
+    "name": "Filter",
+    "icon": "funnel",
+    "size": {
+      "width": 100,
+      "height": 35
+    },
+    "new": true,
+    "settings": [
+      {
+        "type": "dataSource/filterable",
+        "label": "Target component",
+        "required": true,
+        "key": "targetComponent",
+        "wide": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M",
+        "wide": true
+      },
+      {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text",
+        "placeholder": "Apply",
+        "defaultValue": "Apply"
+      },
+      {
+        "type": "boolean",
+        "label": "Persist filters",
+        "key": "persistFilters",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Clear filters",
+        "key": "showClear",
+        "defaultValue": false
+      },
+      {
+        "label": "",
+        "type": "filterConfiguration",
+        "key": "filterConfig",
+        "nested": true,
+        "dependsOn": "targetComponent",
+        "resetOn": "targetComponent"
+      }
+    ]
+  },
+  "filterconfig": {
+    "name": "",
+    "icon": "funnel-simple",
+    "editable": true,
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "dynamicfilter": {
+    "deprecated": true,
     "name": "Dynamic Filter",
-    "icon": "Filter",
+    "icon": "funnel",
     "size": {
       "width": 100,
       "height": 35
@@ -5559,7 +5979,7 @@
     "documentationLink": "https://docs.budibase.com/docs/chart",
     "block": true,
     "name": "Chart Block",
-    "icon": "GraphPie",
+    "icon": "chart-pie",
     "hasChildren": false,
     "size": {
       "width": 600,
@@ -5766,7 +6186,7 @@
       {
         "section": true,
         "name": "Pie Chart",
-        "icon": "GraphPie",
+        "icon": "chart-pie",
         "dependsOn": {
           "setting": "chartType",
           "value": "pie"
@@ -5801,7 +6221,7 @@
       {
         "section": true,
         "name": "Donut Chart",
-        "icon": "GraphDonut",
+        "icon": "chart-donut",
         "dependsOn": {
           "setting": "chartType",
           "value": "donut"
@@ -5836,7 +6256,7 @@
       {
         "section": true,
         "name": "Bar Chart",
-        "icon": "GraphBarVertical",
+        "icon": "chart-bar",
         "dependsOn": {
           "setting": "chartType",
           "value": "bar"
@@ -5900,7 +6320,7 @@
       {
         "section": true,
         "name": "Histogram Chart",
-        "icon": "Histogram",
+        "icon": "chart-bar",
         "dependsOn": {
           "setting": "chartType",
           "value": "histogram"
@@ -5946,7 +6366,7 @@
       {
         "section": true,
         "name": "Line Chart",
-        "icon": "GraphTrend",
+        "icon": "chart-line",
         "dependsOn": {
           "setting": "chartType",
           "value": "line"
@@ -6005,7 +6425,7 @@
       {
         "section": true,
         "name": "Area Chart",
-        "icon": "GraphAreaStacked",
+        "icon": "chart-line-up",
         "dependsOn": {
           "setting": "chartType",
           "value": "area"
@@ -6076,7 +6496,7 @@
       {
         "section": true,
         "name": "Candlestick Chart",
-        "icon": "GraphBarVerticalStacked",
+        "icon": "chart-bar",
         "dependsOn": {
           "setting": "chartType",
           "value": "candlestick"
@@ -6167,7 +6587,7 @@
     "deprecated": true,
     "block": true,
     "name": "Table Block",
-    "icon": "Table",
+    "icon": "table",
     "styles": ["size"],
     "size": {
       "width": 600,
@@ -6486,7 +6906,7 @@
   "cardsblock": {
     "block": true,
     "name": "Cards Block",
-    "icon": "PersonalizationField",
+    "icon": "cards",
     "styles": ["size"],
     "size": {
       "width": 600,
@@ -6701,7 +7121,7 @@
   "repeaterblock": {
     "block": true,
     "name": "Repeater Block",
-    "icon": "ViewList",
+    "icon": "list-dashes",
     "illegalChildren": ["section", "rowexplorer"],
     "hasChildren": true,
     "size": {
@@ -6958,8 +7378,9 @@
     ]
   },
   "markdownviewer": {
+    "deprecated": true,
     "name": "Markdown Viewer",
-    "icon": "Preview",
+    "icon": "article",
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -6980,7 +7401,7 @@
   },
   "multistepformblock": {
     "name": "Multi-step Form Block",
-    "icon": "AssetsAdded",
+    "icon": "steps",
     "block": true,
     "hasChildren": false,
     "ejectable": false,
@@ -7191,7 +7612,7 @@
   },
   "formblock": {
     "name": "Form Block",
-    "icon": "Form",
+    "icon": "list",
     "styles": ["padding", "size", "background", "border", "shadow"],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
@@ -7366,7 +7787,7 @@
   },
   "sidepanel": {
     "name": "Side Panel",
-    "icon": "RailRight",
+    "icon": "sidebar",
     "hasChildren": true,
     "ignoresLayout": true,
     "illegalChildren": ["section", "sidepanel", "modal"],
@@ -7389,7 +7810,7 @@
   },
   "modal": {
     "name": "Modal",
-    "icon": "MBox",
+    "icon": "square",
     "hasChildren": true,
     "illegalChildren": ["section", "modal", "sidepanel"],
     "ignoresLayout": true,
@@ -7434,10 +7855,61 @@
       }
     ]
   },
+  "accordion": {
+    "name": "Accordion",
+    "icon": "caret-down",
+    "friendlyName": "Accordion",
+    "description": "A collapsible Budibase container component",
+    "hasChildren": true,
+    "illegalChildren": ["modal", "sidepanel"],
+    "showSettingsBar": true,
+    "new": true,
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "placeholder": "Label",
+        "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "select",
+        "label": "Default State",
+        "key": "initialOpen",
+        "defaultValue": true,
+        "options": [
+          {
+            "label": "Open",
+            "value": true
+          },
+          {
+            "label": "Closed",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
   "rowexplorer": {
     "block": true,
     "name": "Row Explorer Block",
-    "icon": "PersonalizationField",
+    "icon": "rows",
     "size": {
       "width": 800,
       "height": 426
@@ -7560,8 +8032,20 @@
   },
   "gridblock": {
     "name": "Table",
-    "icon": "Table",
+    "icon": "table",
     "styles": ["size"],
+    "cssVariables": [
+      {
+        "label": "Header color",
+        "variable": "--custom-header-cell-background",
+        "type": "color"
+      },
+      {
+        "label": "Stripe color",
+        "variable": "--custom-stripe-cell-background",
+        "type": "color"
+      }
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -7585,7 +8069,8 @@
           "setting": "table.type",
           "value": "custom",
           "invert": true
-        }
+        },
+        "resetOn": "table"
       },
       {
         "type": "field/sortable",
@@ -7669,7 +8154,7 @@
       },
       {
         "type": "boolean",
-        "label": "High contrast",
+        "label": "Striped rows",
         "key": "stripeRows",
         "defaultValue": false
       },
@@ -7686,7 +8171,8 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "resetOn": "table"
+            "resetOn": "table",
+            "nested": true
           }
         ]
       },
@@ -7736,12 +8222,16 @@
         ]
       }
     ],
-    "actions": ["RefreshDatasource"]
+    "actions": [
+      "AddDataProviderFilterExtension",
+      "ClearRowSelection",
+      "RefreshDatasource"
+    ]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User List Field",
-    "icon": "UserGroup",
+    "icon": "users",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -7815,7 +8305,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -7825,19 +8315,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -7857,7 +8347,7 @@
   "bbreferencesinglefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User Field",
-    "icon": "User",
+    "icon": "user",
     "styles": ["size"],
     "editable": true,
     "size": {
@@ -7931,7 +8421,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -7941,19 +8431,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -7966,6 +8456,322 @@
           "label": "Value",
           "key": "value",
           "type": "string"
+        }
+      ]
+    }
+  },
+  "textv2": {
+    "new": true,
+    "name": "Text",
+    "description": "A component for displaying text",
+    "icon": "text-t",
+    "size": {
+      "width": 400,
+      "height": 24
+    },
+    "settings": [
+      {
+        "type": "text/multiline",
+        "label": "Text (Markdown supported)",
+        "key": "text",
+        "wide": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "14px",
+        "showInBar": true,
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": "12px"
+          },
+          {
+            "label": "Medium",
+            "value": "14px"
+          },
+          {
+            "label": "Large",
+            "value": "18px"
+          },
+          {
+            "label": "Extra large",
+            "value": "24px"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
+      }
+    ]
+  },
+  "pdf": {
+    "name": "PDF Generator",
+    "icon": "file-pdf",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "illegalChildren": ["sidepanel", "modal", "gridblock"],
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "start"
+    },
+    "size": {
+      "width": 800,
+      "height": 1200
+    },
+    "description": "A component to render PDFs from other Budibase components",
+    "settings": [
+      {
+        "type": "text",
+        "label": "PDF title",
+        "key": "fileName",
+        "defaultValue": "Report"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Download PDF"
+      }
+    ]
+  },
+  "pdftable": {
+    "name": "PDF Table",
+    "icon": "table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 304
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn",
+        "placeholder": "Default",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "resetOn": "datasource",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending",
+        "dependsOn": "sortColumn"
+      },
+      {
+        "type": "columns/toplevel",
+        "label": "Columns",
+        "key": "columns",
+        "resetOn": "datasource",
+        "placeholder": "First 3 columns"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      }
+    ]
+  },
+  "singlerowprovider": {
+    "name": "Single Row Provider",
+    "icon": "database",
+    "hasChildren": true,
+    "actions": ["RefreshDatasource"],
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Datasource",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "required": true,
+        "resetOn": "datasource"
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
+  },
+  "ratingfield": {
+    "name": "Rating Field",
+    "icon": "star",
+    "styles": ["size"],
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Number of stars",
+        "key": "numberOfStars",
+        "min": 1,
+        "max": 25,
+        "defaultValue": 5
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": ["XS", "S", "M", "L", "XL"],
+        "defaultValue": "L"
+      },
+      {
+        "type": "select",
+        "label": "Icon type",
+        "key": "type",
+        "options": ["Star", "Heart"],
+        "defaultValue": "Star"
+      },
+      {
+        "type": "select",
+        "label": "Colour variant",
+        "key": "variant",
+        "options": ["Primary", "Secondary", "Mono", "Gold", "Red", "Custom"],
+        "defaultValue": "Primary"
+      },
+      {
+        "type": "color",
+        "label": "Custom colour",
+        "key": "colour",
+        "dependsOn": {
+          "setting": "variant",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
         }
       ]
     }

@@ -14,7 +14,7 @@
   />
   <Space />
   <DocumentationLink
-    icon="DataUnavailable"
+    icon="database-slash"
     href="https://docs.budibase.com/docs/budibasedb#constraints"
     text="Constraint"
   />

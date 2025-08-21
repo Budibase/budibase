@@ -5,7 +5,7 @@
 </script>
 
 <Layout noPadding gap="XS">
-  <DevToolsStat label="App" value={$appStore.application?.name} />
+  <DevToolsStat label="squares-four" value={$appStore.application?.name} />
   <DevToolsStat label="Tenant" value={$appStore.application?.tenantId} />
   <DevToolsStat label="Version" value={$appStore.application?.version} />
   {#if $appStore.clientLoadTime}
@@ -23,6 +23,6 @@
     label="Components"
     value={$componentStore.mountedComponentCount}
   />
-  <DevToolsStat label="User" value={$authStore?.email} />
+  <DevToolsStat label="user" value={$authStore?.email} />
   <DevToolsStat label="Role" value={$authStore?.roleId} />
 </Layout>

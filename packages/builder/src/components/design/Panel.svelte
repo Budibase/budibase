@@ -1,26 +1,32 @@
-<script>
+<script lang="ts">
   import { Icon, Body, TooltipPosition, TooltipType } from "@budibase/bbui"
 
-  export let title
-  export let icon
-  export let iconTooltip
-  export let showAddButton = false
-  export let showBackButton = false
-  export let showCloseButton = false
-  export let onClickAddButton
-  export let onClickBackButton
-  export let onClickCloseButton
-  export let borderLeft = false
-  export let borderRight = false
-  export let borderBottomHeader = true
-  export let wide = false
-  export let extraWide = false
-  export let closeButtonIcon = "Close"
-  export let noHeaderBorder = false
-  export let titleCSS = true
+  export let title: string | undefined = ""
+  export let icon: string | undefined = ""
+  export let iconTooltip: string | undefined = ""
+  export let showAddButton: boolean | undefined = false
+  export let showBackButton: boolean | undefined = false
+  export let showCloseButton: boolean | undefined = false
+  export let onClickAddButton: () => void = () => {}
+  export let onClickBackButton: () => void = () => {}
+  export let onClickCloseButton: () => void = () => {}
+  export let borderLeft: boolean | undefined = false
+  export let borderRight: boolean | undefined = false
+  export let borderBottomHeader: boolean | undefined = true
+  export let wide: boolean | undefined = false
+  export let extraWide: boolean | undefined = false
+  export let closeButtonIcon: string | undefined = "Close"
+  export let noHeaderBorder: boolean | undefined = false
+  export let titleCSS: boolean | undefined = true
+  export let customWidth: number | undefined = undefined
 
   $: customHeaderContent = $$slots["panel-header-content"]
   $: customTitleContent = $$slots["panel-title-content"]
+
+  $: panelStyle =
+    customWidth && !isNaN(customWidth)
+      ? `min-width: ${customWidth}px; width: ${customWidth}px; flex: 0 0 ${customWidth}px;`
+      : undefined
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -31,40 +37,51 @@
   class:extraWide
   class:borderLeft
   class:borderRight
+  style={panelStyle}
 >
-  <div
-    class="header"
-    class:custom={customHeaderContent}
-    class:borderBottom={borderBottomHeader}
-    class:noHeaderBorder
-  >
-    {#if showBackButton}
-      <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
-    {/if}
-    {#if icon}
-      <Icon
-        name={icon}
-        tooltipType={TooltipType.Info}
-        tooltip={iconTooltip}
-        tooltipPosition={TooltipPosition.Top}
-      />
-    {/if}
-    <div class:title={titleCSS}>
-      {#if customTitleContent}
-        <slot name="panel-title-content" />
-      {:else}
-        <Body size="S">{title || ""}</Body>
+  {#if title || customTitleContent}
+    <div
+      class="header"
+      class:custom={customHeaderContent}
+      class:borderBottom={borderBottomHeader}
+      class:noHeaderBorder
+    >
+      {#if showBackButton}
+        <Icon name="arrow-left" hoverable on:click={onClickBackButton} />
+      {/if}
+      {#if icon}
+        <div class="icon-container">
+          <Icon
+            name={icon}
+            tooltipType={TooltipType.Info}
+            tooltip={iconTooltip}
+            tooltipPosition={TooltipPosition.Top}
+            color="var(--spectrum-global-color-static-gray-50)"
+            weight="bold"
+          />
+        </div>
+      {/if}
+      <div class:title={titleCSS}>
+        {#if customTitleContent}
+          <slot name="panel-title-content" />
+        {:else}
+          <Body
+            size="S"
+            weight="500"
+            color="var(--spectrum-global-color-gray-900)">{title || ""}</Body
+          >
+        {/if}
+      </div>
+      {#if showAddButton}
+        <div class="add-button" on:click={onClickAddButton}>
+          <Icon name="plus" />
+        </div>
+      {/if}
+      {#if showCloseButton}
+        <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
       {/if}
     </div>
-    {#if showAddButton}
-      <div class="add-button" on:click={onClickAddButton}>
-        <Icon name="Add" />
-      </div>
-    {/if}
-    {#if showCloseButton}
-      <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
-    {/if}
-  </div>
+  {/if}
 
   {#if customHeaderContent}
     <span class="custom-content-wrap">
@@ -121,6 +138,14 @@
   .header.borderBottom {
     border-bottom: var(--border-light);
   }
+
+  .icon-container {
+    background-color: #aa4321;
+    border: 0.5px solid #c96442;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
   .title {
     flex: 1 1 auto;
     width: 0;

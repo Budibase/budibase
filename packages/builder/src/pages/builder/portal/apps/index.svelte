@@ -24,26 +24,47 @@
     auth,
     admin,
     licensing,
-    environment,
     enrichedApps,
     sortBy,
+    templates,
+    featureFlags,
+    appCreationStore,
+    backups,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
+  import TemplatesModal from "@/components/start/TemplatesModal.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import { BannerType } from "@/constants/banners"
 
-  let template
   let creationModal
   let appLimitModal
   let accountLockedModal
+  let templatesModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
+  let backupErrors
 
   $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: filteredApps = filterApps($enrichedApps, searchTerm)
   $: automationErrors = getAutomationErrors(filteredApps || [])
+  $: backupErrors = getBackupErrors(filteredApps || [])
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  $: if (
+    ($appCreationStore.showCreateModal || $appCreationStore.showImportModal) &&
+    creationModal
+  ) {
+    creationModal.show()
+  }
+
+  $: if ($appCreationStore.showTemplatesModal && templatesModal) {
+    templatesModal.show()
+  }
+
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -73,10 +94,10 @@
   }
 
   const goToAutomationError = appId => {
-    const params = new URLSearchParams({
-      open: "error",
-    })
-    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
+    const automationId = Object.keys(automationErrors[appId] || {})[0]
+    if (automationId) {
+      $goto(`/builder/app/${appId}/automation/${automationId}`)
+    }
   }
 
   const errorCount = errors => {
@@ -89,38 +110,92 @@
     return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
+  const getBackupErrors = apps => {
+    const backupErrors = {}
+    for (const app of apps) {
+      if (app.backupErrors && errorCount(app.backupErrors) > 0) {
+        backupErrors[app.devId] = app.backupErrors
+      }
+    }
+    return backupErrors
+  }
+
+  const goToBackupError = appId => {
+    const backupId = Object.keys(backupErrors[appId] || {})[0]
+    if (backupId) {
+      // For now, just navigate to the app's backup page or show details
+      // Could be enhanced to show specific backup error details
+      $goto(`/builder/app/${appId}/settings/backups`)
+    }
+  }
+
+  const backupErrorMessage = appId => {
+    const app = $enrichedApps.find(app => app.devId === appId)
+    const errors = backupErrors[appId]
+    return `${app.name} - Backup error (${errorCount(errors)})`
+  }
+
   const initiateAppCreation = async () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
-    } else if ($appsStore.apps?.length) {
-      $goto("/builder/portal/apps/create")
     } else {
-      template = null
-      creationModal.show()
+      appCreationStore.showCreateModal()
     }
   }
 
   const initiateAppImport = () => {
-    template = { fromFile: true }
-    creationModal.show()
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      appCreationStore.showImportModal()
+    }
   }
 
   const autoCreateApp = async () => {
     try {
+      const template = $appCreationStore.template
+      if (!template?.key) {
+        notifications.error("No template selected")
+        return
+      }
+
+      const toTitleCase = str => {
+        return str.replace(
+          /\w\S*/g,
+          txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        )
+      }
+
       // Auto name app if has same name
       const templateKey = template.key.split("/")[1]
 
-      let appName = templateKey.replace(/-/g, " ")
-      const appsWithSameName = $appsStore.apps.filter(app =>
-        app.name?.startsWith(appName)
-      )
-      appName = `${appName} ${appsWithSameName.length + 1}`
+      let baseName = templateKey.replace(/-/g, " ")
+      baseName = toTitleCase(baseName)
+
+      // generate a unique app name and url
+      const baseUrl = baseName.toLowerCase().replace(/\s+/g, "-")
+
+      const isNameTaken = name => $appsStore.apps.some(app => app.name === name)
+      const isUrlTaken = url =>
+        $appsStore.apps.some(app => app.url?.replace(/^\//, "") === url)
+
+      let counter = 1
+      let appName = baseName
+      let appUrl = baseUrl
+
+      while (isNameTaken(appName) || isUrlTaken(appUrl)) {
+        counter++
+        appName = `${baseName} ${counter}`
+        appUrl = `${baseUrl}-${counter}`
+      }
 
       // Create form data to create app
       let data = new FormData()
       data.append("name", appName)
-      data.append("useTemplate", true)
+      data.append("url", appUrl)
+      data.append("useTemplate", "true")
       data.append("templateKey", template.key)
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
@@ -144,25 +219,39 @@
   }
 
   const stopAppCreation = () => {
-    template = null
+    appCreationStore.hideCreateModal()
+    appCreationStore.hideImportModal()
+    appCreationStore.hideTemplatesModal()
+    appCreationStore.clearTemplate()
   }
 
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
     if (templateParts.length === 2 && templateParts[0] === "app") {
-      template = {
-        key: templateKey,
+      if ($licensing?.usageMetrics?.apps >= 100) {
+        appLimitModal.show()
+        return
       }
+      appCreationStore.setTemplate({ key: templateKey })
       autoCreateApp()
     } else {
       notifications.error("Your Template URL is invalid. Please try another.")
     }
   }
 
+  const handleTemplateSelect = selectedTemplate => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+      return
+    }
+    appCreationStore.setTemplate(selectedTemplate)
+    appCreationStore.hideTemplatesModal()
+    autoCreateApp()
+  }
+
   onMount(async () => {
     try {
-      await environment.loadVariables()
       // If the portal is loaded from an external URL with a template param
       const initInfo = await auth.getInitInfo()
       if (initInfo?.init_template) {
@@ -172,12 +261,28 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
+      await templates.load()
     } catch (error) {
       notifications.error("Error getting init info")
     }
   })
 </script>
 
+{#if $featureFlags.WORKSPACES}
+  <HeroBanner
+    title="Workspaces are live"
+    linkTitle="Learn about workspaces"
+    linkHref="https://budibase.com/blog/updates/workspaces/"
+    color="var(--spectrum-global-color-gray-100)"
+    image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
+    key={BannerType.PORTAL}
+  >
+    Previously, Budibase centered everything around building a single app. With
+    Workspaces, that changes. Now, you can group multiple apps, automations, and
+    data sources together within a single workspace. Existing apps now have
+    their own workspace.
+  </HeroBanner>
+{/if}
 <Page>
   <Layout noPadding gap="L">
     {#each Object.keys(automationErrors || {}) as appId}
@@ -186,7 +291,7 @@
         dismissable
         action={() => goToAutomationError(appId)}
         type="error"
-        icon="Alert"
+        icon="warning"
         actionMessage={errorCount(automationErrors[appId]) > 1
           ? "View errors"
           : "View error"}
@@ -203,12 +308,36 @@
         message={automationErrorMessage(appId)}
       />
     {/each}
+    {#each Object.keys(backupErrors || {}) as appId}
+      <Notification
+        wide
+        dismissable
+        action={() => goToBackupError(appId)}
+        type="error"
+        icon="warning"
+        actionMessage={errorCount(backupErrors[appId]) > 1
+          ? "View errors"
+          : "View error"}
+        on:dismiss={async () => {
+          const backupId = Object.keys(backupErrors[appId] || {})[0]
+          if (backupId) {
+            await backups.clearBackupErrors(appId)
+            await appsStore.load()
+          }
+        }}
+        message={backupErrorMessage(appId)}
+      />
+    {/each}
     <div class="title">
       <div class="welcome">
         <Layout noPadding gap="XS">
-          <Heading size="L">{welcomeHeader}</Heading>
+          <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
-            Below you'll find the list of apps that you have access to
+            {#if $featureFlags.WORKSPACES}
+              Below you'll find the list of workspaces that you have access to
+            {:else}
+              Below you'll find the list of apps that you have access to
+            {/if}
           </Body>
         </Layout>
       </div>
@@ -224,58 +353,59 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                Create new app
+                {#if $featureFlags.WORKSPACES}
+                  Create new workspace
+                {:else}
+                  Create new app
+                {/if}
               </Button>
-              {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
+
+              {#if $appsStore.apps?.length > 0}
+                {#if !$admin.offlineMode}
+                  <Button
+                    size="M"
+                    secondary
+                    on:click={usersLimitLockAction || templatesModal.show}
+                  >
+                    View templates
+                  </Button>
+                {/if}
                 <Button
                   size="M"
                   secondary
-                  on:click={usersLimitLockAction ||
-                    $goto("/builder/portal/apps/templates")}
-                >
-                  View templates
-                </Button>
-              {/if}
-              {#if !$appsStore.apps?.length}
-                <Button
-                  size="L"
-                  quiet
-                  secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
-                  Import app
+                  Import {appOrWorkspace}
                 </Button>
               {/if}
             </div>
           {/if}
-          {#if $appsStore.apps.length > 1}
-            <div class="app-actions">
-              <Select
-                autoWidth
-                value={$sortBy}
-                on:change={e => {
-                  appsStore.updateSort(e.detail)
-                }}
-                placeholder={null}
-                options={[
-                  { label: "Sort by name", value: "name" },
-                  { label: "Sort by recently updated", value: "updated" },
-                  { label: "Sort by status", value: "status" },
-                ]}
-              />
-              <Search
-                placeholder="Search"
-                on:input={e => {
-                  searchTerm = e.target.value
-                }}
-                on:change={e => {
-                  if (!e.detail) {
-                    searchTerm = null
-                  }
-                }}
-              />
-            </div>
-          {/if}
+          <div class="app-actions">
+            <Select
+              autoWidth
+              value={$sortBy}
+              on:change={e => {
+                appsStore.updateSort(e.detail)
+              }}
+              placeholder={null}
+              options={[
+                { label: "Sort by name", value: "name" },
+                { label: "Sort by recently updated", value: "updated" },
+                { label: "Sort by status", value: "status" },
+              ]}
+            />
+            <Search
+              placeholder="Search"
+              on:input={e => {
+                searchTerm = e.target.value
+              }}
+              on:change={e => {
+                if (!e.detail) {
+                  searchTerm = null
+                }
+              }}
+            />
+          </div>
         </div>
 
         <div class="app-table">
@@ -307,7 +437,17 @@
   width="600px"
   on:hide={stopAppCreation}
 >
-  <CreateAppModal {template} />
+  <CreateAppModal
+    key={$appCreationStore.showImportModal
+      ? "import"
+      : $appCreationStore.showCreateModal
+        ? "create"
+        : "none"}
+  />
+</Modal>
+
+<Modal bind:this={templatesModal}>
+  <TemplatesModal onSelectTemplate={handleTemplateSelect} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
@@ -351,7 +491,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
   }
 
   .empty-wrapper {
@@ -391,7 +531,7 @@
       max-width: none;
     }
     /*  Hide download apps icon */
-    .app-actions :global(> .spectrum-Icon) {
+    .app-actions :global(> i) {
       display: none;
     }
     .app-actions > :global(*) {

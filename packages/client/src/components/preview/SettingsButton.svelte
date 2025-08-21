@@ -41,7 +41,9 @@
     border-radius: 2px;
     color: var(--spectrum-global-color-gray-700);
     display: flex;
-    transition: color 0.13s ease-in-out, background-color 0.13s ease-in-out;
+    transition:
+      color 0.13s ease-in-out,
+      background-color 0.13s ease-in-out;
   }
   div:hover {
     background-color: var(--spectrum-global-color-gray-200);

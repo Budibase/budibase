@@ -4,6 +4,7 @@
     selectedScreen,
     componentStore,
     tables,
+    datasources,
     viewsV2,
   } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
@@ -21,14 +22,24 @@
     nested,
   })
   $: schemaFields = getSchemaFields(parameters?.tableId)
-  $: tableOptions = $tables.list.map(table => ({
-    label: table.name,
-    resourceId: table._id,
-  }))
-  $: viewOptions = $viewsV2.list.map(view => ({
-    label: view.name,
-    resourceId: view.id,
-  }))
+  $: datasourceMap = Object.fromEntries(
+    ($datasources.list || []).map(ds => [ds._id, ds.name])
+  )
+  $: tableOptions = $tables.list.map(table => {
+    const datasourceName = datasourceMap[table.sourceId] || "Unknown"
+    return {
+      label: `${datasourceName} - ${table.name}`,
+      resourceId: table._id,
+    }
+  })
+  $: viewOptions = $viewsV2.list.map(view => {
+    const table = $tables.list.find(t => t._id === view.tableId)
+    const datasourceName = datasourceMap[table.sourceId] || "Unknown"
+    return {
+      label: `${datasourceName} - ${view.name}`,
+      resourceId: view.id,
+    }
+  })
   $: options = [...(tableOptions || []), ...(viewOptions || [])]
 
   const getSchemaFields = resourceId => {

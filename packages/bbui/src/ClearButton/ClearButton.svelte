@@ -1,6 +1,8 @@
-<script>
-  export let small = false
-  export let disabled
+<script lang="ts">
+  import Icon from "../Icon/Icon.svelte"
+
+  export let small: boolean = false
+  export let disabled: boolean = false
 </script>
 
 <button
@@ -9,11 +11,5 @@
   class:spectrum-ClearButton--small={small}
   {disabled}
 >
-  <svg
-    class="spectrum-Icon spectrum-UIIcon-Cross75"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-css-icon-Cross75" />
-  </svg>
+  <Icon name="x" size={small ? "XS" : "S"} />
 </button>

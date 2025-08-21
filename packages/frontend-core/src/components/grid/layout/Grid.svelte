@@ -4,11 +4,12 @@
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
-  import { createAPIClient } from "../../../api"
+  import { type APIClient, createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
   import ClipboardHandler from "../controls/ClipboardHandler.svelte"
+  import { type ExternalClipboardData } from "../../../stores/gridClipboard"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -23,9 +24,20 @@
   import { createGridWebsocket } from "../lib/websocket"
   import * as Constants from "../lib/constants"
 
-  export let API = null
-  export let datasource = null
-  export let schemaOverrides = null
+  type SchemaOverride = {
+    displayName?: string
+    type?: string
+    disabled?: boolean
+    roles?: any
+  }
+
+  export let API: APIClient | null | undefined = null
+  // TODO: work out best type to suit datasource
+  export let datasource: any = null
+  export let schemaOverrides:
+    | Record<string, SchemaOverride>
+    | null
+    | undefined = null
   export let canAddRows = true
   export let canExpandRows = true
   export let canEditRows = true
@@ -42,12 +54,14 @@
   export let fixedRowHeight = null
   export let notifySuccess = null
   export let notifyError = null
-  export let buttons = null
+  export let buttons: { text: string; onClick: any }[] | null | undefined = null
   export let buttonsCollapsed = false
   export let buttonsCollapsedText = null
   export let darkMode = false
-  export let isCloud = null
+  export let isCloud: boolean | null | undefined = null
   export let aiEnabled = false
+  export let canHideColumns = true
+  export let externalClipboard: ExternalClipboardData | undefined = undefined
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -76,6 +90,8 @@
     contentLines,
     gridFocused,
     error,
+    definitionMissing,
+    dispatch,
   } = context
 
   // Keep config store up to date with props
@@ -104,7 +120,16 @@
     darkMode,
     isCloud,
     aiEnabled,
+    canHideColumns,
+    externalClipboard,
   })
+
+  // missing definition, propagate this
+  $: if ($definitionMissing) {
+    dispatch("definitionMissing", {
+      datasource,
+    })
+  }
 
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
@@ -207,7 +232,9 @@
   <BulkDeleteHandler />
   <ClipboardHandler />
   <KeyboardManager />
-  <slot />
+  {#if $loaded}
+    <slot />
+  {/if}
 </div>
 
 <style>
@@ -217,6 +244,10 @@
     --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
     --grid-background-alt: var(--spectrum-global-color-gray-100);
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--spectrum-global-color-gray-100)
+    );
     --cell-background: var(--grid-background);
     --cell-background-hover: var(--grid-background-alt);
     --cell-background-alt: var(--cell-background);
@@ -234,6 +265,7 @@
     overflow: hidden;
     background: var(--grid-background);
     min-height: var(--min-height);
+    font-weight: 500;
   }
   .grid,
   .grid :global(*) {
@@ -246,7 +278,10 @@
     cursor: grabbing !important;
   }
   .grid.stripe {
-    --cell-background-alt: var(--spectrum-global-color-gray-75);
+    --cell-background-alt: var(
+      --custom-stripe-cell-background,
+      var(--spectrum-global-color-gray-75)
+    );
   }
 
   /* Data layers */
@@ -352,11 +387,18 @@
 
   /* Overrides for quiet */
   .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)),
-  .grid.quiet :global(.sticky-column .row > .cell),
-  .grid.quiet :global(.new-row .row > .cell:not(:last-child)) {
+  .grid.quiet :global(.sticky-column .row .cell),
+  .grid.quiet :global(.new-row .row > .cell:not(:last-child)),
+  .grid.quiet :global(.header-cell:not(:last-child) .cell) {
     border-right: none;
   }
   .grid.quiet :global(.sticky-column:before) {
     display: none;
+  }
+  .grid.quiet:not(.stripe) {
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--grid-background)
+    );
   }
 </style>

@@ -1,10 +1,11 @@
 import { Document } from "../../document"
 import { User } from "../../global"
-import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
+import { Readable } from "stream"
+import { LoopSummary } from "./StepInputsOutputs"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -14,7 +15,9 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  DATETIME = "datetime",
   ATTACHMENT = "attachment",
+  LONGFORM = "longform",
 }
 
 export enum AutomationCustomIOType {
@@ -37,6 +40,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  CATEGORIES = "categories",
 }
 
 export enum AutomationTriggerStepId {
@@ -63,16 +67,26 @@ export enum AutomationActionStepId {
   EXECUTE_BASH = "EXECUTE_BASH",
   OUTGOING_WEBHOOK = "OUTGOING_WEBHOOK",
   EXECUTE_SCRIPT = "EXECUTE_SCRIPT",
+  EXECUTE_SCRIPT_V2 = "EXECUTE_SCRIPT_V2",
   EXECUTE_QUERY = "EXECUTE_QUERY",
   SERVER_LOG = "SERVER_LOG",
   DELAY = "DELAY",
   FILTER = "FILTER",
+  API_REQUEST = "API_REQUEST",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
   TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
   BRANCH = "BRANCH",
+  CLASSIFY_CONTENT = "CLASSIFY_CONTENT",
+  PROMPT_LLM = "PROMPT_LLM",
+  TRANSLATE = "TRANSLATE",
+  SUMMARISE = "SUMMARISE",
+  GENERATE_TEXT = "GENERATE_TEXT",
+  EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
+  EXTRACT_STATE = "EXTRACT_STATE",
+  LOOP_V2 = "LOOP_V2",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -99,7 +113,7 @@ export interface SendEmailOpts {
   // workspaceId If finer grain controls being used then this will lookup config for workspace.
   workspaceId?: string
   // user If sending to an existing user the object can be provided, this is used in the context.
-  user: User
+  user?: User
   // from If sending from an address that is not what is configured in the SMTP config.
   from?: string
   // contents If sending a custom email then can supply contents which will be added to it.
@@ -108,8 +122,8 @@ export interface SendEmailOpts {
   subject: string
   // info Pass in a structure of information to be stored alongside the invitation.
   info?: any
-  cc?: boolean
-  bcc?: boolean
+  cc?: string
+  bcc?: string
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]
@@ -135,38 +149,30 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData?: {
-    row?: Row
-    meta: {
-      [key: string]: unknown
-    }
-    id: string
-    revision: string
-    oldRow?: Row
-  }
+  testData?: AutomationTriggerResultOutputs
 }
 
-interface BaseIOStructure {
+export interface BaseIOStructure {
   type?: AutomationIOType
   subtype?: AutomationIOType
   customType?: AutomationCustomIOType
   title?: string
   description?: string
-  dependsOn?: string
+  dependsOn?: string | { field: string; value: string | string[] }
   enum?: string[]
   pretty?: string[]
-  properties?: {
-    [key: string]: BaseIOStructure
-  }
+  properties?: AutomationIOProps
   required?: string[]
   readonly?: true
 }
 
 export interface InputOutputBlock {
-  properties: {
-    [key: string]: BaseIOStructure
-  }
+  properties: AutomationIOProps
   required?: string[]
+}
+
+export interface AutomationIOProps {
+  [key: string]: BaseIOStructure
 }
 
 export enum AutomationFeature {
@@ -176,6 +182,8 @@ export enum AutomationFeature {
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
   MAX_ITERATIONS = "max_iterations_reached",
+  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
+  INCORRECT_TYPE = "INCORRECT_TYPE",
 }
 
 export enum AutomationStatus {
@@ -184,25 +192,50 @@ export enum AutomationStatus {
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
   NO_CONDITION_MET = "No branch condition met",
+  TIMED_OUT = "timed_out",
 }
 
 export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
+  TIMED_OUT = "Automation timed out.",
+}
+
+export interface AutomationStepResultOutputs {
+  success: boolean
+  [key: string]: any
+}
+
+export interface AutomationStepResultInputs {
+  [key: string]: any
+}
+
+export interface AutomationStepResult {
+  id: string
+  name?: string
+  icon?: string
+  stepId: AutomationActionStepId
+  inputs: AutomationStepResultInputs
+  outputs: AutomationStepResultOutputs
+}
+
+export type AutomationTriggerResultInputs = Record<string, any>
+export type AutomationTriggerResultOutputs = Record<string, any>
+
+export interface AutomationTriggerResult {
+  id: string
+  name?: string
+  icon?: string
+  stepId: AutomationTriggerStepId
+  inputs?: AutomationTriggerResultInputs | null
+  outputs: AutomationTriggerResultOutputs
 }
 
 export interface AutomationResults {
   automationId?: string
-  status?: AutomationStatus
-  trigger?: AutomationTrigger
-  steps: {
-    stepId: AutomationTriggerStepId | AutomationActionStepId
-    inputs: {
-      [key: string]: any
-    }
-    outputs: {
-      [key: string]: any
-    }
-  }[]
+  status: AutomationStatus
+  trigger: AutomationTriggerResult
+  steps: [AutomationTriggerResult, ...AutomationStepResult[]]
+  state?: Record<string, any>
 }
 
 export interface DidNotTriggerResponse {
@@ -236,6 +269,7 @@ export type ActionImplementation<TInputs, TOutputs> = (
     inputs: TInputs
   } & AutomationStepInputBase
 ) => Promise<TOutputs>
+
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
@@ -248,7 +282,7 @@ export type AutomationAttachment = {
 
 export type AutomationAttachmentContent = {
   filename: string
-  content: ReadStream | NodeJS.ReadableStream
+  content: Readable
 }
 
 export type BucketedContent = AutomationAttachmentContent & {
@@ -277,4 +311,53 @@ export type UpdatedRowEventEmitter = {
 export enum LoopStepType {
   ARRAY = "Array",
   STRING = "String",
+}
+
+export enum ContentType {
+  EMAIL = "email",
+  DOCUMENT = "document",
+  BLOG_POST = "blog_post",
+  CHAT_MESSAGE = "chat_message",
+  LETTER = "letter",
+  PROPOSAL = "proposal",
+  OTHER = "other",
+}
+
+export const PrettyContentTypes = {
+  [ContentType.EMAIL]: "Email",
+  [ContentType.DOCUMENT]: "Document",
+  [ContentType.BLOG_POST]: "Blog post",
+  [ContentType.CHAT_MESSAGE]: "Chat message",
+  [ContentType.LETTER]: "Letter",
+  [ContentType.PROPOSAL]: "Proposal",
+  [ContentType.OTHER]: "Other",
+}
+
+export enum DocumentSourceType {
+  URL = "URL",
+  ATTACHMENT = "Attachment",
+}
+
+export enum SupportedFileType {
+  PDF = "pdf",
+  JPG = "jpg",
+  PNG = "png",
+  JPEG = "jpeg",
+}
+
+export const ImageContentTypes = [
+  "png",
+  "jpg",
+  "jpeg",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/jpeg",
+]
+
+export interface LoopStorage {
+  results: Record<string, AutomationStepResult[]>
+  summary: LoopSummary
+  nestedSummaries: Record<string, LoopSummary[]>
+  maxStoredResults: number
 }

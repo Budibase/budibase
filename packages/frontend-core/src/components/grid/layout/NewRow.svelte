@@ -4,7 +4,7 @@
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
-  import { GutterWidth, NewRowID } from "../lib/constants"
+  import { DefaultRowHeight, GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
   import { getCellID } from "../lib/utils"
@@ -33,6 +33,7 @@
     columnRenderMap,
     visibleColumns,
     scrollTop,
+    height,
   } = getContext("grid")
 
   let visible = false
@@ -47,6 +48,8 @@
   $: hasNoRows = !$rows.length
   $: renderedRowCount = $renderedRows.length
   $: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
+  $: spaceBelow = $height - offset - $rowHeight
+  $: flipButtons = spaceBelow < 36 + DefaultRowHeight
 
   const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
     // If we have a next page of data then we aren't truly at the bottom, so we
@@ -173,7 +176,7 @@
       transition:fade|local={{ duration: 130 }}
       class:offset={!$displayColumn}
     >
-      <Icon name="Add" size="S" />
+      <Icon name="plus" size="S" />
     </div>
   {/if}
 </TempTooltip>
@@ -190,7 +193,7 @@
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
       <div class="row">
         <GutterCell expandable on:expand={addViaModal} rowHovered>
-          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+          <Icon name="plus" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
             <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
@@ -244,7 +247,11 @@
         </div>
       </GridScrollWrapper>
     </div>
-    <div class="buttons" transition:fade|local={{ duration: 130 }}>
+    <div
+      class="buttons"
+      class:flip={flipButtons}
+      transition:fade|local={{ duration: 130 }}
+    >
       <Button size="M" cta on:click={addRow} disabled={isAdding}>
         <div class="button-with-keys">
           Save
@@ -336,6 +343,9 @@
   }
   .button-with-keys :global(> div) {
     padding-top: 2px;
+  }
+  .buttons.flip {
+    top: calc(var(--offset) - 36px - var(--default-row-height) / 2);
   }
 
   /* Sticky column styles */

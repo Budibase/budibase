@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
+  authStore,
   builderStore,
   appStore,
   blockStore,
@@ -10,15 +11,13 @@ import {
   eventStore,
   hoverStore,
   stateStore,
+  routeStore,
+  notificationStore,
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
-import { Readable } from "svelte/store"
 import {
   Screen,
-  Layout,
   Theme,
   AppCustomTheme,
   PreviewDevice,
@@ -27,7 +26,21 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  Table,
+  DataFetchDatasource,
 } from "@budibase/types"
+import { ActionTypes } from "@/constants"
+import { APIClient } from "@budibase/frontend-core"
+import BlockComponent from "./components/BlockComponent.svelte"
+import Block from "./components/Block.svelte"
+
+// Set up global PWA install prompt handler
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault()
+    window.deferredPwaPrompt = e
+  })
+}
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -36,18 +49,12 @@ import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
 
-// Initialise spectrum icons
-// eslint-disable-next-line local-rules/no-budibase-imports
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
-loadSpectrumIcons()
-
 // Extend global window scope
 declare global {
   interface Window {
     // Data from builder
-    "##BUDIBASE_APP_ID##"?: string
+    "##BUDIBASE_APP_ID##": string
     "##BUDIBASE_IN_BUILDER##"?: true
-    "##BUDIBASE_PREVIEW_LAYOUT##"?: Layout
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
     "##BUDIBASE_PREVIEW_ID##"?: number
@@ -58,17 +65,15 @@ declare global {
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
-    "##BUDIBASE_LOCATION##"?: {
-      protocol: string
-      hostname: string
-      port: string
-    }
     "##BUDIBASE_SNIPPETS##"?: Snippet[]
-    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError>[]
+    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError[]>
     "##BUDIBASE_CUSTOM_COMPONENTS##"?: CustomComponent[]
 
     // Other flags
     MIGRATING_APP: boolean
+
+    // PWA install prompt
+    deferredPwaPrompt: any
 
     // Client additions
     handleBuilderRuntimeEvent: (type: string, data: any) => void
@@ -76,6 +81,7 @@ declare global {
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+    INIT_TIME: number
   }
 }
 
@@ -85,36 +91,27 @@ export interface SDK {
   Provider: any
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
+  fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
+  getRelationshipSchemaAdditions: (schema: Record<string, any>) => Promise<any>
+  enrichButtonActions: any
   generateGoldenSample: any
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-    }
-  }
+  createContextStore: any
+  builderStore: typeof builderStore
+  authStore: typeof authStore
+  notificationStore: typeof notificationStore
+  environmentStore: typeof environmentStore
+  appStore: typeof appStore
+  Block: typeof Block
+  BlockComponent: typeof BlockComponent
 }
 
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-}>
-
-export type Context = Readable<Record<string, any>>
-
-let app: ClientApp
+let app: ClientApp | UpdatingApp
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
   builderStore.set({
     ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
-    layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
@@ -124,7 +121,6 @@ const loadBudibase = async () => {
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
-    location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
     componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
@@ -139,9 +135,11 @@ const loadBudibase = async () => {
   )
 
   if (window.MIGRATING_APP) {
-    new UpdatingApp({
-      target: window.document.body,
-    })
+    if (!app) {
+      app = new UpdatingApp({
+        target: window.document.body,
+      })
+    }
     return
   }
 
@@ -188,6 +186,9 @@ const loadBudibase = async () => {
     } else if (type === "builder-state") {
       const [[key, value]] = Object.entries(data)
       stateStore.actions.setValue(key, value)
+    } else if (type === "builder-url-test-data") {
+      const { route, testValue } = data
+      routeStore.actions.setTestUrlParams(route, testValue)
     }
   }
 

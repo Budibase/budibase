@@ -7,7 +7,6 @@
     onDestroy,
     tick,
   } from "svelte"
-  import Logo from "assets/bb-emblem.svg?raw"
   import { Utils, memo } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "@/stores/builder"
 
@@ -134,9 +133,6 @@
   // Size of the view port
   let viewDims = {}
 
-  // Edge around the draggable content
-  let contentDragPadding = 200
-
   // Auto scroll
   let scrollInterval
 
@@ -157,8 +153,8 @@
   // Background pattern
   let bgDim = 24
 
-  // Scale prop for the icon
-  let dotDefault = 0.006
+  // Scale prop background dots
+  let dotDefault = 1
 
   let viewDragStart = { x: 0, y: 0 }
   let viewDragOffset = [0, 0]
@@ -206,8 +202,8 @@
     const { x, y } = pos
     const { w, h } = dims
     return `
-      --posX: ${x}px; --posY: ${y}px; 
-      --scale: ${scale}; 
+      --posX: ${x}px; --posY: ${y}px;
+      --scale: ${scale};
       --wrapH: ${h}px; --wrapW: ${w}px;
       `
   }
@@ -234,7 +230,7 @@
           : {}),
       }))
 
-      offsetX = offsetX - xBump
+      offsetX -= xBump
     } else if (e.ctrlKey || e.metaKey) {
       // Scale the content on scrolling
       let updatedScale
@@ -261,7 +257,7 @@
             }
           : {}),
       }))
-      offsetY = offsetY - yBump
+      offsetY -= yBump
     }
   }
 
@@ -335,8 +331,8 @@
                 scrollX: state.scrollX + xInterval,
                 scrollY: state.scrollY + yInterval,
               }))
-              offsetX = offsetX + xInterval
-              offsetY = offsetY + yInterval
+              offsetX += xInterval
+              offsetY += yInterval
             }
           }
 
@@ -488,22 +484,35 @@
   const viewToFocusEle = () => {
     if ($focusElement) {
       const viewWidth = viewDims.width
+      const viewHeight = viewDims.height
 
       // The amount to shift the content in order to center the trigger on load.
-      // The content is also padded with `contentDragPadding`
       // The sidebar offset factors into the left positioning of the content here.
       const targetX =
         contentWrap.getBoundingClientRect().x -
         $focusElement.x +
-        (viewWidth / 2 - $focusElement.width / 2)
+        (viewWidth - $focusElement.width) / 2
+
+      const targetY =
+        contentWrap.getBoundingClientRect().y -
+        $focusElement.y +
+        (viewHeight - $focusElement.height) / 2
 
       // Update the content position state
       // Shift the content up slightly to accommodate the padding
       contentPos.update(state => ({
         ...state,
         x: targetX,
-        y: -(contentDragPadding / 2),
+        y: Number.isInteger($focusElement.targetY)
+          ? $focusElement.targetY
+          : targetY,
       }))
+
+      // Be sure to set the initial offset correctly
+      offsetX = targetX
+      offsetY = Number.isInteger($focusElement.targetY)
+        ? $focusElement.targetY
+        : targetY
     }
   }
 
@@ -550,7 +559,6 @@
   aria-label="Viewport for building automations"
   on:mouseup={onMouseUp}
   on:mousemove={Utils.domDebounce(onMouseMove)}
-  style={`--dragPadding: ${contentDragPadding}px;`}
 >
   <svg class="draggable-background" style={`--dotSize: ${dotSize};`}>
     <!-- Small 2px offset to tuck the points under the viewport on load-->
@@ -561,8 +569,7 @@
       patternUnits="userSpaceOnUse"
       patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
     >
-      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-      {@html Logo}
+      <ellipse rx="1" ry="1" cx="1" cy="1" />
     </pattern>
     <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
   </svg>
@@ -617,7 +624,6 @@
     transform-origin: 50% 50%;
     transform: scale(var(--scale));
     user-select: none;
-    padding: var(--dragPadding);
   }
 
   .content-wrap {
@@ -638,14 +644,13 @@
     left: 0;
     pointer-events: none;
     z-index: -1;
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-75);
   }
 
-  .draggable-background :global(svg g path) {
-    fill: #91919a;
+  .draggable-background :global(ellipse) {
+    fill: var(--spectrum-global-color-gray-300);
   }
-
-  .draggable-background :global(svg g) {
+  .draggable-background :global(ellipse) {
     transform: scale(var(--dotSize));
   }
 </style>

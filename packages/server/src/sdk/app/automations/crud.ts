@@ -40,7 +40,8 @@ function cleanAutomationInputs(automation: Automation) {
     if (step == null) {
       continue
     }
-    for (let inputName of Object.keys(step.inputs)) {
+    for (const key of Object.keys(step.inputs || {})) {
+      const inputName = key as keyof typeof step.inputs
       if (!step.inputs[inputName] || step.inputs[inputName] === "") {
         delete step.inputs[inputName]
       }
@@ -98,9 +99,9 @@ export async function get(automationId: string) {
   return trimUnexpectedObjectFields(result)
 }
 
-export async function find(ids: string[]) {
+export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
   const db = getDb()
-  const result = await db.getMultiple<PersistedAutomation>(ids)
+  const result = await db.getMultiple<PersistedAutomation>(ids, opts)
   return result.map(trimUnexpectedObjectFields)
 }
 
@@ -281,7 +282,8 @@ function guardInvalidUpdatesAndThrow(
     const readonlyFields = Object.keys(
       step.schema.inputs.properties || {}
     ).filter(k => step.schema.inputs.properties[k].readonly)
-    readonlyFields.forEach(readonlyField => {
+    readonlyFields.forEach(key => {
+      const readonlyField = key as keyof typeof step.inputs
       const oldStep = oldStepDefinitions.find(i => i.id === step.id)
       if (step.inputs[readonlyField] !== oldStep?.inputs[readonlyField]) {
         throw new HTTPError(
@@ -295,7 +297,7 @@ function guardInvalidUpdatesAndThrow(
 
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
   // This will ensure all the automation fields (and nothing else) is mapped to the result
-  const allRequired: RequiredKeys<Automation> = {
+  const allRequired: RequiredKeys<Omit<Automation, "_deleted">> = {
     _id: automation._id,
     _rev: automation._rev,
     definition: automation.definition,

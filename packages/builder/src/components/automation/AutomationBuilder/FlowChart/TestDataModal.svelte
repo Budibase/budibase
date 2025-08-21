@@ -102,6 +102,10 @@
     if (rowTriggers.includes(trigger?.event)) {
       const tableId = trigger?.inputs?.tableId
 
+      if (!jsonUpdate.row) {
+        jsonUpdate.row = {}
+      }
+
       // Reset the tableId as it must match the trigger
       if (jsonUpdate?.row?.tableId !== tableId) {
         jsonUpdate.row.tableId = tableId
@@ -118,7 +122,6 @@
     await tick()
     try {
       await automationStore.actions.test($selectedAutomation.data, testData)
-      $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
     }
@@ -161,7 +164,7 @@
         block={trigger}
         on:update={e => {
           const { testData: updatedTestData } = e.detail
-          testData = updatedTestData
+          testData = parseTestData(updatedTestData)
         }}
       />
     </div>

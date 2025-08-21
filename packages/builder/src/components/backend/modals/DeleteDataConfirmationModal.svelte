@@ -202,9 +202,7 @@
         {/if}
       </p>
     {/if}
-    <p class="warning">
-      <b>This action cannot be undone.</b>
-    </p>
+    <p class="warning">This action cannot be undone.</p>
   </div>
 </ConfirmDialog>
 

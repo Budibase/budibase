@@ -5,6 +5,7 @@ body {
   height: 100%;
   width: 100%;
   min-height: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -23,7 +24,6 @@ body {
   --grey-8: var(--spectrum-global-color-gray-800);
   --grey-9: var(--spectrum-global-color-gray-900);
   --spectrum-global-color-yellow-1000: #d8b500;
-
   color: var(--ink);
   background-color: var(--background-alt);
 }

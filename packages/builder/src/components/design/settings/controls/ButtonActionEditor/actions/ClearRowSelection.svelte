@@ -18,7 +18,13 @@
     label: block._instanceName,
     value: `${block._id}-table`,
   }))
-  $: componentOptions = tables.concat(tableBlocks)
+  $: gridBlocks = findAllMatchingComponents($selectedScreen?.props, component =>
+    component._component.endsWith("gridblock")
+  ).map(block => ({
+    label: block._instanceName,
+    value: block._id,
+  }))
+  $: componentOptions = tables.concat(tableBlocks).concat(gridBlocks)
 </script>
 
 <div class="root">

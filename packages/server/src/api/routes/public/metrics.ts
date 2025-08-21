@@ -1,5 +1,5 @@
 import controller from "../../controllers/public/metrics"
-import Endpoint from "./utils/Endpoint"
+import { Endpoint } from "@budibase/backend-core"
 
 const read = []
 

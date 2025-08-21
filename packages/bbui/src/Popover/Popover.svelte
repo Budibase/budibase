@@ -18,12 +18,14 @@
   import type { KeyboardEventHandler } from "svelte/elements"
   import { PopoverAlignment } from "../constants"
 
-  export let anchor: HTMLElement
-  export let align: PopoverAlignment = PopoverAlignment.Right
+  export let anchor: HTMLElement | undefined
+  export let align: PopoverAlignment | `${PopoverAlignment}` =
+    PopoverAlignment.Right
   export let portalTarget: string | undefined = undefined
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined
   export let maxHeight: number | undefined = undefined
+  export let borderRadius: string | undefined = undefined
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
@@ -141,7 +143,9 @@
       class:hidden={!showPopover}
       class:blockPointerEvents
       role="presentation"
-      style="height: {customHeight}; --customZIndex: {customZIndex};"
+      style="height: {customHeight}; --customZIndex: {customZIndex}; {borderRadius
+        ? `border-radius: ${borderRadius}`
+        : ``}"
       transition:fly|local={{
         y: -20,
         duration: animate ? animationDuration : 0,
@@ -157,7 +161,7 @@
 <style>
   .spectrum-Popover {
     min-width: var(--spectrum-global-dimension-size-2000);
-    border-color: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-gray-200);
     overflow: auto;
     transition: opacity 260ms ease-out;
     filter: none;

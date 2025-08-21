@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/tags/dist/index-vars.css"
 </script>
 

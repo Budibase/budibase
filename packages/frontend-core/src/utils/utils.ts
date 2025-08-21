@@ -1,7 +1,12 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 import { cloneDeep } from "lodash"
-import { SearchFilterGroup, UISearchFilter } from "@budibase/types"
+import {
+  SearchFilterGroup,
+  UISearchFilter,
+  UITableResource,
+  UIViewResource,
+} from "@budibase/types"
 
 export const sleep = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms))
@@ -14,7 +19,7 @@ export const sleep = (ms: number) =>
  */
 export const sequential = <
   TReturn,
-  TFunction extends (...args: any[]) => Promise<TReturn>
+  TFunction extends (...args: any[]) => Promise<TReturn>,
 >(
   fn: TFunction
 ): TFunction => {
@@ -54,15 +59,19 @@ export const sequential = <
  * @param minDelay the minimum delay between invocations
  * @returns a debounced version of the callback
  */
-export const debounce = (callback: Function, minDelay = 1000) => {
+export const debounce = <T extends (...args: any[]) => any>(
+  callback: T,
+  minDelay = 1000
+) => {
   let timeout: ReturnType<typeof setTimeout>
-  return async (...params: any[]) => {
+  return async (...params: Parameters<T>): Promise<ReturnType<T>> => {
     return new Promise(resolve => {
       if (timeout) {
         clearTimeout(timeout)
       }
       timeout = setTimeout(async () => {
-        resolve(await callback(...params))
+        const result = await callback(...params)
+        resolve(result)
       }, minDelay)
     })
   }
@@ -131,7 +140,7 @@ export const domDebounce = (callback: Function) => {
 export const buildFormBlockButtonConfig = (props?: {
   _id?: string
   actionType?: string
-  dataSource?: { resourceId: string }
+  dataSource?: UITableResource | UIViewResource
   notificationOverride?: boolean
   actionUrl?: string
   showDeleteButton?: boolean
@@ -397,14 +406,19 @@ export function parseFilter(filter: UISearchFilter) {
 
   const update = cloneDeep(filter)
 
-  update.groups = update.groups
-    ?.map(group => {
-      group.filters = group.filters?.filter((filter: any) => {
-        return filter.field && filter.operator
+  if (update.groups) {
+    update.groups = update.groups
+      .map(group => {
+        if (group.filters) {
+          group.filters = group.filters.filter((filter: any) => {
+            return filter.field && filter.operator
+          })
+          return group.filters?.length ? group : null
+        }
+        return group
       })
-      return group.filters?.length ? group : null
-    })
-    .filter((group): group is SearchFilterGroup => !!group)
+      .filter((group): group is SearchFilterGroup => !!group)
+  }
 
   return update
 }

@@ -9,7 +9,7 @@
 
 <div>
   <Tags>
-    <Tag icon="LockClosed">{title}</Tag>
+    <Tag icon="lock">{title}</Tag>
   </Tags>
 </div>
 

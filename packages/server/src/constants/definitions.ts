@@ -1,3 +1,5 @@
+import { AppNavigation } from "@budibase/types"
+
 export interface Table {
   _id: string
   _rev?: string
@@ -39,4 +41,15 @@ export interface BudibaseAppMetadata {
   instance: { _id: string }
   updatedAt: Date
   createdAt: Date
+}
+
+export function defaultAppNavigator(name: string): AppNavigation {
+  return {
+    navigation: "Top",
+    title: name,
+    navWidth: "Large",
+    navBackground: "var(--spectrum-global-color-static-blue-1200)",
+    navTextColor: "var(--spectrum-global-color-static-white)",
+    links: [],
+  }
 }

@@ -1,8 +1,8 @@
 import events from "events"
-import { newid } from "../utils"
+import { newid, timeout } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
-import { Job, JobId, JobInformation } from "bull"
+import { Job, JobId, JobInformation, DoneCallback } from "bull"
 
 function jobToJobInformation(job: Job): JobInformation {
   let cron = ""
@@ -33,12 +33,13 @@ function jobToJobInformation(job: Job): JobInformation {
   }
 }
 
-interface JobMessage<T = any> extends Partial<Job<T>> {
-  id: string
-  timestamp: number
-  queue: Queue<T>
-  data: any
-  opts?: JobOptions
+export interface TestQueueMessage<T = any>
+  extends Pick<
+    Job<T>,
+    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+  > {
+  manualTrigger?: boolean
+  _isDiscarded?: boolean
 }
 
 /**
@@ -47,14 +48,20 @@ interface JobMessage<T = any> extends Partial<Job<T>> {
  * internally to register when messages are available to the consumers - in can
  * support many inputs and many consumers.
  */
-class InMemoryQueue implements Partial<Queue> {
+export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _name: string
   _opts?: QueueOptions
-  _messages: JobMessage[]
+  _messages: TestQueueMessage<T>[]
   _queuedJobIds: Set<string>
-  _emitter: NodeJS.EventEmitter<{ message: [JobMessage]; completed: [Job] }>
+  _emitter: NodeJS.EventEmitter<{
+    message: [TestQueueMessage<T>]
+    completed: [Job<T>, any]
+    removed: [TestQueueMessage<T>]
+    error: [Job<T>, Error]
+  }>
   _runCount: number
   _addCount: number
+  _attempts: number
 
   /**
    * The constructor the queue, exactly the same as that of Bulls.
@@ -70,6 +77,7 @@ class InMemoryQueue implements Partial<Queue> {
     this._runCount = 0
     this._addCount = 0
     this._queuedJobIds = new Set<string>()
+    this._attempts = opts?.defaultJobOptions?.attempts || 1
   }
 
   /**
@@ -83,25 +91,59 @@ class InMemoryQueue implements Partial<Queue> {
   async process(concurrencyOrFunc: number | any, func?: any) {
     func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
     this._emitter.on("message", async message => {
-      let resp = func(message)
+      // For the purpose of testing, don't trigger cron jobs immediately.
+      // Require the test to trigger them manually with timestamps.
+      if (!message.manualTrigger && message.opts?.repeat != null) {
+        return
+      }
 
-      async function retryFunc(fnc: any) {
+      function execute() {
+        if (func.length === 1) {
+          // Simulating bull, if there is not a "done" callback, execution will resolve then the function is processed
+          return func(message)
+        }
+        return new Promise((resolve, reject) => {
+          const done: DoneCallback = (err?: Error | null, result?: any) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(result)
+            }
+          }
+          func(message, done)
+        })
+      }
+
+      const maxAttempts = this._attempts
+
+      async function retryFunc(fnc: any, attempt = 0) {
         try {
-          await fnc
+          return await fnc
         } catch (e: any) {
-          await helpers.wait(50)
-          await retryFunc(func(message))
+          attempt++
+          if (attempt < maxAttempts && !message._isDiscarded) {
+            await helpers.wait(100 * attempt)
+            return await retryFunc(execute(), attempt)
+          } else {
+            throw e
+          }
         }
       }
 
-      if (resp.then != null) {
-        try {
-          await retryFunc(resp)
-          this._emitter.emit("completed", message as Job)
-        } catch (e: any) {
-          console.error(e)
+      try {
+        const result = await retryFunc(execute())
+        this._emitter.emit("completed", message as Job<T>, result)
+
+        const indexToRemove = this._messages.indexOf(message)
+        if (indexToRemove === -1) {
+          throw "Failed deleting a processed message"
         }
+        this._messages.splice(indexToRemove, 1)
+      } catch (e: any) {
+        console.error(e)
+        this._emitter.emit("error", message as Job<T>, e)
       }
+
       this._runCount++
       const jobId = message.opts?.jobId?.toString()
       if (jobId && message.opts?.removeOnComplete) {
@@ -114,7 +156,6 @@ class InMemoryQueue implements Partial<Queue> {
     return this as any
   }
 
-  // simply puts a message to the queue and emits to the queue for processing
   /**
    * Simple function to replicate the add message functionality of Bull, putting
    * a new message on the queue. This then emits an event which will be used to
@@ -123,7 +164,13 @@ class InMemoryQueue implements Partial<Queue> {
    * a JSON message as this is required by Bull.
    * @param repeat serves no purpose for the import queue.
    */
-  async add(data: any, opts?: JobOptions) {
+  async add(data: T | string, optsOrT?: JobOptions | T) {
+    if (typeof data === "string") {
+      throw new Error("doesn't support named jobs")
+    }
+
+    const opts = optsOrT as JobOptions
+
     const jobId = opts?.jobId?.toString()
     if (jobId && this._queuedJobIds.has(jobId)) {
       console.log(`Ignoring already queued job ${jobId}`)
@@ -137,15 +184,23 @@ class InMemoryQueue implements Partial<Queue> {
       this._queuedJobIds.add(jobId)
     }
 
+    const messageId = newid()
+
     const pushMessage = () => {
-      const message: JobMessage = {
-        id: newid(),
+      const message: TestQueueMessage = {
+        id: messageId,
         timestamp: Date.now(),
         queue: this as unknown as Queue,
         data,
         opts,
+        discard: async () => {
+          message._isDiscarded = true
+        },
       }
       this._messages.push(message)
+      if (this._messages.length > 1000) {
+        this._messages.shift()
+      }
       this._addCount++
       this._emitter.emit("message", message)
     }
@@ -156,7 +211,32 @@ class InMemoryQueue implements Partial<Queue> {
     } else {
       pushMessage()
     }
-    return { id: jobId } as any
+    return {
+      id: jobId,
+      finished: () =>
+        new Promise((resolve, reject) => {
+          const errorHandler = (job: Job<T>, error: Error) => {
+            if (job.id !== messageId) {
+              return
+            }
+            this._emitter.off("error", errorHandler)
+            this._emitter.off("completed", completedHandler)
+            reject(error)
+          }
+
+          const completedHandler = (job: Job<T>, result: any) => {
+            if (job.id !== messageId) {
+              return
+            }
+            this._emitter.off("error", errorHandler)
+            this._emitter.off("completed", completedHandler)
+            resolve(result)
+          }
+
+          this._emitter.on("error", errorHandler)
+          this._emitter.on("completed", completedHandler)
+        }),
+    } as any
   }
 
   /**
@@ -164,13 +244,14 @@ class InMemoryQueue implements Partial<Queue> {
    */
   async close() {}
 
-  /**
-   * This removes a cron which has been implemented, this is part of Bull API.
-   * @param cronJobId The cron which is to be removed.
-   */
-  async removeRepeatableByKey(cronJobId: string) {
-    // TODO: implement for testing
-    console.log(cronJobId)
+  async removeRepeatableByKey(id: string) {
+    for (const [idx, message] of this._messages.entries()) {
+      if (message.id === id) {
+        this._messages.splice(idx, 1)
+        this._emitter.emit("removed", message)
+        return
+      }
+    }
   }
 
   async removeJobs(_pattern: string) {
@@ -191,6 +272,16 @@ class InMemoryQueue implements Partial<Queue> {
       }
     }
     return null
+  }
+
+  manualTrigger(id: JobId) {
+    for (const message of this._messages) {
+      if (message.id === id) {
+        this._emitter.emit("message", { ...message, manualTrigger: true })
+        return
+      }
+    }
+    throw new Error(`Job with id ${id} not found`)
   }
 
   on(event: string, callback: (...args: any[]) => void): Queue {
@@ -214,7 +305,19 @@ class InMemoryQueue implements Partial<Queue> {
   }
 
   async getRepeatableJobs() {
-    return this._messages.map(job => jobToJobInformation(job as Job))
+    return this._messages
+      .filter(job => job.opts?.repeat != null)
+      .map(job => jobToJobInformation(job as Job))
+  }
+
+  async whenCurrentJobsFinished() {
+    do {
+      await timeout(50)
+    } while (this.hasRunningJobs())
+  }
+
+  private hasRunningJobs() {
+    return this._addCount > this._runCount
   }
 }
 

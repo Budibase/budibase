@@ -1,46 +1,48 @@
-<script>
+<script lang="ts">
   import { Icon, TooltipType, TooltipPosition } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
-  import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
+  import type { UIUser } from "@budibase/types"
 
-  export let icon
-  export let iconTooltip
-  export let withArrow = false
-  export let withActions = true
-  export let showActions = false
-  export let indentLevel = 0
-  export let text
-  export let border = true
-  export let selected = false
-  export let opened = false
-  export let draggable = false
-  export let iconText
-  export let iconColor
-  export let scrollable = false
-  export let highlighted = false
-  export let rightAlignIcon = false
-  export let id
-  export let showTooltip = false
-  export let selectedBy = null
-  export let compact = false
-  export let hovering = false
-  export let disabled = false
+  export let icon: string | null = null
+  export let iconTooltip: string = ""
+  export let withArrow: boolean = false
+  export let withActions: boolean = true
+  export let showActions: boolean = false
+  export let indentLevel: number = 0
+  export let text: string
+  export let subtext: string | undefined = undefined
+  export let border: boolean = true
+  export let selected: boolean = false
+  export let opened: boolean = false
+  export let draggable: boolean = false
+  export let iconText: string = ""
+  export let iconColor: string = ""
+  export let scrollable: boolean = false
+  export let highlighted: boolean = false
+  export let rightAlignIcon: boolean = false
+  export let id: string = ""
+  export let showTooltip: boolean = false
+  export let selectedBy: UIUser[] | null = null
+  export let compact: boolean = false
+  export let hovering: boolean = false
+  export let disabled: boolean = false
+  export let nonSelectable: boolean = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
 
-  let contentRef
+  let contentRef: HTMLDivElement
 
   $: selected && contentRef && scrollToView()
-  $: style = getStyle(indentLevel, selectedBy)
+  $: style = getStyle(indentLevel)
 
   const onClick = () => {
     scrollToView()
     dispatch("click")
   }
 
-  const onIconClick = e => {
+  const onIconClick = (e: Event) => {
     e.stopPropagation()
     dispatch("iconClick")
   }
@@ -53,11 +55,8 @@
     scrollApi.scrollTo(bounds)
   }
 
-  const getStyle = (indentLevel, selectedBy) => {
+  const getStyle = (indentLevel: number) => {
     let style = `padding-left:calc(${indentLevel * 14}px);`
-    if (selectedBy) {
-      style += `--selected-by-color:${helpers.getUserColor(selectedBy)};`
-    }
     return style
   }
 </script>
@@ -76,6 +75,8 @@
   class:highlighted
   class:selectedBy
   class:disabled
+  class:nonSelectable
+  class:multiline={subtext}
   on:dragend
   on:dragstart
   on:dragover
@@ -104,7 +105,7 @@
         class="icon arrow"
         on:click={onIconClick}
       >
-        <Icon size="S" name="ChevronRight" />
+        <Icon size="XS" weight="bold" name="caret-right" />
       </div>
     {/if}
 
@@ -116,17 +117,24 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <Icon
-          color={iconColor}
-          size="S"
+          size="M"
           name={icon}
+          color={iconColor}
           tooltip={iconTooltip}
           tooltipType={TooltipType.Info}
           tooltipPosition={TooltipPosition.Right}
         />
       </div>
     {/if}
-    <div class="text" title={showTooltip ? text : null}>
-      <span title={text}>{text}</span>
+    <div class="nav-item-body" title={showTooltip ? text : null}>
+      <div class="text">
+        <span title={text}>{text}</span>
+        {#if subtext}
+          <span class="subtext">
+            {subtext}
+          </span>
+        {/if}
+      </div>
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />
       {/if}
@@ -148,38 +156,64 @@
 
 <style>
   .nav-item {
-    cursor: pointer;
     color: var(--grey-7);
     transition: background-color
-      var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
-    padding: 0 var(--spacing-l) 0;
+      var(--spectrum-global-animation-duration-100, 50ms) ease-in-out;
+    padding: 0 var(--spacing-xl) 0;
+    margin: 0 8px;
     height: 32px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    border: 0.5px solid transparent;
+  }
+  .nav-item.multiline {
+    height: 52px;
+  }
+  .nav-item.nonSelectable {
+    cursor: inherit;
   }
   .nav-item.scrollable {
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
   }
   .nav-item.highlighted {
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-global-color-gray-300);
     --avatars-background: var(--spectrum-global-color-gray-200);
   }
+
+  .nav-item.highlighted:hover {
+    background-color: var(--spectrum-global-color-gray-400) !important;
+    color: var(--spectrum-global-color-gray-900);
+    border-radius: 0px !important;
+  }
   .nav-item.selected {
-    background-color: var(--spectrum-global-color-gray-300) !important;
+    background-color: var(--spectrum-global-color-gray-200) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
-    color: var(--ink);
+    color: var(--spectrum-global-color-gray-900);
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+  }
+  :is(.nav-item.selected):has(+ :is(ul)) {
+    border-radius: 8px 8px 0 0 !important;
+  }
+  .nav-item.selected:hover {
+    border-radius: 8px !important;
+  }
+  .nav-item.selected .icon {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+  .nav-item.selected .nav-item-body {
+    color: var(--spectrum-global-color-gray-900) !important;
   }
   .nav-item.disabled span {
     color: var(--spectrum-global-color-gray-700);
   }
-  .nav-item:hover,
+  .nav-item:not(.nonSelectable):hover,
   .hovering {
     background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
   }
   .nav-item:hover .actions,
   .hovering .actions,
@@ -194,9 +228,8 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    width: max-content;
     position: relative;
-    padding-left: var(--spacing-l);
+    padding-left: var(--spacing-m);
     box-sizing: border-box;
   }
 
@@ -220,12 +253,14 @@
   }
   .icon.right {
     order: 4;
+    flex: 1;
+    justify-content: flex-end;
   }
   .icon.arrow {
     flex: 0 0 20px;
     pointer-events: all;
     order: 0;
-    transition: transform 100ms linear;
+    transition: transform 50ms linear;
   }
   .icon.arrow.absolute {
     position: absolute;
@@ -236,8 +271,8 @@
 
   .compact {
     position: absolute;
-    left: 6px;
-    padding: 8px;
+    left: 1px;
+    padding: 6px;
     margin-left: -8px;
   }
   .icon.arrow :global(svg) {
@@ -261,26 +296,39 @@
     flex: 0 0 34px;
   }
 
-  .text {
-    font-weight: 600;
-    font-size: 12px;
+  .nav-item-body {
+    font-weight: 500;
+    font-size: var(--spectrum-global-dimension-font-size-100);
     flex: 1 1 auto;
+    letter-spacing: -0.02em;
     color: var(--spectrum-global-color-gray-900);
     order: 2;
     width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    overflow: hidden;
+    pointer-events: none;
+    gap: var(--spacing-s);
   }
-  .text span {
+  .nav-item-body span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .scrollable .text {
-    flex: 0 0 auto;
-    max-width: 160px;
+  .scrollable .nav-item-body {
+    flex: 0 1 auto;
     width: auto;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .subtext {
+    color: var(--spectrum-global-color-gray-700);
+    font-weight: normal;
   }
 
   .actions {

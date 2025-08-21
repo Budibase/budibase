@@ -1,15 +1,19 @@
 <script lang="ts">
-  import { getContext } from "svelte"
-  import InnerFormBlock from "./InnerFormBlock.svelte"
   import { Utils } from "@budibase/frontend-core"
-  import FormBlockWrapper from "./FormBlockWrapper.svelte"
+  import type {
+    TableSchema,
+    UITableResource,
+    UIViewResource,
+  } from "@budibase/types"
+  import { getContext } from "svelte"
   import { get } from "svelte/store"
-  import { TableSchema, UIDatasource } from "@budibase/types"
+  import FormBlockWrapper from "./FormBlockWrapper.svelte"
+  import InnerFormBlock from "./InnerFormBlock.svelte"
 
   type Field = { name: string; active: boolean }
 
   export let actionType: string
-  export let dataSource: UIDatasource
+  export let dataSource: UITableResource | UIViewResource
   export let size: string
   export let disabled: boolean
   export let fields: (Field | string)[]
@@ -30,8 +34,8 @@
   // Legacy
   export let showDeleteButton: boolean
   export let showSaveButton: boolean
-  export let saveButtonLabel: boolean
-  export let deleteButtonLabel: boolean
+  export let saveButtonLabel: string
+  export let deleteButtonLabel: string
 
   const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
@@ -107,7 +111,7 @@
     return [...fields, ...defaultFields].filter(field => field.active)
   }
 
-  const fetchSchema = async (datasource: UIDatasource) => {
+  const fetchSchema = async (datasource: { resourceId: string }) => {
     schema = (await fetchDatasourceSchema(datasource)) || {}
   }
 </script>

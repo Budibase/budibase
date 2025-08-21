@@ -6,7 +6,7 @@
 
 <div class="cell">
   {#if value != null}
-    <Icon name="Data" />
+    <Icon name="database" />
     <div>{value || 0}</div>
   {/if}
 </div>

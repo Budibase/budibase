@@ -18,12 +18,13 @@ import * as emails from "../../utilities/email"
 export async function loginUser(user: User) {
   const sessionId = coreUtils.newid()
   const tenantId = tenancy.getTenantId()
-  await sessions.createASession(user._id!, {
+  const sessionResult = await sessions.createASession(user._id!, {
     sessionId,
     tenantId,
     email: user.email,
   })
-  return jwt.sign(
+
+  const token = jwt.sign(
     {
       userId: user._id,
       sessionId,
@@ -32,6 +33,11 @@ export async function loginUser(user: User) {
     },
     coreEnv.JWT_SECRET!
   )
+
+  return {
+    token,
+    invalidatedSessionCount: sessionResult.invalidatedSessionCount,
+  }
 }
 
 export async function logout(opts: PlatformLogoutOpts) {

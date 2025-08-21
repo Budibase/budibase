@@ -47,23 +47,23 @@ export enum DatasourceFieldType {
 }
 
 export enum SourceName {
-  POSTGRES = "POSTGRES",
-  DYNAMODB = "DYNAMODB",
-  MONGODB = "MONGODB",
-  ELASTICSEARCH = "ELASTICSEARCH",
-  COUCHDB = "COUCHDB",
-  SQL_SERVER = "SQL_SERVER",
-  S3 = "S3",
   AIRTABLE = "AIRTABLE",
-  MYSQL = "MYSQL",
   ARANGODB = "ARANGODB",
-  REST = "REST",
-  ORACLE = "ORACLE",
-  GOOGLE_SHEETS = "GOOGLE_SHEETS",
-  FIRESTORE = "FIRESTORE",
-  REDIS = "REDIS",
-  SNOWFLAKE = "SNOWFLAKE",
   BUDIBASE = "BUDIBASE",
+  COUCHDB = "COUCHDB",
+  DYNAMODB = "DYNAMODB",
+  ELASTICSEARCH = "ELASTICSEARCH",
+  FIRESTORE = "FIRESTORE",
+  GOOGLE_SHEETS = "GOOGLE_SHEETS",
+  MONGODB = "MONGODB",
+  MYSQL = "MYSQL",
+  ORACLE = "ORACLE",
+  POSTGRES = "POSTGRES",
+  REDIS = "REDIS",
+  REST = "REST",
+  S3 = "S3",
+  SNOWFLAKE = "SNOWFLAKE",
+  SQL_SERVER = "SQL_SERVER",
 }
 
 export enum IncludeRelationship {
@@ -157,7 +157,7 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: DatasourceConfig
+  datasource?: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }
@@ -174,6 +174,7 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  patch?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
   getExternalSchema?(): Promise<string>
   defineTypeCastingFromSchema?(schema: {
@@ -211,7 +212,8 @@ export interface DatasourcePlus extends IntegrationBase {
   query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
+    entities: Record<string, Table>,
+    filter?: string[]
   ): Promise<Schema>
   getTableNames(): Promise<string[]>
 }

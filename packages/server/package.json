@@ -32,16 +32,7 @@
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev": "yarn run dev:stack:up && nodemon",
     "dev:built": "yarn run dev:stack:up && yarn run run:docker",
-    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
-    "initialise": "node scripts/initialise.js",
-    "env:multi:enable": "node scripts/multiTenancy.js enable",
-    "env:multi:disable": "node scripts/multiTenancy.js disable",
-    "env:selfhost:enable": "node scripts/selfhost.js enable",
-    "env:selfhost:disable": "node scripts/selfhost.js disable",
-    "env:localdomain:enable": "node scripts/localdomain.js enable",
-    "env:localdomain:disable": "node scripts/localdomain.js disable",
-    "env:account:enable": "node scripts/account.js enable",
-    "env:account:disable": "node scripts/account.js disable"
+    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
   },
   "keywords": [
     "budibase"
@@ -49,6 +40,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "10.0.3",
     "@aws-sdk/client-dynamodb": "3.709.0",
     "@aws-sdk/client-s3": "3.709.0",
@@ -69,6 +61,8 @@
     "@google-cloud/firestore": "7.8.0",
     "@koa/cors": "5.0.0",
     "@koa/router": "13.1.0",
+    "@modelcontextprotocol/sdk": "^1.11.4",
+    "@octokit/rest": "^22.0.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
     "airtable": "0.12.2",
@@ -85,14 +79,16 @@
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.26.0",
+    "dd-trace": "5.56.0",
     "dotenv": "8.2.0",
-    "form-data": "4.0.0",
+    "extract-zip": "^2.0.1",
+    "form-data": "4.0.4",
     "global-agent": "3.0.0",
     "google-auth-library": "^8.0.1",
     "google-spreadsheet": "npm:@budibase/google-spreadsheet@4.1.5",
+    "http-graceful-shutdown": "^3.1.12",
     "ioredis": "5.3.2",
-    "isolated-vm": "^4.7.2",
+    "isolated-vm": "^6.0.1",
     "jimp": "1.1.4",
     "joi": "17.6.0",
     "js-yaml": "4.1.0",
@@ -112,7 +108,7 @@
     "mysql2": "3.9.8",
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
-    "openai": "4.59.0",
+    "openai": "5.12.1",
     "openapi-types": "9.3.1",
     "oracledb": "6.5.1",
     "pg": "8.10.0",
@@ -144,10 +140,11 @@
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
     "@types/jest": "29.5.5",
+    "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
-    "@types/koa-send": "^4.1.6",
     "@types/koa__cors": "5.0.0",
     "@types/koa__router": "12.0.4",
+    "@types/koa-send": "^4.1.6",
     "@types/lodash": "4.14.200",
     "@types/mssql": "9.1.5",
     "@types/node-fetch": "2.6.4",
@@ -156,12 +153,13 @@
     "@types/pouchdb": "6.4.2",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",
+    "@types/swagger-jsdoc": "^6.0.4",
     "@types/tar": "6.1.5",
     "@types/tmp": "0.2.6",
     "@types/uuid": "8.3.4",
     "chance": "^1.1.12",
     "copyfiles": "2.4.1",
-    "docker-compose": "0.23.17",
+    "docker-compose": "1.2.0",
     "ioredis-mock": "8.9.0",
     "jest": "29.7.0",
     "jest-extended": "^4.0.2",
@@ -177,9 +175,12 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "5.7.2",
-    "update-dotenv": "1.1.1",
+    "undici": "^5.28.4",
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
+  },
+  "resolutions": {
+    "@budibase/pro": "npm:@budibase/pro@latest"
   },
   "nx": {
     "targets": {
@@ -196,8 +197,12 @@
       },
       "build": {
         "inputs": [
+          "{projectRoot}/src",
           "{projectRoot}/builder",
-          "{projectRoot}/client"
+          "{projectRoot}/client",
+          "{projectRoot}/scripts",
+          "{projectRoot}/package.json",
+          "{projectRoot}/tsconfig*.json"
         ],
         "outputs": [
           "{projectRoot}/builder",

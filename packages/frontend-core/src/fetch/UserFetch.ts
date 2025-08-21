@@ -9,8 +9,11 @@ import {
 } from "@budibase/types"
 
 interface UserFetchQuery {
-  appId: string
-  paginated: boolean
+  appId?: string
+  paginated?: boolean
+  string?: {
+    email: string
+  }
 }
 
 interface UserDefinition {

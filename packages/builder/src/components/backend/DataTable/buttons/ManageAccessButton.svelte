@@ -12,7 +12,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { PermissionSource } from "@budibase/types"
   import { capitalise } from "@/helpers"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { Roles } from "@/constants/backend"
 
   export let resourceId
@@ -27,12 +27,19 @@
   $: fetchPermissions(resourceId)
   $: loadDependantInfo(resourceId)
   $: roleMismatch = checkRoleMismatch(permissions)
-  $: selectedRole = roleMismatch ? null : permissions?.[0]?.value
-  $: readableRole = selectedRole
-    ? $roles.find(x => x._id === selectedRole)?.uiMetadata.displayName
-    : null
+  $: selectedRoleID = roleMismatch ? null : permissions?.[0]?.value
+  $: selectedRole = $roles.find(x => x._id === selectedRoleID)
+  $: selectedRoleColor = selectedRole?.uiMetadata?.color
+  $: selectedRoleHighlight = selectedRoleColor
+    ? window
+        .getComputedStyle(document.body)
+        .getPropertyValue(
+          selectedRoleColor.substring(4, selectedRoleColor.length - 1)
+        )
+    : "#ff0000"
+
+  $: readableRole = selectedRoleID ? selectedRole?.uiMetadata.displayName : null
   $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
-  $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
 
   $: builtInRoles = builtins
     .map(roleId => $roles.find(x => x._id === roleId))
@@ -102,7 +109,7 @@
   }
 
   const changePermission = async role => {
-    if (role === selectedRole) {
+    if (role === selectedRoleID) {
       return
     }
     try {
@@ -128,10 +135,10 @@
 <DetailPopover title="Select access role" {showPopover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="LockClosed"
-      selected={open || highlight}
+      icon="lock"
+      selected={open || selectedRoleHighlight}
       quiet
-      accentColor={highlight ? "#ff0000" : null}
+      accentColor={selectedRoleHighlight}
     >
       {buttonLabel}
     </ActionButton>
@@ -156,7 +163,7 @@
     </div>
     <InfoDisplay
       error
-      icon="Alert"
+      icon="warning"
       body="Your previous configuration is shown above.<br/> Please choose a single role for read and write access."
     />
   {/if}
@@ -167,7 +174,7 @@
         title={role.uiMetadata.displayName}
         subtitle={role.uiMetadata.description}
         hoverable
-        selected={selectedRole === role._id}
+        selected={selectedRoleID === role._id}
         icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
@@ -178,7 +185,7 @@
         title={role.uiMetadata.displayName}
         subtitle={role.uiMetadata.description}
         hoverable
-        selected={selectedRole === role._id}
+        selected={selectedRoleID === role._id}
         icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}

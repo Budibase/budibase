@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { RestAuthType } from "./datasource"
 import { Row } from "./row"
 
 export interface QuerySchema {
@@ -7,16 +8,21 @@ export interface QuerySchema {
   subtype?: string
 }
 
+export type QueryVerb = "read" | "create" | "update" | "delete" | "patch"
+
 export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields | any
+  fields: RestQueryFields &
+    SQLQueryFields &
+    MongoQueryFields &
+    GoogleSheetsQueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
   readable: boolean
-  queryVerb: string
+  queryVerb: QueryVerb
   // flag to state whether the default bindings are empty strings (old behaviour) or null
   nullDefaultSupport?: boolean
 }
@@ -56,8 +62,36 @@ export interface RestQueryFields {
   bodyType?: BodyType
   method?: string
   authConfigId?: string
+  authConfigType?: RestAuthType
   pagination?: PaginationConfig
   paginationValues?: PaginationValues
+}
+export interface SQLQueryFields {
+  sql?: string
+}
+
+export interface MongoQueryFields {
+  extra?: {
+    collection?: string
+    actionType:
+      | "findOne"
+      | "find"
+      | "updateOne"
+      | "updateMany"
+      | "findOneAndUpdate"
+      | "count"
+      | "distinct"
+      | "insertOne"
+      | "deleteOne"
+      | "deleteMany"
+  }
+  json?: object | string
+}
+
+export interface GoogleSheetsQueryFields {
+  sheet?: string
+  rowIndex?: string
+  row?: Row
 }
 
 export interface PaginationConfig {

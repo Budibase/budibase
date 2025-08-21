@@ -1,21 +1,47 @@
-import { get } from "svelte/store"
+import { derived, get, Writable } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "@/stores/builder"
-import { BudiStore } from "../BudiStore"
+import { appStore, workspaceAppStore } from "@/stores/builder"
+import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+import { featureFlags } from "../portal"
+import { notifications } from "@budibase/bbui"
 
-export const INITIAL_NAVIGATION_STATE = {
+export interface AppNavigationStore extends AppNavigation {}
+
+export const INITIAL_NAVIGATION_STATE: AppNavigationStore = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<AppNavigation> {
+export interface DerivedAppNavigationStore extends AppNavigationStore {}
+
+export class NavigationStore extends DerivedBudiStore<
+  AppNavigationStore,
+  DerivedAppNavigationStore
+> {
   constructor() {
-    super(INITIAL_NAVIGATION_STATE)
+    const makeDerivedStore = (store: Writable<AppNavigationStore>) => {
+      return derived(
+        [store, workspaceAppStore, featureFlags],
+        ([$store, $workspaceAppStore, $featureFlags]) => {
+          if (!$featureFlags.WORKSPACES) {
+            return $store
+          }
+          const navigation = $workspaceAppStore.selectedWorkspaceApp?.navigation
+
+          return {
+            ...$store,
+            ...(navigation ?? INITIAL_NAVIGATION_STATE),
+          }
+        }
+      )
+    }
+
+    super(INITIAL_NAVIGATION_STATE, makeDerivedStore)
   }
 
-  syncAppNavigation(nav: AppNavigation) {
+  syncAppNavigation(nav?: AppNavigation) {
     this.update(state => ({
       ...state,
       ...nav,
@@ -27,14 +53,27 @@ export class NavigationStore extends BudiStore<AppNavigation> {
   }
 
   async save(navigation: AppNavigation) {
-    const appId = get(appStore).appId
-    const app = await API.saveAppMetadata(appId, { navigation })
-    if (app.navigation) {
-      this.syncAppNavigation(app.navigation)
+    const { selectedWorkspaceApp } = get(workspaceAppStore)
+    if (!selectedWorkspaceApp) {
+      notifications.error("Non selected workspace app")
+      return
     }
+
+    await API.navigation.updateNavigation(selectedWorkspaceApp._id!, {
+      navigation,
+    })
+    this.syncAppNavigation(navigation)
   }
 
-  async saveLink(url: string, title: string, roleId: string) {
+  async addLink({
+    url,
+    title,
+    roleId,
+  }: {
+    url: string
+    title: string
+    roleId: string
+  }) {
     const navigation = get(this.store)
     let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
 
@@ -49,7 +88,8 @@ export class NavigationStore extends BudiStore<AppNavigation> {
       type: "link",
       roleId,
     })
-    await this.save({
+
+    this.syncAppNavigation({
       ...navigation,
       links: [...links],
     })
@@ -84,6 +124,13 @@ export class NavigationStore extends BudiStore<AppNavigation> {
   syncMetadata(metadata: UIObject) {
     const { navigation } = metadata
     this.syncAppNavigation(navigation)
+  }
+
+  async refresh() {
+    const appId = get(appStore).appId
+    const appPackage = await API.fetchAppPackage(appId)
+
+    this.syncAppNavigation(appPackage.application.navigation)
   }
 }
 

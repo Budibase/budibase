@@ -78,6 +78,8 @@ globals:
   offlineMode: "0"
   # @ignore (only needs to be set in our cloud environment)
   accountPortalUrl: ""
+  # @ignore (used for making internal API calls to the account portal when hosting in k8s)
+  internalAccountPortalUrl: ""
   # @ignore (only needs to be set in our cloud environment)
   accountPortalApiKey: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
@@ -243,6 +245,10 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing the
+    # container. This is used to give the apps service time to finish processing
+    # any requests before shutting down. You shouldn't need to change this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for apps pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -333,6 +339,11 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing
+    # the container. This is used to give the automation worker service time to
+    # finish processing any requests before shutting down. You shouldn't need to
+    # change this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for automation worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -425,6 +436,11 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing
+    # the container. This is used to give the worker service time to finish
+    # processing any requests before shutting down. You shouldn't need to change
+    # this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -625,6 +641,13 @@ services:
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:
 #   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
+# Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
+#
+# To have a specific password persist, you can set the adminPassword value.
+# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
+#
+# adminPassword: ""
+
 couchdb:
   # -- The number of replicas to run in the CouchDB cluster. We set this to
   # 1 by default to make things simpler, but you can set it to 3 if you need

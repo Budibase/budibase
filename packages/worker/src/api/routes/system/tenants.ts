@@ -1,13 +1,4 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/system/tenants"
-import { middleware } from "@budibase/backend-core"
+import { adminRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router.delete(
-  "/api/system/tenants/:tenantId",
-  middleware.adminOnly,
-  controller.destroy
-)
-
-export default router
+adminRoutes.delete("/api/system/tenants/:tenantId", controller.destroy)

@@ -1,5 +1,11 @@
 import * as automation from "../index"
-import { LoopStepType, FieldType, Table, Datasource } from "@budibase/types"
+import {
+  LoopStepType,
+  FieldType,
+  Table,
+  Datasource,
+  FilterCondition,
+} from "@budibase/types"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import {
   DatabaseName,
@@ -7,11 +13,8 @@ import {
 } from "../../integrations/tests/utils"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
-import { automations } from "@budibase/shared-core"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
-
-const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("Automation Scenarios", () => {
   const config = new TestConfiguration()
@@ -256,7 +259,7 @@ describe("Automation Scenarios", () => {
         })
         .filter({
           field: "{{ steps.2.rows.0.value }}",
-          condition: FilterConditions.EQUAL,
+          condition: FilterCondition.EQUAL,
           value: 20,
         })
         .serverLog({ text: "Equal condition met" })
@@ -282,7 +285,7 @@ describe("Automation Scenarios", () => {
         })
         .filter({
           field: "{{ steps.2.rows.0.value }}",
-          condition: FilterConditions.NOT_EQUAL,
+          condition: FilterCondition.NOT_EQUAL,
           value: 20,
         })
         .serverLog({ text: "Not Equal condition met" })
@@ -295,37 +298,37 @@ describe("Automation Scenarios", () => {
 
     const testCases = [
       {
-        condition: FilterConditions.EQUAL,
+        condition: FilterCondition.EQUAL,
         value: 10,
         rowValue: 10,
         expectPass: true,
       },
       {
-        condition: FilterConditions.NOT_EQUAL,
+        condition: FilterCondition.NOT_EQUAL,
         value: 10,
         rowValue: 20,
         expectPass: true,
       },
       {
-        condition: FilterConditions.GREATER_THAN,
+        condition: FilterCondition.GREATER_THAN,
         value: 10,
         rowValue: 15,
         expectPass: true,
       },
       {
-        condition: FilterConditions.LESS_THAN,
+        condition: FilterCondition.LESS_THAN,
         value: 10,
         rowValue: 5,
         expectPass: true,
       },
       {
-        condition: FilterConditions.GREATER_THAN,
+        condition: FilterCondition.GREATER_THAN,
         value: 10,
         rowValue: 5,
         expectPass: false,
       },
       {
-        condition: FilterConditions.LESS_THAN,
+        condition: FilterCondition.LESS_THAN,
         value: 10,
         rowValue: 15,
         expectPass: false,

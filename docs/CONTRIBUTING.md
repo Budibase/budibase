@@ -90,7 +90,7 @@ Component libraries are collections of components as well as the definition of t
 
 #### 1. Prerequisites
 
-- NodeJS version `20.x.x`
+- NodeJS version `22.x.x`
 - Python version `3.x`
 
 ### Using asdf (recommended)
@@ -108,7 +108,7 @@ You can install them following any of the steps described below:
   - Installation steps: https://asdf-vm.com/guide/getting-started.html
   - asdf plugin add nodejs
   - asdf plugin add python
-  - npm install -g yarn
+  - asdf plugin add yarn
 
 ### Using NVM and pyenv
 

@@ -6,6 +6,7 @@ import {
   AutomationTriggerStepId,
   RowAttachment,
   FieldType,
+  WebhookTriggerInputs,
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
@@ -99,7 +100,7 @@ async function updateAutomations(prodAppId: string, db: Database) {
     if (
       automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
     ) {
-      const old = automation.definition.trigger.inputs
+      const old = automation.definition.trigger.inputs as WebhookTriggerInputs
       automation.definition.trigger.inputs = {
         schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
         triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),
@@ -126,6 +127,8 @@ async function getTemplateStream(template: TemplateType) {
     const [type, name] = template.key.split("/")
     const tmpPath = await downloadTemplate(type, name)
     return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
+  } else {
+    throw new Error("Either file or key is required.")
   }
 }
 
@@ -176,7 +179,7 @@ export async function importApp(
   } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
-  let dbStream: any
+  let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && (await fsp.lstat(template.file.path)).isDirectory()

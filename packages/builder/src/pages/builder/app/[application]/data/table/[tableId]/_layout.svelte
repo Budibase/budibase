@@ -28,8 +28,11 @@
 
 <style>
   .wrapper {
-    flex: 1 1 auto;
-    margin: -28px -40px -40px -40px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     background: var(--spectrum-global-color-gray-50);

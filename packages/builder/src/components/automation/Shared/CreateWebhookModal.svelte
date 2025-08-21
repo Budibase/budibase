@@ -71,7 +71,7 @@
     target="_blank"
     href="https://docs.budibase.com/docs/trigger"
   >
-    <Icon name="InfoOutline" />
+    <Icon name="info" />
     <span>Learn about webhooks</span>
   </a>
 </ModalContent>

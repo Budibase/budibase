@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     Drawer,
@@ -14,19 +14,27 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
+  import type { Snippet } from "@budibase/types"
 
-  export let snippet
-
-  export const show = () => drawer.show()
+  export const show = () => {
+    if (!snippet) {
+      key = Math.random().toString()
+      // Reset state when creating multiple snippets
+      code = ""
+      name = defaultName
+    }
+    drawer.show()
+  }
   export const hide = () => drawer.hide()
+  export let snippet: Snippet | null
 
   const firstCharNumberRegex = /^[0-9].*$/
 
-  let drawer
+  let drawer: Drawer
   let name = ""
   let code = ""
   let loading = false
-  let deleteConfirmationDialog
+  let deleteConfirmationDialog: ConfirmDialog
 
   $: defaultName = getSequentialName($snippets, "MySnippet", {
     getName: x => x.name,
@@ -40,11 +48,11 @@
   const saveSnippet = async () => {
     loading = true
     try {
-      const newSnippet = { name, code: rawJS }
+      const newSnippet: Snippet = { name, code: rawJS || "" }
       await snippets.saveSnippet(newSnippet)
       drawer.hide()
       notifications.success(`Snippet ${newSnippet.name} saved`)
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(error.message || "Error saving snippet")
     }
     loading = false
@@ -53,7 +61,9 @@
   const deleteSnippet = async () => {
     loading = true
     try {
-      await snippets.deleteSnippet(snippet.name)
+      if (snippet) {
+        await snippets.deleteSnippet(snippet.name)
+      }
       drawer.hide()
     } catch (error) {
       notifications.error("Error deleting snippet")
@@ -61,7 +71,7 @@
     loading = false
   }
 
-  const validateName = (name, snippets) => {
+  const validateName = (name: string, snippets: Snippet[]) => {
     if (!name?.length) {
       return "Name is required"
     }
@@ -89,7 +99,7 @@
         {#if nameError}
           <AbsTooltip text={nameError} type={TooltipType.Negative}>
             <Icon
-              name="Help"
+              name="question"
               size="S"
               color="var(--spectrum-global-color-red-400)"
             />
@@ -108,7 +118,11 @@
         Delete
       </Button>
     {/if}
-    <Button cta on:click={saveSnippet} disabled={!code || loading || nameError}>
+    <Button
+      cta
+      on:click={saveSnippet}
+      disabled={!code || loading || !!nameError}
+    >
       Save
     </Button>
   </svelte:fragment>
@@ -124,9 +138,7 @@
         value={code}
         on:change={e => (code = e.detail)}
       >
-        <div slot="tabs">
-          <Input placeholder="Name" />
-        </div>
+        <Input placeholder="Name" />
       </BindingPanel>
     {/key}
   </svelte:fragment>

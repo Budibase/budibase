@@ -2,12 +2,15 @@
   import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
   import { Icon } from "@budibase/bbui"
+  import { builderStore, screenStore } from "@/stores"
 
   export let type
   export let url
   export let text
   export let subLinks
+  export let icon
   export let internalLink
+  export let customStyles
   export let leftNav = false
   export let mobile = false
   export let navStateStore
@@ -16,9 +19,18 @@
 
   let renderKey
 
-  $: expanded = !!$navStateStore[text]
+  $: isBuilderActive = testUrl => {
+    return (
+      $builderStore.inBuilder &&
+      testUrl &&
+      testUrl === $screenStore.activeScreen?.routing?.route
+    )
+  }
+  $: builderActive = isBuilderActive(url)
+  $: containsActiveLink = (subLinks || []).some(x => isBuilderActive(x.url))
+  $: expanded = !!$navStateStore[text] || containsActiveLink
   $: renderLeftNav = leftNav || mobile
-  $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
+  $: caret = !renderLeftNav || expanded ? "caret-down" : "caret-right"
 
   const onClickLink = () => {
     dispatch("clickLink")
@@ -37,33 +49,45 @@
 </script>
 
 {#if !type || type === "link"}
-  {#if internalLink}
-    <!--
-      It's stupid that we have to add class:active={false} here, but if we don't
-      then svelte will strip out the CSS selector and active links won't be
-      styled
-    -->
-    <a
-      href="#{url}"
-      on:click={onClickLink}
-      use:active={url}
-      class:active={false}
-    >
-      {text}
-    </a>
-  {:else}
-    <a href={url} on:click={onClickLink}>
-      {text}
-    </a>
-  {/if}
+  <div class="link">
+    {#if internalLink}
+      <!--
+        It's stupid that we have to add class:active={false} here, but if we don't
+        then svelte will strip out the CSS selector and active links won't be
+        styled
+      -->
+      <a
+        href="#{url}"
+        on:click={onClickLink}
+        use:active={url}
+        class:builderActive
+        style={customStyles}
+      >
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
+        {text}
+      </a>
+    {:else}
+      <a href={url} on:click={onClickLink}>
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
+        {text}
+      </a>
+    {/if}
+  </div>
 {:else}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
         <span>{text}</span>
-        <Icon name={icon} />
+        <Icon name={caret} color="var(--navTextColor)" size="S" />
       </div>
       <div class="sublinks-wrapper">
         <div class="sublinks">
@@ -73,6 +97,9 @@
                 href="#{subLink.url}"
                 on:click={onClickLink}
                 use:active={subLink.url}
+                class:active={false}
+                class:builderActive={isBuilderActive(subLink.url)}
+                class="sublink"
               >
                 {subLink.text}
               </a>
@@ -91,22 +118,34 @@
 <style>
   /* Generic styles */
   a,
+  .dropdown .text {
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  a,
   .text span {
     opacity: 0.75;
     color: var(--navTextColor);
-    font-size: var(--spectrum-global-dimension-font-size-200);
+    font-size: var(--spectrum-global-dimension-font-size-150);
     transition: opacity 130ms ease-out;
-    font-weight: 600;
     user-select: none;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  a.active {
+  a.active:not(.sublink),
+  a.builderActive:not(.sublink),
+  .dropdown.left a.sublink.active,
+  .dropdown.left a.sublink.builderActive {
+    background: rgba(0, 0, 0, 0.15);
     opacity: 1;
   }
   a:hover,
-  .dropdown:not(.left.expanded):hover .text,
-  .text:hover {
+  .text:hover span {
     cursor: pointer;
     opacity: 1;
   }
@@ -115,13 +154,7 @@
   .dropdown {
     position: relative;
   }
-  .text {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
+
   .sublinks-wrapper {
     position: absolute;
     top: 100%;
@@ -166,9 +199,5 @@
   .dropdown.left.expanded .sublinks-wrapper,
   .dropdown.dropdown.left.expanded .sublinks {
     display: contents;
-  }
-  .dropdown.left a {
-    padding-top: 0;
-    padding-bottom: 0;
   }
 </style>

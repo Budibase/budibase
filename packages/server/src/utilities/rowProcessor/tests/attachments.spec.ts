@@ -41,7 +41,7 @@ const rowGenerators: [
     | FieldType.SIGNATURE_SINGLE
   ),
   string,
-  (fileKey?: string) => Row
+  (fileKey?: string) => Row,
 ][] = [
   [
     "row with a attachment list column",

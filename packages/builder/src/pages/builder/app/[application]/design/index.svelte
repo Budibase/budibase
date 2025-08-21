@@ -1,12 +1,9 @@
-<script>
-  import { redirect } from "@roxi/routify"
-  import { screenStore } from "@/stores/builder"
+<script lang="ts">
+  import { featureFlags } from "@/stores/portal"
+  import OldIndex from "./_flagged/index.old.svelte"
+  import NewIndex from "./_flagged/index.new.svelte"
 
-  $: {
-    if ($screenStore.screens.length > 0) {
-      $redirect(`./${$screenStore.screens[0]._id}`)
-    } else {
-      $redirect("./new")
-    }
-  }
+  $: index = $featureFlags.WORKSPACES ? NewIndex : OldIndex
 </script>
+
+<svelte:component this={index} />

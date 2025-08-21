@@ -38,7 +38,7 @@
       },
     },
     [FIELDS.OPTIONS.type]: {
-      label: "Options",
+      label: "Single select",
       value: FIELDS.OPTIONS.type,
       config: {
         type: FIELDS.OPTIONS.type,
@@ -46,7 +46,7 @@
       },
     },
     [FIELDS.ARRAY.type]: {
-      label: "Multi-select",
+      label: "Multi select",
       value: FIELDS.ARRAY.type,
       config: {
         type: FIELDS.ARRAY.type,
@@ -233,13 +233,13 @@
             {:else}
               Failure
               {#if errors[column.name]}
-                <Icon name="Help" tooltip={errors[column.name]} />
+                <Icon name="question" tooltip={errors[column.name]} />
               {/if}
             {/if}
           </span>
           <Icon
             size="S"
-            name="Close"
+            name="x"
             hoverable
             on:click={() => deleteColumn(column.name)}
           />
@@ -281,7 +281,10 @@
     text-rendering: optimizeLegibility;
     min-width: auto;
     outline: none;
-    font-feature-settings: "case" 1, "rlig" 1, "calt" 0;
+    font-feature-settings:
+      "case" 1,
+      "rlig" 1,
+      "calt" 0;
     -webkit-box-align: center;
     user-select: none;
     flex-shrink: 0;
@@ -318,7 +321,7 @@
     align-items: center;
     gap: 4px;
   }
-  .fieldStatusFailure :global(.spectrum-Icon) {
+  .fieldStatusFailure :global(i) {
     width: 12px;
   }
 </style>

@@ -1,21 +1,22 @@
-<script>
+<script lang="ts">
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
   import { parseToCsv } from "@/helpers/data/utils"
   import { onMount } from "svelte"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
+  import type { BulkUserCreated } from "@budibase/types"
 
-  export let userData
-  export let createUsersResponse
+  export let userData: { email: string; password: string }[]
+  export let createUsersResponse: BulkUserCreated
 
-  let hasSuccess
-  let hasFailure
-  let title
-  let failureMessage
+  let hasSuccess: boolean
+  let hasFailure: boolean
+  let title: string
+  let failureMessage: string
 
-  let userDataIndex
-  let successfulUsers
-  let unsuccessfulUsers
+  let userDataIndex: Record<string, { password: string }>
+  let successfulUsers: { email: string; password: string }[]
+  let unsuccessfulUsers: { email: string; reason: string }[]
 
   const setTitle = () => {
     if (hasSuccess) {
@@ -34,7 +35,7 @@
   }
 
   const setUsers = () => {
-    userDataIndex = userData.reduce((prev, current) => {
+    userDataIndex = userData.reduce<typeof userDataIndex>((prev, current) => {
       prev[current.email] = current
       return prev
     }, {})
@@ -55,8 +56,8 @@
   }
 
   onMount(() => {
-    hasSuccess = createUsersResponse.successful.length
-    hasFailure = createUsersResponse.unsuccessful.length
+    hasSuccess = createUsersResponse.successful.length > 0
+    hasFailure = createUsersResponse.unsuccessful.length > 0
     setTitle()
     setFailureMessage()
     setUsers()
@@ -79,7 +80,7 @@
     download(fileName, content)
   }
 
-  const download = (filename, text) => {
+  const download = (filename: string, text: string) => {
     const element = document.createElement("a")
     element.setAttribute(
       "href",
@@ -129,7 +130,7 @@
 
     <div class="container" on:click={downloadCsvFile}>
       <div class="inner">
-        <Icon name="Download" />
+        <Icon name="download" />
 
         <div style="margin-left: var(--spacing-m)">
           <Body size="XS">Passwords CSV</Body>

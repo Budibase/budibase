@@ -4,7 +4,9 @@ import * as createRow from "./steps/createRow"
 import * as updateRow from "./steps/updateRow"
 import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
+import * as executeScriptV2 from "./steps/executeScriptV2"
 import * as executeQuery from "./steps/executeQuery"
+import * as apiRequest from "./steps/apiRequest"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
 import * as serverLog from "./steps/serverLog"
 import * as discord from "./steps/discord"
@@ -19,6 +21,14 @@ import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
 import * as bash from "./steps/bash"
+import * as classifyText from "./steps/ai/classify"
+import * as promptLLM from "./steps/ai/promptLLM"
+import * as translate from "./steps/ai/translate"
+import * as summarise from "./steps/ai/summarise"
+import * as generate from "./steps/ai/generate"
+import * as extract from "./steps/ai/extract"
+import * as extractState from "./steps/extractState"
+
 import env from "../environment"
 import {
   PluginType,
@@ -27,6 +37,8 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
+  AutomationStepInputs,
+  AutomationStepOutputs,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -42,7 +54,9 @@ const ACTION_IMPLS: ActionImplType = {
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
+  EXECUTE_SCRIPT_V2: executeScriptV2.run,
   EXECUTE_QUERY: executeQuery.run,
+  API_REQUEST: apiRequest.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
   FILTER: filter.run,
@@ -50,6 +64,13 @@ const ACTION_IMPLS: ActionImplType = {
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   OPENAI: openai.run,
+  CLASSIFY_CONTENT: classifyText.run,
+  PROMPT_LLM: promptLLM.run,
+  TRANSLATE: translate.run,
+  SUMMARISE: summarise.run,
+  GENERATE_TEXT: generate.run,
+  EXTRACT_FILE_DATA: extract.run,
+  EXTRACT_STATE: extractState.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -68,7 +89,9 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   DELETE_ROW: automations.steps.deleteRow.definition,
   OUTGOING_WEBHOOK: automations.steps.outgoingWebhook.definition,
   EXECUTE_SCRIPT: automations.steps.executeScript.definition,
+  EXECUTE_SCRIPT_V2: automations.steps.executeScriptV2.definition,
   EXECUTE_QUERY: automations.steps.executeQuery.definition,
+  API_REQUEST: automations.steps.apiRequest.definition,
   SERVER_LOG: automations.steps.serverLog.definition,
   DELAY: automations.steps.delay.definition,
   FILTER: automations.steps.filter.definition,
@@ -77,6 +100,14 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   COLLECT: automations.steps.collect.definition,
   TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
   BRANCH: automations.steps.branch.definition,
+  CLASSIFY_CONTENT: automations.steps.classifyText.definition,
+  PROMPT_LLM: automations.steps.promptLLM.definition,
+  TRANSLATE: automations.steps.translate.definition,
+  SUMMARISE: automations.steps.summarise.definition,
+  GENERATE_TEXT: automations.steps.generate.definition,
+  EXTRACT_FILE_DATA: automations.steps.extract.definition,
+  EXTRACT_STATE: automations.steps.extractState.definition,
+  LOOP_V2: automations.steps.loopV2.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,
@@ -103,6 +134,7 @@ export async function getActionDefinitions(): Promise<
 > {
   if (env.SELF_HOSTED) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
@@ -120,11 +152,15 @@ export async function getActionDefinitions(): Promise<
 }
 
 /* istanbul ignore next */
-export async function getAction(
-  stepId: AutomationActionStepId
-): Promise<ActionImplementation<any, any> | undefined> {
+export async function getAction<
+  TStep extends AutomationActionStepId,
+  TInputs = AutomationStepInputs<TStep>,
+  TOutputs = AutomationStepOutputs<TStep>,
+>(stepId: TStep): Promise<ActionImplementation<TInputs, TOutputs> | undefined> {
   if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
-    return ACTION_IMPLS[stepId as keyof ActionImplType]
+    return ACTION_IMPLS[
+      stepId as keyof ActionImplType
+    ] as unknown as ActionImplementation<TInputs, TOutputs>
   }
 
   // must be a plugin

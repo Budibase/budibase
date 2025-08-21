@@ -4,7 +4,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
   import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
-  import FavouriteAppButton from "../FavouriteAppButton.svelte"
+  import FavouriteAppButton from "./FavouriteAppButton.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Icon } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
@@ -43,11 +43,11 @@
   <NavItem
     on:contextmenu={e => openContextMenu(e, app)}
     text={app.name}
-    icon={app.icon?.name || "Apps"}
+    icon={app.icon?.name || "squares-four"}
     iconColor={app.icon?.color}
     selected={$params.appId === app.appId}
     hovering={contextMenuOpen}
-    highlighted={opened == app.appId}
+    highlighted={opened === app.appId}
     on:click={() => $goto(`./${app.appId}`)}
     withActions
     showActions
@@ -58,7 +58,7 @@
           on:click={e => openContextMenu(e, app)}
           size="S"
           hoverable
-          name="MoreSmallList"
+          name="dots-three"
         />
       {/if}
     </div>

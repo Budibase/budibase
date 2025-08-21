@@ -14,4 +14,7 @@ export interface BudibaseAppProps {
   sideNav?: boolean
   hideFooter?: boolean
   nonce?: string
+  headAppScripts?: string
+  bodyAppScripts?: string
+  recaptchaKey?: string
 }

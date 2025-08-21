@@ -18,7 +18,14 @@
 </Modal>
 
 <Modal bind:this={tableSelectionModal}>
-  <TableImportSelection {datasource} {integration} onComplete={tables.fetch} />
+  <TableImportSelection
+    {datasource}
+    {integration}
+    onComplete={() => {
+      tableSelectionModal.hide()
+      tables.fetch()
+    }}
+  />
 </Modal>
 
 <div class="buttons">

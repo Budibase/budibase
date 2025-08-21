@@ -43,7 +43,6 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
       {bindings}
       on:change
       parseSettings={updatedNestedFlags}
@@ -53,7 +52,7 @@
   <div class="list-item-right">
     <Icon
       size="S"
-      name="Close"
+      name="x"
       hoverable
       on:click={e => {
         e.stopPropagation()

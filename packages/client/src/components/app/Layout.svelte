@@ -4,6 +4,12 @@
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
+  import UserMenu from "./UserMenu.svelte"
+  import Logo from "./Logo.svelte"
+  import {
+    getActiveConditions,
+    reduceConditionActions,
+  } from "@/utils/conditions"
 
   const sdk = getContext("sdk")
   const {
@@ -13,7 +19,6 @@
     builderStore,
     sidePanelStore,
     modalStore,
-    appStore,
   } = sdk
   const context = getContext("context")
   const navStateStore = writable({})
@@ -34,6 +39,7 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let logoHeight
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
@@ -50,6 +56,10 @@
     Small: "s",
     "Extra small": "xs",
   }
+
+  export let logoPosition = "top" // "top" or "bottom"
+  export let titleSize = "S"
+  export let titleColor // CSS color string, only affects title
 
   let mobileOpen = false
 
@@ -70,6 +80,7 @@
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
+    logoHeight,
     $context.device.width,
     $context.device.height
   )
@@ -145,6 +156,21 @@
       })
   }
 
+  function evaluateNavItemConditions(conditions = []) {
+    if (!conditions?.length) return true
+
+    // Get only the active (matching) conditions
+    const activeConditions = getActiveConditions(conditions)
+    const { visible } = reduceConditionActions(activeConditions)
+
+    if (visible == null) {
+      // If any show condition exists, default to hidden unless one matches
+      const hasShow = conditions.some(cond => cond.action === "show")
+      return hasShow ? false : true
+    }
+    return visible
+  }
+
   const isInternal = url => {
     return url?.startsWith("/")
   }
@@ -154,11 +180,6 @@
       return url
     }
     return !url.startsWith("http") ? `http://${url}` : url
-  }
-
-  const navigateToPortal = () => {
-    if ($builderStore.inBuilder) return
-    window.location.href = "/builder/apps"
   }
 
   const getScreenXOffset = (navigation, mobile) => {
@@ -175,7 +196,13 @@
     }
   }
 
-  const getNavStyle = (backgroundColor, textColor, width, height) => {
+  const getNavStyle = (
+    backgroundColor,
+    textColor,
+    logoHeight,
+    width,
+    height
+  ) => {
     let style = `--width:${width}px; --height:${height}px;`
     if (backgroundColor) {
       style += `--navBackground:${backgroundColor};`
@@ -183,6 +210,7 @@
     if (textColor) {
       style += `--navTextColor:${textColor};`
     }
+    style += `--logoHeight:${logoHeight || 24}px;`
     return style
   }
 
@@ -211,7 +239,7 @@
   class:mobile={!!mobile}
   data-id={screenId}
   data-name="Screen"
-  data-icon="WebPage"
+  data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
     {#if typeClass !== "none"}
@@ -219,7 +247,7 @@
         class="interactive component {navigationId}"
         data-id={navigationId}
         data-name="Navigation"
-        data-icon="Visibility"
+        data-icon="eye"
       >
         <div
           class="nav-wrapper {navigationId}-dom"
@@ -237,43 +265,34 @@
                 <div class="burger">
                   <Icon
                     hoverable
-                    name="ShowMenu"
+                    name="list"
+                    color="var(--navTextColor)"
                     on:click={() => (mobileOpen = !mobileOpen)}
                   />
                 </div>
               {/if}
               <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                  {/if}
+                {#if logoPosition === "top"}
+                  <Logo
+                    {logoUrl}
+                    {logoLinkUrl}
+                    {openLogoLinkInNewTab}
+                    {hideLogo}
+                    {title}
+                    {linkable}
+                    {isInternal}
+                    {getSanitizedUrl}
+                  />
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <Heading size={titleSize} {textAlign} color={titleColor}>
+                    {title}
+                  </Heading>
                 {/if}
               </div>
               {#if !embedded}
-                <div class="portal">
-                  <Icon
-                    hoverable
-                    name="Apps"
-                    on:click={navigateToPortal}
-                    disabled={$appStore.isDevApp}
-                  />
+                <div class="user top">
+                  <UserMenu compact />
                 </div>
               {/if}
             </div>
@@ -285,25 +304,41 @@
             {#if enrichedNavItems.length}
               <div class="links" class:visible={mobileOpen}>
                 {#each enrichedNavItems as navItem}
-                  <NavItem
-                    type={navItem.type}
-                    text={navItem.text}
-                    url={navItem.url}
-                    subLinks={navItem.subLinks}
-                    internalLink={navItem.internalLink}
-                    on:clickLink={handleClickLink}
-                    leftNav={navigation === "Left"}
-                    {mobile}
-                    {navStateStore}
-                  />
+                  {#if evaluateNavItemConditions(navItem._conditions)}
+                    <NavItem
+                      type={navItem.type}
+                      text={navItem.text}
+                      url={navItem.url}
+                      subLinks={navItem.subLinks}
+                      icon={navItem.icon}
+                      internalLink={navItem.internalLink}
+                      customStyles={navItem._styles?.custom}
+                      on:clickLink={handleClickLink}
+                      leftNav={navigation === "Left"}
+                      {mobile}
+                      {navStateStore}
+                    />
+                  {/if}
                 {/each}
-                <div class="close">
-                  <Icon
-                    hoverable
-                    name="Close"
-                    on:click={() => (mobileOpen = false)}
-                  />
-                </div>
+              </div>
+            {/if}
+            {#if !embedded}
+              <div class="user left">
+                <UserMenu />
+                {#if logoPosition === "bottom"}
+                  <div>
+                    <Logo
+                      {logoUrl}
+                      {logoLinkUrl}
+                      {openLogoLinkInNewTab}
+                      {hideLogo}
+                      {title}
+                      {linkable}
+                      {isInternal}
+                      {getSanitizedUrl}
+                    />
+                  </div>
+                {/if}
               </div>
             {/if}
           </div>
@@ -332,7 +367,7 @@
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="sidebar"
         hoverable
         on:click={sidePanelStore.actions.close}
       />
@@ -394,27 +429,21 @@
     top: 0;
     left: 0;
   }
-  .layout--top .nav-wrapper {
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .layout--left .nav-wrapper {
-    border-right: 1px solid var(--spectrum-global-color-gray-300);
-  }
 
   .nav {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 24px 32px 20px 32px;
+    padding: 18px 32px 18px 32px;
     max-width: 100%;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-xs);
   }
-  .nav :global(.spectrum-Icon) {
+  .nav :global(.icon) {
     color: var(--navTextColor);
     opacity: 0.75;
   }
-  .nav :global(.spectrum-Icon:hover) {
+  .nav :global(.icon:hover) {
     color: var(--navTextColor);
     opacity: 1;
   }
@@ -521,9 +550,6 @@
     gap: var(--spacing-m);
     flex: 1 1 auto;
   }
-  .logo img {
-    height: 36px;
-  }
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
@@ -532,11 +558,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .portal {
-    display: grid;
-    place-items: center;
-  }
   .links {
+    flex: 1 0 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -544,14 +567,13 @@
     gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
   }
-  .close {
-    display: none;
-    position: absolute;
-    top: var(--spacing-xl);
-    right: var(--spacing-xl);
-  }
   .mobile-click-handler {
     display: none;
+  }
+
+  /* Left overrides for both desktop and mobile */
+  .nav--left {
+    overflow-y: auto;
   }
 
   /* Desktop nav overrides */
@@ -559,30 +581,24 @@
     flex-direction: row;
     overflow: hidden;
   }
-  .desktop.layout--left .nav-wrapper {
-    border-bottom: none;
-  }
   .desktop.layout--left .main-wrapper {
     height: 100%;
     overflow: auto;
   }
-  .desktop.layout--left .links {
-    overflow-y: auto;
-  }
-
   .desktop .nav--left {
     width: 250px;
     padding: var(--spacing-xl);
   }
-
   .desktop .nav--left .links {
     margin-top: var(--spacing-m);
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    gap: var(--spacing-xs);
   }
-  .desktop .nav--left .link {
-    font-size: var(--spectrum-global-dimension-font-size-150);
+  .desktop .nav--left .user.top,
+  .desktop .nav--top .user.left {
+    display: none;
   }
 
   /* Mobile nav overrides */
@@ -591,13 +607,14 @@
     top: 0;
     left: 0;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    border-right: none;
   }
-
-  /* Show close button in drawer */
-  .mobile .close {
-    display: block;
+  .user.left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+  .mobile .user.left {
+    display: none;
   }
 
   /* Force standard top bar */
@@ -635,7 +652,10 @@
     left: -250px;
     transform: translateX(0);
     width: 250px;
-    transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
+    max-width: 75%;
+    transition:
+      transform 0.26s ease-in-out,
+      opacity 0.26s ease-in-out;
     height: var(--height);
     opacity: 0;
     background: var(--navBackground);
@@ -645,10 +665,10 @@
     align-items: stretch;
     padding: var(--spacing-xl);
     overflow-y: auto;
+    gap: var(--spacing-xs);
   }
-  .mobile .link {
-    width: calc(100% - 30px);
-    font-size: 120%;
+  .mobile .links :global(a) {
+    flex: 0 0 auto;
   }
   .mobile .links.visible {
     opacity: 1;

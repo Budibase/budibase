@@ -30,7 +30,7 @@ export default class LoggingProcessor implements EventProcessor {
     console.log(`[audit] group identified`, group)
   }
 
-  shutdown(): void {
+  async shutdown(): Promise<void> {
     // no-op
   }
 }

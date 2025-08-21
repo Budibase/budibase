@@ -3,7 +3,7 @@
   import DatePicker from "./Core/DatePicker/DatePicker.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
+  export let value = undefined
   export let label = null
   export let labelPosition = "above"
   export let disabled = false

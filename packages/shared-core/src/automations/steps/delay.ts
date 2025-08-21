@@ -7,7 +7,7 @@ import {
 
 export const definition: AutomationStepDefinition = {
   name: "Delay",
-  icon: "Clock",
+  icon: "clock",
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the automation until an amount of time has passed",
   stepId: AutomationActionStepId.DELAY,

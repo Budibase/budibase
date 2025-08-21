@@ -1,5 +1,5 @@
-<script>
-  export let title
+<script lang="ts">
+  export let title = ""
 </script>
 
 <div class="side-nav">

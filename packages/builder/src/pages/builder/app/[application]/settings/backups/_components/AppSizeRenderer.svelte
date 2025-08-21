@@ -11,15 +11,15 @@
 <div class="cell">
   {#if automations != null && screens != null && datasources != null}
     <div class="item">
-      <Icon name="Data" />
+      <Icon name="database" />
       <div>{datasources || 0}</div>
     </div>
     <div class="item">
-      <Icon name="WebPage" />
+      <Icon name="browser" />
       <div>{screens || 0}</div>
     </div>
     <div class="item">
-      <Icon name="JourneyVoyager" />
+      <Icon name="path" />
       <div>{automations || 0}</div>
     </div>
   {/if}

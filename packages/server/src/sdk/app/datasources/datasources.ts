@@ -11,6 +11,7 @@ import {
   Row,
   RestConfig,
   SourceName,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
@@ -34,8 +35,10 @@ import { helpers } from "@budibase/shared-core"
 
 const ENV_VAR_PREFIX = "env."
 
-function addDatasourceFlags(datasource: Datasource) {
+export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
+  datasource.usesEnvironmentVariables =
+    datasourceUsesEnvironmentVariables(datasource)
   return datasource
 }
 
@@ -51,7 +54,7 @@ export async function fetch(opts?: {
   )
 
   const internal = internalTables.rows.reduce((acc: any, row: Row) => {
-    const sourceId = row.doc.sourceId || "bb_internal"
+    const sourceId = row.doc.sourceId || INTERNAL_TABLE_SOURCE_ID
     acc[sourceId] = acc[sourceId] || []
     acc[sourceId].push(row.doc)
     return acc
@@ -120,7 +123,7 @@ export function areRESTVariablesValid(datasource: Datasource) {
 
 export function checkDatasourceTypes(schema: Integration, config: any) {
   for (let key of Object.keys(config)) {
-    if (!schema.datasource[key]) {
+    if (!schema.datasource?.[key]) {
       continue
     }
     const type = schema.datasource[key].type
@@ -149,7 +152,9 @@ async function enrichDatasourceWithValues(
   ) as Datasource
   processed.entities = entities
   const definition = await getDefinition(processed.source)
-  processed.config = checkDatasourceTypes(definition!, processed.config)
+  if (definition) {
+    processed.config = checkDatasourceTypes(definition, processed.config)
+  }
   return {
     datasource: processed,
     envVars: env as Record<string, string>,
@@ -192,6 +197,24 @@ function useEnvVars(str: any) {
   }
   const blocks = findHBSBlocks(str)
   return blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+}
+
+function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
+  if (!datasource.config) {
+    return false
+  }
+
+  const checkValue = (value: any): boolean => {
+    if (typeof value === "string") {
+      return useEnvVars(value)
+    }
+    if (typeof value === "object" && value !== null) {
+      return Object.values(value).some(checkValue)
+    }
+    return false
+  }
+
+  return Object.values(datasource.config).some(checkValue)
 }
 
 export async function removeSecrets(datasources: Datasource[]) {
@@ -294,6 +317,9 @@ export async function save(
   datasource: Datasource,
   opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
 ): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  // getIntegration throws an error if the integration is not found
+  await getIntegration(datasource.source)
+
   const db = context.getAppDB()
   const plus = datasource.plus
 
@@ -326,14 +352,6 @@ export async function save(
   )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
 
   return { datasource, errors }
 }

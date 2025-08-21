@@ -2,7 +2,7 @@ import { ThemeOptions, ThemeClassPrefix } from "./constants/themes"
 import { Theme } from "@budibase/types"
 
 // Gets the CSS class names for the specified theme
-export const getThemeClassNames = (theme: Theme): string => {
+export const getThemeClassNames = (theme?: Theme): string => {
   theme = ensureValidTheme(theme)
   let classNames = `${ThemeClassPrefix}${theme}`
 

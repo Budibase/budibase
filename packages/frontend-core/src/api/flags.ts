@@ -2,14 +2,12 @@ import {
   GetUserFlagsResponse,
   SetUserFlagRequest,
   SetUserFlagResponse,
-  ToggleBetaFeatureResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface FlagEndpoints {
   getFlags: () => Promise<GetUserFlagsResponse>
   updateFlag: (flag: string, value: any) => Promise<SetUserFlagResponse>
-  toggleUiFeature: (value: string) => Promise<ToggleBetaFeatureResponse>
 }
 
 export const buildFlagEndpoints = (API: BaseAPIClient): FlagEndpoints => ({
@@ -34,15 +32,6 @@ export const buildFlagEndpoints = (API: BaseAPIClient): FlagEndpoints => ({
         flag,
         value,
       },
-    })
-  },
-  /**
-   * Allows us to experimentally toggle a beta UI feature through a cookie.
-   * @param value the feature to toggle
-   */
-  toggleUiFeature: async value => {
-    return await API.post({
-      url: `/api/beta/${value}`,
     })
   },
 })

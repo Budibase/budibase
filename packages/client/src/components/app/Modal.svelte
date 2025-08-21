@@ -63,7 +63,7 @@
       <div class="modal-header">
         <Icon
           color="var(--spectrum-global-color-gray-800)"
-          name="Close"
+          name="x"
           hoverable
           on:click={handleModalClose}
         />

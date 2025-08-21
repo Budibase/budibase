@@ -4,7 +4,6 @@ import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
-import * as crypto from "crypto"
 
 const schema = {
   TEST_BOOLEAN: false,
@@ -16,26 +15,74 @@ interface TestCase {
   it: string
   identity?: Partial<IdentityContext>
   environmentFlags?: string
-  posthogFlags?: PostHogFlags
+  posthogFlags?: Record<string, boolean>
   expected?: Partial<typeof schema>
   errorMessage?: string | RegExp
 }
 
-interface PostHogFlags {
-  featureFlags?: Record<string, boolean>
-  featureFlagPayloads?: Record<string, string>
+interface Property {
+  key: string
+  value: string
+  operator: string
+  type: string
 }
 
-function mockPosthogFlags(
-  flags: PostHogFlags,
-  opts?: { token?: string; distinct_id?: string }
-) {
-  const { token = "test", distinct_id = "us_1234" } = opts || {}
+interface Group {
+  properties: Property[]
+  rollout_percentage: number
+  variant: string | null
+}
+
+interface Filters {
+  groups: Group[]
+}
+
+interface FlagRules {
+  active: boolean
+  deleted: boolean
+  ensure_experience_continuity: boolean
+  filters: Filters
+  has_encrypted_payloads: boolean
+  id: string
+  key: string
+  name: string
+  team_id: number
+  version: number
+}
+
+interface LocalEvaluationResponse {
+  flags: FlagRules[]
+}
+
+function posthogFlags(flags: Record<string, boolean>): LocalEvaluationResponse {
+  return {
+    flags: Object.entries(flags).map(([name, value]) => ({
+      active: value,
+      deleted: false,
+      ensure_experience_continuity: false,
+      filters: {
+        groups: [
+          {
+            properties: [],
+            rollout_percentage: 100,
+            variant: null,
+          },
+        ],
+      },
+      version: 2,
+      has_encrypted_payloads: false,
+      id: name,
+      name,
+      team_id: 1,
+      key: name,
+    })),
+  }
+}
+
+function mockPosthogFlags(flags: Record<string, boolean>) {
   nock("https://us.i.posthog.com")
-    .post("/decide/?v=3", body => {
-      return body.token === token && body.distinct_id === distinct_id
-    })
-    .reply(200, flags)
+    .get("/api/feature_flag/local_evaluation?token=test&send_cohorts")
+    .reply(200, posthogFlags(flags))
     .persist()
 }
 
@@ -76,33 +123,27 @@ describe("feature flags", () => {
     },
     {
       it: "should be able to read boolean flags from PostHog",
-      posthogFlags: {
-        featureFlags: { TEST_BOOLEAN: true },
-      },
+      posthogFlags: { TEST_BOOLEAN: true },
       expected: { TEST_BOOLEAN: true },
     },
     {
       it: "should not be able to override a negative environment flag from PostHog",
       environmentFlags: "default:!TEST_BOOLEAN",
-      posthogFlags: {
-        featureFlags: { TEST_BOOLEAN: true },
-      },
+      posthogFlags: { TEST_BOOLEAN: true },
       expected: { TEST_BOOLEAN: false },
     },
     {
       it: "should not be able to override a positive environment flag from PostHog",
       environmentFlags: "default:TEST_BOOLEAN",
       posthogFlags: {
-        featureFlags: {
-          TEST_BOOLEAN: false,
-        },
+        TEST_BOOLEAN: false,
       },
       expected: { TEST_BOOLEAN: true },
     },
     {
       it: "should not error on unrecognised PostHog flag",
       posthogFlags: {
-        featureFlags: { UNDEFINED: true },
+        UNDEFINED: true,
       },
       expected: flags.defaults(),
     },
@@ -136,6 +177,8 @@ describe("feature flags", () => {
         // We need to pass in node-fetch here otherwise nock won't get used
         // because posthog-node uses axios under the hood.
         init({
+          // Required for local evaluation rule polling to start
+          personalApiKey: "test",
           fetch: (url, opts) => {
             return nodeFetch(url, opts)
           },
@@ -151,23 +194,25 @@ describe("feature flags", () => {
           ...identity,
         }
 
-        await context.doInIdentityContext(fullIdentity, async () => {
-          if (errorMessage) {
-            await expect(flags.fetch()).rejects.toThrow(errorMessage)
-          } else if (expected) {
-            const values = await flags.fetch()
-            expect(values).toMatchObject(expected)
+        try {
+          await context.doInIdentityContext(fullIdentity, async () => {
+            if (errorMessage) {
+              await expect(flags.fetch()).rejects.toThrow(errorMessage)
+            } else if (expected) {
+              const values = await flags.fetch()
+              expect(values).toMatchObject(expected)
 
-            for (const [key, expectedValue] of Object.entries(expected)) {
-              const value = await flags.isEnabled(key as keyof typeof schema)
-              expect(value).toBe(expectedValue)
+              for (const [key, expectedValue] of Object.entries(expected)) {
+                const value = await flags.isEnabled(key as keyof typeof schema)
+                expect(value).toBe(expectedValue)
+              }
+            } else {
+              throw new Error("No expected value")
             }
-          } else {
-            throw new Error("No expected value")
-          }
-        })
-
-        shutdown()
+          })
+        } finally {
+          shutdown()
+        }
       })
     }
   )
@@ -185,26 +230,30 @@ describe("feature flags", () => {
     // We need to pass in node-fetch here otherwise nock won't get used
     // because posthog-node uses axios under the hood.
     init({
+      // Required for local evaluation rule polling to start
+      personalApiKey: "test",
       fetch: (url, opts) => {
         return nodeFetch(url, opts)
       },
     })
 
     nock("https://us.i.posthog.com")
-      .post("/decide/?v=3", body => {
-        return body.token === "test" && body.distinct_id === "us_1234"
-      })
+      .get("/api/feature_flag/local_evaluation?token=test&send_cohorts")
       .reply(503)
       .persist()
 
-    await withEnv(
-      { POSTHOG_TOKEN: "test", POSTHOG_API_HOST: "https://us.i.posthog.com" },
-      async () => {
-        await context.doInIdentityContext(identity, async () => {
-          await flags.fetch()
-        })
-      }
-    )
+    try {
+      await withEnv(
+        { POSTHOG_TOKEN: "test", POSTHOG_API_HOST: "https://us.i.posthog.com" },
+        async () => {
+          await context.doInIdentityContext(identity, async () => {
+            await flags.fetch()
+          })
+        }
+      )
+    } finally {
+      shutdown()
+    }
   })
 
   it("should still get flags when user is logged out", async () => {
@@ -216,34 +265,30 @@ describe("feature flags", () => {
     }
 
     const ip = "127.0.0.1"
-    const hashedIp = crypto.createHash("sha512").update(ip).digest("hex")
 
     await withEnv(env, async () => {
-      mockPosthogFlags(
-        {
-          featureFlags: { TEST_BOOLEAN: true },
-        },
-        {
-          distinct_id: hashedIp,
-        }
-      )
+      mockPosthogFlags({ TEST_BOOLEAN: true })
 
       // We need to pass in node-fetch here otherwise nock won't get used
       // because posthog-node uses axios under the hood.
       init({
+        // Required for local evaluation rule polling to start
+        personalApiKey: "test",
         fetch: (url, opts) => {
           return nodeFetch(url, opts)
         },
       })
 
-      await context.doInIPContext(ip, async () => {
-        await context.doInTenant("default", async () => {
-          const result = await flags.fetch()
-          expect(result.TEST_BOOLEAN).toBe(true)
+      try {
+        await context.doInIPContext(ip, async () => {
+          await context.doInTenant("default", async () => {
+            const result = await flags.fetch()
+            expect(result.TEST_BOOLEAN).toBe(true)
+          })
         })
-      })
-
-      shutdown()
+      } finally {
+        shutdown()
+      }
     })
   })
 })

@@ -9,7 +9,7 @@ let client: redis.Client | null = null
 
 async function getClient() {
   if (!client) {
-    client = await new redis.Client(redis.utils.Databases.QUERY_VARS).init()
+    client = await redis.Client.init(redis.utils.Databases.QUERY_VARS)
   }
   return client
 }

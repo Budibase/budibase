@@ -72,7 +72,7 @@
           {bindings}
         />
       {:else}
-        <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
+        <Icon hoverable name="x" on:click={() => deleteQueryBinding(idx)} />
       {/if}
     {/each}
   </div>

@@ -1,6 +1,7 @@
-import { FieldType, CouchFindOptions, Table, Row } from "@budibase/types"
+import { FieldType, Table, Row } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "../../../db/utils"
+import Nano from "@budibase/nano"
 
 // default limit - seems to work well for performance
 export const FIND_LIMIT = 25
@@ -8,9 +9,9 @@ export const FIND_LIMIT = 25
 function generateAttachmentFindParams(
   tableId: string,
   attachmentCols: string[],
-  bookmark: null | string
+  bookmark?: string
 ) {
-  const params: CouchFindOptions = {
+  const params: Nano.MangoQuery = {
     selector: {
       $or: attachmentCols.map(col => ({ [col]: { $exists: true } })),
       _id: {
@@ -42,7 +43,7 @@ export async function getRowsWithAttachments(appId: string, table: Table) {
   if (attachmentCols.length === 0) {
     return { rows: [], columns: [] }
   }
-  let bookmark: null | string = null,
+  let bookmark: string | undefined = undefined,
     rowsLength = 0,
     rowList: Row[] = []
   do {
@@ -52,10 +53,10 @@ export async function getRowsWithAttachments(appId: string, table: Table) {
       bookmark
     )
     // use the CouchDB Mango query API to lookup rows that have attachments
-    const resp = await dbCore.directCouchFind(db.name, params)
+    const resp = await db.find<Row>(params)
     bookmark = resp.bookmark
-    rowsLength = resp.rows.length
-    const rows = resp.rows
+    rowsLength = resp.docs.length
+    const rows = resp.docs
     rowList = rowList.concat(rows)
   } while (rowsLength === FIND_LIMIT)
   // write back the updated attachments

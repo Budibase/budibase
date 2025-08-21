@@ -4,6 +4,7 @@ import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -13,6 +14,8 @@ import {
   AutomationTriggerStepId,
   BranchStepInputs,
   isDidNotTriggerResponse,
+  LoopStepType,
+  LoopV2StepInputs,
   SearchFilters,
   TestAutomationRequest,
   TriggerAutomationRequest,
@@ -32,6 +35,18 @@ type BranchConfig = {
   }
 }
 
+type LoopConfig = {
+  option: LoopStepType
+  binding: any
+  steps: StepBuilderFunction
+  iterations?: number
+  failure?: any
+  resultOptions?: {
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
+}
+
 class TriggerBuilder {
   private readonly config: TestConfiguration
 
@@ -41,7 +56,7 @@ class TriggerBuilder {
 
   protected trigger<
     TStep extends AutomationTriggerStepId,
-    TInput = AutomationTriggerInputs<TStep>
+    TInput = AutomationTriggerInputs<TStep>,
   >(stepId: TStep) {
     return (inputs: TInput) => {
       const definition: AutomationTriggerDefinition =
@@ -63,6 +78,7 @@ class TriggerBuilder {
   onRowDeleted = this.trigger(AutomationTriggerStepId.ROW_DELETED)
   onWebhook = this.trigger(AutomationTriggerStepId.WEBHOOK)
   onCron = this.trigger(AutomationTriggerStepId.CRON)
+  onRowAction = this.trigger(AutomationTriggerStepId.ROW_ACTION)
 }
 
 class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
@@ -82,7 +98,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
         id,
         stepId,
         name: opts?.stepName || schema.name,
-      })
+      } as AutomationStep)
       if (opts?.stepName) {
         this.stepNames[id] = opts.stepName
       }
@@ -95,10 +111,14 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
   sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
+  loopv2 = this.step(AutomationActionStepId.LOOP_V2)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
+  executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
+  extractState = this.step(AutomationActionStepId.EXTRACT_STATE)
   filter = this.step(AutomationActionStepId.FILTER)
   bash = this.step(AutomationActionStepId.EXECUTE_BASH)
   openai = this.step(AutomationActionStepId.OPENAI)
@@ -112,6 +132,32 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   make = this.step(AutomationActionStepId.integromat)
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
+  extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
+
+  protected addLoopStep(loopConfig: LoopConfig): void {
+    const inputs: LoopV2StepInputs = {
+      option: loopConfig.option,
+      binding: loopConfig.binding,
+      children: [],
+      iterations: loopConfig.iterations,
+      failure: loopConfig.failure,
+      resultOptions: loopConfig.resultOptions || {
+        storeFullResults: true,
+        summarizeOnly: false,
+      },
+    }
+
+    const builder = new BranchStepBuilder<TStep>()
+    loopConfig.steps(builder)
+    inputs.children = builder.steps
+    let id = uuidv4()
+    this.steps.push({
+      ...automations.steps.loopV2.definition,
+      id,
+      stepId: AutomationActionStepId.LOOP_V2,
+      inputs,
+    })
+  }
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
@@ -139,10 +185,15 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
     this.addBranchStep(branchConfig)
     return this
   }
+
+  loopV2(loopConfig: LoopConfig): this {
+    this.addLoopStep(loopConfig)
+    return this
+  }
 }
 
 class StepBuilder<
-  TStep extends AutomationTriggerStepId
+  TStep extends AutomationTriggerStepId,
 > extends BranchStepBuilder<TStep> {
   private readonly config: TestConfiguration
   private readonly _trigger: AutomationTrigger
@@ -159,7 +210,7 @@ class StepBuilder<
     return this
   }
 
-  build(): Automation {
+  build(opts?: { disabled?: boolean }): Automation {
     const name = this._name || `Test Automation ${uuidv4()}`
     return {
       name,
@@ -168,17 +219,22 @@ class StepBuilder<
         trigger: this._trigger,
         stepNames: this.stepNames,
       },
+      disabled: opts?.disabled,
       type: "automation",
       appId: this.config.getAppId(),
     }
   }
 
-  async save() {
-    const { automation } = await this.config.api.automation.post(this.build())
+  async save(opts?: { disabled?: boolean }) {
+    const { automation } = await this.config.api.automation.post(
+      this.build(opts)
+    )
     return new AutomationRunner<TStep>(this.config, automation)
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const runner = await this.save()
     return await runner.test(triggerOutput)
   }
@@ -200,30 +256,56 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     this.automation = automation
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const response = await this.config.api.automation.test(
       this.automation._id!,
-      // TODO: figure out why this cast is needed.
-      triggerOutput as TestAutomationRequest
+      triggerOutput
     )
 
     if (isDidNotTriggerResponse(response)) {
       throw new Error(response.message)
     }
 
+    const results: AutomationResults = response as AutomationResults
     // Remove the trigger step from the response.
-    response.steps.shift()
+    results.steps.shift()
 
-    return response
+    return results
   }
 
   async trigger(
     request: TriggerAutomationRequest
   ): Promise<TriggerAutomationResponse> {
-    return await this.config.api.automation.trigger(
-      this.automation._id!,
-      request
-    )
+    if (!this.config.prodAppId) {
+      throw new Error(
+        "Automations can only be triggered in a production app context, call config.api.application.publish()"
+      )
+    }
+    // Because you can only trigger automations in a production app context, we
+    // wrap the trigger call to make tests a bit cleaner. If you really want to
+    // test triggering an automation in a dev app context, you can use the
+    // automation API directly.
+    return await this.config.withProdApp(async () => {
+      try {
+        return await this.config.api.automation.trigger(
+          this.automation._id!,
+          request
+        )
+      } catch (e: any) {
+        if (e.cause.status === 404) {
+          throw new Error(
+            `Automation with ID ${
+              this.automation._id
+            } not found in app ${this.config.getAppId()}. You may have forgotten to call config.api.application.publish().`,
+            { cause: e }
+          )
+        } else {
+          throw e
+        }
+      }
+    })
   }
 }
 

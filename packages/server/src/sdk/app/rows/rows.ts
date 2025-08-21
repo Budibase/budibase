@@ -1,9 +1,10 @@
-import { db as dbCore, context, docIds } from "@budibase/backend-core"
+import { db as dbCore, context } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
-import { extractViewInfoFromID, getRowParams } from "../../../db/utils"
+import { getRowParams } from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
+import { getTableIdFromViewId, isViewId } from "@budibase/shared-core"
 
 export async function getAllInternalRows(appId?: string) {
   let db: Database
@@ -22,8 +23,8 @@ export async function getAllInternalRows(appId?: string) {
 
 function pickApi(tableOrViewId: string) {
   let tableId = tableOrViewId
-  if (docIds.isViewId(tableOrViewId)) {
-    tableId = extractViewInfoFromID(tableOrViewId).tableId
+  if (isViewId(tableOrViewId)) {
+    tableId = getTableIdFromViewId(tableOrViewId)
   }
 
   if (isExternalTableID(tableId)) {
@@ -35,9 +36,10 @@ function pickApi(tableOrViewId: string) {
 export async function save(
   sourceId: string,
   row: Row,
-  userId: string | undefined
+  userId: string | undefined,
+  opts?: { updateAIColumns: boolean }
 ) {
-  return pickApi(sourceId).save(sourceId, row, userId)
+  return pickApi(sourceId).save(sourceId, row, userId, opts)
 }
 
 export async function find(sourceId: string, rowId: string) {

@@ -8,6 +8,7 @@ import {
   UIComponentError,
   ComponentDefinition,
   DependsOnComponentSetting,
+  Screen,
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
@@ -16,16 +17,9 @@ import { bindings } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
 import { componentStore } from "./components"
 import { getSettingsDefinition } from "@budibase/frontend-core"
+import { utils } from "@budibase/shared-core"
 
-function reduceBy<TItem extends {}, TKey extends keyof TItem>(
-  key: TKey,
-  list: TItem[]
-): Record<string, TItem> {
-  return list.reduce<Record<string, TItem>>((result, item) => {
-    result[item[key] as string] = item
-    return result
-  }, {})
-}
+const reduceBy = utils.toMap
 
 const friendlyNameByType: Partial<Record<UIDatasourceType, string>> = {
   viewV2: "view",
@@ -66,6 +60,7 @@ export const screenComponentErrorList = derived(
     if (!$selectedScreen) {
       return []
     }
+    const screen = $selectedScreen
 
     const datasources = {
       ...reduceBy("_id", $tables.list),
@@ -79,9 +74,11 @@ export const screenComponentErrorList = derived(
     const errors: UIComponentError[] = []
 
     function checkComponentErrors(component: Component, ancestors: string[]) {
-      errors.push(...getInvalidDatasources(component, datasources, definitions))
-      errors.push(...getMissingRequiredSettings(component, definitions))
       errors.push(...getMissingAncestors(component, definitions, ancestors))
+      errors.push(
+        ...getInvalidDatasources(screen, component, datasources, definitions)
+      )
+      errors.push(...getMissingRequiredSettings(component, definitions))
 
       for (const child of component._children || []) {
         checkComponentErrors(child, [...ancestors, component._component])
@@ -95,6 +92,7 @@ export const screenComponentErrorList = derived(
 )
 
 function getInvalidDatasources(
+  screen: Screen,
   component: Component,
   datasources: Record<string, any>,
   definitions: Record<string, ComponentDefinition>
@@ -234,7 +232,10 @@ function getMissingAncestors(
   ancestors: string[]
 ): UIComponentError[] {
   const definition = definitions[component._component]
-
+  if (ancestors.some(a => !a.startsWith(BudibasePrefix))) {
+    // We don't have a way to know what components are used within a plugin component
+    return []
+  }
   if (!definition?.requiredAncestors?.length) {
     return []
   }

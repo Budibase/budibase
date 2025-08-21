@@ -105,7 +105,7 @@
     {displayValue}
   </div>
   {#if editable}
-    <Icon name="Calendar" />
+    <Icon name="calendar" />
   {/if}
 </div>
 

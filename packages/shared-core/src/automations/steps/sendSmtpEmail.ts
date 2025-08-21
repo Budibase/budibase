@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
-  icon: "Email",
+  icon: "envelope",
   name: "Send Email (SMTP)",
   type: AutomationStepType.ACTION,
   internal: true,
@@ -43,8 +43,10 @@ export const definition: AutomationStepDefinition = {
           title: "Email Subject",
         },
         contents: {
-          type: AutomationIOType.STRING,
-          title: "HTML Contents",
+          type: AutomationIOType.LONGFORM,
+          title: "Message",
+          description:
+            "Use markdown or HTML for rich text formatting: **bold**, _italics_, # Headings, * Bullets, <br> for line breaks, and more.",
         },
         addInvite: {
           type: AutomationIOType.BOOLEAN,

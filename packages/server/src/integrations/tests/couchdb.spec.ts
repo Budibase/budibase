@@ -1,84 +1,87 @@
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    db: {
-      ...core.db,
-      DatabaseWithConnection: function () {
-        return {
-          allDocs: jest.fn().mockReturnValue({ rows: [] }),
-          put: jest.fn(),
-          get: jest.fn().mockReturnValue({ _rev: "a" }),
-          remove: jest.fn(),
-        }
-      },
-    },
-  }
-})
+import { env } from "@budibase/backend-core"
+import { CouchDBIntegration } from "../couchdb"
+import { generator } from "@budibase/backend-core/tests"
 
-import { default as CouchDBIntegration } from "../couchdb"
+function couchSafeID(): string {
+  // CouchDB IDs must start with a letter, so we prepend an 'a'.
+  return `a${generator.guid()}`
+}
 
-class TestConfiguration {
-  integration: any
+function doc(data: Record<string, any>): string {
+  return JSON.stringify({ _id: couchSafeID(), ...data })
+}
 
-  constructor(
-    config: any = { url: "http://somewhere", database: "something" }
-  ) {
-    this.integration = new CouchDBIntegration.integration(config)
-  }
+function query(data?: Record<string, any>): { json: string } {
+  return { json: doc(data || {}) }
 }
 
 describe("CouchDB Integration", () => {
-  let config: any
+  let couchdb: CouchDBIntegration
 
   beforeEach(() => {
-    config = new TestConfiguration()
-  })
-
-  it("calls the create method with the correct params", async () => {
-    const doc = {
-      test: 1,
-    }
-    await config.integration.create({
-      json: JSON.stringify(doc),
-    })
-    expect(config.integration.client.put).toHaveBeenCalledWith(doc)
-  })
-
-  it("calls the read method with the correct params", async () => {
-    const doc = {
-      name: "search",
-    }
-
-    await config.integration.read({
-      json: JSON.stringify(doc),
-    })
-
-    expect(config.integration.client.allDocs).toHaveBeenCalledWith({
-      include_docs: true,
-      name: "search",
+    couchdb = new CouchDBIntegration({
+      url: env.COUCH_DB_URL,
+      database: couchSafeID(),
     })
   })
 
-  it("calls the update method with the correct params", async () => {
-    const doc = {
-      _id: "1234",
-      name: "search",
-    }
-
-    await config.integration.update({
-      json: JSON.stringify(doc),
-    })
-
-    expect(config.integration.client.put).toHaveBeenCalledWith({
-      ...doc,
-      _rev: "a",
-    })
+  it("successfully connects", async () => {
+    const { connected } = await couchdb.testConnection()
+    expect(connected).toBe(true)
   })
 
-  it("calls the delete method with the correct params", async () => {
-    const id = "1234"
-    await config.integration.delete({ id })
-    expect(config.integration.client.remove).toHaveBeenCalledWith(id)
+  it("can create documents", async () => {
+    const { id, ok, rev } = await couchdb.create(query({ test: 1 }))
+    expect(id).toBeDefined()
+    expect(ok).toBe(true)
+    expect(rev).toBeDefined()
+  })
+
+  it("can read created documents", async () => {
+    const { id, ok, rev } = await couchdb.create(query({ test: 1 }))
+    expect(id).toBeDefined()
+    expect(ok).toBe(true)
+    expect(rev).toBeDefined()
+
+    const docs = await couchdb.read(query())
+    expect(docs).toEqual([
+      {
+        _id: id,
+        _rev: rev,
+        test: 1,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      },
+    ])
+  })
+
+  it("can update documents", async () => {
+    const { id, ok, rev } = await couchdb.create(query({ test: 1 }))
+    expect(ok).toBe(true)
+
+    const { id: newId, rev: newRev } = await couchdb.update(
+      query({ _id: id, _rev: rev, test: 2 })
+    )
+    const docs = await couchdb.read(query())
+    expect(docs).toEqual([
+      {
+        _id: newId,
+        _rev: newRev,
+        test: 2,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      },
+    ])
+  })
+
+  it("can delete documents", async () => {
+    const { id, ok, rev } = await couchdb.create(query({ test: 1 }))
+    expect(ok).toBe(true)
+
+    const deleteResponse = await couchdb.delete({ id, rev })
+    expect(deleteResponse.ok).toBe(true)
+
+    const docs = await couchdb.read(query())
+    expect(docs).toBeEmpty()
   })
 })

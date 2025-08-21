@@ -30,6 +30,7 @@ interface DataFetchStore<TDefinition, TQuery> {
   error: {
     message: string
     status: number
+    url: string
   } | null
   definition?: TDefinition | null
 }
@@ -61,7 +62,7 @@ export default abstract class BaseDataFetch<
     schema?: Record<string, any> | null
     primaryDisplay?: string
   },
-  TQuery extends {} = SearchFilters
+  TQuery extends {} = SearchFilters,
 > {
   API: APIClient
   features: {

@@ -56,7 +56,7 @@
   rowIdx={row?.__idx}
   metadata={row?.__metadata?.row}
 >
-  <div class="gutter">
+  <div class="gutter" class:selectable={$config.canSelectRows}>
     {#if $$slots.default}
       <slot />
     {:else}
@@ -79,14 +79,14 @@
     {#if rowSelected && $config.canDeleteRows}
       <div class="delete" on:click={bulkDelete}>
         <Icon
-          name="Delete"
+          name="trash"
           size="S"
           color="var(--spectrum-global-color-red-400)"
         />
       </div>
     {:else}
       <div class="expand" class:visible={$config.canExpandRows && expandable}>
-        <Icon size="S" name="Maximize" hoverable on:click={expand} />
+        <Icon size="S" name="arrows-out-simple" hoverable on:click={expand} />
       </div>
     {/if}
   </div>
@@ -116,12 +116,9 @@
     margin: 3px 0 0 0;
   }
   .number {
-    color: val(--cell-font-color, var(--spectrum-global-color-gray-500));
+    color: var(--spectrum-global-color-gray-500);
   }
-  .checkbox.visible,
-  .number.visible {
-    display: flex;
-  }
+
   .delete,
   .expand {
     margin-right: 4px;
@@ -134,7 +131,14 @@
   .delete:hover {
     cursor: pointer;
   }
-  .delete:hover :global(.spectrum-Icon) {
+  .delete:hover :global(.icon) {
     color: var(--spectrum-global-color-red-600) !important;
+  }
+
+  /* Visibility of checkbox and number */
+  .gutter.selectable .checkbox.visible,
+  .number.visible,
+  .gutter:not(.selectable) .number {
+    display: flex;
   }
 </style>

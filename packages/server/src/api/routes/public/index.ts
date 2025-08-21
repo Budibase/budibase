@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import workspaceEndpoints from "./workspaces"
 import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
@@ -6,14 +7,14 @@ import rowEndpoints from "./rows"
 import userEndpoints from "./users"
 import viewEndpoints from "./views"
 import roleEndpoints from "./roles"
-import authorized from "../../../middleware/authorized"
-import publicApi from "../../../middleware/publicApi"
+import { authorizedMiddleware as authorized } from "../../../middleware/authorized"
+import { publicApiMiddleware as publicApi } from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { PermissionLevel, PermissionType } from "@budibase/types"
-import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
+import testErrorHandling from "./middleware/testErrorHandling"
 import env from "../../../environment"
-import { middleware, redis } from "@budibase/backend-core"
+import { middleware, redis, CtxFn } from "@budibase/backend-core"
 import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
 import cors from "@koa/cors"
 // below imports don't have declaration files
@@ -144,12 +145,17 @@ function applyRoutes(
   // add the output mapper middleware
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
+  if (env.isTest()) {
+    addMiddleware(endpoints.read, testErrorHandling())
+    addMiddleware(endpoints.write, testErrorHandling())
+  }
   addToRouter(endpoints.read)
   addToRouter(endpoints.write)
 }
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
+applyRoutes(workspaceEndpoints, PermissionType.APP, "workspaceId")
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")

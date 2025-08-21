@@ -12,15 +12,14 @@ import {
   FetchAppPackageResponse,
   FetchAppsResponse,
   FetchDeploymentResponse,
+  FetchPublishedAppsResponse,
   GetDiagnosticsResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
+  PublishAppRequest,
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
-  SetRevertableAppVersionRequest,
-  SetRevertableAppVersionResponse,
-  SyncAppResponse,
   UnpublishAppResponse,
   UpdateAppClientResponse,
   UpdateAppRequest,
@@ -34,13 +33,16 @@ export interface AppEndpoints {
     metadata: UpdateAppRequest
   ) => Promise<UpdateAppResponse>
   unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
-  publishAppChanges: (appId: string) => Promise<PublishAppResponse>
+  publishAppChanges: (
+    appId: string,
+    opts?: PublishAppRequest
+  ) => Promise<PublishAppResponse>
   revertAppChanges: (appId: string) => Promise<RevertAppResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
   getAppDeployments: () => Promise<FetchDeploymentResponse>
-  createApp: (app: CreateAppRequest) => Promise<CreateAppResponse>
+  createApp: (app: CreateAppRequest | FormData) => Promise<CreateAppResponse>
   deleteApp: (appId: string) => Promise<DeleteAppResponse>
   duplicateApp: (
     appId: string,
@@ -51,16 +53,12 @@ export interface AppEndpoints {
     body: ImportToUpdateAppRequest
   ) => Promise<ImportToUpdateAppResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
-  syncApp: (appId: string) => Promise<SyncAppResponse>
   getApps: () => Promise<FetchAppsResponse>
   fetchComponentLibDefinitions: (
     appId: string
   ) => Promise<FetchAppDefinitionResponse>
-  setRevertableVersion: (
-    appId: string,
-    revertableVersion: string
-  ) => Promise<SetRevertableAppVersionResponse>
   addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
+  getPublishedApps: () => Promise<FetchPublishedAppsResponse["apps"]>
 
   // Missing request or response types
   importApps: (apps: any) => Promise<any>
@@ -92,9 +90,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Publishes the current app.
    */
-  publishAppChanges: async appId => {
+  publishAppChanges: async (appId, opts) => {
     return await API.post({
       url: `/api/applications/${appId}/publish`,
+      body: opts,
     })
   },
 
@@ -142,10 +141,17 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param app the app to create
    */
   createApp: async app => {
+    if (app instanceof FormData) {
+      return await API.post({
+        url: "/api/applications",
+        body: app,
+        json: false,
+      })
+    }
+
     return await API.post({
       url: "/api/applications",
       body: app,
-      json: false,
     })
   },
 
@@ -157,7 +163,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: `/api/applications/${appId}/duplicate`,
       body: app,
-      json: false,
     })
   },
 
@@ -229,16 +234,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   },
 
   /**
-   * Syncs an app with the production database.
-   * @param appId the ID of the app to sync
-   */
-  syncApp: async appId => {
-    return await API.post({
-      url: `/api/applications/${appId}/sync`,
-    })
-  },
-
-  /**
    * Gets a list of apps.
    */
   getApps: async () => {
@@ -268,21 +263,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     })
   },
 
-  /**
-   * Sets the revertable version of an app.
-   * Used when manually reverting to older client versions.
-   * @param appId the app ID
-   * @param revertableVersion the version number
-   */
-  setRevertableVersion: async (appId, revertableVersion) => {
-    return await API.post<
-      SetRevertableAppVersionRequest,
-      SetRevertableAppVersionResponse
-    >({
-      url: `/api/applications/${appId}/setRevertableVersion`,
-      body: {
-        revertableVersion,
-      },
+  getPublishedApps: async () => {
+    const response = await API.get<FetchPublishedAppsResponse>({
+      url: `/api/client/applications`,
     })
+    return response.apps
   },
 })

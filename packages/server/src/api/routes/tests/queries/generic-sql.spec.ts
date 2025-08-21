@@ -9,13 +9,14 @@ import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
   describe.each(descriptions)(
     "queries ($dbName)",
-    ({ config, dsProvider, isOracle, isMSSQL, isPostgres }) => {
+    ({ config, dsProvider, isOracle, isMSSQL, isPostgres, isMySQL }) => {
       let rawDatasource: Datasource
       let datasource: Datasource
       let client: Knex
@@ -159,7 +160,11 @@ if (descriptions.length) {
             expect(queries).not.toContainEqual(query)
 
             expect(events.query.deleted).toHaveBeenCalledTimes(1)
-            expect(events.query.deleted).toHaveBeenCalledWith(datasource, query)
+            expect(events.query.deleted).toHaveBeenCalledWith(
+              datasource,
+              query,
+              config.appId
+            )
           })
         })
 
@@ -216,6 +221,38 @@ if (descriptions.length) {
               expect(res).toBeDefined()
             })
         })
+
+        isMySQL &&
+          it("should handle ANSI_QUOTE=off MySQL queries with bindings", async () => {
+            const query = await createQuery({
+              fields: {
+                sql: client(tableName)
+                  .select("*")
+                  .where({
+                    name: client.raw("'{{ name }}'"),
+                  })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "name",
+                  default: "",
+                },
+              ],
+              queryVerb: "read",
+            })
+            const res = await config.api.query.execute(
+              query._id!,
+              {
+                parameters: { name: "one" },
+              },
+              {
+                status: 200,
+              }
+            )
+            expect(res.data.length).toEqual(1)
+            expect(res.data[0].name).toEqual("one")
+          })
       })
 
       describe("preview", () => {
@@ -609,6 +646,64 @@ if (descriptions.length) {
               expect(rows).toHaveLength(1)
             }
           )
+
+          it("should be able to create a new row with a JS value of 0 without falling back to the default", async () => {
+            const query = await createQuery({
+              name: "New Query",
+              queryVerb: "create",
+              fields: {
+                sql: client(tableName)
+                  .insert({ number: client.raw("{{ number }}") })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "number",
+                  default: "999",
+                },
+              ],
+            })
+
+            await config.api.query.execute(query._id!, {
+              parameters: { number: 0 },
+            })
+
+            const rows = await client(tableName).select("*").orderBy("id")
+            expect(rows).toHaveLength(6)
+            expect(rows[5].number).toEqual(0)
+
+            const rowsWith999 = rows.filter(row => row.number === 999)
+            expect(rowsWith999).toHaveLength(0)
+          })
+
+          it("should be able to create a new row with a JS value of empty string, falling back to the default", async () => {
+            const query = await createQuery({
+              name: "New Query",
+              queryVerb: "create",
+              fields: {
+                sql: client(tableName)
+                  .insert({ name: client.raw("{{ name }}") })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "name",
+                  default: "abc",
+                },
+              ],
+            })
+
+            await config.api.query.execute(query._id!, {
+              parameters: { name: "" },
+            })
+
+            const rows = await client(tableName).select("*").orderBy("id")
+            expect(rows).toHaveLength(6)
+            expect(rows[5].name).toEqual("abc")
+
+            const rowsWithEmptyName = rows.filter(row => row.name === "")
+            expect(rowsWithEmptyName).toHaveLength(0)
+          })
         })
 
         describe("read", () => {

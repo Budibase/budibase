@@ -8,7 +8,7 @@
 </script>
 
 <Button
-  icon="Group"
+  icon="squares-four"
   primary
   quiet
   active={!!view.groupBy}

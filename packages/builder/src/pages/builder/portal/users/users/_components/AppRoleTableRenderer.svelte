@@ -15,7 +15,9 @@
   }
 </script>
 
-{#if value === Constants.Roles.CREATOR}
+{#if value === Constants.Roles.GROUP}
+  Controlled by group
+{:else if value === Constants.Roles.CREATOR}
   Can edit
 {:else}
   <StatusLight

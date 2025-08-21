@@ -14,6 +14,7 @@ import {
   DatasourcePlusQueryResponse,
   SqlClient,
   EnrichedQueryJson,
+  SqlQueryBinding,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -36,9 +37,9 @@ import { env, sql } from "@budibase/backend-core"
 // This lets us reference the original stored timezone.
 // types is undefined when running in a test env for some reason.
 if (types) {
-  types.setTypeParser(1114, (val: any) => val) // timestamp
-  types.setTypeParser(1082, (val: any) => val) // date
-  types.setTypeParser(1184, (val: any) => val) // timestampz
+  types.setTypeParser(1114, (val: unknown) => val) // timestamp
+  types.setTypeParser(1082, (val: unknown) => val) // date
+  types.setTypeParser(1184, (val: unknown) => val) // timestampz
 }
 
 const JSON_REGEX = /'{\s*.*?\s*}'::json/gs
@@ -146,6 +147,15 @@ const SCHEMA: Integration = {
   },
 }
 
+function processBindings(bindings: SqlQueryBinding): SqlQueryBinding {
+  return bindings.map(binding => {
+    if (binding instanceof Date) {
+      return binding.toISOString()
+    }
+    return binding
+  })
+}
+
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
@@ -240,6 +250,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       .split(",")
       .map(item => `"${item.trim()}"`)
     await this.client.query(`SET search_path TO ${search_path.join(",")};`)
+    await this.client.query(`SET TIME ZONE 'UTC';`)
     this.open = true
   }
 
@@ -275,7 +286,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       }
     }
     try {
-      const bindings = query.bindings || []
+      const bindings = processBindings(query.bindings || [])
       this.log(query.sql, bindings)
       return await client.query(query.sql, bindings)
     } catch (err: any) {
@@ -378,6 +389,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
           options: enumValues?.[column.udt_name],
+          userDefinedType: column.udt_name,
         })
       }
 

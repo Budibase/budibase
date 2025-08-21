@@ -4,8 +4,16 @@ import {
   INITIAL_COMPONENTS_STATE,
   ComponentStore,
 } from "@/stores/builder/components"
+import { DatasourceStore } from "@/stores/builder/datasources"
+import { QueryStore } from "@/stores/builder/queries"
 import { API } from "@/api"
-import { appStore, tables } from "@/stores/builder"
+import {
+  appStore,
+  tables,
+  setComponentStore,
+  setDatasourcesStore,
+  setQueryStore,
+} from "@/stores/builder"
 import {
   componentDefinitionMap,
   getComponentFixture,
@@ -24,6 +32,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "@/constants/backend"
 import { makePropSafe as safe } from "@budibase/string-templates"
+import { Utils } from "@budibase/frontend-core"
 
 // Could move to fixtures
 const COMP_PREFIX = "@budibase/standard-components"
@@ -45,15 +54,33 @@ vi.mock("@/stores/builder", async () => {
     syncClientFeatures: vi.fn(),
     syncClientTypeSupportPresets: vi.fn(),
   }
-  const mockTableStore = writable()
-  const tables = {
-    subscribe: mockTableStore.subscribe,
-    update: mockTableStore.update,
-    set: mockTableStore.set,
-  }
+
+  // 'Global' instance available in the test run and in other imports
+  let componentStore
+  let datasourcesStore
+  let queryStore
+
   return {
     appStore,
-    tables,
+    tables: writable(),
+    get datasources() {
+      return datasourcesStore
+    },
+    get componentStore() {
+      return componentStore
+    },
+    get queries() {
+      return queryStore
+    },
+    setComponentStore(store) {
+      componentStore = store
+    },
+    setDatasourcesStore(store) {
+      datasourcesStore = store
+    },
+    setQueryStore(store) {
+      queryStore = store
+    },
   }
 })
 
@@ -75,21 +102,30 @@ const baseInitialisation = ctx => {
 }
 
 describe("Component store", () => {
-  beforeEach(ctx => {
+  beforeEach(async ctx => {
     vi.clearAllMocks()
     vi.resetAllMocks()
 
-    const componentStore = new ComponentStore()
+    let componentStoreInstance = new ComponentStore()
+    let datasourcesStoreInstance = new DatasourceStore()
+    let queryStoreInstance = new QueryStore()
+
     ctx.test = {}
     ctx.test = {
       get store() {
-        return get(componentStore)
+        return get(componentStoreInstance)
       },
       get $store() {
-        return get(componentStore) //store and $store
+        return get(componentStoreInstance)
       },
-      componentStore,
+      componentStore: componentStoreInstance,
     }
+
+    // Store a copy of the test instance in the mock
+    // May need a submodule if typescript complains
+    setComponentStore(componentStoreInstance)
+    setDatasourcesStore(datasourcesStoreInstance)
+    setQueryStore(queryStoreInstance)
   })
 
   it("Create base component store with defaults", ctx => {
@@ -129,9 +165,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
@@ -154,9 +189,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
@@ -318,9 +352,11 @@ describe("Component store", () => {
 
     baseInitialisation(ctx)
 
-    const componentDefs = componentDefinitionMap()
-    const targetCompDef =
-      componentDefs["@budibase/standard-components/rowexplorer"]
+    const settings = ctx.test.componentStore.getComponentSettings(
+      `${COMP_PREFIX}/rowexplorer`
+    )
+
+    const multiFieldSetting = settings.find(s => s.type === "multifield")
 
     const comp = getComponentFixture(`${COMP_PREFIX}/rowexplorer`).json()
     ctx.test.componentStore.enrichEmptySettings(comp, {
@@ -329,8 +365,7 @@ describe("Component store", () => {
       useDefaultValues: true,
     })
 
-    const multifieldKey = targetCompDef.settings[0].key
-    const multifieldOptions = comp[multifieldKey]
+    const multifieldOptions = comp[multiFieldSetting.key]
 
     expect(multifieldOptions).toStrictEqual(
       Object.keys(internalTableDoc.schema)
@@ -342,9 +377,6 @@ describe("Component store", () => {
 
     baseInitialisation(ctx)
 
-    const componentDefs = componentDefinitionMap()
-    const targetCompDef = componentDefs[`${COMP_PREFIX}/${type}`]
-
     const comp = getComponentFixture(`${COMP_PREFIX}/${type}`).json()
     ctx.test.componentStore.enrichEmptySettings(comp, {
       parent: null,
@@ -352,7 +384,14 @@ describe("Component store", () => {
       useDefaultValues: true,
     })
 
-    const settingKey = targetCompDef.settings[0].key
+    const settings = ctx.test.componentStore.getComponentSettings(
+      `${COMP_PREFIX}/${type}`
+    )
+
+    // Could be table or dataSource
+    const settingKey = settings.find(
+      s => s.type === "dataSource" || s.type === "table"
+    ).key
     const settingValue = comp[settingKey]
 
     expect(settingValue).toStrictEqual({
@@ -491,5 +530,375 @@ describe("Component store", () => {
 
     // The value should remain unset
     expect(settingValue).toBeUndefined()
+  })
+
+  it("updateComponentSetting - skip the update if the request is invalid", ctx => {
+    const query = {
+      name: "Sample",
+      queryParams: { some_val: "2342" },
+      _id: "some_query_123",
+      datasourceId: externalTableDoc._id,
+      type: "query",
+    }
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+
+    // Pass null as a name and ensure it does nothing.
+    const update = ctx.test.componentStore.updateComponentSetting(null, {
+      ...query,
+      queryParams: { some_val: "4567" },
+    })
+
+    const updated = update(provider)
+
+    // Update ignored as the name was invalid
+    expect(updated).toBe(false)
+
+    // Now attempt with no component.
+    const updateNoComp = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      {
+        ...query,
+        queryParams: { some_val: "8910" },
+      }
+    )
+
+    const updated_NoComp = updateNoComp()
+
+    expect(updated_NoComp).toBe(false)
+
+    // No change expected to the original component
+    // The dataSource should still be unset
+    expect(provider["dataSource"]).toBeUndefined()
+  })
+
+  it("updateComponentSetting - ignore 'resetOn' behaviour if query datasource is updated but not replaced", ctx => {
+    // A unique scenario where simply altering the datasource and not replacing it
+    // should not trigger a reset of related settings like filter.
+
+    baseInitialisation(ctx)
+
+    // Non REST query
+    const query = {
+      name: "Untitled query",
+      queryParams: { some_val: "2342" },
+      _id: "some_query_123",
+      datasourceId: externalTableDoc._id,
+      type: "query",
+    }
+
+    // Sample Filter
+    const filter = {
+      logicalOperator: "all",
+      onEmptyFilter: "none",
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              valueType: "Value",
+              field: "name",
+              type: "string",
+              operator: "equal",
+              noValue: false,
+              value: "test",
+            },
+          ],
+        },
+      ],
+    }
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+
+    provider["dataSource"] = query
+    provider["filter"] = filter
+
+    // Alter the query params only. This should trigger the resetOn
+    // behaviour but it should leave the filter intact as the source is unchanged
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      {
+        ...query,
+        queryParams: { some_val: "4567" },
+      }
+    )
+
+    const updated = update(provider)
+    expect(updated).toBe(true)
+
+    // The update should have gone ahead
+    expect(provider["dataSource"].queryParams.some_val).toBe("4567")
+
+    // filter should remain intact
+    expect(provider["filter"]).toStrictEqual(filter)
+  })
+
+  it("updateComponentSetting - resetOn should clear target setting if the datasource is replaced completely.", ctx => {
+    baseInitialisation(ctx)
+
+    // Non REST
+    const query = {
+      name: "Query",
+      queryParams: { some_val: "2342" },
+      _id: "some_query_123",
+      datasourceId: externalTableDoc._id,
+      type: "query",
+    }
+
+    // New Query
+    const query2 = {
+      name: "Query 2",
+      _id: "some_query_456",
+      datasourceId: externalTableDoc._id,
+      type: "query",
+    }
+
+    // Sample Filter
+    const filter = {
+      logicalOperator: "all",
+      onEmptyFilter: "none",
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              valueType: "Value",
+              field: "name",
+              type: "string",
+              operator: "equal",
+              noValue: false,
+              value: "test",
+            },
+          ],
+        },
+      ],
+    }
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+    provider["dataSource"] = query
+    provider["filter"] = filter
+
+    // Replace the entire query
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      query2
+    )
+
+    const updated = update(provider)
+    expect(updated).toBe(true)
+
+    // Datasource should have been replaced.
+    expect(provider["dataSource"]._id).toBe(query2._id)
+
+    // The resetOn behaviour should have kicked in and cleared the filter.
+    expect(provider["filter"]).toBeNull()
+  })
+
+  /**
+   * Check that button configuration resets if either "actionType" or "dataSource" are changed
+   */
+  it("updateComponentSetting - 'resetOn' multi-field config should trigger for all configured fields.", ctx => {
+    baseInitialisation(ctx)
+
+    // Base config for a formBlock
+    const genConfig = source => {
+      return {
+        buttons: [
+          ...Utils.buildFormBlockButtonConfig({
+            _id: formBlock._id,
+            actionType: formBlock["actionType"],
+            dataSource: internalTableDoc,
+          }),
+          getComponentFixture(`${COMP_PREFIX}/button`).json(),
+        ],
+        dataSource: source,
+        fields: Object.keys(source.schema).map(key => ({
+          name: key,
+          active: true,
+        })),
+      }
+    }
+
+    const formBlockFx = getComponentFixture(`${COMP_PREFIX}/formblock`)
+    let formBlock = formBlockFx.json()
+    formBlock["actionType"] = "Update"
+    formBlock = {
+      ...formBlock,
+      ...genConfig(internalTableDoc),
+    }
+
+    // Switch datasource to a new one.
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      externalTableDoc
+    )
+
+    const updated = update(formBlock)
+    expect(updated).toBe(true)
+
+    // formBlock.buttons 'resetOn' prop depends on either actionType OR dataSource
+    expect(formBlock["buttons"]).toBeNull()
+    // Fields has a single 'resetOn' that also depends on dataSource
+    expect(formBlock["fields"]).toBeNull()
+
+    // Now check that altering the actionType has the same effect on buttons.
+    let formBlock2 = formBlockFx.json()
+    formBlock2["actionType"] = "Update"
+    formBlock2 = {
+      ...formBlock2,
+      ...genConfig(externalTableDoc),
+    }
+
+    // Switch actionType to a new one.
+    const update2 = ctx.test.componentStore.updateComponentSetting(
+      "actionType",
+      "Create"
+    )
+    const updated2 = update2(formBlock2)
+    expect(updated2).toBe(true)
+
+    //Again, buttons should be clear
+    expect(formBlock2["buttons"]).toBeNull()
+    // fields should be unaffected
+    expect(formBlock2["fields"]).not.toBeNull()
+  })
+
+  it("updateComponentSetting - should clear if the view name has changed. Legacy views", ctx => {
+    // Legacy views don't have a discernable resource id beyond the name.
+
+    baseInitialisation(ctx)
+
+    const view = {
+      name: "Sample",
+      tableId: internalTableDoc._id,
+      type: "view",
+    }
+
+    const filter = {
+      logicalOperator: "all",
+      onEmptyFilter: "none",
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              valueType: "Value",
+              field: "name",
+              type: "string",
+              operator: "equal",
+              noValue: false,
+              value: "test",
+            },
+          ],
+        },
+      ],
+    }
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+    provider["dataSource"] = view
+    provider["filter"] = filter
+
+    const view2 = {
+      name: "Sample Two",
+      tableId: internalTableDoc._id,
+      type: "view",
+    }
+
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      view2
+    )
+    const updated = update(provider)
+
+    // Update ignored as the name was invalid
+    expect(updated).toBe(true)
+
+    expect(provider.dataSource.name).toBe("Sample Two")
+    expect(provider.filter).toBeNull()
+  })
+
+  it("updateComponentSetting - should clear if the view name is exactly the same but is in another table. Legacy views", ctx => {
+    baseInitialisation(ctx)
+
+    const view = {
+      name: "Sample",
+      tableId: internalTableDoc._id,
+      type: "view",
+    }
+
+    const filter = {
+      logicalOperator: "all",
+      onEmptyFilter: "none",
+      groups: [
+        {
+          logicalOperator: "any",
+          filters: [
+            {
+              valueType: "Value",
+              field: "name",
+              type: "string",
+              operator: "equal",
+              noValue: false,
+              value: "test",
+            },
+          ],
+        },
+      ],
+    }
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+    provider["dataSource"] = view
+    provider["filter"] = filter
+
+    const view2 = {
+      name: "Sample",
+      tableId: externalTableDoc._id,
+      type: "view",
+    }
+
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      view2
+    )
+    const updated = update(provider)
+
+    // Update ignored as the name was invalid
+    expect(updated).toBe(true)
+
+    expect(provider.dataSource.name).toBe("Sample")
+    expect(provider.dataSource.tableId).toBe(externalTableDoc._id)
+    expect(provider.filter).toBeNull()
+  })
+
+  it("updateComponentSetting - Should gracefully handle not having an initial dataSource", ctx => {
+    // Unlikely due to enriching and migrations, but it should handle it.
+
+    baseInitialisation(ctx)
+
+    const providerOne = getComponentFixture(`${COMP_PREFIX}/dataprovider`)
+    const provider = providerOne.json()
+
+    const view2 = {
+      name: "Sample",
+      tableId: externalTableDoc._id,
+      type: "view",
+    }
+
+    const update = ctx.test.componentStore.updateComponentSetting(
+      "dataSource",
+      view2
+    )
+    const updated = update(provider)
+
+    // Update ignored as the name was invalid
+    expect(updated).toBe(true)
+
+    expect(provider.dataSource.name).toBe("Sample")
+    expect(provider.dataSource.tableId).toBe(externalTableDoc._id)
   })
 })

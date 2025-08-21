@@ -1,19 +1,15 @@
-<script lang="ts" context="module">
-  type O = any
-  type V = any
-</script>
-
-<script lang="ts">
+<script lang="ts" generics="O extends any,V">
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
   import { PopoverAlignment } from "../constants"
+  import type { LabelPosition } from "../types"
 
   export let value: V | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let labelPosition: string = "above"
+  export let labelPosition: LabelPosition = "above"
   export let error: string | undefined = undefined
   export let placeholder: string | boolean = "Choose an option"
   export let options: O[] = []
@@ -22,9 +18,11 @@
   export let getOptionValue = (option: O, _index?: number) =>
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
-    option?.subtitle
-  export let getOptionIcon = (option: O, _index?: number) => option?.icon
-  export let getOptionColour = (option: O, _index?: number) => option?.colour
+    (option as any)?.subtitle
+  export let getOptionIcon = (option: O, _index?: number) =>
+    (option as any)?.icon
+  export let getOptionColour = (option: O, _index?: number) =>
+    (option as any)?.colour
   export let useOptionIconImage = false
   export let isOptionEnabled:
     | ((_option: O, _index?: number) => boolean)
@@ -33,6 +31,9 @@
   export let autoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
+  export let tooltipMessage:
+    | ((_option: O, _index?: number) => string)
+    | undefined = undefined
   export let autocomplete: boolean = false
   export let customPopoverHeight: string | undefined = undefined
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
@@ -41,6 +42,7 @@
   export let compare: any = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let loading: boolean | undefined = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -59,6 +61,7 @@
 <Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
     {quiet}
+    {loading}
     {disabled}
     {readonly}
     {value}
@@ -80,6 +83,7 @@
     {compare}
     {onOptionMouseenter}
     {onOptionMouseleave}
+    {tooltipMessage}
     on:change={onChange}
     on:click
   />

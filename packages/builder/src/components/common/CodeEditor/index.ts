@@ -43,15 +43,12 @@ const buildHelperInfoNode = (helper: Helper) => {
 }
 
 const toSpectrumIcon = (name: string) => {
-  return `<svg
-    class="spectrum-Icon spectrum-Icon--sizeS"
-    focusable="false"
-    aria-hidden="false"
-    aria-label="${name}-section-icon"
-    style="color:var(--spectrum-global-color-gray-700)"
-  >
-    <use style="pointer-events: none;" xlink:href="#spectrum-icon-18-${name}" />
-  </svg>`
+  return `
+    <i class="ph ph-${name}"
+       style="color:var(--spectrum-global-color-gray-700); font-size: 14px;" 
+       aria-label="${name}-section-icon"
+       aria-hidden="false"></i>
+  `
 }
 
 const buildSectionHeader = (
@@ -83,6 +80,8 @@ const helpersToCompletion = (
     const helper = helpers[helperName]
     return {
       label: helperName,
+      args: helper.args,
+      requiresBlock: helper.requiresBlock,
       info: () => buildHelperInfoNode(helper),
       type: "helper",
       section: helperSection,
@@ -136,9 +135,13 @@ export const hbAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    let bindingStart = context.matchBefore(EditorModes.Handlebars.match)
+    if (!baseCompletions.length) {
+      return null
+    }
 
-    let options = baseCompletions || []
+    const bindingStart = context.matchBefore(EditorModes.Handlebars.match)
+
+    const options = baseCompletions
 
     if (!bindingStart) {
       return null
@@ -149,7 +152,7 @@ export const hbAutocomplete = (
       return null
     }
     const query = bindingStart.text.replace(match[0], "")
-    let filtered = bindingFilter(options, query)
+    const filtered = bindingFilter(options, query)
 
     return {
       from: bindingStart.from + match[0].length,
@@ -169,8 +172,12 @@ export const jsAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    let jsBinding = wrappedAutocompleteMatch(context)
-    let options = baseCompletions || []
+    if (!baseCompletions.length) {
+      return null
+    }
+
+    const jsBinding = wrappedAutocompleteMatch(context)
+    const options = baseCompletions
 
     if (jsBinding) {
       // Accommodate spaces
@@ -209,6 +216,10 @@ function setAutocomplete(
   options: BindingCompletionOption[]
 ): BindingCompletion {
   return function (context: CompletionContext) {
+    if (!options.length) {
+      return null
+    }
+
     if (wrappedAutocompleteMatch(context)) {
       return null
     }

@@ -53,6 +53,7 @@ import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { isRelationshipColumn } from "../../../db/utils"
+import { isEqual, omit } from "lodash"
 
 interface ManyRelationship {
   tableId?: string
@@ -84,8 +85,8 @@ export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
     ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
-    ? number
-    : { row: Row; table: Table }
+      ? number
+      : { row: Row; table: Table }
 
 /**
  * This function checks the incoming parameters to make sure all the inputs are
@@ -257,16 +258,12 @@ export class ExternalRequest<T extends Operation> {
   }
 
   private async removeManyToManyRelationships(rowId: string, table: Table) {
-    const tableId = table._id!
     const filters = this.prepareFilters(rowId, {}, table)
+
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
-      return makeExternalQuery({
-        endpoint: getEndpoint(tableId, Operation.DELETE),
-        filters,
-      })
-    } else {
-      return []
+      const endpoint = getEndpoint(table._id!, Operation.DELETE)
+      await makeExternalQuery({ endpoint, filters })
     }
   }
 
@@ -279,13 +276,11 @@ export class ExternalRequest<T extends Operation> {
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
-      return makeExternalQuery({
+      await makeExternalQuery({
         endpoint: getEndpoint(tableId, Operation.UPDATE),
         body: { [colName]: null },
         filters,
       })
-    } else {
-      return []
     }
   }
 
@@ -361,14 +356,13 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to many
         else if (isManyToMany(field)) {
-          // we're not inserting a doc, will be a bunch of update calls
           const otherKey: string = field.throughFrom || linkTablePrimary
           const thisKey: string = field.throughTo || tablePrimary
           for (const relationship of row[key]) {
             manyRelationships.push({
               tableId: field.through || field.tableId,
               isUpdate: false,
-              key: otherKey,
+              key: field.fieldName,
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
@@ -378,17 +372,13 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to one
         else {
-          const thisKey = "id"
-          // @ts-ignore
-          const otherKey: string = field.fieldName
           for (const relationship of row[key]) {
             manyRelationships.push({
+              id: breakRowIdField(relationship)[0],
               tableId: field.tableId,
               isUpdate: true,
-              key: otherKey,
-              [thisKey]: breakRowIdField(relationship)[0],
-              // leave the ID for enrichment later
-              [otherKey]: `{{ literal ${tablePrimary} }}`,
+              key: field.fieldName,
+              [field.fieldName]: `{{ literal ${tablePrimary} }}`,
               relationshipType: RelationshipType.MANY_TO_ONE,
             })
           }
@@ -436,8 +426,8 @@ export class ExternalRequest<T extends Operation> {
 
     const { tableName } = breakExternalTableId(tableId)
     const table = this.tables[tableName]
-    // @ts-ignore
-    const primaryKey = table.primary[0]
+    const primaryKey = table.primary?.[0]
+
     // make a new request to get the row with all its relationships
     // we need this to work out if any relationships need removed
     for (const field of Object.values(table.schema)) {
@@ -488,7 +478,8 @@ export class ExternalRequest<T extends Operation> {
           ? []
           : response
 
-      related[this.getLookupRelationsKey(field)] = {
+      const relatedKey = this.getLookupRelationsKey(field)
+      related[relatedKey] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
@@ -512,8 +503,6 @@ export class ExternalRequest<T extends Operation> {
     row: Row,
     relationships: ManyRelationship[]
   ) {
-    // if we're creating (in a through table) need to wipe the existing ones first
-    const promises = []
     const related = await this.lookupRelations(mainTableId, row)
     for (let relationship of relationships) {
       const { key, tableId, isUpdate, id, relationshipType, ...rest } =
@@ -533,24 +522,32 @@ export class ExternalRequest<T extends Operation> {
 
       const linkSecondary = relationshipPrimary[1]
 
-      const rows =
-        related[
-          this.getLookupRelationsKey({
-            relationshipType,
-            fieldName: key,
-            through: relationship.tableId,
-          })
-        ]?.rows || []
+      const relatedKey = this.getLookupRelationsKey({
+        relationshipType,
+        fieldName: key,
+        through: relationship.tableId,
+      })
+      const rows = related[relatedKey]?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
         linkPrimary,
         linkSecondary,
+        relationshipType,
       }: {
         row: Row
         linkPrimary: string
         linkSecondary?: string
+        relationshipType: RelationshipType
       }) => {
+        // In many-to-many relationships, the table will contain 3 fields: a
+        // primary key (usually an auto-incrementing ID), and then the 2 foreign
+        // keys that link to the two tables. So a row is equal if the 2
+        // non-primary keys match the body.
+        if (relationshipType === RelationshipType.MANY_TO_MANY) {
+          return isEqual(omit(row, [linkPrimary]), omit(body, [linkPrimary]))
+        }
+
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
@@ -563,10 +560,16 @@ export class ExternalRequest<T extends Operation> {
         return matchesPrimaryLink && matchesSecondaryLink
       }
 
-      const existingRelationship = rows.find((row: { [key: string]: any }) =>
-        relationshipMatchPredicate({ row, linkPrimary, linkSecondary })
+      const existingRelationship = rows.find(row =>
+        relationshipMatchPredicate({
+          row,
+          linkPrimary,
+          linkSecondary,
+          relationshipType: relationship.relationshipType,
+        })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
+      const promises: Promise<unknown>[] = []
       if (!existingRelationship) {
         promises.push(
           makeExternalQuery({
@@ -580,8 +583,11 @@ export class ExternalRequest<T extends Operation> {
         // remove the relationship from cache so it isn't adjusted again
         rows.splice(rows.indexOf(existingRelationship), 1)
       }
+      await Promise.all(promises)
     }
+
     // finally cleanup anything that needs to be removed
+    const promises: Promise<unknown>[] = []
     for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
@@ -591,13 +597,12 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      for (let row of rows) {
+      for (const row of rows) {
         const rowId = generateIdForRow(row, table)
-        const promise: Promise<any> = isMany
-          ? this.removeManyToManyRelationships(rowId, table)
-          : this.removeOneToManyRelationships(rowId, table, field)
-        if (promise) {
-          promises.push(promise)
+        if (isMany) {
+          promises.push(this.removeManyToManyRelationships(rowId, table))
+        } else {
+          promises.push(this.removeOneToManyRelationships(rowId, table, field))
         }
       }
     }
@@ -607,27 +612,31 @@ export class ExternalRequest<T extends Operation> {
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
+    const promises: Promise<unknown>[] = []
     for (const column of Object.values(table.schema)) {
       if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
       }
 
-      const relatedByTable = related[this.getLookupRelationsKey(column)]
-      if (!relatedByTable) {
+      const relatedKey = this.getLookupRelationsKey(column)
+      if (!related[relatedKey]) {
         continue
       }
 
-      const { rows, isMany, tableId } = relatedByTable
+      const { rows, isMany, tableId } = related[relatedKey]!
       const table = this.getTable(tableId)!
-      await Promise.all(
-        rows.map(row => {
-          const rowId = generateIdForRow(row, table)
-          return isMany
-            ? this.removeManyToManyRelationships(rowId, table)
-            : this.removeOneToManyRelationships(rowId, table, column.fieldName)
-        })
-      )
+      for (const row of rows) {
+        const rowId = generateIdForRow(row, table)
+        if (isMany) {
+          promises.push(this.removeManyToManyRelationships(rowId, table))
+        } else {
+          promises.push(
+            this.removeOneToManyRelationships(rowId, table, column.fieldName)
+          )
+        }
+      }
     }
+    await Promise.all(promises)
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {

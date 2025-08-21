@@ -15,23 +15,27 @@ const conversion: Record<DurationType, number> = {
 }
 
 export class Duration {
+  constructor(public ms: number) {}
+
+  to(type: DurationType) {
+    return this.ms / conversion[type]
+  }
+
+  toMs() {
+    return this.ms
+  }
+
+  toSeconds() {
+    return this.to(DurationType.SECONDS)
+  }
+
   static convert(from: DurationType, to: DurationType, duration: number) {
     const milliseconds = duration * conversion[from]
     return milliseconds / conversion[to]
   }
 
   static from(from: DurationType, duration: number) {
-    return {
-      to: (to: DurationType) => {
-        return Duration.convert(from, to, duration)
-      },
-      toMs: () => {
-        return Duration.convert(from, DurationType.MILLISECONDS, duration)
-      },
-      toSeconds: () => {
-        return Duration.convert(from, DurationType.SECONDS, duration)
-      },
-    }
+    return new Duration(duration * conversion[from])
   }
 
   static fromSeconds(duration: number) {

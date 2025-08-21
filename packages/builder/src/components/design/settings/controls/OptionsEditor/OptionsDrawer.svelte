@@ -43,7 +43,7 @@
             <Input placeholder="Label" bind:value={option.label} />
             <Input placeholder="Value" bind:value={option.value} />
             <Icon
-              name="Close"
+              name="x"
               hoverable
               size="S"
               on:click={() => removeOption(option.id)}
@@ -52,7 +52,7 @@
         </div>
       {/if}
       <div>
-        <Button icon="AddCircle" size="M" on:click={addOption} secondary>
+        <Button icon="plus-circle" size="M" on:click={addOption} secondary>
           Add Option
         </Button>
       </div>

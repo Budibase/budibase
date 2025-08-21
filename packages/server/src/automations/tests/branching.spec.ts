@@ -1,5 +1,5 @@
 import * as automation from "../index"
-import { Table, AutomationStatus } from "@budibase/types"
+import { Table, AutomationStatus, EmptyFilterOption } from "@budibase/types"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
@@ -279,5 +279,24 @@ describe("Branching automations", () => {
       .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
+  })
+
+  it("should not fail with empty conditions", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Hello!" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { test_trigger: true } })
+
+    expect(results.steps[0].outputs.success).toEqual(false)
+    expect(results.steps[0].outputs.status).toEqual(
+      AutomationStatus.NO_CONDITION_MET
+    )
   })
 })

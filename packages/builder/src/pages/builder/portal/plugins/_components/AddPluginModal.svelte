@@ -55,8 +55,8 @@
           source === PluginSource.GITHUB
             ? dynamicValues["Github Token"]
             : source === PluginSource.URL
-            ? dynamicValues["Headers"]
-            : undefined
+              ? dynamicValues["Headers"]
+              : undefined
         await plugins.createPlugin(source, url, auth)
       }
       notifications.success("Plugin added successfully.")

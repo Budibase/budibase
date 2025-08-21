@@ -1,24 +1,33 @@
-<script>
+<script lang="ts">
   import Field from "./Field.svelte"
   import Checkbox from "./Core/Checkbox.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
-  export let value = null
-  export let label = null
-  export let labelPosition = "above"
-  export let text = null
-  export let disabled = false
-  export let error = null
-  export let size = "M"
-  export let helpText = null
+  export let value: boolean | undefined = undefined
+  export let indeterminate: boolean | undefined = undefined
+  export let label: string | undefined = undefined
+  export let labelPosition: LabelPosition = "above"
+  export let text: string | undefined = undefined
+  export let disabled: boolean = false
+  export let error: string | undefined = undefined
+  export let size: "S" | "M" | "L" | "XL" = "M"
+  export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e: CustomEvent<boolean>) => {
     value = e.detail
     dispatch("change", e.detail)
   }
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
-  <Checkbox {error} {disabled} {text} {value} {size} on:change={onChange} />
+  <Checkbox
+    {disabled}
+    {text}
+    {value}
+    {size}
+    {indeterminate}
+    on:change={onChange}
+  />
 </Field>

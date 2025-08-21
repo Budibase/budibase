@@ -25,7 +25,6 @@ export default [
       "packages/builder/.routify",
       "packages/sdk/sdk",
       "**/*.ivm.bundle.js",
-      "packages/server/build/oldClientVersions/**/**/*",
     ],
   },
   {
@@ -39,14 +38,18 @@ export default [
         ...globals.jest,
         ...globals.node,
         GeolocationPositionError: true,
+        RequestInit: true,
       },
 
       parser: babelParser,
-      ecmaVersion: 2019,
+      ecmaVersion: 2020,
       sourceType: "module",
 
       parserOptions: {
         allowImportExportEverywhere: true,
+        svelteFeatures: {
+          experimentalGenerics: true,
+        },
       },
     },
 
@@ -93,6 +96,15 @@ export default [
         parser: "@typescript-eslint/parser",
         allowImportExportEverywhere: true,
       },
+    },
+
+    plugins: {
+      ...config.plugins,
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      ...config.rules,
+      "@typescript-eslint/consistent-type-imports": "error",
     },
   })),
   ...tseslint.configs.strict.map(config => ({

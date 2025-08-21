@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Popover from "../Popover/Popover.svelte"
   import Layout from "../Layout/Layout.svelte"
   import { createEventDispatcher } from "svelte"
@@ -11,15 +11,17 @@
     getThemeClassNames,
     DefaultAppTheme,
   } from "@budibase/shared-core"
+  import type { Theme } from "@budibase/types"
+  import type { PopoverAlignment } from "../constants"
 
-  export let value
-  export let size = "M"
-  export let spectrumTheme
-  export let offset
-  export let align
+  export let value: string | undefined = undefined
+  export let size: "S" | "M" | "L" = "M"
+  export let spectrumTheme: Theme | undefined = undefined
+  export let offset: number | undefined = undefined
+  export let align: PopoverAlignment | undefined = undefined
 
-  let dropdown
-  let preview
+  let dropdown: Popover | undefined
+  let preview: HTMLElement | undefined
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
@@ -28,23 +30,7 @@
   const dispatch = createEventDispatcher()
   const categories = [
     {
-      label: "Theme",
-      colors: [
-        "gray-50",
-        "gray-75",
-        "gray-100",
-        "gray-200",
-        "gray-300",
-        "gray-400",
-        "gray-500",
-        "gray-600",
-        "gray-700",
-        "gray-800",
-        "gray-900",
-      ],
-    },
-    {
-      label: "Colors",
+      label: "Theme colors",
       colors: [
         "red-100",
         "orange-100",
@@ -91,13 +77,56 @@
         "indigo-700",
         "magenta-700",
 
+        "gray-50",
+        "gray-75",
+        "gray-100",
+        "gray-200",
+        "gray-300",
+        "gray-400",
+        "gray-500",
+        "gray-600",
+        "gray-700",
+        "gray-800",
+        "gray-900",
+      ],
+    },
+    {
+      label: "Static colors",
+      colors: [
+        "static-red-400",
+        "static-orange-400",
+        "static-yellow-400",
+        "static-green-400",
+        "static-seafoam-400",
+        "static-blue-400",
+        "static-indigo-400",
+        "static-magenta-400",
+
+        "static-red-800",
+        "static-orange-800",
+        "static-yellow-800",
+        "static-green-800",
+        "static-seafoam-800",
+        "static-blue-800",
+        "static-indigo-800",
+        "static-magenta-800",
+
+        "static-red-1200",
+        "static-orange-1200",
+        "static-yellow-1200",
+        "static-green-1200",
+        "static-seafoam-1200",
+        "static-blue-1200",
+        "static-indigo-1200",
+        "static-magenta-1200",
+
         "static-white",
         "static-black",
       ],
     },
   ]
 
-  const getThemeClasses = theme => {
+  const getThemeClasses = (theme: Theme | undefined) => {
     if (!theme) {
       return ""
     }
@@ -105,12 +134,12 @@
     return getThemeClassNames(theme)
   }
 
-  const onChange = value => {
+  const onChange = (value: string | undefined) => {
     dispatch("change", value)
-    dropdown.hide()
+    dropdown?.hide()
   }
 
-  const getCustomValue = value => {
+  const getCustomValue = (value: string | undefined) => {
     if (!value) {
       return value
     }
@@ -125,11 +154,11 @@
     return found ? null : value
   }
 
-  const prettyPrint = color => {
+  const prettyPrint = (color: string) => {
     return capitalise(color.split("-").join(" "))
   }
 
-  const getCheckColor = value => {
+  const getCheckColor = (value: string | undefined) => {
     // Use dynamic color for theme grays
     if (value?.includes("-gray-")) {
       return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
@@ -137,9 +166,12 @@
         : "var(--spectrum-global-color-gray-50)"
     }
 
-    // Use contrasating check for the dim colours
+    // Use contrasting check for the dim colours
     if (value?.includes("-100")) {
       return "var(--spectrum-global-color-gray-900)"
+    }
+    if (value?.includes("-1200") || value?.includes("-800")) {
+      return "var(--spectrum-global-color-static-gray-50)"
     }
 
     // Use black check for static white
@@ -157,7 +189,7 @@
   bind:this={preview}
   class="preview size--{size || 'M'}"
   on:click={() => {
-    dropdown.toggle()
+    dropdown?.toggle()
   }}
 >
   <div
@@ -169,7 +201,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<Popover bind:this={dropdown} anchor={preview} maxHeight={320} {offset} {align}>
+<Popover bind:this={dropdown} anchor={preview} maxHeight={350} {offset} {align}>
   <Layout paddingX="XL" paddingY="L">
     <div class="container">
       {#each categories as category}
@@ -189,7 +221,7 @@
                   style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
                 >
                   {#if value === `var(--spectrum-global-color-${color})`}
-                    <Icon name="Checkmark" size="S" />
+                    <Icon name="check" size="S" />
                   {/if}
                 </div>
               </div>
@@ -209,9 +241,9 @@
           />
           <Icon
             size="S"
-            name="Close"
+            name="x"
             hoverable
-            on:click={() => onChange(null)}
+            on:click={() => onChange(undefined)}
           />
         </div>
       </div>
@@ -246,9 +278,12 @@
     place-items: center;
   }
   .fill.placeholder {
-    background-position: 0 0, 10px 10px;
+    background-position:
+      0 0,
+      10px 10px;
     background-size: 20px 20px;
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         45deg,
         #eee 25%,
         transparent 25%,

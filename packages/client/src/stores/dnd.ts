@@ -60,16 +60,16 @@ const createDndStore = () => {
     let drop: DNDDrop | undefined = undefined
     if (get(isGridScreen)) {
       const screen = get(screenStore)?.activeScreen
-      const id = screen.props._id
+      const id = screen!.props._id
       target = {
-        id,
+        id: id!,
         parent: ScreenslotID,
         empty: false,
         acceptsChildren: true,
       }
       drop = {
-        parent: id,
-        index: screen?.props?._children?.length,
+        parent: id!,
+        index: screen?.props?._children?.length || 0,
       }
     }
 
@@ -85,7 +85,7 @@ const createDndStore = () => {
         type,
         isNew: true,
         name: `New ${definition?.name || "component"}`,
-        icon: definition?.icon || "Selection",
+        icon: definition?.icon || "selection",
       },
       target,
       drop,

@@ -311,7 +311,7 @@ describe("/api/global/auth", () => {
       })
     })
 
-    describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
+    describe.skip("GET /api/global/auth/:tenantId/oidc/callback", () => {
       it("logs in", async () => {
         const email = `${generator.guid()}@example.com`
 

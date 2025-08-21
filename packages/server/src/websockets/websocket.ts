@@ -158,7 +158,7 @@ export class BaseSocket {
       const sessionIds = await this.getRoomSessionIds(room)
       const keys = sessionIds.map(this.getSessionKey.bind(this))
       const sessions = await this.redisClient?.bulkGet<SocketSession>(keys)
-      return Object.values(sessions || {})
+      return Object.values(sessions || {}).filter(session => session !== null)
     } else {
       return []
     }

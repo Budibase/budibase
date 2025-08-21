@@ -377,6 +377,10 @@ class LinkController {
           linkedField.subtype = field.subtype
         }
 
+        if (field.aiGenerated) {
+          linkedField.aiGenerated = field.aiGenerated
+        }
+
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
         if (

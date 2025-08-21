@@ -17,7 +17,15 @@ const copyFonts = dest =>
   viteStaticCopy({
     targets: [
       {
-        src: "../../node_modules/@fontsource/source-sans-pro",
+        src: "./assets/source-sans-3",
+        dest,
+      },
+      {
+        src: "./assets/phosphor-icons",
+        dest,
+      },
+      {
+        src: "./assets/inter",
         dest,
       },
       {
@@ -87,6 +95,7 @@ export default defineConfig(({ mode }) => {
       exclude: ["@roxi/routify", "fsevents"],
     },
     resolve: {
+      conditions: mode === "test" ? ["browser"] : [],
       dedupe: ["@roxi/routify"],
       alias: {
         "@budibase/types": path.resolve(__dirname, "../types/src"),

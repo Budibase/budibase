@@ -1,0 +1,57 @@
+{
+  "name": "@budibase/upgrade-tests",
+  "version": "0.0.0",
+  "description": "Budibase upgrade testing framework",
+  "main": "src/index.ts",
+  "bin": {
+    "budibase-upgrade-test": "./dist/src/cli/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:upgrade": "yarn build && node dist/src/cli/index.js full",
+    "test:pre": "yarn build && node dist/src/cli/index.js pre",
+    "test:post": "yarn build && node dist/src/cli/index.js post",
+    "cli": "yarn build && node dist/src/cli/index.js",
+    "build": "tsc -p tsconfig.build.json",
+    "check:types": "tsc -p tsconfig.json --noEmit"
+  },
+  "author": "Budibase",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@budibase/types": "*",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "lodash": "^4.17.21",
+    "ora": "^5.4.1",
+    "semver": "^7.5.4",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@commander-js/extra-typings": "14.0.0",
+    "@types/jest": "^29.5.5",
+    "@types/node": "22.9.0",
+    "@types/semver": "^7.5.8",
+    "@types/uuid": "^9.0.7",
+    "jest": "29.7.0",
+    "ts-jest": "29.1.1",
+    "typescript": "5.7.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
+  }
+}

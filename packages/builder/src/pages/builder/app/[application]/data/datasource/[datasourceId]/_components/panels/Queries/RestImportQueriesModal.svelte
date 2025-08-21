@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto } from "@roxi/routify"
   import {
     keepOpen,
@@ -14,13 +14,14 @@
   } from "@budibase/bbui"
   import { datasources, queries } from "@/stores/builder"
   import { writable } from "svelte/store"
+  import type { Datasource } from "@budibase/types"
 
   export let navigateDatasource = false
-  export let datasourceId
+  export let datasourceId: string | undefined = undefined
   export let createDatasource = false
-  export let onCancel
+  export let onCancel: (() => void) | undefined = undefined
 
-  const data = writable({
+  const data = writable<{ url: string; raw: string; file?: any }>({
     url: "",
     raw: "",
     file: undefined,
@@ -28,12 +29,14 @@
 
   let lastTouched = "url"
 
-  const getData = async () => {
+  $: datasource = $datasources.selected as Datasource
+
+  const getData = async (): Promise<string> => {
     let dataString
 
     // parse the file into memory and send as string
     if (lastTouched === "file") {
-      dataString = await $data.file.text()
+      dataString = await $data.file?.text()
     } else if (lastTouched === "url") {
       const response = await fetch($data.url)
       dataString = await response.text()
@@ -55,9 +58,9 @@
       const body = {
         data: dataString,
         datasourceId,
+        datasource,
       }
-
-      const importResult = await queries.import(body)
+      const importResult = await queries.importQueries(body)
       if (!datasourceId) {
         datasourceId = importResult.datasourceId
       }
@@ -71,8 +74,8 @@
       }
 
       notifications.success("Imported successfully")
-    } catch (error) {
-      notifications.error("Error importing queries")
+    } catch (error: any) {
+      notifications.error(`Error importing queries - ${error.message}`)
 
       return keepOpen
     }

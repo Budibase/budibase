@@ -16,8 +16,5 @@
     "lodash": "4.17.21",
     "shortid": "2.2.15",
     "socket.io-client": "^4.7.5"
-  },
-  "devDependencies": {
-    "svelte-check": "^4.1.0"
   }
 }

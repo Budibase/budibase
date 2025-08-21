@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import { admin } from "@/stores/portal"
+import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
 import {
@@ -48,7 +48,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       analytics
         .activate()
         .then(() => {
-          analytics.identify(user._id)
+          analytics.identify(user._id!)
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests
@@ -123,8 +123,13 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
   async login(username: string, password: string, targetTenantId?: string) {
     const tenantId = targetTenantId || get(this.store).tenantId
-    await API.logIn(tenantId, username, password)
+    const loginResult = await API.logIn(tenantId, username, password)
+
     await this.getSelf()
+
+    return {
+      invalidatedSessionCount: loginResult.invalidatedSessionCount || 0,
+    }
   }
 
   async logout() {

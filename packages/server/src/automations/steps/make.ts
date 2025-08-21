@@ -1,6 +1,10 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import { ExternalAppStepOutputs, MakeIntegrationInputs } from "@budibase/types"
+import {
+  ExternalAppStepOutputs,
+  JSONValue,
+  MakeIntegrationInputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,
@@ -9,9 +13,27 @@ export async function run({
 }): Promise<ExternalAppStepOutputs> {
   const { url, body } = inputs
 
-  let payload = {}
+  let payload: Record<string, JSONValue> = {}
   try {
-    payload = body?.value ? JSON.parse(body?.value) : {}
+    if (body?.value) {
+      if (typeof body.value === "string") {
+        payload = JSON.parse(body.value)
+      } else {
+        payload = body.value
+      }
+
+      // Handle double-encoded strings in nested properties
+      Object.keys(payload).forEach(key => {
+        if (typeof payload[key] === "string") {
+          try {
+            const parsed = JSON.parse(payload[key])
+            payload[key] = parsed
+          } catch {
+            // If parsing fails, keep the original string value
+          }
+        }
+      })
+    }
   } catch (err) {
     return {
       httpStatus: 400,

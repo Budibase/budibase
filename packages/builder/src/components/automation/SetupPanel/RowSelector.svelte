@@ -6,13 +6,16 @@
     Icon,
     TooltipPosition,
     TooltipType,
+    ActionGroup,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { FieldType } from "@budibase/types"
+  import { AutoReason, FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import {
+    DrawerBindableSlot,
+    ServerBindingPanel as AutomationBindingPanel,
+  } from "@/components/common/bindings"
   import { FIELDS } from "@/constants/backend"
   import { capitalise } from "@/helpers"
   import { memo } from "@budibase/frontend-core"
@@ -25,6 +28,9 @@
   export let meta
   export let bindings
   export let isTestModal
+  export let context = {}
+  export let componentWidth
+  export let fullWidth = false
 
   const typeToField = Object.values(FIELDS).reduce((acc, field) => {
     acc[field.type] = field
@@ -58,13 +64,17 @@
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
+    clone.icon = clone.icon ?? "ShareAndroid"
     return clone
   })
 
   $: tableId = $memoStore?.row?.tableId
 
   $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
+
+  const isAutoincrement = field => {
+    return field.autocolumn && field.autoReason !== AutoReason.FOREIGN_KEY
+  }
 
   const initData = (tableId, metaFields, row) => {
     if (!tableId) {
@@ -82,7 +92,7 @@
     schemaFields = Object.entries(table?.schema ?? {})
       .filter(entry => {
         const [, field] = entry
-        return field.type !== "formula" && !field.autocolumn
+        return field.type !== "formula" && !isAutoincrement(field)
       })
       .sort(([nameA], [nameB]) => {
         return nameA < nameB ? -1 : 1
@@ -241,13 +251,20 @@
   const drawerValue = fieldValue => {
     return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
   }
+
+  // The element controls their own binding drawer
+  const customDrawer = ["string", "number", "barcodeqr", "bigint"]
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
-    <PropField label={field} fullWidth={isFullWidth(schema.type)}>
-      <div class="prop-control-wrap">
-        {#if isTestModal}
+  {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
+    <PropField
+      label={field}
+      fullWidth={fullWidth || isFullWidth(schema.type)}
+      {componentWidth}
+    >
+      {#if customDrawer.includes(schema.type) || isTestModal}
+        <div class="prop-control-wrap">
           <RowSelectorTypes
             {isTestModal}
             {field}
@@ -258,25 +275,28 @@
               fields: editableFields,
             }}
             {onChange}
+            {context}
           />
-        {:else}
-          <DrawerBindableSlot
-            title={$memoStore?.row?.title || field}
-            panel={AutomationBindingPanel}
-            type={schema.type}
-            {schema}
-            value={drawerValue(editableRow[field])}
-            on:change={e =>
-              onChange({
-                row: {
-                  [field]: e.detail,
-                },
-              })}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-          >
+        </div>
+      {:else}
+        <DrawerBindableSlot
+          title={$memoStore?.row?.title || field}
+          panel={AutomationBindingPanel}
+          type={schema.type}
+          {schema}
+          value={drawerValue(editableRow[field])}
+          on:change={e =>
+            onChange({
+              row: {
+                [field]: e.detail,
+              },
+            })}
+          {bindings}
+          allowJS={true}
+          updateOnChange={false}
+          {context}
+        >
+          <div class="prop-control-wrap">
             <RowSelectorTypes
               {isTestModal}
               {field}
@@ -286,47 +306,60 @@
               meta={{
                 fields: editableFields,
               }}
-              onChange={change => onChange(change)}
+              {onChange}
+              {context}
             />
-          </DrawerBindableSlot>
-        {/if}
-      </div>
+          </div>
+        </DrawerBindableSlot>
+      {/if}
     </PropField>
   {/if}
 {/each}
 
 {#if table && schemaFields}
-  <div
-    class="add-fields-btn"
-    class:empty={Object.is(editableFields, {})}
-    bind:this={popoverAnchor}
-  >
-    <ActionButton
-      icon="Add"
-      fullWidth
-      on:click={() => {
-        customPopover.show()
-      }}
-      disabled={!schemaFields}
-      >Add fields
-    </ActionButton>
+  <div class="add-fields-btn" class:empty={Object.is(editableFields, {})}>
+    <PropField {componentWidth} {fullWidth}>
+      <div class="prop-control-wrap" bind:this={popoverAnchor}>
+        <ActionGroup>
+          <ActionButton
+            on:click={() => {
+              customPopover.show()
+            }}
+            disabled={!schemaFields}
+          >
+            Edit fields
+          </ActionButton>
+          {#if schemaFields.length}
+            <ActionButton
+              on:click={() => {
+                dispatch("change", {
+                  meta: { fields: {} },
+                  row: {},
+                })
+              }}
+            >
+              Clear
+            </ActionButton>
+          {/if}
+        </ActionGroup>
+      </div>
+    </PropField>
   </div>
 {/if}
 
 <Popover
-  align="center"
+  align="left"
   bind:this={customPopover}
   anchor={editableFields ? popoverAnchor : null}
   useAnchorWidth
   maxHeight={300}
   resizable={false}
-  offset={10}
 >
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul class="spectrum-Menu" role="listbox">
     {#each schemaFields || [] as [field, schema]}
-      {#if !schema.autocolumn}
+      {#if !isAutoincrement(schema)}
         <li
           class="table_field spectrum-Menu-item"
           class:is-selected={Object.hasOwn(editableFields, field)}
@@ -351,13 +384,9 @@
             tooltipPosition={TooltipPosition.Left}
           />
           <div class="field_name spectrum-Menu-itemLabel">{field}</div>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
+          <div class="check">
+            <Icon name="check" />
+          </div>
         </li>
       {/if}
     {/each}
@@ -374,5 +403,12 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
+  }
+
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 </style>

@@ -3,7 +3,7 @@
 const start = Date.now()
 
 const fs = require("fs")
-const { cp, readdir, copyFile, mkdir } = require("node:fs/promises")
+const { readdir, copyFile, mkdir } = require("node:fs/promises")
 const path = require("path")
 
 const { build } = require("esbuild")
@@ -116,25 +116,13 @@ async function runBuild(entry, outfile) {
     await Promise.all(fileCopyPromises)
   })()
 
-  const oldClientVersions = (async () => {
-    try {
-      await cp("./build/oldClientVersions", "./dist/oldClientVersions", {
-        recursive: true,
-      })
-    } catch (e) {
-      if (e.code !== "EEXIST" && e.code !== "ENOENT") {
-        throw e
-      }
-    }
-  })()
-
   const mainBuild = build({
     ...sharedConfig,
     platform: "node",
     outfile,
   })
 
-  await Promise.all([hbsFiles, mainBuild, oldClientVersions])
+  await Promise.all([hbsFiles, mainBuild])
 
   if (isDev) {
     fs.writeFileSync(

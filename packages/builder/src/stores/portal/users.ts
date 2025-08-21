@@ -13,13 +13,8 @@ import {
   UnsavedUser,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
-
-interface UserInfo {
-  email: string
-  password: string
-  forceResetPassword?: boolean
-  role: keyof typeof Constants.BudibaseRoles
-}
+import { notifications } from "@budibase/bbui"
+import { UserInfo } from "@/types"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
@@ -43,6 +38,7 @@ class UserStore extends BudiStore<UserState> {
     try {
       return await API.getUser(userId)
     } catch (err) {
+      notifications.error("Error fetching user")
       return null
     }
   }
@@ -120,7 +116,7 @@ class UserStore extends BudiStore<UserState> {
   }
 
   async create(data: { users: UserInfo[]; groups: any[] }) {
-    let mappedUsers: UnsavedUser[] = data.users.map((user: any) => {
+    let mappedUsers: UnsavedUser[] = data.users.map(user => {
       const body: UnsavedUser = {
         email: user.email,
         password: user.password,

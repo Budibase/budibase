@@ -15,9 +15,10 @@ import {
   modalStore,
 } from "@/stores"
 import { API } from "@/api"
-import { ActionTypes } from "@/constants"
+import { ActionTypes, PeekMessages } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
+import { convertDataToExportFormat } from "@budibase/shared-core"
 
 // Default action handler, which extracts an action from context that was
 // provided by another component and executes it with all action parameters
@@ -305,7 +306,7 @@ const closeScreenModalHandler = action => {
   }
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.parent.postMessage({ type: "close-screen-modal", url })
+  window.parent.postMessage({ type: PeekMessages.CLOSE_SCREEN_MODAL, url })
 }
 
 const updateStateHandler = action => {
@@ -320,7 +321,7 @@ const updateStateHandler = action => {
   // can also update their state
   if (get(routeStore).queryParams?.peek) {
     window.parent.postMessage({
-      type: "update-state",
+      type: PeekMessages.UPDATE_STATE,
       detail: { type, key, value, persist },
     })
   }
@@ -347,13 +348,17 @@ const exportDataHandler = async action => {
     action.parameters
   let tableId
 
-  // Handle legacy configs using the row selection store
+  // Handle no rows selected
   if (!rows?.length) {
-    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
-    if (selection?.selectedRows?.length) {
-      rows = selection.selectedRows
-      tableId = selection.tableId
-    }
+    notificationStore.actions.error("Please select at least one row")
+    return
+  }
+
+  // Handle legacy configs using the row selection store
+  const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+  if (selection?.selectedRows?.length) {
+    rows = selection.selectedRows
+    tableId = selection.tableId
   }
 
   // Get table ID from first row if needed
@@ -361,33 +366,41 @@ const exportDataHandler = async action => {
     tableId = rows?.[0]?.tableId
   }
 
-  // Handle no rows selected
-  if (!rows?.length) {
-    notificationStore.actions.error("Please select at least one row")
-  }
-  // Handle case where we're not using a DS+
-  else if (!tableId) {
-    notificationStore.actions.error(
-      "You can only export data from table datasources"
-    )
-  }
-  // Happy path when we have both rows and table ID
-  else {
+  // If still no tableId, fallback to raw rows export
+  if (!tableId) {
     try {
-      // Flatten rows if required
-      if (typeof rows[0] !== "string") {
-        rows = rows.map(row => row._id)
-      }
-      const data = await API.exportRows(tableId, type, {
+      const cleanedRows = convertDataToExportFormat(
         rows,
-        columns: columns?.map(column => column.name || column),
-        delimiter,
-        customHeaders,
-      })
-      download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
+        type,
+        columns,
+        delimiter
+      )
+      download(
+        new Blob([cleanedRows], { type: "text/plain" }),
+        `${tableComponentId}.${type}`
+      )
     } catch (error) {
-      notificationStore.actions.error("There was an error exporting the data")
+      notificationStore.actions.error(
+        `Error exporting data: ${error.message || error}`
+      )
     }
+    return
+  }
+
+  try {
+    // Flatten rows if required
+    if (typeof rows[0] !== "string") {
+      rows = rows.map(row => row._id)
+    }
+    const data = await API.exportRows(tableId, type, {
+      rows,
+      columns: columns?.map(col => col.name || col),
+      delimiter,
+      customHeaders,
+    })
+    download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
+  } catch (error) {
+    notificationStore.actions.error("There was an error exporting the data")
   }
 }
 
@@ -420,6 +433,28 @@ const showNotificationHandler = action => {
 }
 
 const promptUserHandler = () => {}
+
+const copyToClipboardHandler = async action => {
+  const { textToCopy, showNotification, notificationMessage } =
+    action.parameters
+
+  if (!textToCopy) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(textToCopy)
+    if (showNotification) {
+      const message = notificationMessage || "Copied to clipboard"
+      notificationStore.actions.success(message, true, 3000)
+    }
+  } catch (err) {
+    console.error("Failed to copy text: ", err)
+    notificationStore.actions.error("Failed to copy to clipboard")
+  }
+
+  return { copied: textToCopy }
+}
 
 const openSidePanelHandler = action => {
   const { id } = action.parameters
@@ -514,6 +549,7 @@ const handlerMap = {
   ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
+  ["Copy To Clipboard"]: copyToClipboardHandler,
 }
 
 const confirmTextMap = {

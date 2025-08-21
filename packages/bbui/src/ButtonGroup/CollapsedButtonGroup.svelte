@@ -24,7 +24,7 @@
 <Button
   bind:ref={anchor}
   {size}
-  icon="ChevronDown"
+  icon="caret-down"
   {quiet}
   primary={quiet}
   cta={!quiet}

@@ -5,6 +5,8 @@
   import { isActive, redirect, goto, params } from "@roxi/routify"
   import { datasources } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { featureFlags } from "@/stores/portal"
 
   let searchValue
 
@@ -19,29 +21,40 @@
 </script>
 
 <!-- routify:options index=1 -->
-<div class="data">
-  {#if !$isActive("./new")}
-    <Panel borderRight borderBottomHeader={false}>
-      <span class="panel-title-content" slot="panel-title-content">
-        <NavHeader
-          title="Sources"
-          placeholder="Search for sources"
-          bind:value={searchValue}
-          onAdd={() => $goto("./new")}
-        />
-      </span>
-      <Layout paddingX="L" paddingY="none" gap="S">
-        <DatasourceNavigator searchTerm={searchValue} />
-      </Layout>
-    </Panel>
+<div class="wrapper">
+  {#if $featureFlags.WORKSPACES}
+    <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   {/if}
+  <div class="data">
+    {#if !$isActive("./new")}
+      <Panel borderRight borderBottomHeader={false}>
+        <span class="panel-title-content" slot="panel-title-content">
+          <NavHeader
+            title="Sources"
+            placeholder="Search for sources"
+            bind:value={searchValue}
+            onAdd={() => $goto("./new")}
+          />
+        </span>
+        <Layout paddingX="L" paddingY="none" gap="S">
+          <DatasourceNavigator searchTerm={searchValue} />
+        </Layout>
+      </Panel>
+    {/if}
 
-  <div class="content">
-    <slot />
+    <div class="content">
+      <slot />
+    </div>
   </div>
 </div>
 
 <style>
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
   .data {
     flex: 1 1 auto;
     display: flex;
@@ -60,6 +73,7 @@
     align-items: stretch;
     flex: 1 1 auto;
     z-index: 1;
+    position: relative;
   }
 
   .panel-title-content {

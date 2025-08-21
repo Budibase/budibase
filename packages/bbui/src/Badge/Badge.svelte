@@ -11,6 +11,7 @@
   export let active = false
   export let inactive = false
   export let hoverable = false
+  export let outlineColor = null
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -29,6 +30,7 @@
   class:spectrum-Label--seafoam={seafoam}
   class:spectrum-Label--active={active}
   class:spectrum-Label--inactive={inactive}
+  style={outlineColor ? `border: 2px solid ${outlineColor}` : ""}
 >
   <slot />
 </span>

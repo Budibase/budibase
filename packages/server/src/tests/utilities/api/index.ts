@@ -17,14 +17,33 @@ import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
+import { EnvironmentAPI } from "./environment"
+import { UserPublicAPI } from "./public/user"
+import { RowPublicAPI } from "./public/row"
+import { MiscAPI } from "./misc"
+import { OAuth2API } from "./oauth2"
+import { AssetsAPI } from "./assets"
+import { AIAPI } from "./ai"
+import { WorkspaceAppAPI } from "./workspaceApp"
+import { ResourceAPI } from "./resource"
+import { DeployAPI } from "./deploy"
+import { NavigationAPI } from "./navigation"
+import { RecaptchaAPI } from "./recaptcha"
+import { RoutingAPI } from "./routing"
+import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
+  ai: AIAPI
   application: ApplicationAPI
   attachment: AttachmentAPI
   automation: AutomationAPI
   backup: BackupAPI
   datasource: DatasourceAPI
+  deploy: DeployAPI
+  environment: EnvironmentAPI
   legacyView: LegacyViewAPI
+  misc: MiscAPI
+  oauth2: OAuth2API
   permission: PermissionAPI
   plugin: PluginAPI
   query: QueryAPI
@@ -37,14 +56,31 @@ export default class API {
   user: UserAPI
   viewV2: ViewV2API
   webhook: WebhookAPI
+  assets: AssetsAPI
+  workspaceApp: WorkspaceAppAPI
+  resource: ResourceAPI
+  navigation: NavigationAPI
+  recaptcha: RecaptchaAPI
+  routing: RoutingAPI
+  workspaceFavourites: WorkspaceFavouriteAPI
+
+  public: {
+    user: UserPublicAPI
+    row: RowPublicAPI
+  }
 
   constructor(config: TestConfiguration) {
+    this.ai = new AIAPI(config)
     this.application = new ApplicationAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
     this.datasource = new DatasourceAPI(config)
+    this.deploy = new DeployAPI(config)
+    this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
+    this.misc = new MiscAPI(config)
+    this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
@@ -57,5 +93,16 @@ export default class API {
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
+    this.assets = new AssetsAPI(config)
+    this.workspaceApp = new WorkspaceAppAPI(config)
+    this.resource = new ResourceAPI(config)
+    this.navigation = new NavigationAPI(config)
+    this.recaptcha = new RecaptchaAPI(config)
+    this.routing = new RoutingAPI(config)
+    this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
+    this.public = {
+      user: new UserPublicAPI(config),
+      row: new RowPublicAPI(config),
+    }
   }
 }

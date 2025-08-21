@@ -2,8 +2,8 @@
   import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import ExistingTableDataImport from "@/components/backend/TableNavigator/ExistingTableDataImport.svelte"
+  import { dataAPI } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { API } from "@/api"
 
   export let tableId
   export let tableType
@@ -30,7 +30,7 @@
   const importData = async () => {
     try {
       loading = true
-      await API.importTableData(tableId, rows, identifierFields)
+      await $dataAPI.importTableData(tableId, rows, identifierFields)
       notifications.success("Rows successfully imported")
       popover.hide()
     } catch (error) {
@@ -48,7 +48,7 @@
 <DetailPopover title="Import data" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="DataUpload"
+      icon="upload-simple"
       quiet
       on:click={openPopover}
       {disabled}

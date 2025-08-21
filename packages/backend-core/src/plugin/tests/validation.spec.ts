@@ -68,7 +68,7 @@ function mockAutomationSchema() {
       schema: {
         name: "{{ name }}",
         tagline: "{{ description }}",
-        icon: "Actions",
+        icon: "cursor-click",
         description: "{{ description }}",
         type: "action",
         stepId: "{{ name }}",
@@ -113,7 +113,7 @@ function mockComponentSchema() {
         name: "{{ name }}",
         friendlyName: "{{ name }}",
         description: "{{ description }}",
-        icon: "Text",
+        icon: "article",
         settings: [
           {
             type: "text",

@@ -5,6 +5,10 @@
   export let href = null
 </script>
 
-<ActionButton quiet icon="Help" on:click={() => window.open(href, "_blank")}>
+<ActionButton
+  quiet
+  icon="question"
+  on:click={() => window.open(href, "_blank")}
+>
   {title}
 </ActionButton>

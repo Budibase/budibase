@@ -14,7 +14,12 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
+  import {
+    builderStore,
+    appStore,
+    roles,
+    deploymentStore,
+  } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -28,15 +33,16 @@
     Constants,
     Utils,
     RoleUtils,
+    emailValidator,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { API } from "@/api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
-  import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
   let query = null
   let loaded = false
@@ -197,12 +203,19 @@
       return
     }
     const update = await users.get(user._id)
+    const newRoles = {
+      ...update.roles,
+      [prodAppId]: role,
+    }
+    // make sure no undefined/null roles (during removal)
+    for (let [appId, role] of Object.entries(newRoles)) {
+      if (!role) {
+        delete newRoles[appId]
+      }
+    }
     await users.save({
       ...update,
-      roles: {
-        ...update.roles,
-        [prodAppId]: role,
-      },
+      roles: newRoles,
     })
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
@@ -313,10 +326,10 @@
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
-  /*  
+  /*
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
-    inherited from their parent group. The users allow assigning of user 
+    inherited from their parent group. The users allow assigning of user
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
@@ -516,7 +529,7 @@
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isAdminOrGlobalBuilder) {
-      return "Account admins can edit all apps"
+      return "Tenant admins can edit all workspaces"
     }
     return null
   }
@@ -539,6 +552,10 @@
       creationAccessType = Constants.Roles.CREATOR
     }
   }
+
+  const itemCountText = (word, count) => {
+    return `${count} ${word}${count !== 1 ? "s" : ""}`
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
@@ -558,7 +575,7 @@
       class="header"
     >
       {#if invitingFlow}
-        <Icon name="BackAndroid" />
+        <Icon name="arrow-left" />
       {/if}
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
@@ -568,7 +585,7 @@
       {/if}
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="arrow-line-right"
         hoverable
         on:click={() => {
           builderStore.hideBuilderSidePanel()
@@ -603,15 +620,15 @@
           userOnboardResponse = null
         }}
       >
-        <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+        <Icon name={!filterByAppAccess || query ? "x" : "magnifying-glass"} />
       </span>
     </div>
 
     <div class="body">
-      {#if !$appPublished}
+      {#if !$deploymentStore.isPublished}
         <div class="alert">
           <InfoDisplay
-            icon="AlertCircleFilled"
+            icon="warning-circle"
             warning
             title="App unpublished"
             body="Users won't be able to access your app until you've published it"
@@ -701,13 +718,11 @@
                 >
                   <div class="details">
                     <GroupIcon {group} size="S" />
-                    <div>
+                    <div class="group-name">
                       {group.name}
                     </div>
                     <div class="auth-entity-meta">
-                      {`${group.users?.length} user${
-                        group.users?.length != 1 ? "s" : ""
-                      }`}
+                      {itemCountText("user", group.users?.length)}
                     </div>
                   </div>
                   <div class="auth-entity-access">
@@ -741,16 +756,33 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
+                {@const userGroups = sdk.users.getUserAppGroups(
+                  $appStore.appId,
+                  user,
+                  $groups
+                )}
                 <div class="auth-entity">
                   <div class="details">
-                    <div class="user-email" title={user.email}>
-                      {user.email}
+                    <div class="user-groups">
+                      <div class="user-email" title={user.email}>
+                        {user.email}
+                      </div>
+                      {#if userGroups.length}
+                        <div class="group-info">
+                          <div class="auth-entity-meta">
+                            {itemCountText("group", userGroups.length)}
+                          </div>
+                          <BuilderGroupPopover groups={userGroups} />
+                        </div>
+                      {/if}
                     </div>
                   </div>
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
                       footer={getRoleFooter(user)}
-                      placeholder={false}
+                      placeholder={userGroups?.length
+                        ? "Controlled by group"
+                        : false}
                       value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
@@ -915,6 +947,7 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
     white-space: nowrap;
+    text-align: end;
   }
 
   .auth-entity-access {
@@ -931,7 +964,7 @@
 
   .auth-entity,
   .auth-entity-header {
-    padding: 0px var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
   }
 
   .auth-entity,
@@ -946,15 +979,17 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    color: var(--spectrum-global-color-gray-900);
     overflow: hidden;
+    width: 100%;
   }
 
-  .auth-entity .user-email {
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .auth-entity .user-email,
+  .group-name {
+    flex: 1 1 0;
+    min-width: 0;
     overflow: hidden;
-    color: var(--spectrum-global-color-gray-900);
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   #builder-side-panel-container {
@@ -1047,5 +1082,24 @@
   }
   .alert {
     padding: 0 var(--spacing-xl);
+  }
+
+  .user-groups {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .group-info {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    justify-content: end;
+    width: 60px;
+    flex: 0 0 auto;
   }
 </style>

@@ -14,7 +14,9 @@
     position: absolute;
     top: 10px;
     color: var(--spectrum-global-color-gray-600);
-    transition: font-size 130ms ease-out, top 130ms ease-out,
+    transition:
+      font-size 130ms ease-out,
+      top 130ms ease-out,
       transform 130ms ease-out;
   }
   div.placeholder {

@@ -16,11 +16,12 @@ import env from "../environment"
 import {
   Ctx,
   EndpointMatcher,
+  ErrorCode,
   LoginMethod,
   SessionCookie,
   User,
 } from "@budibase/types"
-import { ErrorCode, InvalidAPIKeyError } from "../errors"
+import { InvalidAPIKeyError } from "../errors"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
 
@@ -108,7 +109,7 @@ function getHeader(ctx: Ctx, header: Header): string | undefined {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-export default function (
+export function authenticated(
   noAuthPatterns: EndpointMatcher[] = [],
   opts: { publicAllowed?: boolean; populateUser?: Function } = {
     publicAllowed: false,

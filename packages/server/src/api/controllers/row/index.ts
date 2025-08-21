@@ -2,7 +2,7 @@ import stream from "stream"
 import archiver from "archiver"
 
 import { quotas } from "@budibase/pro"
-import { objectStore, context } from "@budibase/backend-core"
+import { objectStore, context, events } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -67,7 +67,14 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table, oldRow } = await pickApi(tableId).patch(ctx)
+    const api = pickApi(tableId)
+    const { row, table, oldRow } = isExternalTableID(tableId)
+      ? await api.patch(ctx)
+      : await quotas.addAction(async () => {
+          const response = await api.patch(ctx)
+          events.action.crudExecuted({ type: "update" })
+          return response
+        })
     if (!row) {
       ctx.throw(404, "Row not found")
     }
@@ -100,15 +107,19 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
     ctx.throw(400, "Cannot create new user entry.")
   }
 
-  // if it has an ID already then its a patch
+  // if it has an ID already then it's a patch
   if (body && body._id) {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = tableId.includes("datasource_plus")
     ? await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
-    : await quotas.addRow(() =>
-        sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
-      )
+    : await quotas.addAction(async () => {
+        const response = await quotas.addRow(() =>
+          sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+        )
+        events.action.crudExecuted({ type: "create" })
+        return response
+      })
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
@@ -144,9 +155,11 @@ export async function find(ctx: UserCtx<void, FindRowResponse>) {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
   const rowId = ctx.params.rowId
-
-  const response = await sdk.rows.find(sourceId, rowId)
-  ctx.body = response
+  try {
+    ctx.body = await sdk.rows.find(sourceId, rowId)
+  } catch (e) {
+    ctx.throw(404, "That row couldn't be found")
+  }
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
@@ -182,7 +195,14 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
-  const { rows } = await pickApi(tableId).bulkDestroy(ctx)
+  const { rows } = isExternalTableID(tableId)
+    ? await pickApi(tableId).bulkDestroy(ctx)
+    : await quotas.addAction(async () => {
+        const response = await pickApi(tableId).bulkDestroy(ctx)
+        events.action.crudExecuted({ type: "delete" })
+        return response
+      })
+
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRows(rows.length)
   }
@@ -202,8 +222,14 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
-
-  const resp = await pickApi(tableId).destroy(ctx)
+  const api = pickApi(tableId)
+  const resp = isExternalTableID(tableId)
+    ? await api.destroy(ctx)
+    : await quotas.addAction(async () => {
+        const response = await api.destroy(ctx)
+        events.action.crudExecuted({ type: "delete" })
+        return response
+      })
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRow()
   }
@@ -241,7 +267,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const { tableId, viewId } = utils.getSourceId(ctx)
 
-  await context.ensureSnippetContext(true)
+  await context.ensureSnippetContext()
 
   const searchRequest = ctx.request.body
   let { query } = searchRequest

@@ -9,6 +9,7 @@ import {
 const DISABLED_EXTERNAL_INTEGRATIONS = [
   SourceName.AIRTABLE,
   SourceName.BUDIBASE,
+  SourceName.ARANGODB,
 ]
 
 export async function fetch(ctx: UserCtx<void, FetchIntegrationsResponse>) {

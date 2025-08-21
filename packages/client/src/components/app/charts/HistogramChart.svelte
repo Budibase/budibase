@@ -16,6 +16,7 @@
   export let c1, c2, c3, c4, c5
   export let horizontal
   export let bucketCount = 10
+  export let onClick
 
   $: series = getSeries(dataProvider, valueColumn, bucketCount)
 
@@ -33,6 +34,9 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      dropShadow: {
+        enabled: true,
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
@@ -47,6 +51,26 @@
       },
       zoom: {
         enabled: false,
+      },
+      events: {
+        // Clicking on a bucket
+        dataPointSelection: function (event, chartContext, opts) {
+          const bucketIndex = opts.dataPointIndex
+          const rows = dataProvider.rows || []
+          const values = rows
+            .map((row, i) => ({ row, value: parseFloat(row[valueColumn]), i }))
+            .filter(obj => !isNaN(obj.value))
+
+          const [min, max] = getValuesRange(values.map(obj => obj.value))
+          const buckets = getBuckets(min, max, bucketCount)
+          const bucket = buckets[bucketIndex]
+
+          const rowsInBucket = values
+            .filter(obj => obj.value >= bucket.min && obj.value <= bucket.max)
+            .map(obj => obj.row)
+
+          handleBucketClick(rowsInBucket, bucket.min, bucket.max)
+        },
       },
     },
     plotOptions: {
@@ -72,6 +96,10 @@
         formatter: yAxisFormatter,
       },
     },
+  }
+
+  function handleBucketClick(rowsInBucket, lowerLimit, upperLimit) {
+    onClick?.({ rowsInBucket, lowerLimit, upperLimit })
   }
 
   const getSeries = (dataProvider, valueColumn, bucketCount) => {

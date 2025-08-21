@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, setContext } from "svelte"
-  import { builderStore } from "@/stores/builder.js"
+  import { builderStore } from "@/stores/builder"
   import { blockStore } from "@/stores/blocks"
 
   const component = getContext("component")

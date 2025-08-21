@@ -68,7 +68,7 @@
 <div class="hierarchy-items-container">
   {#if showAppUsersTable}
     <NavItem
-      icon="UserGroup"
+      icon="users-three"
       text={appUsersTableName}
       selected={$isActive("./table/:tableId") &&
         $tables.selected?._id === TableNames.USERS}
@@ -77,7 +77,7 @@
     />
   {/if}
   <NavItem
-    icon="UserAdmin"
+    icon="user-gear"
     text="Manage roles"
     selected={$isActive("./roles")}
     on:click={() => $goto("./roles")}

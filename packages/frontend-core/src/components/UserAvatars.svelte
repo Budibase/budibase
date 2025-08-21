@@ -1,27 +1,31 @@
-<script>
+<script lang="ts">
   import { UserAvatar } from "@budibase/frontend-core"
   import { TooltipPosition, Avatar } from "@budibase/bbui"
+  import type { UIUser } from "@budibase/types"
 
-  export let users = []
-  export let order = "ltr"
-  export let size = "S"
-  export let tooltipPosition = TooltipPosition.Top
+  type OrderType = "ltr" | "rtl"
 
-  $: uniqueUsers = unique(users, order)
+  export let users: UIUser[] = []
+  export let order: OrderType = "ltr"
+  export let size: "XS" | "S" = "S"
+  export let tooltipPosition: TooltipPosition = TooltipPosition.Top
+
+  $: uniqueUsers = unique(users)
   $: avatars = getAvatars(uniqueUsers, order)
 
-  const unique = users => {
-    let uniqueUsers = {}
-    users?.forEach(user => {
+  const unique = (users: UIUser[]) => {
+    const uniqueUsers: Record<string, UIUser> = {}
+    users.forEach(user => {
       uniqueUsers[user.email] = user
     })
     return Object.values(uniqueUsers)
   }
 
-  const getAvatars = (users, order) => {
-    const avatars = users.slice(0, 3)
+  type Overflow = { _id: "overflow"; label: string }
+  const getAvatars = (users: UIUser[], order: OrderType) => {
+    const avatars: (Overflow | UIUser)[] = users.slice(0, 3)
     if (users.length > 3) {
-      const overflow = {
+      const overflow: Overflow = {
         _id: "overflow",
         label: `+${users.length - 3}`,
       }
@@ -31,17 +35,22 @@
         avatars.unshift(overflow)
       }
     }
+
     return avatars.map((user, idx) => ({
       ...user,
       zIndex: order === "ltr" ? idx : uniqueUsers.length - idx,
     }))
+  }
+
+  function isUser(value: Overflow | UIUser): value is UIUser {
+    return value._id !== "overflow"
   }
 </script>
 
 <div class="avatars">
   {#each avatars as user}
     <span style="z-index:{user.zIndex};">
-      {#if user._id === "overflow"}
+      {#if !isUser(user)}
         <Avatar
           {size}
           initials={user.label}

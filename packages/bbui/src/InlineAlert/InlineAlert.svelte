@@ -1,41 +1,38 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/inlinealert/dist/index-vars.css"
   import Button from "../Button/Button.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
-  export let type = "info"
-  export let header = ""
-  export let message = ""
-  export let onConfirm = undefined
-  export let buttonText = ""
-  export let cta = false
+  export let type: "info" | "error" | "success" | "help" | "negative" = "info"
+  export let header: string = ""
+  export let message: string = ""
+  export let onConfirm: (() => void) | undefined = undefined
+  export let buttonText: string = ""
+  export let cta: boolean = false
+  export let link: string = ""
+  export let linkText: string = ""
 
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
 
-  function selectIcon(alertType) {
+  function selectIcon(alertType: string): string {
     switch (alertType) {
       case "error":
       case "negative":
-        return "Alert"
+        return "warning"
       case "success":
-        return "CheckmarkCircle"
+        return "check-circle"
       case "help":
-        return "Help"
+        return "question"
       default:
-        return "Info"
+        return "info"
     }
   }
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
-  <svg
-    class="spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-icon-18-{icon}" />
-  </svg>
+  <Icon name={icon} size="M" />
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
     {#each split as splitMsg}
@@ -47,6 +44,19 @@
       <Button {cta} secondary={cta ? false : true} on:click={onConfirm}
         >{buttonText || "OK"}</Button
       >
+    </div>
+  {/if}
+  {#if link && linkText}
+    <div id="docs-link">
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="docs-link"
+      >
+        {linkText}
+        <Icon name="arrow-square-out" size="XS" />
+      </a>
     </div>
   {/if}
 </div>
@@ -63,5 +73,22 @@
     min-width: 100px;
     margin: 0;
     border-width: 1px;
+  }
+
+  a {
+    color: white;
+  }
+
+  #docs-link {
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  #docs-link > * {
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 </style>

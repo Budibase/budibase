@@ -13,21 +13,19 @@ let userClient: Client,
   docWritethroughClient: Client
 
 export async function init() {
-  userClient = await new Client(utils.Databases.USER_CACHE).init()
-  sessionClient = await new Client(utils.Databases.SESSIONS).init()
-  appClient = await new Client(utils.Databases.APP_METADATA).init()
-  cacheClient = await new Client(utils.Databases.GENERIC_CACHE).init()
-  lockClient = await new Client(utils.Databases.LOCKS).init()
-  writethroughClient = await new Client(utils.Databases.WRITE_THROUGH).init()
-  inviteClient = await new Client(utils.Databases.INVITATIONS).init()
-  passwordResetClient = await new Client(utils.Databases.PW_RESETS).init()
-  socketClient = await new Client(
+  userClient = await Client.init(utils.Databases.USER_CACHE)
+  sessionClient = await Client.init(utils.Databases.SESSIONS)
+  appClient = await Client.init(utils.Databases.APP_METADATA)
+  cacheClient = await Client.init(utils.Databases.GENERIC_CACHE)
+  lockClient = await Client.init(utils.Databases.LOCKS)
+  writethroughClient = await Client.init(utils.Databases.WRITE_THROUGH)
+  inviteClient = await Client.init(utils.Databases.INVITATIONS)
+  passwordResetClient = await Client.init(utils.Databases.PW_RESETS)
+  socketClient = await Client.init(
     utils.Databases.SOCKET_IO,
     utils.SelectableDatabase.SOCKET_IO
-  ).init()
-  docWritethroughClient = await new Client(
-    utils.Databases.DOC_WRITE_THROUGH
-  ).init()
+  )
+  docWritethroughClient = await Client.init(utils.Databases.DOC_WRITE_THROUGH)
 }
 
 export async function shutdown() {

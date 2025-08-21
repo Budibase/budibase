@@ -1,51 +1,75 @@
 <script>
-  import {
-    automationStore,
-    permissions,
-    selectedAutomation,
-    tables,
-  } from "@/stores/builder"
-  import {
-    Icon,
-    Divider,
-    Layout,
-    Detail,
-    Modal,
-    Label,
-    AbsTooltip,
-  } from "@budibase/bbui"
+  import { automationStore, selectedAutomation, tables } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
+  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import FlowItemHeader from "./FlowItemHeader.svelte"
-  import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
+  import { ActionStepID } from "@/constants/backend/automations"
   import { AutomationStepType } from "@budibase/types"
   import FlowItemActions from "./FlowItemActions.svelte"
-  import DragHandle from "@/components/design/settings/controls/DraggableList/drag-handle.svelte"
+  import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
 
   export let block
   export let blockRef
-  export let testDataModal
-  export let idx
   export let automation
-  export let bindings
   export let draggable = true
-
+  export let logStepData = null
+  export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
+  export let unexecuted = false
+  export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
   const contentPos = getContext("contentPos")
 
   let webhookModal
-  let open = true
-  let showLooping = false
-  let role
   let blockEle
   let positionStyles
   let blockDims
+
+  $: pathSteps = loadSteps(blockRef)
+
+  $: collectBlockExists = pathSteps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
+
+  $: isTrigger = block.type === AutomationStepType.TRIGGER
+  $: lastStep = blockRef?.terminating
+
+  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation?.data) && {
+    title: "Automation trigger",
+    tableName: $tables.list.find(
+      x =>
+        x._id === $selectedAutomation.data?.definition?.trigger?.inputs?.tableId
+    )?.name,
+  }
+
+  $: selectedNodeId = $automationStore.selectedNodeId
+  $: selected =
+    viewMode === ViewMode.EDITOR
+      ? block.id === selectedNodeId
+      : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
+  $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
+
+  $: if (dragging && blockEle) {
+    updateBlockDims()
+  }
+
+  $: placeholderDims = buildPlaceholderStyles(blockDims)
+
+  // Move the selected item
+  // Listen for scrolling in the content. As its scrolled this will be updated
+  $: move(
+    blockEle,
+    $view?.dragSpot,
+    dragging,
+    $contentPos?.scrollX,
+    $contentPos?.scrollY
+  )
 
   const updateBlockDims = () => {
     if (!blockEle) {
@@ -66,48 +90,8 @@
       : []
   }
 
-  $: pathSteps = loadSteps(blockRef)
-
-  $: collectBlockExists = pathSteps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
-  $: automationId = automation?._id
-  $: isTrigger = block.type === AutomationStepType.TRIGGER
-  $: lastStep = blockRef?.terminating
-
-  $: loopBlock = pathSteps.find(x => x.blockToLoop === block.id)
-  $: isAppAction = block?.stepId === TriggerStepID.APP
-  $: isAppAction && setPermissions(role)
-  $: isAppAction && getPermissions(automationId)
-
-  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation?.data) && {
-    title: "Automation trigger",
-    tableName: $tables.list.find(
-      x =>
-        x._id === $selectedAutomation.data?.definition?.trigger?.inputs?.tableId
-    )?.name,
-  }
-
-  $: selected = $view?.moveStep && $view?.moveStep?.id === block.id
-
-  $: if (selected && blockEle) {
-    updateBlockDims()
-  }
-
-  $: placeholderDims = buildPlaceholderStyles(blockDims)
-
-  // Move the selected item
-  // Listen for scrolling in the content. As its scrolled this will be updated
-  $: move(
-    blockEle,
-    $view?.dragSpot,
-    selected,
-    $contentPos?.scrollX,
-    $contentPos?.scrollY
-  )
-
-  const move = (block, dragPos, selected, scrollX, scrollY) => {
-    if ((!block && !selected) || !dragPos) {
+  const move = (block, dragPos, dragging, scrollX, scrollY) => {
+    if ((!block && !dragging) || !dragPos) {
       return
     }
     positionStyles = `
@@ -123,52 +107,6 @@
     const { width, height } = dims
     return `--pswidth: ${Math.round(width)}px;
             --psheight: ${Math.round(height)}px;`
-  }
-
-  async function setPermissions(role) {
-    if (!role || !automationId) {
-      return
-    }
-    await permissions.save({
-      level: "execute",
-      role,
-      resource: automationId,
-    })
-  }
-
-  async function getPermissions(automationId) {
-    if (!automationId) {
-      return
-    }
-    const perms = await permissions.forResource(automationId)
-    if (!perms["execute"]) {
-      role = "BASIC"
-    } else {
-      role = perms["execute"].role
-    }
-  }
-
-  async function deleteStep() {
-    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
-  }
-
-  async function removeLooping() {
-    let loopBlockRef = $selectedAutomation.blockRefs[blockRef.looped]
-    await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
-  }
-
-  async function addLooping() {
-    const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
-    const loopBlock = automationStore.actions.constructBlock(
-      "ACTION",
-      "LOOP",
-      loopDefinition
-    )
-    loopBlock.blockToLoop = block.id
-    await automationStore.actions.addBlockToAutomation(
-      loopBlock,
-      blockRef.pathTo
-    )
   }
 
   const onHandleMouseDown = e => {
@@ -205,159 +143,89 @@
   <div
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
-    class:selected
+    class:dragging
     class:draggable
+    class:selected
+    class:unexecuted
   >
     <div class="wrap">
-      {#if $view.dragging && selected}
+      {#if $view.dragging && dragging}
         <div class="drag-placeholder" style={placeholderDims} />
       {/if}
-
       <div
         bind:this={blockEle}
         class="block-content"
-        class:dragging={$view.dragging && selected}
+        class:dragging={$view.dragging && dragging}
         style={positionStyles}
         on:mousedown={e => {
           e.stopPropagation()
         }}
       >
+        <div class="block-float">
+          <FlowItemStatus
+            {block}
+            {automation}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+          />
+        </div>
         {#if draggable}
           <div
             class="handle"
-            class:grabbing={selected}
+            class:grabbing={dragging}
             on:mousedown={onHandleMouseDown}
           >
-            <DragHandle />
+            <Icon name="dots-six-vertical" weight="bold" />
           </div>
         {/if}
-        <div class="block-core">
-          {#if loopBlock}
+        <div
+          class="block-core"
+          on:click={async () => {
+            if (viewMode === ViewMode.EDITOR) {
+              await automationStore.actions.selectNode(block.id)
+            } else if (viewMode === ViewMode.LOGS && logStepData) {
+              onStepSelect(logStepData)
+            }
+          }}
+        >
+          <div class="blockSection block-info">
+            <BlockHeader
+              disabled
+              {automation}
+              {block}
+              on:update={e =>
+                automationStore.actions.updateBlockTitle(block, e.detail)}
+            />
+          </div>
+
+          {#if isTrigger && triggerInfo}
             <div class="blockSection">
-              <div
-                on:click={() => {
-                  showLooping = !showLooping
-                }}
-                class="splitHeader"
-              >
-                <div class="center-items">
-                  <svg
-                    width="28px"
-                    height="28px"
-                    class="spectrum-Icon"
-                    style="color:var(--spectrum-global-color-gray-700);"
-                    focusable="false"
-                  >
-                    <use xlink:href="#spectrum-icon-18-Reuse" />
-                  </svg>
-                  <div class="iconAlign">
-                    <Detail size="S">Looping</Detail>
-                  </div>
-                </div>
-
-                <div class="blockTitle">
-                  <AbsTooltip type="negative" text="Remove looping">
-                    <Icon
-                      on:click={removeLooping}
-                      hoverable
-                      name="DeleteOutline"
-                    />
-                  </AbsTooltip>
-
-                  <div style="margin-left: 10px;" on:click={() => {}}>
-                    <Icon
-                      hoverable
-                      name={showLooping ? "ChevronDown" : "ChevronUp"}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Divider noMargin />
-            {#if !showLooping}
-              <div class="blockSection">
-                <Layout noPadding gap="S">
-                  <AutomationBlockSetup
-                    schemaProperties={Object.entries(
-                      $automationStore.blockDefinitions.ACTION.LOOP.schema
-                        .inputs.properties
-                    )}
-                    {webhookModal}
-                    block={loopBlock}
-                    {automation}
-                    {bindings}
-                  />
-                </Layout>
-              </div>
-              <Divider noMargin />
-            {/if}
-          {/if}
-
-          <FlowItemHeader
-            {automation}
-            {open}
-            {block}
-            {testDataModal}
-            {idx}
-            {addLooping}
-            {deleteStep}
-            on:toggle={() => (open = !open)}
-            on:update={async e => {
-              const newName = e.detail
-              if (newName.length === 0) {
-                await automationStore.actions.deleteAutomationName(block.id)
-              } else {
-                await automationStore.actions.saveAutomationName(
-                  block.id,
-                  newName
-                )
-              }
-            }}
-          />
-          {#if open}
-            <Divider noMargin />
-            <div class="blockSection">
-              <Layout noPadding gap="S">
-                {#if isAppAction}
-                  <div>
-                    <Label>Role</Label>
-                    <RoleSelect bind:value={role} />
-                  </div>
-                {/if}
-                <AutomationBlockSetup
-                  schemaProperties={Object.entries(
-                    block?.schema?.inputs?.properties || {}
-                  )}
-                  {block}
-                  {webhookModal}
-                  {automation}
-                  {bindings}
-                />
-                {#if isTrigger && triggerInfo}
-                  <InfoDisplay
-                    title={triggerInfo.title}
-                    body="This trigger is tied to your '{triggerInfo.tableName}' table"
-                    icon="InfoOutline"
-                  />
-                {/if}
-              </Layout>
+              <InfoDisplay
+                title={triggerInfo.title}
+                body="This trigger is tied to your '{triggerInfo.tableName}' table"
+                icon="info"
+              />
             </div>
           {/if}
         </div>
       </div>
     </div>
   </div>
-  {#if !collectBlockExists || !lastStep}
+
+  {#if !lastStep || viewMode !== ViewMode.LOGS}
     <div class="separator" />
+  {/if}
+
+  {#if !collectBlockExists}
     {#if $view.dragging}
       <DragZone path={blockRef?.pathTo} />
-    {:else}
+    {:else if viewMode === ViewMode.EDITOR}
       <FlowItemActions
         {block}
         on:branch={() => {
           automationStore.actions.branchAutomation(
-            $selectedAutomation.blockRefs[block.id].pathTo,
+            $selectedAutomation.blockRefs[block.id]?.pathTo,
             automation
           )
         }}
@@ -374,6 +242,9 @@
 </Modal>
 
 <style>
+  .unexecuted {
+    opacity: 0.5;
+  }
   .delete-padding {
     padding-left: 30px;
   }
@@ -397,9 +268,10 @@
     display: inline-block;
   }
   .block {
-    width: 480px;
-    font-size: 16px;
-    border-radius: 4px;
+    width: 320px;
+    font-size: var(--spectrum-global-dimension-font-size-150) !important;
+    border-radius: 12px;
+    font-weight: 600;
     cursor: default;
   }
   .block .wrap {
@@ -415,10 +287,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--grey-3);
-    padding: 6px;
-    color: var(--grey-6);
+    background-color: var(--grey-1);
+    padding: 6px 0;
+    color: var(--grey-4);
     cursor: grab;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
@@ -431,8 +305,8 @@
     display: flex;
     flex-direction: row;
     background-color: var(--background);
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
   }
   .blockSection {
     padding: var(--spacing-xl);
@@ -454,7 +328,7 @@
     width: var(--pswidth);
     background-color: rgba(92, 92, 92, 0.1);
     border: 1px dashed #5c5c5c;
-    border-radius: 4px;
+    border-radius: 12px;
     display: block;
   }
   .block-core {
@@ -468,5 +342,58 @@
     z-index: 3;
     top: var(--blockPosY);
     left: var(--blockPosX);
+  }
+  .block-float {
+    pointer-events: none;
+    width: 100%;
+    position: absolute;
+    top: -35px;
+    left: 0;
+  }
+  .block-core {
+    cursor: pointer;
+  }
+  .block.selected .block-content {
+    border-color: var(--spectrum-global-color-blue-700);
+    transition: border 130ms ease-out;
+  }
+
+  .block-info {
+    pointer-events: none;
+  }
+
+  .log-status-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .status-indicator.status-success {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .status-indicator.status-error {
+    background: var(--spectrum-global-color-red-600);
+  }
+
+  .status-text {
+    font-weight: 600;
+    text-transform: uppercase;
   }
 </style>

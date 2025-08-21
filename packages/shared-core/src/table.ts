@@ -85,6 +85,11 @@ export function canHaveDefaultColumn(type: FieldType): boolean {
   return !!allowDefaultColumnByType[type]
 }
 
+export function isAllowedDisplayField(name: string, type: FieldType) {
+  if (PROTECTED_INTERNAL_COLUMNS.includes(name as any)) return false
+  return canBeDisplayColumn(type)
+}
+
 export function findDuplicateInternalColumns(table: Table): string[] {
   // maintains the case of keys
   const casedKeys = Object.keys(table.schema)

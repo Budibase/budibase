@@ -113,7 +113,9 @@
     border-radius: 2px;
     -webkit-box-shadow: 0 0 0 100px var(--spectrum-global-color-gray-300) inset;
     -webkit-text-fill-color: var(--spectrum-global-color-gray-900);
-    transition: -webkit-box-shadow 130ms 200ms, background-color 0s 86400s;
+    transition:
+      -webkit-box-shadow 130ms 200ms,
+      background-color 0s 86400s;
     padding: 3px 8px 4px 8px;
   }
 </style>

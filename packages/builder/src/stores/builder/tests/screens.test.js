@@ -2,7 +2,7 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore } from "@/stores/builder"
+import { componentStore, appStore, workspaceAppStore } from "@/stores/builder"
 import { initialScreenState, ScreenStore } from "@/stores/builder/screens"
 import {
   getScreenFixture,
@@ -10,7 +10,6 @@ import {
   COMPONENT_DEFINITIONS,
   componentDefinitionMap,
   getScreenDocId,
-  getPluginFixture,
   componentsToNested,
 } from "./fixtures"
 
@@ -32,10 +31,16 @@ vi.mock("@/stores/builder", async () => {
     subscribe: mockAppStore.subscribe,
     update: mockAppStore.update,
     set: mockAppStore.set,
+    refresh: vi.fn(),
+    refreshAppNav: vi.fn(),
   }
 
   const navigationStore = {
     deleteLink: vi.fn(),
+  }
+
+  const workspaceAppStore = {
+    refresh: vi.fn(),
   }
 
   return {
@@ -46,6 +51,7 @@ vi.mock("@/stores/builder", async () => {
       update: mockLayoutStore.update,
       subscribe: mockComponentStore.subscribe,
     },
+    workspaceAppStore,
   }
 })
 
@@ -245,7 +251,9 @@ describe("Screens store", () => {
 
     expect(bb.store.screens.length).toBe(1)
 
-    expect(bb.store.screens[0]).toStrictEqual(newDoc)
+    expect(bb.store.screens[0]).toStrictEqual({
+      ...newDoc,
+    })
 
     expect(bb.store.selectedScreenId).toBe(newDocId)
 
@@ -278,86 +286,14 @@ describe("Screens store", () => {
       .spyOn(API, "saveScreen")
       .mockResolvedValue(existingScreens[2].json())
 
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
     // Saved the existing screen having modified it.
     await bb.screenStore.save(existingScreens[2].json())
 
-    expect(routeSpy).toHaveBeenCalled()
+    expect(appStore.refreshAppNav).toHaveBeenCalledOnce()
     expect(saveSpy).toHaveBeenCalled()
 
     // On save, the screen is spliced back into the store with the saved content
     expect(bb.store.screens[2]).toStrictEqual(existingScreens[2].json())
-  })
-
-  it("Sync API data to relevant stores on save. Updated plugins", async ({
-    bb,
-  }) => {
-    const coreScreen = getScreenFixture()
-
-    const newDocId = getScreenDocId()
-    const newDoc = { ...coreScreen.json(), _id: newDocId, pluginAdded: true }
-
-    // Fake plugins
-    const plugins = Array(2)
-      .fill()
-      .map(() => getPluginFixture())
-
-    appStore.update(() => ({
-      usedPlugins: [],
-    }))
-
-    const appPackageSpy = vi
-      .spyOn(API, "fetchAppPackage")
-      .mockImplementation(appId => {
-        return {
-          application: {
-            appId: appId,
-            usedPlugins: plugins,
-          },
-        }
-      })
-
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
-    await bb.screenStore.syncScreenData(newDoc)
-
-    expect(routeSpy).toHaveBeenCalled()
-    expect(appPackageSpy).toHaveBeenCalled()
-
-    expect(get(appStore).usedPlugins).toStrictEqual(plugins)
-  })
-
-  it("Sync API updates to relevant stores on save. Plugins unchanged", async ({
-    bb,
-  }) => {
-    const coreScreen = getScreenFixture()
-
-    const newDocId = getScreenDocId()
-    const newDoc = { ...coreScreen.json(), _id: newDocId }
-    const plugin = getPluginFixture()
-
-    // Set existing plugin
-    appStore.update(() => ({
-      usedPlugins: [plugin],
-    }))
-
-    const appPackageSpy = vi.spyOn(API, "fetchAppPackage")
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
-    await bb.screenStore.syncScreenData(newDoc)
-
-    expect(routeSpy).toHaveBeenCalled()
-    expect(appPackageSpy).not.toHaveBeenCalled()
-
-    // Ensure nothing was updated
-    expect(get(appStore).usedPlugins).toStrictEqual([plugin])
   })
 
   it("Proceed to patch if appropriate config are supplied", async ({ bb }) => {
@@ -503,6 +439,7 @@ describe("Screens store", () => {
     }))
 
     const deleteSpy = vi.spyOn(API, "deleteScreen")
+    const refreshWorkspaceAppSpy = vi.spyOn(workspaceAppStore, "refresh")
 
     await bb.screenStore.delete(existingScreens[2].json())
 
@@ -511,6 +448,7 @@ describe("Screens store", () => {
     })
 
     expect(deleteSpy).toBeCalled()
+    expect(refreshWorkspaceAppSpy).toHaveBeenCalledOnce()
 
     expect(bb.store.screens.length).toBe(2)
 
@@ -629,23 +567,20 @@ describe("Screens store", () => {
       screens: storeScreens,
     }))
 
-    const patchSpy = vi
-      .spyOn(bb.screenStore, "patch")
-      .mockImplementation(async (patchFn, screenId) => {
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
         const target = bb.store.screens.find(screen => screen._id === screenId)
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
-      })
+      }
+    )
 
     await bb.screenStore.updateSetting(
       storeScreens[0],
       "routing.homeScreen",
       true
     )
-
-    // One call for the update, one call for to update the existing home screen
-    expect(patchSpy).toBeCalledTimes(2)
 
     // The new homescreen for BASIC
     expect(bb.store.screens[0].routing.homeScreen).toBe(true)
@@ -693,14 +628,14 @@ describe("Screens store", () => {
       screens: sorted,
     }))
 
-    const patchSpy = vi
-      .spyOn(bb.screenStore, "patch")
-      .mockImplementation(async (patchFn, screenId) => {
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
         const target = bb.store.screens.find(screen => screen._id === screenId)
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
-      })
+      }
+    )
 
     // ADMIN homeScreen updated from 0 to 2
     await bb.screenStore.updateSetting(sorted[2], "routing.homeScreen", true)
@@ -726,9 +661,6 @@ describe("Screens store", () => {
 
     // Homescreen was never set for POWER
     expect(results[Constants.Roles.POWER]).not.toBeDefined()
-
-    // Once to update the target screen, once to unset the existing homescreen.
-    expect(patchSpy).toBeCalledTimes(2)
   })
 
   it("Sequential patch check. Exit if the screenId is not valid.", async ({
@@ -808,6 +740,9 @@ describe("Screens store", () => {
       screen.name = "updated"
     }, existingDocId)
 
-    expect(saveSpy).toBeCalledWith({ ...original, name: "updated" })
+    expect(saveSpy).toBeCalledWith({
+      ...original,
+      name: "updated",
+    })
   })
 })

@@ -1,30 +1,31 @@
 import {
+  ArrayOperator,
+  BasicOperator,
   Datasource,
-  BBReferenceFieldSubType,
+  EmptyFilterOption,
+  FieldConstraints,
   FieldType,
+  FieldSubType,
   FormulaType,
+  isArraySearchOperator,
+  isBasicSearchOperator,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
   LegacyFilter,
+  LogicalOperator,
+  RangeOperator,
+  RowSearchParams,
+  SearchFilter,
+  SearchFilterOperator,
   SearchFilters,
   SearchQueryFields,
-  ArrayOperator,
-  SearchFilterOperator,
-  SortType,
-  FieldConstraints,
-  SortOrder,
-  RowSearchParams,
-  EmptyFilterOption,
   SearchResponse,
+  SortOrder,
+  SortType,
   Table,
-  BasicOperator,
-  RangeOperator,
-  LogicalOperator,
-  isLogicalSearchOperator,
-  UISearchFilter,
   UILogicalOperator,
-  isBasicSearchOperator,
-  isArraySearchOperator,
-  isRangeSearchOperator,
-  SearchFilter,
+  UISearchFilter,
+  StringFieldSubType,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -47,7 +48,7 @@ const SEARCH_OPERATORS = [
 export const getValidOperatorsForType = (
   fieldType: {
     type: FieldType
-    subtype?: BBReferenceFieldSubType
+    subtype?: FieldSubType
     formulaType?: FormulaType
     constraints?: FieldConstraints
   },
@@ -73,19 +74,30 @@ export const getValidOperatorsForType = (
     Op.NotEmpty,
     Op.In,
   ]
+  const arrayOps = [
+    Op.Contains,
+    Op.NotContains,
+    Op.ContainsAny,
+    Op.Empty,
+    Op.NotEmpty,
+  ]
   let ops: {
     value: string
     label: string
   }[] = []
-  const { type, formulaType } = fieldType
+  const { type, formulaType, subtype } = fieldType
   if (type === FieldType.STRING) {
-    ops = stringOps
+    if (subtype === StringFieldSubType.ARRAY) {
+      ops = arrayOps
+    } else {
+      ops = stringOps
+    }
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
     ops = numOps
   } else if (type === FieldType.OPTIONS) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === FieldType.ARRAY) {
-    ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
+    ops = arrayOps
   } else if (type === FieldType.BOOLEAN) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === FieldType.LONGFORM) {
@@ -102,7 +114,9 @@ export const getValidOperatorsForType = (
   ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === FieldType.BB_REFERENCE) {
-    ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
+    ops = arrayOps
+  } else if (type === FieldType.BARCODEQR) {
+    ops = stringOps
   }
 
   // Only allow equal/not equal for _id in SQL tables
@@ -323,7 +337,13 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
         if (!value) {
           return
         }
-        value = new Date(value).toISOString()
+        if (typeof value === "string") {
+          value = new Date(value).toISOString()
+        } else if (isRangeSearchOperator(operator)) {
+          query[operator] ??= {}
+          query[operator][field] = value
+          return query
+        }
       }
       break
     case FieldType.NUMBER:
@@ -349,7 +369,6 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
       }
       break
   }
-
   if (isRangeSearchOperator(operator)) {
     const key = externalType as keyof typeof SqlNumberTypeRangeMap
     const limits = SqlNumberTypeRangeMap[key] || {
@@ -444,6 +463,7 @@ export function buildQuery(
     return {}
   }
 
+  // Migrate legacy filters if required
   if (Array.isArray(filter)) {
     filter = processSearchFilters(filter)
     if (!filter) {
@@ -451,10 +471,7 @@ export function buildQuery(
     }
   }
 
-  const operator = logicalOperatorFromUI(
-    filter.logicalOperator || UILogicalOperator.ALL
-  )
-
+  // Determine top level empty filter behaviour
   const query: SearchFilters = {}
   if (filter.onEmptyFilter) {
     query.onEmptyFilter = filter.onEmptyFilter
@@ -462,8 +479,24 @@ export function buildQuery(
     query.onEmptyFilter = EmptyFilterOption.RETURN_ALL
   }
 
+  // Default to matching all groups/filters
+  const operator = logicalOperatorFromUI(
+    filter.logicalOperator || UILogicalOperator.ALL
+  )
+
   query[operator] = {
     conditions: (filter.groups || []).map(group => {
+      // Check if we contain more groups
+      if (group.groups) {
+        const searchFilter = buildQuery(group)
+
+        // We don't define this properly in the types, but certain fields should
+        // not be present in these nested search filters
+        delete searchFilter.onEmptyFilter
+        return searchFilter
+      }
+
+      // Otherwise handle filters
       const { allOr, onEmptyFilter, filters } = splitFiltersArray(
         group.filters || []
       )
@@ -471,7 +504,7 @@ export function buildQuery(
         query.onEmptyFilter = onEmptyFilter
       }
 
-      // logicalOperator takes precendence over allOr
+      // logicalOperator takes precedence over allOr
       let operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
       if (group.logicalOperator) {
         operator = logicalOperatorFromUI(group.logicalOperator)
@@ -623,7 +656,6 @@ export function runQuery<T extends Record<string, any>>(
       if (docValue == null || docValue === "") {
         return false
       }
-
       if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }

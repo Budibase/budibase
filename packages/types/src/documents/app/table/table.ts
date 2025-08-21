@@ -23,9 +23,10 @@ export interface Table extends Document {
   relatedFormula?: string[]
   constrained?: string[]
   sql?: boolean
-  indexes?: { [key: string]: any }
+  indexes?: string[]
   created?: boolean
   rowHeight?: number
+  aiGenerated?: boolean
 }
 
 export interface TableRequest extends Table {

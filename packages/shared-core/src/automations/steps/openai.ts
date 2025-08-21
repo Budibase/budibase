@@ -10,16 +10,20 @@ enum Model {
   GPT_4O = "gpt-4o",
   GPT_4 = "gpt-4",
   GPT_35_TURBO = "gpt-3.5-turbo",
+  GPT_5_MINI = "gpt-5-mini",
+  GPT_5 = "gpt-5",
+  GPT_5_NANO = "gpt-5-nano",
 }
 
 export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
-  icon: "Algorithm",
+  icon: "flow-arrow",
   description: "Interact with the OpenAI ChatGPT API.",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
+  deprecated: false,
   stepId: AutomationActionStepId.OPENAI,
   inputs: {
     prompt: "",

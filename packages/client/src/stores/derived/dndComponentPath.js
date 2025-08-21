@@ -1,7 +1,7 @@
 import { derived } from "svelte/store"
-import { findComponentPathById } from "@/utils/components.js"
+import { findComponentPathById } from "@/utils/components"
 import { dndParent } from "../dnd.ts"
-import { screenStore } from "../screens.js"
+import { screenStore } from "../screens"
 
 export const dndComponentPath = derived(
   [dndParent, screenStore],

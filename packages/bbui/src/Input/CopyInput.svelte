@@ -1,19 +1,21 @@
-<script>
+<script lang="ts">
   import Input from "../Form/Input.svelte"
   import Icon from "../Icon/Icon.svelte"
   import { notifications } from "../Stores/notifications"
 
-  export let label = null
-  export let value
+  export let label: string | undefined = undefined
+  export let value: string | undefined = undefined
 
-  const copyToClipboard = val => {
-    const dummy = document.createElement("textarea")
-    document.body.appendChild(dummy)
-    dummy.value = val
-    dummy.select()
-    document.execCommand("copy")
-    document.body.removeChild(dummy)
-    notifications.success(`Copied to clipboard`)
+  const copyToClipboard = (val: string | undefined) => {
+    if (val) {
+      const dummy = document.createElement("textarea")
+      document.body.appendChild(dummy)
+      dummy.value = val
+      dummy.select()
+      document.execCommand("copy")
+      document.body.removeChild(dummy)
+      notifications.success(`Copied to clipboard`)
+    }
   }
 </script>
 
@@ -22,7 +24,7 @@
 <div>
   <Input readonly {value} {label} />
   <div class="icon" on:click={() => copyToClipboard(value)}>
-    <Icon size="S" name="Copy" />
+    <Icon size="S" name="copy" />
   </div>
 </div>
 
@@ -46,8 +48,8 @@
     width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
+    transition:
+      background-color var(--spectrum-global-animation-duration-100, 130ms),
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);

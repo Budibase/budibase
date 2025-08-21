@@ -44,7 +44,7 @@
   <div class="list-item__right">
     <slot name="right" />
     {#if showArrow}
-      <Icon name="ChevronRight" />
+      <Icon name="caret-right" />
     {/if}
   </div>
 </a>
@@ -57,7 +57,9 @@
     flex-direction: row;
     justify-content: space-between;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-800);
     cursor: pointer;
@@ -89,7 +91,7 @@
   /* Selection is only meant for standalone list items (non stacked) so we just set a fixed border radius */
   .list-item.selected {
     background-color: var(--spectrum-global-color-blue-100);
-    border-color: var(--spectrum-global-color-blue-100);
+    border: none;
   }
   .list-item.selected:after {
     content: "";
@@ -100,7 +102,7 @@
     pointer-events: none;
     top: 0;
     left: 0;
-    border-radius: 4px;
+    border-radius: inherit;
     box-sizing: border-box;
     z-index: 1;
     opacity: 0.5;
@@ -112,7 +114,9 @@
     padding: 4px;
     border-radius: 4px;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    transition: background-color 130ms ease-out, border-color 130ms ease-out,
+    transition:
+      background-color 130ms ease-out,
+      border-color 130ms ease-out,
       color 130ms ease-out;
   }
   .list-item.large.hoverable:not(.selected):hover .list-item__icon {

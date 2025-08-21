@@ -1,3 +1,4 @@
+import { Table } from "@budibase/types"
 import { SortOrder } from "../../../api"
 import {
   SearchFilters,
@@ -6,9 +7,21 @@ import {
   LogicalOperator,
 } from "../../../sdk"
 import { HttpMethod } from "../query"
-import { Row } from "../row"
-import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
-import { AutomationStep, AutomationStepOutputs } from "./schema"
+import { Row, RowAttachment } from "../row"
+import {
+  LoopStepType,
+  EmailAttachment,
+  AutomationResults,
+  AutomationStepResult,
+} from "./automation"
+import { AutomationStep } from "./schema"
+
+export enum FilterCondition {
+  EQUAL = "EQUAL",
+  NOT_EQUAL = "NOT_EQUAL",
+  GREATER_THAN = "GREATER_THAN",
+  LESS_THAN = "LESS_THAN",
+}
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -75,10 +88,22 @@ export type DiscordStepInputs = {
 export type ExecuteQueryStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
+  info?: any
+}
+
+export type APIRequestStepInputs = {
+  query: {
+    queryId: string
+    [key: string]: any
+  }
+}
+
+export type APIRequestStepOutputs = BaseAutomationOutputs & {
   info?: any
 }
 
@@ -90,9 +115,18 @@ export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
   value?: string
 }
 
+export type ExtractStateStepInputs = {
+  key: string
+  value: string
+}
+
+export type ExtractStateStepOutputs = BaseAutomationOutputs & {
+  value?: string
+}
+
 export type FilterStepInputs = {
   field: any
-  condition: string
+  condition: FilterCondition
   value: any
 }
 
@@ -110,9 +144,10 @@ export type LoopStepInputs = {
 }
 
 export type LoopStepOutputs = {
-  items: AutomationStepOutputs[]
+  items: AutomationStepResult[]
   success: boolean
   iterations: number
+  status?: string
 }
 
 export type BranchStepInputs = {
@@ -124,6 +159,15 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
+  conditionUI?: {
+    groups?: {
+      filters?: {
+        field: string
+        operator: BasicOperator
+        value: any
+      }[]
+    }[]
+  }
 }
 
 export type BranchSearchFilters = Pick<
@@ -151,12 +195,117 @@ export type OpenAIStepInputs = {
   model: Model
 }
 
+export type ClassifyContentStepInputs = {
+  inputType: string
+  textInput: string
+  categoryItems: Array<{
+    category: string
+  }>
+}
+
+export type ClassifyContentStepOutputs = {
+  category?: string
+  success: boolean
+  response?: string
+}
+
+export type PromptLLMStepInputs = {
+  prompt: string
+  model: Model
+}
+
+export type PromptLLMStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type TranslateStepInputs = {
+  text: string
+  language: string
+}
+
+export type TranslateStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type SummariseStepInputs = {
+  text: string
+  length?: SummariseLength
+}
+
+export type SummariseStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type GenerateTextStepInputs = {
+  contentType: string
+  instructions: string
+}
+
+export type GenerateTextStepOutputs = {
+  success: boolean
+  response?: string
+}
+export type ExtractFileDataStepInputs = {
+  file: RowAttachment | string
+  source: "URL" | "Attachment"
+  fileType?: string
+  schema: Record<string, any>
+}
+
+export type ExtractFileDataStepOutputs = {
+  success: boolean
+  data: Record<string, any>
+  response?: string
+}
+
+export type LoopV2StepInputs = {
+  option: LoopStepType
+  binding: any
+  iterations?: number
+  failure?: string
+  children?: AutomationStep[]
+  resultOptions?: {
+    maxStoredIterations?: number
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
+}
+
+export interface LoopSummary {
+  totalProcessed: number
+  successCount: number
+  failureCount: number
+  firstFailure?: { iteration: number; error: string }
+}
+
+export type LoopV2StepOutputs = {
+  success: boolean
+  iterations: number
+  status?: string
+  summary: LoopSummary
+  items?: Record<string, AutomationStepResult[]>
+  recentItems?: Record<string, AutomationStepResult[]>
+  nestedSummaries?: Record<string, LoopSummary[]>
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
   GPT_4O = "gpt-4o",
   GPT_4O_MINI = "gpt-4o-mini",
+  GPT_5_MINI = "gpt-5-mini",
+  GPT_5 = "gpt-5",
+  GPT_5_NANO = "gpt-5-nano",
+}
+
+export enum SummariseLength {
+  SHORT = "short",
+  MEDIUM = "medium",
+  LONG = "long",
 }
 
 export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
@@ -210,11 +359,12 @@ export type TriggerAutomationStepInputs = {
   automation: {
     automationId: string
   }
-  timeout: number
+  timeout?: number
 }
 
 export type TriggerAutomationStepOutputs = BaseAutomationOutputs & {
   value?: AutomationResults["steps"]
+  status: AutomationResults["status"]
 }
 
 export type UpdateRowStepInputs = {
@@ -293,6 +443,7 @@ export type RowUpdatedTriggerOutputs = {
   row: Row
   id: string
   revision?: string
+  oldRow?: Row
 }
 
 export type WebhookTriggerInputs = {
@@ -300,6 +451,18 @@ export type WebhookTriggerInputs = {
   triggerUrl: string
 }
 
-export type WebhookTriggerOutputs = {
-  fields: Record<string, any>
+export type WebhookTriggerOutputs = Record<string, any> & {
+  body: Record<string, any>
+}
+
+export type RowActionTriggerInputs = {
+  tableId: string
+  rowActionId: string
+}
+
+export type RowActionTriggerOutputs = {
+  row: Row
+  id: string
+  revision?: string
+  table: Table
 }

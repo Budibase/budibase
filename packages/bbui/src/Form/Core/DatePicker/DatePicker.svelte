@@ -13,7 +13,7 @@
   export let readonly = false
   export let error = null
   export let enableTime = true
-  export let value = null
+  export let value = undefined
   export let placeholder = null
   export let timeOnly = false
   export let ignoreTimezones = false
@@ -56,7 +56,7 @@
   focused={isOpen}
   value={parsedValue}
   on:click={popover?.show}
-  icon={timeOnly ? "Clock" : "Calendar"}
+  icon={timeOnly ? "clock" : "calendar"}
 />
 
 <Popover

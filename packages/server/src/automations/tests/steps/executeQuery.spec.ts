@@ -9,7 +9,8 @@ import { generator } from "@budibase/backend-core/tests"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
@@ -25,6 +26,7 @@ if (descriptions.length) {
         const ds = await dsProvider()
         datasource = ds.datasource!
         client = ds.client!
+        await config.api.automation.deleteAll()
       })
 
       beforeEach(async () => {

@@ -5,6 +5,7 @@
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
   import isoWeek from "dayjs/plugin/isoWeek"
+  import Icon from "../../../Icon/Icon.svelte"
 
   dayjs.extend(isoWeek)
 
@@ -106,13 +107,7 @@
       class="spectrum-ActionButton spectrum-ActionButton--quiet spectrum-Calendar-prevMonth"
       on:click={() => (calendarDate = calendarDate.subtract(1, "month"))}
     >
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronLeft100"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
+      <Icon name="caret-left" weight="bold" size="S" />
     </button>
     <button
       aria-label="Next"
@@ -120,13 +115,7 @@
       class="spectrum-ActionButton spectrum-ActionButton--quiet spectrum-Calendar-nextMonth"
       on:click={() => (calendarDate = calendarDate.add(1, "month"))}
     >
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronRight100"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
+      <Icon name="caret-right" weight="bold" size="S" />
     </button>
   </div>
   <div

@@ -12,6 +12,7 @@
   export let onChange
   export let span
   export let helpText = null
+  export let buttonText = "Add signature"
 
   let fieldState
   let fieldApi
@@ -31,10 +32,12 @@
         let attachRequest = new FormData()
         attachRequest.append("file", signatureFile)
 
-        const resp = await API.uploadAttachment(
-          formContext?.dataSource?.tableId,
-          attachRequest
-        )
+        let sourceId = formContext?.dataSource?.tableId
+        if (formContext?.dataSource?.type === "viewV2") {
+          sourceId = formContext.dataSource.id
+        }
+
+        const resp = await API.uploadAttachment(sourceId, attachRequest)
         const [signatureAttachment] = resp
         updateValue = signatureAttachment
       } else {
@@ -97,7 +100,7 @@
           }
         }}
       >
-        Add signature
+        {buttonText ? buttonText : "Add signature"}
       </ActionButton>
     {:else}
       <div class="signature-field">

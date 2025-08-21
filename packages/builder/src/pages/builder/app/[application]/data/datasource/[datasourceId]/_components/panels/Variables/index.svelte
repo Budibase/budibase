@@ -1,14 +1,15 @@
 <script>
-  import { Heading, Layout } from "@budibase/bbui"
+  import { Heading, Layout, notifications } from "@budibase/bbui"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import ViewDynamicVariables from "./ViewDynamicVariables.svelte"
   import { getEnvironmentBindings } from "@/dataBinding"
-  import { licensing } from "@/stores/portal"
+  import { environment, licensing } from "@/stores/portal"
   import { queries } from "@/stores/builder"
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
+  import { onMount } from "svelte"
 
   export let datasource
 
@@ -27,6 +28,14 @@
 
     updatedDatasource.config.staticVariables = newStaticVariables
   }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error(`Error getting environment variables - ${error}`)
+    }
+  })
 </script>
 
 <Panel>

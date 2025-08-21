@@ -7,7 +7,7 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 
-import { S3 } from "@aws-sdk/client-s3"
+import { S3, S3ClientConfig } from "@aws-sdk/client-s3"
 import csv from "csvtojson"
 import stream from "stream"
 
@@ -157,13 +157,24 @@ const SCHEMA: Integration = {
 }
 
 class S3Integration implements IntegrationBase {
-  private readonly config: S3Config
-  private client
+  private readonly config: S3ClientConfig
+  private client: S3
 
   constructor(config: S3Config) {
-    this.config = config
-    if (this.config.endpoint) {
-      this.config.s3ForcePathStyle = true
+    this.config = {
+      forcePathStyle: config.s3ForcePathStyle || true,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+      region: config.region,
+      endpoint: config.endpoint,
+    }
+    if (config.endpoint) {
+      this.config.requestChecksumCalculation = "WHEN_REQUIRED"
+      this.config.responseChecksumValidation = "WHEN_REQUIRED"
+
+      this.config.forcePathStyle = true
     } else {
       delete this.config.endpoint
     }
@@ -176,7 +187,9 @@ class S3Integration implements IntegrationBase {
       connected: false,
     }
     try {
-      await this.client.listBuckets()
+      await this.client.listBuckets({
+        MaxBuckets: 1,
+      })
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
@@ -253,7 +266,7 @@ class S3Integration implements IntegrationBase {
         .on("error", () => {
           csvError = true
         })
-      fileStream.on("finish", () => {
+      fileStream.on("end", () => {
         resolve(response)
       })
     }).catch(err => {

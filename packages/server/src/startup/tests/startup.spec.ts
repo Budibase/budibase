@@ -1,3 +1,4 @@
+import { structures } from "@budibase/backend-core/tests"
 import { withEnv } from "../../environment"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { startup } from "../index"
@@ -23,11 +24,11 @@ describe("check BB_ADMIN environment variables", () => {
     nock("http://localhost:10000")
       .get("/api/global/configs/checklist")
       .reply(200, {})
-      .get("/api/global/self/api_key")
+      .post("/api/global/self/api_key")
       .reply(200, {})
 
-    const EMAIL = "budibase@budibase.com",
-      PASSWORD = "budibase"
+    const EMAIL = `${structures.generator.guid()}@budibase.com`
+    const PASSWORD = "budibase"
     await tenancy.doInTenant(tenancy.DEFAULT_TENANT_ID, async () => {
       await withEnv(
         {
@@ -41,7 +42,7 @@ describe("check BB_ADMIN environment variables", () => {
               BB_ADMIN_USER_PASSWORD: PASSWORD,
             },
             async () => {
-              await startup({ rerun: true })
+              await startup({ force: true })
               const user = await users.getGlobalUserByEmail(EMAIL, {
                 cleanup: false,
               })

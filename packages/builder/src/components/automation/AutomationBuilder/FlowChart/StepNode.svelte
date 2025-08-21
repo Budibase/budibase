@@ -1,6 +1,7 @@
 <script>
   import FlowItem from "./FlowItem.svelte"
   import BranchNode from "./BranchNode.svelte"
+  import { ViewMode } from "@/types/automations"
   import { AutomationActionStepId } from "@budibase/types"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { automationStore } from "@/stores/builder"
@@ -14,6 +15,10 @@
   export let automation
   export let blocks
   export let isLast = false
+  export let logData = null
+  export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
+  export let onStepSelect = () => {}
 
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
@@ -25,6 +30,31 @@
   $: pathToCurrentNode = blockRef?.pathTo
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
   $: branches = step.inputs?.branches
+
+  // Log execution state
+  $: logStepData = getLogStepData(logData, step)
+
+  // For branch steps in logs mode, determine which branch was executed
+  $: executedBranchId =
+    isBranch && viewMode === ViewMode.LOGS && logStepData?.outputs?.branchId
+      ? logStepData.outputs.branchId
+      : null
+
+  $: isBranchUnexecuted =
+    isBranch && viewMode === ViewMode.LOGS && !logStepData?.outputs?.branchId
+
+  function getLogStepData(logData, step) {
+    if (!logData || viewMode !== ViewMode.LOGS) return null
+
+    // For trigger step
+    if (step.type === "TRIGGER") {
+      return logData.trigger
+    }
+
+    // For action steps, find by unique id match
+    const logSteps = logData.steps || []
+    return logSteps.find(logStep => logStep.id === step.id)
+  }
 
   // All bindings available to this point
   $: availableBindings = automationStore.actions.getPathBindings(
@@ -38,6 +68,9 @@
 
   $: userBindings = automationStore.actions.buildUserBindings()
   $: settingBindings = automationStore.actions.buildSettingBindings()
+  $: stateBindings =
+    ($automationStore.selectedNodeId,
+    automationStore.actions.buildStateBindings())
 
   // Combine all bindings for the step
   $: bindings = [
@@ -45,17 +78,28 @@
     ...environmentBindings,
     ...userBindings,
     ...settingBindings,
+    ...stateBindings,
   ]
+
   onMount(() => {
     // Register the trigger as the focus element for the automation
     // Onload, the canvas will use the dimensions to center the step
     if (stepEle && step.type === "TRIGGER" && !$view.focusEle) {
       const { width, height, left, right, top, bottom, x, y } =
         stepEle.getBoundingClientRect()
-
       view.update(state => ({
         ...state,
-        focusEle: { width, height, left, right, top, bottom, x, y },
+        focusEle: {
+          width,
+          height,
+          left,
+          right,
+          top,
+          bottom,
+          x,
+          y,
+          ...(step.type === "TRIGGER" ? { targetY: 100 } : {}),
+        },
       }))
     }
   })
@@ -64,7 +108,8 @@
 {#if isBranch}
   <div class="split-branch-btn">
     <ActionButton
-      icon="AddCircle"
+      disabled={viewMode === ViewMode.LOGS}
+      icon="plus-circle"
       on:click={() => {
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}
@@ -76,12 +121,17 @@
     {#each branches as branch, bIdx}
       {@const leftMost = bIdx === 0}
       {@const rightMost = branches?.length - 1 === bIdx}
+      {@const isBranchExecuted = executedBranchId === branch.id}
+      {@const isBranchUnexecuted =
+        viewMode === ViewMode.LOGS && executedBranchId && !isBranchExecuted}
       <div class="branch-wrap">
         <div
           class="branch"
           class:left={leftMost}
           class:right={rightMost}
           class:middle={!leftMost && !rightMost}
+          class:executed={isBranchExecuted}
+          class:unexecuted={isBranchUnexecuted}
         >
           <div class="branch-node">
             <BranchNode
@@ -91,6 +141,12 @@
               pathTo={pathToCurrentNode}
               branchIdx={bIdx}
               isLast={rightMost}
+              executed={isBranchExecuted}
+              unexecuted={isBranchUnexecuted}
+              {viewMode}
+              {logStepData}
+              {onStepSelect}
+              isLastBranchStep={isLast && isBranch}
               on:change={async e => {
                 const updatedBranch = { ...branch, ...e.detail }
 
@@ -133,15 +189,23 @@
 
           <!-- Branch steps -->
           {#each step.inputs?.children[branch.id] || [] as bStep, sIdx}
+            {@const branchSteps = step.inputs?.children[branch.id] || []}
+            {@const isBranchStepLast = sIdx === branchSteps.length - 1}
             <!-- Recursive StepNode -->
             <svelte:self
               step={bStep}
               stepIdx={sIdx}
               branchIdx={bIdx}
-              isLast={blockRef.terminating}
+              isLast={viewMode === ViewMode.LOGS
+                ? isBranchStepLast
+                : blockRef?.terminating || false}
               pathTo={pathToCurrentNode}
               {automation}
               {blocks}
+              {logData}
+              {viewMode}
+              {selectedLogStepId}
+              {onStepSelect}
             />
           {/each}
         </div>
@@ -158,6 +222,11 @@
       {automation}
       {bindings}
       draggable={step.type !== "TRIGGER"}
+      {logStepData}
+      {viewMode}
+      {selectedLogStepId}
+      {onStepSelect}
+      unexecuted={isBranchUnexecuted}
     />
   </div>
 {/if}
@@ -226,5 +295,20 @@
 
   .split-branch-btn {
     z-index: 2;
+  }
+
+  /* Branch execution states in logs mode */
+
+  .branch.unexecuted {
+    opacity: 0.7;
+  }
+
+  .branch.unexecuted::before,
+  .branch.unexecuted::after {
+    opacity: 0.7;
+  }
+
+  .unexecuted {
+    opacity: 0.7;
   }
 </style>

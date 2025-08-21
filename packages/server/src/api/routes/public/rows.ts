@@ -1,5 +1,5 @@
 import controller, { viewSearch } from "../../controllers/public/rows"
-import Endpoint from "./utils/Endpoint"
+import { Endpoint } from "@budibase/backend-core"
 import { externalSearchValidator } from "../utils/validators"
 
 const read = [],
@@ -144,7 +144,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/appId'
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:

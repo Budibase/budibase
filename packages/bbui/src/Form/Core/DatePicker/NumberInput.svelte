@@ -7,6 +7,8 @@
   export let type = "number"
 
   $: style = width ? `width:${width}px;` : ""
+
+  const selectAll = event => event.target.select()
 </script>
 
 <input
@@ -16,7 +18,7 @@
   {value}
   {min}
   {max}
-  onclick="this.select()"
+  on:click={selectAll}
   on:change
   on:input
 />

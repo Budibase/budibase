@@ -1,6 +1,11 @@
 import { createAPIClient } from "@budibase/frontend-core"
 import { authStore } from "../stores/auth"
-import { notificationStore, devToolsEnabled, devToolsStore } from "../stores"
+import {
+  notificationStore,
+  devToolsEnabled,
+  devToolsStore,
+  recaptchaStore,
+} from "../stores"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -10,7 +15,9 @@ export const API = createAPIClient({
   // Attach client specific headers
   attachHeaders: headers => {
     // Attach app ID header
-    headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    if (window["##BUDIBASE_APP_ID##"]) {
+      headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    }
 
     // Attach client header if not inside the builder preview
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
@@ -42,6 +49,12 @@ export const API = createAPIClient({
       "/api/global/self",
       "/api/tables/ta_users",
     ]
+
+    // expired token, this means the recaptcha token has expired, need to re-assert
+    if (status === 498) {
+      recaptchaStore.actions.unverified()
+      return
+    }
 
     // Log any errors that we haven't manually handled
     if (!handled) {

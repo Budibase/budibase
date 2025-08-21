@@ -80,7 +80,7 @@ export interface NestedProviderDatasource {
 }
 
 interface BaseFieldDatasource<
-  TType extends "field" | "queryarray" | "jsonarray"
+  TType extends "field" | "queryarray" | "jsonarray",
 > {
   type: TType
   tableId: string

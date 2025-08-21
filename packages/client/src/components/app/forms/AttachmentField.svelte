@@ -15,6 +15,9 @@
   export let maximum = undefined
   export let span
   export let helpText = null
+  export let titleText
+  export let clickText
+  export let addText
   export let type = FieldType.ATTACHMENTS
   export let fieldApiMapper = {
     get: value => value,
@@ -49,7 +52,11 @@
       data.append("file", fileList[i])
     }
     try {
-      return await API.uploadAttachment(formContext?.dataSource?.tableId, data)
+      let sourceId = formContext?.dataSource?.tableId
+      if (formContext?.dataSource?.type === "viewV2") {
+        sourceId = formContext.dataSource.id
+      }
+      return await API.uploadAttachment(sourceId, data)
     } catch (error) {
       return []
     }
@@ -89,6 +96,9 @@
       {maximum}
       {extensions}
       {compact}
+      {titleText}
+      {clickText}
+      {addText}
     />
   {/if}
 </Field>

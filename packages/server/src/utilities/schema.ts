@@ -106,7 +106,7 @@ export function validate(
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        isNaN(new Date(columnData).getTime())
+        !sql.utils.isValidISODateString(columnData)
       ) {
         results.schemaValidation[columnName] = false
       } else if (
@@ -177,14 +177,24 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (columnType === FieldType.DATETIME) {
         if (columnData && !columnSchema.timeOnly) {
-          if (!sql.utils.isValidISODateString(columnData)) {
-            let message = `Invalid format for field "${columnName}": "${columnData}".`
-            if (columnSchema.dateOnly) {
-              message += ` Date-only fields must be in the format "YYYY-MM-DD".`
-            } else {
-              message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
+          if (columnSchema.ignoreTimezones) {
+            if (!sql.utils.isValidISODateStringWithoutTimezone(columnData)) {
+              throw new HTTPError(
+                `Invalid format for field "${columnName}": "${columnData}". Datetime fields with ignoreTimezones must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SS".`,
+                400
+              )
             }
-            throw new HTTPError(message, 400)
+            parsedRow[columnName] = new Date(columnData.trim() + "Z")
+          } else {
+            if (!sql.utils.isValidISODateString(columnData)) {
+              let message = `Invalid format for field "${columnName}": "${columnData}".`
+              if (columnSchema.dateOnly) {
+                message += ` Date-only fields must be in the format "YYYY-MM-DD".`
+              } else {
+                message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
+              }
+              throw new HTTPError(message, 400)
+            }
           }
         }
         if (columnData && columnSchema.timeOnly) {
@@ -270,6 +280,7 @@ function parseJsonExport<T>(value: any) {
   if (typeof value !== "string") {
     return value
   }
+
   try {
     const parsed = JSON.parse(value)
 
@@ -278,12 +289,17 @@ function parseJsonExport<T>(value: any) {
     if (
       e.message.startsWith("Expected property name or '}' in JSON at position ")
     ) {
-      // This was probably converted as CSV and it has single quotes instead of double ones
+      // In order to store JSON within CSVs what we used to do is replace double
+      // quotes with single quotes. This results in invalid JSON, so the line
+      // below is a workaround to parse it. However, this method of storing JSON
+      // was never valid, and we don't do it anymore. However, people may have
+      // exported data and stored it, hoping to be able to restore it later, so
+      // we leave this in place to support that.
       const parsed = JSON.parse(value.replace(/'/g, '"'))
       return parsed as T
     }
 
-    // It is no a valid JSON
+    // It is not valid JSON
     throw e
   }
 }

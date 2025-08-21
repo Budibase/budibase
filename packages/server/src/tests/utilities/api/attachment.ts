@@ -13,4 +13,16 @@ export class AttachmentAPI extends TestAPI {
       expectations,
     })
   }
+
+  upload = async (
+    tableId: string,
+    name: string,
+    file: Buffer | fs.ReadStream | string,
+    expectations?: Expectations
+  ): Promise<ProcessAttachmentResponse> => {
+    return await this._post(`/api/attachments/${tableId}/upload`, {
+      files: { file: { name, file } },
+      expectations,
+    })
+  }
 }

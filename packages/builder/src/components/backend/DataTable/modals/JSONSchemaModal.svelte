@@ -119,7 +119,7 @@
             getOptionValue={field => field.value}
             getOptionLabel={field => field.label}
           />
-          <ActionButton icon="Close" quiet on:click={() => removeKey(i)} />
+          <ActionButton icon="x" quiet on:click={() => removeKey(i)} />
         </div>
       {/each}
       <div class:add-field-btn={fieldCount !== 0}>

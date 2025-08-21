@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "Row Deleted",
   event: AutomationEventType.ROW_DELETE,
-  icon: "TableRowRemoveCenter",
+  icon: "trash-simple",
   tagline: "Row is deleted from {{inputs.enriched.table.name}}",
   description: "Fired when a row is deleted from your database",
   stepId: AutomationTriggerStepId.ROW_DELETED,

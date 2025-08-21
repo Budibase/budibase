@@ -42,6 +42,7 @@
   export let panel
   export let toReadable
   export let toRuntime
+  export let evaluationContext = {}
 
   $: editableFilters = migrateFilters(filters)
   $: {
@@ -338,7 +339,7 @@
                 </div>
                 <div class="group-actions">
                   <Icon
-                    name="Add"
+                    name="plus"
                     hoverable
                     hoverColor="var(--ink)"
                     on:click={() => {
@@ -349,7 +350,7 @@
                     }}
                   />
                   <Icon
-                    name="Delete"
+                    name="trash"
                     hoverable
                     hoverColor="var(--ink)"
                     on:click={() => {
@@ -385,6 +386,7 @@
                         {panel}
                         {toReadable}
                         {toRuntime}
+                        {evaluationContext}
                         on:change={e => {
                           const updated = {
                             ...filter,
@@ -423,6 +425,7 @@
                       {panel}
                       {toReadable}
                       {toRuntime}
+                      {evaluationContext}
                       on:change={e => {
                         onFilterFieldUpdate(
                           { ...filter, ...e.detail },
@@ -434,7 +437,7 @@
 
                     <ActionButton
                       size="M"
-                      icon="Delete"
+                      icon="trash"
                       on:click={() => {
                         handleFilterChange({
                           groupIdx,
@@ -475,7 +478,7 @@
           {/if}
           <div class="add-group">
             <Button
-              icon="AddCircle"
+              icon="plus-circle"
               size="M"
               secondary
               on:click={() => {
@@ -489,7 +492,7 @@
             {#if docsURL}
               <a href={docsURL} target="_blank">
                 <Icon
-                  name="HelpOutline"
+                  name="question"
                   color="var(--spectrum-global-color-gray-600)"
                 />
               </a>
