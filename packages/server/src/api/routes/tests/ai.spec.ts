@@ -6,7 +6,7 @@ import {
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, features, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -174,17 +174,6 @@ describe("AI", () => {
       })
 
       describe("POST /api/ai/js", () => {
-        let cleanup: () => void
-        beforeAll(() => {
-          cleanup = features.testutils.setFeatureFlags("*", {
-            AI_JS_GENERATION: true,
-          })
-        })
-
-        afterAll(() => {
-          cleanup()
-        })
-
         it("handles correct plain code response", async () => {
           mockLLMResponse(`return 42`)
 
@@ -310,19 +299,14 @@ describe("BudibaseAI", () => {
     let internalApiKey = "api-key"
 
     let envCleanup: () => void
-    let featureCleanup: () => void
     beforeAll(() => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
       })
-      featureCleanup = features.testutils.setFeatureFlags("*", {
-        AI_JS_GENERATION: true,
-      })
     })
 
     afterAll(() => {
-      featureCleanup()
       envCleanup()
     })
 
@@ -500,17 +484,6 @@ describe("BudibaseAI", () => {
   })
 
   describe("POST /api/ai/tables", () => {
-    let featureCleanup: () => void
-    beforeAll(() => {
-      featureCleanup = features.testutils.setFeatureFlags("*", {
-        AI_TABLE_GENERATION: true,
-      })
-    })
-
-    afterAll(() => {
-      featureCleanup()
-    })
-
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
