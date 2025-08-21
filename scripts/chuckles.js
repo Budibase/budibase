@@ -1,5 +1,5 @@
-const { env } = require("@budibase/backend-core")
-env.DISABLE_PINO_LOGGER = 1
+// Disable pino logger before requiring any backend-core modules
+process.env.DISABLE_PINO_LOGGER = "1"
 const fs = require("fs")
 const dotenv = require("dotenv")
 const { join } = require("path")
