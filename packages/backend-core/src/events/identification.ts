@@ -268,6 +268,7 @@ export const getUniqueTenantId = async (tenantId: string): Promise<string> => {
       } else {
         uniqueTenantId = `${newid()}_${tenantId}`
         config.config.uniqueTenantId = uniqueTenantId
+        config.config.createdVersion = env.VERSION
         await db.put(config)
         return uniqueTenantId
       }
