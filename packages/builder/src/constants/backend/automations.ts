@@ -17,6 +17,7 @@ export const ActionStepID = {
   LOOP: "LOOP",
   COLLECT: "COLLECT",
   TRIGGER_AUTOMATION_RUN: "TRIGGER_AUTOMATION_RUN",
+  BAMBOOHR: "BAMBOOHR",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: "discord",
   slack: "slack",

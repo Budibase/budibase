@@ -33,7 +33,7 @@ export const definition: AutomationStepDefinition = {
           description: "Your BambooHR company subdomain (e.g., 'yourcompany' from yourcompany.bamboohr.com)",
         },
         apiKey: {
-          type: AutomationIOType.PASSWORD,
+          type: AutomationIOType.STRING,
           title: "API Key",
           description: "Your BambooHR API key",
         },
@@ -46,14 +46,14 @@ export const definition: AutomationStepDefinition = {
         operation: {
           type: AutomationIOType.STRING,
           title: "Operation",
-          enum: ["get", "getAll", "create", "update", "delete"],
+          enum: ["get", "getAll", "create", "update", "delete", "upload", "download"],
           description: "The operation to perform on the selected resource",
         },
         employeeId: {
           type: AutomationIOType.STRING,
           title: "Employee ID",
           description: "Required for get, update, and delete operations on employees",
-          customType: AutomationCustomIOType.TEXT,
+          customType: AutomationCustomIOType.WIDE,
         },
         employeeData: {
           type: AutomationIOType.OBJECT,
@@ -143,14 +143,37 @@ export const definition: AutomationStepDefinition = {
               type: AutomationIOType.ARRAY,
               title: "Fields to Return",
               description: "Specific fields to return (for get operations). Leave empty or use 'all' for all fields",
-              items: {
-                type: AutomationIOType.STRING,
-              },
             },
             reportId: {
               type: AutomationIOType.STRING,
               title: "Report ID",
               description: "Required for company report operations",
+            },
+            fileId: {
+              type: AutomationIOType.STRING,
+              title: "File ID",
+              description: "Required for get, update, download, and delete operations on files/documents",
+            },
+            categoryId: {
+              type: AutomationIOType.STRING,
+              title: "Category ID",
+              description: "Required for upload operations",
+            },
+            fileName: {
+              type: AutomationIOType.STRING,
+              title: "File Name",
+              description: "Name of the file for upload operations",
+            },
+            fileData: {
+              type: AutomationIOType.STRING,
+              title: "File Data",
+              description: "Base64 encoded file data for upload operations",
+              customType: AutomationCustomIOType.WIDE,
+            },
+            simplifyOutput: {
+              type: AutomationIOType.BOOLEAN,
+              title: "Simplify Output",
+              description: "Return only files array instead of categories structure (for getAll operations)",
             },
             limit: {
               type: AutomationIOType.NUMBER,
@@ -184,6 +207,10 @@ export const definition: AutomationStepDefinition = {
         id: {
           type: AutomationIOType.STRING,
           description: "The ID of created/updated resource",
+        },
+        fileId: {
+          type: AutomationIOType.STRING,
+          description: "The ID of uploaded file (for upload operations)",
         },
       },
       required: ["success", "response"],

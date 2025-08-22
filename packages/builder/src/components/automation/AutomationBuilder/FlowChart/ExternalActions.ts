@@ -17,4 +17,5 @@ export const externalActions: Partial<
   [AutomationActionStepId.slack]: { name: "slack", icon: SlackLogo },
   [AutomationActionStepId.integromat]: { name: "integromat", icon: MakeLogo },
   [AutomationActionStepId.n8n]: { name: "n8n", icon: n8nLogo },
+  [AutomationActionStepId.BAMBOOHR]: { name: "BambooHR", icon: "ri-team-line" },
 }

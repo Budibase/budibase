@@ -149,6 +149,7 @@
           AutomationActionStepId.integromat,
           AutomationActionStepId.discord,
           AutomationActionStepId.slack,
+          AutomationActionStepId.BAMBOOHR,
         ].includes(k as AutomationActionStepId)
       ),
     },

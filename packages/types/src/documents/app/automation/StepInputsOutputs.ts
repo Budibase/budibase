@@ -479,10 +479,16 @@ export type BambooHRStepInputs = {
     reportId?: string
     limit?: number
     returnAll?: boolean
+    fileId?: string
+    categoryId?: string
+    fileData?: any
+    fileName?: string
+    simplifyOutput?: boolean
   }
 }
 
 export type BambooHRStepOutputs = BaseAutomationOutputs & {
   data?: Record<string, any> | Record<string, any>[]
   id?: string
+  fileId?: string
 }

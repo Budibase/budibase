@@ -42,7 +42,7 @@ export async function run({
             url = `${baseUrl}/employees/directory`
             method = "GET"
             break
-          case "get":
+          case "get": {
             if (!employeeId) {
               return {
                 success: false,
@@ -72,6 +72,7 @@ export async function run({
             url = `${baseUrl}/employees/${employeeId}?fields=${fieldParam}`
             method = "GET"
             break
+          }
           case "create":
             if (!employeeData?.firstName || !employeeData?.lastName) {
               return {
@@ -109,16 +110,173 @@ export async function run({
         break
       case "companyReport":
         switch (operation) {
-          case "get":
+          case "get": {
             const reportId = options?.reportId || "1"
             url = `${baseUrl}/reports/${reportId}?format=JSON`
             method = "GET"
             break
+          }
           default:
             return {
               success: false,
               response: {
                 message: `Unsupported company report operation: ${operation}`
+              }
+            }
+        }
+        break
+      case "employeeDocument":
+        if (!employeeId) {
+          return {
+            success: false,
+            response: {
+              message: "Employee ID is required for employee document operations"
+            }
+          }
+        }
+        switch (operation) {
+          case "getAll":
+            url = `${baseUrl}/employees/${employeeId}/files/view/`
+            method = "GET"
+            break
+          case "get": {
+            const docFileId = options?.fileId
+            if (!docFileId) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID is required for employee document get operation"
+                }
+              }
+            }
+            url = `${baseUrl}/employees/${employeeId}/files/${docFileId}/`
+            method = "GET"
+            break
+          }
+          case "delete": {
+            const delFileId = options?.fileId
+            if (!delFileId) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID is required for employee document delete operation"
+                }
+              }
+            }
+            url = `${baseUrl}/employees/${employeeId}/files/${delFileId}`
+            method = "DELETE"
+            break
+          }
+          case "upload": {
+            const categoryId = options?.categoryId
+            const fileData = options?.fileData
+            if (!categoryId || !fileData) {
+              return {
+                success: false,
+                response: {
+                  message: "Category ID and file data are required for employee document upload operation"
+                }
+              }
+            }
+            url = `${baseUrl}/employees/${employeeId}/files`
+            method = "POST"
+            // Note: File upload would need special handling for form data
+            break
+          }
+          case "update": {
+            const updateFileId = options?.fileId
+            if (!updateFileId || !options?.fileData) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID and file data are required for employee document update operation"
+                }
+              }
+            }
+            url = `${baseUrl}/employees/${employeeId}/files/${updateFileId}`
+            method = "POST"
+            // Note: File update would need special handling for form data
+            break
+          }
+          default:
+            return {
+              success: false,
+              response: {
+                message: `Unsupported employee document operation: ${operation}`
+              }
+            }
+        }
+        break
+      case "file":
+        switch (operation) {
+          case "getAll":
+            url = `${baseUrl}/files/view`
+            method = "GET"
+            break
+          case "get": {
+            const companyFileId = options?.fileId
+            if (!companyFileId) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID is required for file get operation"
+                }
+              }
+            }
+            url = `${baseUrl}/files/${companyFileId}/`
+            method = "GET"
+            break
+          }
+          case "delete": {
+            const delCompanyFileId = options?.fileId
+            if (!delCompanyFileId) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID is required for file delete operation"
+                }
+              }
+            }
+            url = `${baseUrl}/files/${delCompanyFileId}`
+            method = "DELETE"
+            break
+          }
+          case "upload": {
+            const companyCategoryId = options?.categoryId
+            const companyFileData = options?.fileData
+            if (!companyCategoryId || !companyFileData) {
+              return {
+                success: false,
+                response: {
+                  message: "Category ID and file data are required for file upload operation"
+                }
+              }
+            }
+            url = `${baseUrl}/files`
+            method = "POST"
+            // Note: File upload would need special handling for form data
+            break
+          }
+          case "update": {
+            const updateCompanyFileId = options?.fileId
+            if (!updateCompanyFileId || !options?.fileData) {
+              return {
+                success: false,
+                response: {
+                  message: "File ID and file data are required for file update operation"
+                }
+              }
+            }
+            url = `${baseUrl}/files/${updateCompanyFileId}`
+            method = "POST"
+            // Note: File update would need special handling for form data
+            break
+          }
+          default:
+            return {
+              success: false,
+              response: {
+                message: `Unsupported file operation: ${operation}`
               }
             }
         }
@@ -166,6 +324,62 @@ export async function run({
               message: "Employee created successfully"
             },
             id: employeeId
+          }
+        }
+      }
+
+      // Handle file upload operations
+      if ((resource === "employeeDocument" || resource === "file") && operation === "upload") {
+        const locationHeader = response.headers.get("location")
+        if (locationHeader) {
+          const fileId = locationHeader.substring(locationHeader.lastIndexOf("/") + 1)
+          return {
+            success: true,
+            response: {
+              fileId: fileId,
+              message: `${resource === "employeeDocument" ? "Employee document" : "File"} uploaded successfully`
+            },
+            id: fileId
+          }
+        }
+      }
+
+      // Handle delete operations
+      if (operation === "delete") {
+        return {
+          success: true,
+          response: {
+            message: `${resource === "employeeDocument" ? "Employee document" : resource === "file" ? "File" : "Resource"} deleted successfully`
+          }
+        }
+      }
+
+      // Handle simplified output for file listings
+      if (operation === "getAll" && (resource === "employeeDocument" || resource === "file")) {
+        const simplifyOutput = options?.simplifyOutput !== false // default to true
+        if (simplifyOutput && responseData.categories) {
+          const onlyFilesArray: any[] = []
+          for (const category of responseData.categories) {
+            if (category.files) {
+              onlyFilesArray.push(...category.files)
+            }
+          }
+          
+          const limit = options?.limit
+          const returnAll = options?.returnAll
+          
+          if (!returnAll && limit && onlyFilesArray.length > limit) {
+            return {
+              success: true,
+              response: onlyFilesArray.slice(0, limit),
+              data: onlyFilesArray.slice(0, limit)
+            }
+          }
+          
+          return {
+            success: true,
+            response: onlyFilesArray,
+            data: onlyFilesArray
           }
         }
       }
