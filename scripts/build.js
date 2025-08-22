@@ -70,6 +70,7 @@ async function runBuild(entry, outfile) {
     bundle: true,
     minify: !isDev,
     sourcemap: tsconfigPathPluginContent.compilerOptions.sourceMap,
+    sourcesContent: false,
     tsconfig,
     plugins: [
       svelteCompilePlugin,
