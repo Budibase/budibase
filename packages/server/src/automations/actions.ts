@@ -28,6 +28,7 @@ import * as summarise from "./steps/ai/summarise"
 import * as generate from "./steps/ai/generate"
 import * as extract from "./steps/ai/extract"
 import * as extractState from "./steps/extractState"
+import * as bamboohr from "./steps/bamboohr"
 
 import env from "../environment"
 import {
@@ -71,6 +72,7 @@ const ACTION_IMPLS: ActionImplType = {
   GENERATE_TEXT: generate.run,
   EXTRACT_FILE_DATA: extract.run,
   EXTRACT_STATE: extractState.run,
+  BAMBOOHR: bamboohr.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -108,6 +110,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   EXTRACT_FILE_DATA: automations.steps.extract.definition,
   EXTRACT_STATE: automations.steps.extractState.definition,
   LOOP_V2: automations.steps.loopV2.definition,
+  BAMBOOHR: automations.steps.bamboohr.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,

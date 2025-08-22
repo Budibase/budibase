@@ -1,3 +1,4 @@
+export * as bamboohr from "./bamboohr"
 export * as bash from "./bash"
 export * as branch from "./branch"
 export * as collect from "./collect"

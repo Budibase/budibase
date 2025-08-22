@@ -9,6 +9,7 @@ import SqlServer from "./SQLServer.svelte"
 import MySQL from "./MySQL.svelte"
 import ArangoDB from "./ArangoDB.svelte"
 import Rest from "./Rest.svelte"
+import GraphQL from "./GraphQL.svelte"
 import Budibase from "./Budibase.svelte"
 import Oracle from "./Oracle.svelte"
 import GoogleSheets from "./GoogleSheets.svelte"
@@ -32,6 +33,7 @@ const ICONS = {
   MYSQL: MySQL,
   ARANGODB: ArangoDB,
   REST: Rest,
+  GRAPHQL: GraphQL,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
   FIRESTORE: Firebase,

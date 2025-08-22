@@ -32,8 +32,8 @@
   $: handleStoreChanges($store, modal, $goto)
 
   export function show(integration) {
-    if (integration.name === IntegrationTypes.REST) {
-      // A REST integration is created immediately, we don't need to display a config modal.
+    if (integration.name === IntegrationTypes.REST || integration.name === IntegrationTypes.GRAPHQL) {
+      // REST and GraphQL integrations are created immediately, we don't need to display a config modal.
       loading = true
       datasources
         .create({ integration, config: configFromIntegration(integration) })

@@ -466,3 +466,23 @@ export type RowActionTriggerOutputs = {
   revision?: string
   table: Table
 }
+
+export type BambooHRStepInputs = {
+  subdomain: string
+  apiKey: string
+  resource: "employee" | "companyReport" | "employeeDocument" | "file"
+  operation: string
+  employeeId?: string
+  employeeData?: Record<string, any>
+  options?: {
+    fields?: string[]
+    reportId?: string
+    limit?: number
+    returnAll?: boolean
+  }
+}
+
+export type BambooHRStepOutputs = BaseAutomationOutputs & {
+  data?: Record<string, any> | Record<string, any>[]
+  id?: string
+}

@@ -78,6 +78,8 @@ import {
   ExtractStateStepOutputs,
   LoopV2StepInputs,
   LoopV2StepOutputs,
+  BambooHRStepInputs,
+  BambooHRStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -193,6 +195,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractStateStepInputs,
     ExtractStateStepOutputs
   >
+  [AutomationActionStepId.BAMBOOHR]: ActionImplementation<
+    BambooHRStepInputs,
+    BambooHRStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -288,7 +294,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                                 ? ExtractStateStepInputs
                                                                 : T extends AutomationActionStepId.LOOP_V2
                                                                   ? LoopV2StepInputs
-                                                                  : never
+                                                                  : T extends AutomationActionStepId.BAMBOOHR
+                                                                    ? BambooHRStepInputs
+                                                                    : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -351,7 +359,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                             ? ExtractStateStepOutputs
                                                             : T extends AutomationActionStepId.LOOP_V2
                                                               ? LoopV2StepOutputs
-                                                              : never
+                                                              : T extends AutomationActionStepId.BAMBOOHR
+                                                                ? BambooHRStepOutputs
+                                                                : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -443,6 +453,8 @@ export type ExtractStateStep =
 
 export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
 
+export type BambooHRStep = AutomationStepSchema<AutomationActionStepId.BAMBOOHR>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -481,6 +493,7 @@ export type AutomationStep =
   | ExtractFileDataStep
   | ExtractStateStep
   | LoopV2Step
+  | BambooHRStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger

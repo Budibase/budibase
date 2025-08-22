@@ -9,6 +9,7 @@ import airtable from "./airtable"
 import mysql from "./mysql"
 import arangodb from "./arangodb"
 import rest from "./rest"
+import graphql from "./graphql"
 import googlesheets from "./googlesheets"
 import firebase from "./firebase"
 import redis from "./redis"
@@ -36,6 +37,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.S3]: s3.schema,
   [SourceName.MYSQL]: mysql.schema,
   [SourceName.REST]: rest.schema,
+  [SourceName.GRAPHQL]: graphql.schema,
   [SourceName.FIRESTORE]: firebase.schema,
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
@@ -68,6 +70,7 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.S3]: s3.integration,
     [SourceName.MYSQL]: mysql.integration,
     [SourceName.REST]: rest.integration,
+    [SourceName.GRAPHQL]: graphql.integration,
     [SourceName.FIRESTORE]: firebase.integration,
     [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
     [SourceName.REDIS]: redis.integration,

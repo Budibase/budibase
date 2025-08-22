@@ -1,0 +1,27 @@
+<script>
+  export let height = "20"
+  export let width = "20"
+</script>
+
+<svg
+  {width}
+  {height}
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M14.051 2.751L14.051 2.751L14.0511 2.75098C14.2814 2.32686 14.7186 2.32686 14.9489 2.75098L14.9489 2.75098L14.949 2.751L20.299 12.249L20.299 12.249L20.2991 12.2491C20.5294 12.6732 20.2108 13.2 19.7 13.2H4.3C3.78924 13.2 3.47064 12.6732 3.70094 12.2491L3.70094 12.2491L3.701 12.249L9.051 2.751L9.051 2.751L9.05106 2.75098C9.28136 2.32686 9.71864 2.32686 9.94894 2.75098L9.94894 2.75098L9.949 2.751L14.051 2.751Z"
+    stroke="var(--spectrum-global-color-gray-600)"
+    stroke-width="1.5"
+  />
+  <circle cx="12" cy="8" r="1.5" fill="var(--spectrum-global-color-gray-600)" />
+  <circle cx="8" cy="16" r="1.5" fill="var(--spectrum-global-color-gray-600)" />
+  <circle cx="16" cy="16" r="1.5" fill="var(--spectrum-global-color-gray-600)" />
+  <path
+    d="M8 16L12 8L16 16"
+    stroke="var(--spectrum-global-color-gray-600)"
+    stroke-width="1.5"
+    stroke-linecap="round"
+  />
+</svg>

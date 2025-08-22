@@ -42,6 +42,7 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.AIRTABLE]: undefined,
   [SourceName.ARANGODB]: undefined,
   [SourceName.REST]: undefined,
+  [SourceName.GRAPHQL]: undefined,
   [SourceName.FIRESTORE]: undefined,
   [SourceName.GOOGLE_SHEETS]: undefined,
   [SourceName.REDIS]: undefined,
