@@ -220,9 +220,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   try {
     context.getAppDB({ skip_setup: true })
 
-    const [workspaceApp] = await sdk.workspaceApps.getMatchedWorkspaceApp(
-      ctx.url
-    )
+    const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
     const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
