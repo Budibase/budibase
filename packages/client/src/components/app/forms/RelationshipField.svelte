@@ -28,6 +28,8 @@
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
   export let placeholder: string | undefined = undefined
+  export let searchText: string | undefined = undefined
+
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let validation: UIFieldValidationRule[] | undefined = undefined
@@ -442,6 +444,7 @@
   {#if fieldState}
     <svelte:component
       this={multiselect ? CoreMultiselect : CoreSelect}
+      {searchText}
       value={displayValue}
       id={fieldState?.fieldId}
       disabled={fieldState?.disabled}
