@@ -18,6 +18,7 @@ export interface UIFieldMetadata {
   width?: number
   visible?: boolean
   icon?: string
+  displayName?: string
 }
 
 interface BaseRelationshipFieldMetadata

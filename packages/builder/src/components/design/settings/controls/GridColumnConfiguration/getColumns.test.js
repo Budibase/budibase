@@ -32,6 +32,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -59,6 +60,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -121,6 +123,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -191,6 +194,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -258,6 +262,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -312,6 +317,43 @@ describe("getColumns", () => {
     })
   })
 
+  describe("displayName for viewV2 datasources", () => {
+    beforeEach(ctx => {
+      ctx.schemaWithDisplayNames = {
+        one: {
+          name: "one",
+          displayName: "First Column",
+          visible: true,
+          order: 0,
+          type: "foo",
+        },
+        two: {
+          name: "two",
+          displayName: "Second Column",
+          visible: true,
+          order: 1,
+          type: "foo",
+        },
+        three: { name: "three", visible: true, order: 2, type: "foo" }, // No displayName
+      }
+    })
+
+    it("uses displayName as label when datasource is viewV2", ctx => {
+      const columns = getColumns({
+        columns: undefined,
+        schema: ctx.schemaWithDisplayNames,
+        primaryDisplayColumnName: null,
+        onChange: ctx.onChange,
+        createComponent: ctx.createComponent,
+        datasource: { type: "viewV2" },
+      })
+
+      expect(columns.sortable[0].label).toBe("First Column")
+      expect(columns.sortable[1].label).toBe("Second Column")
+      expect(columns.sortable[2].label).toBe("three") // Falls back to name
+    })
+  })
+
   describe("methods", () => {
     beforeEach(ctx => {
       const { update, updateSortable } = getColumns({
@@ -320,6 +362,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
 
       ctx.update = update
