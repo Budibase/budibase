@@ -3716,12 +3716,6 @@
         "placeholder": "Choose an option"
       },
       {
-        "type": "text",
-        "label": "Search Text",
-        "key": "searchText",
-        "placeholder": "Search"
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3942,12 +3936,6 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
-      },
-      {
-        "type": "text",
-        "label": "Search Text",
-        "key": "searchText",
-        "placeholder": "Search"
       },
       {
         "type": "text",
