@@ -1,6 +1,6 @@
-import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
+import { newTool } from ".."
 import env from "../../../environment"
 
 export class ConfluenceClient {

@@ -1,6 +1,6 @@
-import { newTool } from "@budibase/types"
-import sdk from "../../../sdk"
 import { z } from "zod"
+import { newTool } from ".."
+import sdk from "../../../sdk"
 
 export default [
   newTool({
