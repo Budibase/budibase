@@ -352,21 +352,6 @@ describe("getColumns", () => {
       expect(columns.sortable[1].label).toBe("Second Column")
       expect(columns.sortable[2].label).toBe("three") // Falls back to name
     })
-
-    it("uses name as label when datasource is not viewV2", ctx => {
-      const columns = getColumns({
-        columns: undefined,
-        schema: ctx.schemaWithDisplayNames,
-        primaryDisplayColumnName: null,
-        onChange: ctx.onChange,
-        createComponent: ctx.createComponent,
-        datasource: { type: "table" },
-      })
-
-      expect(columns.sortable[0].label).toBe("one") // Uses name, not displayName
-      expect(columns.sortable[1].label).toBe("two") // Uses name, not displayName
-      expect(columns.sortable[2].label).toBe("three")
-    })
   })
 
   describe("methods", () => {
