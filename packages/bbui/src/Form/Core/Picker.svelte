@@ -135,6 +135,12 @@
   onDestroy(() => {
     component?.removeEventListener("scroll", null)
   })
+
+  const getSearchText = () => {
+    console.log("search text value: ", searchText)
+    if (searchText) return searchText
+    return "Search"
+  }
 </script>
 
 <button
@@ -196,7 +202,7 @@
         value={searchTerm}
         on:change={event => (searchTerm = event.detail)}
         {disabled}
-        placeholder={searchText || "Search"}
+        placeholder={getSearchText()}
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>

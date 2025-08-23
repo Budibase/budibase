@@ -11,6 +11,7 @@
   export let value: V | null = null
   export let id: string | undefined = undefined
   export let placeholder: string | boolean = "Choose an option"
+  export let searchText: string | undefined = undefined
   export let disabled: boolean = false
   export let options: O[] = []
   export let getOptionLabel = (option: O, _index?: number) => `${option}`
@@ -125,6 +126,7 @@
     : placeholder || "Choose an option"}
   isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
+  {searchText}
   {loading}
   {customPopoverHeight}
 />

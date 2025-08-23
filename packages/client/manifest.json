@@ -3945,6 +3945,12 @@
       },
       {
         "type": "text",
+        "label": "Search Text",
+        "key": "searchText",
+        "placeholder": "Search"
+      },
+      {
+        "type": "text",
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
