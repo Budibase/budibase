@@ -29,6 +29,12 @@ docker compose up -d app-service-migration worker-service-migration proxy-servic
 - **Main Budibase**: http://localhost:10000
 - **Migration Budibase**: http://localhost:10001
 
+⚠️ **WARNING**: Migration instances share the same database as your main services. To safely test migrations:
+
+1. **Create a copy** of your live app instance before testing
+2. **Access the copied app only** from the migration service (http://localhost:10001)
+3. **Never access live apps** from the migration instance as this will modify production data
+
 ## What It Does
 
 The script creates migration instances of:
