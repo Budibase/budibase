@@ -14,14 +14,21 @@ This adds migration services directly to your `docker-compose.yaml` file.
 
 ### 2. Start Services
 
-Start all services (including migration instances):
+Start all services (including migration services):
 ```bash
 docker compose up -d
 ```
 
+**Database Copying**: The `couchdb-replicator` service automatically copies all databases from your main instance to the migration instance. Monitor progress with:
+```bash
+docker logs -f couchdb-replicator
+```
+
 Or start only specific services:
-```bash     # Main services only
-docker compose up -d app-service-migration worker-service-migration proxy-service-migration  # Migration services only
+```bash
+docker compose up -d app-service worker-service proxy-service        # Main services only
+docker compose up -d couchdb-service couchdb-service-migration couchdb-replicator  # Copy databases first
+docker compose up -d app-service-migration worker-service-migration proxy-service-migration  # Then start migration services
 ```
 
 ### 3. Access Services
@@ -29,19 +36,18 @@ docker compose up -d app-service-migration worker-service-migration proxy-servic
 - **Main Budibase**: http://localhost:10000
 - **Migration Budibase**: http://localhost:10001
 
-⚠️ **WARNING**: Migration instances share the same database as your main services. To safely test migrations:
-
-1. **Create a copy** of your live app instance before testing
-2. **Access the copied app only** from the migration service (http://localhost:10001)
-3. **Never access live apps** from the migration instance as this will modify production data
+✅ **SAFE TESTING**: Migration instances use completely isolated databases and Redis instances, so you can safely test without affecting your main services or data.
 
 ## What It Does
 
-The script creates migration instances of:
+The script creates isolated migration instances of:
 
+- `couchdb-service` → `couchdb-service-migration` (ports 15984, 14984)
+- `redis-service` → `redis-service-migration`
 - `app-service` → `app-service-migration`
 - `worker-service` → `worker-service-migration` 
 - `proxy-service` → `proxy-service-migration`
+- `couchdb-replicator` → Automatic database copying service
 
 ## Use Cases
 
@@ -54,7 +60,7 @@ The script creates migration instances of:
 
 ```bash
 # Stop migration services only
-docker compose stop app-service-migration worker-service-migration proxy-service-migration
+docker compose stop couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration
 
 # Remove migration services from compose file
 cp docker-compose.yaml.backup docker-compose.yaml
