@@ -29,7 +29,6 @@ extract_service() {
     BEGIN { 
         in_service = 0
         indent_level = 0
-        skip_volumes = 0
     }
     
     # Find the source service
@@ -88,29 +87,23 @@ extract_service() {
         if (target == "proxy-service-migration" && line ~ /- "?\${MAIN_PORT}:10000"?/) {
             gsub(/\${MAIN_PORT}/, "10001", line)
         }
-        if (target == "couchdb-service-migration") {
-            if (line ~ /- "?\${COUCH_DB_PORT}:5984"?/) {
-                gsub(/\${COUCH_DB_PORT}/, "15984", line)
-            }
-            if (line ~ /- "?\${COUCH_DB_SQS_PORT}:4984"?/) {
-                gsub(/\${COUCH_DB_SQS_PORT}/, "14984", line)
-            }
-        }
-        if (target == "minio-service-migration" && line ~ /- "?\${MINIO_PORT}:9000"?/) {
-            gsub(/\${MINIO_PORT}/, "19000", line)
-        }
-        
-        # Skip volumes section completely for migration services (ephemeral data)  
+        # Skip specific sections for migration services
         if (target ~ /-migration$/) {
+            # Skip volumes section completely (ephemeral data)
             if (line ~ /^[[:space:]]*volumes:/) {
-                skip_volumes = 1
                 return
             }
-            if (skip_volumes && line ~ /^[[:space:]]*[a-zA-Z_-]+:/ && line !~ /^[[:space:]]*-/) {
-                skip_volumes = 0
-                # This is the next section, process it normally
+            if (line ~ /^[[:space:]]*- .*_data.*:/) {
+                return
             }
-            if (skip_volumes) {
+        }
+        
+        # Skip ports section for CouchDB and MinIO migration services (internal access only)
+        if ((target == "couchdb-service-migration" || target == "minio-service-migration")) {
+            if (line ~ /^[[:space:]]*ports:/) {
+                return
+            }
+            if (line ~ /^[[:space:]]*- "?.*:/) {
                 return
             }
         }
@@ -124,10 +117,10 @@ extract_service() {
             gsub(/- minio-service$/, "- minio-service-migration", line)
         }
         
-        # Add dependency on couchdb-replicator for proxy-service-migration
+        # Add dependency on env-replicator for proxy-service-migration
         if (target == "proxy-service-migration" && line ~ /^[[:space:]]*depends_on:/) {
             print line
-            print "      - couchdb-replicator"
+            print "      - env-replicator"
             return
         }
         
@@ -140,9 +133,9 @@ extract_service() {
 create_replication_service() {
     cat << 'EOF'
   # Database replication service
-  couchdb-replicator:
+  env-replicator:
     image: redis:alpine
-    container_name: couchdb-replicator
+    container_name: env-replicator
     restart: "no"
     depends_on:
       - couchdb-service
@@ -243,12 +236,12 @@ EOF
 }
 
 # Remove existing migration services if they exist
-if grep -q ".*-migration:" "$INPUT_FILE" || grep -q "couchdb-replicator:" "$INPUT_FILE"; then
+if grep -q ".*-migration:" "$INPUT_FILE" || grep -q "env-replicator:" "$INPUT_FILE"; then
     echo "⚠️  Migration services already exist in ${INPUT_FILE}"
     echo "🔄 Removing existing migration services first..."
     
     awk '
-    /^[[:space:]]*[a-zA-Z0-9_-]+-migration:/ || /^[[:space:]]*couchdb-replicator:/ { 
+    /^[[:space:]]*[a-zA-Z0-9_-]+-migration:/ || /^[[:space:]]*env-replicator:/ { 
         in_migration = 1
         indent_level = match($0, /[^ ]/) - 1
         next 
@@ -328,13 +321,13 @@ fi
 echo "✅ Added migration services to ${INPUT_FILE} successfully!"
 echo ""
 echo "📋 Added migration services:"
-echo "   - couchdb-service-migration (ports 15984, 14984)"
+echo "   - couchdb-service-migration"
 echo "   - redis-service-migration"
-echo "   - minio-service-migration (port 19000)"
+echo "   - minio-service-migration"
 echo "   - app-service-migration (port 4002)"
 echo "   - worker-service-migration (port 4003)"
 echo "   - proxy-service-migration (port 10001)"
-echo "   - couchdb-replicator (automatic database + file copying)"
+echo "   - env-replicator (automatic database + file copying)"
 echo ""
 echo "🌐 Access points:"
 echo "   - Main services: http://localhost:10000"
@@ -345,7 +338,7 @@ echo "🔄 To remove migration services: cp ${BACKUP_FILE} ${INPUT_FILE}"
 echo ""
 echo "🚀 To start with database and file replication:"
 echo "   docker compose up -d                    # Starts all services + automatic DB/file copy"
-echo "   docker logs -f couchdb-replicator       # Watch replication progress"
+echo "   docker logs -f env-replicator       # Watch replication progress"
 echo ""
 echo "🔄 To wipe migration data for fresh testing:"
 echo "   docker compose down couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration && docker compose up -d    # Recreates containers = fresh data"
