@@ -47,6 +47,10 @@ export async function checkMissingMigrations(
     return next()
   }
 
+  if (!(await db.getDB(appId).exists())) {
+    return next()
+  }
+
   if (!(await isAppFullyMigrated(appId))) {
     const queue = getAppMigrationQueue()
     await queue.add(
