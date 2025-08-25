@@ -29,6 +29,7 @@ extract_service() {
     BEGIN { 
         in_service = 0
         indent_level = 0
+        skip_volumes = 0
     }
     
     # Find the source service
@@ -81,6 +82,7 @@ extract_service() {
         gsub(/app-service:/, "app-service-migration:", line)
         gsub(/couchdb-service:/, "couchdb-service-migration:", line)
         gsub(/redis-service:/, "redis-service-migration:", line)
+        gsub(/minio-service:/, "minio-service-migration:", line)
         
         # Update ports for specific services
         if (target == "proxy-service-migration" && line ~ /- "?\${MAIN_PORT}:10000"?/) {
@@ -94,10 +96,24 @@ extract_service() {
                 gsub(/\${COUCH_DB_SQS_PORT}/, "14984", line)
             }
         }
+        if (target == "minio-service-migration" && line ~ /- "?\${MINIO_PORT}:9000"?/) {
+            gsub(/\${MINIO_PORT}/, "19000", line)
+        }
         
-        # Update volume names
-        gsub(/couchdb3_data:/, "couchdb3_data_migration:", line)
-        gsub(/redis_data:/, "redis_data_migration:", line)
+        # Skip volumes section completely for migration services (ephemeral data)  
+        if (target ~ /-migration$/) {
+            if (line ~ /^[[:space:]]*volumes:/) {
+                skip_volumes = 1
+                return
+            }
+            if (skip_volumes && line ~ /^[[:space:]]*[a-zA-Z_-]+:/ && line !~ /^[[:space:]]*-/) {
+                skip_volumes = 0
+                # This is the next section, process it normally
+            }
+            if (skip_volumes) {
+                return
+            }
+        }
         
         # Update depends_on references
         if (line ~ /^[[:space:]]*- /) {
@@ -105,6 +121,7 @@ extract_service() {
             gsub(/- worker-service$/, "- worker-service-migration", line)
             gsub(/- couchdb-service$/, "- couchdb-service-migration", line)
             gsub(/- redis-service$/, "- redis-service-migration", line)
+            gsub(/- minio-service$/, "- minio-service-migration", line)
         }
         
         # Add dependency on couchdb-replicator for proxy-service-migration
@@ -131,9 +148,13 @@ create_replication_service() {
       - couchdb-service
       - couchdb-service-migration
       - redis-service-migration
+      - minio-service
+      - minio-service-migration
     environment:
       - COUCH_DB_USER=${COUCH_DB_USER}
       - COUCH_DB_PASSWORD=${COUCH_DB_PASSWORD}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
     command:
       - sh
       - -c
@@ -157,19 +178,6 @@ create_replication_service() {
         done
         echo "✅ couchdb-service-migration is ready"
         
-        echo "🧹 Wiping existing databases from migration CouchDB..."
-        
-        # Get list of existing databases in migration instance
-        EXISTING_DBS=$$(curl -s -u "$$COUCH_DB_USER:$$COUCH_DB_PASSWORD" http://couchdb-service-migration:5984/_all_dbs | sed 's/\[//g' | sed 's/\]//g' | sed 's/"//g' | tr ',' '\n')
-        
-        for db in $$EXISTING_DBS; do
-          if [ "$$db" != "_replicator" ] && [ "$$db" != "_users" ] && [ "$$db" != "_global_changes" ]; then
-            echo "  🗑️  Deleting database: $$db"
-            curl -X DELETE -u "$$COUCH_DB_USER:$$COUCH_DB_PASSWORD" http://couchdb-service-migration:5984/$$db > /dev/null 2>&1
-          fi
-        done
-        echo "✅ Migration CouchDB wiped clean"
-        
         echo "Starting database replication..."
         
         # Get list of databases
@@ -187,6 +195,35 @@ create_replication_service() {
         done
         
         echo "🎉 Database replication completed!"
+        
+        # Sync MinIO data after DB replication
+        echo "📁 Syncing MinIO files..."
+        
+        # Wait for MinIO services to be ready
+        until wget -q --spider http://minio-service:9000/minio/health/live > /dev/null 2>&1; do
+          echo "  Waiting for minio-service..."
+          sleep 2
+        done
+        echo "✅ minio-service is ready"
+        
+        until wget -q --spider http://minio-service-migration:9000/minio/health/live > /dev/null 2>&1; do
+          echo "  Waiting for minio-service-migration..."
+          sleep 2
+        done
+        echo "✅ minio-service-migration is ready"
+        
+        # Install minio client
+        apk add --no-cache wget
+        wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+        chmod +x /usr/local/bin/mc
+        
+        # Configure minio client aliases
+        mc alias set source http://minio-service:9000 "$$MINIO_ACCESS_KEY" "$$MINIO_SECRET_KEY"
+        mc alias set target http://minio-service-migration:9000 "$$MINIO_ACCESS_KEY" "$$MINIO_SECRET_KEY"
+        
+        # Sync all buckets and objects
+        mc mirror source target --overwrite --remove
+        echo "✅ MinIO data synced!"
         
         # Flush Redis cache after DB replication
         echo "🧹 Flushing Redis cache..."
@@ -238,8 +275,8 @@ if grep -q ".*-migration:" "$INPUT_FILE" || grep -q "couchdb-replicator:" "$INPU
     in_volumes && /^[a-zA-Z]+:/ && !/^volumes:/ {
         in_volumes = 0
     }
-    in_volumes && /_migration:/ {
-        # Skip migration volume and its driver line
+    in_volumes && /replication_state:/ {
+        # Skip replication state volume and its driver line
         getline
         next
     }
@@ -262,6 +299,9 @@ fi
     extract_service "redis-service" "redis-service-migration" 
     echo ""
     
+    extract_service "minio-service" "minio-service-migration"
+    echo ""
+    
     extract_service "app-service" "app-service-migration"
     echo ""
     
@@ -281,10 +321,7 @@ fi
         if (/^volumes:/) next
         print
     }' "$INPUT_FILE"
-    echo "  couchdb3_data_migration:"
-    echo "    driver: local"
-    echo "  redis_data_migration:"
-    echo "    driver: local"
+    # Migration services don't persist data - no migration volumes needed
     
 } > "${INPUT_FILE}.tmp" && mv "${INPUT_FILE}.tmp" "$INPUT_FILE"
 
@@ -293,10 +330,11 @@ echo ""
 echo "📋 Added migration services:"
 echo "   - couchdb-service-migration (ports 15984, 14984)"
 echo "   - redis-service-migration"
+echo "   - minio-service-migration (port 19000)"
 echo "   - app-service-migration (port 4002)"
 echo "   - worker-service-migration (port 4003)"
 echo "   - proxy-service-migration (port 10001)"
-echo "   - couchdb-replicator (automatic database copying)"
+echo "   - couchdb-replicator (automatic database + file copying)"
 echo ""
 echo "🌐 Access points:"
 echo "   - Main services: http://localhost:10000"
@@ -305,6 +343,9 @@ echo ""
 echo "💾 Backup saved as: ${BACKUP_FILE}"
 echo "🔄 To remove migration services: cp ${BACKUP_FILE} ${INPUT_FILE}"
 echo ""
-echo "🚀 To start with database replication:"
-echo "   docker compose up -d                    # Starts all services + automatic DB copy"
+echo "🚀 To start with database and file replication:"
+echo "   docker compose up -d                    # Starts all services + automatic DB/file copy"
 echo "   docker logs -f couchdb-replicator       # Watch replication progress"
+echo ""
+echo "🔄 To wipe migration data for fresh testing:"
+echo "   docker compose down couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration && docker compose up -d    # Recreates containers = fresh data"

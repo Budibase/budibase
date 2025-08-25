@@ -19,7 +19,7 @@ Start all services (including migration services):
 docker compose up -d
 ```
 
-**Database Copying**: The `couchdb-replicator` service automatically copies all databases from your main instance to the migration instance. Monitor progress with:
+**Data Copying**: The `couchdb-replicator` service automatically copies all databases and files from your main instance to the migration instance. Monitor progress with:
 ```bash
 docker logs -f couchdb-replicator
 ```
@@ -60,7 +60,7 @@ The script creates isolated migration instances of:
 
 ```bash
 # Stop migration services only
-docker compose stop couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration
+docker compose down couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration
 
 # Remove migration services from compose file
 cp docker-compose.yaml.backup docker-compose.yaml
