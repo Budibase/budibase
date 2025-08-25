@@ -48,10 +48,18 @@
   )
   $: isPrimaryBranchEdge =
     $$props.data?.isBranchEdge && $$props.data?.isPrimaryEdge
-  $: showActions =
+
+  $: showEdgeActions =
+    !!block && viewMode === ViewMode.EDITOR && !isBranchTarget
+
+  $: showPreBranchActions =
     !!block &&
     viewMode === ViewMode.EDITOR &&
-    (!isBranchTarget || isPrimaryBranchEdge)
+    isBranchTarget &&
+    isPrimaryBranchEdge
+
+  $: preBranchLabelX = $$props.sourceX ?? 0
+  $: preBranchLabelY = ($$props.sourceY ?? 0) + 40
 </script>
 
 <BaseEdge path={path[0]} />
@@ -60,7 +68,72 @@
     class="add-item-label nodrag nopan"
     style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
   >
-    {#if !collectBlockExists && showActions}
+    {#if !collectBlockExists}
+      <!-- Actions on non-branch edges at the edge label position -->
+      {#if showEdgeActions}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div
+          class="actions-stack"
+          on:mousedown|stopPropagation
+          on:click|stopPropagation
+        >
+          <FlowItemActions
+            {block}
+            on:branch={() => {
+              const explicitTargetRef =
+                isBranchTarget && $$props.data?.branchStepId
+                  ? $selectedAutomation?.blockRefs?.[$$props.data.branchStepId]
+                  : null
+              const targetPath = explicitTargetRef?.pathTo || blockRefs?.pathTo
+              if (targetPath && automation) {
+                automationStore.actions.branchAutomation(targetPath, automation)
+              }
+            }}
+          />
+        </div>
+      {/if}
+
+      {#if isPrimaryBranchEdge}
+        {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+
+          <div
+            class="branch-controls"
+            on:mousedown|stopPropagation
+            on:click|stopPropagation
+          >
+            <ActionButton
+              icon="plus-circle"
+              disabled={viewMode === ViewMode.LOGS}
+              on:click={() => {
+                const targetRef =
+                  $selectedAutomation.blockRefs[$$props.data.branchStepId]
+                if (targetRef && automation) {
+                  automationStore.actions.branchAutomation(
+                    targetRef.pathTo,
+                    automation
+                  )
+                }
+              }}
+            >
+              Add branch
+            </ActionButton>
+          </div>
+        {/if}
+      {/if}
+    {/if}
+  </div>
+</EdgeLabelRenderer>
+
+<!-- Render the Actions above the branch fan-out on the primary branch edge -->
+{#if !collectBlockExists && showPreBranchActions}
+  <EdgeLabelRenderer>
+    <div
+      class="add-item-label nodrag nopan"
+      style="transform:translate(-50%, -50%) translate({preBranchLabelX}px,{preBranchLabelY}px);"
+    >
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
@@ -68,49 +141,11 @@
         on:mousedown|stopPropagation
         on:click|stopPropagation
       >
-        <FlowItemActions
-          {block}
-          on:branch={() => {
-            const explicitTargetRef =
-              isBranchTarget && $$props.data?.branchStepId
-                ? $selectedAutomation?.blockRefs?.[$$props.data.branchStepId]
-                : null
-            const targetPath = explicitTargetRef?.pathTo || blockRefs?.pathTo
-            if (targetPath && automation) {
-              automationStore.actions.branchAutomation(targetPath, automation)
-            }
-          }}
-        />
-        {#if isPrimaryBranchEdge}
-          {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
-            <div
-              class="branch-controls"
-              on:mousedown|stopPropagation
-              on:click|stopPropagation
-            >
-              <ActionButton
-                icon="plus-circle"
-                disabled={viewMode === ViewMode.LOGS}
-                on:click={() => {
-                  const targetRef =
-                    $selectedAutomation.blockRefs[$$props.data.branchStepId]
-                  if (targetRef && automation) {
-                    automationStore.actions.branchAutomation(
-                      targetRef.pathTo,
-                      automation
-                    )
-                  }
-                }}
-              >
-                Add branch
-              </ActionButton>
-            </div>
-          {/if}
-        {/if}
+        <FlowItemActions {block} hideBranch />
       </div>
-    {/if}
-  </div>
-</EdgeLabelRenderer>
+    </div>
+  </EdgeLabelRenderer>
+{/if}
 
 <style>
   .add-item-label {

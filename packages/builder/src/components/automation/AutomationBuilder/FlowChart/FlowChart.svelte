@@ -52,7 +52,7 @@
     AutomationStatus,
     type AutomationStep,
     AutomationActionStepId,
-    Automation,
+    type Automation,
   } from "@budibase/types"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
