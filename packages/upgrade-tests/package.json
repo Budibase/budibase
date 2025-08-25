@@ -35,7 +35,6 @@
     "@types/node": "22.9.0",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^9.0.7",
-    "ts-jest": "29.1.1",
     "typescript": "5.7.2"
   },
   "nx": {
