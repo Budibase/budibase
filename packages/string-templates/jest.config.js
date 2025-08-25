@@ -4,7 +4,10 @@
  */
 
 module.exports = {
-  preset: "ts-jest",
+  testEnvironment: "node",
+  transform: {
+    "^.+\\.ts$": "@swc/jest",
+  },
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
