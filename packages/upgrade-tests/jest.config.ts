@@ -1,11 +1,10 @@
 import type { Config } from "jest"
 
 const config: Config = {
-  preset: "ts-jest",
   testEnvironment: "node",
   moduleFileExtensions: ["ts", "js"],
   transform: {
-    "^.+\\.ts$": "ts-jest",
+    "^.+\\.ts$": "@swc/jest",
   },
   testMatch: ["**/*.test.ts"],
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.test.ts"],
