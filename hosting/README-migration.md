@@ -59,11 +59,11 @@ The script creates isolated migration instances of:
 ## Cleanup
 
 ```bash
-# Stop migration services only
-docker compose down couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration
-
 # Remove migration services from compose file
 cp docker-compose.yaml.backup docker-compose.yaml
+
+# Stop migration services only
+docker compose down couchdb-service-migration redis-service-migration app-service-migration worker-service-migration proxy-service-migration
 ```
 
 ## Environment Variables
