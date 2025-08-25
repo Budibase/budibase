@@ -40,7 +40,7 @@ describe("workspaceApps utils", () => {
     closingChar => {
       it("should be able to get the base workspaceApp", async () => {
         await config.doInContext(config.getAppId(), async () => {
-          const [result] = await getMatchedWorkspaceApp(
+          const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}${closingChar}`
           )
           expect(result).toBeDefined()
