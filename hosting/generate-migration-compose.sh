@@ -157,6 +157,19 @@ create_replication_service() {
         done
         echo "✅ couchdb-service-migration is ready"
         
+        echo "🧹 Wiping existing databases from migration CouchDB..."
+        
+        # Get list of existing databases in migration instance
+        EXISTING_DBS=$$(curl -s -u "$$COUCH_DB_USER:$$COUCH_DB_PASSWORD" http://couchdb-service-migration:5984/_all_dbs | sed 's/\[//g' | sed 's/\]//g' | sed 's/"//g' | tr ',' '\n')
+        
+        for db in $$EXISTING_DBS; do
+          if [ "$$db" != "_replicator" ] && [ "$$db" != "_users" ] && [ "$$db" != "_global_changes" ]; then
+            echo "  🗑️  Deleting database: $$db"
+            curl -X DELETE -u "$$COUCH_DB_USER:$$COUCH_DB_PASSWORD" http://couchdb-service-migration:5984/$$db > /dev/null 2>&1
+          fi
+        done
+        echo "✅ Migration CouchDB wiped clean"
+        
         echo "Starting database replication..."
         
         # Get list of databases
