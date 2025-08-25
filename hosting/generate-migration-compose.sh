@@ -29,6 +29,7 @@ extract_service() {
     BEGIN { 
         in_service = 0
         indent_level = 0
+        proxy_deps_mode = 0
     }
     
     # Find the source service
@@ -117,11 +118,29 @@ extract_service() {
             gsub(/- minio-service$/, "- minio-service-migration", line)
         }
         
-        # Add dependency on env-replicator for proxy-service-migration
+        # Handle depends_on section for proxy-service-migration
         if (target == "proxy-service-migration" && line ~ /^[[:space:]]*depends_on:/) {
             print line
-            print "      - env-replicator"
+            print "      env-replicator:"
+            print "        condition: service_completed_successfully"
+            proxy_deps_mode = 1
             return
+        }
+        
+        # Process proxy dependencies in new format
+        if (proxy_deps_mode && line ~ /^[[:space:]]*- (.+)$/) {
+            # Convert "- service" to "service-migration: {condition: service_started}"
+            service = line
+            gsub(/^[[:space:]]*- /, "", service)
+            gsub(/-migration$/, "", service)  # Remove existing -migration if present
+            print "      " service "-migration:"
+            print "        condition: service_started"
+            return
+        }
+        
+        # Exit proxy dependencies mode when we hit a new section
+        if (proxy_deps_mode && line ~ /^[[:space:]]*[a-zA-Z_-]+:/ && line !~ /^[[:space:]]*-/) {
+            proxy_deps_mode = 0
         }
         
         print line
@@ -137,6 +156,12 @@ create_replication_service() {
     image: redis:alpine
     container_name: env-replicator
     restart: "no"
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/replication-completed"]
+      interval: 2s
+      timeout: 1s
+      retries: 1
+      start_period: 10s
     depends_on:
       - couchdb-service
       - couchdb-service-migration
