@@ -14,18 +14,7 @@ const baseConfig: Config.InitialProjectOptions = {
 }
 
 const config: Config.InitialOptions = {
-  projects: [
-    {
-      ...baseConfig,
-      displayName: "sequential test",
-      testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
-      runner: "jest-serial-runner",
-    },
-    {
-      ...baseConfig,
-      testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
-    },
-  ],
+  ...baseConfig,
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
 }
