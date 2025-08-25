@@ -1,30 +1,33 @@
 # Migration Docker Compose
 
-This directory contains scripts to generate and run parallel instances Budibase for testing purposes for selfhosters.
+This directory contains scripts to add parallel migration instances to your main `docker-compose.yaml` for TESTING purposes.
 
 ## Quick Start
 
-### 1. Generate Migration Compose File
+### 1. Add Migration Services
 
 ```bash
 ./generate-migration-compose.sh
 ```
 
-This creates `docker-compose.migration.yaml` with migration instance of your services.
+This adds migration services directly to your `docker-compose.yaml` file.
 
 ### 2. Start Services
 
-**Prerequisites:** Make sure your main Budibase instance is running first:
-
-Then start the migration instances:
+Start all services (including migration instances):
 ```bash
-docker compose -f docker-compose.migration.yaml --env-file .env up -d
+docker compose up -d
+```
+
+Or start only specific services:
+```bash     # Main services only
+docker compose up -d app-service-migration worker-service-migration proxy-service-migration  # Migration services only
 ```
 
 ### 3. Access Services
 
-- **Main Budibase**: http://url:10000
-- **Migration Budibase**: http://url:10001
+- **Main Budibase**: http://localhost:10000
+- **Migration Budibase**: http://localhost:10001
 
 ## What It Does
 
@@ -44,11 +47,11 @@ The script creates migration instances of:
 ## Cleanup
 
 ```bash
-# Stop migration services
-docker compose -f docker-compose.migration.yaml down
+# Stop migration services only
+docker compose stop app-service-migration worker-service-migration proxy-service-migration
 
-# Stop all services
-docker compose -f docker-compose.yaml down
+# Remove migration services from compose file
+cp docker-compose.yaml.backup docker-compose.yaml
 ```
 
 ## Environment Variables
@@ -59,4 +62,6 @@ The new instances use the same `.env` file as the main services.
 
 ## Regeneration
 
-Re-run `./generate-migration-compose.sh` anytime you update the main `docker-compose.yaml` to keep the migration file in sync.
+Re-run `./generate-migration-compose.sh` anytime you update the main services to refresh the migration services.
+
+**Note:** The script automatically creates a backup (`docker-compose.yaml.backup`) before making changes.

@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# Generate migration docker-compose file from main compose file
+# Add migration services to existing docker-compose.yaml
 # Usage: ./generate-migration-compose.sh
 
 set -e
 
 INPUT_FILE="docker-compose.yaml"
-OUTPUT_FILE="docker-compose.migration.yaml"
-
-echo "🔄 Generating migration docker-compose.yaml from ${INPUT_FILE}..."
+BACKUP_FILE="docker-compose.yaml.backup"
 
 # Check if input file exists
 if [[ ! -f "$INPUT_FILE" ]]; then
@@ -16,13 +14,15 @@ if [[ ! -f "$INPUT_FILE" ]]; then
     exit 1
 fi
 
-# Extract service configuration from the main compose file
-extract_service() {
-    local service_name=$1
-    local output_service_name=$2
+# Check if script is being called to extract a single service
+if [[ "$1" == "extract_service" ]]; then
+    service_name="$2"
+    output_name="$3"
     
-    # Extract the entire service block
-    awk -v service="$service_name:" -v output_name="$output_service_name" '
+    # Suppress all output for extraction mode
+    exec 2>/dev/null
+    
+    awk -v service="$service_name:" -v output_name="$output_name" '
     BEGIN { in_service=0; indent_level=0; service_found=0 }
     
     # Find the service definition
@@ -50,21 +50,17 @@ extract_service() {
         
         # Update container name
         if (line ~ /container_name:/) {
-            # Extract the container name and append -migration
             gsub(/container_name: */, "", line)
-            gsub(/^[ \t]*/, "", line)  # trim leading spaces
-            gsub(/[ \t]*$/, "", line)  # trim trailing spaces
+            gsub(/^[ \t]*/, "", line)
+            gsub(/[ \t]*$/, "", line)
             line = "    container_name: " line "-migration"
         }
         
         # Update image to use latest tag
         if (line ~ /^[[:space:]]*image:/) {
             if (line ~ /image:.*:/) {
-                # Has existing tag - replace with :latest
-                # Match pattern: image: imagename:version -> image: imagename:latest
                 gsub(/:[^[:space:]]*[[:space:]]*$/, ":latest", line)
             } else {
-                # No tag specified, add :latest
                 gsub(/[[:space:]]*$/, ":latest", line)
             }
         }
@@ -97,28 +93,16 @@ extract_service() {
             gsub(/\${MAIN_PORT}/, "10001", line)
         }
         
-        # Handle depends_on section - exclude external services
+        # Handle depends_on section - update service references
         if (line ~ /depends_on:/) {
-            depends_on_line = line
+            print line
             in_depends=1
-            has_dependencies=0
             next
         }
         if (in_depends && line ~ /^[[:space:]]*-/) {
-            # Extract dependency name (more portable approach)
             gsub(/^[[:space:]]*- */, "", line)
             dep = line
-            gsub(/[[:space:]]*$/, "", dep)  # trim trailing spaces
-            
-            if (dep == "redis-service" || dep == "minio-service" || dep == "couchdb-service") {
-                next  # Skip external dependencies
-            }
-            
-            # If this is the first valid dependency, print the depends_on: line
-            if (has_dependencies == 0) {
-                print depends_on_line
-                has_dependencies = 1
-            }
+            gsub(/[[:space:]]*$/, "", dep)
             
             if (dep == "app-service") {
                 line = "      - app-service-migration"
@@ -130,57 +114,101 @@ extract_service() {
         }
         if (in_depends && line !~ /^[[:space:]]*-/ && line !~ /^[[:space:]]*$/) {
             in_depends=0
-            has_dependencies=0
         }
         
         print line
     }
     ' "$INPUT_FILE"
+    exit 0
+fi
+
+# Main execution starts here
+
+echo "🔄 Adding migration services to ${INPUT_FILE}..."
+
+# Create backup
+cp "$INPUT_FILE" "$BACKUP_FILE"
+echo "💾 Created backup: ${BACKUP_FILE}"
+
+# Check if migration services already exist
+if grep -q "app-service-migration:" "$INPUT_FILE"; then
+    echo "⚠️  Migration services already exist in ${INPUT_FILE}"
+    echo "🔄 Removing existing migration services first..."
+    
+    # Remove existing migration services
+    awk '
+    /^[[:space:]]*[a-zA-Z0-9_-]+-migration:/ { 
+        in_migration=1; 
+        indent_level = match($0, /[^ ]/) - 1;
+        next 
+    }
+    /^[[:space:]]*# Migration services/ { next }
+    in_migration && /^[[:space:]]*[a-zA-Z0-9_-]+:/ {
+        current_indent = match($0, /[^ ]/) - 1
+        if (current_indent <= indent_level && NF > 0) {
+            in_migration=0
+        }
+    }
+    !in_migration { print }
+    ' "$INPUT_FILE" > "${INPUT_FILE}.tmp" && mv "${INPUT_FILE}.tmp" "$INPUT_FILE"
+fi
+
+# Append migration services at the end of the services section
+# Find the last service and add migration services after it
+awk '
+BEGIN { last_service_line = 0; in_services = 0 }
+
+# Track if we are in services section
+/^services:/ { in_services = 1 }
+
+# Track the last line of services section
+in_services && /^[[:space:]]*[a-zA-Z0-9_-]+:/ { 
+    last_service_line = NR 
 }
 
-# Get version from original file
-VERSION=$(grep '^version:' "$INPUT_FILE" | head -1)
+# When we hit volumes, networks, or end of file, insert migration services
+/^volumes:/ || /^networks:/ || /^[a-zA-Z]+:/ && !/^services:/ && in_services {
+    if (in_services && last_service_line > 0) {
+        # Insert migration services before this section
+        print ""
+        print "  # Migration services (generated)"
+        system("'"$0"' extract_service app-service app-service-migration 2>/dev/null")
+        print ""
+        system("'"$0"' extract_service worker-service worker-service-migration 2>/dev/null") 
+        print ""
+        system("'"$0"' extract_service proxy-service proxy-service-migration 2>/dev/null")
+        print ""
+        in_services = 0
+    }
+}
 
-# Start writing the output file
-cat > "$OUTPUT_FILE" << EOF
-${VERSION}
+# Print all original lines
+{ print }
 
-# Generated migration compose file
-# This file creates migration versions of app and worker services
-# Infrastructure services (couchdb, redis, minio) are external
+# If we reach end of file and still in services, add migration services
+END {
+    if (in_services && last_service_line > 0) {
+        print ""
+        print "  # Migration services (generated)"
+        system("'"$0"' extract_service app-service app-service-migration 2>/dev/null")
+        print ""
+        system("'"$0"' extract_service worker-service worker-service-migration 2>/dev/null")
+        print ""
+        system("'"$0"' extract_service proxy-service proxy-service-migration 2>/dev/null")
+    }
+}
+' "$INPUT_FILE" > "${INPUT_FILE}.tmp" && mv "${INPUT_FILE}.tmp" "$INPUT_FILE"
 
-services:
-EOF
-
-# Extract and transform each service
-extract_service "app-service" "app-service-migration" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-extract_service "worker-service" "worker-service-migration" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-extract_service "proxy-service" "proxy-service-migration" >> "$OUTPUT_FILE"
-
-# Add networks section
-cat >> "$OUTPUT_FILE" << 'EOF'
-
-networks:
-  default:
-    external: true
-    name: hosting_default
-EOF
-
-echo "✅ Generated ${OUTPUT_FILE} successfully!"
+echo "✅ Added migration services to ${INPUT_FILE} successfully!"
 echo ""
-echo "📋 Created migration services:"
-echo "   - app-service-migration (port 4002)"
-echo "   - worker-service-migration (port 4003)" 
-echo "   - proxy-service-migration (port 10001)"
-echo ""
-echo "🚀 To start migration services:"
-echo "   docker compose -f docker-compose.yaml up -d                    # Start infrastructure"
-echo "   docker compose -f ${OUTPUT_FILE} --env-file ../.env up -d      # Start migration services"
+echo "📋 Added migration services:"
+echo "   - app-service-migration"
+echo "   - worker-service-migration"
+echo "   - proxy-service-migration"
 echo ""
 echo "🌐 Access points:"
 echo "   - Main services: http://localhost:10000"
 echo "   - Migration services: http://localhost:10001"
+echo ""
+echo "💾 Backup saved as: ${BACKUP_FILE}"
+echo "🔄 To remove migration services: cp ${BACKUP_FILE} ${INPUT_FILE}"
