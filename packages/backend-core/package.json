@@ -76,7 +76,6 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@jest/types": "^29.6.3",
     "@shopify/jest-koa-mocks": "5.1.1",
     "@smithy/types": "4.0.0",
     "@swc/core": "1.3.71",
