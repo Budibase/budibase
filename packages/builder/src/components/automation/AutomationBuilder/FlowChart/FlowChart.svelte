@@ -405,10 +405,10 @@
   </div>
 
   <div class="root">
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
-      role="region"
-      aria-label="Automation flow viewport"
       bind:this={paneEl}
       on:mousemove={dnd.handlePointerMove}
       on:mousedown={dnd.updatePaneRect}
