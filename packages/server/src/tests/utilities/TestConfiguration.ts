@@ -601,6 +601,14 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
+  async createDefaultWorkspaceApp() {
+    return await this.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        url: "/",
+      })
+    )
+  }
+
   doInTenant<T>(task: () => T) {
     return context.doInTenant(this.getTenantId(), task)
   }
