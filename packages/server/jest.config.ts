@@ -41,12 +41,7 @@ if (fs.existsSync("../pro/src")) {
 }
 
 const config: Config = {
-  projects: [
-    {
-      ...baseConfig,
-      testMatch: ["<rootDir>/**/*.spec.[jt]s"],
-    },
-  ],
+  ...baseConfig,
   collectCoverageFrom: [
     "src/**/*.{js,ts}",
     "../backend-core/src/**/*.{js,ts}",
