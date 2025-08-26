@@ -11,6 +11,13 @@
     Switcher,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
+  import {
+    PublishResourceState,
+    AutomationStatus,
+    AutomationActionStepId,
+    type UIAutomation,
+    type AutomationStep,
+  } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
   import {
     automationStore,
@@ -25,40 +32,34 @@
   import {
     getBlocks as getBlocksHelper,
     renderBranches,
-    type GraphBuildDeps,
     dagreLayoutAutomation,
+    type GraphBuildDeps,
   } from "./AutomationStepHelpers"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import TestDataModal from "./TestDataModal.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { createFlowChartDnD } from "./FlowChartDnD"
+  import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
   import EdgeWrapper from "./EdgeWrapper.svelte"
   import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
   import AnchorNode from "./AnchorNode.svelte"
+
   import {
     SvelteFlow,
     Controls,
     Background,
     BackgroundVariant,
     MiniMap,
+    useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
-    useSvelteFlow,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
-  import {
-    AutomationStatus,
-    type AutomationStep,
-    AutomationActionStepId,
-    type UIAutomation,
-  } from "@budibase/types"
-
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import { PublishResourceState } from "@budibase/types"
-  import { createFlowChartDnD } from "./FlowChartDnD"
+  import {} from "@budibase/types"
 
   export let automation: UIAutomation
 
@@ -419,7 +420,7 @@
         colorMode="dark"
         nodesDraggable={false}
       >
-        <Controls />
+        <Controls orientation={"horizontal"} />
         <Background variant={BackgroundVariant.Dots} gap={25} />
         <MiniMap />
       </SvelteFlow>
@@ -522,8 +523,8 @@
 
   .canvas-footer-left {
     position: absolute;
-    left: var(--spacing-xl);
-    bottom: var(--spacing-l);
+    left: 130px;
+    bottom: 12px;
     display: flex;
     gap: var(--spacing-l);
   }
