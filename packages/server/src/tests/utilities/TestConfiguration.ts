@@ -695,8 +695,9 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
-    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app

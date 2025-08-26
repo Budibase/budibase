@@ -34,6 +34,8 @@ describe("/screens", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    // Replace the regular app with an onboarding app to get sample data
+    await config.createAppWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -43,9 +45,16 @@ describe("/screens", () => {
   }
 
   describe("fetch", () => {
+    it("should create the sample data screen", async () => {
+      const screens = await config.api.screen.list()
+      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
+        true
+      )
+    })
+
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(1)
+      expect(screens.length).toEqual(2)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
 
