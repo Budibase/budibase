@@ -14,10 +14,7 @@ describe("getRoutingInfo", () => {
     jest.clearAllMocks()
     await config.newTenant()
 
-    defaultWorkspaceApp = (
-      await config.api.workspaceApp.fetch()
-    ).workspaceApps.find(w => w.isDefault)!
-    expect(defaultWorkspaceApp).toBeDefined()
+    defaultWorkspaceApp = await config.createDefaultWorkspaceApp()
   })
 
   async function createWorkspaceApp(name: string, url: string) {
