@@ -95,8 +95,7 @@
     "pino-pretty": "10.0.0",
     "pouchdb-adapter-memory": "7.2.2",
     "testcontainers": "10.16.0",
-    "timekeeper": "2.2.0",
-    "typescript": "5.7.2"
+    "timekeeper": "2.2.0"
   },
   "nx": {
     "targets": {

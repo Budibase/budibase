@@ -213,5 +213,5 @@ export function processDates<T extends Row | Row[]>(
     }
   }
 
-  return Array.isArray(inputRows) ? rows : rows[0]
+  return (Array.isArray(inputRows) ? rows : rows[0]) as T
 }
