@@ -8,7 +8,7 @@
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@types/node": "22.18.0",
     "@types/proper-lockfile": "^4.1.4",
-    "@typescript-eslint/parser": "8.17.0",
+    "@typescript-eslint/parser": "8.41.0",
     "@vitest/eslint-plugin": "^1.1.14",
     "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
