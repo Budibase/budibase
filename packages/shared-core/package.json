@@ -19,8 +19,7 @@
     "cron-validate": "1.4.5"
   },
   "devDependencies": {
-    "rimraf": "3.0.2",
-    "typescript": "5.7.2"
+    "rimraf": "3.0.2"
   },
   "nx": {
     "targets": {
