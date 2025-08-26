@@ -6,7 +6,6 @@ import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
 import { Readable } from "stream"
 import { LoopSummary } from "./StepInputsOutputs"
-import { PublishResourceState } from "packages/types/src/api"
 
 export enum AutomationIOType {
   OBJECT = "object",

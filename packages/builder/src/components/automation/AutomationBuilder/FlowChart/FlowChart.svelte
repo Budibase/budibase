@@ -53,7 +53,7 @@
     AutomationStatus,
     type AutomationStep,
     AutomationActionStepId,
-    UIAutomation,
+    type UIAutomation,
   } from "@budibase/types"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -215,7 +215,7 @@
       }
     })
 
-    // Run Dagre layout (top-to-bottom, tighter spacing)
+    // Run Dagre layout (top-to-bottom)
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
       { rankdir: "TB", ranksep: 150, nodesep: 300 }
