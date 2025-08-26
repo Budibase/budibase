@@ -8,6 +8,7 @@ import { structures } from "@budibase/backend-core/tests"
 import { db } from "@budibase/backend-core"
 import { basicScreen } from "../../../tests/utilities/structures"
 import { WorkspaceApp } from "@budibase/types"
+import { AppType } from "../../../middleware/appInfo"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -28,9 +29,9 @@ async function createWorkspaceApp(isDefault = false) {
 }
 
 describe.each([
-  ["dev", () => config.getAppId()],
-  ["prod", () => config.getProdAppId()],
-])("Workspace cleanups migration (%s)", (_, getAppId) => {
+  [AppType.DEV, () => config.getAppId()],
+  [AppType.PROD, () => config.getProdAppId()],
+])("Workspace cleanups migration (%s)", (env, getAppId) => {
   let defaultWorkspaceApp: WorkspaceApp
 
   beforeAll(async () => {
@@ -39,6 +40,7 @@ describe.each([
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.createDefaultWorkspaceApp(env)
     for (const appId of [config.getAppId(), config.getProdAppId()]) {
       await config.doInContext(appId, async () => {
         await updateAppMigrationMetadata({

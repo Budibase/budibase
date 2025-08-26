@@ -601,12 +601,17 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
-  async createDefaultWorkspaceApp() {
-    return await this.api.workspaceApp.create(
+  async createDefaultWorkspaceApp(mode: "dev" | "prod" = "dev") {
+    const { workspaceApp } = await this.api.workspaceApp.create(
       structures.workspaceApps.createRequest({
         url: "/",
       })
     )
+    const appId = mode === "dev" ? this.getAppId() : this.getProdAppId()
+    const db = dbCore.getDB(appId)
+    await db.put({ ...workspaceApp, isDefault: true })
+
+    return { ...workspaceApp, isDefault: true }
   }
 
   doInTenant<T>(task: () => T) {

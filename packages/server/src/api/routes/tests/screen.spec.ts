@@ -334,7 +334,7 @@ describe("/screens", () => {
 
     beforeEach(async () => {
       await config.newTenant()
-      const { workspaceApp } = await config.createDefaultWorkspaceApp()
+      const workspaceApp = await config.createDefaultWorkspaceApp()
       addScreen = async (screen: Screen) => {
         return await config.api.screen.save({
           ...screen,
