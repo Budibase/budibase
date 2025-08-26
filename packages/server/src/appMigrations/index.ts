@@ -3,8 +3,9 @@ import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 import { UserCtx } from "@budibase/types"
-import { db, Header } from "@budibase/backend-core"
+import { context, db, Header } from "@budibase/backend-core"
 import environment from "../environment"
+import sdk from "../sdk"
 
 export * from "./appMigrationMetadata"
 export * from "./migrationLock"
@@ -44,6 +45,14 @@ export async function checkMissingMigrations(
 
   // no migrations set - edge case, don't try to do anything
   if (!latestMigration) {
+    return next()
+  }
+
+  const appExists = await context.doInAppContext(
+    appId,
+    async () => !!(await sdk.applications.metadata.tryGet())
+  )
+  if (!appExists) {
     return next()
   }
 
