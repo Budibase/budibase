@@ -15,6 +15,7 @@ import {
   basicScreen,
   basicTable,
   basicWebhook,
+  TEST_WORKSPACEAPPID_PLACEHOLDER,
 } from "./structures"
 import {
   cache,
@@ -653,8 +654,7 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-      .workspaceApps
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp()
     this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
@@ -681,9 +681,8 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-      .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp()
+    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -994,6 +993,13 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
+    if (
+      !config.workspaceAppId ||
+      config.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER
+    ) {
+      config.workspaceAppId = this.getDefaultWorkspaceAppId()
+    }
+
     return this.api.screen.save(config)
   }
 
