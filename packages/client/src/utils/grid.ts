@@ -186,7 +186,6 @@ export const gridLayout = (node: HTMLDivElement, metadata: GridMetadata) => {
     }
 
     // Apply all CSS variables to the wrapper
-    // @ts-expect-error TODO
     node.style = buildStyleString(vars)
 
     // Add a listener to select this node on click
