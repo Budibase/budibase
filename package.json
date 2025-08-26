@@ -6,7 +6,7 @@
     "@babel/eslint-parser": "7.25.9",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@types/node": "^22.15.3",
+    "@types/node": "22.18.0",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "8.17.0",
     "@vitest/eslint-plugin": "^1.1.14",
