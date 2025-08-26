@@ -40,7 +40,6 @@ describe.each([
 
   beforeEach(async () => {
     await config.newTenant()
-    await config.createDefaultWorkspaceApp(env)
     for (const appId of [config.getAppId(), config.getProdAppId()]) {
       await config.doInContext(appId, async () => {
         await updateAppMigrationMetadata({

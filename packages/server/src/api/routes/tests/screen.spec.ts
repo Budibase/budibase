@@ -34,8 +34,6 @@ describe("/screens", () => {
 
   beforeEach(async () => {
     await config.newTenant()
-    // Replace the regular app with an onboarding app to get sample data
-    await config.createAppWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -45,16 +43,9 @@ describe("/screens", () => {
   }
 
   describe("fetch", () => {
-    it("should create the sample data screen", async () => {
-      const screens = await config.api.screen.list()
-      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
-        true
-      )
-    })
-
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(2)
+      expect(screens.length).toEqual(1)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
 
@@ -203,7 +194,6 @@ describe("/screens", () => {
   describe("destroy", () => {
     beforeEach(async () => {
       await config.newTenant()
-      await config.createDefaultWorkspaceApp()
     })
 
     it("should be able to delete the screen", async () => {
@@ -326,22 +316,9 @@ describe("/screens", () => {
   })
 
   describe("usage", () => {
-    let addScreen: (screen: Screen) => Promise<Screen>
-
-    beforeAll(async () => {
-      await config.init()
-    })
-
     beforeEach(async () => {
-      await config.newTenant()
-      const workspaceApp = await config.createDefaultWorkspaceApp()
-      addScreen = async (screen: Screen) => {
-        return await config.api.screen.save({
-          ...screen,
-          workspaceAppId: workspaceApp._id,
-        })
-      }
-      await addScreen(basicScreen())
+      await config.init()
+      await config.api.screen.save(basicScreen())
     })
 
     function confirmScreen(usage: UsageInScreensResponse, screen: Screen) {
@@ -352,7 +329,9 @@ describe("/screens", () => {
 
     it("should find table usage", async () => {
       const table = await config.api.table.save(basicTable())
-      const screen = await addScreen(createTableScreen("BudibaseDB", table))
+      const screen = await config.api.screen.save(
+        createTableScreen("BudibaseDB", table)
+      )
       const usage = await config.api.screen.usage(table._id!)
       expect(usage.sourceType).toEqual(SourceType.TABLE)
       confirmScreen(usage, screen)
@@ -364,7 +343,7 @@ describe("/screens", () => {
         viewV2.createRequest(table._id!),
         { status: 201 }
       )
-      const screen = await addScreen(createViewScreen(view))
+      const screen = await config.api.screen.save(createViewScreen(view))
       const usage = await config.api.screen.usage(view.id)
       expect(usage.sourceType).toEqual(SourceType.VIEW)
       confirmScreen(usage, screen)
@@ -375,7 +354,9 @@ describe("/screens", () => {
         basicDatasourcePlus().datasource
       )
       const query = await config.api.query.save(basicQuery(datasource._id!))
-      const screen = await addScreen(createQueryScreen(datasource._id!, query))
+      const screen = await config.api.screen.save(
+        createQueryScreen(datasource._id!, query)
+      )
       const dsUsage = await config.api.screen.usage(datasource._id!)
       expect(dsUsage.sourceType).toEqual(SourceType.DATASOURCE)
       confirmScreen(dsUsage, screen)

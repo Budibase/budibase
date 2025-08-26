@@ -28,6 +28,7 @@ import {
   sessions,
   tenancy,
   utils,
+  features,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -68,6 +69,7 @@ import {
   Webhook,
   WithRequired,
   DevInfo,
+  FeatureFlag,
 } from "@budibase/types"
 
 import API from "./api"
@@ -602,9 +604,13 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
-  async createDefaultWorkspaceApp(mode: "dev" | "prod" = "dev") {
+  async createDefaultWorkspaceApp(
+    appName: string,
+    mode: "dev" | "prod" = "dev"
+  ) {
     const { workspaceApp } = await this.api.workspaceApp.create(
       structures.workspaceApps.createRequest({
+        name: appName,
         url: "/",
       })
     )
@@ -654,8 +660,16 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp()
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    if (
+      await this.doInTenant(() => features.isEnabled(FeatureFlag.WORKSPACES))
+    ) {
+      const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+      this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    } else {
+      const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+        .workspaceApps
+      this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    }
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -681,7 +695,7 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp()
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
     this.defaultWorkspaceAppId = defaultWorkspaceApp._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
