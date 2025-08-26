@@ -151,7 +151,6 @@ export interface Automation extends Document {
   type?: string
   disabled?: boolean
   testData?: AutomationTriggerResultOutputs
-  publishStatus?: PublishResourceState
 }
 
 export interface BaseIOStructure {

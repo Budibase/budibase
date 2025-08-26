@@ -78,16 +78,15 @@
   let scrolling = false
   let blockRefs: Record<string, any> = {}
   let prodErrors: number
-  $: viewMode = ViewMode.EDITOR
+  let paneEl: HTMLDivElement | null = null
+  let changingStatus = false
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  // Svelte Flow viewport helpers
   const { getViewport, setViewport } = useSvelteFlow()
 
   // DnD helper and context stores
-  let paneEl: HTMLDivElement | null = null
   const dnd = createFlowChartDnD({
     getViewport,
     setViewport,
@@ -102,8 +101,6 @@
 
   $: updateGraph(blocks as any, viewMode)
 
-  let changingStatus = false
-
   $: $automationStore.showTestModal === true && testDataModal.show()
 
   $: displayToggleValue = $featureFlags.WORKSPACES
@@ -115,13 +112,14 @@
 
   // Parse the automation tree state
   $: $selectedAutomation.blockRefs && refresh()
-
   $: blocks = getBlocksHelper(
     $selectedAutomation.data || $memoAutomation,
     viewMode
   )
     .filter(x => x.stepId !== ActionStepID.LOOP)
     .map((block, idx) => ({ ...block, __top: idx }))
+
+  $: viewMode = ViewMode.EDITOR
 
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
@@ -406,7 +404,6 @@
 
   <div class="root">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="wrapper"
       bind:this={paneEl}

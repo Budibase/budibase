@@ -24,7 +24,6 @@
   $: labelX = basePath[1]
   $: labelY = basePath[2]
 
-  // Only crop when the edge targets an anchor node
   $: edgeTarget = target ?? $$props.target
   $: isBranchTarget = edgeTarget?.startsWith("branch-")
   $: path = edgeTarget.startsWith("anchor-")
@@ -36,7 +35,6 @@
       })
     : basePath
 
-  // Get block reference from automation store
   $: blockRefs = $selectedAutomation?.blockRefs?.[block?.id]
   $: pathSteps =
     blockRefs && automation
@@ -69,7 +67,6 @@
     style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
   >
     {#if !collectBlockExists}
-      <!-- Actions on non-branch edges at the edge label position -->
       {#if showEdgeActions}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -98,7 +95,6 @@
         {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-
           <div
             class="branch-controls"
             on:mousedown|stopPropagation

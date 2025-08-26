@@ -216,4 +216,3 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
     destroyDnD,
   }
 }
-
