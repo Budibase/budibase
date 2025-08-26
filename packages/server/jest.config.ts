@@ -44,7 +44,7 @@ const config: Config = {
   projects: [
     {
       ...baseConfig,
-      testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
+      testMatch: ["<rootDir>/**/*.spec.[jt]s"],
     },
   ],
   collectCoverageFrom: [
