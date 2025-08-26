@@ -53,14 +53,14 @@
     AutomationStatus,
     type AutomationStep,
     AutomationActionStepId,
-    type Automation,
+    UIAutomation,
   } from "@budibase/types"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { PublishResourceState } from "@budibase/types"
   import { createFlowChartDnD } from "./FlowChartDnD"
 
-  export let automation: Automation
+  export let automation: UIAutomation
 
   const memoAutomation = memo(automation)
 
