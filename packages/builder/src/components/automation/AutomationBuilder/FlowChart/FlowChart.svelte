@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte"
+  import { onMount, onDestroy, setContext } from "svelte"
   import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
@@ -46,6 +46,7 @@
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
+    useSvelteFlow,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import {
@@ -80,6 +81,53 @@
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
+
+  // Drag/drop contexts (ported from DraggableCanvas, simplified for Svelte Flow)
+  type DragView = {
+    dragging: boolean
+    moveStep: null | {
+      id: string
+      offsetX: number
+      offsetY: number
+      w?: number
+      h?: number
+      mouse?: { x: number; y: number }
+    }
+    dragSpot: { x: number; y: number } | null
+    scale: number
+    dropzones: Record<string, { dims: DOMRect; path: any }>
+    droptarget: string | null
+    focusEle?: any
+  }
+
+  const view = writable<DragView>({
+    dragging: false,
+    moveStep: null,
+    dragSpot: null,
+    scale: 1,
+    dropzones: {},
+    droptarget: null,
+  })
+  const viewPos = writable({ x: 0, y: 0 })
+  const contentPos = writable({ scrollX: 0, scrollY: 0 })
+
+  setContext("draggableView", view)
+  setContext("viewPos", viewPos)
+  setContext("contentPos", contentPos)
+
+  // Svelte Flow viewport helpers
+  const { getViewport, setViewport } = useSvelteFlow()
+
+  // Local refs for pointer math and auto-scroll
+  let paneEl: HTMLDivElement | null = null
+  let paneRect: DOMRect | null = null
+  let scrollInterval: any
+  let scrollZones: {
+    top: boolean
+    bottom: boolean
+    left: boolean
+    right: boolean
+  } | null = null
 
   $: updateGraph(blocks as any, viewMode)
 
@@ -201,7 +249,7 @@
     // Run Dagre layout (top-to-bottom, tighter spacing)
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: "TB", ranksep: 150, nodesep: 200 }
+      { rankdir: "TB", ranksep: 150, nodesep: 300 }
     )
 
     nodes.set(laidOut.nodes)
@@ -247,7 +295,147 @@
     } catch (error) {
       console.error(error)
     }
+    // Register global mouseup to finish drag / drop
+    const onDocMouseUp = () => {
+      const current = get(view)
+      if (current.dragging) {
+        if (current.droptarget) {
+          try {
+            const sourceBlock =
+              $selectedAutomation.blockRefs[current.moveStep?.id as string]
+            const sourcePath = sourceBlock?.pathTo
+            const drop = current.dropzones[current.droptarget]
+            const destPath = drop?.path
+            if (sourcePath && destPath && $selectedAutomation.data) {
+              automationStore.actions.moveBlock(
+                sourcePath,
+                destPath,
+                $selectedAutomation.data
+              )
+            }
+          } catch (e) {
+            console.error("Drag drop move failed", e)
+          }
+        }
+        view.update(s => ({
+          ...s,
+          dragging: false,
+          moveStep: null,
+          dragSpot: null,
+          dropzones: {},
+          droptarget: null,
+        }))
+        contentPos.set({ scrollX: 0, scrollY: 0 })
+        clearScrollInterval()
+      }
+    }
+    document.addEventListener("mouseup", onDocMouseUp)
   })
+
+  onDestroy(() => {
+    clearScrollInterval()
+  })
+
+  function updatePaneRect() {
+    if (paneEl) paneRect = paneEl.getBoundingClientRect()
+  }
+
+  function clearScrollInterval() {
+    if (scrollInterval) {
+      clearInterval(scrollInterval)
+      scrollInterval = undefined
+      scrollZones = null
+    }
+  }
+
+  function handlePointerMove(e: MouseEvent) {
+    if (!paneEl) return
+    if (!paneRect) updatePaneRect()
+    if (!paneRect) return
+
+    const localX = Math.round(e.clientX - paneRect.left)
+    const localY = Math.round(e.clientY - paneRect.top)
+    viewPos.set({ x: Math.max(localX, 0), y: Math.max(localY, 0) })
+
+    const v = get(view)
+    if (v.moveStep && !v.dragging) {
+      view.update(s => ({ ...s, dragging: true }))
+    }
+
+    if (v.dragging && v.moveStep) {
+      const vp = getViewport()
+      const scale = vp?.zoom || 1
+      if (scale !== v.scale) {
+        view.update(s => ({ ...s, scale }))
+      }
+
+      const adjustedX = (e.clientX - paneRect.left - v.moveStep.offsetX) / scale
+      const adjustedY = (e.clientY - paneRect.top - v.moveStep.offsetY) / scale
+      view.update(s => ({ ...s, dragSpot: { x: adjustedX, y: adjustedY } }))
+
+      // Hover detection over DragZones
+      let hovering = false
+      const zones = get(view).dropzones
+      for (const [dzKey, dz] of Object.entries(zones)) {
+        const rect: DOMRect = dz.dims
+        if (
+          e.clientX < rect.right &&
+          e.clientX > rect.left &&
+          e.clientY < rect.bottom &&
+          e.clientY > rect.top
+        ) {
+          hovering = true
+          view.update(s => ({ ...s, droptarget: dzKey }))
+          break
+        }
+      }
+      if (!hovering && get(view).droptarget) {
+        view.update(s => ({ ...s, droptarget: null }))
+      }
+
+      // Auto-scroll near edges using Svelte Flow viewport
+      const buffer = 100
+      const rightEdge = paneRect.width - (v.moveStep.w || 0)
+      const zonesState = {
+        top: localY < buffer,
+        bottom: localY > paneRect.height - buffer,
+        left: localX < buffer,
+        right: localX > rightEdge,
+      }
+      const anyActive = Object.values(zonesState).some(Boolean)
+
+      if (anyActive) {
+        if (!scrollInterval) {
+          scrollZones = zonesState
+          scrollInterval = setInterval(() => {
+            const active = scrollZones || zonesState
+            const bump = 30
+            const xInterval = active.right ? -bump : active.left ? bump : 0
+            const yInterval = active.bottom ? -bump : active.top ? bump : 0
+
+            const current = getViewport()
+            if (current) {
+              setViewport({
+                x: (current.x || 0) + xInterval,
+                y: (current.y || 0) + yInterval,
+                zoom: current.zoom,
+              })
+            }
+            contentPos.update(s => ({
+              scrollX: s.scrollX + xInterval,
+              scrollY: s.scrollY + yInterval,
+            }))
+          }, 30)
+        } else {
+          scrollZones = zonesState
+        }
+      } else {
+        clearScrollInterval()
+      }
+    } else {
+      clearScrollInterval()
+    }
+  }
 
   function toggleLogsPanel() {
     if ($automationStore.showLogsPanel) {
@@ -380,7 +568,14 @@
   </div>
 
   <div class="root">
-    <div class="wrapper">
+    <div
+      class="wrapper"
+      role="region"
+      aria-label="Automation flow viewport"
+      bind:this={paneEl}
+      on:mousemove={handlePointerMove}
+      on:mousedown={updatePaneRect}
+    >
       <SvelteFlow
         {nodes}
         {nodeTypes}
