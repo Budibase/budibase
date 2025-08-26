@@ -1,9 +1,9 @@
-import { Config } from "@jest/types"
+import { Config } from "jest"
 
 import * as fs from "fs"
 import { join } from "path"
 
-const baseConfig: Config.InitialProjectOptions = {
+const baseConfig: Config = {
   setupFiles: ["./src/tests/jestEnv.ts"],
   moduleFileExtensions: [
     "js",
@@ -40,7 +40,7 @@ if (fs.existsSync("../pro/src")) {
   baseConfig.moduleNameMapper!["@budibase/pro"] = "<rootDir>/../pro/src"
 }
 
-const config: Config.InitialOptions = {
+const config: Config = {
   projects: [
     {
       ...baseConfig,
