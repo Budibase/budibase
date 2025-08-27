@@ -10,7 +10,6 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import { selectedAutomation } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import { memo } from "@budibase/frontend-core"
 
@@ -27,7 +26,6 @@
   let stepEle
 
   $: memoEnvVariables.set($environment.variables)
-  $: blockRef = $selectedAutomation?.blockRefs?.[step.id]
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
 
   // Log execution state
@@ -53,7 +51,6 @@
   <div class="block" bind:this={stepEle}>
     <FlowItem
       block={step}
-      {blockRef}
       {automation}
       draggable={step.type !== "TRIGGER"}
       {logStepData}

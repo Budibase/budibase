@@ -8,13 +8,14 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import StyleSection from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/StyleSection.svelte"
 
   export let data
 
   // Extract block and other data
   $: block = data.block
   $: viewMode = data?.viewMode
+  $: direction = (data?.direction || "TB") as "TB" | "LR"
+  $: isHorizontal = direction === "LR"
 
   // Get automation data from store
   $: automation = $selectedAutomation?.data
@@ -41,9 +42,12 @@
 
 <div style="position: relative;">
   {#if !isTrigger}
-    <div class="xy-flow__handle">
-      <Handle type="target" position={Position.Top} />
-    </div>
+    <Handle
+      isConnectable={false}
+      class="custom-handle"
+      type="target"
+      position={isHorizontal ? Position.Left : Position.Top}
+    />
   {/if}
   <StepNode
     step={block}
@@ -54,13 +58,11 @@
     onStepSelect={block => handleStepSelect(block)}
   />
   <div class="xy-flow__handle">
-    <Handle type="source" position={Position.Bottom} />
+    <Handle
+      isConnectable={false}
+      class="custom-handle"
+      type="source"
+      position={isHorizontal ? Position.Right : Position.Bottom}
+    />
   </div>
 </div>
-
-<style>
-  .xy-flow__handle {
-    opacity: 0;
-    top: 0;
-  }
-</style>

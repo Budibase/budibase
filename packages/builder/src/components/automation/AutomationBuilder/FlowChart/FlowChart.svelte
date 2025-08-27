@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, setContext } from "svelte"
+  import { onMount, onDestroy, setContext, tick } from "svelte"
   import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
@@ -53,6 +53,7 @@
     BackgroundVariant,
     MiniMap,
     useSvelteFlow,
+    getNodesBounds,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
@@ -80,11 +81,45 @@
   let prodErrors: number
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
+  let layoutDirection: "TB" | "LR" = "TB"
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
   const { getViewport, setViewport } = useSvelteFlow()
+
+  // Track and apply a custom "fit to top" viewport once after each graph build
+  let initialViewportApplied = false
+  let isApplyingViewport = false
+
+  const fitViewportTop = async () => {
+    if (isApplyingViewport) return
+    isApplyingViewport = true
+    try {
+      await tick()
+      const currentNodes = get(nodes)
+      if (!currentNodes?.length || !paneEl) return
+
+      const bounds = getNodesBounds(currentNodes)
+      const rect = paneEl.getBoundingClientRect()
+
+      const padding = 40
+      const widthWithPadding = bounds.width + padding * 2
+
+      // Fit horizontally (respect reasonable zoom bounds); keep top aligned vertically
+      let zoom = rect.width / (widthWithPadding || rect.width)
+      if (zoom > 1) zoom = 0.8
+      if (zoom < 0.1) zoom = 0.5
+
+      const x = rect.width / 2 - (bounds.x + bounds.width / 2) * zoom
+      const y = padding - bounds.y * zoom
+
+      setViewport({ x, y, zoom })
+      initialViewportApplied = true
+    } finally {
+      isApplyingViewport = false
+    }
+  }
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -99,7 +134,7 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
 
-  $: updateGraph(blocks as any, viewMode)
+  $: updateGraph(blocks as any, viewMode, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -123,9 +158,14 @@
 
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
-  function updateGraph(blocks: AutomationStep[], currentViewMode: ViewMode) {
+  function updateGraph(
+    blocks: AutomationStep[],
+    currentViewMode: ViewMode,
+    direction: "TB" | "LR"
+  ) {
+    initialViewportApplied = false
     const xSpacing = 300
-    const ySpacing = 240
+    const ySpacing = 340
 
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
@@ -143,6 +183,7 @@
       testDataModal,
       newNodes,
       newEdges,
+      direction,
     }
 
     // Build linear chain of top-level steps first
@@ -161,6 +202,7 @@
             block,
             isTopLevel: true,
             viewMode: currentViewMode,
+            direction,
           },
           position: pos,
         })
@@ -173,7 +215,11 @@
           type: "add-item",
           source: prevId,
           target: baseId,
-          data: { block: blocks[idx - 1], viewMode: currentViewMode },
+          data: {
+            block: blocks[idx - 1],
+            viewMode: currentViewMode,
+            direction,
+          },
         })
       }
 
@@ -187,7 +233,7 @@
         newNodes.push({
           id: terminalId,
           type: "anchor-node",
-          data: { viewMode: currentViewMode },
+          data: { viewMode: currentViewMode, direction },
           position: terminalPos,
         })
 
@@ -196,7 +242,7 @@
           type: "add-item",
           source: baseId,
           target: terminalId,
-          data: { block, viewMode: currentViewMode },
+          data: { block, viewMode: currentViewMode, direction },
         })
       }
 
@@ -215,15 +261,18 @@
       }
     })
 
-    // Run Dagre layout (top-to-bottom)
+    // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: "TB", ranksep: 150, nodesep: 300 }
+      { rankdir: direction, ranksep: 150, nodesep: 300 }
     )
 
     nodes.set(laidOut.nodes)
     edges.set(laidOut.edges)
   }
+
+  // When nodes are available and we haven't applied our custom viewport yet, align the top
+  $: $nodes?.length && !initialViewportApplied && fitViewportTop()
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
@@ -415,17 +464,27 @@
         {nodeTypes}
         {edges}
         {edgeTypes}
-        fitView
         colorMode="dark"
         nodesDraggable={false}
       >
-        <Controls orientation={"horizontal"} />
+        <Controls showLock={false} orientation={"horizontal"} />
         <Background variant={BackgroundVariant.Dots} gap={25} />
         <MiniMap />
       </SvelteFlow>
     </div>
     <div class="canvas-footer-left">
       <UndoRedoControl store={automationHistoryStore} showButtonGroup />
+      <div class="layout-toggle">
+        <Switcher
+          leftText="TB"
+          rightText="LR"
+          selected={layoutDirection === "LR" ? "right" : "left"}
+          on:left={() => (layoutDirection = "TB")}
+          on:right={() => (layoutDirection = "LR")}
+          leftIcon="arrow-down"
+          rightIcon="arrow-right"
+        />
+      </div>
     </div>
   </div>
 </div>
@@ -455,7 +514,7 @@
   .wrapper {
     position: relative;
     height: 100%;
-    --xy-background-color: var(--spectrum-global-color-gray-50);
+    --xy-background-color: var(--spectrum-global-color-gray-75);
     --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
     --xy-node-background-color: var(--background);
     --xy-node-border: 1px var(--grey-3) solid;
@@ -522,7 +581,7 @@
 
   .canvas-footer-left {
     position: absolute;
-    left: 130px;
+    left: 110px;
     bottom: 12px;
     display: flex;
     gap: var(--spacing-l);
@@ -570,6 +629,10 @@
     pointer-events: auto;
   }
 
+  .layout-toggle {
+    margin-left: auto;
+  }
+
   .toggle-active :global(.spectrum-Switch-label) {
     margin-right: 0px;
   }
@@ -588,5 +651,43 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+  }
+
+  :global(.svelte-flow__handle.custom-handle) {
+    background-color: var(--spectrum-global-color-gray-700);
+    border-radius: 1px;
+    width: 8px;
+    height: 4px;
+    border: none;
+    min-width: 2px;
+    min-height: 2px;
+  }
+
+  :global(.svelte-flow__handle.custom-handle:hover),
+  :global(.svelte-flow__handle.custom-handle.connectionindicator:focus),
+  :global(.svelte-flow__handle.custom-handle.connectingfrom),
+  :global(.svelte-flow__handle.custom-handle.connectingto) {
+    background-color: var(--xy-theme-edge-hover);
+  }
+
+  :global(.svelte-flow__handle-bottom.custom-handle) {
+    bottom: -5px;
+    transform: none;
+  }
+
+  :global(.svelte-flow__handle-top.custom-handle) {
+    top: -5px;
+    transform: none;
+  }
+
+  :global(.svelte-flow__handle-left.custom-handle) {
+    height: 8px;
+    width: 4px;
+    left: -3px;
+  }
+  :global(.svelte-flow__handle-right.custom-handle) {
+    height: 8px;
+    width: 4px;
+    right: -3px;
   }
 </style>

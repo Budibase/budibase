@@ -6,22 +6,18 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
-  import DragZone from "./DragZone.svelte"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
-    AutomationActionStepId,
     AutomationStepType,
     type Automation,
     type AutomationStep,
     type AutomationTrigger,
     type AutomationStepResult,
     type AutomationTriggerResult,
-    type BlockRef,
   } from "@budibase/types"
 
   export let block: AutomationStep | AutomationTrigger
-  export let blockRef: BlockRef | undefined
   export let automation: Automation | undefined
   export let draggable: boolean = true
   export let logStepData:
@@ -42,12 +38,6 @@
   let blockEle: HTMLDivElement | null
   let positionStyles: string | undefined
   let blockDims: DOMRect | undefined
-
-  $: pathSteps = loadSteps(blockRef)
-
-  $: collectBlockExists = pathSteps.some(
-    step => step.stepId === AutomationActionStepId.COLLECT
-  )
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
 
@@ -84,15 +74,6 @@
     $contentPos?.scrollX,
     $contentPos?.scrollY
   )
-
-  function loadSteps(blockRef?: BlockRef) {
-    return blockRef
-      ? (automationStore.actions.getPathSteps(
-          blockRef.pathTo,
-          (automation || $selectedAutomation?.data) as any
-        ) as Array<AutomationStep | AutomationTrigger>)
-      : ([] as Array<AutomationStep | AutomationTrigger>)
-  }
 
   function updateBlockDims() {
     if (!blockEle) return
@@ -228,12 +209,6 @@
       </div>
     </div>
   </div>
-
-  {#if !collectBlockExists}
-    {#if $view?.dragging}
-      <DragZone path={blockRef?.pathTo} />
-    {/if}
-  {/if}
 {/if}
 
 <Modal bind:this={webhookModal}>

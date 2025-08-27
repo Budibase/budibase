@@ -17,6 +17,8 @@
   $: branchIdx = data.branchIdx
   $: viewMode = data?.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
+  $: direction = (data?.direction || "TB") as "TB" | "LR"
+  $: isHorizontal = direction === "LR"
 
   // Handle step selection in logs mode (open details panel)
   function handleStepSelect(
@@ -38,9 +40,12 @@
 </script>
 
 <div style="position: relative;">
-  <div class="xy-flow__handle">
-    <Handle type="target" position={Position.Top} />
-  </div>
+  <Handle
+    isConnectable={false}
+    class="custom-handle"
+    type="target"
+    position={isHorizontal ? Position.Left : Position.Top}
+  />
   <div class="branch-container">
     <BranchNode
       {automation}
@@ -50,14 +55,10 @@
       onStepSelect={() => handleStepSelect(block)}
     />
   </div>
-  <div class="xy-flow__handle">
-    <Handle type="source" position={Position.Bottom} />
-  </div>
+  <Handle
+    isConnectable={false}
+    class="custom-handle"
+    type="source"
+    position={isHorizontal ? Position.Right : Position.Bottom}
+  />
 </div>
-
-<style>
-  .xy-flow__handle {
-    opacity: 0;
-    top: 0;
-  }
-</style>

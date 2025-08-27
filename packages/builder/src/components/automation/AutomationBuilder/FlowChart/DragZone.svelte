@@ -3,6 +3,7 @@
   import { generate } from "shortid"
 
   export let path
+  export let variant = "inline"
 
   let dropEle
   let dzid = generate()
@@ -32,6 +33,7 @@
   id={`dz-${dzid}`}
   bind:this={dropEle}
   class="drag-zone"
+  class:edge={variant === "edge"}
   class:drag-over={$view?.droptarget === dzid}
 >
   <span class="move-to">Move to</span>
@@ -50,6 +52,16 @@
     position: relative;
     text-align: center;
   }
+  /* Floating variant used on edges */
+  .drag-zone.edge {
+    min-width: 320px;
+    width: 320px;
+    min-height: 56px;
+    height: 56px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   .move-to {
     position: absolute;
     left: 0;
@@ -62,5 +74,9 @@
     padding: 4px 8px;
     background-color: rgb(28, 168, 114);
     color: var(--spectrum-global-color-gray-50);
+  }
+  .drag-zone.edge .move-to {
+    position: static;
+    margin: 0;
   }
 </style>

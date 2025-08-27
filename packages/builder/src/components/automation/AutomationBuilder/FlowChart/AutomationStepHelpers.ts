@@ -2,7 +2,11 @@ import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
 import { ViewMode } from "@/types/automations"
 import dagre from "@dagrejs/dagre"
-import { Position } from "@xyflow/svelte"
+import {
+  Position,
+  type Node as FlowNode,
+  type Edge as FlowEdge,
+} from "@xyflow/svelte"
 import {
   Automation,
   AutomationActionStepId,
@@ -205,8 +209,9 @@ export interface GraphBuildDeps {
   blockRefs: Record<string, any>
   viewMode: ViewMode
   testDataModal?: any
-  newNodes: any[]
-  newEdges: any[]
+  newNodes: FlowNode[]
+  newEdges: FlowEdge[]
+  direction?: "TB" | "LR"
 }
 
 // Dagre layout for automation flow
@@ -252,15 +257,21 @@ export const dagreLayoutAutomation = (
 
   dagre.layout(dagreGraph)
 
-  // Apply computed positions (top/bottom orientation)
+  // Apply computed positions with sensible default handle positions based on orientation
   // First pass: place all nodes from dagre output
   graph.nodes.forEach(node => {
     const dims = dagreGraph.node(node.id)
     if (!dims) return
     const width = dims.width
     const height = dims.height
-    node.targetPosition = Position.Top
-    node.sourcePosition = Position.Bottom
+    // Default handle positions based on rank direction
+    if (rankdir === "LR" || rankdir === "RL") {
+      node.targetPosition = Position.Left
+      node.sourcePosition = Position.Right
+    } else {
+      node.targetPosition = Position.Top
+      node.sourcePosition = Position.Bottom
+    }
     node.position = {
       x: Math.round(dims.x - width / 2),
       y: Math.round(dims.y - height / 2),
@@ -312,6 +323,7 @@ export const renderChain = (
         testDataModal: deps.testDataModal,
         block: step,
         viewMode: deps.viewMode,
+        direction: deps.direction,
       },
       position: pos,
     })
@@ -320,7 +332,11 @@ export const renderChain = (
       type: "add-item",
       source: lastNodeId,
       target: step.id,
-      data: { block: lastNodeBlock, viewMode: deps.viewMode },
+      data: {
+        block: lastNodeBlock,
+        viewMode: deps.viewMode,
+        direction: deps.direction,
+      },
     })
 
     lastNodeId = step.id
@@ -364,6 +380,7 @@ export const renderBranches = (
         branch,
         branchIdx: bIdx,
         viewMode: deps.viewMode,
+        direction: deps.direction,
       },
       position: branchPos,
     })
@@ -381,6 +398,7 @@ export const renderBranches = (
         branchStepId: baseId,
         branchIdx: bIdx,
         branchesCount: branches.length,
+        direction: deps.direction,
       },
     })
 
@@ -422,7 +440,7 @@ export const renderBranches = (
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { viewMode: deps.viewMode },
+        data: { viewMode: deps.viewMode, direction: deps.direction },
         position: terminalPos,
       })
       deps.newEdges.push({
@@ -430,7 +448,11 @@ export const renderBranches = (
         type: "add-item",
         source: lastNodeId,
         target: terminalId,
-        data: { block: lastNodeBlock, viewMode: deps.viewMode },
+        data: {
+          block: lastNodeBlock,
+          viewMode: deps.viewMode,
+          direction: deps.direction,
+        },
       })
     }
 
