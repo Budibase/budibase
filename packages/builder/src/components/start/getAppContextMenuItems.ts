@@ -14,7 +14,7 @@ const getAppContextMenuItems = ({
   onExportProd: () => void
   onDelete: () => void
 }): MenuItem[] => {
-  const appOrWorkspace = featureFlag.isEnabled("WORKSPACE_APPS")
+  const appOrWorkspace = featureFlag.isEnabled("WORKSPACES")
     ? "workspace"
     : "app"
   return [

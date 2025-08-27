@@ -39,7 +39,7 @@
   }
 
   let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const resolveAppName = (name: string) => {
     return name ? name.trim() : null

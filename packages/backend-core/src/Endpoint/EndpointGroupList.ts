@@ -25,14 +25,18 @@ export default class EndpointGroupList {
     // sort endpoints with a URL parameters after the static endpoints -
     // for example, endpoints /api/queries/:queryId and /api/queries/accessible
     // can overlap, if the parameter comes before the accessible it'll be unreachable
-    endpoints.sort((a, b) => {
-      const aHasColon = a.url.includes(":")
-      const bHasColon = b.url.includes(":")
+    // maintain original order within each group (static vs parameterized)
+    const staticEndpoints = []
+    const parameterizedEndpoints = []
 
-      if (aHasColon && !bHasColon) return 1
-      if (!aHasColon && bHasColon) return -1
-      return a.url.localeCompare(b.url)
-    })
-    return endpoints
+    for (const endpoint of endpoints) {
+      if (endpoint.url.includes(":")) {
+        parameterizedEndpoints.push(endpoint)
+      } else {
+        staticEndpoints.push(endpoint)
+      }
+    }
+
+    return [...staticEndpoints, ...parameterizedEndpoints]
   }
 }

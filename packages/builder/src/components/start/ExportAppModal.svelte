@@ -25,7 +25,7 @@
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {

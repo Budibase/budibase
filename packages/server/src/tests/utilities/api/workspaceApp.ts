@@ -36,13 +36,10 @@ export class WorkspaceAppAPI extends TestAPI {
     expectations?: Expectations
   ) => {
     return await this._put<UpdateWorkspaceAppResponse>(
-      `/api/workspaceApp/${app._id!}`,
+      `/api/workspaceApp/${app._id}`,
       {
         body: app,
-        expectations: {
-          status: 201,
-          ...expectations,
-        },
+        expectations,
       }
     )
   }

@@ -1,23 +1,25 @@
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import * as screenTemplating from "@/templates/screenTemplating"
 import {
   InsertWorkspaceAppRequest,
+  PublishResourceState,
   RequiredKeys,
   UIWorkspaceApp,
   UpdateWorkspaceAppRequest,
   WorkspaceApp,
 } from "@budibase/types"
-import { derived, Readable, get } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { appStore } from "./app"
-import { screenStore, selectedScreen, sortedScreens } from "./screens"
+import { sortedScreens } from "./screens"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
   loading: boolean
+  selectedWorkspaceAppId: string | undefined
 }
 
-interface DerivedWorkspaceAppStoreState {
+interface DerivedWorkspaceAppStoreState extends WorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
   selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
@@ -29,8 +31,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
-        [store, sortedScreens, selectedScreen],
-        ([$store, $sortedScreens, $selectedScreen]) => {
+        [store, sortedScreens, workspaceDeploymentStore],
+        ([$store, $sortedScreens, $workspaceDeploymentStore]) => {
           const workspaceApps = $store.workspaceApps
             .map<UIWorkspaceApp>(workspaceApp => {
               return {
@@ -38,15 +40,21 @@ export class WorkspaceAppStore extends DerivedBudiStore<
                 screens: $sortedScreens.filter(
                   s => s.workspaceAppId === workspaceApp._id
                 ),
+                publishStatus: $workspaceDeploymentStore.workspaceApps[
+                  workspaceApp._id!
+                ] || {
+                  state: PublishResourceState.DISABLED,
+                  unpublishedChanges: true,
+                },
               }
             })
             .sort((a, b) => a.name.localeCompare(b.name))
 
-          const selectedWorkspaceApp = $selectedScreen
-            ? workspaceApps.find(a => a._id === $selectedScreen.workspaceAppId)
+          const selectedWorkspaceApp = $store.selectedWorkspaceAppId
+            ? workspaceApps.find(a => a._id === $store.selectedWorkspaceAppId)
             : undefined
 
-          return { workspaceApps, selectedWorkspaceApp }
+          return { ...$store, workspaceApps, selectedWorkspaceApp }
         }
       )
     }
@@ -55,6 +63,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       {
         workspaceApps: [],
         loading: true,
+        selectedWorkspaceAppId: undefined,
       },
       makeDerivedStore
     )
@@ -72,6 +81,27 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     return this.fetch()
   }
 
+  select(workspaceAppId: string) {
+    const state = get(this.store)
+    const workspaceApp = state.workspaceApps.find(
+      app => app._id === workspaceAppId
+    )
+    if (!workspaceApp) {
+      return
+    }
+
+    // Check screen isn't already selected
+    if (state.selectedWorkspaceAppId === workspaceApp._id) {
+      return
+    }
+
+    // Select new screen
+    this.update(state => {
+      state.selectedWorkspaceAppId = workspaceAppId
+      return state
+    })
+  }
+
   async add(workspaceApp: InsertWorkspaceAppRequest) {
     const { workspaceApp: createdWorkspaceApp } =
       await API.workspaceApp.create(workspaceApp)
@@ -79,15 +109,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       ...state,
       workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
     }))
-
-    await screenStore.save({
-      ...screenTemplating.blank({
-        route: "/",
-        screens: [],
-        workspaceAppId: createdWorkspaceApp._id,
-      })[0].data,
-      workspaceAppId: createdWorkspaceApp._id,
-    })
+    return createdWorkspaceApp
   }
 
   async edit(workspaceApp: WorkspaceApp) {
@@ -126,6 +148,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       }
     })
 
+    const { deploymentStore } = await import("./deployment")
+
+    await deploymentStore.publishApp()
     appStore.refresh()
   }
 
@@ -140,6 +165,21 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     await this.edit({
       ...workspaceApp,
       disabled: state,
+    })
+
+    const { deploymentStore } = await import("./deployment")
+    await deploymentStore.publishApp()
+    await workspaceDeploymentStore.fetch()
+  }
+
+  replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {
+    const index = get(this.store).workspaceApps.findIndex(
+      x => x._id === workspaceApp._id
+    )
+
+    this.store.update(state => {
+      state.workspaceApps[index] = workspaceApp
+      return state
     })
   }
 }

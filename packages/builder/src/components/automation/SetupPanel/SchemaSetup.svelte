@@ -1,8 +1,6 @@
 <script>
   import { Input, Select, Button } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { memo } from "@budibase/frontend-core"
-  import { generate } from "shortid"
 
   export let value = {}
 
@@ -30,66 +28,69 @@
   ]
 
   const dispatch = createEventDispatcher()
-  const memoValue = memo({ data: {} })
-  let initialized = false
 
-  $: {
-    if (!initialized || Object.keys($memoValue.data).length === 0) {
-      memoValue.set({ data: value })
-      initialized = true
-    }
+  let fields = []
+  let initialized = false
+  let lastValueRef = null
+
+  $: if (!initialized || value !== lastValueRef) {
+    fields = Object.entries(value || {}).map(([name, type]) => ({ name, type }))
+    initialized = true
+    lastValueRef = value
   }
 
-  $: fieldsArray = $memoValue.data
-    ? Object.entries($memoValue.data).map(([name, type]) => ({
-        name,
-        type,
-        id: generate(),
-      }))
-    : []
-
   function addField() {
-    const newValue = { ...$memoValue.data }
-    newValue[""] = "string"
-    fieldsArray = [...fieldsArray, { name: "", type: "string", id: generate() }]
+    fields = [...fields, { name: "", type: "string" }]
   }
 
   function removeField(idx) {
-    const entries = [...fieldsArray]
-
-    // Remove empty field
-    if (!entries[idx]?.name) {
-      fieldsArray.splice(idx, 1)
-      fieldsArray = [...fieldsArray]
-      return
+    const removed = fields[idx]
+    fields = fields.filter((_, i) => i !== idx)
+    if ((removed?.name || "").trim()) {
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
+      dispatch("change", update)
     }
-
-    entries.splice(idx, 1)
-
-    const update = entries.reduce((newVals, current) => {
-      newVals[current.name.trim()] = current.type
-      return newVals
-    }, {})
-    dispatch("change", update)
   }
 
-  const fieldNameChanged = originalName => e => {
-    // reconstruct using fieldsArray, so field order is preserved
-    let entries = [...fieldsArray]
-    const newName = e.detail
+  const fieldNameChanged = idx => e => {
+    const newName = (e.detail || "").trim()
+    const hadName = (fields[idx]?.name || "").trim()
+    const copy = [...fields]
     if (newName) {
-      entries.find(f => f.name === originalName).name = newName
+      copy[idx] = { ...copy[idx], name: newName }
+      fields = copy
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
+      dispatch("change", update)
     } else {
-      entries = entries.filter(f => f.name !== originalName)
+      fields = copy.filter((_, i) => i !== idx)
+      if (hadName) {
+        const update = {}
+        for (const f of fields) {
+          const name = (f.name || "").trim()
+          if (name) update[name] = f.type || "string"
+        }
+        dispatch("change", update)
+      }
     }
+  }
 
-    const update = entries
-      .filter(entry => entry.name)
-      .reduce((newVals, current) => {
-        newVals[current.name.trim()] = current.type
-        return newVals
-      }, {})
-    if (Object.keys(update).length) {
+  const typeChanged = idx => e => {
+    const newType = e.detail
+    fields = fields.map((f, i) => (i === idx ? { ...f, type: newType } : f))
+    if ((fields[idx]?.name || "").trim()) {
+      const update = {}
+      for (const f of fields) {
+        const name = (f.name || "").trim()
+        if (name) update[name] = f.type || "string"
+      }
       dispatch("change", update)
     }
   }
@@ -99,21 +100,18 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="root">
   <div class="spacer" />
-  {#each fieldsArray as field, idx (field.id)}
+  {#each fields as field, idx}
     <div class="field">
       <Input
         value={field.name}
         secondary
         placeholder="Enter field name"
-        on:change={fieldNameChanged(field.name)}
+        on:change={fieldNameChanged(idx)}
         updateOnChange={false}
       />
       <Select
         value={field.type}
-        on:change={e => {
-          value[field.name] = e.detail
-          dispatch("change", value)
-        }}
+        on:change={typeChanged(idx)}
         options={typeOptions}
       />
       <i
@@ -130,7 +128,6 @@
 <style>
   .root {
     max-width: 100%;
-    /* so we can show the "+" button beside the "fields" label*/
     top: -26px;
   }
 

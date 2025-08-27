@@ -10,7 +10,7 @@
   import { notifications } from "@budibase/bbui"
   import { API } from "@/api"
   import { redirect } from "@roxi/routify"
-  import { onMount, onDestroy } from "svelte"
+  import { onDestroy } from "svelte"
   import BuilderSidePanel from "../_components/BuilderSidePanel.svelte"
   import PreviewOverlay from "../_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
@@ -19,7 +19,6 @@
   export let application
 
   let promise = getPackage()
-  let hasSynced = false
 
   async function getPackage() {
     try {
@@ -34,17 +33,6 @@
       $redirect("../../")
     }
   }
-
-  onMount(async () => {
-    if (!hasSynced && application) {
-      try {
-        await API.syncApp(application)
-      } catch (error) {
-        notifications.error("Failed to sync with production database")
-      }
-      hasSynced = true
-    }
-  })
 
   onDestroy(() => {
     // Run async on a slight delay to let other cleanup logic run without
