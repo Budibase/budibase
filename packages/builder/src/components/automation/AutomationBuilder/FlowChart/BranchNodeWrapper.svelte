@@ -38,7 +38,9 @@
 </script>
 
 <div style="position: relative;">
-  <Handle type="target" position={Position.Top} />
+  <div class="xy-flow__handle">
+    <Handle type="target" position={Position.Top} />
+  </div>
   <div class="branch-container">
     <BranchNode
       {automation}
@@ -48,5 +50,14 @@
       onStepSelect={() => handleStepSelect(block)}
     />
   </div>
-  <Handle type="source" position={Position.Bottom} />
+  <div class="xy-flow__handle">
+    <Handle type="source" position={Position.Bottom} />
+  </div>
 </div>
+
+<style>
+  .xy-flow__handle {
+    opacity: 0;
+    top: 0;
+  }
+</style>

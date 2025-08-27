@@ -44,6 +44,9 @@
   $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
+  // When a collect step exists in the path, no further blocks are allowed.
+  // In editor mode we should not render the visual edge in this case.
+  $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
   $: isPrimaryBranchEdge =
     $$props.data?.isBranchEdge && $$props.data?.isPrimaryEdge
 
@@ -62,7 +65,9 @@
   $: preBranchLabelY = ($$props.targetY ?? 0) - 100
 </script>
 
-<BaseEdge path={path[0]} />
+{#if !hideEdge}
+  <BaseEdge path={path[0]} />
+{/if}
 <EdgeLabelRenderer>
   <div
     class="add-item-label nodrag nopan"
