@@ -2,8 +2,6 @@ export enum FeatureFlag {
   DEBUG_UI = "DEBUG_UI",
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
   AI_AGENTS = "AI_AGENTS",
-  WORKSPACE_APPS = "WORKSPACE_APPS",
-  NEW_AUTOMATION_CANVAS = "NEW_AUTOMATION_CANVAS",
   WORKSPACES = "WORKSPACES",
 
   // Account-portal
@@ -13,14 +11,12 @@ export enum FeatureFlag {
 export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.WORKSPACE_APPS]: false,
-  [FeatureFlag.NEW_AUTOMATION_CANVAS]: false,
   [FeatureFlag.WORKSPACES]: false,
 
   // Account-portal
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 
-  [FeatureFlag.DEBUG_UI]: true,
+  [FeatureFlag.DEBUG_UI]: false,
 }
 
 export type FeatureFlags = typeof FeatureFlagDefaults
