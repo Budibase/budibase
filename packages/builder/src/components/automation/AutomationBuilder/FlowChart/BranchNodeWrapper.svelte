@@ -50,9 +50,3 @@
   </div>
   <Handle type="source" position={Position.Bottom} />
 </div>
-
-<style>
-  .branch-container {
-    padding: 20px;
-  }
-</style>

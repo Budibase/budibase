@@ -1,20 +1,25 @@
 <script lang="ts">
-  import AddItemEdge from "./AddItemEdge.svelte"
+  import CustomEdge from "./CustomEdge.svelte"
+  import type { Position } from "@xyflow/svelte"
 
-  // Props from @xyflow/svelte - accept all expected props
-  export let id
-  export let data = undefined
-  export let sourceX = undefined
-  export let sourceY = undefined
-  export let targetX = undefined
-  export let targetY = undefined
-  export let sourcePosition = undefined
-  export let targetPosition = undefined
-  export let source = undefined
-  export let target = undefined
+  export let id: string
+  export let data: any = undefined
+  export let sourceX: number
+  export let sourceY: number
+  export let targetX: number
+  export let targetY: number
+  export let sourcePosition: Position
+  export let targetPosition: Position
+  export let source: string
+  export let target: string
+  export let type: string
+  export let markerStart: string | undefined = undefined
+  export let markerEnd: string | undefined = undefined
+  export let sourceHandleId: string | null | undefined = undefined
+  export let targetHandleId: string | null | undefined = undefined
 </script>
 
-<AddItemEdge
+<CustomEdge
   {id}
   {data}
   {sourceX}
@@ -25,4 +30,9 @@
   {targetPosition}
   {source}
   {target}
+  {type}
+  {markerStart}
+  {markerEnd}
+  {sourceHandleId}
+  {targetHandleId}
 />

@@ -216,10 +216,9 @@ export interface DagreLayoutOptions {
   nodesep?: number
 }
 
-const DEFAULT_NODE_WIDTH = 150
+const DEFAULT_NODE_WIDTH = 320
 const DEFAULT_STEP_HEIGHT = 100
 const DEFAULT_BRANCH_HEIGHT = 180
-const DEFAULT_ANCHOR_SIZE = 1
 
 export const dagreLayoutAutomation = (
   graph: { nodes: any[]; edges: any[] },
@@ -240,8 +239,8 @@ export const dagreLayoutAutomation = (
     if (node.type === "branch-node") {
       height = DEFAULT_BRANCH_HEIGHT
     } else if (node.type === "anchor-node") {
-      width = DEFAULT_ANCHOR_SIZE
-      height = DEFAULT_ANCHOR_SIZE
+      width = DEFAULT_NODE_WIDTH
+      height = 1
     }
     dagreGraph.setNode(node.id, { width, height })
   })
@@ -254,6 +253,7 @@ export const dagreLayoutAutomation = (
   dagre.layout(dagreGraph)
 
   // Apply computed positions (top/bottom orientation)
+  // First pass: place all nodes from dagre output
   graph.nodes.forEach(node => {
     const dims = dagreGraph.node(node.id)
     if (!dims) return
@@ -301,8 +301,7 @@ export const renderChain = (
         currentY,
         deps
       )
-      branched = true
-      return { lastNodeId, lastNodeBlock, bottomY: bottom, branched }
+      return { lastNodeId, lastNodeBlock, bottomY: bottom, branched: true }
     }
 
     const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
@@ -341,10 +340,10 @@ export const renderBranches = (
   deps: GraphBuildDeps
 ): number => {
   const baseId = branchStep.id
-  const branches: Branch[] = ((branchStep as any)?.inputs?.branches ||
+  const branches: Branch[] = ((branchStep as BranchStep)?.inputs?.branches ||
     []) as Branch[]
   const children: Record<string, AutomationStep[]> =
-    (branchStep as any)?.inputs?.children || {}
+    (branchStep as BranchStep)?.inputs?.children || {}
 
   let clusterBottomY = startY + deps.ySpacing // at least one row below
 
@@ -413,8 +412,7 @@ export const renderBranches = (
       encounteredBranch = result.branched
     }
 
-    // Add a terminal anchor only when this branch path doesn't immediately split again.
-    // This avoids showing an extra edge under a node that fans out to branches.
+    // Add a terminal anchor
     if (!encounteredBranch) {
       const terminalId = `anchor-${lastNodeId}`
       const terminalPos = deps.ensurePosition(terminalId, {

@@ -9,8 +9,8 @@
 
 <style>
   .anchor {
-    width: 1px;
-    height: 1px;
+    width: 320px;
+    height: 320px;
     opacity: 0;
     pointer-events: none;
   }

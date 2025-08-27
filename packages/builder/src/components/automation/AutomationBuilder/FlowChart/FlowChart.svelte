@@ -59,7 +59,6 @@
     type EdgeTypes,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
-  import {} from "@budibase/types"
 
   export let automation: UIAutomation
 
@@ -71,7 +70,7 @@
     "anchor-node": AnchorNode as any,
   }
   const edgeTypes: EdgeTypes = {
-    "add-item": EdgeWrapper as any,
+    "add-item": EdgeWrapper,
   }
 
   let testDataModal: Modal
@@ -178,7 +177,7 @@
         })
       }
 
-      // Add a terminal anchor so the add-item affordance appears when there is no next node
+      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
       if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
         const terminalId = `anchor-${baseId}`
         const terminalPos = ensurePosition(terminalId, {

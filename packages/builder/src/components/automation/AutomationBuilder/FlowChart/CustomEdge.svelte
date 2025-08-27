@@ -56,8 +56,10 @@
     isBranchTarget &&
     isPrimaryBranchEdge
 
+  // Place the pre-branch controls nearer the fan-out junction
+  // so they don't sit just under the previous node.
   $: preBranchLabelX = $$props.sourceX ?? 0
-  $: preBranchLabelY = ($$props.sourceY ?? 0) + 40
+  $: preBranchLabelY = ($$props.targetY ?? 0) - 100
 </script>
 
 <BaseEdge path={path[0]} />
@@ -90,35 +92,6 @@
           />
         </div>
       {/if}
-
-      {#if isPrimaryBranchEdge}
-        {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
-            class="branch-controls"
-            on:mousedown|stopPropagation
-            on:click|stopPropagation
-          >
-            <ActionButton
-              icon="plus-circle"
-              disabled={viewMode === ViewMode.LOGS}
-              on:click={() => {
-                const targetRef =
-                  $selectedAutomation.blockRefs[$$props.data.branchStepId]
-                if (targetRef && automation) {
-                  automationStore.actions.branchAutomation(
-                    targetRef.pathTo,
-                    automation
-                  )
-                }
-              }}
-            >
-              Add branch
-            </ActionButton>
-          </div>
-        {/if}
-      {/if}
     {/if}
   </div>
 </EdgeLabelRenderer>
@@ -138,6 +111,33 @@
         on:click|stopPropagation
       >
         <FlowItemActions {block} hideBranch />
+
+        {#if isPrimaryBranchEdge}
+          {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
+            <div
+              class="branch-controls"
+              on:mousedown|stopPropagation
+              on:click|stopPropagation
+            >
+              <ActionButton
+                icon="plus-circle"
+                disabled={viewMode === ViewMode.LOGS}
+                on:click={() => {
+                  const targetRef =
+                    $selectedAutomation.blockRefs[$$props.data.branchStepId]
+                  if (targetRef && automation) {
+                    automationStore.actions.branchAutomation(
+                      targetRef.pathTo,
+                      automation
+                    )
+                  }
+                }}
+              >
+                Add branch
+              </ActionButton>
+            </div>
+          {/if}
+        {/if}
       </div>
     </div>
   </EdgeLabelRenderer>
@@ -155,7 +155,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 20px;
     pointer-events: all;
   }
   .branch-controls :global(.spectrum-ActionButton) {
