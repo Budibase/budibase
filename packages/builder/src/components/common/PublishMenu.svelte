@@ -20,8 +20,7 @@
   let seedProductionTables = false
   let menuOpen = false
 
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACES
-  $: workspaceOrApp = workspaceAppsEnabled ? "workspace" : "app"
+  $: workspaceOrApp = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const publish = async () => {
     await deploymentStore.publishApp({ seedProductionTables })
@@ -99,22 +98,12 @@
       size="L"
     />
     <Body size="S">
-      {#if !workspaceAppsEnabled}
-        App published successfully
+      {#if $automationStore.automations.length}
+        Automations published: {$automationStore.automations.length}
         <br />
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={deploymentStore.viewPublishedApp}>
-          View app
-        </div>
-      {:else}
-        {#if $automationStore.automations.length}
-          Automations published: {$automationStore.automations.length}
-          <br />
-        {/if}
-        {#if $workspaceAppStore.workspaceApps.length}
-          Apps published: {$workspaceAppStore.workspaceApps.length}
-        {/if}
+      {/if}
+      {#if $workspaceAppStore.workspaceApps.length}
+        Apps published: {$workspaceAppStore.workspaceApps.length}
       {/if}
     </Body>
   </div>
@@ -174,14 +163,6 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-  }
-  .link {
-    text-decoration: underline;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
   }
   .menu-item-header {
     font-weight: 500;

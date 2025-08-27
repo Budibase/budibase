@@ -77,14 +77,6 @@
       />
       <Body size="S">
         {$deploymentStore.lastPublished}
-        <br />
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        {#if !$featureFlags.WORKSPACES}
-          <div class="link" on:click={deploymentStore.viewPublishedApp}>
-            View app
-          </div>
-        {/if}
       </Body>
     </div>
     <div class="row">
@@ -105,24 +97,14 @@
       </Body>
     </div>
     <div class="row">
-      {#if !$featureFlags.WORKSPACES}
-        <Button
-          cta
-          disabled={$deploymentStore.isPublishing}
-          on:click={deploymentStore.publishApp}
-        >
-          Publish
-        </Button>
-      {:else}
-        <Button
-          icon="arrow-circle-up"
-          primary
-          disabled={$deploymentStore.isPublishing}
-          on:click={deploymentStore.publishApp}
-        >
-          Publish
-        </Button>
-      {/if}
+      <Button
+        icon="arrow-circle-up"
+        primary
+        disabled={$deploymentStore.isPublishing}
+        on:click={deploymentStore.publishApp}
+      >
+        Publish
+      </Button>
     </div>
   {/if}
   <Divider id="version" />
@@ -272,9 +254,8 @@
 >
   Are you sure you want to unpublish the {appOrWorkspace}
   <b>{selectedApp?.name}</b>?
-  {#if $featureFlags.WORKSPACES}
-    <p>This will make all apps and automations in this workspace unavailable</p>
-  {/if}
+
+  <p>This will make all apps and automations in this workspace unavailable</p>
 </ConfirmDialog>
 
 <RevertModal bind:this={revertModal} />
@@ -286,14 +267,6 @@
 />
 
 <style>
-  .link {
-    text-decoration: underline;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-  }
   .row {
     display: flex;
     gap: var(--spacing-m);

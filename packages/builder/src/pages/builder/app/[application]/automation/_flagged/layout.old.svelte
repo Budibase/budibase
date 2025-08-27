@@ -16,7 +16,6 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -39,9 +38,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags.WORKSPACES}
-    <TopBar breadcrumbs={[{ text: "Automations" }]} icon="path"></TopBar>
-  {/if}
+  <TopBar breadcrumbs={[{ text: "Automations" }]} icon="path"></TopBar>
   <div class="root">
     <AutomationPanel {modal} {webhookModal} />
     <div class="content drawer-container">
