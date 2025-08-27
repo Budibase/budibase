@@ -13,14 +13,11 @@
     workspaceAppStore,
   } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
-  import { featureFlags } from "@/stores/portal"
 
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
   let seedProductionTables = false
   let menuOpen = false
-
-  $: workspaceOrApp = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const publish = async () => {
     await deploymentStore.publishApp({ seedProductionTables })
@@ -64,10 +61,8 @@
     on:click={() => (seedProductionTables = false)}
   >
     <div>
-      <div class="menu-item-header">Publish {workspaceOrApp}</div>
-      <div class="menu-item-text">
-        Publish changes to the {workspaceOrApp}
-      </div>
+      <div class="menu-item-header">Publish workspace</div>
+      <div class="menu-item-text">Publish changes to the workspace</div>
     </div>
   </MenuItem>
   <MenuItem
@@ -79,7 +74,7 @@
     <div>
       <div class="menu-item-header">Seed and publish</div>
       <div class="menu-item-text">
-        Seed internal prod tables with dev data and publish {workspaceOrApp}
+        Seed internal prod tables with dev data and publish workspace
       </div>
     </div>
   </MenuItem>
