@@ -195,4 +195,30 @@ describe("migrations", () => {
     expect(ctx.response.set).not.toHaveBeenCalled()
     expect(mockNext).toHaveBeenCalled()
   })
+
+  describe("app existence check", () => {
+    beforeEach(() => {
+      migrations.MIGRATIONS.length = 0
+      migrations.MIGRATIONS.push({
+        id: "20231211101320_test",
+        func: migrationLogic(),
+      })
+    })
+
+    it("should skip migrations when app does not exist", async () => {
+      const config = setup.getConfig()
+      await config.init()
+
+      // Use a non-existent app ID
+      const nonExistentAppId = "app_nonexistent123456"
+
+      const mockNext = jest.fn()
+      const ctx = { response: { set: jest.fn() } } as any
+
+      await checkMissingMigrations(ctx, mockNext, nonExistentAppId)
+
+      expect(ctx.response.set).not.toHaveBeenCalled()
+      expect(mockNext).toHaveBeenCalled()
+    })
+  })
 })
