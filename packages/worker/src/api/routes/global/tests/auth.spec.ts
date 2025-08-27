@@ -17,14 +17,10 @@ import nock from "nock"
 import * as jwt from "jsonwebtoken"
 
 function getAuthCookie(response: Response) {
-  const cookies = response.headers["set-cookie"]
-  if (!cookies) throw new Error("No cookies found")
-  const cookieArray = Array.isArray(cookies) ? cookies : [cookies]
-  const authCookie = cookieArray.find((s: string) =>
-    s.startsWith(`${constants.Cookie.Auth}=`)
-  )
-  if (!authCookie) throw new Error("No auth cookie found")
-  return authCookie.split("=")[1].split(";")[0]
+  return response.headers["set-cookie"]
+    .find((s: string) => s.startsWith(`${constants.Cookie.Auth}=`))
+    .split("=")[1]
+    .split(";")[0]
 }
 
 const expectSetAuthCookie = (response: Response) => {
@@ -306,10 +302,9 @@ describe("/api/global/auth", () => {
         const res = await config.api.configs.getOIDCConfig(configId)
 
         expect(res.status).toBe(302)
-        const location = res.get("location")
-        expect(location).toBeDefined()
+        const location: string = res.get("location")
         expect(
-          location!.startsWith(
+          location.startsWith(
             `http://example.com/auth?response_type=code&client_id=clientId&redirect_uri=http%3A%2F%2Flocalhost%3A10000%2Fapi%2Fglobal%2Fauth%2F${config.tenantId}%2Foidc%2Fcallback&scope=openid%20profile%20email%20offline_access`
           )
         ).toBe(true)
@@ -361,7 +356,7 @@ describe("/api/global/auth", () => {
         expect(events.auth.login).toHaveBeenCalledWith("oidc", email)
         expect(events.auth.login).toHaveBeenCalledTimes(1)
         expect(res.status).toBe(302)
-        const location = res.get("location")
+        const location: string = res.get("location")
         expect(location).toBe("/")
         expectSetAuthCookie(res)
       })
