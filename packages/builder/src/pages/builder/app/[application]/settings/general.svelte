@@ -17,7 +17,7 @@
     recaptchaStore,
   } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin, licensing, featureFlags } from "@/stores/portal"
+  import { appsStore, admin, licensing } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -37,7 +37,6 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -58,13 +57,10 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>General settings</Heading>
-    <Body>Control client version, {appOrWorkspace} deployment and settings</Body
-    >
+    <Body>Control client version, workspace deployment and settings</Body>
   </Layout>
   <Divider />
-  <Heading size="S">
-    {$featureFlags.WORKSPACES ? "Workspace info" : "App info"}
-  </Heading>
+  <Heading size="S">Workspace info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider />
@@ -91,9 +87,8 @@
         size="M"
       />
       <Body size="S">
-        {$featureFlags.WORKSPACES
-          ? "You haven't published yet, so your apps and automations are not available to users"
-          : "Your app hasn't been published yet and isn't available to users"}
+        You haven't published yet, so your apps and automations are not
+        available to users
       </Body>
     </div>
     <div class="row">
@@ -117,7 +112,7 @@
       </Body>
     {:else if updateAvailable}
       <Body size="S">
-        The {appOrWorkspace} is currently using version
+        The workspace is currently using version
         <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
         <br />
@@ -137,7 +132,7 @@
       </div>
     {:else}
       <Body size="S">
-        The {appOrWorkspace} is currently using version
+        The workspace is currently using version
         <strong>{$appStore.version}</strong>.
         <br />
         You're running the latest!
@@ -162,34 +157,28 @@
   <Layout noPadding gap="XS">
     <Heading size="S">Export</Heading>
     <Body size="S">
-      Export your {appOrWorkspace} for backup or to share it with someone else
+      Export your workspace for backup or to share it with someone else
     </Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={() => exportApp({ published: false })}>
-      Export latest edited {appOrWorkspace}
+      Export latest edited workspace
     </Button>
     <Button
       secondary
       disabled={!$deploymentStore.isPublished}
       on:click={() => exportApp({ published: true })}
     >
-      Export latest published {$featureFlags.WORKSPACES ? "workspace" : "app"}
+      Export latest published workspace
     </Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
-    <Body size="S"
-      >Import an export bundle to update this {$featureFlags.WORKSPACES
-        ? "workspace"
-        : "app"}
-    </Body>
+    <Body size="S">Import an export bundle to update this workspace</Body>
   </Layout>
   <div class="row">
-    <Button secondary on:click={importModal?.show}>
-      Import {appOrWorkspace}
-    </Button>
+    <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
@@ -231,7 +220,7 @@
         ? undefined
         : "Unavailable - another user is editing this app"}
     >
-      Delete {appOrWorkspace}
+      Delete workspace
     </Button>
   </div>
 </Layout>
@@ -252,7 +241,7 @@
   okText="Unpublish"
   onOk={deploymentStore.unpublishApp}
 >
-  Are you sure you want to unpublish the {appOrWorkspace}
+  Are you sure you want to unpublish the workspace
   <b>{selectedApp?.name}</b>?
 
   <p>This will make all apps and automations in this workspace unavailable</p>
