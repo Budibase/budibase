@@ -20,6 +20,9 @@ export const EditorModes: EditorModesMap = {
   Text: {
     name: "text/html",
   },
+  HTML: {
+    name: "html",
+  },
 }
 
 const buildHelperInfoNode = (helper: Helper) => {
@@ -72,7 +75,7 @@ const buildSectionHeader = (
 
 const helpersToCompletion = (
   helpers: Record<string, Helper>,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const helperSection = buildSectionHeader("helper", "Helpers", "Code", 99)
 
@@ -99,7 +102,7 @@ const helpersToCompletion = (
 }
 
 export const getHelperCompletions = (mode: {
-  name: "javascript" | "handlebars"
+  name: "javascript" | "handlebars" | "html"
 }): BindingCompletionOption[] => {
   // TODO: manifest needs to be properly typed
   const manifest: any = getManifest()
@@ -270,6 +273,21 @@ export const hbInsert = (
   return parsedInsert
 }
 
+export const htmlInsert = (
+  value: string,
+  from: number,
+  to: number,
+  text: string
+) => {
+  const left = from ? value.substring(0, from) : ""
+  const right = to ? value.substring(to) : ""
+
+  const leftPrefix = left.includes("{{") ? "" : "{{"
+  const rightPrefix = right.includes("}}") ? "" : "}}"
+
+  return `${leftPrefix} ${text} ${rightPrefix}`
+}
+
 export function jsInsert(
   value: string,
   from: number,
@@ -309,7 +327,7 @@ const insertBinding = (
   from: number,
   to: number,
   text: string,
-  mode: { name: "javascript" | "handlebars" },
+  mode: { name: "javascript" | "handlebars" | "html" },
   type: AutocompleteType
 ) => {
   let parsedInsert
@@ -321,6 +339,8 @@ const insertBinding = (
     })
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
+  } else if (mode.name === "html") {
+    parsedInsert = htmlInsert(view.state.doc?.toString(), from, to, text)
   } else {
     console.warn("Unsupported")
     return
@@ -351,7 +371,7 @@ const insertBinding = (
 // TODO: typing in this function isn't great
 export const bindingsToCompletions = (
   bindings: any,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
   const categoryMeta = bindings?.reduce((acc: any, ele: any) => {

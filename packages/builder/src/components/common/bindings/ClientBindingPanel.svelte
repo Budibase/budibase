@@ -10,6 +10,7 @@
   export let allowHelpers = true
   export let autofocusEditor = false
   export let context = null
+  export let allowHTML = false
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -35,6 +36,7 @@
   {allowHBS}
   {allowJS}
   {allowHelpers}
+  {allowHTML}
   {autofocusEditor}
   on:change
 />

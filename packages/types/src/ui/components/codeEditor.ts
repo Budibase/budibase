@@ -14,12 +14,21 @@ interface HTMLEditorMode {
   name: "text/html"
 }
 
-export type EditorMode = JSEditorMode | HBSEditorMode | HTMLEditorMode
+interface PureHTMLEditorMode {
+  name: "html"
+}
+
+export type EditorMode =
+  | JSEditorMode
+  | HBSEditorMode
+  | HTMLEditorMode
+  | PureHTMLEditorMode
 
 type EditorModeMapBase =
   | (JSEditorMode & { key: "JS" })
   | (HBSEditorMode & { key: "Handlebars" })
   | (HTMLEditorMode & { key: "Text" })
+  | (PureHTMLEditorMode & { key: "HTML" })
 
 export type EditorModesMap = {
   [M in EditorModeMapBase as M["key"]]: Omit<M, "key">
