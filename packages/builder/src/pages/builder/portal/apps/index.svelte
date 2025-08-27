@@ -35,6 +35,8 @@
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
   import TemplatesModal from "@/components/start/TemplatesModal.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import { BannerType } from "@/constants/banners"
 
   let creationModal
   let appLimitModal
@@ -61,6 +63,8 @@
   $: if ($appCreationStore.showTemplatesModal && templatesModal) {
     templatesModal.show()
   }
+
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -264,6 +268,21 @@
   })
 </script>
 
+{#if $featureFlags.WORKSPACES}
+  <HeroBanner
+    title="Workspaces are live"
+    linkTitle="Learn about workspaces"
+    linkHref="https://budibase.com/blog/updates/workspaces/"
+    color="var(--spectrum-global-color-gray-100)"
+    image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
+    key={BannerType.PORTAL}
+  >
+    Previously, Budibase centered everything around building a single app. With
+    Workspaces, that changes. Now, you can group multiple apps, automations, and
+    data sources together within a single workspace. Existing apps now have
+    their own workspace.
+  </HeroBanner>
+{/if}
 <Page>
   <Layout noPadding gap="L">
     {#each Object.keys(automationErrors || {}) as appId}
@@ -314,7 +333,7 @@
         <Layout noPadding gap="XS">
           <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
-            {#if $featureFlags.WORKSPACE_APPS}
+            {#if $featureFlags.WORKSPACES}
               Below you'll find the list of workspaces that you have access to
             {:else}
               Below you'll find the list of apps that you have access to
@@ -334,7 +353,7 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                {#if $featureFlags.WORKSPACE_APPS}
+                {#if $featureFlags.WORKSPACES}
                   Create new workspace
                 {:else}
                   Create new app
@@ -356,39 +375,37 @@
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
-                  Import app
+                  Import {appOrWorkspace}
                 </Button>
               {/if}
             </div>
           {/if}
-          {#if $appsStore.apps.length > 1}
-            <div class="app-actions">
-              <Select
-                autoWidth
-                value={$sortBy}
-                on:change={e => {
-                  appsStore.updateSort(e.detail)
-                }}
-                placeholder={null}
-                options={[
-                  { label: "Sort by name", value: "name" },
-                  { label: "Sort by recently updated", value: "updated" },
-                  { label: "Sort by status", value: "status" },
-                ]}
-              />
-              <Search
-                placeholder="Search"
-                on:input={e => {
-                  searchTerm = e.target.value
-                }}
-                on:change={e => {
-                  if (!e.detail) {
-                    searchTerm = null
-                  }
-                }}
-              />
-            </div>
-          {/if}
+          <div class="app-actions">
+            <Select
+              autoWidth
+              value={$sortBy}
+              on:change={e => {
+                appsStore.updateSort(e.detail)
+              }}
+              placeholder={null}
+              options={[
+                { label: "Sort by name", value: "name" },
+                { label: "Sort by recently updated", value: "updated" },
+                { label: "Sort by status", value: "status" },
+              ]}
+            />
+            <Search
+              placeholder="Search"
+              on:input={e => {
+                searchTerm = e.target.value
+              }}
+              on:change={e => {
+                if (!e.detail) {
+                  searchTerm = null
+                }
+              }}
+            />
+          </div>
         </div>
 
         <div class="app-table">

@@ -20,7 +20,6 @@
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
-  import { FeatureFlag } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -92,7 +91,7 @@
 
   import { tick } from "svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
@@ -448,7 +447,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+  {#if $featureFlags.WORKSPACES}
     <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
   {/if}
   <div class="page">

@@ -24,9 +24,14 @@
     if (!color) {
       return ""
     }
+    if (!color.startsWith("rgba")) {
+      color = color.startsWith("rgb")
+        ? `${color.substring(0, color.length - 1)}, 0.2)`
+        : hexToRGBA(color, 0.2)
+    }
     let style = ""
-    style += `--accent-bg-color:${hexToRGBA(color, 0.2)};`
-    style += `--accent-border-color:${hexToRGBA(color, 0.2)};`
+    style += `--accent-bg-color:${color};`
+    style += `--accent-border-color:${color};`
     return style
   }
 </script>
@@ -87,7 +92,7 @@
     border: 0.5px solid rgba(75, 117, 255, 0.2);
     color: var(--spectrum-global-color-gray-900);
   }
-  .active:hover {
+  .active:hover:not(:disabled) {
     background-color: rgba(75, 117, 255, 0.2);
     border: 0.5px solid rgba(75, 117, 255, 0.3);
   }
@@ -102,7 +107,7 @@
     padding: 0 8px;
     border: 1px dashed transparent;
   }
-  .spectrum-ActionButton--quiet:hover {
+  .spectrum-ActionButton--quiet:hover:not(:disabled) {
     background-color: var(--spectrum-global-color-gray-200);
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
@@ -114,7 +119,7 @@
     padding: 0;
     min-width: 0;
   }
-  .noPadding:hover {
+  .noPadding:hover:not(:disabled) {
     padding: 0;
     min-width: 0;
     background-color: transparent;
@@ -145,7 +150,7 @@
     border: 1px solid var(--accent-border-color);
     background: var(--accent-bg-color);
   }
-  .accent:hover {
+  .accent:hover:not(:disabled) {
     filter: brightness(1.2);
   }
 </style>

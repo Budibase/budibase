@@ -204,8 +204,7 @@ export function newAutomation({
 export function rowActionAutomation() {
   const automation = newAutomation({
     trigger: {
-      ...automationTrigger(),
-      stepId: AutomationTriggerStepId.ROW_ACTION,
+      ...automationTrigger(TRIGGER_DEFINITIONS.ROW_ACTION),
     },
   })
   return automation

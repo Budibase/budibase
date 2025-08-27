@@ -1,5 +1,6 @@
 import { layoutStore } from "./layouts"
 import { workspaceAppStore } from "./workspaceApps"
+import { workspaceFavouriteStore } from "./workspaceFavourites"
 import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
@@ -8,6 +9,7 @@ import { screenStore, selectedScreen, sortedScreens } from "./screens"
 import { builderStore } from "./builder"
 import { hoverStore } from "./hover"
 import { previewStore } from "./preview"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 import {
   automationStore,
   selectedAutomation,
@@ -15,7 +17,6 @@ import {
   evaluationContext,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
-import { workspaceDeploymentStore } from "./workspaceDeployment"
 import { deploymentStore } from "./deployment"
 import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"
@@ -40,6 +41,7 @@ import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
+import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -86,7 +88,10 @@ export {
   workspaceAppStore,
   selectedAppUrls,
   workspaceDeploymentStore,
+  workspaceFavouriteStore,
   recaptchaStore,
+  dataEnvironmentStore,
+  dataAPI,
 }
 
 export const reset = () => {
@@ -134,6 +139,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
+  workspaceFavouriteStore.sync()
   resetBuilderHistory()
   await refreshBuilderData()
 }

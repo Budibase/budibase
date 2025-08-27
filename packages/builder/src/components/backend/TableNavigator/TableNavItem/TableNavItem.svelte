@@ -3,7 +3,9 @@
     tables as tablesStore,
     userSelectedResourceMap,
     contextMenuStore,
+    workspaceFavouriteStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import NavItem from "@/components/common/NavItem.svelte"
   import { isActive } from "@roxi/routify"
@@ -12,12 +14,18 @@
   import { Icon } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { notifications } from "@budibase/bbui"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import { WorkspaceResource } from "@budibase/types"
 
   export let table
   export let idx
 
+  const favourites = workspaceFavouriteStore.lookup
+
   let editModal
   let deleteConfirmationModal
+
+  $: favourite = table?._id ? $favourites[table?._id] : undefined
 
   const duplicateTable = async () => {
     try {
@@ -78,9 +86,26 @@
   selectedBy={$userSelectedResourceMap[table._id]}
   on:click
 >
-  {#if table._id !== TableNames.USERS}
-    <Icon s on:click={openContextMenu} hoverable name="dots-three" size="M" />
-  {/if}
+  <div class="buttons">
+    {#if $featureFlags.WORKSPACES}
+      <FavouriteResourceButton
+        favourite={favourite || {
+          resourceType: WorkspaceResource.TABLE,
+          resourceId: table._id,
+        }}
+      />
+    {/if}
+    {#if table._id !== TableNames.USERS}
+      <Icon s on:click={openContextMenu} hoverable name="dots-three" size="M" />
+    {/if}
+  </div>
 </NavItem>
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
+
+<style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+</style>
