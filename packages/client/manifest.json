@@ -5257,8 +5257,7 @@
       {
         "type": "text",
         "label": "Search Text",
-        "key": "searchText",
-        "placeholder": "Search"
+        "key": "searchText"
       },
       {
         "type": "text",
