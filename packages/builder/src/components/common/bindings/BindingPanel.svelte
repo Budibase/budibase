@@ -84,7 +84,7 @@
   $: usingJS = mode === BindingMode.JavaScript
   $: editorMode = getEditorMode(mode, allowHTML)
 
-  const getEditorMode = (mode: BindingMode, allowHTML: boolean) => {
+  const getEditorMode = (mode: BindingMode, allowHTML?: boolean) => {
     if (mode === BindingMode.JavaScript) {
       return EditorModes.JS
     }
