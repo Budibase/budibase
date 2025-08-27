@@ -12,7 +12,7 @@ export enum QuotaType {
 
 export enum StaticQuotaName {
   ROWS = "rows",
-  APPS = "apps",
+  APPS = "workspaces",
   USERS = "users",
   CREATORS = "creators",
   USER_GROUPS = "userGroups",
