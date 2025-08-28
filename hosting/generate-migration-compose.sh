@@ -88,13 +88,12 @@ extract_service() {
         if (target == "proxy-service-migration" && line ~ /- "?\${MAIN_PORT}:10000"?/) {
             gsub(/\${MAIN_PORT}/, "10001", line)
         }
-        # Skip specific sections for migration services
+        # Transform volumes for migration services
         if (target ~ /-migration$/) {
-            # Skip volumes section completely (ephemeral data)
-            if (line ~ /^[[:space:]]*volumes:/) {
-                return
-            }
-            if (line ~ /^[[:space:]]*- .*_data.*:/) {
+            # Transform volume mounts: add _migration suffix to volume names
+            if (line ~ /^[[:space:]]*- .*_data:/) {
+                gsub(/_data:/, "_data_migration:", line)
+                print line
                 return
             }
         }
@@ -339,7 +338,14 @@ fi
         if (/^volumes:/) next
         print
     }' "$INPUT_FILE"
-    # Migration services don't persist data - no migration volumes needed
+    
+    # Add migration volumes
+    echo "  couchdb3_data_migration:"
+    echo "    driver: local"
+    echo "  minio_data_migration:"
+    echo "    driver: local" 
+    echo "  redis_data_migration:"
+    echo "    driver: local"
     
 } > "${INPUT_FILE}.tmp" && mv "${INPUT_FILE}.tmp" "$INPUT_FILE"
 
