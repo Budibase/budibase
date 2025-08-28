@@ -4,6 +4,7 @@
     EdgeLabelRenderer,
     BaseEdge,
     getStraightPath,
+    type Position,
   } from "@xyflow/svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import FlowItemActions from "./FlowItemActions.svelte"
@@ -11,61 +12,73 @@
   import { ActionButton } from "@budibase/bbui"
   import { ActionStepID } from "@/constants/backend/automations"
   import { ViewMode } from "@/types/automations"
+  import { type LayoutDirection } from "@budibase/types"
   import { getContext } from "svelte"
 
-  export let target: string | undefined = undefined
+  export let data: any = undefined
+  export let sourceX: number
+  export let sourceY: number
+  export let targetX: number
+  export let targetY: number
+  export let sourcePosition: Position
+  export let targetPosition: Position
+  export let target: string
 
-  $: viewMode = $$props.data.viewMode
-  $: block = $$props.data?.block
-  $: direction = ($$props.data?.direction || "TB") as "TB" | "LR"
+  // Edge data
+  $: viewMode = data?.viewMode as ViewMode
+  $: block = data?.block
+  $: direction = (data?.direction || "TB") as LayoutDirection
+  $: passedPathTo = data?.pathTo as any[] | undefined
   $: automation = $selectedAutomation?.data
 
-  // DnD view store (used to know when to show dropzones)
   const view: any = getContext("draggableView")
 
-  // full path to compute label position
   $: basePath = getSmoothStepPath({
-    ...(($$props as any) || {}),
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
     borderRadius: 12,
   })
   $: labelX = basePath[1]
   $: labelY = basePath[2]
 
-  $: edgeTarget = target ?? $$props.target
-  $: isBranchTarget = edgeTarget?.startsWith("branch-")
-  $: path = edgeTarget.startsWith("anchor-")
+  $: isBranchTarget = target?.startsWith("branch-")
+  $: isAnchorTarget = target?.startsWith("anchor-")
+  $: path = isAnchorTarget
     ? getStraightPath({
-        ...(($$props as any) || {}),
-        borderRadius: 12,
+        sourceX,
+        sourceY,
         targetX: labelX,
         targetY: labelY,
       })
     : basePath
 
-  // The path to the source step for this edge. For normal edges, look up by
-  // block id; for branch entry edges we carry a synthetic branch block ref with
-  // a `pathTo` we can use directly.
-  $: blockRefs = $selectedAutomation?.blockRefs?.[block?.id]
-  $: sourcePathForDrop =
-    block && (block as any).pathTo ? (block as any).pathTo : blockRefs?.pathTo
+  $: blockRef = $selectedAutomation?.blockRefs?.[block?.id]
+  $: sourcePathForDrop = passedPathTo
+    ? passedPathTo
+    : block && (block as any).pathTo
+      ? (block as any).pathTo
+      : blockRef?.pathTo
   $: pathSteps =
-    blockRefs && automation
-      ? automationStore.actions.getPathSteps(blockRefs.pathTo, automation)
+    blockRef && $selectedAutomation?.data
+      ? automationStore.actions.getPathSteps(
+          blockRef.pathTo,
+          $selectedAutomation?.data
+        )
       : []
 
   $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
-  // When a collect step exists in the path, no further blocks are allowed.
-  // In editor mode we should not render the visual edge in this case.
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
-  $: isPrimaryBranchEdge =
-    $$props.data?.isBranchEdge && $$props.data?.isPrimaryEdge
+  $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
 
-  // Show action buttons only when not dragging
   $: showEdgeActions =
     viewMode === ViewMode.EDITOR && !isBranchTarget && !$view?.dragging
-  // Show the dropzone when dragging over a normal edge
+
   $: showEdgeDrop =
     viewMode === ViewMode.EDITOR && !isBranchTarget && $view?.dragging
 
@@ -75,24 +88,40 @@
     isPrimaryBranchEdge &&
     !$view?.dragging
 
-  // Show a dropzone before branch fan-out when dragging
   $: showPreBranchDrop =
     viewMode === ViewMode.EDITOR &&
     isBranchTarget &&
     isPrimaryBranchEdge &&
     $view?.dragging
 
-  // Place pre-branch controls/dropzone centred between source and branch row
-  // depending on layout direction. For TB we keep it vertically centred under
-  // the source; for LR we centre horizontally and align to the source Y.
+  // For TB we keep it vertically centered under the source;
+  // for LR we center horizontally and align to the source Y.
   $: preBranchLabelX =
     direction === "LR"
-      ? Math.round((($$props.sourceX ?? 0) + ($$props.targetX ?? 0)) / 2)
-      : ($$props.sourceX ?? 0)
+      ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+      : (sourceX ?? 0)
   $: preBranchLabelY =
     direction === "LR"
-      ? ($$props.sourceY ?? 0)
-      : Math.round((($$props.sourceY ?? 0) + ($$props.targetY ?? 0)) / 2 - 20)
+      ? (sourceY ?? 0)
+      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2 - 20)
+
+  const handleBranch = () => {
+    const explicitTargetRef =
+      isBranchTarget && data?.branchStepId
+        ? $selectedAutomation?.blockRefs?.[data.branchStepId]
+        : null
+    const targetPath = explicitTargetRef?.pathTo || blockRef?.pathTo
+    if (targetPath && automation) {
+      automationStore.actions.branchAutomation(targetPath, automation)
+    }
+  }
+
+  const handleAddBranch = () => {
+    const targetRef = $selectedAutomation?.blockRefs?.[data.branchStepId]
+    if (targetRef && automation) {
+      automationStore.actions.branchAutomation(targetRef.pathTo, automation)
+    }
+  }
 </script>
 
 {#if !hideEdge}
@@ -115,19 +144,7 @@
           on:mousedown|stopPropagation
           on:click|stopPropagation
         >
-          <FlowItemActions
-            {block}
-            on:branch={() => {
-              const explicitTargetRef =
-                isBranchTarget && $$props.data?.branchStepId
-                  ? $selectedAutomation?.blockRefs?.[$$props.data.branchStepId]
-                  : null
-              const targetPath = explicitTargetRef?.pathTo || blockRefs?.pathTo
-              if (targetPath && automation) {
-                automationStore.actions.branchAutomation(targetPath, automation)
-              }
-            }}
-          />
+          <FlowItemActions {block} on:branch={handleBranch} />
         </div>
       {/if}
     {/if}
@@ -148,21 +165,12 @@
         <FlowItemActions {block} hideBranch />
 
         {#if isPrimaryBranchEdge}
-          {#if $selectedAutomation?.blockRefs?.[$$props.data?.branchStepId]}
+          {#if $selectedAutomation?.blockRefs?.[data?.branchStepId]}
             <div class="branch-controls">
               <ActionButton
                 icon="plus-circle"
                 disabled={viewMode === ViewMode.LOGS}
-                on:click={() => {
-                  const targetRef =
-                    $selectedAutomation.blockRefs[$$props.data.branchStepId]
-                  if (targetRef && automation) {
-                    automationStore.actions.branchAutomation(
-                      targetRef.pathTo,
-                      automation
-                    )
-                  }
-                }}
+                on:click={handleAddBranch}
               >
                 Add branch
               </ActionButton>

@@ -336,6 +336,9 @@ export const renderChain = (
         block: lastNodeBlock,
         viewMode: deps.viewMode,
         direction: deps.direction,
+        pathTo:
+          (lastNodeBlock as any)?.pathTo ||
+          deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
       },
     })
 
@@ -399,6 +402,7 @@ export const renderBranches = (
         branchIdx: bIdx,
         branchesCount: branches.length,
         direction: deps.direction,
+        pathTo: deps.blockRefs?.[(sourceBlock as any)?.id]?.pathTo,
       },
     })
 
@@ -452,6 +456,9 @@ export const renderBranches = (
           block: lastNodeBlock,
           viewMode: deps.viewMode,
           direction: deps.direction,
+          pathTo:
+            (lastNodeBlock as any)?.pathTo ||
+            deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
         },
       })
     }

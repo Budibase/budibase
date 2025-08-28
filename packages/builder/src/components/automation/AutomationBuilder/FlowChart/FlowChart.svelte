@@ -43,7 +43,7 @@
   import { createFlowChartDnD } from "./FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
-  import EdgeWrapper from "./EdgeWrapper.svelte"
+  import CustomEdge from "./CustomEdge.svelte"
   import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
   import AnchorNode from "./AnchorNode.svelte"
 
@@ -71,7 +71,7 @@
     "anchor-node": AnchorNode as any,
   }
   const edgeTypes: EdgeTypes = {
-    "add-item": EdgeWrapper,
+    "add-item": CustomEdge as any,
   }
 
   let testDataModal: Modal
@@ -225,6 +225,7 @@
             block: blocks[idx - 1],
             viewMode: currentViewMode,
             direction,
+            pathTo: blockRefs?.[prevId]?.pathTo,
           },
         })
       }
@@ -248,7 +249,12 @@
           type: "add-item",
           source: baseId,
           target: terminalId,
-          data: { block, viewMode: currentViewMode, direction },
+          data: {
+            block,
+            viewMode: currentViewMode,
+            direction,
+            pathTo: blockRefs?.[baseId]?.pathTo,
+          },
         })
       }
 
