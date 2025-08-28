@@ -40,10 +40,6 @@
       label: "Show component",
       value: "show",
     },
-    {
-      label: "Update setting",
-      value: "update",
-    },
   ]
   const valueTypeOptions = [
     {
