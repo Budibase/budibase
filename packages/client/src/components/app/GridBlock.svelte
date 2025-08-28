@@ -185,11 +185,6 @@
 
   const enrichConditions = (conditions, context) => {
     return conditions?.map(condition => {
-      console.log("NEW VAL ??? ", condition.newValue)
-      console.log(
-        "PROCESSED NEW VAL ??? ",
-        processStringSync(condition.newValue || "", context)
-      )
       return {
         ...condition,
         referenceValue: processStringSync(
@@ -213,16 +208,18 @@
       return null
     }
     return buttons.map(settings => {
-      // Create a fake, ephemeral context to run the buttons actions/conditions with
       const id = get(component).id
-      const gridContext = createContextStore(context)
       return {
         size: "M",
         text: settings.text,
         type: settings.type,
         icon: settings.icon,
-        conditions: settings.conditions, // Pass raw conditions for per-row evaluation
+        getRowConditions: row =>
+          enrichConditions(settings.conditions, { [id]: row }),
+        conditions: settings.conditions,
         onClick: async row => {
+          // Create a fake, ephemeral context to run the buttons actions/conditions with
+          const gridContext = createContextStore(context)
           gridContext.actions.provideData(id, row)
           const fn = enrichButtonActions(settings.onClick, get(gridContext))
           return await fn?.({ row })

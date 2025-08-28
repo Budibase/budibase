@@ -75,7 +75,7 @@ export const initialise = (context: StoreContext) => {
     let newMetadata: Record<string, any> = {}
     if ($conditions?.length) {
       for (let row of get(rows)) {
-        newMetadata[row._id] = evaluateConditions(row, $conditions)
+        newMetadata[row._id] = evaluateConditions(row, $conditions, context)
       }
     }
     metadata.set(newMetadata)
@@ -103,7 +103,7 @@ export const initialise = (context: StoreContext) => {
         continue
       }
 
-      $metadata[row._id] = evaluateConditions(row, $conditions)
+      $metadata[row._id] = evaluateConditions(row, $conditions, context)
     }
     if (Object.keys(metadataUpdates).length) {
       metadata.update(state => ({
@@ -135,7 +135,11 @@ const TypeCoercionMap: Partial<Record<FieldType, (val: string) => any>> = {
 
 // Evaluates an array of cell conditions against a certain row and returns the
 // resultant metadata
-const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
+const evaluateConditions = (
+  row: UIRow,
+  conditions: UICondition[],
+  context: StoreContext
+) => {
   const metadata: {
     version?: string
     row: Record<string, string>
@@ -147,7 +151,32 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
     cell: {},
     button: {},
   }
-  for (let condition of conditions) {
+
+  // Get dynamic button conditions
+  const { props } = context
+  const $props = get(props)
+  let allConditions = [...conditions]
+
+  // Add dynamic button conditions from getRowConditions
+  if ($props.buttons) {
+    for (let button of $props.buttons) {
+      if (button.getRowConditions) {
+        const dynamicConditions = button.getRowConditions(row) || []
+        for (let condition of dynamicConditions) {
+          allConditions.push({
+            ...(condition as UICondition),
+            target: "button",
+            buttonIndex: $props.buttons.indexOf(button),
+            type: FieldType.STRING, // Default type for button conditions
+          })
+        }
+      }
+    }
+  }
+  console.log("CONDTIONS ?? ", conditions)
+  console.log("ALL CONDTIONS ?? ", allConditions)
+
+  for (let condition of allConditions) {
     try {
       let {
         column,
