@@ -266,7 +266,7 @@ export const dagreLayoutAutomation = (
     const width = dims.width
     const height = dims.height
     // Default handle positions based on rank direction
-    if (rankdir === "LR" || rankdir === "RL") {
+    if (rankdir === "LR") {
       node.targetPosition = Position.Left
       node.sourcePosition = Position.Right
     } else {
