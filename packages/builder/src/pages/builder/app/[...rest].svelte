@@ -4,9 +4,9 @@
 
   onMount(() => {
     const restPath = $params.rest || ""
-    const workspacesPath = `/builder/portal/workspaces/${restPath}`
+    const workspacesPath = `/builder/workspace/${restPath}`
     $redirect(workspacesPath)
   })
 </script>
 
-<!-- Catch-all redirect from /builder/portal/apps/* to /builder/portal/workspaces/* -->
+<!-- Catch-all redirect from /builder/app/* to /builder/workspace/* -->

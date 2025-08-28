@@ -3,6 +3,6 @@
   import { onMount } from "svelte"
 
   onMount(() => {
-    $redirect("/builder/portal/workspaces")
+    $redirect("/builder/workspace")
   })
 </script>
