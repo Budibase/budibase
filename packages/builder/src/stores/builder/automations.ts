@@ -1563,20 +1563,17 @@ const automationActions = (store: AutomationStore) => ({
         return state
       })
     } else {
-      const index = get(store.store).automations.findIndex(
-        x => x._id === automation._id
-      )
-      if (index === -1) {
-        store.store.update(state => ({
-          ...state,
-          automations: [...state.automations, automation],
-        }))
-      } else {
-        store.store.update(state => {
+      store.store.update(state => {
+        const index = state.automations.findIndex(
+          x => x._id === automation._id
+        )
+        if (index === -1) {
+          state.automations.push(automation)
+        } else {
           state.automations[index] = automation
-          return state
-        })
-      }
+        }
+        return state
+      })
     }
   },
 
