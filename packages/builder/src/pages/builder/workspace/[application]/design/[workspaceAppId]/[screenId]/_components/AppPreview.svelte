@@ -272,7 +272,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    src="/workspace/preview"
+    src="/app/preview"
     class:hidden={loading || error}
   />
   <div class="underlay" />
