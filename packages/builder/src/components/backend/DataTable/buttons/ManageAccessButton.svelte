@@ -12,7 +12,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { PermissionSource } from "@budibase/types"
   import { capitalise } from "@/helpers"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { Roles } from "@/constants/backend"
 
   export let resourceId

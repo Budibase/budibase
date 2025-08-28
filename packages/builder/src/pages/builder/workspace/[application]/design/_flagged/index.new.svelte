@@ -26,7 +26,7 @@
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
+  import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import { capitalise, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
