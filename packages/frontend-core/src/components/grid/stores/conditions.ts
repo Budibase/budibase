@@ -1,5 +1,5 @@
 import { writable, get, derived, Writable, Readable } from "svelte/store"
-import { derivedMemo, QueryUtils } from "../../../utils"
+import { QueryUtils } from "../../../utils"
 import {
   FieldType,
   EmptyFilterOption,
@@ -33,7 +33,7 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
   // only recompute condition metadata when absolutely necessary
   const conditions = derived([columns, props], ([$columns, $props]) => {
     let newConditions: UICondition[] = []
-    
+
     // Add column conditions
     for (let column of $columns) {
       for (let condition of column.conditions || []) {
@@ -44,7 +44,7 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
         })
       }
     }
-    
+
     // Add button conditions
     if ($props.buttons) {
       for (let button of $props.buttons) {
@@ -58,7 +58,7 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
         }
       }
     }
-    
+
     return newConditions
   })
 
@@ -163,7 +163,7 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
         setting,
         settingValue,
       } = condition
-      
+
       let value
       if (target === "button") {
         // For button conditions, use newValue directly
@@ -201,11 +201,10 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
       const result = QueryUtils.runQuery([{ value }], query)
       if (result.length > 0) {
         if (target === "button" && typeof buttonIndex === "number") {
-          // Handle button-specific conditions
           if (!metadata.button[buttonIndex]) {
             metadata.button[buttonIndex] = {}
           }
-          
+
           if (action === "hide") {
             metadata.button[buttonIndex].hidden = true
           } else if (action === "update" && setting) {
