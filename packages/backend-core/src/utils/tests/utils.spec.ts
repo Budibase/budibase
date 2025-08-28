@@ -214,7 +214,7 @@ describe("utils", () => {
     })
 
     it("returns false if current path doesn't have '/' suffix", async () => {
-      ctx.path = "/builder/app"
+      ctx.path = "/builder/workspace"
       expectResult(false)
 
       ctx.path = "/xx"
