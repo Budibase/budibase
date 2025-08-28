@@ -704,7 +704,12 @@
         "showInBar": true,
         "barIcon": "VisibilityOff",
         "barTitle": "Quiet variant",
-        "barSeparator": false
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "type",
+          "value": "cta",
+          "invert": true
+        }
       },
       {
         "type": "boolean",
