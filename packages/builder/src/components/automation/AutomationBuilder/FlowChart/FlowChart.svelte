@@ -107,7 +107,7 @@
 
       let zoom = rect.width / (widthWithPadding || rect.width)
       if (zoom > 1) zoom = 0.8
-      if (zoom < 0.1) zoom = 0.5
+      if (zoom < 0.01) zoom = 0.01 // Allow much smaller zoom for large graphs
 
       const x = rect.width / 2 - (bounds.x + bounds.width / 2) * zoom
       const y =
@@ -480,6 +480,8 @@
         {edgeTypes}
         colorMode="dark"
         nodesDraggable={false}
+        minZoom={0.01}
+        maxZoom={4}
       >
         <FlowControls
           historyStore={automationHistoryStore}
