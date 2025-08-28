@@ -37,8 +37,8 @@
   <Button secondary on:click={() => flow.fitView()}>Auto layout</Button>
 
   <Switcher
-    leftText="TB"
-    rightText="LR"
+    leftText="Vertical"
+    rightText="Horizontal"
     selected={layoutDirection === "LR" ? "right" : "left"}
     on:left={() => setDirection("TB")}
     on:right={() => setDirection("LR")}
