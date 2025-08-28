@@ -229,7 +229,7 @@
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <a href={$url("/builder/portal/apps")}>
+      <a href={$url("/builder/portal/workspaces")}>
         <img src={BBLogo} alt="Budibase logo" />
       </a>
       <div class="nav_title">
