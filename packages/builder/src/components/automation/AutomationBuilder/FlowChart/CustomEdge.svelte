@@ -28,7 +28,7 @@
   $: viewMode = data?.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection
-  $: passedPathTo = data?.pathTo as any[] | undefined
+  $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
 
   const view: any = getContext("draggableView")
@@ -59,8 +59,8 @@
   $: blockRef = $selectedAutomation?.blockRefs?.[block?.id]
   $: sourcePathForDrop = passedPathTo
     ? passedPathTo
-    : block && (block as any).pathTo
-      ? (block as any).pathTo
+    : block && block.pathTo
+      ? block.pathTo
       : blockRef?.pathTo
   $: pathSteps =
     blockRef && $selectedAutomation?.data
