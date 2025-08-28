@@ -188,7 +188,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <Drawer
   bind:this={drawer}
-  title="{componentInstance.field} conditions"
+  title="{componentInstance.text} conditions"
   on:drawerShow
   on:drawerHide
 >
