@@ -18,7 +18,7 @@ const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREVIEW_PATH = "/app/preview"
 const BUILDER_PREFIX = "/builder"
-const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
+const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/workspace/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
 export async function resolveAppUrl(ctx: Ctx) {
