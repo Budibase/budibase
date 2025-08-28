@@ -6,6 +6,7 @@
   auth.checkQueryString()
 
   $: {
+    debugger
     if (sdk.users.hasBuilderPermissions($auth.user)) {
       $redirect(`./portal`)
     } else if ($auth.user) {
