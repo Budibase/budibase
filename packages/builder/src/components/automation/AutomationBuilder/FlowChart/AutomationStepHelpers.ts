@@ -332,6 +332,7 @@ export const renderChain = (
       type: "add-item",
       source: lastNodeId,
       target: step.id,
+      animated: true,
       data: {
         block: lastNodeBlock,
         viewMode: deps.viewMode,

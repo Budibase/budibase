@@ -19,7 +19,7 @@
 <style>
   .anchor {
     width: 320px;
-    height: 320px;
+    height: 1px;
     opacity: 0;
     pointer-events: none;
   }

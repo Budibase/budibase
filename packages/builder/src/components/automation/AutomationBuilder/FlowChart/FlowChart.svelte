@@ -17,6 +17,7 @@
     AutomationActionStepId,
     type UIAutomation,
     type AutomationStep,
+    type LayoutDirection,
   } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
   import {
@@ -35,7 +36,7 @@
     dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
-  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
+
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -48,18 +49,17 @@
 
   import {
     SvelteFlow,
-    Controls,
     Background,
     BackgroundVariant,
     MiniMap,
     useSvelteFlow,
-    getNodesBounds,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
+  import FlowControls from "./Controls.svelte"
 
   export let automation: UIAutomation
 
@@ -76,21 +76,20 @@
 
   let testDataModal: Modal
   let confirmDeleteDialog
-  let scrolling = false
   let blockRefs: Record<string, any> = {}
   let prodErrors: number
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
-  let layoutDirection: "TB" | "LR" = "TB"
+
+  let scrolling = false
+  let initialViewportApplied = false
+  let isApplyingViewport = false
+  let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  const { getViewport, setViewport } = useSvelteFlow()
-
-  // Track and apply a custom "fit to top" viewport once after each graph build
-  let initialViewportApplied = false
-  let isApplyingViewport = false
+  const { getViewport, setViewport, getNodesBounds } = useSvelteFlow()
 
   const fitViewportTop = async () => {
     if (isApplyingViewport) return
@@ -106,13 +105,15 @@
       const padding = 40
       const widthWithPadding = bounds.width + padding * 2
 
-      // Fit horizontally (respect reasonable zoom bounds); keep top aligned vertically
       let zoom = rect.width / (widthWithPadding || rect.width)
       if (zoom > 1) zoom = 0.8
       if (zoom < 0.1) zoom = 0.5
 
       const x = rect.width / 2 - (bounds.x + bounds.width / 2) * zoom
-      const y = padding - bounds.y * zoom
+      const y =
+        layoutDirection === "LR"
+          ? rect.height / 2 - (bounds.y + bounds.height / 2) * zoom
+          : padding - bounds.y * zoom
 
       setViewport({ x, y, zoom })
       initialViewportApplied = true
@@ -158,11 +159,11 @@
 
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
-  function updateGraph(
-    blocks: AutomationStep[],
-    currentViewMode: ViewMode,
-    direction: "TB" | "LR"
-  ) {
+  const updateGraph = async (
+    blocks: any,
+    currentViewMode: any,
+    direction: LayoutDirection
+  ) => {
     initialViewportApplied = false
     const xSpacing = 300
     const ySpacing = 340
@@ -187,7 +188,8 @@
     }
 
     // Build linear chain of top-level steps first
-    blocks.forEach((block, idx) => {
+    blocks.forEach((block: AutomationStep, idx: number) => {
+      const isTrigger = idx === 0
       const baseId = block.id
       const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
 
@@ -208,7 +210,7 @@
         })
       }
 
-      if (idx > 0 && !isBranchStep) {
+      if (!isTrigger && !isBranchStep) {
         const prevId = blocks[idx - 1].id
         newEdges.push({
           id: `edge-${prevId}-${baseId}`,
@@ -248,8 +250,8 @@
 
       // Branch fan-out
       if (isBranchStep) {
-        const sourceForBranches = idx > 0 ? blocks[idx - 1].id : baseId
-        const sourceBlock = idx > 0 ? blocks[idx - 1] : block
+        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
+        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
         renderBranches(
           block,
           sourceForBranches,
@@ -300,6 +302,46 @@
     }
   }
 
+  const saveDirectionChange = async (direction: LayoutDirection) => {
+    layoutDirection = direction
+    try {
+      await automationStore.actions.save({
+        ...automation,
+        layoutDirection,
+      })
+    } catch (error) {
+      notifications.error("Unable to save layout direction")
+    }
+  }
+
+  const toggleLogsPanel = () => {
+    if ($automationStore.showLogsPanel) {
+      automationStore.actions.closeLogsPanel()
+      viewMode = ViewMode.EDITOR
+    } else {
+      automationStore.actions.openLogsPanel()
+      automationStore.actions.closeLogPanel()
+      viewMode = ViewMode.LOGS
+      // Clear editor selection when switching to logs mode
+      automationStore.actions.selectNode(undefined)
+    }
+  }
+
+  const closeAllPanels = () => {
+    automationStore.actions.closeLogsPanel()
+    automationStore.actions.closeLogPanel()
+    viewMode = ViewMode.EDITOR
+  }
+
+  const handleToggleChange = async () => {
+    try {
+      changingStatus = true
+      await automationStore.actions.toggleDisabled(automation._id!)
+    } finally {
+      changingStatus = false
+    }
+  }
+
   onMount(async () => {
     try {
       await automationStore.actions.initAppSelf()
@@ -320,34 +362,6 @@
   onDestroy(() => {
     dnd.destroyDnD()
   })
-
-  function toggleLogsPanel() {
-    if ($automationStore.showLogsPanel) {
-      automationStore.actions.closeLogsPanel()
-      viewMode = ViewMode.EDITOR
-    } else {
-      automationStore.actions.openLogsPanel()
-      automationStore.actions.closeLogPanel()
-      viewMode = ViewMode.LOGS
-      // Clear editor selection when switching to logs mode
-      automationStore.actions.selectNode(undefined)
-    }
-  }
-
-  function closeAllPanels() {
-    automationStore.actions.closeLogsPanel()
-    automationStore.actions.closeLogPanel()
-    viewMode = ViewMode.EDITOR
-  }
-
-  async function handleToggleChange() {
-    try {
-      changingStatus = true
-      await automationStore.actions.toggleDisabled(automation._id!)
-    } finally {
-      changingStatus = false
-    }
-  }
 </script>
 
 <div class="automation-heading">
@@ -467,24 +481,14 @@
         colorMode="dark"
         nodesDraggable={false}
       >
-        <Controls showLock={false} orientation={"horizontal"} />
+        <FlowControls
+          historyStore={automationHistoryStore}
+          {layoutDirection}
+          onChangeDirection={saveDirectionChange}
+        />
         <Background variant={BackgroundVariant.Dots} gap={25} />
         <MiniMap />
       </SvelteFlow>
-    </div>
-    <div class="canvas-footer-left">
-      <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-      <div class="layout-toggle">
-        <Switcher
-          leftText="TB"
-          rightText="LR"
-          selected={layoutDirection === "LR" ? "right" : "left"}
-          on:left={() => (layoutDirection = "TB")}
-          on:right={() => (layoutDirection = "LR")}
-          leftIcon="arrow-down"
-          rightIcon="arrow-right"
-        />
-      </div>
     </div>
   </div>
 </div>
@@ -579,18 +583,6 @@
     align-items: center;
   }
 
-  .canvas-footer-left {
-    position: absolute;
-    left: 110px;
-    bottom: 12px;
-    display: flex;
-    gap: var(--spacing-l);
-  }
-
-  .canvas-footer-left :global(div) {
-    border-right: none;
-  }
-
   .root {
     height: 100%;
     width: 100%;
@@ -627,10 +619,6 @@
 
   .canvas-controls > * {
     pointer-events: auto;
-  }
-
-  .layout-toggle {
-    margin-left: auto;
   }
 
   .toggle-active :global(.spectrum-Switch-label) {
