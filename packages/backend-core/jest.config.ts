@@ -1,6 +1,6 @@
-import { Config } from "@jest/types"
+import { Config } from "jest"
 
-const baseConfig: Config.InitialProjectOptions = {
+const baseConfig: Config = {
   setupFiles: ["./tests/jestEnv.ts"],
   globalSetup: "./../../globalSetup.ts",
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
@@ -13,19 +13,8 @@ const baseConfig: Config.InitialProjectOptions = {
   },
 }
 
-const config: Config.InitialOptions = {
-  projects: [
-    {
-      ...baseConfig,
-      displayName: "sequential test",
-      testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
-      runner: "jest-serial-runner",
-    },
-    {
-      ...baseConfig,
-      testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
-    },
-  ],
+const config: Config = {
+  ...baseConfig,
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
 }

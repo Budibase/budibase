@@ -61,7 +61,7 @@
             ? "var(--spectrum-global-color-gray-600)"
             : "var(--spectrum-global-color-green-600)"}
           title={automation.name}
-          url={`/builder/app/${$appStore.appId}/automation/${automation._id}`}
+          url={`/builder/workspace/${$appStore.appId}/automation/${automation._id}`}
           showArrow
         />
       {/each}

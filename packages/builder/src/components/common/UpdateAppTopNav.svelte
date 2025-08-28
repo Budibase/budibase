@@ -9,7 +9,7 @@
 <div
   class="app-heading"
   on:click={() => {
-    $goto(`/builder/app/${$appStore.appId}/settings/general`)
+    $goto(`/builder/workspace/${$appStore.appId}/settings/general`)
   }}
 >
   <slot />

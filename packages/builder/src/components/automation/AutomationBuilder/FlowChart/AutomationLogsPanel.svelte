@@ -13,7 +13,7 @@
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
-  import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+  import StatusRenderer from "@/pages/builder/workspace/[application]/settings/automations/_components/StatusRenderer.svelte"
 
   export let automation
   export let onSelectLog = () => {}

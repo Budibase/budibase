@@ -203,11 +203,11 @@
       // Focus on the main component for the screen type
       const mainComponent = screen.props?._children?.[0]._id
       $goto(
-        `/builder/app/${$appStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
+        `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
       )
     } else {
       $goto(
-        `/builder/app/${$appStore.appId}/design/${workspaceAppId}/${screen._id}`
+        `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}`
       )
     }
 

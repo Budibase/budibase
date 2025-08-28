@@ -35,7 +35,7 @@ export const menu: Readable<MenuItem[]> = derived(
     let menu: MenuItem[] = [
       {
         title: $featureFlags.WORKSPACES ? "Workspaces" : "Apps",
-        href: "/builder/portal/apps",
+        href: "/builder/portal/workspaces",
       },
     ]
     if (isGlobalBuilder) {

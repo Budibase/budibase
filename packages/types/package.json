@@ -12,7 +12,6 @@
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
-  "jest": {},
   "devDependencies": {
     "@budibase/nano": "10.1.5",
     "@types/json-schema": "^7.0.15",
@@ -21,7 +20,6 @@
     "@types/redlock": "4.0.7",
     "koa-useragent": "^4.1.0",
     "rimraf": "3.0.2",
-    "typescript": "5.7.2",
     "zod": "^3.23.8"
   },
   "dependencies": {

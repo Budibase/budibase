@@ -323,7 +323,7 @@ export async function fetchAppPackage(
       ? new URL(ctx.headers.referer).pathname
       : ""
 
-    const [matchedWorkspaceApp] =
+    const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
 
     // disabled workspace apps should appear to not exist

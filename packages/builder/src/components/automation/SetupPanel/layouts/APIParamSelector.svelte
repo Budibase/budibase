@@ -112,7 +112,7 @@
       icon="Add"
       disabled={!queryDataSource?._id}
       on:click={() => {
-        $goto(`/builder/app/:application/data/query/new/:id`, {
+        $goto(`/builder/workspace/:application/data/query/new/:id`, {
           application: $params.application,
           id: queryDataSource?._id,
         })

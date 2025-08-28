@@ -64,7 +64,7 @@
         {#each appScreens as screen}
           <ListItem
             title={screen.url}
-            url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
+            url={`/builder/workspace/${$appStore.appId}/design/${screen._id}`}
             showArrow
           />
         {/each}

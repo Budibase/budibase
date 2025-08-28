@@ -98,7 +98,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateAppID()
       ctx.request.headers = {
-        referer: `http://example.com/builder/app/${expected}/design/screen_123/screens`,
+        referer: `http://example.com/builder/workspace/${expected}/design/screen_123/screens`,
       }
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -209,12 +209,12 @@ describe("utils", () => {
     })
 
     it("returns true if current path is in builder", async () => {
-      ctx.path = "/builder/app/app_"
+      ctx.path = "/builder/workspace/app_"
       expectResult(true)
     })
 
     it("returns false if current path doesn't have '/' suffix", async () => {
-      ctx.path = "/builder/app"
+      ctx.path = "/builder/workspace"
       expectResult(false)
 
       ctx.path = "/xx"

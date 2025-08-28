@@ -68,7 +68,7 @@
     />
   </FancyForm>
   {#if url}
-    <p><span class="host">{window.location.origin}/app/</span>{url}</p>
+    <p><span class="host">{window.location.origin}/workspace/</span>{url}</p>
   {:else}
     <p>‎</p>
   {/if}

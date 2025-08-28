@@ -29,7 +29,9 @@ export class ApplicationAPI {
     const form = new FormData()
 
     // Create a Blob from the buffer with the correct type
-    const blob = new Blob([fileBuffer], { type: "application/gzip" })
+    const blob = new Blob([new Uint8Array(fileBuffer)], {
+      type: "application/gzip",
+    })
 
     // Append the file
     form.append("fileToImport", blob, filename)

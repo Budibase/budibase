@@ -1,4 +1,4 @@
-import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
+import { SourceOption } from "@/pages/builder/workspace/[application]/design/_components/NewScreen/utils"
 import { Screen, UIPermissions } from "@budibase/types"
 import inline from "./inline"
 import modal from "./modal"

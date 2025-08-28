@@ -35,12 +35,12 @@
 
   function addBasicConfiguration() {
     $goto(
-      `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
+      `/builder/workspace/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
     )
   }
 
   function addOAuth2Configuration() {
-    $goto(`/builder/app/${$appStore.appId}/settings/oauth2`)
+    $goto(`/builder/workspace/${$appStore.appId}/settings/oauth2`)
   }
 
   function selectConfiguration(id: string, type?: RestAuthType) {

@@ -1,7 +1,7 @@
-import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
 import env from "../../../environment"
+import { newTool } from ".."
 
 export class BambooHRClient {
   private apiKey: string

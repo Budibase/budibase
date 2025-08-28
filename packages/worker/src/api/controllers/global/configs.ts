@@ -673,7 +673,7 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
           apps: {
             checked: apps.length > 0,
             label: "Create your first app",
-            link: "/builder/portal/apps",
+            link: "/builder/portal/workspaces",
           },
           smtp: {
             checked: !!smtpConfig,

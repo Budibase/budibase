@@ -85,7 +85,10 @@
   <div class="top-nav">
     {#if $appStore.initialised}
       <div class="topleftnav">
-        <a href={$url("../../portal/apps")} class="linkWrapper back-to-apps">
+        <a
+          href={$url("../../portal/workspaces")}
+          class="linkWrapper back-to-apps"
+        >
           <Icon size="S" hoverable name="arrow-left" />
         </a>
         <Tabs {selected} size="M">

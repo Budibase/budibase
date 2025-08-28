@@ -40,7 +40,7 @@ describe("workspaceApps utils", () => {
     closingChar => {
       it("should be able to get the base workspaceApp", async () => {
         await config.doInContext(config.getAppId(), async () => {
-          const [result] = await getMatchedWorkspaceApp(
+          const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}${closingChar}`
           )
           expect(result).toBeDefined()
@@ -50,7 +50,7 @@ describe("workspaceApps utils", () => {
 
       it("should be able to get the a workspaceApp by its path", async () => {
         await config.doInContext(config.getAppId(), async () => {
-          const [result] = await getMatchedWorkspaceApp(
+          const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}/app${closingChar}`
           )
           expect(result).toBeDefined()
@@ -60,7 +60,7 @@ describe("workspaceApps utils", () => {
 
       it("should be able to get the a workspaceApp by its path for overlapping urls", async () => {
         await config.doInContext(config.getAppId(), async () => {
-          const [result] = await getMatchedWorkspaceApp(
+          const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}/app2${closingChar}`
           )
           expect(result).toBeDefined()
@@ -70,7 +70,7 @@ describe("workspaceApps utils", () => {
 
       it("should return undefined for partial matching paths", async () => {
         await config.doInContext(config.getAppId(), async () => {
-          const [result] = await getMatchedWorkspaceApp(
+          const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}/app22${closingChar}`
           )
           expect(result).toBeUndefined()

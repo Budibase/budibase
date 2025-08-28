@@ -166,8 +166,8 @@ describe("Builder store", () => {
 
   it("Update the previousTopNavPath value when empty", ctx => {
     expect(ctx.test.store.previousTopNavPath).toBeDefined()
-    const dataRoute = "/builder/app/:application/data"
-    const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
+    const dataRoute = "/builder/workspace/:application/data"
+    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
 
     ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
@@ -177,12 +177,12 @@ describe("Builder store", () => {
   })
 
   it("Add in new route/path mappings and maintain existing", ctx => {
-    const dataRoute = "/builder/app/:application/data"
-    const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
+    const dataRoute = "/builder/workspace/:application/data"
+    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
 
-    const designRoute = "/builder/app/:application/design"
+    const designRoute = "/builder/workspace/:application/design"
     const designURL =
-      "/builder/app/app_dev_123/design/screen_456/screen_456-screen"
+      "/builder/workspace/app_dev_123/design/screen_456/screen_456-screen"
 
     ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
@@ -201,9 +201,9 @@ describe("Builder store", () => {
   it("Overrite an existing route/path mapping with a new URL", ctx => {
     expect(ctx.test.store.previousTopNavPath).toStrictEqual({})
 
-    const dataRoute = "/builder/app/:application/data"
-    const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
-    const updatedURL = "/builder/app/app_dev_123/data/table/ta_employees"
+    const dataRoute = "/builder/workspace/:application/data"
+    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
+    const updatedURL = "/builder/workspace/app_dev_123/data/table/ta_employees"
 
     ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 

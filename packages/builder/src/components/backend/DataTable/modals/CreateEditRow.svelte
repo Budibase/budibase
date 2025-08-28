@@ -1,9 +1,8 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables } from "@/stores/builder"
+  import { tables, dataAPI } from "@/stores/builder"
   import { ModalContent, keepOpen, notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import { API } from "@/api"
   import { FIELDS } from "@/constants/backend"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -23,7 +22,7 @@
   async function saveRow() {
     errors = []
     try {
-      const res = await API.saveRow({ ...row, tableId: table._id })
+      const res = await $dataAPI.saveRow({ ...row, tableId: table._id })
       notifications.success("Row saved successfully")
       dispatch("updaterows", res._id)
     } catch (error) {

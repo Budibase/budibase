@@ -37,7 +37,13 @@ export function getSecret(secretOption: SecretOption): string {
 }
 
 function stretchString(secret: string, salt: Buffer) {
-  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
+  return crypto.pbkdf2Sync(
+    secret,
+    new Uint8Array(salt),
+    ITERATIONS,
+    STRETCH_LENGTH,
+    "sha512"
+  )
 }
 
 export function encrypt(
@@ -46,10 +52,17 @@ export function encrypt(
 ) {
   const salt = crypto.randomBytes(SALT_LENGTH)
   const stretched = stretchString(getSecret(secretOption), salt)
-  const cipher = crypto.createCipheriv(ALGO, stretched, salt)
-  const base = cipher.update(input)
+  const cipher = crypto.createCipheriv(
+    ALGO,
+    new Uint8Array(stretched),
+    new Uint8Array(salt)
+  )
+  const base = cipher.update(input, "utf8")
   const final = cipher.final()
-  const encrypted = Buffer.concat([base, final]).toString("hex")
+  const encrypted = Buffer.concat([
+    new Uint8Array(base),
+    new Uint8Array(final),
+  ]).toString("hex")
   return `${salt.toString("hex")}${SEPARATOR}${encrypted}`
 }
 
@@ -60,10 +73,14 @@ export function decrypt(
   const [salt, encrypted] = input.split(SEPARATOR)
   const saltBuffer = Buffer.from(salt, "hex")
   const stretched = stretchString(getSecret(secretOption), saltBuffer)
-  const decipher = crypto.createDecipheriv(ALGO, stretched, saltBuffer)
-  const base = decipher.update(Buffer.from(encrypted, "hex"))
+  const decipher = crypto.createDecipheriv(
+    ALGO,
+    new Uint8Array(stretched),
+    new Uint8Array(saltBuffer)
+  )
+  const base = decipher.update(encrypted, "hex")
   const final = decipher.final()
-  return Buffer.concat([base, final]).toString()
+  return Buffer.concat([new Uint8Array(base), new Uint8Array(final)]).toString()
 }
 
 export async function encryptFile(
@@ -82,7 +99,11 @@ export async function encryptFile(
   const salt = crypto.randomBytes(SALT_LENGTH)
   const iv = crypto.randomBytes(IV_LENGTH)
   const stretched = stretchString(secret, salt)
-  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+  const cipher = crypto.createCipheriv(
+    ALGO,
+    new Uint8Array(stretched),
+    new Uint8Array(iv)
+  )
 
   outputFile.write(salt)
   outputFile.write(iv)
@@ -124,7 +145,11 @@ export async function decryptFile(
   const outputFile = fs.createWriteStream(outputPath)
 
   const stretched = stretchString(secret, salt)
-  const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+  const decipher = crypto.createDecipheriv(
+    ALGO,
+    new Uint8Array(stretched),
+    new Uint8Array(iv)
+  )
 
   const unzip = zlib.createGunzip()
 
@@ -171,7 +196,7 @@ function readBytes(stream: fs.ReadStream, length: number) {
         bytesRead += chunk.length
       }
 
-      resolve(Buffer.concat(data))
+      resolve(Buffer.concat(data.map(buf => new Uint8Array(buf))))
     })
 
     stream.on("end", () => {

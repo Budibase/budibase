@@ -40,7 +40,9 @@
   }
 
   const goToPortal = () => {
-    window.location.href = isBuilder ? "/builder/portal/apps" : "/builder/apps"
+    window.location.href = isBuilder
+      ? "/builder/portal/workspaces"
+      : "/builder/apps"
   }
 
   $: user = $authStore as User
