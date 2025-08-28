@@ -3,7 +3,7 @@
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
-  import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+  import StatusRenderer from "@/pages/builder/workspace/[application]/settings/automations/_components/StatusRenderer.svelte"
   import {
     summariseBranch,
     getCurrentStepData,

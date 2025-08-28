@@ -158,7 +158,7 @@
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
-    const appPrefix = `/builder/app/${appId}`
+    const appPrefix = `/builder/workspace/${appId}`
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${appPrefix}/automation/${id}`,

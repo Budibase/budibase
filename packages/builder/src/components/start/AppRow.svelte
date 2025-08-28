@@ -31,11 +31,11 @@
   }
 
   const goToBuilder = () => {
-    $goto(`../../app/${app.devId}`)
+    $goto(`../../workspace/${app.devId}`)
   }
 
   const goToOverview = () => {
-    $goto(`../../app/${app.devId}/settings`)
+    $goto(`../../workspace/${app.devId}/settings`)
   }
 
   const goToApp = () => {

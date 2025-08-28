@@ -37,7 +37,7 @@
   }
 
   const goToApp = () => {
-    $goto(`/builder/app/${appId}`)
+    $goto(`/builder/workspace/${appId}`)
     notifications.success(`App created successfully`)
   }
 
