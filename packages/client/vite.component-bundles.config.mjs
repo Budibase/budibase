@@ -134,7 +134,7 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         input: componentEntries,
-        external: ['svelte', 'svelte/store', 'svelte/internal'],
+        external: ["svelte", "svelte/store", "svelte/internal"],
         output: {
           format: "es",
           dir: "dist/components",
@@ -162,8 +162,6 @@ export default defineConfig(({ mode }) => {
       visualizer({
         filename: "dist/components-bundle-analysis.html",
         open: false,
-        gzipSize: true,
-        brotliSize: true,
       }),
     ],
     resolve: {
