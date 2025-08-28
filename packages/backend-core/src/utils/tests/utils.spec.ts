@@ -84,7 +84,7 @@ describe("utils", () => {
       // set custom url
       const appUrl = "preview"
       app.url = `/${appUrl}`
-      ctx.path = `/app/${appUrl}`
+      ctx.path = `/workspace/${appUrl}`
 
       // save the app
       const database = db.getDB(appId)
@@ -98,7 +98,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateAppID()
       ctx.request.headers = {
-        referer: `http://example.com/builder/app/${expected}/design/screen_123/screens`,
+        referer: `http://example.com/builder/workspace/${expected}/design/screen_123/screens`,
       }
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -109,7 +109,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const appId = db.generateAppID()
       ctx.request.headers = {
-        referer: `http://example.com/foo/app/${appId}/bar`,
+        referer: `http://example.com/foo/workspace/${appId}/bar`,
       }
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -209,7 +209,7 @@ describe("utils", () => {
     })
 
     it("returns true if current path is in builder", async () => {
-      ctx.path = "/builder/app/app_"
+      ctx.path = "/builder/workspace/app_"
       expectResult(true)
     })
 
