@@ -19,6 +19,7 @@ import {
   BlockDefinitions,
   Branch,
   BranchStep,
+  LayoutDirection,
 } from "@budibase/types"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
@@ -211,12 +212,12 @@ export interface GraphBuildDeps {
   testDataModal?: any
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
-  direction?: "TB" | "LR"
+  direction?: LayoutDirection
 }
 
 // Dagre layout for automation flow
 export interface DagreLayoutOptions {
-  rankdir?: "TB" | "BT" | "LR" | "RL"
+  rankdir?: LayoutDirection
   ranksep?: number
   nodesep?: number
 }

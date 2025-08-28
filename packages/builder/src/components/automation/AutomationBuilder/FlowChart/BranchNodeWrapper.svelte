@@ -7,6 +7,7 @@
   import {
     type AutomationStepResult,
     type AutomationTriggerResult,
+    type LayoutDirection,
   } from "@budibase/types"
 
   export let data
@@ -17,7 +18,7 @@
   $: branchIdx = data.branchIdx
   $: viewMode = data?.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
-  $: direction = (data?.direction || "TB") as "TB" | "LR"
+  $: direction = (data?.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
 
   // Handle step selection in logs mode (open details panel)
@@ -52,7 +53,7 @@
       step={block}
       {branchIdx}
       {viewMode}
-      onStepSelect={() => handleStepSelect(block)}
+      onStepSelect={handleStepSelect}
     />
   </div>
   <Handle
