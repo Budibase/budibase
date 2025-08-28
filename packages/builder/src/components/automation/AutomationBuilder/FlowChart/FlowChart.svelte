@@ -199,7 +199,7 @@
       />
       {#if hasUnpublishedChanges}
         <button class="unpublished-changes-btn" on:click={publishChanges}>
-          <StatusLight color="var(--spectrum-global-color-blue-600)" />
+          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
           <div class="unpublished-changes-text">Unpublished changes</div>
         </button>
       {/if}
