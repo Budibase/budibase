@@ -81,7 +81,6 @@
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
 
-  let scrolling = false
   let initialViewportApplied = false
   let isApplyingViewport = false
   let preserveViewport = false
