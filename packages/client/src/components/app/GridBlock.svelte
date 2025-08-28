@@ -211,6 +211,7 @@
       text: settings.text,
       type: settings.type,
       icon: settings.icon,
+      conditions: settings.conditions,
       onClick: async row => {
         // Create a fake, ephemeral context to run the buttons actions with
         const id = get(component).id

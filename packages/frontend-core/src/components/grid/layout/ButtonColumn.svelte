@@ -21,6 +21,7 @@
     showHScrollbar,
     dispatch,
     config,
+    metadata,
   } = getContext("grid")
 
   let container
@@ -40,6 +41,29 @@
       return gridButtons.slice(0, 3)
     }
     return gridButtons
+  }
+
+  // Apply button conditions and return filtered/modified buttons for a specific row
+  const getButtonsForRow = (buttons, row) => {
+    if (!buttons || !row) return buttons
+
+    const rowMetadata = $metadata?.[row._id]?.button || {}
+
+    return buttons
+      .map((button, index) => {
+        const buttonMetadata = rowMetadata[index]
+        if (!buttonMetadata) return button
+
+        // Skip hidden buttons
+        if (buttonMetadata.hidden) return null
+
+        // Apply any setting updates
+        return {
+          ...button,
+          ...buttonMetadata,
+        }
+      })
+      .filter(button => button !== null)
   }
 
   const handleClick = async (button, row) => {
@@ -75,6 +99,7 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const rowFocused = $focusedRow?._id === row._id}
+        {@const rowButtons = getButtonsForRow(buttons, row)}
         <div
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
@@ -93,7 +118,7 @@
             >
               {#if $props.buttonsCollapsed}
                 <CollapsedButtonGroup
-                  buttons={makeCollapsedButtons(buttons, row)}
+                  buttons={makeCollapsedButtons(rowButtons, row)}
                   text={$props.buttonsCollapsedText || "Action"}
                   align="right"
                   offset={5}
@@ -102,7 +127,7 @@
                   on:mouseenter={() => ($hoveredRowId = row._id)}
                 />
               {:else}
-                {#each buttons as button}
+                {#each rowButtons as button}
                   <Button
                     newStyles
                     size="S"

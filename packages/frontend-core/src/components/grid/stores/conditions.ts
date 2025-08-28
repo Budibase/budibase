@@ -1,4 +1,4 @@
-import { writable, get, Writable, Readable } from "svelte/store"
+import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
 import {
   FieldType,
@@ -27,12 +27,14 @@ export const createStores = (): ConditionStore => {
 }
 
 export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
-  const { columns } = context
+  const { columns, props } = context
 
   // Derive and memoize the cell conditions present in our columns so that we
   // only recompute condition metadata when absolutely necessary
-  const conditions = derivedMemo(columns, $columns => {
+  const conditions = derived([columns, props], ([$columns, $props]) => {
     let newConditions: UICondition[] = []
+    
+    // Add column conditions
     for (let column of $columns) {
       for (let condition of column.conditions || []) {
         newConditions.push({
@@ -42,6 +44,21 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
         })
       }
     }
+    
+    // Add button conditions
+    if ($props.buttons) {
+      for (let button of $props.buttons) {
+        for (let condition of button.conditions || []) {
+          newConditions.push({
+            ...(condition as UICondition),
+            target: "button",
+            buttonIndex: $props.buttons.indexOf(button),
+            type: FieldType.STRING, // Default type for button conditions
+          })
+        }
+      }
+    }
+    
     return newConditions
   })
 
@@ -123,10 +140,12 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
     version?: string
     row: Record<string, string>
     cell: Record<string, any>
+    button: Record<string, any>
   } = {
     version: row._rev,
     row: {},
     cell: {},
+    button: {},
   }
   for (let condition of conditions) {
     try {
@@ -138,8 +157,20 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
         metadataKey,
         metadataValue,
         target,
+        buttonIndex,
+        newValue,
+        action,
+        setting,
+        settingValue,
       } = condition
-      let value = row[column]
+      
+      let value
+      if (target === "button") {
+        // For button conditions, use newValue directly
+        value = newValue
+      } else {
+        value = row[column]
+      }
 
       // Coerce values into correct types for primitives
       let coercedType = type
@@ -154,8 +185,8 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
       }
       const coerce = TypeCoercionMap[coercedType]
       if (coerce) {
-        value = coerce(value)
-        referenceValue = coerce(referenceValue)
+        value = coerce(value as string)
+        referenceValue = coerce(referenceValue as string)
       }
 
       // Build lucene compatible condition expression
@@ -169,7 +200,18 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
       query.onEmptyFilter = EmptyFilterOption.RETURN_NONE
       const result = QueryUtils.runQuery([{ value }], query)
       if (result.length > 0) {
-        if (target === "row") {
+        if (target === "button" && typeof buttonIndex === "number") {
+          // Handle button-specific conditions
+          if (!metadata.button[buttonIndex]) {
+            metadata.button[buttonIndex] = {}
+          }
+          
+          if (action === "hide") {
+            metadata.button[buttonIndex].hidden = true
+          } else if (action === "update" && setting) {
+            metadata.button[buttonIndex][setting] = settingValue
+          }
+        } else if (target === "row") {
           metadata.row = {
             ...metadata.row,
             [metadataKey]: metadataValue,
