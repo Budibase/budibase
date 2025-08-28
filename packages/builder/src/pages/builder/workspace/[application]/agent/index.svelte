@@ -91,7 +91,7 @@
 
   import { tick } from "svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
