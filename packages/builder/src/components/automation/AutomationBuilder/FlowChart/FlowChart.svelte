@@ -84,6 +84,7 @@
   let scrolling = false
   let initialViewportApplied = false
   let isApplyingViewport = false
+  let preserveViewport = false
   let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
 
   let nodes = writable<FlowNode[]>([])
@@ -164,7 +165,10 @@
     currentViewMode: any,
     direction: LayoutDirection
   ) => {
-    initialViewportApplied = false
+    if (!preserveViewport) {
+      initialViewportApplied = false
+    }
+    preserveViewport = true
     const xSpacing = 300
     const ySpacing = 340
 
@@ -304,6 +308,7 @@
 
   const saveDirectionChange = async (direction: LayoutDirection) => {
     layoutDirection = direction
+    preserveViewport = false
     try {
       await automationStore.actions.save({
         ...automation,
