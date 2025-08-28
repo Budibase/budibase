@@ -750,6 +750,15 @@
         "type": "event",
         "label": "On click",
         "key": "onClick"
+      },
+      {
+        "type": "buttonConditions",
+        "label": "Conditions",
+        "key": "conditions",
+        "contextAccess": {
+          "global": true,
+          "self": true
+        }
       }
     ]
   },
