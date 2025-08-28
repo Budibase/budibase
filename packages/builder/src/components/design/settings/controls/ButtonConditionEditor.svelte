@@ -16,7 +16,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
-  import { selectedComponent, componentStore } from "@/stores/builder"
+  import { componentStore } from "@/stores/builder"
   import { getComponentForSetting } from "@/components/design/settings/componentSettings"
   import { cloneDeep } from "lodash"
   import { createEventDispatcher } from "svelte"
@@ -26,13 +26,12 @@
   export let conditions = []
   export let bindings = []
   export let componentBindings = []
-  export let actionOptions = null
 
   let drawer
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
   const zoneType = generate()
-  const defaultActionOptions = [
+  const actionOptions = [
     {
       label: "Hide component",
       value: "hide",
@@ -69,10 +68,9 @@
 
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
-  $: finalActionOptions = actionOptions ?? defaultActionOptions
 
   $: settings = componentStore
-    .getComponentSettings($selectedComponent?._component)
+    .getComponentSettings(componentInstance?._component)
     ?.concat({
       label: "Custom CSS",
       key: "_css",
@@ -233,7 +231,7 @@
                 </div>
                 <Select
                   placeholder={false}
-                  options={finalActionOptions}
+                  options={actionOptions}
                   bind:value={condition.action}
                 />
                 {#if condition.action === "update"}
@@ -249,7 +247,7 @@
                       control={getComponentForSetting(definition)}
                       key={definition.key}
                       value={condition.settingValue}
-                      componentInstance={$selectedComponent}
+                      {componentInstance}
                       onChange={val => (condition.settingValue = val)}
                       props={{
                         options: definition.options,
