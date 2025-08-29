@@ -3,7 +3,7 @@
   import { automationStore } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { sdk as coreSdk } from "@budibase/shared-core"
-  import { filterTriggerableAutomations } from "./utils"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   export let parameters = {}
   export let bindings = []
@@ -27,8 +27,10 @@
     parameters
   }
   $: automations = rootEle
-    ? filterTriggerableAutomations($automationStore.automations).map(
-        automation => {
+    ? $automationStore.automations
+        .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
+        .filter((a, i, arr) => arr.findIndex(b => b._id === a._id) === i)
+        .map(automation => {
           const schema = Object.entries(
             automation.definition.trigger.inputs.fields || {}
           ).map(([name, type]) => ({ name, type }))
@@ -44,8 +46,7 @@
             disabled: automation.disabled,
             icon: getStatusIcon(!automation.disabled),
           }
-        }
-      )
+        })
     : []
 
   $: selectedAutomation = automations?.find(
