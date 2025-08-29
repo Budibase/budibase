@@ -76,7 +76,10 @@ export async function fetch(ctx: UserCtx<void, FetchScreenRoutingResponse>) {
 export async function clientFetch(
   ctx: UserCtx<void, FetchClientScreenRoutingResponse>
 ) {
-  const urlPath = getReferer(ctx)
+  const embedPath: string | undefined = ctx.request.get(
+    "x-budibase-embed-location"
+  )
+  const urlPath = embedPath || getReferer(ctx)
   const routing = await getRoutingStructure(urlPath)
   let roleId = ctx.user?.role?._id
   const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []
