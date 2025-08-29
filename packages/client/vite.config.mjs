@@ -2,6 +2,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig } from "vite"
 import path from "path"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
+import { visualizer } from "rollup-plugin-visualizer"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -39,6 +40,10 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cssInjectedByJsPlugin(),
+      visualizer({
+        filename: "dist/budibase-client-analysis.html",
+        open: false,
+      }),
     ],
     resolve: {
       dedupe: ["svelte", "svelte/internal"],
