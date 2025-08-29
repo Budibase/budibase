@@ -5,7 +5,6 @@
     contextMenuStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import NavItem from "@/components/common/NavItem.svelte"
   import { isActive } from "@roxi/routify"
@@ -87,14 +86,12 @@
   on:click
 >
   <div class="buttons">
-    {#if $featureFlags.WORKSPACES}
-      <FavouriteResourceButton
-        favourite={favourite || {
-          resourceType: WorkspaceResource.TABLE,
-          resourceId: table._id,
-        }}
-      />
-    {/if}
+    <FavouriteResourceButton
+      favourite={favourite || {
+        resourceType: WorkspaceResource.TABLE,
+        resourceId: table._id,
+      }}
+    />
     {#if table._id !== TableNames.USERS}
       <Icon s on:click={openContextMenu} hoverable name="dots-three" size="M" />
     {/if}

@@ -25,7 +25,6 @@
     Table,
     ViewV2,
   } from "@budibase/types"
-  import { featureFlags } from "@/stores/portal"
 
   let mode: AutoScreenTypes
   let workspaceAppId: string | undefined
@@ -70,7 +69,7 @@
 
     modals = []
     stepIndex = 0
-    if (!workspaceAppId && $featureFlags.WORKSPACES) {
+    if (!workspaceAppId) {
       modals.push(appSelectionModal)
     }
 

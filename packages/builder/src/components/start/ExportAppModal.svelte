@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { featureFlags } from "@/stores/portal"
   import {
     ModalContent,
     keepOpen,
@@ -25,14 +24,12 @@
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
 
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
-
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {
     [Step.CONFIG]: {
       title: published
-        ? `Export published ${appOrWorkspace}`
-        : `Export latest ${appOrWorkspace}`,
+        ? `Export published workspace`
+        : `Export latest workspace`,
       confirmText: encrypt ? "Continue" : exportButtonText,
       onConfirm: async () => {
         if (!encrypt) {
@@ -68,11 +65,11 @@
         encryptPassword: password,
       })
       if (!downloaded) {
-        notifications.error(`Error exporting the ${appOrWorkspace}.`)
+        notifications.error(`Error exporting the workspace.`)
       }
     } catch (error: any) {
       notifications.error(
-        error.message || `Error downloading the exported ${appOrWorkspace}`
+        error.message || `Error downloading the exported workspace`
       )
     }
   }

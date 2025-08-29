@@ -6,7 +6,6 @@
   import { datasources } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   let searchValue
 
@@ -22,9 +21,7 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper">
-  {#if $featureFlags.WORKSPACES}
-    <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
-  {/if}
+  <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <Panel borderRight borderBottomHeader={false}>

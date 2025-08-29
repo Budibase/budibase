@@ -15,9 +15,6 @@ import {
   GenerateAPIKeyRequest,
   GenerateAPIKeyResponse,
   GetGlobalSelfResponse,
-  QuotaType,
-  QuotaUsageType,
-  StaticQuotaName,
   UpdateSelfRequest,
   UpdateSelfResponse,
   User,
@@ -125,13 +122,6 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
         model: llmConfig.model,
       }
     : undefined
-
-  if (flags?.WORKSPACES) {
-    // TODO: once the flag is clean, we should rename the original object instead
-    sessionAttributes.license.quotas[QuotaType.USAGE][QuotaUsageType.STATIC][
-      StaticQuotaName.APPS
-    ].name = "Workspaces"
-  }
 
   ctx.body = {
     ...enrichedUser,

@@ -1,5 +1,5 @@
-import { context, db as coreDb, features } from "@budibase/backend-core"
-import { FeatureFlag, ScreenRoutesViewOutput } from "@budibase/types"
+import { context, db as coreDb } from "@budibase/backend-core"
+import { ScreenRoutesViewOutput } from "@budibase/types"
 import { getQueryIndex, UNICODE_MAX, ViewName } from "../../db/utils"
 import { createRoutingView } from "../../db/views/staticViews"
 import sdk from "../../sdk"
@@ -12,11 +12,7 @@ export async function getRoutingInfo(
   if (!workspaceApp) {
     return []
   }
-  if (
-    !isDev &&
-    workspaceApp?.disabled &&
-    (await features.isEnabled(FeatureFlag.WORKSPACES))
-  ) {
+  if (!isDev && workspaceApp?.disabled) {
     return []
   }
 

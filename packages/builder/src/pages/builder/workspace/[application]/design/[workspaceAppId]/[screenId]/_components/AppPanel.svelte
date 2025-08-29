@@ -8,7 +8,6 @@
     selectedAppUrls,
     workspaceAppStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
   import { ActionButton, Divider, Toggle, AbsTooltip } from "@budibase/bbui"
@@ -58,23 +57,21 @@
     <div class="drawer-container" />
     <div class="header">
       <div class="header-left">
-        {#if $featureFlags.WORKSPACES}
-          <div class="workspace-info">
-            {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
-              <div class="workspace-url">
-                <AbsTooltip text="Open live app">
-                  <ActionButton
-                    icon="globe-simple"
-                    quiet
-                    on:click={() => {
-                      window.open(liveUrl, "_blank")
-                    }}
-                  />
-                </AbsTooltip>
-              </div>
-            {/if}
-          </div>
-        {/if}
+        <div class="workspace-info">
+          {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
+            <div class="workspace-url">
+              <AbsTooltip text="Open live app">
+                <ActionButton
+                  icon="globe-simple"
+                  quiet
+                  on:click={() => {
+                    window.open(liveUrl, "_blank")
+                  }}
+                />
+              </AbsTooltip>
+            </div>
+          {/if}
+        </div>
       </div>
       <div class="header-right">
         <UndoRedoControl store={screenStore.history} />
@@ -100,23 +97,21 @@
         <ActionButton quiet icon="play" on:click={previewApp}>
           Preview
         </ActionButton>
-        {#if $featureFlags.WORKSPACES}
-          <div class="divider-container">
-            <Divider size="S" vertical />
-          </div>
-          <div class="workspace-info-toggle">
-            <PublishStatusBadge
-              status={selectedWorkspaceApp.publishStatus.state}
-              loading={changingStatus}
-            />
-            <Toggle
-              noPadding
-              on:change={handleToggleChange}
-              value={toggleValue}
-              disabled={changingStatus}
-            />
-          </div>
-        {/if}
+        <div class="divider-container">
+          <Divider size="S" vertical />
+        </div>
+        <div class="workspace-info-toggle">
+          <PublishStatusBadge
+            status={selectedWorkspaceApp.publishStatus.state}
+            loading={changingStatus}
+          />
+          <Toggle
+            noPadding
+            on:change={handleToggleChange}
+            value={toggleValue}
+            disabled={changingStatus}
+          />
+        </div>
       </div>
     </div>
     <div class="content">

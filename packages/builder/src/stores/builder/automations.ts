@@ -62,7 +62,6 @@ import {
   isActionStep,
   PublishResourceState,
   UIAutomation,
-  FeatureFlag,
   isRowActionTrigger,
   isWebhookTrigger,
   AutomationTriggerResult,
@@ -88,7 +87,6 @@ import {
 } from "@/types/automations"
 import { TableNames } from "@/constants"
 import { getSequentialName } from "@/helpers/duplicate"
-import { featureFlag } from "@/helpers"
 import { EnvVar } from "../portal/environment"
 import { makePropSafe } from "@budibase/string-templates"
 
@@ -1589,7 +1587,7 @@ const automationActions = (store: AutomationStore) => ({
         steps: [],
         trigger,
       },
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
+      disabled: true,
     }
     const response = await store.actions.save(automation)
     return response
@@ -1605,7 +1603,7 @@ const automationActions = (store: AutomationStore) => ({
       ),
       _id: undefined,
       _rev: undefined,
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
+      disabled: true,
     })
     return response
   },

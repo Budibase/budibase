@@ -67,7 +67,7 @@ export function quotas(): Quotas {
           triggers: [],
         },
         apps: {
-          name: "Apps",
+          name: "Workspaces",
           value: 1,
           triggers: [],
         },

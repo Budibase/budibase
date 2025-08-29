@@ -11,7 +11,6 @@
     contextMenuStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import NavItem from "@/components/common/NavItem.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
@@ -81,14 +80,12 @@
   selectedBy={$userSelectedResourceMap[query._id]}
 >
   <div class="buttons">
-    {#if $featureFlags.WORKSPACES}
-      <FavouriteResourceButton
-        favourite={favourite || {
-          resourceType: WorkspaceResource.QUERY,
-          resourceId: query._id,
-        }}
-      />
-    {/if}
+    <FavouriteResourceButton
+      favourite={favourite || {
+        resourceType: WorkspaceResource.QUERY,
+        resourceId: query._id,
+      }}
+    />
     <Icon size="M" hoverable name="dots-three" on:click={openContextMenu} />
   </div>
 </NavItem>

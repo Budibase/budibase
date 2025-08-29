@@ -1,7 +1,6 @@
 import { derived } from "svelte/store"
 import { DerivedBudiStore } from "../BudiStore"
 import { screenStore, workspaceAppStore } from "@/stores/builder"
-import { featureFlags } from "@/stores/portal"
 import { Screen } from "@budibase/types"
 
 export type RoutesState = string[]
@@ -17,14 +16,13 @@ export class RoutesStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = () => {
       return derived(
-        [screenStore, workspaceAppStore, featureFlags],
-        ([$screenStore, $wsa, $featureFlags]) => {
+        [screenStore, workspaceAppStore],
+        ([$screenStore, $wsa]) => {
           const workspaceApp = $wsa.selectedWorkspaceApp
           return $screenStore.screens
-            .filter((s: Screen) =>
-              $featureFlags.WORKSPACES
-                ? workspaceApp && workspaceApp._id === s.workspaceAppId
-                : true
+            .filter(
+              (s: Screen) =>
+                workspaceApp && workspaceApp._id === s.workspaceAppId
             )
             .map(screen => screen.routing?.route)
             .filter(url => url != null)

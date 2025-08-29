@@ -4,7 +4,6 @@ import { notifications } from "@budibase/bbui"
 import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { appsStore } from "@/stores/portal/apps"
-import { featureFlags } from "@/stores/portal"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { appStore } from "./app"
 import { processStringSync } from "@budibase/string-templates"
@@ -34,8 +33,8 @@ class DeploymentStore extends DerivedBudiStore<
       store: Writable<DeploymentState>
     ): Readable<DerivedDeploymentState> => {
       return derived(
-        [store, appStore, appsStore, featureFlags],
-        ([$store, $appStore, $appsStore, $featureFlags]) => {
+        [store, appStore, appsStore],
+        ([$store, $appStore, $appsStore]) => {
           // Determine whether the app is published
           const app = $appsStore.apps.find(app => app.devId === $appStore.appId)
           const deployments = $store.deployments.filter(
@@ -48,7 +47,7 @@ class DeploymentStore extends DerivedBudiStore<
           let lastPublished = undefined
           if (isPublished) {
             lastPublished = processStringSync(
-              `Your ${$featureFlags.WORKSPACES ? "apps and automations were" : "app was"} last published {{ duration time 'millisecond' }} ago`,
+              `Your apps and automations were last published {{ duration time 'millisecond' }} ago`,
               {
                 time:
                   new Date().getTime() -

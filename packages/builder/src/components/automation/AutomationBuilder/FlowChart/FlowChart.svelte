@@ -5,14 +5,12 @@
     notifications,
     Modal,
     Toggle,
-    Body,
     Button,
     ActionButton,
     Switcher,
     StatusLight,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
   import {
     automationStore,
     automationHistoryStore,
@@ -20,7 +18,7 @@
     workspaceDeploymentStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { environment, featureFlags } from "@/stores/portal"
+  import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
@@ -52,9 +50,8 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue = $featureFlags.WORKSPACES
-    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
-    : !automation?.disabled
+  $: displayToggleValue =
+    automation.publishStatus.state === PublishResourceState.PUBLISHED
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -65,7 +62,6 @@
   $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
-  $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
@@ -154,22 +150,8 @@
 </script>
 
 <div class="automation-heading">
-  {#if !$featureFlags.WORKSPACES}
-    <div class="actions-left">
-      <div class="automation-name">
-        <Body
-          size="S"
-          weight="500"
-          color="var(--spectrum-global-color-gray-900)"
-        >
-          {automation.name}
-        </Body>
-      </div>
-    </div>
-  {/if}
-
-  <div class="actions-right" class:grow={$featureFlags.WORKSPACES}>
-    <div class:grow={$featureFlags.WORKSPACES} class="actions-group">
+  <div class="actions-right">
+    <div class="actions-group">
       <Switcher
         on:left={() => {
           viewMode = ViewMode.EDITOR
@@ -216,31 +198,17 @@
       Run test
     </ActionButton>
 
-    {#if $featureFlags.WORKSPACES}
-      <PublishStatusBadge
-        status={automation.publishStatus.state}
-        loading={changingStatus}
+    <PublishStatusBadge
+      status={automation.publishStatus.state}
+      loading={changingStatus}
+    />
+    <div class="toggle-active setting-spacing">
+      <Toggle
+        on:change={handleToggleChange}
+        disabled={!automation?.definition?.trigger || changingStatus}
+        value={displayToggleValue}
       />
-      <div class="toggle-active setting-spacing">
-        <Toggle
-          on:change={handleToggleChange}
-          disabled={!automation?.definition?.trigger || changingStatus}
-          value={displayToggleValue}
-        />
-      </div>
-    {:else if !isRowAction}
-      <div class="toggle-active setting-spacing">
-        <Toggle
-          text={automation.disabled ? "Disabled" : "Enabled"}
-          on:change={automationStore.actions.toggleDisabled(
-            automation._id,
-            automation.disabled
-          )}
-          disabled={!automation?.definition?.trigger}
-          value={!automation.disabled}
-        />
-      </div>
-    {/if}
+    </div>
   </div>
 </div>
 
@@ -337,19 +305,6 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
-  .automation-name {
-    margin-right: var(--spacing-l);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  .automation-name :global(.spectrum-Heading) {
-    font-weight: 600;
-  }
-
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
   }
@@ -422,20 +377,11 @@
     background: var(--spectrum-global-color-gray-300) !important;
   }
 
-  .actions-left {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-  }
-  .grow {
-    flex: 1 1 auto;
-  }
   .actions-right {
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+    flex: 1 1 auto;
   }
 
   .unpublished-changes-btn {
@@ -466,6 +412,7 @@
   }
 
   .actions-group {
+    flex: 1 1 auto;
     display: flex;
     gap: var(--spacing-m);
     align-items: center;

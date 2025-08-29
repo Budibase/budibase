@@ -2,20 +2,14 @@ import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { WorkspaceApp } from "@budibase/types"
 import { getMatchedWorkspaceApp } from "../utils"
-import { features } from "@budibase/backend-core"
 
 describe("workspaceApps utils", () => {
   const config = new TestConfiguration()
   let workspaceApps: WorkspaceApp[]
 
-  let featureCleanup: () => void
-
   beforeAll(async () => {
     await config.init()
 
-    featureCleanup = features.testutils.setFeatureFlags("*", {
-      WORKSPACES: true,
-    })
     workspaceApps = (await config.api.workspaceApp.fetch()).workspaceApps
     expect(workspaceApps).toHaveLength(1)
     expect(workspaceApps.find(x => x.url === "/")).toBeDefined()
@@ -29,10 +23,6 @@ describe("workspaceApps utils", () => {
         ).workspaceApp
       )
     }
-  })
-
-  afterAll(() => {
-    featureCleanup()
   })
 
   describe.each(["", "/"])(

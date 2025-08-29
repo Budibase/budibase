@@ -88,7 +88,7 @@
       const used = quotaUsage.usageQuota[key]
       if (value.value !== 0) {
         staticUsage.push({
-          name: value.name,
+          name: value.name === "Apps" ? "Workspaces" : value.name,
           used: used ? used : 0,
           total: value.value,
         })

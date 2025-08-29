@@ -7,15 +7,12 @@
     Dropzone,
     notifications,
     Body,
-    Helpers,
   } from "@budibase/bbui"
   import { API } from "@/api"
   import { initialise } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
 
   export let app
 
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
   $: disabled = (encrypted && !password) || !file
   let encrypted = false,
     password
@@ -33,13 +30,9 @@
       const pkg = await API.fetchAppPackage(appId)
       await initialise(pkg)
 
-      notifications.success(
-        `${Helpers.capitalise(appOrWorkspace)} updated successfully`
-      )
+      notifications.success("Workspace updated successfully")
     } catch (err) {
-      notifications.error(
-        `Failed to update ${appOrWorkspace} - ${err.message || err}`
-      )
+      notifications.error(`Failed to update workspace - ${err.message || err}`)
     }
   }
 </script>
@@ -51,14 +44,14 @@
   bind:disabled
 >
   <Body size="S">
-    Updating {$featureFlags.WORKSPACES ? "a workspace" : "an app"} using an export
-    bundle will replace all tables, datasources, queries, screens and automations.
-    It is recommended to perform a backup before running this operation.
+    Updating a workspace using an export bundle will replace all tables,
+    datasources, queries, screens and automations. It is recommended to perform
+    a backup before running this operation.
   </Body>
   <Layout noPadding gap="XS">
     <Dropzone
       gallery={false}
-      label={`${Helpers.capitalise(appOrWorkspace)} export`}
+      label={"Workspace export"}
       on:change={e => {
         file = e.detail?.[0]
         encrypted = file?.name?.endsWith(".enc.tar.gz")
