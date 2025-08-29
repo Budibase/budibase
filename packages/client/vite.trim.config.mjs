@@ -17,8 +17,6 @@ export default defineConfig(({ mode }) => {
   // Get analysis from environment variables
   const usesCharts = process.env.BUDIBASE_INCLUDE_CHARTS !== "false"
   const usesForms = process.env.BUDIBASE_INCLUDE_FORMS !== "false"
-  // Always include blocks for now
-  const usesBlocks = true
 
   return {
     build: {
@@ -35,37 +33,26 @@ export default defineConfig(({ mode }) => {
         treeshake: {
           moduleSideEffects: false,
         },
-        external: id => {
-          // Externalize modules we don't want to include
-          if (
-            !usesCharts &&
-            (id.includes("/charts/") || id.endsWith("/charts"))
-          ) {
-            return true
-          }
-          if (!usesForms && (id.includes("/forms/") || id.endsWith("/forms"))) {
-            return true
-          }
-          if (
-            !usesBlocks &&
-            (id.includes("/blocks/") || id.endsWith("/blocks"))
-          ) {
-            return true
-          }
-          return false
-        },
-        output: {
-          globals: id => {
-            // Provide empty globals for externalized modules
-            if (id.includes("charts")) return "{}"
-            if (id.includes("forms")) return "{}"
-            if (id.includes("blocks")) return "{}"
-            return undefined
-          },
-        },
       },
     },
     plugins: [
+      // Plugin to conditionally exclude exports at build time
+      {
+        name: "conditional-exports",
+        transform(code, id) {
+          if (id.endsWith("src/components/app/index.js")) {
+            let modifiedCode = code
+            if (!usesCharts) {
+              modifiedCode = modifiedCode.replace('export * from "./charts"', '// export * from "./charts" // excluded')
+            }
+            if (!usesForms) {
+              modifiedCode = modifiedCode.replace('export * from "./forms"', '// export * from "./forms" // excluded')
+            }
+            return modifiedCode
+          }
+          return null
+        },
+      },
       svelte({
         emitCss: true,
         onwarn: (warning, handler) => {
