@@ -81,9 +81,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      const minWidth = buttons?.length > 0 ? 60 : 0
-      const finalWidth = Math.max(width - 1, minWidth)
-      buttonColumnWidth.set(finalWidth)
+      buttonColumnWidth.set(width - 1)
     })
     observer.observe(container)
   })
