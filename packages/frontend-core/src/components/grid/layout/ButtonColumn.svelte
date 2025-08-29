@@ -81,7 +81,9 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width - 1)
+      const minWidth = buttons?.length > 0 ? 60 : 0
+      const finalWidth = Math.max(width - 1, minWidth)
+      buttonColumnWidth.set(finalWidth)
     })
     observer.observe(container)
   })
@@ -117,15 +119,19 @@
               class:offset={$showVScrollbar && $showHScrollbar}
             >
               {#if $props.buttonsCollapsed}
-                <CollapsedButtonGroup
-                  buttons={makeCollapsedButtons(rowButtons, row)}
-                  text={$props.buttonsCollapsedText || "Action"}
-                  align="right"
-                  offset={5}
-                  size="S"
-                  animate={false}
-                  on:mouseenter={() => ($hoveredRowId = row._id)}
-                />
+                {#if rowButtons.length > 0}
+                  <CollapsedButtonGroup
+                    buttons={makeCollapsedButtons(rowButtons, row)}
+                    text={$props.buttonsCollapsedText || "Action"}
+                    align="right"
+                    offset={5}
+                    size="S"
+                    animate={false}
+                    on:mouseenter={() => ($hoveredRowId = row._id)}
+                  />
+                {:else}
+                  <div class="button-placeholder-collapsed" />
+                {/if}
               {:else}
                 {#each rowButtons as button}
                   <Button
@@ -144,6 +150,9 @@
                     {button.text || "Button"}
                   </Button>
                 {/each}
+                {#if rowButtons.length === 0}
+                  <div class="button-placeholder" />
+                {/if}
               {/if}
             </div>
           </GridCell>
@@ -203,6 +212,15 @@
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+  .button-placeholder {
+    min-width: 60px;
+    height: 32px;
+  }
+  .button-placeholder-collapsed {
+    min-width: 70px;
+    height: 32px;
+    visibility: hidden;
   }
   .blank :global(.cell:hover) {
     cursor: pointer;
