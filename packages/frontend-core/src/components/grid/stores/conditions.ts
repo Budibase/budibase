@@ -227,39 +227,16 @@ const evaluateConditions = (
           coercedType = FieldType.NUMBER
         }
       }
-
-      // Enhanced type coercion for range operators to fix numeric comparison issues
-      const isRangeOperator =
-        operator === "rangeLow" || operator === "rangeHigh"
-      if (
-        isRangeOperator &&
-        (type === FieldType.NUMBER || coercedType === FieldType.NUMBER)
-      ) {
-        // Ensure both values are properly converted to numbers for range comparisons
-        if (value != null && value !== "") {
-          value = typeof value === "string" ? parseFloat(value) : Number(value)
-          if (isNaN(value)) value = null
-        }
-        if (referenceValue != null && referenceValue !== "") {
-          referenceValue =
-            typeof referenceValue === "string"
-              ? parseFloat(referenceValue)
-              : Number(referenceValue as number)
-          if (isNaN(referenceValue as number)) referenceValue = null
-        }
-      } else {
-        // Standard type coercion for other operators
-        const coerce = TypeCoercionMap[coercedType]
-        if (coerce) {
-          value = coerce(value as string)
-          referenceValue = coerce(referenceValue as string)
-        }
+      const coerce = TypeCoercionMap[coercedType]
+      if (coerce) {
+        value = coerce(value as string)
+        referenceValue = coerce(referenceValue as string)
       }
 
       // Build lucene compatible condition expression
       const luceneFilter = {
         operator,
-        type: isRangeOperator ? FieldType.NUMBER : type,
+        type,
         field: "value",
         value: referenceValue,
       }
