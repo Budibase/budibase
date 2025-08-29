@@ -20,13 +20,12 @@
   import { getComponentForSetting } from "@/components/design/settings/componentSettings"
   import { cloneDeep } from "lodash"
   import { createEventDispatcher } from "svelte"
-  import { BasicOperator } from "@budibase/types"
+  import { BasicOperator, FieldType } from "@budibase/types"
   import type {
     ArrayOperator,
     ComponentCondition,
     ComponentSetting,
     EnrichedBinding,
-    FieldType,
   } from "@budibase/types"
 
   interface ExtendedComponentSetting extends ComponentSetting {
@@ -115,6 +114,7 @@
         action: "hide",
         operator: BasicOperator.EQUAL,
         valueType: "string",
+        type: FieldType.STRING,
       },
     ]
   }
@@ -142,7 +142,7 @@
 
   const getOperatorOptions = (condition: ComponentCondition) => {
     return QueryUtils.getValidOperatorsForType({
-      type: condition.valueType as FieldType,
+      type: condition.type as FieldType,
     })
   }
 
@@ -157,7 +157,7 @@
     condition.noValue = noValueOptions.includes(newOperator)
     if (condition.noValue || newOperator === "oneOf") {
       condition.referenceValue = null
-      condition.valueType = "string"
+      condition.type = FieldType.STRING
     }
   }
 
@@ -306,11 +306,11 @@
                 <Select
                   disabled={condition.noValue || condition.operator === "oneOf"}
                   options={valueTypeOptions}
-                  bind:value={condition.valueType}
+                  bind:value={condition.type}
                   placeholder={false}
                   on:change={e => onValueTypeChange(condition, e.detail)}
                 />
-                {#if ["string", "number"].includes(condition.valueType)}
+                {#if ["string", "number"].includes(condition.type)}
                   <DrawerBindableInput
                     disabled={condition.noValue}
                     {bindings}
@@ -318,13 +318,13 @@
                     value={condition.referenceValue}
                     on:change={e => (condition.referenceValue = e.detail)}
                   />
-                {:else if condition.valueType === "datetime"}
+                {:else if condition.type === "datetime"}
                   <DatePicker
                     placeholder="Value"
                     disabled={condition.noValue}
                     bind:value={condition.referenceValue}
                   />
-                {:else if condition.valueType === "boolean"}
+                {:else if condition.type === "boolean"}
                   <Select
                     placeholder="Value"
                     disabled={condition.noValue}
