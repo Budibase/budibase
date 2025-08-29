@@ -79,7 +79,12 @@ export interface BaseStoreProps {
   minHeight?: number
   canHideColumns?: boolean
   externalClipboard?: ExternalClipboardData
-  buttons?: { text: string; onClick: unknown; conditions?: unknown[]; getRowConditions?: (row: any) => unknown[] }[]
+  buttons?: {
+    text: string
+    onClick: unknown
+    conditions?: unknown[]
+    getRowConditions?: (row: any) => unknown[]
+  }[]
   buttonsCollapsed?: boolean
   buttonsCollapsedText?: string
 }
