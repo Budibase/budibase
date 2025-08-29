@@ -20,9 +20,9 @@
   import { getComponentForSetting } from "@/components/design/settings/componentSettings"
   import { cloneDeep } from "lodash"
   import { createEventDispatcher } from "svelte"
-  import {
+  import { BasicOperator } from "@budibase/types"
+  import type {
     ArrayOperator,
-    BasicOperator,
     ComponentCondition,
     ComponentSetting,
     EnrichedBinding,

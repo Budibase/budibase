@@ -8,7 +8,7 @@
   import { parseDate } from "../../../helpers"
   import DatePickerPopoverContents from "./DatePickerPopoverContents.svelte"
   import { PopoverAlignment } from "../../../constants"
-  import dayjs from "dayjs"
+  import type dayjs from "dayjs"
 
   export let id = null
   export let disabled = false
