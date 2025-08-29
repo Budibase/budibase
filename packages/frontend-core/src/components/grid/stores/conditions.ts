@@ -1,5 +1,5 @@
 import { writable, get, derived, Writable, Readable } from "svelte/store"
-import { QueryUtils } from "../../../utils"
+import { derivedMemo, QueryUtils } from "../../../utils"
 import {
   FieldType,
   EmptyFilterOption,
@@ -31,36 +31,39 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
 
   // Derive and memoize the cell conditions present in our columns so that we
   // only recompute condition metadata when absolutely necessary
-  const conditions = derived([columns, props], ([$columns, $props]) => {
-    let newConditions: UICondition[] = []
+  const conditions = derivedMemo(
+    derived([columns, props], ([$columns, $props]) => {
+      let newConditions: UICondition[] = []
 
-    // Add column conditions
-    for (let column of $columns) {
-      for (let condition of column.conditions || []) {
-        newConditions.push({
-          ...condition,
-          column: column.name,
-          type: column.schema.type,
-        })
-      }
-    }
-
-    // Add button conditions
-    if ($props.buttons) {
-      for (let button of $props.buttons) {
-        for (let condition of button.conditions || []) {
+      // Add column conditions
+      for (let column of $columns) {
+        for (let condition of column.conditions || []) {
           newConditions.push({
-            ...(condition as UICondition),
-            target: "button",
-            buttonIndex: $props.buttons.indexOf(button),
-            type: FieldType.STRING, // Default type for button conditions
+            ...condition,
+            column: column.name,
+            type: column.schema.type,
           })
         }
       }
-    }
 
-    return newConditions
-  })
+      // Add button conditions
+      if ($props.buttons) {
+        for (let button of $props.buttons) {
+          for (let condition of button.conditions || []) {
+            newConditions.push({
+              ...(condition as UICondition),
+              target: "button",
+              buttonIndex: $props.buttons.indexOf(button),
+              type: FieldType.STRING, // Default type for button conditions
+            })
+          }
+        }
+      }
+
+      return newConditions
+    }),
+    conditions => conditions
+  )
 
   return {
     conditions,
