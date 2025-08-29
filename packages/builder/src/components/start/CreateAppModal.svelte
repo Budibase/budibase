@@ -170,7 +170,7 @@
         await auth.getSelf()
       }
 
-      $goto(`/builder/app/${createdApp.instance._id}`)
+      $goto(`/builder/workspace/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
       throw error
