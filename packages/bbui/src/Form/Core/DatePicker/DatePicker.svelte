@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="V">
   import "@spectrum-css/calendar/dist/index-vars.css"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/textfield/dist/index-vars.css"
@@ -8,13 +8,14 @@
   import { parseDate } from "../../../helpers"
   import DatePickerPopoverContents from "./DatePickerPopoverContents.svelte"
   import { PopoverAlignment } from "../../../constants"
+  import dayjs from "dayjs"
 
   export let id = null
   export let disabled = false
   export let readonly = false
   export let error = null
   export let enableTime = true
-  export let value: string | null = null
+  export let value: V | null = null
   export let placeholder: string | null = null
   export let timeOnly = false
   export let ignoreTimezones = false
@@ -27,7 +28,9 @@
   let anchor: HTMLElement
   let popover: Popover
 
-  $: parsedValue = parseDate(value, { enableTime })
+  $: parsedValue = parseDate(value as string | dayjs.Dayjs | null, {
+    enableTime,
+  })
 
   const onOpen = () => {
     isOpen = true

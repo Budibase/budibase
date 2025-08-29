@@ -1,10 +1,10 @@
-<script lang="ts">
+<script lang="ts" generics="V">
   import Field from "./Field.svelte"
   import DatePicker from "./Core/DatePicker/DatePicker.svelte"
   import { createEventDispatcher } from "svelte"
   import type { LabelPosition } from "../types"
 
-  export let value: string | null = null
+  export let value: V | null = null
   export let label = undefined
   export let labelPosition: LabelPosition = "above"
   export let disabled = false

@@ -29,11 +29,16 @@
     FieldType,
   } from "@budibase/types"
 
+  interface ExtendedComponentSetting extends ComponentSetting {
+    options?: any[]
+    placeholder?: string
+  }
+
   export let componentInstance
   export let value
   export let conditions: ComponentCondition[] = []
   export let bindings: EnrichedBinding[] = []
-  export let componentBindings = []
+  export let componentBindings: EnrichedBinding[] = []
 
   let drawer: Drawer
   const dispatch = createEventDispatcher()
@@ -94,8 +99,12 @@
     }
   }
 
-  const getSettingDefinition = (key: string | undefined) => {
-    return settings.find(setting => setting.key === key)
+  const getSettingDefinition = (
+    key: string | undefined
+  ): ExtendedComponentSetting | undefined => {
+    return settings.find(setting => setting.key === key) as
+      | ExtendedComponentSetting
+      | undefined
   }
 
   const addCondition = () => {
@@ -179,6 +188,17 @@
     }
   }
 
+  const onSettingValueChange = (
+    val: unknown,
+    condition: ComponentCondition
+  ) => {
+    condition.settingValue = val
+  }
+
+  const propertyControlChangeHandler = (condition: ComponentCondition) => {
+    return (val: unknown) => onSettingValueChange(val, condition)
+  }
+
   const openDrawer = () => {
     conditions = cloneDeep(value || [])
     drawer.show()
@@ -234,7 +254,7 @@
                     size="L"
                     color="var(--spectrum-global-color-gray-600)"
                     hoverable={true}
-                    hovercolor="var(--spectrum-global-color-gray-800)"
+                    hoverColor="var(--spectrum-global-color-gray-800)"
                   />
                 </div>
                 <Select
@@ -256,7 +276,7 @@
                       key={definition.key}
                       value={condition.settingValue}
                       {componentInstance}
-                      onChange={val => (condition.settingValue = val)}
+                      onChange={propertyControlChangeHandler(condition)}
                       props={{
                         options: definition.options,
                         placeholder: definition.placeholder,
