@@ -188,7 +188,7 @@
           <Icon
             hoverable
             name="x"
-            color="var(--spectrum-global-color-gray-800)"
+            color="var(--spectrum-global-color-gray-900)"
             on:click={() => {
               setBannerLocalStorageKey()
               bannerStore.set(true)
@@ -252,10 +252,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--spectrum-global-color-blue-100);
+    background-color: var(--background);
     color: var(--background);
-    border-radius: var(--border-radius-l);
-    padding: var(--spacing-s) var(--spacing-l);
+    border-radius: var(--border-radius-xl);
+    border: 1px solid var(--bb-indigo);
+    padding: var(--spacing-xs) 24px;
   }
 
   .banner-content {
