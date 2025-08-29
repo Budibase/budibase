@@ -174,7 +174,7 @@
           <div class="banner-icon">
             <img src={BBAI} alt="BB AI" width="24" height="24" />
           </div>
-          <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
+          <p>Try BB AI for free. 50,000 tokens included. No CC required.</p>
         </div>
         <div class="banner-buttons">
           <Button
@@ -188,6 +188,7 @@
           <Icon
             hoverable
             name="x"
+            color="var(--spectrum-global-color-gray-800)"
             on:click={() => {
               setBannerLocalStorageKey()
               bannerStore.set(true)
@@ -251,27 +252,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--bb-indigo);
+    background-color: var(--spectrum-global-color-blue-100);
     color: var(--background);
-    border-radius: var(--border-radius-m);
-    padding: var(--spacing-s);
+    border-radius: var(--border-radius-l);
+    padding: var(--spacing-s) var(--spacing-l);
   }
 
   .banner-content {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .banner-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--background);
-    border-radius: var(--border-radius-s);
-    width: 32px;
-    height: 32px;
-    padding: 4px;
+    border-radius: var(--border-radius-l);
   }
 
   .banner-buttons {
@@ -307,5 +304,11 @@
     font-size: 16px;
     margin-top: 32px;
     color: var(--ink);
+  }
+
+  p {
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
+    font-size: 14px;
   }
 </style>

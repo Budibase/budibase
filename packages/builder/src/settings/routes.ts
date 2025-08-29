@@ -238,7 +238,7 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
       ],
     },
     {
-      section: "App",
+      section: "Apps",
       icon: "layout",
       path: "app",
       routes: [
