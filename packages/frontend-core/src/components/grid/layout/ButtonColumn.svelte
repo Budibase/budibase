@@ -108,7 +108,7 @@
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         >
           <GridCell
-            width="auto"
+            width="100%"
             rowIdx={row.__idx}
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
