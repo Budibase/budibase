@@ -103,6 +103,7 @@ typings/
 
 bin/
 hosting/.generated*
+hosting/docker-compose.yaml.backup
 stats.html
 
 
