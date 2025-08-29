@@ -173,8 +173,6 @@ const evaluateConditions = (
       }
     }
   }
-  console.log("CONDTIONS ?? ", conditions)
-  console.log("ALL CONDTIONS ?? ", allConditions)
 
   for (let condition of allConditions) {
     try {

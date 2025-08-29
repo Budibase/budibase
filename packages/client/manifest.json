@@ -760,6 +760,7 @@
         "type": "buttonConditions",
         "label": "Conditions",
         "key": "conditions",
+        "nestedOnly": true,
         "contextAccess": {
           "global": false,
           "self": true
