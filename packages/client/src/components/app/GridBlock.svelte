@@ -191,6 +191,7 @@
           condition.referenceValue || "",
           context
         ),
+        newValue: processStringSync(condition.newValue || "", context),
       }
     })
   }
@@ -206,20 +207,25 @@
     if (!buttons?.length) {
       return null
     }
-    return buttons.map(settings => ({
-      size: "M",
-      text: settings.text,
-      type: settings.type,
-      icon: settings.icon,
-      onClick: async row => {
-        // Create a fake, ephemeral context to run the buttons actions with
-        const id = get(component).id
-        const gridContext = createContextStore(context)
-        gridContext.actions.provideData(id, row)
-        const fn = enrichButtonActions(settings.onClick, get(gridContext))
-        return await fn?.({ row })
-      },
-    }))
+    return buttons.map(settings => {
+      const id = get(component).id
+      return {
+        size: "M",
+        text: settings.text,
+        type: settings.type,
+        icon: settings.icon,
+        getRowConditions: row =>
+          enrichConditions(settings.conditions, { [id]: row }),
+        conditions: settings.conditions,
+        onClick: async row => {
+          // Create a fake, ephemeral context to run the buttons actions/conditions with
+          const gridContext = createContextStore(context)
+          gridContext.actions.provideData(id, row)
+          const fn = enrichButtonActions(settings.onClick, get(gridContext))
+          return await fn?.({ row })
+        },
+      }
+    })
   }
 
   const deriveSelectedRows = gridContext => {

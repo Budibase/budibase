@@ -1,5 +1,6 @@
 import { Document } from "../document"
-import { BasicOperator } from "../../sdk"
+import { ArrayOperator, BasicOperator } from "../../sdk"
+import { FieldType } from "./row"
 
 export interface Component extends Document {
   _instanceName: string
@@ -12,11 +13,13 @@ export interface Component extends Document {
 
 export interface ComponentCondition {
   id: string
-  operator: BasicOperator
+  operator: ArrayOperator | BasicOperator
   action: "update" | "show" | "hide"
+  type: FieldType
   valueType: "string" | "number" | "datetime" | "boolean"
-  newValue?: any
-  referenceValue?: any
+  newValue?: unknown
+  referenceValue?: unknown
   setting?: string
-  settingValue?: any
+  settingValue?: unknown
+  noValue?: boolean
 }
