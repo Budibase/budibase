@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ActionButton,
     Drawer,
@@ -20,14 +20,22 @@
   import { getComponentForSetting } from "@/components/design/settings/componentSettings"
   import { cloneDeep } from "lodash"
   import { createEventDispatcher } from "svelte"
+  import {
+    ArrayOperator,
+    BasicOperator,
+    ComponentCondition,
+    ComponentSetting,
+    EnrichedBinding,
+    FieldType,
+  } from "@budibase/types"
 
   export let componentInstance
   export let value
-  export let conditions = []
-  export let bindings = []
+  export let conditions: ComponentCondition[] = []
+  export let bindings: EnrichedBinding[] = []
   export let componentBindings = []
 
-  let drawer
+  let drawer: Drawer
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
   const zoneType = generate()
@@ -72,19 +80,12 @@
       key: "_css",
       type: "text",
     })
-  $: settingOptions = settings
-    .filter(setting => setting.supportsConditions !== false)
-    .map(setting => ({
-      label: makeLabel(setting),
-      value: setting.key,
-    }))
-  $: conditions.forEach(link => {
-    if (!link.id) {
-      link.id = generate()
-    }
-  })
+  $: settingOptions = settings.map(setting => ({
+    label: makeLabel(setting),
+    value: setting.key,
+  }))
 
-  const makeLabel = setting => {
+  const makeLabel = (setting: ComponentSetting) => {
     const { section, label } = setting
     if (section) {
       return label ? `${section} - ${label}` : section
@@ -93,7 +94,7 @@
     }
   }
 
-  const getSettingDefinition = key => {
+  const getSettingDefinition = (key: string | undefined) => {
     return settings.find(setting => setting.key === key)
   }
 
@@ -101,38 +102,45 @@
     conditions = [
       ...conditions,
       {
-        valueType: "string",
         id: generate(),
         action: "hide",
-        operator: Constants.OperatorOptions.Equals.value,
+        operator: BasicOperator.EQUAL,
+        valueType: "string",
       },
     ]
   }
 
-  const removeCondition = id => {
+  const removeCondition = (id: string) => {
     conditions = conditions.filter(link => link.id !== id)
   }
 
-  const duplicateCondition = id => {
-    const condition = conditions.find(link => link.id === id)
+  const duplicateCondition = (id: string) => {
+    const condition: ComponentCondition = conditions.find(
+      link => link.id === id
+    )!
     const duplicate = { ...condition, id: generate() }
     conditions = [...conditions, duplicate]
   }
 
-  const handleFinalize = e => {
+  const handleFinalize = (e: CustomEvent) => {
     updateConditions(e)
     dragDisabled = true
   }
 
-  const updateConditions = e => {
+  const updateConditions = (e: CustomEvent) => {
     conditions = e.detail.items
   }
 
-  const getOperatorOptions = condition => {
-    return QueryUtils.getValidOperatorsForType({ type: condition.valueType })
+  const getOperatorOptions = (condition: ComponentCondition) => {
+    return QueryUtils.getValidOperatorsForType({
+      type: condition.valueType as FieldType,
+    })
   }
 
-  const onOperatorChange = (condition, newOperator) => {
+  const onOperatorChange = (
+    condition: ComponentCondition,
+    newOperator: ArrayOperator | BasicOperator
+  ) => {
     const noValueOptions = [
       Constants.OperatorOptions.Empty.value,
       Constants.OperatorOptions.NotEmpty.value,
@@ -144,7 +152,10 @@
     }
   }
 
-  const onValueTypeChange = (condition, newType) => {
+  const onValueTypeChange = (
+    condition: ComponentCondition,
+    newType: FieldType
+  ) => {
     condition.referenceValue = null
 
     // Ensure a valid operator is set
@@ -153,12 +164,13 @@
     }).map(x => x.value)
     if (!validOperators.includes(condition.operator)) {
       condition.operator =
-        validOperators[0] ?? Constants.OperatorOptions.Equals.value
+        (validOperators[0] as ArrayOperator | BasicOperator) ??
+        BasicOperator.EQUAL
       onOperatorChange(condition, condition.operator)
     }
   }
 
-  const onSettingChange = (e, condition) => {
+  const onSettingChange = (e: CustomEvent, condition: ComponentCondition) => {
     const setting = settings.find(x => x.key === e.detail)
     if (setting?.defaultValue != null) {
       condition.settingValue = setting.defaultValue
@@ -221,7 +233,7 @@
                     name="dots-six-vertical"
                     size="L"
                     color="var(--spectrum-global-color-gray-600)"
-                    hoverable="true"
+                    hoverable={true}
                     hovercolor="var(--spectrum-global-color-gray-800)"
                   />
                 </div>
