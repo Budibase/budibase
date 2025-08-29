@@ -38,7 +38,7 @@
 </script>
 
 <Layout gap="M" noPadding>
-  <Heading size="XS">App info</Heading>
+  <Heading size="XS">Workspace info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
@@ -55,7 +55,7 @@
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="link" on:click={deploymentStore.viewPublishedApp}>
-          View app
+          View workspace
         </div>
       </Body>
     </div>
@@ -71,7 +71,7 @@
         size="M"
       />
       <Body size="S">
-        Your app hasn't been published yet and isn't available to users
+        Your workspace hasn't been published yet and isn't available to users
       </Body>
     </div>
     <div class="row">
@@ -86,7 +86,7 @@
   {/if}
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
-    <Heading size="XS">App version</Heading>
+    <Heading size="XS">Workspace version</Heading>
     {#if $admin.isDev}
       <Body size="S">
         You're running the latest client version from your file system, as
@@ -94,7 +94,9 @@
       </Body>
     {:else if updateAvailable}
       <Body size="S">
-        The app is currently using version <strong>{$appStore.version}</strong>
+        The workspace is currently using version <strong
+          >{$appStore.version}</strong
+        >
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
@@ -106,14 +108,16 @@
           disabled={!$isOnlyUser}
           tooltip={$isOnlyUser
             ? null
-            : "Unavailable - another user is editing this app"}
+            : "Unavailable - another user is editing this workspace"}
         >
           Update version
         </Button>
       </div>
     {:else}
       <Body size="S">
-        The app is currently using version <strong>{$appStore.version}</strong>.
+        The workspace is currently using version <strong
+          >{$appStore.version}</strong
+        >.
         <br />
         You're running the latest!
       </Body>
@@ -125,7 +129,7 @@
             disabled={!$isOnlyUser}
             tooltip={$isOnlyUser
               ? null
-              : "Unavailable - another user is editing this app"}
+              : "Unavailable - another user is editing this workspace"}
           >
             Revert version
           </Button>
@@ -137,28 +141,30 @@
   <Layout noPadding gap="XS">
     <Heading size="XS">Export</Heading>
     <Body size="S">
-      Export your app for backup or to share it with someone else
+      Export your workspace for backup or to share it with someone else
     </Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={() => exportApp({ published: false })}>
-      Export latest edited app
+      Export latest edited workspace
     </Button>
     <Button
       secondary
       disabled={!$deploymentStore.isPublished}
       on:click={() => exportApp({ published: true })}
     >
-      Export latest published app
+      Export latest published workspace
     </Button>
   </div>
   <Divider noMargin />
   <Layout noPadding gap="XS">
     <Heading size="XS">Import</Heading>
-    <Body size="S">Import an app export bundle to update this app</Body>
+    <Body size="S"
+      >Import a workspace export bundle to update this workspace</Body
+    >
   </Layout>
   <div class="row">
-    <Button secondary on:click={importModal?.show}>Import app</Button>
+    <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider noMargin />
   <Heading size="XS">Danger zone</Heading>
@@ -171,9 +177,9 @@
       }}
       tooltip={$isOnlyUser
         ? undefined
-        : "Unavailable - another user is editing this app"}
+        : "Unavailable - another user is editing this workspace"}
     >
-      Delete app
+      Delete workspace
     </Button>
   </div>
 </Layout>
@@ -191,10 +197,10 @@
 <ConfirmDialog
   bind:this={unpublishModal}
   title="Confirm unpublish"
-  okText="Unpublish app"
+  okText="Unpublish workspace"
   onOk={deploymentStore.unpublishApp}
 >
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+  Are you sure you want to unpublish the workspace <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
 <RevertModal bind:this={revertModal} />
