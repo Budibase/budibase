@@ -51,10 +51,9 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
         for (let button of $props.buttons) {
           for (let condition of button.conditions || []) {
             newConditions.push({
-              ...(condition as UICondition),
+              ...condition,
               target: "button",
               buttonIndex: $props.buttons.indexOf(button),
-              type: FieldType.STRING, // Default type for button conditions
             })
           }
         }
@@ -167,10 +166,9 @@ const evaluateConditions = (
         const dynamicConditions = button.getRowConditions(row) || []
         for (let condition of dynamicConditions) {
           allConditions.push({
-            ...(condition as UICondition),
+            ...condition,
             target: "button",
             buttonIndex: $props.buttons.indexOf(button),
-            type: FieldType.STRING, // Default type for button conditions
           })
         }
       }
@@ -213,7 +211,6 @@ const evaluateConditions = (
 
       let value
       if (target === "button") {
-        // For button conditions, use newValue directly
         value = newValue
       } else {
         value = row[column]
