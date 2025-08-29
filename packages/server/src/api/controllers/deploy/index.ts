@@ -31,6 +31,8 @@ import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../appMigrations"
 import env from "../../../environment"
+import { bundleGenerationService } from "../../../services/bundleGeneration"
+import { updateClientLibrary } from "../../../utilities/fileSystem/clientLibrary"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -305,6 +307,33 @@ export const publishApp = async function (
       await db.put(appDoc)
       await cache.app.invalidateAppMetadata(productionAppId)
       await initDeployedApp(productionAppId)
+
+      // Generate optimized client bundle and update client library for this app
+      try {
+        console.log(`Generating optimized client bundle for app ${productionAppId}`)
+        
+        // Generate the optimized bundle (replaces the default client bundle)
+        await bundleGenerationService.generateOptimizedBundle(appDoc, productionAppId)
+        
+        // Upload the optimized bundle using the existing client library system
+        await updateClientLibrary(productionAppId)
+        
+        console.log(`Optimized client bundle deployed for app ${productionAppId}`)
+      } catch (bundleError) {
+        console.error(`Failed to generate/deploy optimized client bundle for app ${productionAppId}:`, bundleError)
+        
+        // Fallback: try to use the default bundle
+        try {
+          console.log(`Falling back to default client bundle for app ${productionAppId}`)
+          await updateClientLibrary(productionAppId)
+        } catch (fallbackError) {
+          console.error(`Failed to deploy fallback client bundle for app ${productionAppId}:`, fallbackError)
+        }
+        
+        // Don't fail the entire deployment if bundle generation fails
+        // The app can still function with whatever bundle is available
+      }
+
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

@@ -2,7 +2,6 @@ import { svelte } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig } from "vite"
 import path from "path"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
-import { visualizer } from "rollup-plugin-visualizer"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -15,18 +14,54 @@ const ignoredWarnings = [
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
+  // Get analysis from environment variables
+  const usesCharts = process.env.BUDIBASE_INCLUDE_CHARTS !== "false"
+  const usesForms = process.env.BUDIBASE_INCLUDE_FORMS !== "false"
+  // Always include blocks for now
+  const usesBlocks = true
+
   return {
-    server: {
-      open: false,
-    },
     build: {
-      outDir: "dist",
-      minify: false, // Don't minify
+      lib: {
+        entry: "src/index.ts",
+        formats: ["iife"],
+        outDir: "dist",
+        name: "budibase_client",
+        fileName: () => "budibase-client.js",
+      },
+      emptyOutDir: false,
+      minify: isProduction,
       rollupOptions: {
-        input: "src/index.ts",
-        treeshake: false, // Keep everything, don't tree shake
+        treeshake: {
+          moduleSideEffects: false,
+        },
+        external: id => {
+          // Externalize modules we don't want to include
+          if (
+            !usesCharts &&
+            (id.includes("/charts/") || id.endsWith("/charts"))
+          ) {
+            return true
+          }
+          if (!usesForms && (id.includes("/forms/") || id.endsWith("/forms"))) {
+            return true
+          }
+          if (
+            !usesBlocks &&
+            (id.includes("/blocks/") || id.endsWith("/blocks"))
+          ) {
+            return true
+          }
+          return false
+        },
         output: {
-          format: "es", // ES modules format
+          globals: id => {
+            // Provide empty globals for externalized modules
+            if (id.includes("charts")) return "{}"
+            if (id.includes("forms")) return "{}"
+            if (id.includes("blocks")) return "{}"
+            return undefined
+          },
         },
       },
     },
@@ -34,17 +69,12 @@ export default defineConfig(({ mode }) => {
       svelte({
         emitCss: true,
         onwarn: (warning, handler) => {
-          // Ignore some warnings
           if (!ignoredWarnings.includes(warning.code)) {
             handler(warning)
           }
         },
       }),
       cssInjectedByJsPlugin(),
-      visualizer({
-        filename: "dist/budibase-client-analysis.html",
-        open: false,
-      }),
     ],
     resolve: {
       dedupe: ["svelte", "svelte/internal"],
@@ -67,26 +97,23 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: "@",
-          replacement: path.resolve(__dirname, "src"),
+          replacement: path.resolve("src"),
         },
         {
           find: "leaflet/dist/leaflet.css",
           replacement: path.resolve(
-            __dirname,
             "../../node_modules/leaflet/dist/leaflet.css"
           ),
         },
         {
           find: "leaflet",
           replacement: path.resolve(
-            __dirname,
             "../../node_modules/leaflet/dist/leaflet.js"
           ),
         },
         {
           find: "html2canvas",
           replacement: path.resolve(
-            __dirname,
             "../../node_modules/html2canvas/dist/html2canvas.min.js"
           ),
         },
