@@ -2,8 +2,8 @@
   import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
   import { automationStore } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import { TriggerStepID } from "@/constants/backend/automations"
   import { sdk as coreSdk } from "@budibase/shared-core"
+  import { filterTriggerableAutomations } from "./utils"
 
   export let parameters = {}
   export let bindings = []
@@ -27,9 +27,8 @@
     parameters
   }
   $: automations = rootEle
-    ? $automationStore.automations
-        .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
-        .map(automation => {
+    ? filterTriggerableAutomations($automationStore.automations).map(
+        automation => {
           const schema = Object.entries(
             automation.definition.trigger.inputs.fields || {}
           ).map(([name, type]) => ({ name, type }))
@@ -45,7 +44,8 @@
             disabled: automation.disabled,
             icon: getStatusIcon(!automation.disabled),
           }
-        })
+        }
+      )
     : []
 
   $: selectedAutomation = automations?.find(
