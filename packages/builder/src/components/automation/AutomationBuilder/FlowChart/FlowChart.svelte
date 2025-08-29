@@ -9,6 +9,7 @@
     Button,
     ActionButton,
     Switcher,
+    StatusLight,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -31,7 +32,6 @@
   import DraggableCanvas from "../DraggableCanvas.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
-  import CtaNotification from "@/components/common/CtaNotification.svelte"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { PublishResourceState } from "@budibase/types"
@@ -42,7 +42,6 @@
 
   let testDataModal
   let confirmDeleteDialog
-  let scrolling = false
   let blockRefs = {}
   let treeEle
   let draggable
@@ -170,7 +169,7 @@
   {/if}
 
   <div class="actions-right" class:grow={$featureFlags.WORKSPACES}>
-    <div class:grow={$featureFlags.WORKSPACES}>
+    <div class:grow={$featureFlags.WORKSPACES} class="actions-group">
       <Switcher
         on:left={() => {
           viewMode = ViewMode.EDITOR
@@ -198,6 +197,12 @@
           ? "right"
           : "left"}
       />
+      {#if hasUnpublishedChanges}
+        <button class="unpublished-changes-btn" on:click={publishChanges}>
+          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
+          <div class="unpublished-changes-text">Unpublished changes</div>
+        </button>
+      {/if}
     </div>
 
     <ActionButton
@@ -240,20 +245,6 @@
 </div>
 
 <div class="main-flow">
-  <div class="canvas-heading" class:scrolling>
-    <div class="canvas-controls">
-      {#if hasUnpublishedChanges}
-        <CtaNotification
-          button={{ message: "Publish changes" }}
-          on:click={publishChanges}
-          icon="info"
-        >
-          <span>This automation has unpublished changes</span>
-        </CtaNotification>
-      {/if}
-    </div>
-  </div>
-
   <div class="root" bind:this={treeEle}>
     <DraggableCanvas
       bind:this={draggable}
@@ -335,13 +326,6 @@
     height: 100%;
   }
 
-  .canvas-heading {
-    position: absolute;
-    z-index: 1;
-    width: 100%;
-    pointer-events: none;
-  }
-
   .automation-heading {
     display: flex;
     align-items: center;
@@ -405,27 +389,6 @@
     box-sizing: border-box;
   }
 
-  .canvas-heading.scrolling {
-    background: var(--background);
-    border-bottom: var(--border-light);
-    z-index: 1;
-  }
-
-  .canvas-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-l);
-    padding-right: var(--spacing-xl);
-    width: 100%;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  .canvas-controls > * {
-    pointer-events: auto;
-  }
-
   .toggle-active :global(.spectrum-Switch-label) {
     margin-right: 0px;
   }
@@ -473,5 +436,42 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+  }
+
+  .unpublished-changes-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding: 0 calc(var(--spacing-m) / 2);
+    color: var(--spectrum-global-color-gray-900);
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background 130ms ease-out,
+      border 130ms ease-out,
+      color 130ms ease-out;
+  }
+
+  .unpublished-changes-btn:hover {
+    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  .unpublished-changes-btn:active {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .actions-group {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+
+  .unpublished-changes-text {
+    padding-top: 1px;
   }
 </style>

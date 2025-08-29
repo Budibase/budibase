@@ -79,7 +79,7 @@
     offset={20}
   >
     <Explanation
-      tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
+      tableHref={`/builder/workspace/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
       name={currentOption}
       {explanation}

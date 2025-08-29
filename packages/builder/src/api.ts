@@ -51,7 +51,7 @@ const newClient = (opts?: { production?: boolean }) =>
       }
     },
     onMigrationDetected: appId => {
-      const updatingUrl = `/builder/app/updating/${appId}`
+      const updatingUrl = `/builder/workspace/updating/${appId}`
 
       if (window.location.pathname === updatingUrl) {
         return
