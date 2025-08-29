@@ -177,6 +177,23 @@ const evaluateConditions = (
     }
   }
 
+  // Pre-process button conditions to set default visibility for show conditions
+  const buttonShowConditions = new Set()
+  for (let condition of allConditions) {
+    if (
+      condition.target === "button" &&
+      condition.action === "show" &&
+      typeof condition.buttonIndex === "number"
+    ) {
+      buttonShowConditions.add(condition.buttonIndex)
+      // Initialize button metadata and set as hidden by default for show conditions
+      if (!metadata.button[condition.buttonIndex]) {
+        metadata.button[condition.buttonIndex] = {}
+      }
+      metadata.button[condition.buttonIndex].hidden = true
+    }
+  }
+
   for (let condition of allConditions) {
     try {
       let {
@@ -237,6 +254,8 @@ const evaluateConditions = (
 
           if (action === "hide") {
             metadata.button[buttonIndex].hidden = true
+          } else if (action === "show") {
+            metadata.button[buttonIndex].hidden = false
           } else if (action === "update" && setting) {
             metadata.button[buttonIndex][setting] = settingValue
           }
