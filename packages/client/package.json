@@ -18,7 +18,7 @@
     "./manifest.json": "./manifest.json"
   },
   "scripts": {
-    "build": "node cli.js build",
+    "build": "vite build",
     "dev": "vite build --watch --mode=dev",
     "check:types": "yarn svelte-check"
   },
