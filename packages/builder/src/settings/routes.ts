@@ -249,7 +249,7 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
     },
   ].map((entry: Route) => ({
     ...entry,
-    group: "This workspace",
+    group: "Workspace",
   }))
 }
 
