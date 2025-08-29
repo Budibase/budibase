@@ -149,7 +149,7 @@ export interface DerivedAutomationStoreState
   extends AutomationStoreState<UIAutomation> {}
 
 export interface SelectedAutomationState {
-  data?: Automation
+  data?: UIAutomation
   blockRefs: Record<string, BlockRef>
 }
 

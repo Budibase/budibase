@@ -65,6 +65,8 @@ import {
   FeatureFlag,
   isRowActionTrigger,
   isWebhookTrigger,
+  AutomationLog,
+  AutomationStepResult,
   AutomationTriggerResult,
   RowActionTriggerOutputs,
   WebhookTriggerOutputs,
@@ -1969,7 +1971,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param block
    * @param newName
    */
-  updateBlockTitle: async (block: AutomationStep, newName: string) => {
+  updateBlockTitle: async (
+    block: AutomationStep | AutomationTrigger,
+    newName: string
+  ) => {
     if (newName.trim().length === 0) {
       await automationStore.actions.deleteAutomationName(block.id)
     } else {
@@ -2099,7 +2104,10 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openLogPanel: (log: any, stepData: any) => {
+  openLogPanel: (
+    log: AutomationLog,
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) => {
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,
