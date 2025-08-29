@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/calendar/dist/index-vars.css"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/textfield/dist/index-vars.css"
@@ -7,26 +7,27 @@
   import DateInput from "./DateInput.svelte"
   import { parseDate } from "../../../helpers"
   import DatePickerPopoverContents from "./DatePickerPopoverContents.svelte"
+  import { PopoverAlignment } from "../../../constants"
 
   export let id = null
   export let disabled = false
   export let readonly = false
   export let error = null
   export let enableTime = true
-  export let value = undefined
-  export let placeholder = null
+  export let value: string | null = null
+  export let placeholder: string | null = null
   export let timeOnly = false
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
-  export let appendTo = null
+  export let appendTo = undefined
   export let api = null
-  export let align = "left"
+  export let align: PopoverAlignment = PopoverAlignment.Left
 
   let isOpen = false
-  let anchor
-  let popover
+  let anchor: HTMLElement
+  let popover: Popover
 
-  $: parsedValue = parseDate(value, { timeOnly, enableTime })
+  $: parsedValue = parseDate(value, { enableTime })
 
   const onOpen = () => {
     isOpen = true
