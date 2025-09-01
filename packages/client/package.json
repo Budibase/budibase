@@ -15,8 +15,8 @@
     "./manifest.json": "./manifest.json"
   },
   "scripts": {
-    "build": "vite build && vite build --config vite.apexcharts.config.mjs",
-    "dev": "vite build --watch --mode=dev",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch --dev",
     "check:types": "yarn svelte-check"
   },
   "dependencies": {
