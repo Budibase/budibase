@@ -10,7 +10,7 @@
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
 
   export let block

@@ -60,7 +60,7 @@ export async function fetch(status: AppStatus, user: ContextUser) {
 
 export async function enrichWithDefaultWorkspaceAppUrl(apps: App[]) {
   const result = []
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (await features.isEnabled(FeatureFlag.WORKSPACES)) {
     for (const app of apps) {
       const workspaceApps = await db.doWithDB(app.appId, db =>
         sdk.workspaceApps.fetch(db)

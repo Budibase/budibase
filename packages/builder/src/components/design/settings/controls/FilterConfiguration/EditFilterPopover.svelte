@@ -4,7 +4,7 @@
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import { getComponentBindableProperties } from "@/dataBinding"
-  import ComponentSettingsSection from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import ComponentSettingsSection from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
 
   export let anchor
   export let componentInstance

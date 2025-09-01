@@ -7,7 +7,7 @@
   import { sdk } from "@budibase/shared-core"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-  import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
+  import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
   export let app
@@ -31,11 +31,11 @@
   }
 
   const goToBuilder = () => {
-    $goto(`../../app/${app.devId}`)
+    $goto(`../../workspace/${app.devId}`)
   }
 
   const goToOverview = () => {
-    $goto(`../../app/${app.devId}/settings`)
+    $goto(`../../workspace/${app.devId}/settings`)
   }
 
   const goToApp = () => {

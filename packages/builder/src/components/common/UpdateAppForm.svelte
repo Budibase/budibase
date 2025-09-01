@@ -6,6 +6,7 @@
     Input,
     notifications,
     Body,
+    Helpers,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
   import { appStore, initialise } from "@/stores/builder"
@@ -49,7 +50,7 @@
   let initialised = false
 
   let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps[0]
@@ -86,7 +87,7 @@
     })
   }
 
-  // On app/apps update, reset the state.
+  // On workspace/apps update, reset the state.
   $: initForm(appMeta)
   $: validate($values)
 
@@ -157,10 +158,12 @@
       })
 
       await initialiseApp()
-      notifications.success("App update successful")
+      notifications.success(
+        `${Helpers.capitalise(appOrWorkspace)} update successful`
+      )
     } catch (error) {
       console.error(error)
-      notifications.error("Error updating app")
+      notifications.error(`Error updating ${appOrWorkspace}`)
     }
   }
 
@@ -222,7 +225,9 @@
       {:else}
         <div class="edit-info">
           <Icon size="M" name="info" />
-          <Body size="S">Unpublish your app to edit name and URL</Body>
+          <Body size="S">
+            Unpublish your {appOrWorkspace} to edit name and URL
+          </Body>
         </div>
       {/if}
     </div>

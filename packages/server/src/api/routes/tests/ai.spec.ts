@@ -6,7 +6,7 @@ import {
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, features, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -73,7 +73,7 @@ function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
         provider: "OpenAI",
         name: "OpenAI",
         apiKey: "test-key",
-        defaultModel: "gpt-4o-mini",
+        defaultModel: "gpt-5-mini",
         active: true,
         isDefault: true,
         ...providerConfig,
@@ -109,7 +109,7 @@ const allProviders: TestSetup[] = [
   },
   {
     name: "OpenAI API key with custom config",
-    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-4o-mini" }),
+    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
     mockLLMResponse: mockChatGPTResponse,
   },
   {
@@ -174,17 +174,6 @@ describe("AI", () => {
       })
 
       describe("POST /api/ai/js", () => {
-        let cleanup: () => void
-        beforeAll(() => {
-          cleanup = features.testutils.setFeatureFlags("*", {
-            AI_JS_GENERATION: true,
-          })
-        })
-
-        afterAll(() => {
-          cleanup()
-        })
-
         it("handles correct plain code response", async () => {
           mockLLMResponse(`return 42`)
 
@@ -310,19 +299,14 @@ describe("BudibaseAI", () => {
     let internalApiKey = "api-key"
 
     let envCleanup: () => void
-    let featureCleanup: () => void
     beforeAll(() => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
       })
-      featureCleanup = features.testutils.setFeatureFlags("*", {
-        AI_JS_GENERATION: true,
-      })
     })
 
     afterAll(() => {
-      featureCleanup()
       envCleanup()
     })
 
@@ -500,20 +484,12 @@ describe("BudibaseAI", () => {
   })
 
   describe("POST /api/ai/tables", () => {
-    let featureCleanup: () => void
-    beforeAll(() => {
-      featureCleanup = features.testutils.setFeatureFlags("*", {
-        AI_TABLE_GENERATION: true,
-      })
-    })
-
-    afterAll(() => {
-      featureCleanup()
-    })
-
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+      // Ensure MockAgent is installed for OpenAI interceptors
+      const { installHttpMocking } = require("../../../tests/jestEnv")
+      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
@@ -688,7 +664,11 @@ describe("BudibaseAI", () => {
       }
       mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
-      nock("https://photourl.com").get("/any.png").reply(200).persist()
+      // Use nock for image downloads since it intercepts before undici
+      nock("https://photourl.com")
+        .get("/any.png")
+        .times(5) // 5 employee photos
+        .reply(200, Buffer.from("fake image data"))
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
@@ -845,7 +825,13 @@ describe("BudibaseAI", () => {
       }
       mockDataGeneration(dataGeneration)
 
-      mockProcessAIColumn("Mock LLM Response")
+      // Set up interceptors for AI column processing
+      // Tickets: 4 rows × 2 AI columns = 8 calls
+      // Employees: 5 rows × 1 AI column = 5 calls
+      // Total: 13 interceptors needed
+      for (let i = 0; i < 13; i++) {
+        mockProcessAIColumn("Mock LLM Response")
+      }
 
       const { createdTables } = await config.api.ai.generateTables({ prompt })
       expect(createdTables).toEqual([

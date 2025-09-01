@@ -170,7 +170,7 @@
         await auth.getSelf()
       }
 
-      $goto(`/builder/app/${createdApp.instance._id}`)
+      $goto(`/builder/workspace/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
       throw error
@@ -181,7 +181,7 @@
   let currentStep = Step.CONFIG
 
   let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: stepConfig = {
     [Step.CONFIG]: {
