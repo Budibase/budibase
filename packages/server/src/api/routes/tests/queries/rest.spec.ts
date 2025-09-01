@@ -454,4 +454,56 @@ describe("rest", () => {
 
     expect(mock.isDone()).toEqual(true)
   })
+
+  it("should remove empty query parameters from bindings", async () => {
+    const mock = nock("http://www.example.com")
+      .get("/?validParam=test")
+      .reply(200, { success: true })
+
+    await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: generator.guid(),
+      parameters: [
+        { name: "emptyParam", default: "" },
+        { name: "validParam", default: "test" },
+        { name: "anotherEmptyParam", default: "" },
+      ],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString:
+          "emptyParam={{emptyParam}}&validParam={{validParam}}&anotherEmptyParam={{anotherEmptyParam}}",
+      },
+    })
+
+    expect(mock.isDone()).toEqual(true)
+  })
+
+  it("should handle query string with all empty bindings", async () => {
+    const mock = nock("http://www.example.com")
+      .get("/")
+      .reply(200, { success: true })
+
+    await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: generator.guid(),
+      parameters: [
+        { name: "emptyParam1", default: "" },
+        { name: "emptyParam2", default: "" },
+      ],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "emptyParam1={{emptyParam1}}&emptyParam2={{emptyParam2}}",
+      },
+    })
+
+    expect(mock.isDone()).toEqual(true)
+  })
 })
