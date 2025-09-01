@@ -1,30 +1,20 @@
 import path from "path"
 import fs from "fs"
 import { spawn } from "child_process"
-import { App } from "@budibase/types"
+import { Screen } from "@budibase/types"
 import env from "../environment"
+import sdk from "../sdk"
 
 interface ComponentAnalysis {
-  usesCharts: boolean
-  usesForms: boolean
-  usesBlocks: boolean
+  usesChartBlock: boolean
   usedComponents: string[]
   totalComponents: number
-}
-
-interface BuildFlags {
-  BUDIBASE_INCLUDE_CHARTS: string
-  BUDIBASE_INCLUDE_FORMS: string
-  BUDIBASE_INCLUDE_BLOCKS: string
 }
 
 export class BundleGenerationService {
   private static bundleCache = new Map<string, string>()
 
-  /**
-   * Analyzes an app definition to determine which component categories are used
-   */
-  private analyzeAppComponents(appDefinition: App): ComponentAnalysis {
+  private analyseAppComponents(screens: Screen[]): ComponentAnalysis {
     const usedComponents = new Set<string>()
 
     const scanComponent = (component: any) => {
@@ -39,81 +29,19 @@ export class BundleGenerationService {
         }
       }
 
-      // Recursively scan children
       if (component._children) {
         component._children.forEach(scanComponent)
       }
     }
 
-    // Scan all screens and layouts
-    const appDefinitionAny = appDefinition as any
+    Object.values(screens).forEach((screen: any) => {
+      if (screen.props) {
+        scanComponent(screen.props)
+      }
+    })
 
-    if (appDefinitionAny.layouts) {
-      Object.values(appDefinitionAny.layouts).forEach((layout: any) => {
-        if (layout.props) {
-          scanComponent(layout.props)
-        }
-      })
-    }
-
-    if (appDefinitionAny.screens) {
-      Object.values(appDefinitionAny.screens).forEach((screen: any) => {
-        if (screen.props) {
-          scanComponent(screen.props)
-        }
-      })
-    }
-
-    // Define component categories
-    const chartComponents = [
-      "bar",
-      "line",
-      "area",
-      "pie",
-      "donut",
-      "candlestick",
-      "histogram",
-    ]
-    const formComponents = [
-      "form",
-      "formstep",
-      "fieldgroup",
-      "labelfield",
-      "stringfield",
-      "numberfield",
-      "bigintfield",
-      "passwordfield",
-      "optionsfield",
-      "multifieldselect",
-      "booleanfield",
-      "longformfield",
-      "datetimefield",
-      "codescanner",
-      "signaturesinglefield",
-      "attachmentfield",
-      "attachmentsinglefield",
-      "relationshipfield",
-      "jsonfield",
-      "s3upload",
-      "bbreferencefield",
-      "bbreferencesinglefield",
-      "ratingfield",
-    ]
-    const blockComponents = [
-      "chartblock",
-      "cardsblock",
-      "repeaterblock",
-      "multistepformblock",
-      "formblock",
-      "rowexplorer",
-    ]
-
-    // Determine which categories are used
     const analysis = {
-      usesCharts:
-        chartComponents.some(comp => usedComponents.has(comp)) || true,
-      usesForms: formComponents.some(comp => usedComponents.has(comp)),
-      usesBlocks: blockComponents.some(comp => usedComponents.has(comp)),
+      usesChartBlock: usedComponents.has("chartblock"),
       usedComponents: Array.from(usedComponents),
       totalComponents: usedComponents.size,
     }
@@ -122,27 +50,12 @@ export class BundleGenerationService {
   }
 
   /**
-   * Generates build flags based on component analysis
-   */
-  private generateBuildFlags(analysis: ComponentAnalysis): BuildFlags {
-    return {
-      BUDIBASE_INCLUDE_CHARTS: analysis.usesCharts ? "true" : "false",
-      BUDIBASE_INCLUDE_FORMS: analysis.usesForms ? "true" : "false",
-      BUDIBASE_INCLUDE_BLOCKS: analysis.usesBlocks ? "true" : "false",
-    }
-  }
-
-  /**
    * Generates a cache key for the bundle based on component usage
    */
   private generateBundleKey(analysis: ComponentAnalysis): string {
-    const flags = [
-      analysis.usesCharts ? "C" : "",
-      analysis.usesForms ? "F" : "",
-      analysis.usesBlocks ? "B" : "",
-    ].join("")
+    const flags = [analysis.usesChartBlock ? "CB" : ""].join("")
 
-    return `bundle-${flags || "minimal"}`
+    return `bundle-${flags}`
   }
 
   /**
@@ -165,32 +78,18 @@ export class BundleGenerationService {
   }
 
   /**
-   * Gets the path where the generated bundle should be placed
-   * This integrates with the existing updateClientLibrary system
-   */
-  private getBundleOutputPath(): string {
-    const clientPath = this.getClientPackagePath()
-    return path.join(clientPath, "dist", "budibase-client.js")
-  }
-
-  /**
    * Trims unused modules from the full bundle using the CLI trim command (Step 2)
    */
   private async trimBundle(analysis: ComponentAnalysis): Promise<void> {
     const clientPath = this.getClientPackagePath()
     const cliPath = path.join(clientPath, "cli.js")
 
-    // Check if CLI exists
-    // @ts-ignore
     if (!fs.existsSync(cliPath)) {
       throw new Error(`Client CLI not found at ${cliPath}`)
     }
 
-    // Create analysis JSON for CLI
     const analysisJson = JSON.stringify({
-      usesCharts: analysis.usesCharts,
-      usesForms: analysis.usesForms,
-      usesBlocks: analysis.usesBlocks,
+      usesChartBlock: analysis.usesChartBlock,
     })
 
     console.log(`Trimming bundle with analysis: ${analysisJson}`)
@@ -201,11 +100,10 @@ export class BundleGenerationService {
         stdio: ["inherit", "pipe", "pipe"],
       })
 
-      let stdout = ""
       let stderr = ""
 
       trimProcess.stdout?.on("data", data => {
-        stdout += data.toString()
+        console.log(data.toString().trim())
       })
 
       trimProcess.stderr?.on("data", data => {
@@ -235,13 +133,11 @@ export class BundleGenerationService {
    * Generates an optimized bundle for a specific app
    * The bundle replaces the default client bundle and will be used by updateClientLibrary
    */
-  async generateOptimizedBundle(
-    appDefinition: App,
-    appId: string
-  ): Promise<void> {
+  async generateOptimizedBundle(appId: string): Promise<void> {
     try {
-      // Analyze the app to determine component usage
-      const analysis = this.analyzeAppComponents(appDefinition)
+      const screens = await sdk.screens.fetch()
+
+      const analysis = this.analyseAppComponents(screens)
       const bundleKey = this.generateBundleKey(analysis)
 
       // Check if we need to generate a new bundle (simple caching based on bundle key)
@@ -251,16 +147,13 @@ export class BundleGenerationService {
       //   return
       // }
 
-      // Generate new optimized bundle
       console.log(`Generating optimized bundle: ${bundleKey} for app ${appId}`)
       console.log(
-        `Component analysis: ${analysis.totalComponents} total, charts: ${analysis.usesCharts}, forms: ${analysis.usesForms}, blocks: ${analysis.usesBlocks}`
+        `Component analysis: ${analysis.totalComponents} total, chart blocks: ${analysis.usesChartBlock}`
       )
 
-      // Trim unused modules based on analysis (compiled modules already exist)
       await this.trimBundle(analysis)
 
-      // Cache the bundle key for this app
       BundleGenerationService.bundleCache.set(appId, bundleKey)
 
       console.log(`Optimized bundle generated for app ${appId}`)

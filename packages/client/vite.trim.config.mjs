@@ -6,12 +6,10 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
   // Get analysis from environment variables
-  const usesCharts = process.env.BUDIBASE_INCLUDE_CHARTS !== "false"
-  const usesForms = process.env.BUDIBASE_INCLUDE_FORMS !== "false"
+  const usesChartBlock = process.env.BUDIBASE_INCLUDE_CHARTBLOCK !== "false"
 
   console.log({
-    Charts: usesCharts,
-    Forms: usesForms,
+    ChartBlock: usesChartBlock,
   })
 
   // Find the compiled chunk files in dist/assets
@@ -41,20 +39,14 @@ export default defineConfig(({ mode }) => {
       minify: isProduction,
       rollupOptions: {
         external: id => {
-          // Externalize chart/form chunks we don't want to include
-          if (!usesCharts && id.includes("charts-")) {
-            return true
-          }
-          if (!usesForms && id.includes("forms-")) {
+          if (!usesChartBlock && id.includes("chartBlock-")) {
             return true
           }
           return false
         },
         output: {
           globals: id => {
-            // Provide empty objects for externalized chunks
-            if (id.includes("charts-")) return "{}"
-            if (id.includes("forms-")) return "{}"
+            if (id.includes("chartBlock-")) return "{}"
             return undefined
           },
         },

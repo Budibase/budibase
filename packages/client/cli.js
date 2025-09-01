@@ -69,9 +69,7 @@ async function trimBundle(analysisData) {
         env: {
           ...process.env,
           NODE_ENV: "production",
-          BUDIBASE_INCLUDE_CHARTS: analysis.usesCharts ? "true" : "false",
-          BUDIBASE_INCLUDE_FORMS: analysis.usesForms ? "true" : "false",
-          // Blocks are always included for now
+          BUDIBASE_INCLUDE_CHARTBLOCK: analysis.usesChartBlock ? "true" : "false",
         },
       })
 
