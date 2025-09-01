@@ -1,7 +1,12 @@
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
-import { EditorModesMap, Helper, Snippet } from "@budibase/types"
+import {
+  EditorModesMap,
+  EnrichedBinding,
+  Helper,
+  Snippet,
+} from "@budibase/types"
 import { CompletionContext } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
 import { BindingCompletion, BindingCompletionOption } from "@/types"
@@ -239,10 +244,7 @@ function setAutocomplete(
   }
 }
 
-const buildBindingInfoNode = (binding: {
-  valueHTML: string
-  value: string | null
-}) => {
+const buildBindingInfoNode = (binding: EnrichedBinding) => {
   if (!binding.valueHTML || binding.value == null) {
     return null
   }
@@ -368,13 +370,12 @@ const insertBinding = (
   })
 }
 
-// TODO: typing in this function isn't great
 export const bindingsToCompletions = (
-  bindings: any,
+  bindings: EnrichedBinding[] | undefined,
   mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
-  const categoryMeta = bindings?.reduce((acc: any, ele: any) => {
+  const categoryMeta = bindings?.reduce((acc: any, ele: EnrichedBinding) => {
     acc[ele.category] = acc[ele.category] || {}
 
     if (ele.icon) {
@@ -392,7 +393,7 @@ export const bindingsToCompletions = (
     const { icon, rank } = categoryMeta[catKey] || {}
 
     const bindingSectionHeader = buildSectionHeader(
-      // @ts-ignore something wrong with this - logically this should be dictionary
+      // @ts-expect-error something wrong with this - logically this should be dictionary
       bindingByCategory.type,
       catKey,
       icon || "",

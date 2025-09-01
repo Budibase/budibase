@@ -100,10 +100,7 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  $: bindingOptions =
-    allowHBS || allowHTML
-      ? bindingsToCompletions(enrichedBindings, editorMode)
-      : []
+  $: bindingOptions = bindingsToCompletions(enrichedBindings, editorMode)
   $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
     usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
