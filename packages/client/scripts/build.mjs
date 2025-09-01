@@ -13,21 +13,19 @@ async function buildAll() {
     // Directory might not exist
   }
 
-  console.log("Building ApexCharts dependency...")
-  await build({ configFile: "./vite.apexcharts.config.mjs" })
-
-  if (isWatch) {
-    console.log("Starting dev server...")
-    await build({
-      build: { watch: {} },
-      mode: isDev ? "development" : "production",
-    })
-  } else {
-    console.log("Building main client...")
-    await build()
-
-    console.log("Build complete!")
+  const config = {
+    build: { watch: isWatch ? {} : false },
+    mode: isDev ? "development" : "production",
   }
+
+  console.log("Building ApexCharts dependency...")
+  await build({
+    ...config,
+    configFile: "./vite.apexcharts.config.mjs",
+  })
+
+  console.log("Building client...")
+  await build(config)
 }
 
 buildAll().catch(console.error)
