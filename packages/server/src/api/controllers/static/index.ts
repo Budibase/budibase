@@ -16,6 +16,7 @@ import {
   context,
   objectStore,
   utils,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
@@ -367,6 +368,14 @@ export const serveBuilderPreview = async function (
   }
 }
 
+function serveLocalFile(ctx: Ctx, fileName: string) {
+  const tsPath = join(require.resolve("@budibase/client"), "..")
+  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  return send(ctx, fileName, {
+    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
+  })
+}
+
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
@@ -377,7 +386,6 @@ export const serveClientLibrary = async function (
   }
 
   const appId = context.getAppId() || (ctx.request.query.appId as string)
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
@@ -390,11 +398,7 @@ export const serveClientLibrary = async function (
     )
     ctx.set("Content-Type", "application/javascript")
   } else {
-    // incase running from TS directly
-    const tsPath = join(require.resolve("@budibase/client"), "..")
-    return send(ctx, "budibase-client.js", {
-      root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-    })
+    return serveLocalFile(ctx, "budibase-client.js")
   }
 }
 
@@ -402,10 +406,16 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   const { file } = ctx.params
 
   const appId = context.getAppId()
-  ctx.body = await objectStore.getReadStream(
-    ObjectStoreBuckets.APPS,
-    objectStore.client3rdPartyLibrary(appId!, file)
-  )
+
+  const serveLocally = shouldServeLocally(coreEnv.VERSION)
+  if (!serveLocally) {
+    ctx.body = await objectStore.getReadStream(
+      ObjectStoreBuckets.APPS,
+      objectStore.client3rdPartyLibrary(appId!, file)
+    )
+  } else {
+    return serveLocalFile(ctx, file)
+  }
 }
 
 export const serveServiceWorker = async function (ctx: Ctx) {
