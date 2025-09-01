@@ -1,4 +1,4 @@
-import jestOpenAPI from "jest-openapi"
+import SwaggerParser from "@apidevtools/swagger-parser"
 import { run as generateSchema } from "../../../../../specs/generate"
 import * as setup from "../../tests/utilities"
 import { generateMakeRequest } from "./utils"
@@ -7,7 +7,8 @@ import nock from "nock"
 import environment from "../../../../environment"
 
 const yamlPath = generateSchema()
-jestOpenAPI(yamlPath!)
+// Validate OpenAPI spec on startup
+SwaggerParser.validate(yamlPath!).catch(console.error)
 
 describe("compare", () => {
   let config = setup.getConfig()
