@@ -15,6 +15,7 @@ import {
   basicScreen,
   basicTable,
   basicWebhook,
+  TEST_WORKSPACEAPPID_PLACEHOLDER,
 } from "./structures"
 import {
   cache,
@@ -27,6 +28,7 @@ import {
   sessions,
   tenancy,
   utils,
+  features,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -67,6 +69,7 @@ import {
   Webhook,
   WithRequired,
   DevInfo,
+  FeatureFlag,
 } from "@budibase/types"
 
 import API from "./api"
@@ -601,6 +604,23 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
+  async createDefaultWorkspaceApp(
+    appName: string,
+    mode: "dev" | "prod" = "dev"
+  ) {
+    const { workspaceApp } = await this.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: appName,
+        url: "/",
+      })
+    )
+    const appId = mode === "dev" ? this.getAppId() : this.getProdAppId()
+    const db = dbCore.getDB(appId)
+    await db.put({ ...workspaceApp, isDefault: true })
+
+    return { ...workspaceApp, isDefault: true }
+  }
+
   doInTenant<T>(task: () => T) {
     return context.doInTenant(this.getTenantId(), task)
   }
@@ -640,9 +660,16 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
-    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-      .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    if (
+      await this.doInTenant(() => features.isEnabled(FeatureFlag.WORKSPACES))
+    ) {
+      const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+      this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    } else {
+      const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+        .workspaceApps
+      this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    }
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -981,6 +1008,13 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
+    if (
+      !config.workspaceAppId ||
+      config.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER
+    ) {
+      config.workspaceAppId = this.getDefaultWorkspaceAppId()
+    }
+
     return this.api.screen.save(config)
   }
 

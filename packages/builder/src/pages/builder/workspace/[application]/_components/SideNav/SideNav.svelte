@@ -1,19 +1,11 @@
 <script lang="ts">
-  import {
-    Context,
-    Icon,
-    StatusLight,
-    Body,
-    Link,
-    Divider,
-  } from "@budibase/bbui"
+  import { Context, Icon, Body, Link, Divider } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
   import {
     appStore,
     builderStore,
-    isOnlyUser,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -23,7 +15,7 @@
     viewsV2,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
-  import { featureFlags, admin } from "@/stores/portal"
+  import { featureFlags } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
@@ -147,10 +139,6 @@
   $: appId = $appStore.appId
   $: collapsed = !focused && !$pinned
   $: !$pinned && unPin()
-  $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
@@ -158,7 +146,7 @@
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
-    const appPrefix = `/builder/app/${appId}`
+    const appPrefix = `/builder/workspace/${appId}`
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${appPrefix}/automation/${id}`,
@@ -229,7 +217,7 @@
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <a href={$url("/builder/portal/apps")}>
+      <a href={$url("/builder/portal/workspaces")}>
         <img src={BBLogo} alt="Budibase logo" />
       </a>
       <div class="nav_title">
@@ -361,16 +349,6 @@
         </div>
       </div>
       <div class="links">
-        {#if updateAvailable && $isOnlyUser && !$admin.isDev}
-          <SideNavLink
-            icon="circle"
-            url={$url("./settings/general")}
-            text="Update available"
-            forceActive={false}
-          >
-            <StatusLight notice slot="icon" size="L" />
-          </SideNavLink>
-        {/if}
         <SideNavLink
           icon="user-plus"
           text="Invite member"

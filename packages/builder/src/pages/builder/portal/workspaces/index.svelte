@@ -96,7 +96,7 @@
   const goToAutomationError = appId => {
     const automationId = Object.keys(automationErrors[appId] || {})[0]
     if (automationId) {
-      $goto(`/builder/app/${appId}/automation/${automationId}`)
+      $goto(`/builder/workspace/${appId}/automation/${automationId}`)
     }
   }
 
@@ -125,7 +125,7 @@
     if (backupId) {
       // For now, just navigate to the app's backup page or show details
       // Could be enhanced to show specific backup error details
-      $goto(`/builder/app/${appId}/settings/backups`)
+      $goto(`/builder/workspace/${appId}/settings/backups`)
     }
   }
 
@@ -212,7 +212,7 @@
         roleId: "BASIC",
       })
       await auth.setInitInfo({})
-      $goto(`/builder/app/${createdApp.instance._id}`)
+      $goto(`/builder/workspace/${createdApp.instance._id}`)
     } catch (error) {
       notifications.error(`Error creating app - ${error.message}`)
     }

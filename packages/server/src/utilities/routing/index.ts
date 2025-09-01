@@ -8,46 +8,49 @@ export async function getRoutingInfo(
   urlPath: string
 ): Promise<ScreenRoutesViewOutput[]> {
   const isDev = coreDb.isDevAppID(context.getAppId())
-  const workspaceApps = await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-  if (!workspaceApps.length) {
+  const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+  if (!workspaceApp) {
     return []
   }
-  const workspaceAppsEnabled = await features.isEnabled(FeatureFlag.WORKSPACES)
+  if (
+    !isDev &&
+    workspaceApp?.disabled &&
+    (await features.isEnabled(FeatureFlag.WORKSPACES))
+  ) {
+    return []
+  }
+
   const db = context.getAppDB()
   try {
     const result: ScreenRoutesViewOutput[] = []
-    for (const workspaceApp of workspaceApps) {
-      if (!isDev && workspaceApp.disabled && workspaceAppsEnabled) {
-        continue
+    const allRouting = await db.query<ScreenRoutesViewOutput>(
+      getQueryIndex(ViewName.ROUTING),
+      {
+        startkey: [workspaceApp._id, ""],
+        endkey: [workspaceApp._id, UNICODE_MAX],
       }
-      const allRouting = await db.query<ScreenRoutesViewOutput>(
-        getQueryIndex(ViewName.ROUTING),
-        {
-          startkey: [workspaceApp._id, ""],
-          endkey: [workspaceApp._id, UNICODE_MAX],
-        }
-      )
-      result.push(...allRouting.rows.map(row => row.value))
+    )
+    result.push(...allRouting.rows.map(row => row.value))
 
-      // Handling a bug where some screens have missing workspaceAppId (in this case, they are part of the default workspace app)
-      if (workspaceApp.isDefault) {
-        const screensWithMissingWorkspaceAppRouting =
-          await db.query<ScreenRoutesViewOutput>(
-            getQueryIndex(ViewName.ROUTING),
-            {
-              startkey: [null, ""],
-              endkey: [null, UNICODE_MAX],
-            }
-          )
-
-        const mappedRoutes = new Set(result.map(r => r._id!))
-        result.push(
-          ...screensWithMissingWorkspaceAppRouting.rows
-            .filter(s => !mappedRoutes.has(s.id))
-            .map(row => row.value)
+    // Handling a bug where some screens have missing workspaceAppId (in this case, they are part of the default workspace app)
+    if (workspaceApp.isDefault) {
+      const screensWithMissingWorkspaceAppRouting =
+        await db.query<ScreenRoutesViewOutput>(
+          getQueryIndex(ViewName.ROUTING),
+          {
+            startkey: [null, ""],
+            endkey: [null, UNICODE_MAX],
+          }
         )
-      }
+
+      const mappedRoutes = new Set(result.map(r => r._id!))
+      result.push(
+        ...screensWithMissingWorkspaceAppRouting.rows
+          .filter(s => !mappedRoutes.has(s.id))
+          .map(row => row.value)
+      )
     }
+
     return result
   } catch (err: any) {
     // check if the view doesn't exist, it should for all new instances

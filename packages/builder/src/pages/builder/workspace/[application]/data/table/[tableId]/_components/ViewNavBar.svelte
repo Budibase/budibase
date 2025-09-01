@@ -228,7 +228,7 @@
 
 <div class="nav">
   <a
-    href={`/builder/app/${$appStore.appId}/data/datasource/${datasource?._id}`}
+    href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
   >
     <IntegrationIcon
       integrationType={datasource?.source}
