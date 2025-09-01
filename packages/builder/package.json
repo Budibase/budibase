@@ -64,7 +64,7 @@
     "@dagrejs/dagre": "1.1.4",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
-    "@xyflow/svelte": "^0.1.18",
+    "@xyflow/svelte": "^0.1.39",
     "@zerodevx/svelte-json-view": "^1.0.7",
     "codemirror": "^5.65.16",
     "cron-parser": "^4.9.0",

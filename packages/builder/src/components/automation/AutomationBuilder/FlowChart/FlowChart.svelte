@@ -1,17 +1,25 @@
-<script>
-  import { onMount } from "svelte"
+<script lang="ts">
+  import { onMount, onDestroy, setContext, tick } from "svelte"
+  import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
     notifications,
     Modal,
     Toggle,
     Body,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
+  import {
+    PublishResourceState,
+    AutomationStatus,
+    AutomationActionStepId,
+    type UIAutomation,
+    type AutomationStep,
+    type LayoutDirection,
+  } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
   import {
     automationStore,
@@ -25,30 +33,109 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    enrichLog,
+    renderBranches,
+    dagreLayoutAutomation,
+    type GraphBuildDeps,
   } from "./AutomationStepHelpers"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import DraggableCanvas from "../DraggableCanvas.svelte"
-  import TestDataModal from "./TestDataModal.svelte"
-  import StepNode from "./StepNode.svelte"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import { PublishResourceState } from "@budibase/types"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { createFlowChartDnD } from "./FlowChartDnD"
+  import TestDataModal from "./TestDataModal.svelte"
+  import NodeWrapper from "./NodeWrapper.svelte"
+  import CustomEdge from "./CustomEdge.svelte"
+  import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
+  import AnchorNode from "./AnchorNode.svelte"
 
-  export let automation
+  import {
+    SvelteFlow,
+    Background,
+    BackgroundVariant,
+    MiniMap,
+    useSvelteFlow,
+    type Node as FlowNode,
+    type Edge as FlowEdge,
+    type NodeTypes,
+    type EdgeTypes,
+  } from "@xyflow/svelte"
+  import "@xyflow/svelte/dist/style.css"
+  import FlowControls from "./Controls.svelte"
+
+  export let automation: UIAutomation
 
   const memoAutomation = memo(automation)
 
-  let testDataModal
-  let confirmDeleteDialog
-  let blockRefs = {}
-  let treeEle
-  let draggable
-  let prodErrors
-  let viewMode = ViewMode.EDITOR
+  const nodeTypes: NodeTypes = {
+    "step-node": NodeWrapper as any,
+    "branch-node": BranchNodeWrapper as any,
+    "anchor-node": AnchorNode as any,
+  }
+  const edgeTypes: EdgeTypes = {
+    "add-item": CustomEdge as any,
+  }
 
+  let testDataModal: Modal
+  let confirmDeleteDialog
+  let blockRefs: Record<string, any> = {}
+  let prodErrors: number
+  let paneEl: HTMLDivElement | null = null
   let changingStatus = false
+
+  let initialViewportApplied = false
+  let isApplyingViewport = false
+  let preserveViewport = false
+  let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
+
+  let nodes = writable<FlowNode[]>([])
+  let edges = writable<FlowEdge[]>([])
+
+  const { getViewport, setViewport, getNodesBounds } = useSvelteFlow()
+
+  const fitViewportTop = async () => {
+    if (isApplyingViewport) return
+    isApplyingViewport = true
+    try {
+      await tick()
+      const currentNodes = get(nodes)
+      if (!currentNodes?.length || !paneEl) return
+
+      const bounds = getNodesBounds(currentNodes)
+      const rect = paneEl.getBoundingClientRect()
+
+      const padding = 40
+      const widthWithPadding = bounds.width + padding * 2
+
+      let zoom = rect.width / (widthWithPadding || rect.width)
+      if (zoom > 1) zoom = 0.8
+      if (zoom < 0.01) zoom = 0.01 // Allow much smaller zoom for large graphs
+
+      const x = rect.width / 2 - (bounds.x + bounds.width / 2) * zoom
+      const y =
+        layoutDirection === "LR"
+          ? rect.height / 2 - (bounds.y + bounds.height / 2) * zoom
+          : padding - bounds.y * zoom
+
+      setViewport({ x, y, zoom })
+      initialViewportApplied = true
+    } finally {
+      isApplyingViewport = false
+    }
+  }
+
+  // DnD helper and context stores
+  const dnd = createFlowChartDnD({
+    getViewport,
+    setViewport,
+    moveBlock: (sourcePath, destPath, automationData) =>
+      automationStore.actions.moveBlock(sourcePath, destPath, automationData),
+    getSelectedAutomation: () => get(selectedAutomation),
+  })
+  const { view, viewPos, contentPos } = dnd
+  setContext("draggableView", view)
+  setContext("viewPos", viewPos)
+  setContext("contentPos", contentPos)
+
+  $: updateGraph(blocks as any, viewMode, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -57,19 +144,150 @@
     : !automation?.disabled
 
   // Memo auto - selectedAutomation
-  $: memoAutomation.set(automation)
+  $: memoAutomation.set($selectedAutomation.data || automation)
 
   // Parse the automation tree state
-  $: refresh($memoAutomation)
-
-  $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
-    x => x.stepId !== ActionStepID.LOOP
+  $: $selectedAutomation.blockRefs && refresh()
+  $: blocks = getBlocksHelper(
+    $selectedAutomation.data || $memoAutomation,
+    viewMode
   )
+    .filter(x => x.stepId !== ActionStepID.LOOP)
+    .map((block, idx) => ({ ...block, __top: idx }))
+
+  $: viewMode = ViewMode.EDITOR
+
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
+
+  const updateGraph = async (
+    blocks: any,
+    currentViewMode: any,
+    direction: LayoutDirection
+  ) => {
+    if (!preserveViewport) {
+      initialViewportApplied = false
+    }
+    preserveViewport = true
+    const xSpacing = 300
+    const ySpacing = 340
+
+    const newNodes: FlowNode[] = []
+    const newEdges: FlowEdge[] = []
+
+    // helper to get or create position
+    const ensurePosition = (_id: string, fallback: { x: number; y: number }) =>
+      fallback
+
+    const deps: GraphBuildDeps = {
+      ensurePosition,
+      xSpacing,
+      ySpacing,
+      blockRefs,
+      viewMode: currentViewMode,
+      testDataModal,
+      newNodes,
+      newEdges,
+      direction,
+    }
+
+    // Build linear chain of top-level steps first
+    blocks.forEach((block: AutomationStep, idx: number) => {
+      const isTrigger = idx === 0
+      const baseId = block.id
+      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
+
+      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
+
+      if (!isBranchStep) {
+        newNodes.push({
+          id: baseId,
+          type: "step-node",
+          data: {
+            testDataModal,
+            block,
+            isTopLevel: true,
+            viewMode: currentViewMode,
+            direction,
+          },
+          position: pos,
+        })
+      }
+
+      if (!isTrigger && !isBranchStep) {
+        const prevId = blocks[idx - 1].id
+        newEdges.push({
+          id: `edge-${prevId}-${baseId}`,
+          type: "add-item",
+          source: prevId,
+          target: baseId,
+          data: {
+            block: blocks[idx - 1],
+            viewMode: currentViewMode,
+            direction,
+            pathTo: blockRefs?.[prevId]?.pathTo,
+          },
+        })
+      }
+
+      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
+      if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
+        const terminalId = `anchor-${baseId}`
+        const terminalPos = ensurePosition(terminalId, {
+          x: pos.x,
+          y: pos.y + ySpacing,
+        })
+        newNodes.push({
+          id: terminalId,
+          type: "anchor-node",
+          data: { viewMode: currentViewMode, direction },
+          position: terminalPos,
+        })
+
+        newEdges.push({
+          id: `edge-${baseId}-${terminalId}`,
+          type: "add-item",
+          source: baseId,
+          target: terminalId,
+          data: {
+            block,
+            viewMode: currentViewMode,
+            direction,
+            pathTo: blockRefs?.[baseId]?.pathTo,
+          },
+        })
+      }
+
+      // Branch fan-out
+      if (isBranchStep) {
+        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
+        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
+        renderBranches(
+          block,
+          sourceForBranches,
+          sourceBlock,
+          pos.x,
+          pos.y + ySpacing,
+          deps
+        )
+      }
+    })
+
+    // Run Dagre layout with selected direction
+    const laidOut = dagreLayoutAutomation(
+      { nodes: newNodes, edges: newEdges },
+      { rankdir: direction, ranksep: 150, nodesep: 300 }
+    )
+
+    nodes.set(laidOut.nodes)
+    edges.set(laidOut.edges)
+  }
+
+  // When nodes are available and we haven't applied our custom viewport yet, align the top
+  $: $nodes?.length && !initialViewportApplied && fitViewportTop()
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
-    $workspaceDeploymentStore.automations[automation._id]
+    $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
   const refresh = () => {
@@ -93,22 +311,20 @@
     }
   }
 
-  onMount(async () => {
+  const saveDirectionChange = async (direction: LayoutDirection) => {
+    layoutDirection = direction
+    preserveViewport = false
     try {
-      await automationStore.actions.initAppSelf()
-      await environment.loadVariables()
-      const response = await automationStore.actions.getLogs({
-        automationId: automation._id,
-        status: "error",
-        startDate: dayjs().subtract(1, "day").toISOString(),
+      await automationStore.actions.save({
+        ...automation,
+        layoutDirection,
       })
-      prodErrors = response?.data?.length || 0
     } catch (error) {
-      console.error(error)
+      notifications.error("Unable to save layout direction")
     }
-  })
+  }
 
-  function toggleLogsPanel() {
+  const toggleLogsPanel = () => {
     if ($automationStore.showLogsPanel) {
       automationStore.actions.closeLogsPanel()
       viewMode = ViewMode.EDITOR
@@ -117,40 +333,45 @@
       automationStore.actions.closeLogPanel()
       viewMode = ViewMode.LOGS
       // Clear editor selection when switching to logs mode
-      automationStore.actions.selectNode(null)
+      automationStore.actions.selectNode(undefined)
     }
   }
 
-  function closeAllPanels() {
+  const closeAllPanels = () => {
     automationStore.actions.closeLogsPanel()
     automationStore.actions.closeLogPanel()
     viewMode = ViewMode.EDITOR
   }
 
-  function handleStepSelect(stepData) {
-    // Show step details when a step is selected in logs mode
-    if (
-      stepData &&
-      viewMode === ViewMode.LOGS &&
-      $automationStore.selectedLog
-    ) {
-      const enrichedLog =
-        enrichLog(
-          $automationStore.blockDefinitions,
-          $automationStore.selectedLog
-        ) ?? $automationStore.selectedLog
-      automationStore.actions.openLogPanel(enrichedLog, stepData)
-    }
-  }
-
-  async function handleToggleChange() {
+  const handleToggleChange = async () => {
     try {
       changingStatus = true
-      await automationStore.actions.toggleDisabled(automation._id)
+      await automationStore.actions.toggleDisabled(automation._id!)
     } finally {
       changingStatus = false
     }
   }
+
+  onMount(async () => {
+    try {
+      await automationStore.actions.initAppSelf()
+      await environment.loadVariables()
+      const response = await automationStore.actions.getLogs({
+        automationId: automation._id,
+        status: AutomationStatus.ERROR,
+        startDate: dayjs().subtract(1, "day").toISOString(),
+      })
+      prodErrors = response?.data?.length || 0
+    } catch (error) {
+      console.error(error)
+    }
+    dnd.setPaneEl(paneEl)
+    dnd.initDnD()
+  })
+
+  onDestroy(() => {
+    dnd.destroyDnD()
+  })
 </script>
 
 <div class="automation-heading">
@@ -178,7 +399,7 @@
         on:right={() => {
           viewMode = ViewMode.LOGS
           // Clear editor selection when switching to logs mode
-          automationStore.actions.selectNode(null)
+          automationStore.actions.selectNode(undefined)
           if (
             !$automationStore.showLogsPanel &&
             !$automationStore.showLogDetailsPanel
@@ -232,10 +453,11 @@
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
-          on:change={automationStore.actions.toggleDisabled(
-            automation._id,
-            automation.disabled
-          )}
+          on:change={() => {
+            if (automation._id) {
+              automationStore.actions.toggleDisabled(automation._id)
+            }
+          }}
           disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
         />
@@ -245,55 +467,32 @@
 </div>
 
 <div class="main-flow">
-  <div class="root" bind:this={treeEle}>
-    <DraggableCanvas
-      bind:this={draggable}
-      draggableClasses={[
-        "main-content",
-        "content",
-        "block",
-        "branched",
-        "branch",
-        "flow-item",
-        "branch-wrap",
-      ]}
+  <div class="root">
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+      class="wrapper"
+      bind:this={paneEl}
+      on:mousemove={dnd.handlePointerMove}
+      on:mousedown={dnd.updatePaneRect}
     >
-      <span class="main-content" slot="content">
-        {#if Object.keys(blockRefs).length}
-          {#each blocks as block, idx (block.id)}
-            <StepNode
-              step={blocks[idx]}
-              stepIdx={idx}
-              isLast={blocks?.length - 1 === idx}
-              automation={$memoAutomation}
-              blocks={blockRefs}
-              logData={$automationStore.selectedLog}
-              {viewMode}
-              selectedLogStepId={$automationStore.selectedLogStepData?.id}
-              onStepSelect={handleStepSelect}
-            />
-          {/each}
-        {/if}
-      </span>
-    </DraggableCanvas>
-    <div class="canvas-footer-left">
-      <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-
-      <div class="zoom">
-        <div class="group">
-          <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
-          <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
-        </div>
-      </div>
-
-      <Button
-        secondary
-        on:click={() => {
-          draggable.zoomToFit()
-        }}
+      <SvelteFlow
+        {nodes}
+        {nodeTypes}
+        {edges}
+        {edgeTypes}
+        colorMode="dark"
+        nodesDraggable={false}
+        minZoom={0.01}
+        maxZoom={4}
       >
-        Zoom to fit
-      </Button>
+        <FlowControls
+          historyStore={automationHistoryStore}
+          {layoutDirection}
+          onChangeDirection={saveDirectionChange}
+        />
+        <Background variant={BackgroundVariant.Dots} gap={25} />
+        <MiniMap />
+      </SvelteFlow>
     </div>
   </div>
 </div>
@@ -320,6 +519,27 @@
 </Modal>
 
 <style>
+  .wrapper {
+    position: relative;
+    height: 100%;
+    --xy-background-color: var(--spectrum-global-color-gray-75);
+    --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
+    --xy-node-background-color: var(--background);
+    --xy-node-border: 1px var(--grey-3) solid;
+    --xy-node-boxshadow-selected: 0 0 0 1px
+      var(--spectrum-global-color-blue-400);
+    --xy-minimap-mask-background-color-props: var(
+      --spectrum-global-color-gray-200
+    );
+    --xy-minimap-node-background-color-props: var(
+      --spectrum-global-color-gray-400
+    );
+    --xy-controls-button-background-color: var(
+      --spectrum-global-color-gray-200
+    );
+    --xy-edge-stroke: var(--spectrum-global-color-gray-400);
+  }
+
   .main-flow {
     position: relative;
     width: 100%;
@@ -360,18 +580,6 @@
     align-items: center;
   }
 
-  .canvas-footer-left {
-    position: absolute;
-    left: var(--spacing-xl);
-    bottom: var(--spacing-l);
-    display: flex;
-    gap: var(--spacing-l);
-  }
-
-  .canvas-footer-left :global(div) {
-    border-right: none;
-  }
-
   .root {
     height: 100%;
     width: 100%;
@@ -393,35 +601,6 @@
     margin-right: 0px;
   }
 
-  .zoom .group {
-    border-radius: 4px;
-    display: flex;
-    flex-direction: row;
-  }
-
-  .canvas-footer-left .group :global(.spectrum-Button),
-  .canvas-footer-left .group :global(.spectrum-ActionButton),
-  .canvas-footer-left .group :global(i) {
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-  .zoom .group :global(> *:not(:first-child)) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left: 2px solid var(--spectrum-global-color-gray-300);
-  }
-  .zoom .group :global(> *:not(:last-child)) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .zoom .group :global(.spectrum-Button),
-  .zoom .group :global(.spectrum-ActionButton) {
-    background: var(--spectrum-global-color-gray-200) !important;
-  }
-  .zoom .group :global(.spectrum-Button:hover),
-  .zoom .group :global(.spectrum-ActionButton:hover) {
-    background: var(--spectrum-global-color-gray-300) !important;
-  }
-
   .actions-left {
     display: flex;
     flex-direction: row;
@@ -436,6 +615,44 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
+  }
+
+  :global(.svelte-flow__handle.custom-handle) {
+    background-color: var(--spectrum-global-color-gray-700);
+    border-radius: 1px;
+    width: 8px;
+    height: 4px;
+    border: none;
+    min-width: 2px;
+    min-height: 2px;
+  }
+
+  :global(.svelte-flow__handle.custom-handle:hover),
+  :global(.svelte-flow__handle.custom-handle.connectionindicator:focus),
+  :global(.svelte-flow__handle.custom-handle.connectingfrom),
+  :global(.svelte-flow__handle.custom-handle.connectingto) {
+    background-color: var(--xy-theme-edge-hover);
+  }
+
+  :global(.svelte-flow__handle-bottom.custom-handle) {
+    bottom: -5px;
+    transform: none;
+  }
+
+  :global(.svelte-flow__handle-top.custom-handle) {
+    top: -5px;
+    transform: none;
+  }
+
+  :global(.svelte-flow__handle-left.custom-handle) {
+    height: 8px;
+    width: 4px;
+    left: -3px;
+  }
+  :global(.svelte-flow__handle-right.custom-handle) {
+    height: 8px;
+    width: 4px;
+    right: -3px;
   }
 
   .unpublished-changes-btn {
