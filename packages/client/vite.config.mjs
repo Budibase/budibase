@@ -29,8 +29,6 @@ export default defineConfig(({ mode }) => {
           format: "es", // ES modules format
           manualChunks: {
             chartBlock: ["src/components/app/blocks/ChartBlock.svelte"],
-            charts: ["src/components/app/charts/index.js"],
-            forms: ["src/components/app/forms/index.ts"],
           },
         },
       },
