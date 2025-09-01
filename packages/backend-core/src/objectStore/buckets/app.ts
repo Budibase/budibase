@@ -8,6 +8,9 @@ import { PWAManifestImage } from "@budibase/types"
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
 }
+export function client3rdPartyLibrary(appId: string, file: string) {
+  return `${objectStore.sanitizeKey(appId)}/_dependencies/${file}`
+}
 
 /**
  * Previously we used to serve the client library directly from Cloudfront, however

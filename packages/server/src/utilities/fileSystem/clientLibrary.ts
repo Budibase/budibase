@@ -91,17 +91,23 @@ export async function backupClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function updateClientLibrary(appId: string) {
-  let manifest, client
+  let manifest, client, apexCharts
 
   if (env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
     manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
     client = clientPath
+    apexCharts = join(
+      path.dirname(path.dirname(clientPath)),
+      "dist",
+      "apexcharts.min.js"
+    )
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
+    apexCharts = resolve(TOP_LEVEL_PATH, "client", "apexcharts.min.js")
   }
 
   // Upload latest manifest and client library
@@ -121,10 +127,23 @@ export async function updateClientLibrary(appId: string) {
       ContentType: "application/javascript",
     },
   })
+  const apexChartsUpload = objectStore.streamUpload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: join(appId, "_dependencies", "apexcharts.min.js"),
+    stream: fs.createReadStream(apexCharts),
+    extra: {
+      ContentType: "application/javascript",
+    },
+  })
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
 
-  await Promise.all([manifestUpload, clientUpload, manifestSrc])
+  await Promise.all([
+    manifestUpload,
+    clientUpload,
+    manifestSrc,
+    apexChartsUpload,
+  ])
 
   return JSON.parse(await manifestSrc)
 }
@@ -175,7 +194,7 @@ export function shouldServeLocally(version: string) {
     return false
   }
 
-  if (env.isDev()) {
+  if (env.isDev() && env.USE_LOCAL_COMPONENT_LIBS === "false") {
     return true
   }
 

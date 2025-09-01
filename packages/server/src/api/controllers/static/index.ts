@@ -398,6 +398,16 @@ export const serveClientLibrary = async function (
   }
 }
 
+export const serve3rdPartyFile = async function (ctx: Ctx) {
+  const { file } = ctx.params
+
+  const appId = context.getAppId()
+  ctx.body = await objectStore.getReadStream(
+    ObjectStoreBuckets.APPS,
+    objectStore.client3rdPartyLibrary(appId!, file)
+  )
+}
+
 export const serveServiceWorker = async function (ctx: Ctx) {
   const serviceWorkerContent = `
     self.addEventListener('install', () => {
