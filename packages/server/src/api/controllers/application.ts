@@ -317,9 +317,13 @@ export async function fetchAppPackage(
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
 
-    const urlPath = ctx.headers.referer
-      ? new URL(ctx.headers.referer).pathname
-      : ""
+    const embedPath: string | undefined = ctx.request.get(
+      "x-budibase-embed-location"
+    )
+
+    const urlPath =
+      embedPath ||
+      (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
 
     const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)

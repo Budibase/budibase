@@ -2,8 +2,9 @@ import { APIError } from "@budibase/types"
 import * as errors from "../errors"
 import environment from "../environment"
 import { stringContainsSecret } from "../security/secrets"
+import { ParameterizedContext, Next } from "koa"
 
-export async function errorHandling(ctx: any, next: any) {
+export async function errorHandling(ctx: ParameterizedContext, next: Next) {
   try {
     await next()
   } catch (err: any) {

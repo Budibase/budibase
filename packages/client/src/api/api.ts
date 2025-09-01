@@ -5,6 +5,7 @@ import {
   devToolsEnabled,
   devToolsStore,
   recaptchaStore,
+  appStore,
 } from "../stores"
 import { get } from "svelte/store"
 
@@ -17,6 +18,13 @@ export const API = createAPIClient({
     // Attach app ID header
     if (window["##BUDIBASE_APP_ID##"]) {
       headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    }
+
+    // Attach the iframe location pathname to ensure the app url is fully preserved.
+    // Needed for workspace app resolution and client routing in an embed
+    const appData = get(appStore)
+    if (appData.embedded) {
+      headers["x-budibase-embed-location"] = window.location.pathname
     }
 
     // Attach client header if not inside the builder preview
