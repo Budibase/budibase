@@ -27,6 +27,10 @@ export default defineConfig(({ mode }) => {
         treeshake: false, // Keep everything, don't tree shake
         output: {
           format: "es", // ES modules format
+          manualChunks: {
+            charts: ["src/components/app/charts/index.js"],
+            forms: ["src/components/app/forms/index.ts"],
+          },
         },
       },
     },
