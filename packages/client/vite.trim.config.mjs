@@ -1,6 +1,7 @@
 import { defineConfig } from "vite"
 import path from "path"
 import fs from "fs"
+import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
@@ -55,6 +56,11 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    plugins: [],
+    plugins: [
+      visualizer({
+        filename: "dist/budibase-trimmed-analysis.html",
+        open: false,
+      }),
+    ],
   }
 })
