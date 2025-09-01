@@ -33,8 +33,6 @@
   const dispatch = createEventDispatcher()
 
   let contentRef: HTMLDivElement
-  let textRef: HTMLSpanElement
-  let navItemRef: HTMLDivElement
   $: selected && contentRef && scrollToView()
   $: style = getStyle(indentLevel)
 
@@ -65,7 +63,6 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  bind:this={navItemRef}
   class="nav-item"
   class:hovering
   class:border
@@ -130,7 +127,7 @@
     {/if}
     <div class="nav-item-body" title={showTooltip ? text : null}>
       <div class="text">
-        <span bind:this={textRef} title={text}>{text}</span>
+        <span title={text}>{text}</span>
         {#if subtext}
           <span class="subtext">
             {subtext}
