@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           globals: id => {
-            if (id.includes("chartBlock-")) {
+            if (id.includes("charts-")) {
               return `(function() {
                 class SvelteComponent {
                   constructor(options) {
