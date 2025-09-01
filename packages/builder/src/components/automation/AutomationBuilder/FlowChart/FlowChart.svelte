@@ -15,9 +15,7 @@
   import {
     PublishResourceState,
     AutomationStatus,
-    AutomationActionStepId,
     type UIAutomation,
-    type AutomationStep,
     type LayoutDirection,
   } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
@@ -33,7 +31,7 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    renderBranches,
+    buildTopLevelGraph,
     dagreLayoutAutomation,
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
@@ -46,6 +44,7 @@
   import CustomEdge from "./CustomEdge.svelte"
   import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
   import AnchorNode from "./AnchorNode.svelte"
+  import LoopV2Node from "./LoopV2Node.svelte"
 
   import {
     SvelteFlow,
@@ -53,6 +52,7 @@
     BackgroundVariant,
     MiniMap,
     useSvelteFlow,
+    Position,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
@@ -69,6 +69,7 @@
     "step-node": NodeWrapper as any,
     "branch-node": BranchNodeWrapper as any,
     "anchor-node": AnchorNode as any,
+    "loop-subflow-node": LoopV2Node as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": CustomEdge as any,
@@ -190,87 +191,8 @@
       direction,
     }
 
-    // Build linear chain of top-level steps first
-    blocks.forEach((block: AutomationStep, idx: number) => {
-      const isTrigger = idx === 0
-      const baseId = block.id
-      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
-
-      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
-
-      if (!isBranchStep) {
-        newNodes.push({
-          id: baseId,
-          type: "step-node",
-          data: {
-            testDataModal,
-            block,
-            isTopLevel: true,
-            viewMode: currentViewMode,
-            direction,
-          },
-          position: pos,
-        })
-      }
-
-      if (!isTrigger && !isBranchStep) {
-        const prevId = blocks[idx - 1].id
-        newEdges.push({
-          id: `edge-${prevId}-${baseId}`,
-          type: "add-item",
-          source: prevId,
-          target: baseId,
-          data: {
-            block: blocks[idx - 1],
-            viewMode: currentViewMode,
-            direction,
-            pathTo: blockRefs?.[prevId]?.pathTo,
-          },
-        })
-      }
-
-      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
-      if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
-        const terminalId = `anchor-${baseId}`
-        const terminalPos = ensurePosition(terminalId, {
-          x: pos.x,
-          y: pos.y + ySpacing,
-        })
-        newNodes.push({
-          id: terminalId,
-          type: "anchor-node",
-          data: { viewMode: currentViewMode, direction },
-          position: terminalPos,
-        })
-
-        newEdges.push({
-          id: `edge-${baseId}-${terminalId}`,
-          type: "add-item",
-          source: baseId,
-          target: terminalId,
-          data: {
-            block,
-            viewMode: currentViewMode,
-            direction,
-            pathTo: blockRefs?.[baseId]?.pathTo,
-          },
-        })
-      }
-
-      // Branch fan-out
-      if (isBranchStep) {
-        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-        renderBranches(
-          block,
-          sourceForBranches,
-          sourceBlock,
-          pos.x,
-          pos.y + ySpacing,
-          deps
-        )
-      }
-    })
+    // Build graph via helpers
+    buildTopLevelGraph(blocks, deps)
 
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(

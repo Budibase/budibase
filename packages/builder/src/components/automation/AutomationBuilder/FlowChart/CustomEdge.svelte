@@ -47,6 +47,7 @@
 
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
+  $: isSubflowEdge = data?.isSubflowEdge === true
   $: path = isAnchorTarget
     ? getStraightPath({
         sourceX,
@@ -77,10 +78,10 @@
   $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
 
   $: showEdgeActions =
-    viewMode === ViewMode.EDITOR && !isBranchTarget && !$view?.dragging
+    viewMode === ViewMode.EDITOR && !isBranchTarget && !$view?.dragging && !isSubflowEdge
 
   $: showEdgeDrop =
-    viewMode === ViewMode.EDITOR && !isBranchTarget && $view?.dragging
+    viewMode === ViewMode.EDITOR && !isBranchTarget && $view?.dragging && !isSubflowEdge
 
   $: showPreBranchActions =
     viewMode === ViewMode.EDITOR &&

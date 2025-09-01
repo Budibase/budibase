@@ -47,6 +47,19 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
+  // If adding inside a Loop V2 subflow, disallow Branch, Collect and any Loop steps
+  $: insideLoopV2 = Boolean(block?.loopV2Children)
+  $: actions = actions.filter(([k]) =>
+    insideLoopV2
+      ? ![
+          AutomationActionStepId.BRANCH,
+          AutomationActionStepId.COLLECT,
+          AutomationActionStepId.LOOP,
+          AutomationActionStepId.LOOP_V2,
+        ].includes(k as AutomationActionStepId)
+      : true
+  )
+
   $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
   $: pathSteps =
@@ -104,6 +117,7 @@
           AutomationActionStepId.BRANCH,
           AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           AutomationActionStepId.COLLECT,
+          AutomationActionStepId.LOOP_V2,
         ].includes(k as AutomationActionStepId)
       ),
     },
@@ -211,10 +225,14 @@
         action.stepId,
         action
       )
-      await automationStore.actions.addBlockToAutomation(
-        newBlock,
-        blockRef ? blockRef.pathTo : block.pathTo
-      )
+      if (insideLoopV2) {
+        await automationStore.actions.addBlockToLoopChildren(block.id, newBlock)
+      } else {
+        await automationStore.actions.addBlockToAutomation(
+          newBlock,
+          blockRef ? blockRef.pathTo : block.pathTo
+        )
+      }
 
       // Determine presence of the block before focusing
       const createdBlock = $selectedAutomation.blockRefs[newBlock.id]

@@ -9,6 +9,7 @@ export interface BlockPath {
   stepIdx: number
   branchIdx: number
   branchStepId: string
+  loopStepId?: string
   id: string
 }
 

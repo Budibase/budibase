@@ -436,6 +436,15 @@ const automationActions = (store: AutomationStore) => ({
         looped: block.id,
       }
     }
+
+    // Loop V2 child flag so the UI can restrict actions
+    const lastHop: any = pathTo?.at(-1)
+    if (lastHop && lastHop.loopStepId) {
+      blocks[block.id] = {
+        ...blocks[block.id],
+        loopV2Child: true,
+      }
+    }
   },
 
   /**
@@ -456,7 +465,7 @@ const automationActions = (store: AutomationStore) => ({
 
     let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       let last: AutomationStep | AutomationTrigger | undefined = result.length
         ? result[result.length - 1]
         : undefined
@@ -473,6 +482,21 @@ const automationActions = (store: AutomationStore) => ({
 
         const stepChildren = children.slice(0, stepIdx + 1)
         // Preceeding steps.
+        result = result.concat(stepChildren)
+        return
+      }
+
+      // Handle Loop V2 child traversal
+      if (loopStepId) {
+        // Prefer the last traversed block as the loop block
+        let loopBlock: any = last
+        if (!loopBlock || loopBlock.id !== loopStepId) {
+          loopBlock =
+            (result.find(b => (b as any).id === loopStepId) as any) ||
+            steps.find(b => (b as any).id === loopStepId)
+        }
+        const children = (loopBlock?.inputs?.children || []) as AutomationStep[]
+        const stepChildren = children.slice(0, stepIdx + 1)
         result = result.concat(stepChildren)
       }
     })
@@ -512,7 +536,7 @@ const automationActions = (store: AutomationStore) => ({
 
     let cache: any = null
     pathWay.forEach((path, idx, array) => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       let final = idx === array.length - 1
 
       if (!cache) {
@@ -528,6 +552,17 @@ const automationActions = (store: AutomationStore) => ({
       if (Number.isInteger(branchIdx)) {
         const branchId = cache.inputs.branches[branchIdx].id
         const children = cache.inputs.children[branchId]
+        if (final) {
+          finalise(children, stepIdx, update)
+        } else {
+          cache = children[stepIdx]
+        }
+        return
+      }
+
+      // Handle Loop V2 children inside a subflow
+      if (loopStepId) {
+        const children = (cache.inputs.children || []) as AutomationStep[]
         if (final) {
           finalise(children, stepIdx, update)
         } else {
@@ -669,12 +704,14 @@ const automationActions = (store: AutomationStore) => ({
       pathTo: Array<any> | null,
       stepIdx: number,
       branchIdx: number | null,
-      terminating: boolean
+      terminating: boolean,
+      loopContext?: string
     ) => {
       const pathToCurrentNode = [
         ...(pathTo || []),
         {
           ...(Number.isInteger(branchIdx) ? { branchIdx } : {}),
+          ...(loopContext ? { loopStepId: loopContext } : {}),
           stepIdx,
           id: block.id,
         },
@@ -688,12 +725,22 @@ const automationActions = (store: AutomationStore) => ({
           children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
-              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended, loopContext)
             }
           )
         })
 
         terminating = terminating && !branches.length
+      }
+
+      // Traverse children of Loop V2 subflow
+      if (block.stepId === AutomationActionStepId.LOOP_V2) {
+        const children: AutomationStep[] = (block.inputs?.children || []) as any
+        children.forEach((child, cIdx) => {
+          const isChildTerminating = cIdx === children.length - 1
+          // For the child we continue with the current path, injecting loop context
+          treeTraverse(child, pathToCurrentNode, cIdx, null, isChildTerminating, block.id)
+        })
       }
 
       store.actions.registerBlock(
@@ -706,7 +753,7 @@ const automationActions = (store: AutomationStore) => ({
 
     // Traverse the entire tree.
     blocks.forEach((block, idx, array) => {
-      treeTraverse(block, null, idx, null, array.length - 1 === idx)
+      treeTraverse(block, null, idx, null, array.length - 1 === idx, undefined)
     })
     return blockRefs
   },
@@ -1233,6 +1280,70 @@ const automationActions = (store: AutomationStore) => ({
     } catch (e) {
       notifications.error("Error adding automation block")
       console.error("Automation adding block ", e)
+    }
+  },
+
+  /**
+   * Append a new block inside a Loop V2 subflow's children array.
+   * The loop is identified by its block id.
+   */
+  addBlockToLoopChildren: async (loopId: string, block: AutomationStep) => {
+    const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return
+    }
+
+    const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
+    if (!loopRef) {
+      console.error("Loop reference not found for id", loopId)
+      return
+    }
+
+    let newAutomation = cloneDeep(automation)
+
+    // Traverse to the loop node using its recorded path
+    const steps = [
+      newAutomation.definition.trigger,
+      ...newAutomation.definition.steps,
+    ]
+
+    let cache: any
+    loopRef.pathTo.forEach((path: BlockPath, idx: number, array: BlockPath[]) => {
+      const { stepIdx, branchIdx } = path as any
+      const final = idx === array.length - 1
+
+      if (!cache) {
+        cache = steps[stepIdx]
+        return
+      }
+      if (Number.isInteger(branchIdx)) {
+        const branchId = cache.inputs.branches[branchIdx].id
+        const children = cache.inputs.children[branchId]
+        cache = final ? children[stepIdx] : children[stepIdx]
+      }
+    })
+
+    const loopNode = cache?.stepId
+      ? cache
+      : (steps.find(s => (s as any).id === loopId) as any)
+
+    if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
+      console.error("Target is not a Loop V2 node")
+      return
+    }
+
+    const children = (loopNode.inputs?.children || []) as AutomationStep[]
+    children.push(block)
+    loopNode.inputs = {
+      ...(loopNode.inputs || {}),
+      children,
+    }
+
+    try {
+      await store.actions.save(newAutomation)
+    } catch (e) {
+      notifications.error("Error adding subflow step")
+      console.error("Error adding subflow step ", e)
     }
   },
 
