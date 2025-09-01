@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Icon, TooltipType, TooltipPosition } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher, getContext, onMount, onDestroy } from "svelte"
   import { UserAvatars } from "@budibase/frontend-core"
   import type { UIUser } from "@budibase/types"
 
@@ -33,9 +33,15 @@
   const dispatch = createEventDispatcher()
 
   let contentRef: HTMLDivElement
+  let textRef: HTMLSpanElement
+  let navItemRef: HTMLDivElement
+  let displayText = text
+  let resizeObserver: ResizeObserver
 
   $: selected && contentRef && scrollToView()
   $: style = getStyle(indentLevel)
+  $: displayText = text
+  $: text, updateDisplayText()
 
   const onClick = () => {
     scrollToView()
@@ -59,11 +65,83 @@
     let style = `padding-left:calc(${indentLevel * 14}px);`
     return style
   }
+
+  const updateDisplayText = () => {
+    if (!textRef || !navItemRef || !text) {
+      displayText = text
+      return
+    }
+
+    const container = navItemRef
+    const maxWidth = container.clientWidth - 100 // Account for icons, padding, etc.
+
+    if (maxWidth <= 0) {
+      displayText = text
+      return
+    }
+
+    // Create a temporary element to measure text width
+    const tempElement = document.createElement("span")
+    tempElement.style.visibility = "hidden"
+    tempElement.style.position = "absolute"
+    tempElement.style.whiteSpace = "nowrap"
+    tempElement.style.fontSize = getComputedStyle(textRef).fontSize
+    tempElement.style.fontFamily = getComputedStyle(textRef).fontFamily
+    tempElement.style.fontWeight = getComputedStyle(textRef).fontWeight
+    document.body.appendChild(tempElement)
+
+    try {
+      tempElement.textContent = text
+      if (tempElement.offsetWidth <= maxWidth) {
+        displayText = text
+        return
+      }
+
+      // Binary search to find the optimal length
+      let left = 0
+      let right = text.length
+      let bestLength = 0
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2)
+        const testText = text.substring(0, mid) + "..."
+        tempElement.textContent = testText
+
+        if (tempElement.offsetWidth <= maxWidth) {
+          bestLength = mid
+          left = mid + 1
+        } else {
+          right = mid - 1
+        }
+      }
+
+      displayText =
+        bestLength > 0 ? text.substring(0, bestLength) + "..." : text
+    } finally {
+      document.body.removeChild(tempElement)
+    }
+  }
+
+  onMount(() => {
+    if (navItemRef) {
+      resizeObserver = new ResizeObserver(() => {
+        updateDisplayText()
+      })
+      resizeObserver.observe(navItemRef)
+    }
+  })
+
+  onDestroy(() => {
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+    }
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
+  bind:this={navItemRef}
   class="nav-item"
   class:hovering
   class:border
@@ -128,7 +206,7 @@
     {/if}
     <div class="nav-item-body" title={showTooltip ? text : null}>
       <div class="text">
-        <span title={text}>{text}</span>
+        <span bind:this={textRef} title={text}>{displayText}</span>
         {#if subtext}
           <span class="subtext">
             {subtext}

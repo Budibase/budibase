@@ -7,8 +7,32 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { featureFlags } from "@/stores/portal"
+  import { getHorizontalResizeActions } from "@/components/common/resizable"
+  import { onMount, onDestroy } from "svelte"
 
   let searchValue
+  let maxWidth = window.innerWidth / 3
+
+  const updateMaxWidth = () => {
+    maxWidth = window.innerWidth / 3
+  }
+
+  const [resizable, resizableHandle] = getHorizontalResizeActions(260, (width) => {
+    if (width > maxWidth) {
+      const element = document.querySelector('.panel-container')
+      if (element) {
+        element.style.width = `${maxWidth}px`
+      }
+    }
+  })
+
+  onMount(() => {
+    window.addEventListener('resize', updateMaxWidth)
+  })
+
+  onDestroy(() => {
+    window.removeEventListener('resize', updateMaxWidth)
+  })
 
   $: {
     // If we ever don't have any data other than the users table, prompt the
@@ -27,19 +51,28 @@
   {/if}
   <div class="data">
     {#if !$isActive("./new")}
-      <Panel borderRight borderBottomHeader={false}>
-        <span class="panel-title-content" slot="panel-title-content">
-          <NavHeader
-            title="Sources"
-            placeholder="Search for sources"
-            bind:value={searchValue}
-            onAdd={() => $goto("./new")}
+      <div class="panel-container" use:resizable>
+        <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
+          <span class="panel-title-content" slot="panel-title-content">
+            <NavHeader
+              title="Sources"
+              placeholder="Search for sources"
+              bind:value={searchValue}
+              onAdd={() => $goto("./new")}
+            />
+          </span>
+          <Layout paddingX="L" paddingY="none" gap="S">
+            <DatasourceNavigator searchTerm={searchValue} />
+          </Layout>
+        </Panel>
+        <div class="divider">
+          <div
+            class="dividerClickExtender"
+            role="separator"
+            use:resizableHandle
           />
-        </span>
-        <Layout paddingX="L" paddingY="none" gap="S">
-          <DatasourceNavigator searchTerm={searchValue} />
-        </Layout>
-      </Panel>
+        </div>
+      </div>
     {/if}
 
     <div class="content">
@@ -63,6 +96,13 @@
     align-items: stretch;
     height: 0;
   }
+  .panel-container {
+    display: flex;
+    min-width: 260px;
+    width: 260px;
+    max-width: 33.33vw;
+    height: 100%;
+  }
   .content {
     padding: 28px 40px 40px 40px;
     overflow-y: auto;
@@ -78,5 +118,25 @@
 
   .panel-title-content {
     display: contents;
+  }
+
+  .divider {
+    position: relative;
+    height: 100%;
+    width: 2px;
+    background: var(--spectrum-global-color-gray-200);
+    transition: background 130ms ease-out;
+  }
+  .divider:hover {
+    background: var(--spectrum-global-color-gray-300);
+    cursor: col-resize;
+  }
+  .dividerClickExtender {
+    position: absolute;
+    cursor: col-resize;
+    height: 100%;
+    width: 12px;
+    left: -5px;
+    top: 0;
   }
 </style>
