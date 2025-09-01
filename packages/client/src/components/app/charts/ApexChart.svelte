@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { loadCharts } from "../../../utils/charts-loader"
+  import { loadCharts } from "../../../utils/dependencies"
   import { Icon } from "@budibase/bbui"
   import { cloneDeep } from "./utils"
 

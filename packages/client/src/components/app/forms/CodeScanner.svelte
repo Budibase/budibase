@@ -8,7 +8,7 @@
     Button,
     StatusLight,
   } from "@budibase/bbui"
-  import { loadQRCode } from "../../../utils/qrcode-loader"
+  import { loadQRCode } from "../../../utils/dependencies"
   import { createEventDispatcher } from "svelte"
 
   export let value
