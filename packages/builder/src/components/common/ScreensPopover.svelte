@@ -6,7 +6,7 @@
     PopoverAlignment,
   } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { appStore } from "@/stores/builder"
+  import { appStore, workspaceAppStore } from "@/stores/builder"
   import type { ScreenUsage } from "@budibase/types"
 
   export let screens: ScreenUsage[] = []
@@ -15,7 +15,19 @@
   export let showCount = false
   export let align = PopoverAlignment.Left
 
-  let popover: any
+  let popover: DetailPopover
+
+  $: screensByApp = screens.reduce<Record<string, ScreenUsage[]>>(
+    (acc, screen) => {
+      acc[screen.workspaceAppId] ??= []
+      acc[screen.workspaceAppId].push(screen)
+
+      return acc
+    },
+    {}
+  )
+
+  $: hasManyWorkspaceApps = $workspaceAppStore.workspaceApps.length > 1
 
   export function show() {
     popover?.show()
@@ -43,15 +55,21 @@
     There aren't any screens connected to this data.
   {:else}
     The following screens are connected to this data.
-    <List>
-      {#each screens as screen}
-        <ListItem
-          title={screen.url}
-          url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
-          showArrow
-        />
-      {/each}
-    </List>
+    {#each Object.entries(screensByApp) as [workspaceAppId, appScreens]}
+      {@const title = !hasManyWorkspaceApps
+        ? undefined
+        : $workspaceAppStore.workspaceApps.find(a => a._id === workspaceAppId)
+            ?.name}
+      <List {title}>
+        {#each appScreens as screen}
+          <ListItem
+            title={screen.url}
+            url={`/builder/workspace/${$appStore.appId}/design/${screen._id}`}
+            showArrow
+          />
+        {/each}
+      </List>
+    {/each}
   {/if}
 
   <slot name="footer" />

@@ -14,7 +14,6 @@ import stream, { Readable } from "stream"
 import fetch from "node-fetch"
 import tar from "tar-fs"
 import zlib from "zlib"
-import { promisify } from "util"
 import { join } from "path"
 import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
@@ -24,8 +23,10 @@ import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { ReadableStream } from "stream/web"
 import { NodeJsClient } from "@smithy/types"
+import tracer from "dd-trace"
+import { pipeline } from "stream/promises"
+import { utils } from "@budibase/shared-core"
 
-const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
@@ -76,12 +77,12 @@ const STRING_CONTENT_TYPES = [
 ]
 
 // does normal sanitization and then swaps dev apps to apps
-export function sanitizeKey(input: string) {
+export function sanitizeKey(input: string): string {
   return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
 }
 
 // simply handles the dev app to app conversion
-export function sanitizeBucket(input: string) {
+export function sanitizeBucket(input: string): string {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
 
@@ -237,61 +238,76 @@ export async function streamUpload({
   extra,
   ttl,
 }: StreamUploadParams) {
-  if (!stream) {
-    throw new Error("Stream to upload is invalid/undefined")
-  }
-  const extension = filename.split(".").pop()
-  const objectStore = ObjectStore()
-  const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+  return await tracer.trace("streamUpload", async span => {
+    span.addTags({
+      bucketName,
+      filename,
+      type,
+      ttl,
+    })
 
-  if (ttl && bucketCreated.created) {
-    let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig)
-  }
-
-  // Set content type for certain known extensions
-  if (filename?.endsWith(".js")) {
-    extra = {
-      ...extra,
-      ContentType: "application/javascript",
+    if (!stream) {
+      throw new Error("Stream to upload is invalid/undefined")
     }
-  } else if (filename?.endsWith(".svg")) {
-    extra = {
-      ...extra,
-      ContentType: "image",
+    const extension = filename.split(".").pop()
+    const objectStore = ObjectStore()
+    const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+
+    span.addTags({
+      bucketCreated: bucketCreated.created,
+      bucketExists: bucketCreated.exists,
+      extension,
+    })
+
+    if (ttl && bucketCreated.created) {
+      let ttlConfig = bucketTTLConfig(bucketName, ttl)
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig)
     }
-  }
 
-  let contentType = type
-  if (!contentType) {
-    contentType = extension
-      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-      : CONTENT_TYPE_MAP.txt
-  }
+    // Set content type for certain known extensions
+    if (filename?.endsWith(".js")) {
+      extra = {
+        ...extra,
+        ContentType: "application/javascript",
+      }
+    } else if (filename?.endsWith(".svg")) {
+      extra = {
+        ...extra,
+        ContentType: "image",
+      }
+    }
 
-  const bucket = sanitizeBucket(bucketName),
-    objKey = sanitizeKey(filename)
-  const params = {
-    Bucket: bucket,
-    Key: objKey,
-    Body: stream,
-    ContentType: contentType,
-    ...extra,
-  }
+    let contentType = type
+    if (!contentType) {
+      contentType = extension
+        ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+        : CONTENT_TYPE_MAP.txt
+    }
 
-  const upload = new Upload({
-    client: objectStore,
-    params,
+    span.addTags({ contentType })
+
+    const bucket = sanitizeBucket(bucketName),
+      objKey = sanitizeKey(filename)
+    const params = {
+      Bucket: bucket,
+      Key: objKey,
+      Body: stream,
+      ContentType: contentType,
+      ...extra,
+    }
+
+    const upload = new Upload({ client: objectStore, params })
+    const details = await upload.done()
+    const headDetails = await objectStore.headObject({
+      Bucket: bucket,
+      Key: objKey,
+    })
+    span.addTags({ contentLength: headDetails.ContentLength })
+    return {
+      ...details,
+      ContentLength: headDetails.ContentLength,
+    }
   })
-  const details = await upload.done()
-  const headDetails = await objectStore.headObject({
-    Bucket: bucket,
-    Key: objKey,
-  })
-  return {
-    ...details,
-    ContentLength: headDetails.ContentLength,
-  }
 }
 
 /**
@@ -302,31 +318,40 @@ export async function retrieve(
   bucketName: string,
   filepath: string
 ): Promise<string | stream.Readable> {
-  const objectStore = ObjectStore()
-  const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
-  }
-  const response = await objectStore.getObject(params)
-  if (!response.Body) {
-    throw new Error("Unable to retrieve object")
-  }
-  if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
-    return response.Body.transformToString()
-  } else {
-    // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
-    // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
-    // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
-    const readableStream =
-      response.Body.transformToWebStream() as ReadableStream
-    return stream.Readable.fromWeb(readableStream)
-  }
+  return await tracer.trace("retrieve", async span => {
+    span.addTags({ bucketName, filepath })
+    const objectStore = ObjectStore()
+    const params = {
+      Bucket: sanitizeBucket(bucketName),
+      Key: sanitizeKey(filepath),
+    }
+    const response = await objectStore.getObject(params)
+    if (!response.Body) {
+      throw new Error("Unable to retrieve object")
+    }
+    span.addTags({
+      contentLength: response.ContentLength,
+      contentType: response.ContentType,
+    })
+    if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
+      span.addTags({ string: true })
+      return response.Body.transformToString()
+    } else {
+      span.addTags({ string: false })
+      // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
+      // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
+      // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
+      const readableStream =
+        response.Body.transformToWebStream() as ReadableStream
+      return stream.Readable.fromWeb(readableStream)
+    }
+  })
 }
 
-export async function listAllObjects(
+export async function* listAllObjects(
   bucketName: string,
   path: string
-): Promise<S3Object[]> {
+): AsyncGenerator<S3Object> {
   const objectStore = ObjectStore()
   const list = (params: ListParams = {}) => {
     return objectStore.listObjectsV2({
@@ -335,9 +360,10 @@ export async function listAllObjects(
       Prefix: sanitizeKey(path),
     })
   }
-  let isTruncated = false,
-    token,
-    objects: Object[] = []
+
+  let isTruncated = false
+  let token
+
   do {
     let params: ListParams = {}
     if (token) {
@@ -345,12 +371,13 @@ export async function listAllObjects(
     }
     const response = await list(params)
     if (response.Contents) {
-      objects = objects.concat(response.Contents)
+      for (const obj of response.Contents) {
+        yield obj
+      }
     }
     isTruncated = !!response.IsTruncated
     token = response.NextContinuationToken
   } while (isTruncated && token)
-  return objects
 }
 
 /**
@@ -388,50 +415,60 @@ export async function getPresignedUrl(
  * Same as retrieval function but puts to a temporary file.
  */
 export async function retrieveToTmp(bucketName: string, filepath: string) {
-  bucketName = sanitizeBucket(bucketName)
-  filepath = sanitizeKey(filepath)
-  const data = await retrieve(bucketName, filepath)
-  const outputPath = join(budibaseTempDir(), v4())
-  if (data instanceof stream.Readable) {
-    data.pipe(fs.createWriteStream(outputPath))
-  } else {
-    fs.writeFileSync(outputPath, data)
-  }
-  return outputPath
+  return await tracer.trace("retrieveToTmp", async span => {
+    span.addTags({ bucketName, filepath })
+    bucketName = sanitizeBucket(bucketName)
+    filepath = sanitizeKey(filepath)
+    const data = await retrieve(bucketName, filepath)
+    const outputPath = join(budibaseTempDir(), v4())
+    span.addTags({ outputPath })
+    if (data instanceof stream.Readable) {
+      span.addTags({ stream: true })
+      await pipeline(data, fs.createWriteStream(outputPath))
+    } else {
+      span.addTags({ stream: false })
+      fs.writeFileSync(outputPath, data)
+    }
+    return outputPath
+  })
 }
 
 export async function retrieveDirectory(bucketName: string, path: string) {
-  let writePath = join(budibaseTempDir(), v4())
-  fs.mkdirSync(writePath)
-  const objects = await listAllObjects(bucketName, path)
-  let streams = await Promise.all(
-    objects.map(obj => getReadStream(bucketName, obj.Key!))
-  )
-  let count = 0
-  const writePromises: Promise<void>[] = []
-  for (let obj of objects) {
-    const filename = obj.Key!
-    const stream = streams[count++]
-    const possiblePath = filename.split("/")
-    const dirs = possiblePath.slice(0, possiblePath.length - 1)
-    const possibleDir = join(writePath, ...dirs)
-    if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
-      fs.mkdirSync(possibleDir, { recursive: true })
-    }
-    const writeStream = fs.createWriteStream(join(writePath, ...possiblePath), {
-      mode: 0o644,
-    })
-    stream.pipe(writeStream)
-    writePromises.push(
-      new Promise<void>((resolve, reject) => {
-        writeStream.on("finish", () => resolve())
-        stream.on("error", reject)
-        writeStream.on("error", reject)
-      })
+  return await tracer.trace("retrieveDirectory", async span => {
+    span.addTags({ bucketName, path })
+
+    let writePath = join(budibaseTempDir(), v4())
+    await fsp.mkdir(writePath, { recursive: true })
+
+    let numObjects = 0
+    await utils.parallelForeach(
+      listAllObjects(bucketName, path),
+      async object => {
+        numObjects++
+        await tracer.trace("retrieveDirectory.object", async span => {
+          const filename = object.Key!
+          span.addTags({ filename })
+          const stream = await getReadStream(bucketName, filename)
+          const possiblePath = filename.split("/")
+          const dirs = possiblePath.slice(0, possiblePath.length - 1)
+          const possibleDir = join(writePath, ...dirs)
+          if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
+            await fsp.mkdir(possibleDir, { recursive: true })
+          }
+          await pipeline(
+            stream,
+            fs.createWriteStream(join(writePath, ...possiblePath), {
+              mode: 0o644,
+            })
+          )
+        })
+      },
+      5 /* max concurrency */
     )
-  }
-  await Promise.all(writePromises)
-  return writePath
+
+    span.addTags({ numObjects })
+    return writePath
+  })
 }
 
 /**
@@ -503,26 +540,26 @@ export async function uploadDirectory(
   localPath: string,
   bucketPath: string
 ) {
-  bucketName = sanitizeBucket(bucketName)
-  let uploads = []
-  const files = fs.readdirSync(localPath, { withFileTypes: true })
-  for (let file of files) {
-    const path = sanitizeKey(join(bucketPath, file.name))
-    const local = join(localPath, file.name)
-    if (file.isDirectory()) {
-      uploads.push(uploadDirectory(bucketName, local, path))
-    } else {
-      uploads.push(
-        streamUpload({
+  return await tracer.trace("uploadDirectory", async span => {
+    span.addTags({ bucketName, localPath, bucketPath })
+    bucketName = sanitizeBucket(bucketName)
+    const files = await fsp.readdir(localPath, { withFileTypes: true })
+    span.addTags({ numFiles: files.length })
+    for (const file of files) {
+      const path = sanitizeKey(join(bucketPath, file.name))
+      const local = join(localPath, file.name)
+      if (file.isDirectory()) {
+        await uploadDirectory(bucketName, local, path)
+      } else {
+        await streamUpload({
           bucket: bucketName,
           filename: path,
           stream: fs.createReadStream(local),
         })
-      )
+      }
     }
-  }
-  await Promise.all(uploads)
-  return files
+    return files
+  })
 }
 
 export async function downloadTarballDirect(
@@ -536,7 +573,7 @@ export async function downloadTarballDirect(
     throw new Error(`unexpected response ${response.statusText}`)
   }
 
-  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(path))
+  await pipeline(response.body, zlib.createUnzip(), tar.extract(path))
 }
 
 export async function downloadTarball(
@@ -552,7 +589,7 @@ export async function downloadTarball(
   }
 
   const tmpPath = join(budibaseTempDir(), path)
-  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(tmpPath))
+  await pipeline(response.body, zlib.createUnzip(), tar.extract(tmpPath))
   if (!env.isTest() && env.SELF_HOSTED) {
     await uploadDirectory(bucketName, tmpPath, path)
   }
@@ -564,18 +601,25 @@ export async function getReadStream(
   bucketName: string,
   path: string
 ): Promise<Readable> {
-  bucketName = sanitizeBucket(bucketName)
-  path = sanitizeKey(path)
-  const client = ObjectStore()
-  const params = {
-    Bucket: bucketName,
-    Key: path,
-  }
-  const response = await client.getObject(params)
-  if (!response.Body || !(response.Body instanceof stream.Readable)) {
-    throw new Error("Unable to retrieve stream - invalid response")
-  }
-  return response.Body
+  return await tracer.trace("getReadStream", async span => {
+    bucketName = sanitizeBucket(bucketName)
+    path = sanitizeKey(path)
+    span.addTags({ bucketName, path })
+    const client = ObjectStore()
+    const params = {
+      Bucket: bucketName,
+      Key: path,
+    }
+    const response = await client.getObject(params)
+    if (!response.Body || !(response.Body instanceof stream.Readable)) {
+      throw new Error("Unable to retrieve stream - invalid response")
+    }
+    span.addTags({
+      contentLength: response.ContentLength,
+      contentType: response.ContentType,
+    })
+    return response.Body
+  })
 }
 
 export async function getObjectMetadata(

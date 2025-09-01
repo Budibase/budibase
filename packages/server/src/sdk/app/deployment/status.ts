@@ -1,12 +1,25 @@
 import { context } from "@budibase/backend-core"
 import {
+  App,
   Automation,
-  WorkspaceApp,
+  PublishResourceState,
   PublishStatusResource,
   Screen,
-  App,
+  WorkspaceApp,
+  Table,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+
+function getPublishedState(
+  resource: { disabled?: boolean },
+  lastPublishedAt?: string
+): PublishResourceState {
+  if (!resource.disabled && lastPublishedAt) {
+    return PublishResourceState.PUBLISHED
+  }
+
+  return PublishResourceState.DISABLED
+}
 
 export async function status() {
   const prodDb = context.getProdAppDB()
@@ -15,26 +28,31 @@ export async function status() {
     automations: Automation[]
     workspaceApps: WorkspaceApp[]
     screens: Screen[]
+    tables: Table[]
   }
   const developmentState: State = {
     automations: [],
     workspaceApps: [],
     screens: [],
+    tables: [],
   }
   const productionState: State = {
     automations: [],
     workspaceApps: [],
     screens: [],
+    tables: [],
   }
   const updateState = async (state: State) => {
-    const [automations, workspaceApps, screens] = await Promise.all([
+    const [automations, workspaceApps, screens, tables] = await Promise.all([
       sdk.automations.fetch(),
       sdk.workspaceApps.fetch(),
       sdk.screens.fetch(),
+      sdk.tables.getAllInternalTables(),
     ])
     state.automations = automations
     state.workspaceApps = workspaceApps
     state.screens = screens
+    state.tables = tables
   }
 
   await context.doInAppContext(context.getDevAppId(), async () =>
@@ -56,19 +74,39 @@ export async function status() {
   const prodWorkspaceAppIds = new Set(
     productionState.workspaceApps.map(w => w._id)
   )
+  const prodTableIds = new Set(productionState.tables.map(t => t._id))
+
+  const processResource = (
+    map: Record<string, PublishStatusResource>,
+    prodIds: Set<string | undefined>,
+    resource: {
+      disabled?: boolean
+      updatedAt?: string
+      name: string
+      _id?: string
+    }
+  ) => {
+    const id = resource._id!
+    const resourcePublishedAt = metadata?.resourcesPublishedAt?.[id]
+    map[id] = {
+      published: prodIds.has(id),
+      name: resource.name,
+      publishedAt: resourcePublishedAt,
+      unpublishedChanges:
+        !resourcePublishedAt || resource.updatedAt! > resourcePublishedAt,
+      state: getPublishedState(resource, resourcePublishedAt),
+    }
+  }
 
   // Build response maps comparing development vs production
   const automations: Record<string, PublishStatusResource> = {}
   for (const automation of developmentState.automations) {
-    const resourcePublishedAt =
-      metadata?.resourcesPublishedAt?.[automation._id!]
-    automations[automation._id!] = {
-      published: prodAutomationIds.has(automation._id!),
-      name: automation.name,
-      publishedAt: resourcePublishedAt,
-      unpublishedChanges:
-        !resourcePublishedAt || automation.updatedAt! > resourcePublishedAt,
-    }
+    processResource(automations, prodAutomationIds, automation)
+  }
+
+  const tables: Record<string, PublishStatusResource> = {}
+  for (const table of developmentState.tables) {
+    processResource(tables, prodTableIds, table)
   }
 
   const workspaceApps: Record<string, PublishStatusResource> = {}
@@ -87,8 +125,9 @@ export async function status() {
         !!workspaceScreens.find(
           screen => screen.updatedAt! > resourcePublishedAt
         ),
+      state: getPublishedState(workspaceApp, resourcePublishedAt),
     }
   }
 
-  return { automations, workspaceApps }
+  return { automations, workspaceApps, tables }
 }

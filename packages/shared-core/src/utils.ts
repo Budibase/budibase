@@ -11,7 +11,7 @@ import {
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering, splitFiltersArray } from "./filters"
-import _ from "lodash"
+import pick from "lodash/pick"
 
 const FILTER_ALLOWED_KEYS: (keyof SearchFilter)[] = [
   "field",
@@ -39,24 +39,32 @@ export function unreachable(
 }
 
 export async function parallelForeach<T>(
-  items: T[],
+  items: Iterable<T> | AsyncIterable<T>,
   task: (item: T) => Promise<void>,
   maxConcurrency: number
 ): Promise<void> {
   const results: Promise<void>[] = []
-  let index = 0
+
+  // Check if it's an async iterable
+  const isAsyncIterable = Symbol.asyncIterator in items
+  const iterator = isAsyncIterable
+    ? (items as AsyncIterable<T>)[Symbol.asyncIterator]()
+    : (items as Iterable<T>)[Symbol.iterator]()
 
   const executeNext = async (): Promise<void> => {
-    while (index < items.length) {
-      const currentIndex = index++
-      const item = items[currentIndex]
+    let result = await (isAsyncIterable
+      ? (iterator as AsyncIterator<T>).next()
+      : Promise.resolve((iterator as Iterator<T>).next()))
 
-      await task(item)
+    while (!result.done) {
+      await task(result.value)
+      result = await (isAsyncIterable
+        ? (iterator as AsyncIterator<T>).next()
+        : Promise.resolve((iterator as Iterator<T>).next()))
     }
   }
 
-  // Start up to maxConcurrency workers
-  for (let i = 0; i < Math.min(maxConcurrency, items.length); i++) {
+  for (let i = 0; i < maxConcurrency; i++) {
     results.push(executeNext())
   }
 
@@ -150,7 +158,7 @@ export function processSearchFilters(
       {
         logicalOperator: allOr ? UILogicalOperator.ANY : UILogicalOperator.ALL,
         filters: filters.map(filter => {
-          const trimmedFilter = _.pick(
+          const trimmedFilter = pick(
             filter,
             FILTER_ALLOWED_KEYS
           ) as SearchFilter

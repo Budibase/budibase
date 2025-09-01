@@ -46,6 +46,7 @@ export interface SettingsInnerConfig {
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
+  createdVersion?: string
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}
@@ -73,6 +74,7 @@ export interface OIDCStrategyConfiguration {
   clientID: string
   clientSecret: string
   callbackURL: string
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfigs {
@@ -94,6 +96,7 @@ export interface OIDCInnerConfig {
   uuid: string
   activated: boolean
   scopes: string[]
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfig extends Config<OIDCConfigs> {}
@@ -135,6 +138,13 @@ export interface AIInnerConfig {
 
 export interface AIConfig extends Config<AIInnerConfig> {}
 
+export interface RecaptchaInnerConfig {
+  siteKey: string
+  secretKey: string
+}
+
+export interface RecaptchaConfig extends Config<RecaptchaInnerConfig> {}
+
 export const isConfig = (config: Object): config is Config =>
   "type" in config && "config" in config
 
@@ -156,6 +166,14 @@ export const isSCIMConfig = (config: Config): config is SCIMConfig =>
 export const isAIConfig = (config: Config): config is AIConfig =>
   config.type === ConfigType.AI
 
+export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
+  config.type === ConfigType.RECAPTCHA
+
+export enum PKCEMethod {
+  S256 = "S256",
+  PLAIN = "plain",
+}
+
 export enum ConfigType {
   SETTINGS = "settings",
   ACCOUNT = "account",
@@ -165,6 +183,7 @@ export enum ConfigType {
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
   AI = "ai",
+  RECAPTCHA = "recaptcha",
 }
 
 export type ConfigTypeToConfig<T extends ConfigType> =

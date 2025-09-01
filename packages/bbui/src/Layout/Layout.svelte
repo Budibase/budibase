@@ -1,6 +1,6 @@
 <script lang="ts">
   export let horizontal: boolean = false
-  export let paddingX: "S" | "M" | "L" | "XL" | "XXL" = "M"
+  export let paddingX: "none" | "S" | "M" | "L" | "XL" | "XXL" = "M"
   export let paddingY: "none" | "S" | "M" | "L" | "XL" | "XXL" = "M"
   export let noPadding: boolean = false
   export let gap: "XXS" | "XS" | "S" | "M" | "L" | "XL" = "M"

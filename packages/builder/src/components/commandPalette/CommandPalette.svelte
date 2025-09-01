@@ -31,7 +31,7 @@
   let search
   let selected = null
 
-  $: inApp = $isActive("/builder/app/:application")
+  $: inApp = $isActive("/builder/workspace/:application")
   $: commands = [
     {
       type: "Access",
@@ -108,15 +108,15 @@
       },
       {
         name: "Data",
-        url: "/builder/app/:application/data",
+        url: "/builder/workspace/:application/data",
       },
       {
         name: "Design",
-        url: "/builder/app/:application/design",
+        url: "/builder/workspace/:application/design",
       },
       {
         name: "Automations",
-        url: "/builder/app/:application/automation",
+        url: "/builder/workspace/:application/automation",
       },
     ]
     return routes.map(route => ({
@@ -139,7 +139,7 @@
       name: datasource.name,
       icon: "database",
       action: () =>
-        $goto(`/builder/app/:application/data/datasource/:id`, {
+        $goto(`/builder/workspace/:application/data/datasource/:id`, {
           application: $params.application,
           id: datasource._id,
         }),
@@ -153,7 +153,7 @@
       name: table.name,
       icon: "table",
       action: () =>
-        $goto(`/builder/app/:application/data/table/:id`, {
+        $goto(`/builder/workspace/:application/data/table/:id`, {
           application: $params.application,
           id: table._id,
         }),
@@ -167,7 +167,7 @@
       name: view.name,
       icon: "minus",
       action: () => {
-        $goto(`/builder/app/:application/data/view/:name`, {
+        $goto(`/builder/workspace/:application/data/view/:name`, {
           application: $params.application,
           name: view.name,
         })
@@ -182,7 +182,7 @@
       name: view.name,
       icon: "minus",
       action: () => {
-        $goto(`/builder/app/:application/data/table/:tableId/:viewId`, {
+        $goto(`/builder/workspace/:application/data/table/:tableId/:viewId`, {
           application: $params.application,
           x: view.tableId,
           viewId: view.id,
@@ -198,7 +198,7 @@
       name: query.name,
       icon: "database",
       action: () =>
-        $goto(`/builder/app/:application/data/query/:id`, {
+        $goto(`/builder/workspace/:application/data/query/:id`, {
           application: $params.application,
           id: query._id,
         }),
@@ -212,7 +212,7 @@
       name: screen.routing.route,
       icon: "browser",
       action: () =>
-        $goto(`/builder/app/:application/design/:screenId/:componentId`, {
+        $goto(`/builder/workspace/:application/design/:screenId/:componentId`, {
           application: $params.application,
           screenId: screen._id,
           componentId: `${screen._id}-screen`,
@@ -227,7 +227,7 @@
       name: automation.name,
       icon: "share-network",
       action: () =>
-        $goto(`/builder/app/:application/automation/:id`, {
+        $goto(`/builder/workspace/:application/automation/:id`, {
           application: $params.application,
           id: automation._id,
         }),

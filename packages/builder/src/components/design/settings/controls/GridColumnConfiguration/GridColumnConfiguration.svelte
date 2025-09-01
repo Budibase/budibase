@@ -10,7 +10,7 @@
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import { getColumns } from "./getColumns.js"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let value
   export let componentInstance

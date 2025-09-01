@@ -118,7 +118,7 @@
     }
   })
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -161,7 +161,7 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
+        on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">

@@ -8,9 +8,8 @@ const baseSchema = {
   name: Joi.string().required(),
   url: Joi.string()
     .required()
-    .regex(/^\/\w*$/),
-  icon: Joi.string().required(),
-  iconColor: Joi.string().optional(),
+    .regex(/^\/[\w-]*$/),
+  disabled: Joi.boolean().optional(),
 }
 
 const insertSchema = Joi.object({

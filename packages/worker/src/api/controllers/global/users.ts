@@ -30,6 +30,7 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
+  OIDCUser,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -114,11 +115,20 @@ export const changeTenantOwnerEmail = async (
   try {
     for (const tenantId of tenantIds) {
       await tenancy.doInTenant(tenantId, async () => {
-        const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
+        const tenantUser = (await userSdk.db.getUserByEmail(
+          originalEmail
+        )) as OIDCUser
         if (!tenantUser) {
           return
         }
         tenantUser.email = newAccountEmail
+
+        tenantUser.provider = undefined
+        tenantUser.providerType = undefined
+        tenantUser.thirdPartyProfile = undefined
+        tenantUser.profile = undefined
+        tenantUser.oauth2 = undefined
+
         await userSdk.db.save(tenantUser, {
           currentUserId: tenantUser._id,
           isAccountHolder: true,
@@ -214,15 +224,6 @@ export const adminUser = async (
   const { email, password, tenantId, ssoId, givenName, familyName } =
     ctx.request.body
 
-  if (await platform.tenants.exists(tenantId)) {
-    ctx.throw(403, "Organisation already exists.")
-  }
-
-  if (env.MULTI_TENANCY) {
-    // store the new tenant record in the platform db
-    await platform.tenants.addTenant(tenantId)
-  }
-
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
@@ -249,7 +250,8 @@ export const adminUser = async (
 
       await events.identification.identifyTenantGroup(
         tenantId,
-        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD,
+        Date.now()
       )
 
       ctx.body = {

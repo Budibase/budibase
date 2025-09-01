@@ -7,11 +7,17 @@
     Button,
     Modal,
     Icon,
+    notifications,
   } from "@budibase/bbui"
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
-  import { isOnlyUser, appStore, deploymentStore } from "@/stores/builder"
+  import {
+    isOnlyUser,
+    appStore,
+    deploymentStore,
+    recaptchaStore,
+  } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin } from "@/stores/portal"
+  import { appsStore, admin, licensing, featureFlags } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -30,15 +36,30 @@
   $: selectedApp = filteredApps.length ? filteredApps[0] : {}
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
+  $: appRecaptchaEnabled = $recaptchaStore.enabled
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
   }
+
+  const updateRecaptcha = async () => {
+    try {
+      const newState = !appRecaptchaEnabled
+      await recaptchaStore.setState(newState)
+      notifications.success(`Recaptcha ${newState ? "enabled" : "disabled"}`)
+    } catch (err) {
+      notifications.error(`Failed to set recaptcha state: ${err.message}`)
+    }
+  }
 </script>
 
-<Layout gap="M" noPadding>
-  <Heading size="XS">Workspace info</Heading>
+<Layout noPadding>
+  <Heading size="S">
+    {$featureFlags.WORKSPACES ? "Workspace info" : "App info"}
+  </Heading>
+
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
@@ -71,22 +92,34 @@
         size="M"
       />
       <Body size="S">
-        Your workspace hasn't been published yet and isn't available to users
+        You haven't published yet, so your apps and automations are not
+        available to users
       </Body>
     </div>
     <div class="row">
-      <Button
-        cta
-        disabled={$deploymentStore.isPublishing}
-        on:click={deploymentStore.publishApp}
-      >
-        Publish
-      </Button>
+      {#if !$featureFlags.WORKSPACES}
+        <Button
+          cta
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {:else}
+        <Button
+          icon="arrow-circle-up"
+          primary
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {/if}
     </div>
   {/if}
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
-    <Heading size="XS">Workspace version</Heading>
+    <Heading size="S">Client version</Heading>
     {#if $admin.isDev}
       <Body size="S">
         You're running the latest client version from your file system, as
@@ -158,13 +191,44 @@
   </div>
   <Divider noMargin />
   <Layout noPadding gap="XS">
-    <Heading size="XS">Import</Heading>
+    <Heading size="S">Import</Heading>
     <Body size="S"
-      >Import a workspace export bundle to update this workspace</Body
-    >
+      >Import an export bundle to update this {$featureFlags.WORKSPACES
+        ? "workspace"
+        : "app"}
+    </Body>
   </Layout>
   <div class="row">
-    <Button secondary on:click={importModal?.show}>Import workspace</Button>
+    <Button secondary on:click={importModal?.show}>
+      Import {appOrWorkspace}
+    </Button>
+  </div>
+  <Divider />
+  <Layout noPadding gap="XS">
+    <div class="row">
+      <Heading size="S">Recaptcha</Heading>
+      {#if !$licensing.recaptchaEnabled}
+        <Icon name="lock" />
+      {/if}
+    </div>
+    {#if !$licensing.recaptchaEnabled}
+      <Body size="S"
+        >Recaptcha support is included with enterprise licenses</Body
+      >
+    {:else if !$recaptchaStore.available}
+      <Body size="S"
+        >Please configure Recaptcha keys to enable this protection</Body
+      >
+    {:else}
+      <Body size="S">Enable recaptcha protection for all pages</Body>
+    {/if}
+  </Layout>
+  <div>
+    {#if $licensing.recaptchaEnabled && $recaptchaStore.available}
+      <Button secondary on:click={updateRecaptcha}
+        >{appRecaptchaEnabled ? "Disable" : "Enable"}</Button
+      >
+    {/if}
   </div>
   <Divider noMargin />
   <Heading size="XS">Danger zone</Heading>
@@ -197,10 +261,14 @@
 <ConfirmDialog
   bind:this={unpublishModal}
   title="Confirm unpublish"
-  okText="Unpublish workspace"
+  okText="Unpublish"
   onOk={deploymentStore.unpublishApp}
 >
-  Are you sure you want to unpublish the workspace <b>{selectedApp?.name}</b>?
+  Are you sure you want to unpublish the {appOrWorkspace}
+  <b>{selectedApp?.name}</b>?
+  {#if $featureFlags.WORKSPACES}
+    <p>This will make all apps and automations in this workspace unavailable</p>
+  {/if}
 </ConfirmDialog>
 
 <RevertModal bind:this={revertModal} />

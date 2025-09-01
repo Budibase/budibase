@@ -35,7 +35,9 @@ export interface AutomationContext {
     company?: string
   }
   loop?: { currentItem: any }
+  state: Record<string, any>
   _stepIndex: number
   _error: boolean
   _stepResults: AutomationStepResult[]
+  _loopDepth?: number
 }

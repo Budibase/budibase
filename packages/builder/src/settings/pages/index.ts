@@ -43,7 +43,7 @@ const componentMap: Record<string, LazyComponentLoader> = {
 
   // App
   general_info: () => import("@/settings/pages/general.svelte"),
-  automations: () => import("@/settings/pages/automations.svelte"),
+  automations: () => import("@/settings/pages/automations/automations.svelte"),
   backups: () => import("@/settings/pages/backups/index.svelte"),
   pwa: () => import("@/settings/pages/pwa.svelte"),
   embed: () => import("@/settings/pages/embed.svelte"),

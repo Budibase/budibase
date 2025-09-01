@@ -19,7 +19,7 @@ export interface App extends Document {
   revertableVersion?: string
   lockedBy?: User
   sessions?: SocketSession[]
-  // @deprecated  use workspace app navigation instead
+  /** @deprecated use workspace app navigation instead */
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   backupErrors?: AppMetadataErrors
@@ -36,6 +36,7 @@ export interface App extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
+  recaptchaEnabled?: boolean
 }
 
 export interface AppInstance {

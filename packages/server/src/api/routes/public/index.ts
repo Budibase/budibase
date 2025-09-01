@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import workspaceEndpoints from "./workspaces"
 import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
@@ -6,8 +7,8 @@ import rowEndpoints from "./rows"
 import userEndpoints from "./users"
 import viewEndpoints from "./views"
 import roleEndpoints from "./roles"
-import authorized from "../../../middleware/authorized"
-import publicApi from "../../../middleware/publicApi"
+import { authorizedMiddleware as authorized } from "../../../middleware/authorized"
+import { publicApiMiddleware as publicApi } from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { PermissionLevel, PermissionType } from "@budibase/types"
 import mapperMiddleware from "./middleware/mapper"
@@ -154,6 +155,7 @@ function applyRoutes(
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
+applyRoutes(workspaceEndpoints, PermissionType.APP, "workspaceId")
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")

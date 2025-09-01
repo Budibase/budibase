@@ -5,17 +5,17 @@ export interface WorkspaceAppResponse {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
   isDefault: boolean
+  createdAt: string
+  updatedAt: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
-  icon: string
-  iconColor?: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -27,9 +27,8 @@ export interface UpdateWorkspaceAppRequest {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
+  disabled?: boolean
 }
 
 export interface UpdateWorkspaceAppResponse {

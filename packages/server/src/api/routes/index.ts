@@ -1,6 +1,6 @@
 import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
-import { allRoutes } from "./endpointGroups"
+import { endpointGroupList } from "./endpointGroups"
 
 // just need to import routes, they'll include themselves in the
 // various groups they need to be included in
@@ -37,8 +37,10 @@ import "./oauth2"
 import "./features"
 import "./ai"
 import "./workspaceApp"
+import "./workspaceFavourites"
 import "./navigation"
 import "./resource"
+import "./recaptcha"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
@@ -46,18 +48,7 @@ export { default as assetRoutes } from "./assets"
 
 const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
-const appEndpoints = allRoutes().flatMap(group => group.endpointList())
-// sort endpoints with a URL parameters after the static endpoints -
-// for example, endpoints /api/queries/:queryId and /api/queries/accessible
-// can overlap, if the parameter comes before the accessible it'll be unreachable
-appEndpoints.sort((a, b) => {
-  const aHasColon = a.url.includes(":")
-  const bHasColon = b.url.includes(":")
-
-  if (aHasColon && !bHasColon) return 1
-  if (!aHasColon && bHasColon) return -1
-  return a.url.localeCompare(b.url)
-})
+const appEndpoints = endpointGroupList.listAllEndpoints()
 
 const appRoutes = new Router()
 for (let endpoint of appEndpoints) {

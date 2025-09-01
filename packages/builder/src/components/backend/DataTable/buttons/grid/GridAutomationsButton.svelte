@@ -41,7 +41,7 @@
 <DetailPopover title="Automations" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="lightning-a"
+      icon="path"
       selected={open || automationCount}
       quiet
       accentColor="#4b75ff"
@@ -61,14 +61,14 @@
             ? "var(--spectrum-global-color-gray-600)"
             : "var(--spectrum-global-color-green-600)"}
           title={automation.name}
-          url={`/builder/app/${$appStore.appId}/automation/${automation._id}`}
+          url={`/builder/workspace/${$appStore.appId}/automation/${automation._id}`}
           showArrow
         />
       {/each}
     </List>
   {/if}
   <div>
-    <Button secondary icon="lightning-a" on:click={generateAutomation}>
+    <Button secondary icon="path" on:click={generateAutomation}>
       Generate automation
     </Button>
   </div>

@@ -239,6 +239,48 @@ if (descriptions.length) {
             }
           )
         })
+
+        describe("primaryDisplay validation", () => {
+          it("should not allow primaryDisplay field of type 'attachments'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "attachments",
+                schema: {
+                  attachments: {
+                    name: "attachments",
+                    type: FieldType.ATTACHMENTS,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "attachments" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
+
+          it("should not allow primaryDisplay field of type 'json'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "json",
+                schema: {
+                  json: {
+                    name: "json",
+                    type: FieldType.JSON,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "json" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
+        })
       })
 
       describe("permissions", () => {
@@ -949,7 +991,8 @@ if (descriptions.length) {
             expect.objectContaining({
               ...testTable,
               tableId: testTable._id,
-            })
+            }),
+            config.appId
           )
         })
 

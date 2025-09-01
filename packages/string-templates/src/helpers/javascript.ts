@@ -8,7 +8,7 @@ import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
-import { cloneDeep } from "lodash/fp"
+import cloneDeep from "lodash/fp/cloneDeep"
 import { Log, LogType } from "../types"
 import { isTest } from "../environment"
 

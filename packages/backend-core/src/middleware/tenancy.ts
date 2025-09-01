@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import type { Next, Middleware } from "koa"
 
-export default function (
+export function tenancy(
   allowQueryStringPatterns: EndpointMatcher[],
   noTenancyPatterns: EndpointMatcher[],
   opts: { noTenancyRequired?: boolean } = { noTenancyRequired: false }

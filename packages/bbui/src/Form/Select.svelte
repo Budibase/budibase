@@ -31,6 +31,9 @@
   export let autoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
+  export let tooltipMessage:
+    | ((_option: O, _index?: number) => string)
+    | undefined = undefined
   export let autocomplete: boolean = false
   export let customPopoverHeight: string | undefined = undefined
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
@@ -80,6 +83,7 @@
     {compare}
     {onOptionMouseenter}
     {onOptionMouseleave}
+    {tooltipMessage}
     on:change={onChange}
     on:click
   />

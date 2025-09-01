@@ -24,12 +24,15 @@
   import { onMount } from "svelte"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
   let dateRange = []
+  let selectedRows = []
+  let bulkDeleteDialog
   let filters = [
     {
       label: "Manual backup",
@@ -97,6 +100,35 @@
     })
   }
 
+  function deselectAll() {
+    selectedRows = []
+  }
+
+  async function bulkDeleteBackups() {
+    if (selectedRows.length === 0) return
+
+    try {
+      loading = true
+      const backupIds = selectedRows.map(row => row._id)
+      const response = await backups.deleteBackups($appStore.appId, backupIds)
+
+      if (response.failureCount > 0) {
+        notifications.warning(response.message)
+      } else {
+        notifications.success(response.message)
+      }
+
+      deselectAll()
+      await fetchBackups(filterOpt, page)
+    } catch (err) {
+      notifications.error("Error while deleting the selected backups")
+    } finally {
+      loading = false
+    }
+  }
+
+  $: hasSelection = selectedRows.length > 0
+
   async function fetchBackups(filters, page, dateRange = []) {
     const opts = {
       ...filters,
@@ -114,6 +146,9 @@
 
     // flatten so we have an easier structure to use for the table schema
     backupData = flattenBackups(response.data)
+
+    // Clear selections when fetching new data
+    deselectAll()
   }
 
   async function createManualBackup() {
@@ -206,16 +241,23 @@
                 bind:value={filterOpt}
               />
             </div>
-            <DateRangePicker
-              value={dateRange}
-              on:change={e => (dateRange = e.detail)}
-            />
+            <div class="date-range-compact">
+              <DateRangePicker
+                value={dateRange}
+                on:change={e => (dateRange = e.detail)}
+              />
+            </div>
           </div>
-          <div>
-            <Button cta disabled={loading} on:click={createManualBackup}>
-              Create new backup
-            </Button>
-          </div>
+          {#if hasSelection}
+            <div class="selection-controls">
+              <Button warning on:click={bulkDeleteDialog.show}>
+                Delete selected ({selectedRows.length})
+              </Button>
+            </div>
+          {/if}
+          <Button cta disabled={loading} on:click={createManualBackup}>
+            Create backup
+          </Button>
         </div>
         <div class="table">
           <Table
@@ -245,6 +287,18 @@
   </Layout>
 </LockedFeature>
 
+<ConfirmDialog
+  bind:this={bulkDeleteDialog}
+  okText="Delete backups"
+  onOk={bulkDeleteBackups}
+  title="Confirm backup deletion"
+>
+  Are you sure you wish to delete {selectedRows.length} backup{selectedRows.length ===
+  1
+    ? ""
+    : "s"}? This action cannot be undone.
+</ConfirmDialog>
+
 <style>
   .controls {
     display: flex;
@@ -255,11 +309,35 @@
     flex-wrap: wrap;
   }
 
+  .actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-m);
+    align-items: flex-end;
+  }
+
+  .selection-controls {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
+  }
+
   .search {
     flex: 1 1 auto;
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-end;
+  }
+  .date-range-compact :global(.date-range-picker) {
+    max-width: 280px;
+    flex: 0 0 280px;
+  }
+  .date-range-compact :global(.date-range-picker > *) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .date-range-compact :global(.date-range-picker .spectrum-InputGroup) {
+    width: 100%;
   }
   .search :global(.spectrum-InputGroup) {
     min-width: 100px;

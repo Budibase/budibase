@@ -1,17 +1,19 @@
 <script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import AbsTooltip from "./AbsTooltip.svelte"
+  import type { TooltipPosition } from "../constants"
 
   export let tooltip: string = ""
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = true
+  export let position: TooltipPosition | undefined = undefined
 </script>
 
 <div class:container={!!tooltip}>
   <slot />
   {#if tooltip}
     <div class="icon-container">
-      <AbsTooltip text={tooltip}>
+      <AbsTooltip text={tooltip} {position}>
         <div
           class="icon"
           class:icon-small={size === "M" || size === "S"}

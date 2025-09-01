@@ -32,6 +32,7 @@ export * as docUpdates from "./docUpdates"
 export * as docIds from "./docIds"
 export * as security from "./security"
 export * as sql from "./sql"
+export * as csv from "./csv"
 export * from "./utils/Duration"
 export * from "./Endpoint"
 // Add context to tenancy for backwards compatibility

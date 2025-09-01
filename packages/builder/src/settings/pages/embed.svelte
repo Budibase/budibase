@@ -1,30 +1,51 @@
 <script>
   import {
     Layout,
-    Body,
-    Divider,
     Button,
     Helpers,
     Icon,
     notifications,
+    Select,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appsStore } from "@/stores/portal"
-  import { appStore } from "@/stores/builder"
+  import { appsStore, featureFlags } from "@/stores/portal"
+  import { appStore, workspaceAppStore } from "@/stores/builder"
+
+  let selectedApp
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
-  $: app = filteredApps.length ? filteredApps[0] : {}
-  $: appUrl = `${window.origin}/embed${app?.url}`
-  $: appDeployed = app?.status === AppStatus.DEPLOYED
+  $: workspace = filteredApps.length ? filteredApps[0] : {}
+  $: workspaceBaseUrl = `${window.origin}/embed${workspace?.url}`
+  $: workspaceUrl =
+    !selectedApp || selectedApp?.isDefault
+      ? workspaceBaseUrl
+      : `${workspaceBaseUrl}${selectedApp.url}`
+  $: appDeployed = workspace?.status === AppStatus.DEPLOYED
+  $: defaultApp = $workspaceAppStore.workspaceApps.find(a => a.isDefault)
+  $: embedTitle = selectedApp?.name || workspace?.name || ""
 
-  $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${appUrl}"></iframe>`
+  $: embed = `<iframe title="${embedTitle}" width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${workspaceUrl}"> </iframe>`
 </script>
 
-<Layout gap="S" noPadding>
-  <Layout gap="XS" noPadding>
-    <Body size="S">Embed your app into your other tools of choice</Body>
-  </Layout>
-  <Divider noMargin />
+<Layout noPadding>
+  {#if $featureFlags.WORKSPACES}
+    <div class="embed-app-select">
+      <span>
+        Select a workspace app below if you wish to target a specific app:
+      </span>
+      <Select
+        placeholder={!$workspaceAppStore.workspaceApps.length
+          ? "No workspace apps"
+          : false}
+        options={$workspaceAppStore.workspaceApps}
+        getOptionLabel={a => a.name}
+        getOptionValue={a => a}
+        value={selectedApp || defaultApp}
+        on:change={e => (selectedApp = e.detail)}
+        disabled={!$workspaceAppStore.workspaceApps.length}
+      />
+    </div>
+  {/if}
   <div class="embed-body">
     <div class="embed-code">{embed}</div>
     {#if appDeployed}
@@ -68,5 +89,11 @@
     );
     border-radius: var(--border-radius-s);
     padding: var(--spacing-xl);
+  }
+  .embed-app-select {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    width: fit-content;
   }
 </style>

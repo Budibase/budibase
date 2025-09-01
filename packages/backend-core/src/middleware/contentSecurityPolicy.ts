@@ -14,6 +14,7 @@ const CSP_DIRECTIVES = {
     "https://widget.intercom.io",
     "https://d2l5prqdbvm3op.cloudfront.net",
     "https://us-assets.i.posthog.com",
+    "https://www.google.com/recaptcha/api.js",
   ],
   "style-src": [
     "'self'",
@@ -91,7 +92,7 @@ const CSP_DIRECTIVES = {
 
 const CSPDomainRegex = /^[A-Za-z0-9-*:/.]+$/
 
-const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
+export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
   let directives = { ...CSP_DIRECTIVES }
@@ -132,5 +133,3 @@ const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   ctx.set("Content-Security-Policy", cspHeader)
   await next()
 }) as Middleware
-
-export default contentSecurityPolicy

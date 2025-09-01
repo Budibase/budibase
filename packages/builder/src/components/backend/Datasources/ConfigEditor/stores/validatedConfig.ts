@@ -1,9 +1,9 @@
-import { derived, writable, get } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 import { getValidatorFields } from "./validation"
 import { capitalise } from "@/helpers/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
-import { DatasourceFieldType, UIIntegration } from "@budibase/types"
+import { DatasourceFieldType, SourceName, UIIntegration } from "@budibase/types"
 import { processStringSync } from "@budibase/string-templates"
 
 interface ValidatedConfigItem {
@@ -143,10 +143,21 @@ export const createValidatedConfigStore = (
 
       const config: Record<string, any> = {}
 
+      // During the auth flow, we get a continueSetupId from Google's OAuth flow
+      // that gets saved in the config store but is not something we expect the
+      // user to configure. It needs preserving in the validated config or no
+      // one is able to create a Google Sheets datasource.
+      if (integration.name === SourceName.GOOGLE_SHEETS) {
+        config.continueSetupId = $configStore.continueSetupId
+      }
+
       const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
       Object.entries(integration.datasource || {}).forEach(
         ([key, properties]) => {
-          if (integration.name === "REST" && !allowedRestKeys.includes(key)) {
+          if (
+            integration.name === SourceName.REST &&
+            !allowedRestKeys.includes(key)
+          ) {
             return
           }
 

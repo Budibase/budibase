@@ -1,16 +1,16 @@
 <script>
   import {
+    Body,
+    CopyInput,
+    Divider,
     Layout,
     Heading,
-    Body,
-    Divider,
     Link,
     Button,
     Input,
     Label,
     ButtonGroup,
     notifications,
-    CopyInput,
     File,
   } from "@budibase/bbui"
   import { auth, admin, licensing } from "@/stores/portal"
@@ -38,6 +38,8 @@
   let offlineLicenseIdentifier = ""
   let offlineLicense = undefined
   const offlineLicenseExtensions = [".txt"]
+
+  let installInfo
 
   // Make sure page can't be visited directly in cloud
   $: {
@@ -99,6 +101,7 @@
   const getOfflineLicense = async () => {
     try {
       const license = await API.getOfflineLicense()
+      console.log("Test")
       if (license) {
         offlineLicense = {
           name: "license",
@@ -180,6 +183,7 @@
       await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
     } else {
       await getLicenseKey()
+      installInfo = await API.getInstallInfo()
     }
   })
 </script>
@@ -286,6 +290,29 @@
         })}
       </Body>
     </Layout>
+
+    {#if !$admin.offlineMode}
+      <Divider />
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">
+          <div class="split-heading">
+            <span> Installation </span>
+            <span>{installInfo?.version ? `v${installInfo.version}` : ""}</span>
+          </div>
+        </Heading>
+      </Layout>
+      <Layout noPadding gap="S">
+        <Body size="S">Useful information to share with the support team.</Body>
+        <Layout paddingX="none">
+          <div class="fields">
+            <div class="field">
+              <Label size="L">Install ID</Label>
+              <CopyInput value={installInfo?.installId} />
+            </div>
+          </div>
+        </Layout>
+      </Layout>
+    {/if}
   </Layout>
 {/if}
 
@@ -305,5 +332,9 @@
   }
   .refresh-button {
     margin: 12px 0;
+  }
+  .split-heading {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

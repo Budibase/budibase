@@ -31,7 +31,6 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import { configFromIntegration } from "@/stores/selectors"
-  import { IntegrationTypes } from "@/constants/backend"
   import { goto, params } from "@roxi/routify"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
@@ -133,9 +132,7 @@
             icon={"Add"}
             secondary
             on:click={() => {
-              const REST = $integrations.find(
-                i => i.name === IntegrationTypes.REST
-              )
+              const REST = $integrations.find(i => i.name === SourceName.REST)
               if (!REST) {
                 notifications.error("Could not create REST API!")
                 return
@@ -148,7 +145,7 @@
                 })
                 .then(datasource => {
                   notifications.success("REST API created successfully")
-                  $goto(`/builder/app/:application/data/query/new/:id`, {
+                  $goto(`/builder/workspace/:application/data/query/new/:id`, {
                     application: $params.application,
                     id: datasource._id,
                   })
@@ -203,7 +200,7 @@
               icon={"Add"}
               secondary
               on:click={() => {
-                $goto(`/builder/app/:application/data/query/new/:id`, {
+                $goto(`/builder/workspace/:application/data/query/new/:id`, {
                   application: $params.application,
                   id: dataSource._id,
                 })

@@ -1,21 +1,25 @@
 import * as controller from "../controllers/automation"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { bodyResource, paramResource } from "../../middleware/resourceId"
 import {
   middleware as appInfoMiddleware,
   AppType,
 } from "../../middleware/appInfo"
+import recaptcha from "../../middleware/recaptcha"
 import { automationValidator } from "./utils/validators"
-import { builderRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const authorizedRoutes = customEndpointGroups.group({
-  middleware: authorized(
-    permissions.PermissionType.AUTOMATION,
-    permissions.PermissionLevel.EXECUTE
-  ),
-  first: false,
-})
+const authorizedRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(
+      permissions.PermissionType.AUTOMATION,
+      permissions.PermissionLevel.EXECUTE
+    ),
+    first: false,
+  },
+  recaptcha
+)
 
 builderRoutes
   .get("/api/automations/trigger/list", controller.getTriggerList)

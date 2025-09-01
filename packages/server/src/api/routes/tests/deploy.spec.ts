@@ -3,6 +3,7 @@ import { structures } from "@budibase/backend-core/tests"
 import { features } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
+import { Automation, PublishResourceState, WorkspaceApp } from "@budibase/types"
 
 describe("/api/deploy", () => {
   let config = setup.getConfig(),
@@ -15,7 +16,7 @@ describe("/api/deploy", () => {
 
   beforeAll(async () => {
     cleanup = features.testutils.setFeatureFlags("*", {
-      WORKSPACE_APPS: true,
+      WORKSPACES: true,
     })
     await config.init()
   })
@@ -37,7 +38,7 @@ describe("/api/deploy", () => {
       }
     })
 
-    it("returns unpublished state for development-only resources", async () => {
+    it("returns disabled state for development-only resources", async () => {
       const table = await config.api.table.save(basicTable())
 
       // Create automation
@@ -60,11 +61,13 @@ describe("/api/deploy", () => {
         published: false,
         name: automation.name,
         unpublishedChanges: true,
+        state: "disabled",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: false,
         name: workspaceApp.name,
         unpublishedChanges: true,
+        state: "disabled",
       })
     })
 
@@ -88,14 +91,25 @@ describe("/api/deploy", () => {
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
+        publishedAt: expect.any(String),
         published: true,
         name: automation.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "published",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
+        publishedAt: expect.any(String),
         published: true,
         name: workspaceApp.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "published",
+      })
+      expect(res.tables[table._id!]).toEqual({
+        publishedAt: expect.any(String),
+        published: true,
+        name: table.name,
+        unpublishedChanges: false,
+        state: "published",
       })
     })
 
@@ -110,12 +124,6 @@ describe("/api/deploy", () => {
         .serverLog({ text: "Published automation" })
         .save()
 
-      const { automation: unpublishedAutomation } =
-        await createAutomationBuilder(config)
-          .onRowSaved({ tableId: table._id! })
-          .serverLog({ text: "Unpublished automation" })
-          .save()
-
       const { workspaceApp: publishedWorkspaceApp } =
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
@@ -123,6 +131,14 @@ describe("/api/deploy", () => {
             url: "/publishedapp",
           })
         )
+
+      await config.api.application.publish(config.app!.appId)
+
+      const { automation: unpublishedAutomation } =
+        await createAutomationBuilder(config)
+          .onRowSaved({ tableId: table._id! })
+          .serverLog({ text: "Unpublished automation" })
+          .save()
 
       const { workspaceApp: unpublishedWorkspaceApp } =
         await config.api.workspaceApp.create(
@@ -132,11 +148,6 @@ describe("/api/deploy", () => {
           })
         )
 
-      await config.api.application.filteredPublish(config.app!.appId, {
-        automationIds: [publishedAutomation._id!],
-        workspaceAppIds: [publishedWorkspaceApp._id!],
-      })
-
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[publishedAutomation._id!]).toEqual({
@@ -144,52 +155,62 @@ describe("/api/deploy", () => {
         name: publishedAutomation.name,
         publishedAt: expect.any(String),
         unpublishedChanges: false,
+        state: "published",
       })
       expect(res.workspaceApps[publishedWorkspaceApp._id!]).toEqual({
         published: true,
         name: publishedWorkspaceApp.name,
         publishedAt: expect.any(String),
         unpublishedChanges: false,
+        state: "published",
       })
 
       expect(res.automations[unpublishedAutomation._id!]).toEqual({
         published: false,
         name: unpublishedAutomation.name,
         unpublishedChanges: true,
+        state: "disabled",
       })
       expect(res.workspaceApps[unpublishedWorkspaceApp._id!]).toEqual({
         published: false,
         name: unpublishedWorkspaceApp.name,
         unpublishedChanges: true,
+        state: "disabled",
       })
     })
 
-    it("handles app with no production database", async () => {
+    it("handles app with disabled automation/workspace app", async () => {
       const table = await config.api.table.save(basicTable())
 
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
         .serverLog({ text: "Test automation" })
-        .save()
+        .save({ disabled: true })
 
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
           url: "/testapp",
+          disabled: true,
         })
       )
 
+      await config.api.application.publish(config.app!.appId)
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
-        published: false,
+        published: true,
+        publishedAt: expect.any(String),
         name: automation.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "disabled",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
-        published: false,
+        published: true,
+        publishedAt: expect.any(String),
         name: workspaceApp.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "disabled",
       })
     })
 
@@ -211,6 +232,217 @@ describe("/api/deploy", () => {
       // Should not include deleted automation
       expect(res.automations[automation._id!]).toBeUndefined()
       expect(Object.keys(res.automations)).toHaveLength(0)
+    })
+  })
+
+  describe.each([false, true])("POST /api/deploy", workspaceAppsFlag => {
+    let cleanup: () => void
+    afterAll(() => {
+      cleanup()
+    })
+
+    beforeAll(async () => {
+      cleanup = features.testutils.setFeatureFlags("*", {
+        WORKSPACES: workspaceAppsFlag,
+      })
+
+      await config.init()
+    })
+
+    beforeEach(async () => {
+      await config.unpublish()
+    })
+
+    function expectApp(app: WorkspaceApp) {
+      return {
+        disabled: async (
+          disabled: boolean | undefined,
+          state: PublishResourceState
+        ) => {
+          expect((await config.api.workspaceApp.find(app._id!)).disabled).toBe(
+            disabled
+          )
+
+          const status = await config.api.deploy.publishStatus()
+          expect(status.workspaceApps[app._id!]).toEqual(
+            expect.objectContaining({
+              state,
+            })
+          )
+        },
+      }
+    }
+    function expectAutomation(automation: Automation) {
+      return {
+        disabled: async (
+          disabled: boolean | undefined,
+          state: PublishResourceState
+        ) => {
+          expect(
+            (await config.api.automation.get(automation._id!)).disabled
+          ).toBe(disabled)
+
+          const status = await config.api.deploy.publishStatus()
+          expect(status.automations[automation._id!]).toEqual(
+            expect.objectContaining({
+              state,
+            })
+          )
+        },
+      }
+    }
+
+    async function publishProdApp() {
+      await config.api.application.publish(config.getAppId())
+      await config.api.application.sync(config.getAppId())
+    }
+
+    it("should define the disable value for all workspace apps when publishing for the first time (only when flag is true, workspace apps flag %s)", async () => {
+      const { workspaceApp: publishedApp } =
+        await config.api.workspaceApp.create({
+          name: "Test App 1",
+          url: "/app1",
+          disabled: false,
+        })
+      const { workspaceApp: appWithoutInfo } =
+        await config.api.workspaceApp.create({
+          name: "Test App 2",
+          url: "/app2",
+        })
+      const { workspaceApp: disabledApp } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Disabled App",
+            url: "/disabled",
+            disabled: true,
+          })
+        )
+
+      expect(publishedApp.disabled).toBe(false)
+      expect(appWithoutInfo.disabled).toBeUndefined()
+      expect(disabledApp.disabled).toBe(true)
+
+      // Publish the app for the first time
+      await publishProdApp()
+
+      await expectApp(publishedApp).disabled(
+        false,
+        PublishResourceState.PUBLISHED
+      )
+      await expectApp(appWithoutInfo).disabled(
+        !workspaceAppsFlag ? undefined : true,
+        !workspaceAppsFlag
+          ? PublishResourceState.PUBLISHED
+          : PublishResourceState.DISABLED
+      )
+      await expectApp(disabledApp).disabled(true, PublishResourceState.DISABLED)
+    })
+
+    it("should define the disable value for all automations when publishing for the first time (only when flag is true, workspace apps flag %s)", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      const { automation: disabledAutomation } = await createAutomationBuilder(
+        config
+      )
+        .onRowSaved({ tableId: table._id! })
+        .save({ disabled: true })
+      const { automation: enabledAutomation } = await createAutomationBuilder(
+        config
+      )
+        .onRowSaved({ tableId: table._id! })
+        .save({ disabled: false })
+      const { automation: automationWithoutInfo } =
+        await createAutomationBuilder(config)
+          .onRowSaved({ tableId: table._id! })
+          .save({ disabled: undefined })
+
+      // Verify apps are not disabled before publishing
+      expect(disabledAutomation.disabled).toBe(true)
+      expect(enabledAutomation.disabled).toBe(false)
+      expect(automationWithoutInfo.disabled).toBe(undefined)
+
+      // Publish the app for the first time
+      await publishProdApp()
+
+      await expectAutomation(disabledAutomation).disabled(
+        true,
+        PublishResourceState.DISABLED
+      )
+      await expectAutomation(enabledAutomation).disabled(
+        false,
+        PublishResourceState.PUBLISHED
+      )
+      await expectAutomation(automationWithoutInfo).disabled(
+        !workspaceAppsFlag ? undefined : true,
+        !workspaceAppsFlag
+          ? PublishResourceState.PUBLISHED
+          : PublishResourceState.DISABLED
+      )
+    })
+
+    it("should not disable workspace apps on subsequent publishes", async () => {
+      const { workspaceApp: initialApp } = await config.api.workspaceApp.create(
+        {
+          name: "Test App 1",
+          url: "/app1",
+          disabled: undefined,
+        }
+      )
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        {
+          WORKSPACES: false,
+        },
+        () => publishProdApp()
+      )
+
+      const { workspaceApp: secondApp } = await config.api.workspaceApp.create({
+        name: "Test App 2",
+        url: "/app2",
+        disabled: true,
+      })
+      await publishProdApp()
+
+      await expectApp(initialApp).disabled(
+        undefined,
+        PublishResourceState.PUBLISHED
+      )
+      await expectApp(secondApp).disabled(true, PublishResourceState.DISABLED)
+    })
+
+    it("should not disable automations on subsequent publishes", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      const { automation: initialAutomation } = await createAutomationBuilder(
+        config
+      )
+        .onRowSaved({ tableId: table._id! })
+        .save({ disabled: undefined })
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        {
+          WORKSPACES: false,
+        },
+        () => publishProdApp()
+      )
+
+      const { automation: secondAutomation } = await createAutomationBuilder(
+        config
+      )
+        .onRowSaved({ tableId: table._id! })
+        .save({ disabled: true })
+      await publishProdApp()
+
+      await expectAutomation(initialAutomation).disabled(
+        undefined,
+        PublishResourceState.PUBLISHED
+      )
+      await expectAutomation(secondAutomation).disabled(
+        true,
+        PublishResourceState.DISABLED
+      )
     })
   })
 })

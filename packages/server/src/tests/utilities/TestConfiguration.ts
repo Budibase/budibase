@@ -15,6 +15,7 @@ import {
   basicScreen,
   basicTable,
   basicWebhook,
+  TEST_WORKSPACEAPPID_PLACEHOLDER,
 } from "./structures"
 import {
   cache,
@@ -27,6 +28,7 @@ import {
   sessions,
   tenancy,
   utils,
+  features,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -67,6 +69,7 @@ import {
   Webhook,
   WithRequired,
   DevInfo,
+  FeatureFlag,
 } from "@budibase/types"
 
 import API from "./api"
@@ -469,13 +472,13 @@ export default class TestConfiguration {
     })
   }
 
-  async withHeaders(
+  async withHeaders<T>(
     headers: Record<string, string | string[]>,
-    cb: () => Promise<unknown>
+    cb: () => Promise<T>
   ) {
     this.temporaryHeaders = headers
     try {
-      await cb()
+      return await cb()
     } finally {
       this.temporaryHeaders = undefined
     }
@@ -494,9 +497,27 @@ export default class TestConfiguration {
     }
     const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
+    let cookie: (string | string[])[] = [
+      `${constants.Cookie.Auth}=${authToken}`,
+    ]
+    const tempHeaderCookie = this.temporaryHeaders?.["Cookie"]
+    let hasAuth = false
+    if (Array.isArray(tempHeaderCookie)) {
+      hasAuth = !!tempHeaderCookie.find(cookie =>
+        cookie.includes(constants.Cookie.Auth)
+      )
+    } else if (typeof tempHeaderCookie === "string") {
+      hasAuth = tempHeaderCookie.includes(constants.Cookie.Auth)
+    }
+    if (tempHeaderCookie && hasAuth) {
+      cookie = [tempHeaderCookie]
+    } else if (tempHeaderCookie) {
+      cookie.push(tempHeaderCookie)
+      delete this.temporaryHeaders?.["Cookie"]
+    }
     const headers: any = {
       Accept: "application/json",
-      Cookie: [`${constants.Cookie.Auth}=${authToken}`],
+      Cookie: cookie,
       [constants.Header.CSRF_TOKEN]: this.csrfToken,
       Host: this.tenantHost(),
       ...extras,
@@ -583,6 +604,23 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
+  async createDefaultWorkspaceApp(
+    appName: string,
+    mode: "dev" | "prod" = "dev"
+  ) {
+    const { workspaceApp } = await this.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: appName,
+        url: "/",
+      })
+    )
+    const appId = mode === "dev" ? this.getAppId() : this.getProdAppId()
+    const db = dbCore.getDB(appId)
+    await db.put({ ...workspaceApp, isDefault: true })
+
+    return { ...workspaceApp, isDefault: true }
+  }
+
   doInTenant<T>(task: () => T) {
     return context.doInTenant(this.getTenantId(), task)
   }
@@ -622,9 +660,44 @@ export default class TestConfiguration {
     )
     this.appId = this.app.appId
 
+    if (
+      await this.doInTenant(() => features.isEnabled(FeatureFlag.WORKSPACES))
+    ) {
+      const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+      this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    } else {
+      const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+        .workspaceApps
+      this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    }
+
+    return await context.doInAppContext(this.app.appId!, async () => {
+      // create production app
+      this.prodApp = await this.publish()
+
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app!)
+
+      return this.app!
+    })
+  }
+
+  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+    this.appId = undefined
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+          url,
+          isOnboarding: "true",
+        })) as App
+    )
+    this.appId = this.app.appId
+
     const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
       .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -935,6 +1008,13 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
+    if (
+      !config.workspaceAppId ||
+      config.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER
+    ) {
+      config.workspaceAppId = this.getDefaultWorkspaceAppId()
+    }
+
     return this.api.screen.save(config)
   }
 

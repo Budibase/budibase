@@ -72,7 +72,7 @@
   import { utils } from "@budibase/shared-core"
   import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
   import { API } from "@/api"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let automation
   export let block

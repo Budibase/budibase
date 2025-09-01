@@ -1,7 +1,7 @@
-import { Config } from "@jest/types"
+import { Config } from "jest"
 import * as fs from "fs"
 
-const config: Config.InitialOptions = {
+const config: Config = {
   globalSetup: "./../../globalSetup.ts",
   setupFiles: ["./src/tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],

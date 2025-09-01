@@ -109,7 +109,7 @@ function getHeader(ctx: Ctx, header: Header): string | undefined {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-export default function (
+export function authenticated(
   noAuthPatterns: EndpointMatcher[] = [],
   opts: { publicAllowed?: boolean; populateUser?: Function } = {
     publicAllowed: false,

@@ -90,7 +90,7 @@
   let selectedRows: User[] = []
   let bulkSaveResponse: BulkUserCreated
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
@@ -234,8 +234,13 @@
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
+      // Skip empty or whitespace-only emails
+      if (!email || !email.trim()) {
+        continue
+      }
+
       const newUser = {
-        email: email,
+        email: email.trim(),
         role: usersRole,
         password: generatePassword(12),
         forceResetPassword: true,

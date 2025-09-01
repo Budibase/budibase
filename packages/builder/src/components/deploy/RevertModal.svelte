@@ -1,6 +1,7 @@
 <script>
   import { Input, Modal, notifications, ModalContent } from "@budibase/bbui"
   import { appStore, initialise } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { API } from "@/api"
 
   export let onComplete = () => {}
@@ -9,6 +10,7 @@
   let appName
 
   $: appId = $appStore.appId
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const revert = async () => {
     try {
@@ -40,11 +42,11 @@
     onConfirm={revert}
     disabled={appName !== $appStore.name}
   >
-    <span
-      >The changes you have made will be deleted and the application reverted
-      back to its production state.</span
-    >
-    <span>Please enter your app name to continue.</span>
+    <span>
+      The changes you have made will be deleted and the {appOrWorkspace} reverted
+      back to its production state.
+    </span>
+    <span>Please enter your {appOrWorkspace} name to continue.</span>
     <Input bind:value={appName} />
   </ModalContent>
 </Modal>

@@ -1,7 +1,7 @@
 import { integrations } from "./integrations"
 import { derived } from "svelte/store"
 import { DatasourceTypes } from "@/constants/backend"
-import { UIIntegration, Integration } from "@budibase/types"
+import { UIIntegration, Integration, SourceName } from "@budibase/types"
 import { BudiStore } from "@/stores/BudiStore"
 
 const getIntegrationOrder = (type: string | undefined) => {
@@ -25,7 +25,10 @@ export class SortedIntegrationStore extends BudiStore<UIIntegration[]> {
     const derivedStore = derived<typeof integrations, UIIntegration[]>(
       integrations,
       $integrations => {
-        const entries: [string, Integration][] = Object.entries($integrations)
+        const entries = Object.entries($integrations) as [
+          SourceName,
+          Integration,
+        ][]
         const integrationsAsArray = entries.map(([name, integration]) => ({
           name,
           ...integration,

@@ -12,10 +12,10 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v3
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - run: yarn --frozen-lockfile
 
@@ -23,4 +23,4 @@ jobs:
         run: yarn global add rdme@8.6.6
 
       - name: update specs
-        run: cd packages/server && yarn specs && rdme openapi specs/openapi.yaml --key=${{ secrets.README_API_KEY }} --id=67c16880add6da002352069a
+        run: cd packages/server && yarn specs && rdme openapi specs/openapi.yaml --key=${{ secrets.README_API_KEY }} --id=${{ secrets.README_OPENAPI_ID }}

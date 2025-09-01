@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, events } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
@@ -35,15 +35,14 @@ export async function create(
 
   await guardName(workspaceApp.name)
 
-  const response = await db.put({
-    _id: docIds.generateWorkspaceAppID(),
-    ...workspaceApp,
-  })
-  return {
-    ...workspaceApp,
-    _id: response.id!,
-    _rev: response.rev!,
-  }
+  const response = await db.put(
+    {
+      ...workspaceApp,
+      _id: docIds.generateWorkspaceAppID(),
+    },
+    { returnDoc: true }
+  )
+  return response.doc
 }
 
 export async function update(
@@ -51,7 +50,13 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  const persisted = (await get(workspaceApp._id!))!
+  const persisted = await get(workspaceApp._id!)
+  if (!persisted) {
+    throw new HTTPError(
+      `Project app with id '${workspaceApp._id}' not found.`,
+      404
+    )
+  }
   if (workspaceApp.name !== persisted.name) {
     await guardName(workspaceApp.name, workspaceApp._id)
   }
@@ -60,9 +65,8 @@ export async function update(
     _rev: workspaceApp._rev,
     name: workspaceApp.name,
     url: workspaceApp.url,
-    icon: workspaceApp.icon,
-    iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
+    disabled: workspaceApp.disabled,
 
     // Immutable properties
     createdAt: persisted.createdAt,
@@ -70,12 +74,8 @@ export async function update(
     isDefault: persisted.isDefault,
     _deleted: undefined,
   }
-  const response = await db.put(docToUpdate)
-  return {
-    ...docToUpdate,
-    _id: response.id!,
-    _rev: response.rev!,
-  }
+  const response = await db.put(docToUpdate, { returnDoc: true })
+  return response.doc
 }
 
 export async function remove(
@@ -84,7 +84,17 @@ export async function remove(
 ): Promise<void> {
   const db = context.getAppDB()
   try {
+    const existing = await db.tryGet<WorkspaceApp>(workspaceAppId)
+    if (!existing)
+      throw new HTTPError(
+        `Project app with id '${workspaceAppId}' not found.`,
+        404
+      )
+
     await db.remove(workspaceAppId, _rev)
+
+    // Clear out any favourites related to this
+    events.workspace.deleted(existing, context.getAppId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(
