@@ -17,21 +17,24 @@
     maxWidth = window.innerWidth / 3
   }
 
-  const [resizable, resizableHandle] = getHorizontalResizeActions(260, (width) => {
-    if (width > maxWidth) {
-      const element = document.querySelector('.panel-container')
-      if (element) {
-        element.style.width = `${maxWidth}px`
+  const [resizable, resizableHandle] = getHorizontalResizeActions(
+    260,
+    width => {
+      if (width > maxWidth) {
+        const element = document.querySelector(".panel-container")
+        if (element) {
+          element.style.width = `${maxWidth}px`
+        }
       }
     }
-  })
+  )
 
   onMount(() => {
-    window.addEventListener('resize', updateMaxWidth)
+    window.addEventListener("resize", updateMaxWidth)
   })
 
   onDestroy(() => {
-    window.removeEventListener('resize', updateMaxWidth)
+    window.removeEventListener("resize", updateMaxWidth)
   })
 
   $: {
