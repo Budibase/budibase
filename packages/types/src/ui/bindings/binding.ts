@@ -6,7 +6,7 @@ export interface EnrichedBinding {
   type?: null | string
   icon?: string
   category: string
-  display?: { name: string; type: string }
+  display?: { name: string; type: string; rank: unknown }
   fieldSchema?: {
     name: string
     tableId: string
