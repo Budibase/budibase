@@ -24,6 +24,12 @@ async function buildAll() {
     configFile: "./vite.apexcharts.config.mjs",
   })
 
+  console.log("Building Html5QrCode dependency...")
+  await build({
+    ...config,
+    configFile: "./vite.html5-qrcode.config.mjs",
+  })
+
   console.log("Building client...")
   await build(config)
 }

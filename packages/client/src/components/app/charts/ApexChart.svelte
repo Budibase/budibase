@@ -3,7 +3,7 @@
   import { loadCharts } from "../../../utils/charts-loader"
   import { Icon } from "@budibase/bbui"
   import { cloneDeep } from "./utils"
-  import { appStore } from "@/stores"
+
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -32,7 +32,7 @@
     try {
       await chart?.destroy()
       
-      const ApexCharts = await loadCharts($appStore.appId)
+      const ApexCharts = await loadCharts()
       
       chart = new ApexCharts(newChartElement, optionsCopy)
       currentType = optionsCopy?.xaxis?.type

@@ -1,6 +1,9 @@
+import { appStore } from "@/stores"
+import { get } from "svelte/store"
+
 let apexChartsPromise: Promise<any> | null = null
 
-export async function loadCharts(appId: string): Promise<any> {
+export async function loadCharts(): Promise<any> {
   if (apexChartsPromise) {
     return apexChartsPromise
   }
@@ -15,6 +18,7 @@ export async function loadCharts(appId: string): Promise<any> {
       return
     }
 
+    const { appId } = get(appStore)
     const script = document.createElement("script")
     script.src = `/api/assets/apexcharts.js?appId=${appId}`
     script.onload = () => {
