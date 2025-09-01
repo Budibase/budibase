@@ -117,7 +117,7 @@
     "semver": "7.5.3",
     "http-cache-semantics": "4.1.1",
     "msgpackr": "1.10.1",
-    "axios": "1.7.7",
+    "axios": "1.8.2",
     "xml2js": "0.6.2",
     "passport": "0.6.0",
     "fast-xml-parser": "4.4.1",
@@ -126,7 +126,8 @@
     "**/nan": "2.22.0",
     "globals": "15.13.0",
     "esm": "npm:esm-wallaby@3.2.35",
-    "@types/koa": "2.13.4"
+    "@types/koa": "2.13.4",
+    "form-data": "4.0.4"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"
