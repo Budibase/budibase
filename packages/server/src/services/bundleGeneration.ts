@@ -135,7 +135,14 @@ export class BundleGenerationService {
    */
   async generateOptimizedBundle(appId: string): Promise<void> {
     try {
-      const screens = await sdk.screens.fetch()
+      let screens = await sdk.screens.fetch()
+      const apps = await sdk.workspaceApps.fetch()
+      screens = screens.filter(s =>
+        apps
+          .filter(a => !a.disabled)
+          .map(a => a._id)
+          .includes(s.workspaceAppId)
+      )
 
       const analysis = this.analyseAppComponents(screens)
       const bundleKey = this.generateBundleKey(analysis)
