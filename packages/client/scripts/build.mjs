@@ -18,20 +18,21 @@ async function buildAll() {
     mode: isDev ? "development" : "production",
   }
 
-  console.log("Building ApexCharts dependency...")
-  await build({
-    ...config,
-    configFile: "./vite.apexcharts.config.mjs",
-  })
+  const dependencies = ["apexcharts", "html5-qrcode"]
 
-  console.log("Building Html5QrCode dependency...")
-  await build({
-    ...config,
-    configFile: "./vite.html5-qrcode.config.mjs",
-  })
+  for (const dep of dependencies) {
+    console.log(`Building ${dep} dependency...`)
+    await build({
+      ...config,
+      configFile: `./vite.${dep}.config.mjs`,
+    })
+  }
 
   console.log("Building client...")
-  await build(config)
+  await build({
+    ...config,
+    configFile: "./vite.config.mjs",
+  })
 }
 
 buildAll().catch(console.error)

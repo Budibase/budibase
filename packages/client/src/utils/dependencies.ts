@@ -7,12 +7,11 @@ interface DependencyConfig {
   name: string
   scriptName: string
   globalProperty: string
-  errorMessage: string
 }
 
 export async function loadDependency(config: DependencyConfig): Promise<any> {
-  const { name, scriptName, globalProperty, errorMessage } = config
-  
+  const { name, scriptName, globalProperty } = config
+
   if (loadedDependencies.has(name)) {
     return loadedDependencies.get(name)!
   }
@@ -23,7 +22,7 @@ export async function loadDependency(config: DependencyConfig): Promise<any> {
 
   const promise = new Promise((resolve, reject) => {
     if (typeof window === "undefined") {
-      reject(new Error(`${errorMessage} requires browser environment`))
+      reject(new Error(`${scriptName} requires browser environment`))
       return
     }
 
@@ -34,11 +33,11 @@ export async function loadDependency(config: DependencyConfig): Promise<any> {
       if ((window as any)[globalProperty]) {
         resolve((window as any)[globalProperty])
       } else {
-        reject(new Error(`Failed to load ${errorMessage}`))
+        reject(new Error(`Failed to load ${scriptName}`))
       }
     }
     script.onerror = () => {
-      reject(new Error(`Failed to load ${errorMessage} script`))
+      reject(new Error(`Failed to load ${scriptName} script`))
     }
 
     document.head.appendChild(script)
@@ -51,18 +50,16 @@ export async function loadDependency(config: DependencyConfig): Promise<any> {
 // Specific loaders
 export async function loadCharts(): Promise<any> {
   return loadDependency({
-    name: 'charts',
-    scriptName: 'apexcharts.js',
-    globalProperty: '_charts',
-    errorMessage: 'ApexCharts'
+    name: "charts",
+    scriptName: "apexcharts.js",
+    globalProperty: "_charts",
   })
 }
 
 export async function loadQRCode(): Promise<any> {
   return loadDependency({
-    name: 'qrcode',
-    scriptName: 'html5-qrcode.js',
-    globalProperty: '_qrcode',
-    errorMessage: 'QRCode'
+    name: "qrcode",
+    scriptName: "html5-qrcode.js",
+    globalProperty: "_qrcode",
   })
 }
