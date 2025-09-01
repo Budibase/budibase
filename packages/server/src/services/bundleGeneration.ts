@@ -6,7 +6,7 @@ import env from "../environment"
 import sdk from "../sdk"
 
 interface ComponentAnalysis {
-  usesChartBlock: boolean
+  usesCharts: boolean
   usedComponents: string[]
   totalComponents: number
 }
@@ -40,8 +40,18 @@ export class BundleGenerationService {
       }
     })
 
+    const chartComponents = [
+      "chartblock",
+      "bar",
+      "line",
+      "area",
+      "pie",
+      "donut",
+      "candlestick",
+      "histogram",
+    ]
     const analysis = {
-      usesChartBlock: usedComponents.has("chartblock"),
+      usesCharts: chartComponents.some(comp => usedComponents.has(comp)),
       usedComponents: Array.from(usedComponents),
       totalComponents: usedComponents.size,
     }
@@ -53,7 +63,7 @@ export class BundleGenerationService {
    * Generates a cache key for the bundle based on component usage
    */
   private generateBundleKey(analysis: ComponentAnalysis): string {
-    const flags = [analysis.usesChartBlock ? "CB" : ""].join("")
+    const flags = [analysis.usesCharts ? "C" : ""].join("")
 
     return `bundle-${flags}`
   }
@@ -89,7 +99,7 @@ export class BundleGenerationService {
     }
 
     const analysisJson = JSON.stringify({
-      usesChartBlock: analysis.usesChartBlock,
+      usesCharts: analysis.usesCharts,
     })
 
     console.log(`Trimming bundle with analysis: ${analysisJson}`)
@@ -156,7 +166,7 @@ export class BundleGenerationService {
 
       console.log(`Generating optimized bundle: ${bundleKey} for app ${appId}`)
       console.log(
-        `Component analysis: ${analysis.totalComponents} total, chart blocks: ${analysis.usesChartBlock}`
+        `Component analysis: ${analysis.totalComponents} total, charts: ${analysis.usesCharts}`
       )
 
       await this.trimBundle(analysis)

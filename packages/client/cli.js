@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { spawn } from "child_process"
-import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 
@@ -30,15 +29,11 @@ switch (command) {
   case "trim":
     trimBundle(nonFlagArgs[1])
     break
-  case "analyze":
-    analyzeApp(nonFlagArgs[1])
-    break
   default:
     console.error(`Unknown command: ${command}`)
     showHelp()
     process.exit(1)
 }
-
 
 async function trimBundle(analysisData) {
   if (!analysisData) {
@@ -69,7 +64,7 @@ async function trimBundle(analysisData) {
         env: {
           ...process.env,
           NODE_ENV: "production",
-          BUDIBASE_INCLUDE_CHARTBLOCK: analysis.usesChartBlock ? "true" : "false",
+          BUDIBASE_INCLUDE_CHARTS: analysis.usesCharts ? "true" : "false",
         },
       })
 
@@ -86,132 +81,10 @@ async function trimBundle(analysisData) {
         reject(err)
       })
     })
-
   } catch (error) {
     console.error("Failed to create final bundle:", error.message)
     process.exit(1)
   }
-}
-
-function analyzeApp(appFilePath) {
-  if (!appFilePath) {
-    console.error("Usage: node cli.js analyze <app-definition.json>")
-    process.exit(1)
-  }
-
-  try {
-    const appDefinition = JSON.parse(fs.readFileSync(appFilePath, "utf8"))
-    const analysis = analyzeAppComponents(appDefinition)
-
-    console.log("\n--- App Analysis Results ---")
-    console.log(`Total components: ${analysis.totalComponents}`)
-    console.log(`Used components: ${analysis.usedComponents.join(", ")}`)
-    console.log("\nFeature usage:")
-    console.log(`  Charts: ${analysis.usesCharts}`)
-    console.log(`  Forms: ${analysis.usesForms}`)
-    console.log(`  Blocks: ${analysis.usesBlocks}`)
-
-    console.log("\nRecommended environment flags:")
-    console.log(`  BUDIBASE_INCLUDE_CHARTS=${analysis.usesCharts}`)
-    console.log(`  BUDIBASE_INCLUDE_FORMS=${analysis.usesForms}`)
-    console.log(`  BUDIBASE_INCLUDE_BLOCKS=${analysis.usesBlocks}`)
-  } catch (error) {
-    console.error("Error analyzing app:", error.message)
-    process.exit(1)
-  }
-}
-
-function analyzeAppComponents(appDefinition) {
-  const usedComponents = new Set()
-
-  const scanComponent = component => {
-    if (!component) return
-
-    if (component._component) {
-      // Extract component type from full component path
-      const componentType = component._component.split("/").pop()
-      if (componentType) {
-        usedComponents.add(componentType)
-      }
-    }
-
-    // Recursively scan children
-    if (component._children) {
-      component._children.forEach(scanComponent)
-    }
-  }
-
-  // Scan all screens and layouts
-  if (appDefinition.layouts) {
-    Object.values(appDefinition.layouts).forEach(layout => {
-      if (layout.props) {
-        scanComponent(layout.props)
-      }
-    })
-  }
-
-  if (appDefinition.screens) {
-    Object.values(appDefinition.screens).forEach(screen => {
-      if (screen.props) {
-        scanComponent(screen.props)
-      }
-    })
-  }
-
-  // Define component categories
-  const chartComponents = [
-    "bar",
-    "line",
-    "area",
-    "pie",
-    "donut",
-    "candlestick",
-    "histogram",
-  ]
-  const formComponents = [
-    "form",
-    "formstep",
-    "fieldgroup",
-    "labelfield",
-    "stringfield",
-    "numberfield",
-    "bigintfield",
-    "passwordfield",
-    "optionsfield",
-    "multifieldselect",
-    "booleanfield",
-    "longformfield",
-    "datetimefield",
-    "codescanner",
-    "signaturesinglefield",
-    "attachmentfield",
-    "attachmentsinglefield",
-    "relationshipfield",
-    "jsonfield",
-    "s3upload",
-    "bbreferencefield",
-    "bbreferencesinglefield",
-    "ratingfield",
-  ]
-  const blockComponents = [
-    "chartblock",
-    "cardsblock",
-    "repeaterblock",
-    "multistepformblock",
-    "formblock",
-    "rowexplorer",
-  ]
-
-  // Determine which categories are used
-  const analysis = {
-    usesCharts: chartComponents.some(comp => usedComponents.has(comp)),
-    usesForms: formComponents.some(comp => usedComponents.has(comp)),
-    usesBlocks: blockComponents.some(comp => usedComponents.has(comp)),
-    usedComponents: Array.from(usedComponents),
-    totalComponents: usedComponents.size,
-  }
-
-  return analysis
 }
 
 function showHelp() {

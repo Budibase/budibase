@@ -7,10 +7,10 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
   // Get analysis from environment variables
-  const usesChartBlock = process.env.BUDIBASE_INCLUDE_CHARTBLOCK !== "false"
+  const usesCharts = process.env.BUDIBASE_INCLUDE_CHARTS !== "false"
 
   console.log({
-    ChartBlock: usesChartBlock,
+    Charts: usesCharts,
   })
 
   // Find the compiled chunk files in dist/assets
@@ -37,17 +37,47 @@ export default defineConfig(({ mode }) => {
         fileName: () => "budibase-client.js",
       },
       emptyOutDir: false,
-      minify: isProduction,
+      minify: false,
       rollupOptions: {
         external: id => {
-          if (!usesChartBlock && id.includes("chartBlock-")) {
+          if (!usesCharts && id.includes("charts-")) {
             return true
           }
           return false
         },
         output: {
           globals: id => {
-            if (id.includes("chartBlock-")) return "{}"
+            if (id.includes("chartBlock-")) {
+              return `(function() {
+                class SvelteComponent {
+                  constructor(options) {
+                    this.$$set = () => {};
+                    this.$destroy = () => {};
+                    this.$on = () => {};
+                    this.$set = () => {};
+                  }
+                  $destroy() {}
+                  $on() {}
+                  $set() {}
+                }
+                
+                class MockChartBlock extends SvelteComponent {
+                  constructor(options) {
+                    super(options);
+                  }
+                }
+                
+                // Export everything the chartBlock chunk would export
+                return {
+                  default: MockChartBlock,
+                  SvelteComponent,
+                  SvelteComponentDev: SvelteComponent,
+                  HtmlTag: class HtmlTag {},
+                  HtmlTagHydration: class HtmlTagHydration {},
+                  SvelteElement: class SvelteElement extends HTMLElement {}
+                };
+              })()`
+            }
             return undefined
           },
         },
