@@ -474,7 +474,8 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        queryString: "emptyParam={{emptyParam}}&validParam={{validParam}}&anotherEmptyParam={{anotherEmptyParam}}",
+        queryString:
+          "emptyParam={{emptyParam}}&validParam={{validParam}}&anotherEmptyParam={{anotherEmptyParam}}",
       },
     })
 
