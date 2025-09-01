@@ -37,48 +37,18 @@ export default defineConfig(({ mode }) => {
         fileName: () => "budibase-client.js",
       },
       emptyOutDir: false,
-      minify: false,
+      minify: isProduction,
       rollupOptions: {
         external: id => {
-          if (!usesCharts && id.includes("charts-")) {
+          // Only externalize apexcharts when charts are NOT needed
+          if (!usesCharts && id === "apexcharts") {
             return true
           }
           return false
         },
         output: {
-          globals: id => {
-            if (id.includes("charts-")) {
-              return `(function() {
-                class SvelteComponent {
-                  constructor(options) {
-                    this.$$set = () => {};
-                    this.$destroy = () => {};
-                    this.$on = () => {};
-                    this.$set = () => {};
-                  }
-                  $destroy() {}
-                  $on() {}
-                  $set() {}
-                }
-                
-                class MockChartBlock extends SvelteComponent {
-                  constructor(options) {
-                    super(options);
-                  }
-                }
-                
-                // Export everything the chartBlock chunk would export
-                return {
-                  default: MockChartBlock,
-                  SvelteComponent,
-                  SvelteComponentDev: SvelteComponent,
-                  HtmlTag: class HtmlTag {},
-                  HtmlTagHydration: class HtmlTagHydration {},
-                  SvelteElement: class SvelteElement extends HTMLElement {}
-                };
-              })()`
-            }
-            return undefined
+          globals: {
+            apexcharts: `(function ApexCharts() {})()`,
           },
         },
         treeshake: {

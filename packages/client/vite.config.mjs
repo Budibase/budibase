@@ -21,15 +21,13 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: "dist",
-      minify: false, // Don't minify
+      minify: true,
       rollupOptions: {
         input: "src/index.ts",
-        treeshake: false, // Keep everything, don't tree shake
+        treeshake: false,
+        external: ["apexcharts"],
         output: {
-          format: "es", // ES modules format
-          manualChunks: {
-            charts: ["src/components/app/charts/index.js"],
-          },
+          format: "es",
         },
       },
     },
