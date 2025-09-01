@@ -16,7 +16,7 @@ export async function loadCharts(appId: string): Promise<any> {
     }
 
     const script = document.createElement("script")
-    script.src = `/api/assets/dependencies/apexcharts.js?appId=${appId}`
+    script.src = `/api/assets/apexcharts.js?appId=${appId}`
     script.onload = () => {
       if (window._charts) {
         resolve(window._charts)

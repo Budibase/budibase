@@ -8,7 +8,7 @@ export default defineConfig({
       name: "ApexCharts",
       fileName: () => "apexcharts.js",
     },
-    outDir: "dist/dependencies/",
+    outDir: "dist/",
     emptyOutDir: false,
   },
 })

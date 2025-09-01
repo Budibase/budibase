@@ -101,13 +101,13 @@ export async function updateClientLibrary(appId: string) {
     apexCharts = join(
       path.dirname(path.dirname(clientPath)),
       "dist",
-      "apexcharts.min.js"
+      "apexcharts.js"
     )
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    apexCharts = resolve(TOP_LEVEL_PATH, "client", "apexcharts.min.js")
+    apexCharts = resolve(TOP_LEVEL_PATH, "client", "apexcharts.js")
   }
 
   // Upload latest manifest and client library
@@ -129,7 +129,7 @@ export async function updateClientLibrary(appId: string) {
   })
   const apexChartsUpload = objectStore.streamUpload({
     bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "_dependencies", "apexcharts.min.js"),
+    filename: join(appId, "_dependencies", "apexcharts.js"),
     stream: fs.createReadStream(apexCharts),
     extra: {
       ContentType: "application/javascript",
