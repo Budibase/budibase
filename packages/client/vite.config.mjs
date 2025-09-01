@@ -2,6 +2,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig } from "vite"
 import path from "path"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
+import { viteStaticCopy } from "vite-plugin-static-copy"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -39,6 +40,14 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cssInjectedByJsPlugin(),
+      viteStaticCopy({
+        targets: [
+          {
+            src: "../../node_modules/apexcharts/dist/apexcharts.min.js",
+            dest: "."
+          }
+        ]
+      })
     ],
     resolve: {
       dedupe: ["svelte", "svelte/internal"],
