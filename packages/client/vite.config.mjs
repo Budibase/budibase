@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
         name: "budibase_client",
         fileName: () => "budibase-client.js",
       },
+      emptyOutDir: false,
       minify: isProduction,
     },
     plugins: [

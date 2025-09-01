@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 
-import { build, createServer } from "vite"
+import { build } from "vite"
+import { rmSync } from "fs"
 
 const isWatch = process.argv.includes("--watch")
 const isDev = process.argv.includes("--dev")
 
 async function buildAll() {
+  try {
+    rmSync("dist", { recursive: true, force: true })
+  } catch (e) {
+    // Directory might not exist
+  }
+
   console.log("Building ApexCharts dependency...")
   await build({ configFile: "./vite.apexcharts.config.mjs" })
 
