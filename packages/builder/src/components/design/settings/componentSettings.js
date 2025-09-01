@@ -33,6 +33,7 @@ import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
+import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
 
@@ -73,6 +74,7 @@ const componentMap = {
   "columns/toplevel": TopLevelColumnEditor,
   "columns/grid": GridColumnEditor,
   tableConditions: TableConditionEditor,
+  buttonConditions: ButtonConditionEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,

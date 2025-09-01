@@ -704,7 +704,12 @@
         "showInBar": true,
         "barIcon": "VisibilityOff",
         "barTitle": "Quiet variant",
-        "barSeparator": false
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "type",
+          "value": "cta",
+          "invert": true
+        }
       },
       {
         "type": "boolean",
@@ -750,6 +755,16 @@
         "type": "event",
         "label": "On click",
         "key": "onClick"
+      },
+      {
+        "type": "buttonConditions",
+        "label": "Conditions",
+        "key": "conditions",
+        "nestedOnly": true,
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
@@ -1810,7 +1825,8 @@
         "type": "text",
         "label": "Embed",
         "key": "embed",
-        "required": true
+        "required": true,
+        "allowHTML": true
       }
     ]
   },
