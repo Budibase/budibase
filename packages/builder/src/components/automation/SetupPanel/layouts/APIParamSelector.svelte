@@ -165,8 +165,8 @@
     text-transform: capitalize;
   }
 
-  .wrap :global(.option-extra img),
-  :global(.popover-content .option-extra img) {
-    width: 30px;
+  .wrap :global(.option-extra img.icon-dims),
+  :global(.popover-content .option-extra img.icon-dims) {
+    width: 25px;
   }
 </style>
