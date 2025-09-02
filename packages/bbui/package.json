@@ -16,7 +16,6 @@
     "dev": "vite build --watch --mode=dev"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "1.4.0",
     "vite-plugin-css-injected-by-js": "3.5.2"
   },
   "keywords": [

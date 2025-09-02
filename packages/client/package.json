@@ -40,7 +40,6 @@
     "svelte-spa-router": "^4.0.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "1.4.0",
     "vite-plugin-css-injected-by-js": "3.5.2"
   },
   "resolutions": {
