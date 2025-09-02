@@ -1,6 +1,6 @@
 import { DocumentType, prefixed } from "@budibase/types"
 
-const APP_PREFIX = prefixed(DocumentType.APP)
+const APP_PREFIX = prefixed(DocumentType.WORKSPACE)
 const APP_DEV_PREFIX = prefixed(DocumentType.APP_DEV)
 
 export function getDevAppID(appId: string) {

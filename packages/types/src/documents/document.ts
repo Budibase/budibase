@@ -8,7 +8,7 @@ export enum DocumentType {
   GROUP = "gr",
   CONFIG = "config",
   TEMPLATE = "template",
-  APP = "app",
+  WORKSPACE = "app",
   DEV = "dev",
   APP_DEV = "app_dev",
   APP_METADATA = "app_metadata",

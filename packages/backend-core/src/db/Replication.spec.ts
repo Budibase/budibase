@@ -25,7 +25,7 @@ describe("Replication", () => {
     it("should skip migrations document when not a creation", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({})
@@ -42,7 +42,7 @@ describe("Replication", () => {
     it("should skip migrations document when isCreation is set to false", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: false })
@@ -59,7 +59,7 @@ describe("Replication", () => {
     it("should include migrations document on creation", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -76,7 +76,7 @@ describe("Replication", () => {
     it("should always replicate deleted documents", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: false })
@@ -92,7 +92,7 @@ describe("Replication", () => {
     it("should filter out automation logs", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -108,7 +108,7 @@ describe("Replication", () => {
     it("should filter out app metadata", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -123,7 +123,7 @@ describe("Replication", () => {
 
     it("should filter out design documents when replicating to dev", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP}_source`,
+        source: `${DocumentType.WORKSPACE}_source`,
         target: `${DocumentType.APP_DEV}_target`,
       })
 
@@ -140,7 +140,7 @@ describe("Replication", () => {
     it("should include design documents when replicating to production", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -158,7 +158,7 @@ describe("Replication", () => {
 
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({
@@ -180,7 +180,7 @@ describe("Replication", () => {
     it("should return opts unchanged when filter is string", () => {
       const replication = new Replication({
         source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const inputOpts = {

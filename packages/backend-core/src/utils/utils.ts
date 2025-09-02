@@ -13,7 +13,7 @@ import {
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
 
-const APP_PREFIX = DocumentType.APP + SEPARATOR
+const APP_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREVIEW_PATH = "/app/preview"

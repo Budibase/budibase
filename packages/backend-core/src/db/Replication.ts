@@ -20,11 +20,11 @@ class Replication {
     this.target = getPouchDB(target)
     if (
       source.startsWith(DocumentType.APP_DEV) &&
-      target.startsWith(DocumentType.APP)
+      target.startsWith(DocumentType.WORKSPACE)
     ) {
       this.direction = ReplicationDirection.TO_PRODUCTION
     } else if (
-      source.startsWith(DocumentType.APP) &&
+      source.startsWith(DocumentType.WORKSPACE) &&
       target.startsWith(DocumentType.APP_DEV)
     ) {
       this.direction = ReplicationDirection.TO_DEV

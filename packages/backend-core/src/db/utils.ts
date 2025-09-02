@@ -33,7 +33,7 @@ export async function getAllDbs(opts = { efficient: false }) {
     await addDbs()
   } else {
     // get prod apps
-    await addDbs(getStartEndKeyURL(DocumentType.APP, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE, tenantId))
     // get dev apps
     await addDbs(getStartEndKeyURL(DocumentType.APP_DEV, tenantId))
     // add global db name
@@ -83,7 +83,7 @@ export async function getAllApps({
 
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
-    if (split[0] === DocumentType.APP) {
+    if (split[0] === DocumentType.WORKSPACE) {
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
 
