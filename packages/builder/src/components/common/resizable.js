@@ -36,6 +36,12 @@ const getResizeActions = (
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
 
+      // Re-enable text selection
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("-webkit-user-select")
+      document.body.style.removeProperty("-moz-user-select")
+      document.body.style.removeProperty("-ms-user-select")
+
       element.style.removeProperty("transition") // remove temporary transition override
       for (let item of document.getElementsByTagName("iframe")) {
         item.style.removeProperty("pointer-events")
@@ -61,6 +67,12 @@ const getResizeActions = (
       ) {
         return
       }
+
+      // Prevent text selection during resize by disabling user-select on the document body
+      document.body.style.userSelect = "none"
+      document.body.style.webkitUserSelect = "none"
+      document.body.style.mozUserSelect = "none"
+      document.body.style.msUserSelect = "none"
 
       element.style.transition = `${cssProperty} 0ms` // temporarily override any height transitions
 

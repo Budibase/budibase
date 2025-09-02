@@ -33,7 +33,6 @@
   const dispatch = createEventDispatcher()
 
   let contentRef: HTMLDivElement
-
   $: selected && contentRef && scrollToView()
   $: style = getStyle(indentLevel)
 
