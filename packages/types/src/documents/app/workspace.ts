@@ -1,4 +1,4 @@
-import { Document, Plugin, Snippet, Theme, User } from "../"
+import { Document, Plugin, Snippet, Theme, User } from ".."
 import { SocketSession } from "../../sdk"
 
 export type WorkspaceMetadataErrors = { [key: string]: string[] }
