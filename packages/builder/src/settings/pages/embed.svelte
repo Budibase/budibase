@@ -8,7 +8,7 @@
     Select,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appsStore, featureFlags } from "@/stores/portal"
+  import { appsStore } from "@/stores/portal"
   import { appStore, workspaceAppStore } from "@/stores/builder"
 
   let selectedApp
@@ -28,24 +28,22 @@
 </script>
 
 <Layout noPadding>
-  {#if $featureFlags.WORKSPACES}
-    <div class="embed-app-select">
-      <span>
-        Select a workspace app below if you wish to target a specific app:
-      </span>
-      <Select
-        placeholder={!$workspaceAppStore.workspaceApps.length
-          ? "No workspace apps"
-          : false}
-        options={$workspaceAppStore.workspaceApps}
-        getOptionLabel={a => a.name}
-        getOptionValue={a => a}
-        value={selectedApp || defaultApp}
-        on:change={e => (selectedApp = e.detail)}
-        disabled={!$workspaceAppStore.workspaceApps.length}
-      />
-    </div>
-  {/if}
+  <div class="embed-app-select">
+    <span>
+      Select a workspace app below if you wish to target a specific app:
+    </span>
+    <Select
+      placeholder={!$workspaceAppStore.workspaceApps.length
+        ? "No workspace apps"
+        : false}
+      options={$workspaceAppStore.workspaceApps}
+      getOptionLabel={a => a.name}
+      getOptionValue={a => a}
+      value={selectedApp || defaultApp}
+      on:change={e => (selectedApp = e.detail)}
+      disabled={!$workspaceAppStore.workspaceApps.length}
+    />
+  </div>
   <div class="embed-body">
     <div class="embed-code">{embed}</div>
     {#if appDeployed}

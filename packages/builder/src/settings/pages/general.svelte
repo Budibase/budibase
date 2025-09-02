@@ -55,7 +55,6 @@
 </script>
 
 <Layout noPadding>
-  <Divider />
   <Heading size="S">Workspace info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
