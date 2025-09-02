@@ -148,6 +148,23 @@ The following commands can be executed to manually get Budibase up and running (
 
 `yarn build` will build all budibase packages.
 
+#### Windows Notes ⚡
+
+On Windows, you may encounter this error when running `yarn build`:
+
+'DISABLE_V8_COMPILE_CACHE' is not recognized as an internal or external command
+
+This happens because Windows does not support inline environment variables in the same way as Linux/macOS.
+
+✅ To fix:
+
+- Run commands in **Git Bash** instead of PowerShell or CMD
+- Or install [cross-env](https://www.npmjs.com/package/cross-env) and update the command to:
+
+cross-env DISABLE_V8_COMPILE_CACHE=1 NODE_OPTIONS=--max-old-space-size=1500 yarn build
+
+This ensures consistent builds on Windows.
+
 If you have access to the `@budibase/pro` submodule then please follow the Pro section of this guide before running the above commands.
 
 #### 4. Running
