@@ -124,12 +124,12 @@ describe.each(rowGenerators)(
       jest.resetAllMocks()
 
       jest.spyOn(context, "getWorkspaceId").mockReturnValue(DEV_APPID)
-      jest.spyOn(db, "isProdAppID").mockReturnValue(false)
+      jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
       jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_APPID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
 
-    // Ignore calls to prune attachments when app is in production.
+    // Ignore calls to prune attachments when workspace is in production.
     it(`${attachmentFieldType} - should not attempt to delete attachments/signatures if a published app exists`, async () => {
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(true))
       const originalTable = tableGenerator()
