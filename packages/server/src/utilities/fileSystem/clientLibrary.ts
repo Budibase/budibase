@@ -100,7 +100,7 @@ export async function updateClientLibrary(appId: string) {
     // Load the symlinked version in dev which is always the newest
     manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
     client = clientPath
-    for (const lib of libDependencies) {
+    for (const lib of Object.values(libDependencies)) {
       dependencies.push(
         join(path.dirname(path.dirname(clientPath)), "dist", lib.outFile)
       )
@@ -109,7 +109,7 @@ export async function updateClientLibrary(appId: string) {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    for (const lib of libDependencies) {
+    for (const lib of Object.values(libDependencies)) {
       dependencies.push(resolve(TOP_LEVEL_PATH, "client", lib.outFile))
     }
   }
