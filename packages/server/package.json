@@ -158,7 +158,7 @@
     "docker-compose": "1.2.0",
     "ioredis-mock": "8.9.0",
     "jest-extended": "^4.0.2",
-    "jest-openapi": "0.14.2",
+    "@apidevtools/swagger-parser": "^12.0.0",
     "nock": "13.5.4",
     "nodemon": "2.0.15",
     "openapi-typescript": "5.2.0",
