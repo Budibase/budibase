@@ -4,15 +4,15 @@ import { DocumentType } from "../../db/utils"
 import {
   Workspace,
   Ctx,
-  ExportAppDumpRequest,
-  ExportAppDumpResponse,
+  ExportWorkspaceDumpRequest,
+  ExportWorkspaceDumpResponse,
   UserCtx,
   ClearBackupErrorRequest,
   ClearBackupErrorResponse,
 } from "@budibase/types"
 
 export async function exportAppDump(
-  ctx: Ctx<ExportAppDumpRequest, ExportAppDumpResponse>
+  ctx: Ctx<ExportWorkspaceDumpRequest, ExportWorkspaceDumpResponse>
 ) {
   const { appId } = ctx.query as any
   const { excludeRows, encryptPassword } = ctx.request.body

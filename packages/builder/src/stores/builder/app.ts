@@ -8,7 +8,7 @@ import {
   AutomationSettings,
   Plugin,
   PWAManifest,
-  UpdateAppRequest,
+  UpdateWorkspaceRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { initialise, navigationStore, workspaceAppStore } from "."
@@ -172,7 +172,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateAppRequest) {
+  async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
     this.syncApp(app)
   }

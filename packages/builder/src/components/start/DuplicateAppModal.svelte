@@ -13,7 +13,7 @@
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { sdk } from "@budibase/shared-core"
-  import type { CreateAppRequest } from "@budibase/types"
+  import type { CreateWorkspaceRequest } from "@budibase/types"
 
   export let appId: string
   export let appName: string
@@ -65,7 +65,7 @@
   const duplicateApp = async () => {
     duplicating = true
 
-    const data: CreateAppRequest = {
+    const data: CreateWorkspaceRequest = {
       name: $values.name.trim(),
     }
 

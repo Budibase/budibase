@@ -83,7 +83,7 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-export interface CreateAppRequest {
+export interface CreateWorkspaceRequest {
   appName: string
   url?: string
   snippets?: any[]

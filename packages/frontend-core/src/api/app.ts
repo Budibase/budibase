@@ -1,63 +1,69 @@
 import { sdk } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 import {
-  AddAppSampleDataResponse,
+  AddSampleDataResponse,
   ClearDevLockResponse,
-  CreateAppRequest,
-  CreateAppResponse,
-  DeleteAppResponse,
-  DuplicateAppRequest,
-  DuplicateAppResponse,
+  CreateWorkspaceRequest,
+  CreateWorkspaceResponse,
+  DeleteWorkspaceResponse,
+  DuplicateWorkspaceRequest,
+  DuplicateWorkspaceResponse,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
-  FetchAppsResponse,
+  FetchWorkspacesResponse,
   FetchDeploymentResponse,
   FetchPublishedAppsResponse,
   GetDiagnosticsResponse,
-  ImportToUpdateAppRequest,
-  ImportToUpdateAppResponse,
+  ImportToUpdateWorkspaceRequest,
+  ImportToUpdateWorkspaceResponse,
   PublishAppRequest,
   PublishAppResponse,
-  RevertAppClientResponse,
+  RevertWorkspaceClientResponse,
   RevertAppResponse,
-  UnpublishAppResponse,
-  UpdateAppClientResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  UnpublishWorkspaceResponse,
+  UpdateWorkspaceClientResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
 } from "@budibase/types"
 
 export interface AppEndpoints {
   fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
   saveAppMetadata: (
     appId: string,
-    metadata: UpdateAppRequest
-  ) => Promise<UpdateAppResponse>
-  unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
+    metadata: UpdateWorkspaceRequest
+  ) => Promise<UpdateWorkspaceResponse>
+  unpublishApp: (appId: string) => Promise<UnpublishWorkspaceResponse>
   publishAppChanges: (
     appId: string,
     opts?: PublishAppRequest
   ) => Promise<PublishAppResponse>
   revertAppChanges: (appId: string) => Promise<RevertAppResponse>
-  updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
-  revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
+  updateAppClientVersion: (
+    appId: string
+  ) => Promise<UpdateWorkspaceClientResponse>
+  revertAppClientVersion: (
+    appId: string
+  ) => Promise<RevertWorkspaceClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
   getAppDeployments: () => Promise<FetchDeploymentResponse>
-  createApp: (app: CreateAppRequest | FormData) => Promise<CreateAppResponse>
-  deleteApp: (appId: string) => Promise<DeleteAppResponse>
+  createApp: (
+    app: CreateWorkspaceRequest | FormData
+  ) => Promise<CreateWorkspaceResponse>
+  deleteApp: (appId: string) => Promise<DeleteWorkspaceResponse>
   duplicateApp: (
     appId: string,
-    app: DuplicateAppRequest
-  ) => Promise<DuplicateAppResponse>
+    app: DuplicateWorkspaceRequest
+  ) => Promise<DuplicateWorkspaceResponse>
   updateAppFromExport: (
     appId: string,
-    body: ImportToUpdateAppRequest
-  ) => Promise<ImportToUpdateAppResponse>
+    body: ImportToUpdateWorkspaceRequest
+  ) => Promise<ImportToUpdateWorkspaceResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
-  getApps: () => Promise<FetchAppsResponse>
+  getApps: () => Promise<FetchWorkspacesResponse>
   fetchComponentLibDefinitions: (
     appId: string
   ) => Promise<FetchAppDefinitionResponse>
-  addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
+  addSampleData: (appId: string) => Promise<AddSampleDataResponse>
   getPublishedApps: () => Promise<FetchPublishedAppsResponse["apps"]>
 
   // Missing request or response types

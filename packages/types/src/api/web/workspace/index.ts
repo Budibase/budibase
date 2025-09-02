@@ -1,4 +1,4 @@
-export * from "./application"
+export * from "./workspace"
 export * from "./attachment"
 export * from "./automation"
 export * from "./backup"

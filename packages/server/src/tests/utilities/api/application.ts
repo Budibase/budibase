@@ -2,13 +2,13 @@ import {
   Workspace,
   PublishAppRequest,
   PublishAppResponse,
-  type CreateAppRequest,
+  type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
   type FetchPublishedAppsResponse,
-  DuplicateAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  DuplicateWorkspaceResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
 } from "@budibase/types"
 import { Expectations, RequestOpts, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
@@ -16,7 +16,7 @@ import { constants } from "@budibase/backend-core"
 
 export class ApplicationAPI extends TestAPI {
   create = async (
-    app: CreateAppRequest,
+    app: CreateWorkspaceRequest,
     expectations?: Expectations
   ): Promise<Workspace> => {
     const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
@@ -99,7 +99,7 @@ export class ApplicationAPI extends TestAPI {
     appId: string,
     fields: object,
     expectations?: Expectations
-  ): Promise<DuplicateAppResponse> => {
+  ): Promise<DuplicateWorkspaceResponse> => {
     let headers = {
       ...this.config.defaultHeaders(),
       [constants.Header.APP_ID]: appId,
@@ -133,9 +133,9 @@ export class ApplicationAPI extends TestAPI {
 
   update = async (
     appId: string,
-    app: UpdateAppRequest,
+    app: UpdateWorkspaceRequest,
     expectations?: Expectations
-  ): Promise<UpdateAppResponse> => {
+  ): Promise<UpdateWorkspaceResponse> => {
     return await this._put<Workspace>(`/api/applications/${appId}`, {
       body: app,
       expectations,

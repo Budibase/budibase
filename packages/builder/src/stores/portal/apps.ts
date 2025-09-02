@@ -3,7 +3,7 @@ import { AppStatus } from "@/constants"
 import { API } from "@/api"
 import { auth } from "./auth"
 import { BudiStore } from "../BudiStore"
-import { Workspace, UpdateAppRequest } from "@budibase/types"
+import { Workspace, UpdateWorkspaceRequest } from "@budibase/types"
 import { EnrichedApp, StoreApp } from "@/types"
 
 interface PortalAppsStore {
@@ -137,7 +137,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     }
   }
 
-  async save(appId: string, value: UpdateAppRequest) {
+  async save(appId: string, value: UpdateWorkspaceRequest) {
     await API.saveAppMetadata(appId, value)
     this.update(state => {
       const updatedAppIndex = state.apps.findIndex(
