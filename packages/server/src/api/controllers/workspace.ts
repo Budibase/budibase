@@ -76,7 +76,7 @@ import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
-import * as appMigrations from "../../workspaceMigrations"
+import * as workspaceMigrations from "../../workspaceMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
@@ -99,39 +99,43 @@ function getUserRoleId(ctx: UserCtx) {
     : ctx.user.role._id
 }
 
-function checkAppUrl(
+function checkWorkspaceUrl(
   ctx: UserCtx,
-  apps: Workspace[],
+  workspaces: Workspace[],
   url: string,
-  currentAppId?: string
+  currentWorkspaceId?: string
 ) {
-  if (currentAppId) {
-    apps = apps.filter((app: any) => app.appId !== currentAppId)
+  if (currentWorkspaceId) {
+    workspaces = workspaces.filter(
+      workspace => workspace.appId !== currentWorkspaceId
+    )
   }
-  if (apps.some((app: any) => app.url === url)) {
+  if (workspaces.some(workspace => workspace.url === url)) {
     ctx.throw(400, "App URL is already in use.")
   }
 }
 
-function checkAppName(
+function checkWorkspaceName(
   ctx: UserCtx,
-  apps: Workspace[],
+  workspaces: Workspace[],
   name: string,
-  currentAppId?: string
+  currentWorkspaceId?: string
 ) {
   // TODO: Replace with Joi
   if (!name) {
     ctx.throw(400, "Name is required")
   }
-  if (currentAppId) {
-    apps = apps.filter((app: any) => app.appId !== currentAppId)
+  if (currentWorkspaceId) {
+    workspaces = workspaces.filter(
+      workspace => workspace.appId !== currentWorkspaceId
+    )
   }
-  if (apps.some((app: any) => app.name === name)) {
-    ctx.throw(400, "App name is already in use.")
+  if (workspaces.some(workspace => workspace.name === name)) {
+    ctx.throw(400, "Workspace name is already in use.")
   }
 }
 
-interface AppTemplate {
+interface WorkspaceTemplate {
   useTemplate?: boolean
   file?: {
     type?: string
@@ -141,7 +145,10 @@ interface AppTemplate {
   key?: string
 }
 
-async function createInstance(appId: string, template: AppTemplate) {
+async function createInstance(
+  workspaceId: string,
+  template: WorkspaceTemplate
+) {
   const db = context.getWorkspaceDB()
   await db.put({
     _id: "_design/database",
@@ -161,13 +168,13 @@ async function createInstance(appId: string, template: AppTemplate) {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
     }
-    await sdk.backups.importApp(appId, db, template, opts)
+    await sdk.backups.importApp(workspaceId, db, template, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
   }
 
-  return { _id: appId }
+  return { _id: workspaceId }
 }
 
 async function addSampleDataDocs() {
@@ -184,12 +191,12 @@ async function addSampleDataDocs() {
 }
 
 async function createDefaultWorkspaceApp(): Promise<string> {
-  const appMetadata = await sdk.workspaces.metadata.get()
+  const workspaceMetadata = await sdk.workspaces.metadata.get()
   const workspaceApp = await sdk.workspaceApps.create({
-    name: appMetadata.name,
+    name: workspaceMetadata.name,
     url: "/",
     navigation: {
-      ...defaultAppNavigator(appMetadata.name),
+      ...defaultAppNavigator(workspaceMetadata.name),
       links: [],
     },
     disabled: true,
@@ -290,8 +297,8 @@ export async function fetchAppDefinition(
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchWorkspacePackageResponse>
 ) {
-  const appId = context.getWorkspaceId()
-  let [application, layouts, screens, license, recaptchaConfig] =
+  const workspaceId = context.getWorkspaceId()
+  let [workspace, layouts, screens, license, recaptchaConfig] =
     await Promise.all([
       sdk.workspaces.metadata.get(),
       getLayouts(),
@@ -301,21 +308,20 @@ export async function fetchAppPackage(
     ])
 
   // Enrich plugin URLs
-  application.usedPlugins = await objectStore.enrichPluginURLs(
-    application.usedPlugins
+  workspace.usedPlugins = await objectStore.enrichPluginURLs(
+    workspace.usedPlugins
   )
 
   // Enrich PWA icon URLs if they exist
-  if (application.pwa?.icons && application.pwa.icons.length > 0) {
-    application.pwa.icons = await objectStore.enrichPWAImages(
-      application.pwa.icons
-    )
+  if (workspace.pwa?.icons && workspace.pwa.icons.length > 0) {
+    workspace.pwa.icons = await objectStore.enrichPWAImages(workspace.pwa.icons)
   }
 
   // Only filter screens if the user is not a builder call
-  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+  const isBuilder =
+    users.isBuilder(ctx.user, workspaceId) && !utils.isClient(ctx)
 
-  const isDev = isDevWorkspaceID(ctx.params.appId)
+  const isDev = isDevWorkspaceID(ctx.params.workspaceId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
@@ -339,29 +345,31 @@ export async function fetchAppPackage(
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
 
-    application.navigation = matchedWorkspaceApp.navigation
+    workspace.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
-    ctx.params.appId,
-    application.version
+    ctx.params.workspaceId,
+    workspace.version
   )
 
   ctx.body = {
-    application: { ...application, upgradableVersion: envCore.VERSION },
+    application: { ...workspace, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
     screens,
     layouts,
     clientLibPath,
-    hasLock: await doesUserHaveLock(application.appId, ctx.user),
+    hasLock: await doesUserHaveLock(workspace.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
   }
 }
 
-async function performAppCreate(
+async function performWorkspaceCreate(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = (await dbCore.getAllWorkspaces({
+    dev: true,
+  })) as Workspace[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
@@ -379,11 +387,11 @@ async function performAppCreate(
     useTemplate = body.useTemplate
   }
 
-  checkAppName(ctx, apps, name)
-  const appUrl = sdk.workspaces.getAppUrl({ name, url })
-  checkAppUrl(ctx, apps, appUrl)
+  checkWorkspaceName(ctx, workspaces, name)
+  const workspaceUrl = sdk.workspaces.getWorkspaceUrl({ name, url })
+  checkWorkspaceUrl(ctx, workspaces, workspaceUrl)
 
-  const instanceConfig: AppTemplate = {
+  const instanceConfig: WorkspaceTemplate = {
     useTemplate,
     key: templateKey,
   }
@@ -399,27 +407,27 @@ async function performAppCreate(
   }
 
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const appId = generateDevWorkspaceID(generateWorkspaceID(tenantId))
+  const workspaceId = generateDevWorkspaceID(generateWorkspaceID(tenantId))
 
-  return await context.doInWorkspaceContext(appId, async () => {
-    const instance = await createInstance(appId, instanceConfig)
+  return await context.doInWorkspaceContext(workspaceId, async () => {
+    const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
     const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
-      await updateUserColumns(appId, db, ctx.user._id!)
+      await updateUserColumns(workspaceId, db, ctx.user._id!)
     }
 
-    let newApplication: Workspace = {
+    let newWorkspace: Workspace = {
       _id: DocumentType.WORKSPACE_METADATA,
       _rev: undefined,
-      appId,
+      appId: workspaceId,
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
       name: name,
-      url: appUrl,
+      url: workspaceUrl,
       template: templateKey,
       instance,
       tenantId: tenancy.getTenantId(),
@@ -442,12 +450,12 @@ async function performAppCreate(
     }
 
     if (!isImport) {
-      newApplication.creationVersion = envCore.VERSION
+      newWorkspace.creationVersion = envCore.VERSION
     }
 
     const existing = await sdk.workspaces.metadata.tryGet()
-    // If we used a template or imported an app there will be an existing doc.
-    // Fetch and migrate some metadata from the existing app.
+    // If we used a template or imported a workspace there will be an existing doc.
+    // Fetch and migrate some metadata from the existing workspace.
     if (existing) {
       const keys: (keyof Workspace)[] = [
         "_rev",
@@ -461,30 +469,30 @@ async function performAppCreate(
       keys.forEach(key => {
         if (existing[key]) {
           // @ts-ignore
-          newApplication[key] = existing[key]
+          newWorkspace[key] = existing[key]
         }
       })
 
       // Keep existing feature flags
       if (!existing.features?.componentValidation) {
-        newApplication.features!.componentValidation = false
+        newWorkspace.features!.componentValidation = false
       }
       if (!existing.features?.disableUserMetadata) {
-        newApplication.features!.disableUserMetadata = false
+        newWorkspace.features!.disableUserMetadata = false
       }
 
       // Migrate navigation settings and screens if required
       const navigation = await migrateAppNavigation()
       if (navigation) {
-        newApplication.navigation = navigation
+        newWorkspace.navigation = navigation
       }
     }
 
-    const response = await db.put(newApplication, { force: true })
-    newApplication._rev = response.rev
+    const response = await db.put(newWorkspace, { force: true })
+    newWorkspace._rev = response.rev
 
     if (!env.USE_LOCAL_COMPONENT_LIBS) {
-      await uploadAppFiles(appId)
+      await uploadAppFiles(workspaceId)
     }
 
     // Add sample datasource and example screen for non-templates/non-imports
@@ -494,21 +502,21 @@ async function performAppCreate(
         await addSampleDataDocs()
         await addSampleDataScreen()
 
-        // Fetch the latest version of the app after these changes
-        newApplication = await sdk.workspaces.metadata.get()
+        // Fetch the latest version of the workspace after these changes
+        newWorkspace = await sdk.workspaces.metadata.get()
       } catch (err) {
-        ctx.throw(400, "App created, but failed to add sample data")
+        ctx.throw(400, "Workspace created, but failed to add sample data")
       }
     }
 
-    const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
+    const latestMigrationId = workspaceMigrations.getLatestEnabledMigrationId()
     if (latestMigrationId) {
       if (useTemplate) {
-        await processMigrations(appId)
+        await processMigrations(workspaceId)
       } else if (!isImport) {
-        // Initialise the app migration version as the latest one
-        await appMigrations.updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+        // Initialise the workspace migration version as the latest one
+        await workspaceMigrations.updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: latestMigrationId,
           skipHistory: true,
         })
@@ -517,8 +525,8 @@ async function performAppCreate(
 
     await disableAllAppsAndAutomations()
 
-    await cache.app.invalidateWorkspaceMetadata(appId, newApplication)
-    return newApplication
+    await cache.workspace.invalidateWorkspaceMetadata(workspaceId, newWorkspace)
+    return newWorkspace
   })
 }
 
@@ -535,11 +543,11 @@ async function disableAllAppsAndAutomations() {
 }
 
 async function updateUserColumns(
-  appId: string,
+  workspaceId: string,
   db: Database,
   toUserId: string
 ) {
-  await context.doInWorkspaceContext(appId, async () => {
+  await context.doInWorkspaceContext(workspaceId, async () => {
     const allTables = await sdk.tables.getAllTables()
     const tablesWithUserColumns = []
     for (const table of allTables) {
@@ -596,9 +604,9 @@ async function updateUserColumns(
 
 async function creationEvents(
   request: BBRequest<CreateWorkspaceRequest>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  let creationFns: ((app: Workspace) => Promise<void>)[] = []
+  let creationFns: ((workspace: Workspace) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
   if (useTemplate === "true") {
@@ -613,7 +621,7 @@ async function creationEvents(
     // from server file path
     else if (file) {
       // explicitly pass in the newly created app id
-      creationFns.push(a => events.app.duplicated(a, app.appId))
+      creationFns.push(a => events.app.duplicated(a, workspace.appId))
     }
     // unknown
     else {
@@ -624,52 +632,52 @@ async function creationEvents(
   creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
-    await fn(app)
+    await fn(workspace)
   }
 }
 
-async function appPostCreate(
+async function workspacePostCreate(
   ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  await creationEvents(ctx.request, app)
+  await creationEvents(ctx.request, workspace)
 
-  // app import, template creation and duplication
+  // workspace import, template creation and duplication
   if (ctx.request.body.useTemplate) {
-    const { rows } = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([workspace.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
-        await context.doInWorkspaceContext(app.appId, () => {
+        await context.doInWorkspaceContext(workspace.appId, () => {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
         if (err.code && err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
-          // delete the app
+          // delete the workspace
           // skip pre and post-steps as no rows have been added to quotas yet
-          ctx.params.appId = app.appId
-          await destroyApp(ctx)
+          ctx.params.workspaceId = workspace.appId
+          await destroyWorkspace(ctx)
         }
         throw err
       }
     }
   }
 
-  // If the user is a creator, we need to give them access to the new app
+  // If the user is a creator, we need to give them access to the new workspace
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
     const user = await users.UserDB.getUser(ctx.user._id!)
-    await users.addAppBuilder(user, app.appId)
+    await users.addAppBuilder(user, workspace.appId)
   }
 }
 
 export async function create(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
-  const newApplication = await quotas.addApp(() => performAppCreate(ctx))
-  await appPostCreate(ctx, newApplication)
+  const newWorkspace = await quotas.addApp(() => performWorkspaceCreate(ctx))
+  await workspacePostCreate(ctx, newWorkspace)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
-  ctx.body = newApplication
+  ctx.body = newWorkspace
 }
 
 export async function find(ctx: UserCtx) {
@@ -681,31 +689,34 @@ export async function find(ctx: UserCtx) {
 export async function update(
   ctx: UserCtx<UpdateWorkspaceRequest, UpdateWorkspaceResponse>
 ) {
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = await dbCore.getAllWorkspaces({ dev: true })
   // validation
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
   if (name) {
-    checkAppName(ctx, apps, name, ctx.params.appId)
+    checkWorkspaceName(ctx, workspaces, name, ctx.params.workspaceId)
   }
-  const url = sdk.workspaces.getAppUrl({ name, url: possibleUrl })
+  const url = sdk.workspaces.getWorkspaceUrl({ name, url: possibleUrl })
   if (url) {
-    checkAppUrl(ctx, apps, url, ctx.params.appId)
+    checkWorkspaceUrl(ctx, workspaces, url, ctx.params.workspaceId)
     ctx.request.body.url = url
   }
 
-  const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
-  await events.app.updated(app)
-  ctx.body = app
+  const workspace = await updateWorkspacePackage(
+    ctx.request.body,
+    ctx.params.appId
+  )
+  await events.app.updated(workspace)
+  ctx.body = workspace
   builderSocket?.emitAppMetadataUpdate(ctx, {
-    theme: app.theme,
-    customTheme: app.customTheme,
-    navigation: app.navigation,
-    name: app.name,
-    url: app.url,
-    icon: app.icon,
+    theme: workspace.theme,
+    customTheme: workspace.customTheme,
+    navigation: workspace.navigation,
+    name: workspace.name,
+    url: workspace.url,
+    icon: workspace.icon,
     automations: {
-      chainAutomations: app.automations?.chainAutomations,
+      chainAutomations: workspace.automations?.chainAutomations,
     },
   })
 }
@@ -715,32 +726,35 @@ export async function updateClient(
 ) {
   // Don't allow updating in dev
   if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+    ctx.throw(400, "Updating or reverting workspaces is not supported in dev")
   }
-  // Get current app version
-  const application = await sdk.workspaces.metadata.get()
-  const currentVersion = application.version
+  // Get current workspace version
+  let workspace = await sdk.workspaces.metadata.get()
+  const currentVersion = workspace.version
 
   let manifest
   // Update client library and manifest
   if (!env.isTest()) {
-    await backupClientLibrary(ctx.params.appId)
-    manifest = await updateClientLibrary(ctx.params.appId)
+    await backupClientLibrary(ctx.params.workspaceId)
+    manifest = await updateClientLibrary(ctx.params.workspaceId)
   }
 
-  // Update versions in app package
+  // Update versions in workspace package
   const updatedToVersion = envCore.VERSION
-  const appPackageUpdates = {
+  const workspacePackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
     features: {
-      ...(application.features ?? {}),
+      ...(workspace.features ?? {}),
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionUpdated(app, currentVersion, updatedToVersion)
-  ctx.body = app
+  workspace = await updateWorkspacePackage(
+    workspacePackageUpdates,
+    ctx.params.workspaceId
+  )
+  await events.app.versionUpdated(workspace, currentVersion, updatedToVersion)
+  ctx.body = workspace
 }
 
 export async function revertClient(
@@ -748,12 +762,12 @@ export async function revertClient(
 ) {
   // Don't allow reverting in dev
   if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+    ctx.throw(400, "Updating or reverting workspaces is not supported in dev")
   }
 
-  // Check app can be reverted
-  const application = await sdk.workspaces.metadata.get()
-  if (!application.revertableVersion) {
+  // Check workspace can be reverted
+  let workspace = await sdk.workspaces.metadata.get()
+  if (!workspace.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
 
@@ -763,85 +777,92 @@ export async function revertClient(
     manifest = await revertClientLibrary(ctx.params.appId)
   }
 
-  // Update versions in app package
-  const currentVersion = application.version
-  const revertedToVersion = application.revertableVersion
-  const appPackageUpdates = {
+  // Update versions in workspace package
+  const currentVersion = workspace.version
+  const revertedToVersion = workspace.revertableVersion
+  const workspacePackageUpdates = {
     version: revertedToVersion,
     revertableVersion: undefined,
     features: {
-      ...(application.features ?? {}),
+      ...(workspace.features ?? {}),
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionReverted(app, currentVersion, revertedToVersion)
-  ctx.body = app
+  workspace = await updateWorkspacePackage(
+    workspacePackageUpdates,
+    ctx.params.appId
+  )
+  await events.app.versionReverted(workspace, currentVersion, revertedToVersion)
+  ctx.body = workspace
 }
 
-async function unpublishApp(ctx: UserCtx) {
-  let appId = ctx.params.appId
-  appId = dbCore.getProdWorkspaceID(appId)
+async function unpublishWorkspace(ctx: UserCtx) {
+  let workspaceId = ctx.params.appId
+  workspaceId = dbCore.getProdWorkspaceID(workspaceId)
 
   const db = context.getProdWorkspaceDB()
   const result = await db.destroy()
 
-  await events.app.unpublished({ appId } as Workspace)
+  await events.app.unpublished({ appId: workspaceId } as Workspace)
 
   // automations only in production
-  await cleanupAutomations(appId)
+  await cleanupAutomations(workspaceId)
 
   await disableAllAppsAndAutomations()
 
-  await cache.app.invalidateWorkspaceMetadata(appId)
+  await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
   return result
 }
 
-async function invalidateAppCache(appId: string) {
-  await cache.app.invalidateWorkspaceMetadata(dbCore.getDevWorkspaceID(appId))
-  await cache.app.invalidateWorkspaceMetadata(dbCore.getProdWorkspaceID(appId))
+async function invalidateWorkspaceCache(workspaceId: string) {
+  await cache.workspace.invalidateWorkspaceMetadata(
+    dbCore.getDevWorkspaceID(workspaceId)
+  )
+  await cache.workspace.invalidateWorkspaceMetadata(
+    dbCore.getProdWorkspaceID(workspaceId)
+  )
 }
 
-async function destroyApp(ctx: UserCtx) {
-  let appId = ctx.params.appId
-  appId = dbCore.getProdWorkspaceID(appId)
-  const devAppId = dbCore.getDevWorkspaceID(appId)
+async function destroyWorkspace(ctx: UserCtx) {
+  let workspaceId = ctx.params.appId
+  workspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const devWorkspaceId = dbCore.getDevWorkspaceID(workspaceId)
 
   // check if we need to unpublish first
-  if (await dbCore.dbExists(appId)) {
-    // app is deployed, run through unpublish flow
-    await sdk.workspaces.syncWorkspace(devAppId, {
+  if (await dbCore.dbExists(workspaceId)) {
+    // workspace is deployed, run through unpublish flow
+    await sdk.workspaces.syncWorkspace(devWorkspaceId, {
       automationOnly: true,
     })
-    await unpublishApp(ctx)
+    await unpublishWorkspace(ctx)
   }
 
-  const db = dbCore.getDB(devAppId)
-  // standard app deletion flow
-  const app = await sdk.workspaces.metadata.get()
+  const db = dbCore.getDB(devWorkspaceId)
+  // standard workspace deletion flow
+  const workspace = await sdk.workspaces.metadata.get()
   const result = await db.destroy()
   await quotas.removeApp()
-  await events.app.deleted(app)
+  await events.app.deleted(workspace)
 
   if (!env.USE_LOCAL_COMPONENT_LIBS) {
-    await deleteAppFiles(appId)
+    await deleteAppFiles(workspaceId)
   }
 
-  await removeWorkspaceFromUserRoles(ctx, appId)
-  await invalidateAppCache(appId)
+  await removeWorkspaceFromUserRoles(ctx, workspaceId)
+  await invalidateWorkspaceCache(workspaceId)
   return result
 }
 
-async function preDestroyApp(ctx: UserCtx) {
+async function preDestroyWorkspace(ctx: UserCtx) {
   // invalidate the cache immediately in-case they are leading to
-  // zombie appearing apps
-  const appId = ctx.params.appId
-  await invalidateAppCache(appId)
-  const { rows } = await getUniqueRows([appId])
+  // zombie appearing workspaces
+  const workspaceId = ctx.params.appId
+  await invalidateWorkspaceCache(workspaceId)
+  const { rows } = await getUniqueRows([workspaceId])
   ctx.rowCount = rows.length
 }
 
-async function postDestroyApp(ctx: UserCtx) {
+async function postDestroyWorkspace(ctx: UserCtx) {
   const rowCount = ctx.rowCount
   await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
@@ -850,52 +871,52 @@ async function postDestroyApp(ctx: UserCtx) {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteWorkspaceResponse>) {
-  await preDestroyApp(ctx)
-  const result = await destroyApp(ctx)
-  await postDestroyApp(ctx)
+  await preDestroyWorkspace(ctx)
+  const result = await destroyWorkspace(ctx)
+  await postDestroyWorkspace(ctx)
   ctx.body = result
 }
 
 export async function unpublish(
   ctx: UserCtx<void, UnpublishWorkspaceResponse>
 ) {
-  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
-  const dbExists = await dbCore.dbExists(prodAppId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.params.workspaceId)
+  const dbExists = await dbCore.dbExists(prodWorkspaceId)
 
-  // check app has been published
+  // check workspace has been published
   if (!dbExists) {
-    return ctx.throw(400, "App has not been published.")
+    return ctx.throw(400, "Workspace has not been published.")
   }
 
-  await appMigrations.doInMigrationLock(prodAppId, async () => {
-    await preDestroyApp(ctx)
-    await unpublishApp(ctx)
-    await postDestroyApp(ctx)
+  await workspaceMigrations.doInMigrationLock(prodWorkspaceId, async () => {
+    await preDestroyWorkspace(ctx)
+    await unpublishWorkspace(ctx)
+    await postDestroyWorkspace(ctx)
   })
   builderSocket?.emitAppUnpublish(ctx)
-  ctx.body = { message: "App unpublished." }
+  ctx.body = { message: "Workspace unpublished." }
 }
 
 export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
-  const appId = ctx.params.appId
+  const workspaceId = ctx.params.appId
   try {
-    ctx.body = await sdk.workspaces.syncWorkspace(appId)
+    ctx.body = await sdk.workspaces.syncWorkspace(workspaceId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err.message)
   }
 }
 
-export async function importToApp(
+export async function importToWorkspace(
   ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
   const { appId } = ctx.params
   const appExport = ctx.request.files?.appExport
   const password = ctx.request.body.encryptionPassword
   if (!appExport) {
-    ctx.throw(400, "Must supply app export to import")
+    ctx.throw(400, "Must supply workspace export to import")
   }
   if (Array.isArray(appExport)) {
-    ctx.throw(400, "Must only supply one app export")
+    ctx.throw(400, "Must only supply one workspace export")
   }
   const fileAttributes = { type: appExport.type!, path: appExport.path! }
   try {
@@ -906,40 +927,43 @@ export async function importToApp(
       `Unable to perform update, please retry - ${err?.message || err}`
     )
   }
-  ctx.body = { message: "app updated" }
+  ctx.body = { message: "workspace updated" }
 }
 
 /**
- * Create a copy of the latest dev application.
- * Performs an export of the app, then imports from the export dir path
+ * Create a copy of the latest dev workspace.
+ * Performs an export of the workspace, then imports from the export dir path
  */
-export async function duplicateApp(
+export async function duplicateWorkspace(
   ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
-  const { name: appName, url: possibleUrl } = ctx.request.body
-  const { appId: sourceAppId } = ctx.params
-  const [app] = await dbCore.getWorkspacesByIDs([sourceAppId])
+  const { name: workspaceName, url: possibleUrl } = ctx.request.body
+  const { appId: sourceWorkspaceId } = ctx.params
+  const [workspace] = await dbCore.getWorkspacesByIDs([sourceWorkspaceId])
 
-  if (!app) {
-    ctx.throw(404, "Source app not found")
+  if (!workspace) {
+    ctx.throw(404, "Source workspace not found")
   }
 
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = await dbCore.getAllWorkspaces({ dev: true })
 
-  checkAppName(ctx, apps, appName)
-  const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
-  checkAppUrl(ctx, apps, url)
+  checkWorkspaceName(ctx, workspaces, workspaceName)
+  const url = sdk.workspaces.getWorkspaceUrl({
+    name: workspaceName,
+    url: possibleUrl,
+  })
+  checkWorkspaceUrl(ctx, workspaces, url)
 
-  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+  const tmpPath = await sdk.backups.exportApp(sourceWorkspaceId, {
     excludeRows: false,
     tar: false,
   })
 
   const createRequestBody: CreateWorkspaceRequest = {
-    name: appName,
+    name: workspaceName,
     url: possibleUrl,
     useTemplate: "true",
-    // The app export path
+    // The workspace export path
     file: {
       path: tmpPath,
     },
@@ -957,53 +981,54 @@ export async function duplicateApp(
     },
   } as UserCtx<CreateWorkspaceRequest, Workspace>
 
-  // Build the new application
+  // Build the new workspace
   await create(createRequest)
-  const { body: newApplication } = createRequest
+  const { body: newWorkspace } = createRequest
 
-  if (!newApplication) {
-    ctx.throw(500, "There was a problem duplicating the application")
+  if (!newWorkspace) {
+    ctx.throw(500, "There was a problem duplicating the workspace")
   }
 
   ctx.body = {
-    duplicateAppId: newApplication?.appId,
-    sourceAppId,
+    duplicateAppId: newWorkspace?.appId,
+    sourceAppId: sourceWorkspaceId,
   }
 }
 
-export async function updateAppPackage(
-  appPackage: Partial<Workspace>,
-  appId: string
+export async function updateWorkspacePackage(
+  workspacePackage: Partial<Workspace>,
+  workspaceId: string
 ) {
-  return context.doInWorkspaceContext(appId, async () => {
+  return context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
-    const application = await sdk.workspaces.metadata.get()
+    const workspace = await sdk.workspaces.metadata.get()
 
-    const newAppPackage: Workspace = { ...application, ...appPackage }
-    if (appPackage._rev !== application._rev) {
-      newAppPackage._rev = application._rev
+    const newWorkspacePackage: Workspace = { ...workspace, ...workspacePackage }
+    if (workspacePackage._rev !== workspace._rev) {
+      newWorkspacePackage._rev = workspace._rev
     }
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
-    if (appPackage.pwa && application.pwa) {
-      if (appPackage.pwa.icons) {
-        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
-          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
-          application?.pwa?.icons?.[i]
-            ? { ...icon, src: application?.pwa?.icons?.[i].src }
-            : icon
+    if (workspacePackage.pwa && workspace.pwa) {
+      if (workspacePackage.pwa.icons) {
+        workspacePackage.pwa.icons = workspacePackage.pwa.icons.map(
+          (icon, i) =>
+            icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+            workspace?.pwa?.icons?.[i]
+              ? { ...icon, src: workspace?.pwa?.icons?.[i].src }
+              : icon
         )
       }
     }
 
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
-    delete newAppPackage.lockedBy
+    delete newWorkspacePackage.lockedBy
 
-    await db.put(newAppPackage)
+    await db.put(newWorkspacePackage)
     // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateWorkspaceMetadata(appId)
-    return newAppPackage
+    await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
+    return newWorkspacePackage
   })
 }
 

@@ -6,7 +6,7 @@ import {
   roles,
   tenancy,
 } from "@budibase/backend-core"
-import { updateAppPackage } from "./application"
+import { updateWorkspacePackage } from "./workspace"
 import {
   DeleteScreenResponse,
   FetchScreenResponse,
@@ -90,7 +90,7 @@ export async function save(
     })
 
     if (pluginAdded) {
-      await updateAppPackage({ usedPlugins }, ctx.appId)
+      await updateWorkspacePackage({ usedPlugins }, ctx.appId)
     }
   }
 

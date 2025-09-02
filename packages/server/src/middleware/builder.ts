@@ -57,7 +57,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
 
       const response = await db.put(metadata)
       metadata._rev = response.rev
-      await cache.app.invalidateWorkspaceMetadata(appId, metadata)
+      await cache.workspace.invalidateWorkspaceMetadata(appId, metadata)
       // set a new debounce record with a short TTL
       await setDebounce(appId, DEBOUNCE_TIME_SEC)
     } catch (err: any) {

@@ -23,8 +23,8 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
   ) {
     return next()
   }
-  const app = await cache.app.getWorkspaceMetadata(appId)
-  if ("state" in app && app.state === cache.app.WorkspaceState.INVALID) {
+  const app = await cache.workspace.getWorkspaceMetadata(appId)
+  if ("state" in app && app.state === cache.workspace.WorkspaceState.INVALID) {
     throw new Error("App not found")
   }
   if ((app as Workspace).recaptchaEnabled) {

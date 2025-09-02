@@ -1,4 +1,4 @@
-import * as controller from "../controllers/application"
+import * as controller from "../controllers/workspace"
 import * as deploymentController from "../controllers/deploy"
 import { applicationValidator } from "./utils/validators"
 import { skipMigrationRedirect } from "../../middleware/workspaceMigrations"
@@ -18,8 +18,8 @@ builderRoutes
   .post("/api/applications/:appId/publish", deploymentController.publishApp)
   .post("/api/applications/:appId/unpublish", controller.unpublish)
   .delete("/api/applications/:appId", skipMigrationRedirect, controller.destroy)
-  .post("/api/applications/:appId/duplicate", controller.duplicateApp)
-  .post("/api/applications/:appId/import", controller.importToApp)
+  .post("/api/applications/:appId/duplicate", controller.duplicateWorkspace)
+  .post("/api/applications/:appId/import", controller.importToWorkspace)
 
 creatorRoutes.post(
   "/api/applications",

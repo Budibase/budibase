@@ -2,7 +2,7 @@ import { db } from "@budibase/backend-core"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
-export function getAppUrl(opts?: { name?: string; url?: string }) {
+export function getWorkspaceUrl(opts?: { name?: string; url?: string }) {
   // construct the url
   let url
   if (opts?.url) {

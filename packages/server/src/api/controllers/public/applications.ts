@@ -1,6 +1,6 @@
 import { db as dbCore, context } from "@budibase/backend-core"
 import { search as stringSearch, addRev } from "./utils"
-import * as controller from "../application"
+import * as controller from "../workspace"
 import * as deployController from "../deploy"
 import * as backupController from "../backup"
 import { Application } from "../../../definitions/common"
@@ -97,7 +97,7 @@ export async function publish(ctx: UserCtx, next: Next) {
 
 // get licensed endpoints from pro
 export const importToApp = proSdk.publicApi.applications.buildImportFn(
-  controller.importToApp
+  controller.importToWorkspace
 )
 export const exportApp = proSdk.publicApi.applications.buildExportFn(
   backupController.exportAppDump

@@ -1,5 +1,5 @@
 import * as rowController from "../../../controllers/row"
-import * as appController from "../../../controllers/application"
+import * as appController from "../../../controllers/workspace"
 import { WorkspaceStatus } from "../../../../db/utils"
 import { roles, tenancy, context, db } from "@budibase/backend-core"
 import env from "../../../../environment"
