@@ -3,9 +3,9 @@ import {
   PublishAppRequest,
   PublishAppResponse,
   type CreateWorkspaceRequest,
-  type FetchAppDefinitionResponse,
-  type FetchAppPackageResponse,
-  type FetchPublishedAppsResponse,
+  type FetchWorkspaceDefinitionResponse,
+  type FetchWorkspacePackageResponse,
+  type FetchPublishedWorkspacesResponse,
   DuplicateWorkspaceResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
@@ -114,8 +114,8 @@ export class ApplicationAPI extends TestAPI {
   getDefinition = async (
     appId: string,
     expectations?: Expectations
-  ): Promise<FetchAppDefinitionResponse> => {
-    return await this._get<FetchAppDefinitionResponse>(
+  ): Promise<FetchWorkspaceDefinitionResponse> => {
+    return await this._get<FetchWorkspaceDefinitionResponse>(
       `/api/applications/${appId}/definition`,
       { expectations }
     )
@@ -124,8 +124,8 @@ export class ApplicationAPI extends TestAPI {
   getAppPackage = async (
     appId: string,
     opts?: RequestOpts
-  ): Promise<FetchAppPackageResponse> => {
-    return await this._get<FetchAppPackageResponse>(
+  ): Promise<FetchWorkspacePackageResponse> => {
+    return await this._get<FetchWorkspacePackageResponse>(
       `/api/applications/${appId}/appPackage`,
       opts
     )
@@ -185,8 +185,8 @@ export class ApplicationAPI extends TestAPI {
 
   fetchClientApps = async (
     expectations?: Expectations
-  ): Promise<FetchPublishedAppsResponse> => {
-    return await this._get<FetchPublishedAppsResponse>(
+  ): Promise<FetchPublishedWorkspacesResponse> => {
+    return await this._get<FetchPublishedWorkspacesResponse>(
       "/api/client/applications",
       {
         expectations,

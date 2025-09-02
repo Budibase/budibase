@@ -36,7 +36,7 @@ import {
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { removeWorkspaceFromUserRoles } from "../../utilities/workerRequests"
 import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
@@ -48,8 +48,8 @@ import {
   Screen,
   UserCtx,
   CreateWorkspaceRequest,
-  FetchAppDefinitionResponse,
-  FetchAppPackageResponse,
+  FetchWorkspaceDefinitionResponse,
+  FetchWorkspacePackageResponse,
   DuplicateWorkspaceRequest,
   DuplicateWorkspaceResponse,
   UpdateWorkspaceRequest,
@@ -70,7 +70,7 @@ import {
   AddSampleDataResponse,
   UnpublishWorkspaceResponse,
   ErrorCode,
-  FetchPublishedAppsResponse,
+  FetchPublishedWorkspacesResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -237,14 +237,17 @@ export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
   ctx.body =
     await sdk.workspaces.enrichWithDefaultWorkspaceWorkspaceUrl(workspaces)
 }
-export async function fetchClientApps(
-  ctx: UserCtx<void, FetchPublishedAppsResponse>
+export async function fetchClientWorkspaces(
+  ctx: UserCtx<void, FetchPublishedWorkspacesResponse>
 ) {
-  const apps = await sdk.workspaces.fetch(WorkspaceStatus.DEPLOYED, ctx.user)
+  const workspaces = await sdk.workspaces.fetch(
+    WorkspaceStatus.DEPLOYED,
+    ctx.user
+  )
 
-  const result: FetchPublishedAppsResponse["apps"] = []
-  for (const app of apps) {
-    const workspaceApps = await db.doWithDB(app.appId, db =>
+  const result: FetchPublishedWorkspacesResponse["apps"] = []
+  for (const workspace of workspaces) {
+    const workspaceApps = await db.doWithDB(workspace.appId, db =>
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
@@ -254,12 +257,12 @@ export async function fetchClientApps(
       }
       result.push({
         // This is used as idempotency key for rendering in the frontend
-        appId: `${app.appId}_${workspaceApp._id}`,
+        appId: `${workspace.appId}_${workspaceApp._id}`,
         // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
-        prodId: app.appId,
+        prodId: workspace.appId,
         name: `${workspaceApp.name}`,
-        url: `${app.url}${workspaceApp.url || ""}`.replace(/\/$/, ""),
-        updatedAt: app.updatedAt,
+        url: `${workspace.url}${workspaceApp.url || ""}`.replace(/\/$/, ""),
+        updatedAt: workspace.updatedAt,
       })
     }
   }
@@ -268,7 +271,7 @@ export async function fetchClientApps(
 }
 
 export async function fetchAppDefinition(
-  ctx: UserCtx<void, FetchAppDefinitionResponse>
+  ctx: UserCtx<void, FetchWorkspaceDefinitionResponse>
 ) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
@@ -285,7 +288,7 @@ export async function fetchAppDefinition(
 }
 
 export async function fetchAppPackage(
-  ctx: UserCtx<void, FetchAppPackageResponse>
+  ctx: UserCtx<void, FetchWorkspacePackageResponse>
 ) {
   const appId = context.getWorkspaceId()
   let [application, layouts, screens, license, recaptchaConfig] =
@@ -824,7 +827,7 @@ async function destroyApp(ctx: UserCtx) {
     await deleteAppFiles(appId)
   }
 
-  await removeAppFromUserRoles(ctx, appId)
+  await removeWorkspaceFromUserRoles(ctx, appId)
   await invalidateAppCache(appId)
   return result
 }

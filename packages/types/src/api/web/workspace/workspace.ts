@@ -30,13 +30,13 @@ export interface DuplicateWorkspaceResponse {
   sourceAppId: string
 }
 
-export interface FetchAppDefinitionResponse {
+export interface FetchWorkspaceDefinitionResponse {
   layouts: Layout[]
   screens: Screen[]
   libraries: string[]
 }
 
-export interface FetchAppPackageResponse {
+export interface FetchWorkspacePackageResponse {
   application: Workspace
   licenseType: PlanType
   screens: Screen[]
@@ -54,7 +54,7 @@ export type FetchWorkspacesResponse = (Workspace & {
   defaultWorkspaceAppUrl: string
 })[]
 
-export interface PublishedAppData {
+export interface PublishedWorkspaceData {
   name: string
   appId: string
   url: string
@@ -62,8 +62,8 @@ export interface PublishedAppData {
   updatedAt?: string
 }
 
-export interface FetchPublishedAppsResponse {
-  apps: PublishedAppData[]
+export interface FetchPublishedWorkspacesResponse {
+  apps: PublishedWorkspaceData[]
 }
 
 export interface UpdateWorkspaceRequest extends Partial<Workspace> {}

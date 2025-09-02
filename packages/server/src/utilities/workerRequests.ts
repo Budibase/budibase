@@ -137,16 +137,19 @@ export async function sendSmtpEmail({
   return (await checkResponse(response, "send email")) as SendEmailResponse
 }
 
-export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
-  const prodAppId = dbCore.getProdWorkspaceID(appId)
+export async function removeWorkspaceFromUserRoles(
+  ctx: Ctx,
+  workspaceId: string
+) {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodWorkspaceId}`),
     createRequest({
       ctx,
       method: "DELETE",
     })
   )
-  return checkResponse(response, "remove app role")
+  return checkResponse(response, "remove workspace role")
 }
 
 export async function allGlobalUsers(ctx: Ctx) {
