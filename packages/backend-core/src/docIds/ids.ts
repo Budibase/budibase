@@ -1,5 +1,5 @@
 import {
-  APP_PREFIX,
+  WORKSPACE_PREFIX,
   DocumentType,
   InternalTable,
   SEPARATOR,
@@ -11,7 +11,7 @@ import { newid } from "./newid"
  * @returns The new app ID which the app doc can be stored under.
  */
 export const generateAppID = (tenantId?: string | null) => {
-  let id = APP_PREFIX
+  let id = WORKSPACE_PREFIX
   if (tenantId) {
     id += `${tenantId}${SEPARATOR}`
   }

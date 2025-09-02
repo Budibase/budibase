@@ -93,7 +93,7 @@ export const createUserAppView = async () => {
       }
     }
   }`
-  await createView(db, viewJs, ViewName.USER_BY_APP)
+  await createView(db, viewJs, ViewName.USER_BY_WORKSPACE)
 }
 
 export const createApiKeyView = async () => {
@@ -217,7 +217,7 @@ export const queryPlatformView = async <T extends Document>(
 const CreateFuncByName: any = {
   [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
   [ViewName.BY_API_KEY]: createApiKeyView,
-  [ViewName.USER_BY_APP]: createUserAppView,
+  [ViewName.USER_BY_WORKSPACE]: createUserAppView,
 }
 
 export const queryGlobalView = async <T extends Document>(

@@ -35,8 +35,8 @@ export const BudibaseInternalDB: Datasource = {
 
 export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
-export const APP_PREFIX = dbCore.APP_PREFIX
-export const APP_DEV_PREFIX = dbCore.APP_DEV_PREFIX
+export const APP_PREFIX = dbCore.WORKSPACE_PREFIX
+export const APP_DEV_PREFIX = dbCore.WORKSPACE_DEV_PREFIX
 export const isDevAppID = dbCore.isDevWorkspaceID
 export const isProdAppID = dbCore.isProdWorkspaceID
 export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`

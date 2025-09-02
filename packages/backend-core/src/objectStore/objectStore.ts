@@ -19,7 +19,7 @@ import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
-import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
+import { WORKSPACE_PREFIX, WORKSPACE_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { ReadableStream } from "stream/web"
 import { NodeJsClient } from "@smithy/types"
@@ -83,7 +83,7 @@ export function sanitizeKey(input: string): string {
 
 // simply handles the dev app to app conversion
 export function sanitizeBucket(input: string): string {
-  return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
+  return input.replace(new RegExp(WORKSPACE_DEV_PREFIX, "g"), WORKSPACE_PREFIX)
 }
 
 /**
