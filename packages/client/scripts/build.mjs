@@ -23,6 +23,7 @@ async function buildAll() {
     console.log(`Building ${dep.sourceFile} dependency...`)
     await build({
       ...config,
+      configFile: false,
       build: {
         lib: {
           entry: `./src/dependencies/${dep.sourceFile}`,
