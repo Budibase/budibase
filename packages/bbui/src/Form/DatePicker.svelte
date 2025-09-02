@@ -1,24 +1,25 @@
-<script>
+<script lang="ts" generics="V">
   import Field from "./Field.svelte"
   import DatePicker from "./Core/DatePicker/DatePicker.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
-  export let value = undefined
-  export let label = null
-  export let labelPosition = "above"
+  export let value: V | null = null
+  export let label = undefined
+  export let labelPosition: LabelPosition = "above"
   export let disabled = false
   export let readonly = false
-  export let error = null
+  export let error = undefined
   export let enableTime = true
   export let timeOnly = false
-  export let placeholder = null
+  export let placeholder: string | null = null
   export let appendTo = undefined
   export let ignoreTimezones = false
-  export let helpText = null
+  export let helpText = undefined
 
   const dispatch = createEventDispatcher()
 
-  const onChange = e => {
+  const onChange = (e: CustomEvent) => {
     value = e.detail
     dispatch("change", e.detail)
   }
