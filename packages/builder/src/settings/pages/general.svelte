@@ -17,7 +17,7 @@
     recaptchaStore,
   } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin, licensing, featureFlags } from "@/stores/portal"
+  import { appsStore, admin, licensing } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -37,7 +37,6 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -56,10 +55,8 @@
 </script>
 
 <Layout noPadding>
-  <Heading size="S">
-    {$featureFlags.WORKSPACES ? "Workspace info" : "App info"}
-  </Heading>
-
+  <Divider />
+  <Heading size="S">Workspace info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
@@ -72,12 +69,6 @@
       />
       <Body size="S">
         {$deploymentStore.lastPublished}
-        <br />
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={deploymentStore.viewPublishedApp}>
-          View workspace
-        </div>
       </Body>
     </div>
     <div class="row">
@@ -97,24 +88,14 @@
       </Body>
     </div>
     <div class="row">
-      {#if !$featureFlags.WORKSPACES}
-        <Button
-          cta
-          disabled={$deploymentStore.isPublishing}
-          on:click={deploymentStore.publishApp}
-        >
-          Publish
-        </Button>
-      {:else}
-        <Button
-          icon="arrow-circle-up"
-          primary
-          disabled={$deploymentStore.isPublishing}
-          on:click={deploymentStore.publishApp}
-        >
-          Publish
-        </Button>
-      {/if}
+      <Button
+        icon="arrow-circle-up"
+        primary
+        disabled={$deploymentStore.isPublishing}
+        on:click={deploymentStore.publishApp}
+      >
+        Publish
+      </Button>
     </div>
   {/if}
   <Divider noMargin id="version" />
@@ -127,9 +108,8 @@
       </Body>
     {:else if updateAvailable}
       <Body size="S">
-        The workspace is currently using version <strong
-          >{$appStore.version}</strong
-        >
+        The workspace is currently using version
+        <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
@@ -148,9 +128,8 @@
       </div>
     {:else}
       <Body size="S">
-        The workspace is currently using version <strong
-          >{$appStore.version}</strong
-        >.
+        The workspace is currently using version
+        <strong>{$appStore.version}</strong>.
         <br />
         You're running the latest!
       </Body>
@@ -192,16 +171,10 @@
   <Divider noMargin />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
-    <Body size="S"
-      >Import an export bundle to update this {$featureFlags.WORKSPACES
-        ? "workspace"
-        : "app"}
-    </Body>
+    <Body size="S">Import an export bundle to update this workspace</Body>
   </Layout>
   <div class="row">
-    <Button secondary on:click={importModal?.show}>
-      Import {appOrWorkspace}
-    </Button>
+    <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
@@ -264,11 +237,10 @@
   okText="Unpublish"
   onOk={deploymentStore.unpublishApp}
 >
-  Are you sure you want to unpublish the {appOrWorkspace}
+  Are you sure you want to unpublish the workspace
   <b>{selectedApp?.name}</b>?
-  {#if $featureFlags.WORKSPACES}
-    <p>This will make all apps and automations in this workspace unavailable</p>
-  {/if}
+
+  <p>This will make all apps and automations in this workspace unavailable</p>
 </ConfirmDialog>
 
 <RevertModal bind:this={revertModal} />

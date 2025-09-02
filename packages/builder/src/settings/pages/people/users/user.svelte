@@ -17,15 +17,8 @@
     Banner,
     Table,
   } from "@budibase/bbui"
-  import { onMount, setContext, getContext } from "svelte"
-  import {
-    users,
-    auth,
-    groups,
-    appsStore,
-    licensing,
-    featureFlags,
-  } from "@/stores/portal"
+  import { onMount, setContext } from "svelte"
+  import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
@@ -39,7 +32,6 @@
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
-  import { capitalise } from "@/helpers"
 
   export let userId
 
@@ -270,8 +262,6 @@
       notifications.error("Error getting user groups")
     }
   })
-
-  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -405,10 +395,10 @@
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="XS">{capitalise(appsOrWorkspaces)}</Heading>
+      <Heading size="S">Workspaces</Heading>
       {#if privileged}
         <Banner showCloseButton={false}>
-          This user's role grants admin access to all {appsOrWorkspaces}
+          This user's role grants admin access to all workspaces
         </Banner>
       {:else}
         <Table
@@ -421,8 +411,8 @@
           on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="XS">
-              This user doesn't have access to any {appsOrWorkspaces}
+            <Heading size="S">
+              This user doesn't have access to any workspace
             </Heading>
           </div>
         </Table>

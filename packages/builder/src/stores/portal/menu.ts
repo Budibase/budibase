@@ -1,5 +1,4 @@
-import { derived, Readable } from "svelte/store"
-import { featureFlags } from "./featureFlags"
+import { Readable, readable } from "svelte/store"
 
 interface MenuItem {
   title: string
@@ -7,16 +6,10 @@ interface MenuItem {
   subPages?: MenuItem[]
 }
 
-export const menu: Readable<MenuItem[]> = derived(
-  [featureFlags],
-  ([$featureFlags]) => {
-    // Pages that all devs and admins can access
-    let menu: MenuItem[] = [
-      {
-        title: $featureFlags.WORKSPACES ? "Workspaces" : "Apps",
-        href: "/builder/portal/workspaces",
-      },
-    ]
-    return menu
-  }
-)
+// This is the current default
+export const menu: Readable<MenuItem[]> = readable([
+  {
+    title: "Workspaces",
+    href: "/builder/portal/workspaces",
+  },
+])

@@ -1,23 +1,18 @@
 import * as setup from "./utilities"
 import { structures } from "@budibase/backend-core/tests"
-import { features } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
 import { Automation, PublishResourceState, WorkspaceApp } from "@budibase/types"
+import { db as dbCore } from "@budibase/backend-core"
 
 describe("/api/deploy", () => {
-  let config = setup.getConfig(),
-    cleanup: () => void
+  let config = setup.getConfig()
 
   afterAll(() => {
-    cleanup()
     setup.afterAll()
   })
 
   beforeAll(async () => {
-    cleanup = features.testutils.setFeatureFlags("*", {
-      WORKSPACES: true,
-    })
     await config.init()
   })
 
@@ -235,17 +230,8 @@ describe("/api/deploy", () => {
     })
   })
 
-  describe.each([false, true])("POST /api/deploy", workspaceAppsFlag => {
-    let cleanup: () => void
-    afterAll(() => {
-      cleanup()
-    })
-
+  describe("POST /api/deploy", () => {
     beforeAll(async () => {
-      cleanup = features.testutils.setFeatureFlags("*", {
-        WORKSPACES: workspaceAppsFlag,
-      })
-
       await config.init()
     })
 
@@ -330,10 +316,8 @@ describe("/api/deploy", () => {
         PublishResourceState.PUBLISHED
       )
       await expectApp(appWithoutInfo).disabled(
-        !workspaceAppsFlag ? undefined : true,
-        !workspaceAppsFlag
-          ? PublishResourceState.PUBLISHED
-          : PublishResourceState.DISABLED
+        true,
+        PublishResourceState.DISABLED
       )
       await expectApp(disabledApp).disabled(true, PublishResourceState.DISABLED)
     })
@@ -373,10 +357,8 @@ describe("/api/deploy", () => {
         PublishResourceState.PUBLISHED
       )
       await expectAutomation(automationWithoutInfo).disabled(
-        !workspaceAppsFlag ? undefined : true,
-        !workspaceAppsFlag
-          ? PublishResourceState.PUBLISHED
-          : PublishResourceState.DISABLED
+        true,
+        PublishResourceState.DISABLED
       )
     })
 
@@ -388,14 +370,14 @@ describe("/api/deploy", () => {
           disabled: undefined,
         }
       )
+      await publishProdApp()
 
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        {
-          WORKSPACES: false,
-        },
-        () => publishProdApp()
-      )
+      // Remove disabled flag, simulating old apps
+      const db = dbCore.getDB(config.getAppId())
+      await db.put({
+        ...(await config.api.workspaceApp.find(initialApp._id)),
+        disabled: undefined,
+      })
 
       const { workspaceApp: secondApp } = await config.api.workspaceApp.create({
         name: "Test App 2",
@@ -420,13 +402,14 @@ describe("/api/deploy", () => {
         .onRowSaved({ tableId: table._id! })
         .save({ disabled: undefined })
 
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        {
-          WORKSPACES: false,
-        },
-        () => publishProdApp()
-      )
+      await publishProdApp()
+
+      // Remove disabled flag, simulating old automations
+      const db = dbCore.getDB(config.getAppId())
+      await db.put({
+        ...(await config.api.automation.get(initialAutomation._id!)),
+        disabled: undefined,
+      })
 
       const { automation: secondAutomation } = await createAutomationBuilder(
         config
