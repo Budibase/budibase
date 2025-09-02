@@ -1,9 +1,9 @@
 import { AppStatus } from "../../../db/utils"
-import { App, ContextUser, FeatureFlag, User } from "@budibase/types"
+import { App, ContextUser, User } from "@budibase/types"
 import { getLocksById } from "../../../utilities/redis"
 import { enrichApps } from "../../users/sessions"
 import { checkAppMetadata } from "../../../automations/logging"
-import { db, db as dbCore, features, users } from "@budibase/backend-core"
+import { db, db as dbCore, users } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
 import sdk from "../.."
 
@@ -60,19 +60,15 @@ export async function fetch(status: AppStatus, user: ContextUser) {
 
 export async function enrichWithDefaultWorkspaceAppUrl(apps: App[]) {
   const result = []
-  if (await features.isEnabled(FeatureFlag.WORKSPACES)) {
-    for (const app of apps) {
-      const workspaceApps = await db.doWithDB(app.appId, db =>
-        sdk.workspaceApps.fetch(db)
-      )
+  for (const app of apps) {
+    const workspaceApps = await db.doWithDB(app.appId, db =>
+      sdk.workspaceApps.fetch(db)
+    )
 
-      result.push({
-        ...app,
-        defaultWorkspaceAppUrl: workspaceApps[0]?.url || "",
-      })
-    }
-  } else {
-    result.push(...apps.map(a => ({ ...a, defaultWorkspaceAppUrl: "" })))
+    result.push({
+      ...app,
+      defaultWorkspaceAppUrl: workspaceApps[0]?.url || "",
+    })
   }
 
   return result

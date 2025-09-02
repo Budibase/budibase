@@ -26,6 +26,7 @@
   export let context: any | undefined = undefined
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
+  export let allowHTML: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -109,6 +110,7 @@
     {allowHBS}
     {allowJS}
     {allowHelpers}
+    {allowHTML}
     {context}
   />
 </Drawer>
