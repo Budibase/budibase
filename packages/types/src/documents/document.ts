@@ -46,7 +46,7 @@ export enum DocumentType {
 }
 
 // these are the core documents that make up the data, design
-// and automation sections of an app. This excludes any internal
+// and automation sections of a workspace. This excludes any internal
 // rows as we shouldn't import data.
 export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.ROLE,
