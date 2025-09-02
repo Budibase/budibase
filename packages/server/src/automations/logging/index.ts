@@ -24,7 +24,7 @@ export async function storeLog(
   automation: Automation,
   results: AutomationResults
 ) {
-  // can disable this if un-needed in self-host, also only do this for prod apps
+  // can disable this if un-needed in self-host, also only do this for prod workspaces
   if (env.DISABLE_AUTOMATION_LOGS) {
     return
   }
@@ -44,9 +44,9 @@ export async function storeLog(
   }
 }
 
-export async function checkAppMetadata(apps: Workspace[]) {
+export async function checkWorkspaceMetadata(workspaces: Workspace[]) {
   const maxStartDate = await automations.logs.oldestLogDate()
-  for (let metadata of apps) {
+  for (let metadata of workspaces) {
     if (!metadata.automationErrors) {
       continue
     }
@@ -64,5 +64,5 @@ export async function checkAppMetadata(apps: Workspace[]) {
       metadata.automationErrors[key] = updated
     }
   }
-  return apps
+  return workspaces
 }

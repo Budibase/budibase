@@ -11,14 +11,20 @@ import {
 } from "@budibase/types"
 import { getProdWorkspaceID } from "./applications"
 
-// checks if a user is specifically a builder, given an app ID
-export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
+// checks if a user is specifically a builder, given an workspace ID
+export function isBuilder(
+  user?: UserBuilderInfo,
+  workspaceId?: string
+): boolean {
   if (!user) {
     return false
   }
   if (user.builder?.global) {
     return true
-  } else if (appId && user.builder?.apps?.includes(getProdWorkspaceID(appId))) {
+  } else if (
+    workspaceId &&
+    user.builder?.apps?.includes(getProdWorkspaceID(workspaceId))
+  ) {
     return true
   }
   return false
@@ -27,10 +33,12 @@ export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
 export function isGlobalBuilder(
   user: UserBuilderInfo & UserAdminInfo
 ): boolean {
-  return (isBuilder(user) && !hasAppBuilderPermissions(user)) || isAdmin(user)
+  return (
+    (isBuilder(user) && !hasWorkspaceBuilderPermissions(user)) || isAdmin(user)
+  )
 }
 
-export function canCreateApps(user: User | ContextUser): boolean {
+export function canCreateWorkspaces(user: User | ContextUser): boolean {
   return isGlobalBuilder(user) || hasCreatorPermissions(user)
 }
 
@@ -46,9 +54,9 @@ export function isAdmin(user?: UserAdminInfo): boolean {
 
 export function isAdminOrBuilder(
   user: UserBuilderInfo & UserAdminInfo,
-  appId?: string
+  workspaceId?: string
 ): boolean {
-  return isBuilder(user, appId) || isAdmin(user)
+  return isBuilder(user, workspaceId) || isAdmin(user)
 }
 
 export function isAdminOrGlobalBuilder(
@@ -57,31 +65,33 @@ export function isAdminOrGlobalBuilder(
   return isGlobalBuilder(user) || isAdmin(user)
 }
 
-// check if they are a builder within an app (not necessarily a global builder)
-export function hasAppBuilderPermissions(user?: UserBuilderInfo): boolean {
+// check if they are a builder within a workspace (not necessarily a global builder)
+export function hasWorkspaceBuilderPermissions(
+  user?: UserBuilderInfo
+): boolean {
   if (!user) {
     return false
   }
-  const appLength = user.builder?.apps?.length
+  const workspaceLength = user.builder?.apps?.length
   const isGlobalBuilder = !!user.builder?.global
-  return !isGlobalBuilder && appLength != null && appLength > 0
+  return !isGlobalBuilder && workspaceLength != null && workspaceLength > 0
 }
 
-function hasAppCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
+function hasWorkspaceCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
   if (!user) {
     return false
   }
   return !!Object.values(user.roles ?? {}).find(x => x === "CREATOR")
 }
 
-// checks if a user is capable of building any app
+// checks if a user is capable of building any workspace
 export function hasBuilderPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
   }
   return (
     user.builder?.global ||
-    hasAppBuilderPermissions(user) ||
+    hasWorkspaceBuilderPermissions(user) ||
     hasCreatorPermissions(user)
   )
 }
@@ -111,8 +121,8 @@ export function isCreator(
     isGlobalBuilder(user!) ||
     hasAdminPermissions(user) ||
     hasCreatorPermissions(user) ||
-    hasAppBuilderPermissions(user) ||
-    hasAppCreatorPermissions(user)
+    hasWorkspaceBuilderPermissions(user) ||
+    hasWorkspaceCreatorPermissions(user)
   )
 }
 
@@ -140,23 +150,25 @@ export function getUserGroups(user: User, groups?: UserGroup[]) {
   )
 }
 
-export function getUserAppGroups(
-  appId: string,
+export function getUserWorkspaceGroups(
+  workspaceId: string,
   user: User,
   groups?: UserGroup[]
 ) {
-  const prodAppId = getProdWorkspaceID(appId)
+  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
   const userGroups = getUserGroups(user, groups)
   return userGroups.filter(group =>
-    Object.keys(group.roles || {}).find(app => app === prodAppId)
+    Object.keys(group.roles || {}).find(
+      workspace => workspace === prodWorkspaceId
+    )
   )
 }
 
-export function userAppAccessList(user: User, groups?: UserGroup[]) {
+export function userWorkspaceAccessList(user: User, groups?: UserGroup[]) {
   const userGroups = getUserGroups(user, groups)
-  const userGroupApps = userGroups.flatMap(userGroup =>
+  const userGroupWorkspaces = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )
-  const fullList = [...Object.keys(user?.roles || {}), ...userGroupApps]
+  const fullList = [...Object.keys(user?.roles || {}), ...userGroupWorkspaces]
   return [...new Set(fullList)]
 }

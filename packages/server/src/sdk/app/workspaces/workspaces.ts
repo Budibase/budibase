@@ -2,7 +2,7 @@ import { WorkspaceStatus } from "../../../db/utils"
 import { Workspace, ContextUser, User } from "@budibase/types"
 import { getLocksById } from "../../../utilities/redis"
 import { enrichWorkspaces } from "../../users/sessions"
-import { checkAppMetadata } from "../../../automations/logging"
+import { checkWorkspaceMetadata } from "../../../automations/logging"
 import { db, db as dbCore, users } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
 import sdk from "../.."
@@ -57,7 +57,7 @@ export async function fetch(status: WorkspaceStatus, user: ContextUser) {
   // Enrich workspaces with all builder user sessions
   const enrichedWorkspaces = await enrichWorkspaces(workspaces)
 
-  return await checkAppMetadata(enrichedWorkspaces)
+  return await checkWorkspaceMetadata(enrichedWorkspaces)
 }
 
 export async function enrichWithDefaultWorkspaceWorkspaceUrl(
