@@ -3,7 +3,7 @@ import { AppStatus } from "@/constants"
 import { API } from "@/api"
 import { auth } from "./auth"
 import { BudiStore } from "../BudiStore"
-import { App, UpdateAppRequest } from "@budibase/types"
+import { Workspace, UpdateAppRequest } from "@budibase/types"
 import { EnrichedApp, StoreApp } from "@/types"
 
 interface PortalAppsStore {
@@ -99,7 +99,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
         }
 
         // Extract certain properties from the dev app to override the prod app
-        let devProps: Pick<App, "updatedBy" | "updatedAt"> = {}
+        let devProps: Pick<Workspace, "updatedBy" | "updatedAt"> = {}
         if (appMap[id]) {
           devProps = {
             updatedBy: appMap[id].updatedBy,

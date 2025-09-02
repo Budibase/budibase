@@ -1,5 +1,5 @@
 import { API } from "@/api"
-import { App, Layout, Screen } from "@budibase/types"
+import { Workspace, Layout, Screen } from "@budibase/types"
 import { derived, get, writable } from "svelte/store"
 
 interface AppStoreState {
@@ -10,7 +10,7 @@ interface AppStoreState {
   inIframe: boolean
   screens?: Screen[]
   layouts?: Layout[]
-  application?: App
+  application?: Workspace
   pageWidth?: string
   recaptchaKey?: string
 }

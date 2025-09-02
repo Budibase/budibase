@@ -1,6 +1,6 @@
 import { BudiStore } from "../BudiStore"
 import { API } from "@/api"
-import { App } from "@budibase/types"
+import { Workspace } from "@budibase/types"
 import { appStore } from "@/stores/builder"
 import { get } from "svelte/store"
 
@@ -17,7 +17,7 @@ export class RecaptchaStore extends BudiStore<RecaptchaState> {
     })
   }
 
-  syncRecaptcha = (app: App, key?: string) => {
+  syncRecaptcha = (app: Workspace, key?: string) => {
     this.set({
       available: !!key,
       enabled: !!app.recaptchaEnabled && !!key,

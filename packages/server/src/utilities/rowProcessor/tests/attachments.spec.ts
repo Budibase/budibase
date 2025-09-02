@@ -123,9 +123,9 @@ describe.each(rowGenerators)(
       mockedDeleteFiles.mockClear()
       jest.resetAllMocks()
 
-      jest.spyOn(context, "getAppId").mockReturnValue(DEV_APPID)
+      jest.spyOn(context, "getWorkspaceId").mockReturnValue(DEV_APPID)
       jest.spyOn(db, "isProdAppID").mockReturnValue(false)
-      jest.spyOn(db, "getProdAppID").mockReturnValue(PROD_APPID)
+      jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_APPID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
 

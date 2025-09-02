@@ -3,7 +3,7 @@ import { createBuilderWebsocket } from "./websocket.js"
 import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { BudiStore } from "../BudiStore.js"
-import { App } from "@budibase/types"
+import { Workspace } from "@budibase/types"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
@@ -42,7 +42,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.selectResource = this.selectResource.bind(this)
   }
 
-  init(app: App) {
+  init(app: Workspace) {
     if (!app?.appId) {
       console.error("BuilderStore: No appId supplied for websocket")
       return
