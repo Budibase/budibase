@@ -12,12 +12,12 @@ import {
   updateClientLibrary,
 } from "../../utilities/fileSystem"
 import {
-  AppStatus,
+  WorkspaceStatus,
   DocumentType,
-  generateAppID,
-  generateDevAppID,
+  generateWorkspaceID,
+  generateDevWorkspaceID,
   getLayoutParams,
-  isDevAppID,
+  isDevWorkspaceID,
 } from "../../db/utils"
 import {
   cache,
@@ -230,7 +230,7 @@ export const addSampleData = async (
 
 export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
   const apps = await sdk.applications.fetch(
-    ctx.query.status as AppStatus,
+    ctx.query.status as WorkspaceStatus,
     ctx.user
   )
 
@@ -239,7 +239,7 @@ export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
 ) {
-  const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
+  const apps = await sdk.applications.fetch(WorkspaceStatus.DEPLOYED, ctx.user)
 
   const result: FetchPublishedAppsResponse["apps"] = []
   for (const app of apps) {
@@ -311,7 +311,7 @@ export async function fetchAppPackage(
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
 
-  const isDev = isDevAppID(ctx.params.appId)
+  const isDev = isDevWorkspaceID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
@@ -395,7 +395,7 @@ async function performAppCreate(
   }
 
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const appId = generateDevAppID(generateAppID(tenantId))
+  const appId = generateDevWorkspaceID(generateWorkspaceID(tenantId))
 
   return await context.doInWorkspaceContext(appId, async () => {
     const instance = await createInstance(appId, instanceConfig)
@@ -421,7 +421,7 @@ async function performAppCreate(
       tenantId: tenancy.getTenantId(),
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
-      status: AppStatus.DEV,
+      status: WorkspaceStatus.DEV,
       navigation: defaultAppNavigator(name),
       theme: DefaultAppTheme,
       customTheme: {

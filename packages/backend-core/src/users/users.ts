@@ -1,6 +1,6 @@
 import {
   DocumentType,
-  generateAppUserID,
+  generateWorkspaceUserID,
   getGlobalUserParams,
   getProdWorkspaceID,
   getUsersByAppParams,
@@ -204,7 +204,7 @@ export function getGlobalUserByAppPage(appId: string, user: User) {
   if (!user) {
     return
   }
-  return generateAppUserID(getProdWorkspaceID(appId)!, user._id!)
+  return generateWorkspaceUserID(getProdWorkspaceID(appId)!, user._id!)
 }
 
 /**

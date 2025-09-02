@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { isExternalTableID } from "../../../integrations/utils"
-import { APP_PREFIX, DocumentType } from "../../../db/utils"
+import { WORKSPACE_PREFIX, DocumentType } from "../../../db/utils"
 import { Row } from "@budibase/types"
 
 export async function addRev(
@@ -11,7 +11,7 @@ export async function addRev(
     return body
   }
   let id = body._id
-  if (body._id.startsWith(APP_PREFIX)) {
+  if (body._id.startsWith(WORKSPACE_PREFIX)) {
     id = DocumentType.WORKSPACE_METADATA
   }
   const db = context.getWorkspaceDB()

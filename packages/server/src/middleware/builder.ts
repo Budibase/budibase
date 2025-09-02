@@ -1,4 +1,7 @@
-import { APP_DEV_PREFIX, getGlobalIDFromUserMetadataID } from "../db/utils"
+import {
+  WORKSPACE_DEV_PREFIX,
+  getGlobalIDFromUserMetadataID,
+} from "../db/utils"
 import {
   doesUserHaveLock,
   updateLock,
@@ -28,7 +31,7 @@ async function checkDevAppLocks(ctx: UserCtx) {
   }
 
   // not a development app, don't need to do anything
-  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+  if (!appId || !appId.startsWith(WORKSPACE_DEV_PREFIX)) {
     return
   }
 

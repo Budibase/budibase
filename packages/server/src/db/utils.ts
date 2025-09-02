@@ -19,7 +19,7 @@ const newid = utils.newid
 
 type Optional = string | null
 
-export const enum AppStatus {
+export const enum WorkspaceStatus {
   DEV = "development",
   ALL = "all",
   DEPLOYED = "published",
@@ -35,10 +35,10 @@ export const BudibaseInternalDB: Datasource = {
 
 export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
-export const APP_PREFIX = dbCore.WORKSPACE_PREFIX
-export const APP_DEV_PREFIX = dbCore.WORKSPACE_DEV_PREFIX
-export const isDevAppID = dbCore.isDevWorkspaceID
-export const isProdAppID = dbCore.isProdWorkspaceID
+export const WORKSPACE_PREFIX = dbCore.WORKSPACE_PREFIX
+export const WORKSPACE_DEV_PREFIX = dbCore.WORKSPACE_DEV_PREFIX
+export const isDevWorkspaceID = dbCore.isDevWorkspaceID
+export const isProdWorkspaceID = dbCore.isProdWorkspaceID
 export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
@@ -46,8 +46,8 @@ export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
-export const generateAppID = dbCore.generateAppID
-export const generateDevAppID = dbCore.getDevelopmentWorkspaceID
+export const generateWorkspaceID = dbCore.generateWorkspaceID
+export const generateDevWorkspaceID = dbCore.getDevelopmentWorkspaceID
 export const generateRoleID = dbCore.generateRoleID
 export const getRoleParams = dbCore.getRoleParams
 export const getQueryIndex = dbCore.getQueryIndex
@@ -125,7 +125,7 @@ function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
 }
 
 /**
- * Gets all the link docs document from the current app db.
+ * Gets all the link docs document from the current workspace db.
  */
 export async function allLinkDocs() {
   const db = context.getWorkspaceDB()
@@ -229,7 +229,7 @@ export function generateAutomationMetadataID(automationId: string) {
 }
 
 /**
- * Retrieve all automation metadata in an app database.
+ * Retrieve all automation metadata in an workspace database.
  */
 export function getAutomationMetadataParams(otherProps: any = {}) {
   return getDocParams(DocumentType.AUTOMATION_METADATA, null, otherProps)

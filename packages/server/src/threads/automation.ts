@@ -6,7 +6,7 @@ import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
-import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
+import { generateAutomationMetadataID, isProdWorkspaceID } from "../db/utils"
 import { automations } from "@budibase/shared-core"
 import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
@@ -282,7 +282,7 @@ class Orchestrator {
   }
 
   private isProdApp(): boolean {
-    return isProdAppID(this.appId)
+    return isProdWorkspaceID(this.appId)
   }
 
   hasErrored(context: AutomationContext): boolean {

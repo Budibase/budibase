@@ -152,7 +152,7 @@ describe("context", () => {
 
   describe("doInAppMigrationContext", () => {
     it("the context is set correctly", async () => {
-      const appId = db.generateAppID()
+      const appId = db.generateWorkspaceID()
 
       await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
@@ -167,7 +167,7 @@ describe("context", () => {
 
     it("the context is set correctly when running in a tenant id", async () => {
       const tenantId = structures.tenant.id()
-      const appId = db.generateAppID(tenantId)
+      const appId = db.generateWorkspaceID(tenantId)
 
       await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
@@ -182,7 +182,7 @@ describe("context", () => {
     })
 
     it("the context is not modified outside the delegate", async () => {
-      const appId = db.generateAppID()
+      const appId = db.generateWorkspaceID()
 
       expect(Context.get()).toBeUndefined()
 
@@ -203,22 +203,28 @@ describe("context", () => {
       [
         "doInAppMigrationContext",
         () =>
-          context.doInWorkspaceMigrationContext(db.generateAppID(), () => {}),
+          context.doInWorkspaceMigrationContext(
+            db.generateWorkspaceID(),
+            () => {}
+          ),
       ],
       [
         "doInWorkspaceContext",
-        () => context.doInWorkspaceContext(db.generateAppID(), () => {}),
+        () => context.doInWorkspaceContext(db.generateWorkspaceID(), () => {}),
       ],
       [
         "doInAutomationContext",
         () =>
           context.doInAutomationContext({
-            workspaceId: db.generateAppID(),
+            workspaceId: db.generateWorkspaceID(),
             automationId: structures.generator.guid(),
             task: () => {},
           }),
       ],
-      ["doInContext", () => context.doInContext(db.generateAppID(), () => {})],
+      [
+        "doInContext",
+        () => context.doInContext(db.generateWorkspaceID(), () => {}),
+      ],
       [
         "doInEnvironmentContext",
         () => context.doInEnvironmentContext({}, () => {}),
@@ -245,7 +251,7 @@ describe("context", () => {
       async (_, otherContextCall: () => Promise<void>) => {
         await expect(
           context.doInWorkspaceMigrationContext(
-            db.generateAppID(),
+            db.generateWorkspaceID(),
             async () => {
               await otherContextCall()
             }

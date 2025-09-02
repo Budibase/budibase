@@ -7,7 +7,7 @@ import {
   Ctx,
   PingSource,
 } from "@budibase/types"
-import { DocumentType, isDevAppID } from "../../db/utils"
+import { DocumentType, isDevWorkspaceID } from "../../db/utils"
 
 export const isEnabled = async (ctx: Ctx<void, AnalyticsEnabledResponse>) => {
   const enabled = await events.analytics.enabled()
@@ -28,7 +28,7 @@ export const ping = async (
       const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
       let appId = context.getWorkspaceId()
 
-      if (isDevAppID(appId)) {
+      if (isDevWorkspaceID(appId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {
         await events.serve.servedApp(appInfo, body.timezone, body.embedded)

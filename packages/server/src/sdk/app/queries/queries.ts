@@ -1,7 +1,7 @@
 import { getEnvironmentVariables } from "../../utils"
 import { processStringSync } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
-import { getQueryParams, isProdAppID } from "../../../db/utils"
+import { getQueryParams, isProdWorkspaceID } from "../../../db/utils"
 import { BaseQueryVerbs } from "../../../constants"
 import { Query, QuerySchema } from "@budibase/types"
 
@@ -42,7 +42,7 @@ export async function find(queryId: string) {
   const appId = context.getWorkspaceId()
   const query = enrichQueries(await db.get(queryId))
   // remove properties that could be dangerous in real app
-  if (isProdAppID(appId)) {
+  if (isProdWorkspaceID(appId)) {
     delete query.fields
     delete query.parameters
   }

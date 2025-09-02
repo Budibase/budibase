@@ -7,7 +7,7 @@ import {
   users,
   auth,
 } from "@budibase/backend-core"
-import { generateUserMetadataID, isDevAppID } from "../db/utils"
+import { generateUserMetadataID, isDevWorkspaceID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
@@ -30,7 +30,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   // deny access to application preview
   if (isBrowser(ctx) && !isApiKey(ctx)) {
     if (
-      isDevAppID(requestAppId) &&
+      isDevWorkspaceID(requestAppId) &&
       !isWebhookEndpoint(ctx) &&
       !users.isBuilder(ctx.user, requestAppId)
     ) {
@@ -52,7 +52,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
 
     // Allow builders to specify their role via a header
     const isBuilder = users.isBuilder(globalUser, appId)
-    const isDevApp = appId && isDevAppID(appId)
+    const isDevApp = appId && isDevWorkspaceID(appId)
     const roleHeader =
       ctx.request &&
       (ctx.request.headers[constants.Header.PREVIEW_ROLE] as string)

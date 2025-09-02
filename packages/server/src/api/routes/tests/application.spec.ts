@@ -3,7 +3,7 @@ import { setEnv, withEnv } from "../../../environment"
 
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import {
   events,
   utils,
@@ -288,7 +288,7 @@ describe("/applications (workspace apps flag)", () => {
   describe("fetch", () => {
     it("lists all applications", async () => {
       const apps = await config.api.application.fetch({
-        status: AppStatus.DEV,
+        status: WorkspaceStatus.DEV,
       })
       expect(apps.length).toBeGreaterThan(0)
     })

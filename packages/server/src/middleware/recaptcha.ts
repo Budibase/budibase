@@ -4,13 +4,13 @@ import { Header, ClientHeader, sdk } from "@budibase/shared-core"
 import { features } from "@budibase/pro"
 import { Middleware, Next } from "koa"
 import { isRecaptchaVerified } from "../utilities/redis"
-import { isProdAppID } from "../db/utils"
+import { isProdWorkspaceID } from "../db/utils"
 
 const middleware = (async (ctx: UserCtx, next: Next) => {
   const appId = context.getWorkspaceId()
   // no app ID, requests are not targeting an app
   // if not production app - this is in the builder, recaptcha isn't enabled
-  if (!appId || !isProdAppID(appId)) {
+  if (!appId || !isProdWorkspaceID(appId)) {
     return next()
   }
   if (!(await features.isRecaptchaEnabled())) {

@@ -11,7 +11,7 @@ import {
   UpdateWorkspaceResponse,
 } from "@budibase/types"
 import { Expectations, RequestOpts, TestAPI } from "./base"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import { constants } from "@budibase/backend-core"
 
 export class ApplicationAPI extends TestAPI {
@@ -167,7 +167,7 @@ export class ApplicationAPI extends TestAPI {
   }
 
   fetch = async (
-    { status }: { status?: AppStatus } = {},
+    { status }: { status?: WorkspaceStatus } = {},
     expectations?: Expectations
   ): Promise<Workspace[]> => {
     return await this._get<Workspace[]>("/api/applications", {
