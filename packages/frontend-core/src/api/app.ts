@@ -180,7 +180,7 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param body a FormData body with a file and password.
    */
   updateAppFromExport: async (appId, body) => {
-    const devId = sdk.applications.getDevWorkspaceID(appId)
+    const devId = sdk.workspaces.getDevWorkspaceID(appId)
     return await API.post({
       url: `/api/applications/${devId}/import`,
       body,

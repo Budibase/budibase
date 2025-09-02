@@ -9,7 +9,7 @@ import {
   UserAdminInfo,
   UserRoleInfo,
 } from "@budibase/types"
-import { getProdWorkspaceID } from "./applications"
+import { getProdWorkspaceID } from "./workspace"
 
 // checks if a user is specifically a builder, given an workspace ID
 export function isBuilder(
