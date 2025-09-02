@@ -234,7 +234,7 @@ export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
     ctx.user
   )
 
-  ctx.body = await sdk.applications.enrichWithDefaultWorkspaceAppUrl(apps)
+  ctx.body = await sdk.applications.enrichWithDefaultWorkspaceWorkspaceUrl(apps)
 }
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
