@@ -8,11 +8,11 @@ import {
   DeleteWorkspaceResponse,
   DuplicateWorkspaceRequest,
   DuplicateWorkspaceResponse,
-  FetchAppDefinitionResponse,
-  FetchAppPackageResponse,
+  FetchWorkspaceDefinitionResponse,
+  FetchWorkspacePackageResponse,
   FetchWorkspacesResponse,
   FetchDeploymentResponse,
-  FetchPublishedAppsResponse,
+  FetchPublishedWorkspacesResponse,
   GetDiagnosticsResponse,
   ImportToUpdateWorkspaceRequest,
   ImportToUpdateWorkspaceResponse,
@@ -27,7 +27,7 @@ import {
 } from "@budibase/types"
 
 export interface AppEndpoints {
-  fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
+  fetchAppPackage: (appId: string) => Promise<FetchWorkspacePackageResponse>
   saveAppMetadata: (
     appId: string,
     metadata: UpdateWorkspaceRequest
@@ -62,9 +62,9 @@ export interface AppEndpoints {
   getApps: () => Promise<FetchWorkspacesResponse>
   fetchComponentLibDefinitions: (
     appId: string
-  ) => Promise<FetchAppDefinitionResponse>
+  ) => Promise<FetchWorkspaceDefinitionResponse>
   addSampleData: (appId: string) => Promise<AddSampleDataResponse>
-  getPublishedApps: () => Promise<FetchPublishedAppsResponse["apps"]>
+  getPublishedApps: () => Promise<FetchPublishedWorkspacesResponse["apps"]>
 
   // Missing request or response types
   importApps: (apps: any) => Promise<any>
@@ -270,7 +270,7 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   },
 
   getPublishedApps: async () => {
-    const response = await API.get<FetchPublishedAppsResponse>({
+    const response = await API.get<FetchPublishedWorkspacesResponse>({
       url: `/api/client/applications`,
     })
     return response.apps

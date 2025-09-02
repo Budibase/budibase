@@ -43,7 +43,7 @@ import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 
-import { FetchAppPackageResponse } from "@budibase/types"
+import { FetchWorkspacePackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
 
 export {
@@ -124,7 +124,7 @@ const resetBuilderHistory = () => {
   automationHistoryStore.reset()
 }
 
-export const initialise = async (pkg: FetchAppPackageResponse) => {
+export const initialise = async (pkg: FetchWorkspacePackageResponse) => {
   const { application, recaptchaKey } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
   appStore.syncAppPackage(pkg)

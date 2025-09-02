@@ -18,7 +18,7 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
-  FetchAppPackageResponse,
+  FetchWorkspacePackageResponse,
   SaveScreenRequest,
   SaveScreenResponse,
   Screen,
@@ -98,9 +98,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
   /**
    * Replace ALL store screens with application package screens
-   * @param {FetchAppPackageResponse} pkg
+   * @param {FetchWorkspacePackageResponse} pkg
    */
-  syncAppScreens(pkg: FetchAppPackageResponse) {
+  syncAppScreens(pkg: FetchWorkspacePackageResponse) {
     const screens = [...pkg.screens]
     this.update(state => {
       const { selectedScreenId } = state

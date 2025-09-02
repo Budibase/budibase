@@ -1,9 +1,9 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { PublishedAppData } from "@budibase/types"
+import { PublishedWorkspaceData } from "@budibase/types"
 
 interface ClientAppsStoreState {
-  apps: PublishedAppData[]
+  apps: PublishedWorkspaceData[]
 }
 
 export class ClientAppsStore extends BudiStore<ClientAppsStoreState> {
