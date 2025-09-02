@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { build } from "vite"
+import { libDependencies } from "@budibase/types"
 import { rmSync } from "fs"
+import { build } from "vite"
 
 const isWatch = process.argv.includes("--watch")
 const isDev = process.argv.includes("--dev")
@@ -18,13 +19,23 @@ async function buildAll() {
     mode: isDev ? "development" : "production",
   }
 
-  const dependencies = ["apexcharts", "html5-qrcode"]
-
-  for (const dep of dependencies) {
-    console.log(`Building ${dep} dependency...`)
+  for (const dep of libDependencies) {
+    console.log(`Building ${dep.sourceFile} dependency...`)
     await build({
       ...config,
-      configFile: `./vite.${dep}.config.mjs`,
+      build: {
+        lib: {
+          entry: `./src/dependencies/${dep.sourceFile}`,
+          formats: ["iife"],
+          name: dep.windowObject,
+          fileName: () => dep.outFile,
+        },
+        rollupOptions: {
+          context: "window",
+        },
+        outDir: "dist/",
+        emptyOutDir: false,
+      },
     })
   }
 
