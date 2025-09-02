@@ -13,7 +13,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
   import { appsStore, auth, groups } from "@/stores/portal"
-  import { onMount, setContext } from "svelte"
+  import { onMount, setContext, getContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"

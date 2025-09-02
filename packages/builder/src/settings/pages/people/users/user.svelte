@@ -17,7 +17,7 @@
     Banner,
     Table,
   } from "@budibase/bbui"
-  import { onMount, setContext } from "svelte"
+  import { onMount, setContext, getContext } from "svelte"
   import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
