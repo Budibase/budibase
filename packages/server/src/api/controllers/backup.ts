@@ -2,7 +2,7 @@ import sdk from "../../sdk"
 import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
 import {
-  App,
+  Workspace,
   Ctx,
   ExportAppDumpRequest,
   ExportAppDumpResponse,
@@ -34,7 +34,7 @@ export async function exportAppDump(
 
   await context.doInWorkspaceContext(appId, async () => {
     const appDb = context.getWorkspaceDB()
-    const app = await appDb.get<App>(DocumentType.WORKSPACE_METADATA)
+    const app = await appDb.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     await events.app.exported(app)
   })
 }

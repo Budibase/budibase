@@ -1,4 +1,4 @@
-import { UserCtx, RecaptchaSessionCookie, App } from "@budibase/types"
+import { UserCtx, RecaptchaSessionCookie, Workspace } from "@budibase/types"
 import { utils, Cookie, cache, context } from "@budibase/backend-core"
 import { Header, ClientHeader, sdk } from "@budibase/shared-core"
 import { features } from "@budibase/pro"
@@ -27,7 +27,7 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
   if ("state" in app && app.state === cache.app.AppState.INVALID) {
     throw new Error("App not found")
   }
-  if ((app as App).recaptchaEnabled) {
+  if ((app as Workspace).recaptchaEnabled) {
     const cookie = utils.getCookie<RecaptchaSessionCookie>(
       ctx,
       Cookie.RecaptchaSession

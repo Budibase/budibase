@@ -6,7 +6,7 @@ import {
   queue,
 } from "@budibase/backend-core"
 import {
-  App,
+  Workspace,
   DeploymentDoc,
   DevRevertQueueData,
   DocumentType,
@@ -63,7 +63,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
 
       // update appID in reverted app to be dev version again
       const db = context.getWorkspaceDB()
-      const appDoc = await db.get<App>(DocumentType.WORKSPACE_METADATA)
+      const appDoc = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
       appDoc.appId = appId
       appDoc.instance._id = appId
       await db.put(appDoc)

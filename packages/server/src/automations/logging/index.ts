@@ -1,5 +1,5 @@
 import env from "../../environment"
-import { AutomationResults, Automation, App } from "@budibase/types"
+import { AutomationResults, Automation, Workspace } from "@budibase/types"
 import { automations } from "@budibase/pro"
 import { db as dbUtils, logging } from "@budibase/backend-core"
 import sizeof from "object-sizeof"
@@ -44,7 +44,7 @@ export async function storeLog(
   }
 }
 
-export async function checkAppMetadata(apps: App[]) {
+export async function checkAppMetadata(apps: Workspace[]) {
   const maxStartDate = await automations.logs.oldestLogDate()
   for (let metadata of apps) {
     if (!metadata.automationErrors) {

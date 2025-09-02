@@ -1,9 +1,9 @@
-import { App } from "../../../documents"
+import { Workspace } from "../../../documents"
 import stream from "node:stream"
 
-export type ServeAppResponse = string | App
+export type ServeAppResponse = string | Workspace
 
-interface BuilderPreview extends App {
+interface BuilderPreview extends Workspace {
   builderPreview: boolean
 }
 

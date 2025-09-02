@@ -14,7 +14,7 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import {
-  type App,
+  type Workspace,
   BuiltinPermissionID,
   PermissionLevel,
   Screen,
@@ -36,7 +36,7 @@ import sdk from "../../../sdk"
 
 describe("/applications (workspace apps flag)", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: Workspace
   const cleanup: (() => void)[] = []
 
   afterAll(() => {

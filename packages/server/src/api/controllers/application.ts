@@ -42,7 +42,7 @@ import { cleanupAutomations } from "../../automations/utils"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
-  App,
+  Workspace,
   Layout,
   PlanType,
   Screen,
@@ -101,7 +101,7 @@ function getUserRoleId(ctx: UserCtx) {
 
 function checkAppUrl(
   ctx: UserCtx,
-  apps: App[],
+  apps: Workspace[],
   url: string,
   currentAppId?: string
 ) {
@@ -115,7 +115,7 @@ function checkAppUrl(
 
 function checkAppName(
   ctx: UserCtx,
-  apps: App[],
+  apps: Workspace[],
   name: string,
   currentAppId?: string
 ) {
@@ -357,7 +357,7 @@ export async function fetchAppPackage(
 async function performAppCreate(
   ctx: UserCtx<CreateAppRequest, CreateAppResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
@@ -407,7 +407,7 @@ async function performAppCreate(
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
-    let newApplication: App = {
+    let newApplication: Workspace = {
       _id: DocumentType.WORKSPACE_METADATA,
       _rev: undefined,
       appId,
@@ -445,7 +445,7 @@ async function performAppCreate(
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
     if (existing) {
-      const keys: (keyof App)[] = [
+      const keys: (keyof Workspace)[] = [
         "_rev",
         "navigation",
         "theme",
@@ -590,8 +590,11 @@ async function updateUserColumns(
   })
 }
 
-async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
-  let creationFns: ((app: App) => Promise<void>)[] = []
+async function creationEvents(
+  request: BBRequest<CreateAppRequest>,
+  app: Workspace
+) {
+  let creationFns: ((app: Workspace) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
   if (useTemplate === "true") {
@@ -621,7 +624,10 @@ async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
   }
 }
 
-async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
+async function appPostCreate(
+  ctx: UserCtx<CreateAppRequest, Workspace>,
+  app: Workspace
+) {
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
@@ -671,7 +677,7 @@ export async function find(ctx: UserCtx) {
 export async function update(
   ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
   // validation
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
@@ -776,7 +782,7 @@ async function unpublishApp(ctx: UserCtx) {
   const db = context.getProdWorkspaceDB()
   const result = await db.destroy()
 
-  await events.app.unpublished({ appId } as App)
+  await events.app.unpublished({ appId } as Workspace)
 
   // automations only in production
   await cleanupAutomations(appId)
@@ -912,7 +918,7 @@ export async function duplicateApp(
     ctx.throw(404, "Source app not found")
   }
 
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
 
   checkAppName(ctx, apps, appName)
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
@@ -943,7 +949,7 @@ export async function duplicateApp(
     request: {
       body: createRequestBody,
     },
-  } as UserCtx<CreateAppRequest, App>
+  } as UserCtx<CreateAppRequest, Workspace>
 
   // Build the new application
   await create(createRequest)
@@ -960,14 +966,14 @@ export async function duplicateApp(
 }
 
 export async function updateAppPackage(
-  appPackage: Partial<App>,
+  appPackage: Partial<Workspace>,
   appId: string
 ) {
   return context.doInWorkspaceContext(appId, async () => {
     const db = context.getWorkspaceDB()
     const application = await sdk.applications.metadata.get()
 
-    const newAppPackage: App = { ...application, ...appPackage }
+    const newAppPackage: Workspace = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
     }

@@ -1,7 +1,7 @@
 import * as setup from "./utilities"
 import nock from "nock"
 import { mocks } from "@budibase/backend-core/tests"
-import { App, RecaptchaConfig, ConfigType } from "@budibase/types"
+import { Workspace, RecaptchaConfig, ConfigType } from "@budibase/types"
 import { basicTable } from "../../../tests/utilities/structures"
 
 // need to mock the config, this is setup in the worker service
@@ -45,7 +45,7 @@ function recaptchaError() {
 
 describe("/recaptcha", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: Workspace
 
   beforeAll(async () => {
     await config.init()

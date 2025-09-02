@@ -9,7 +9,7 @@ import {
   SocketSession,
   ContextUser,
   Screen,
-  App,
+  Workspace,
   Automation,
   Role,
   WorkspaceApp,
@@ -188,7 +188,7 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  emitAppMetadataUpdate(ctx: any, metadata: Partial<App>) {
+  emitAppMetadataUpdate(ctx: any, metadata: Partial<Workspace>) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppMetadataChange, {
       metadata,
     })

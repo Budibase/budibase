@@ -5,7 +5,7 @@ import {
   Table,
   Row,
   DocumentType,
-  App,
+  Workspace,
   ContextEmitter,
   EventType,
   UserBindings,
@@ -27,7 +27,7 @@ class AutomationEmitter implements ContextEmitter {
 
   async getMaxAutomationChain() {
     const db = context.getWorkspaceDB()
-    const appMetadata = await db.get<App>(DocumentType.WORKSPACE_METADATA)
+    const appMetadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     let chainAutomations = appMetadata?.automations?.chainAutomations
 
     if (chainAutomations === true) {

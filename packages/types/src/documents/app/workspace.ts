@@ -1,9 +1,9 @@
-import { User, Document, Plugin, Snippet, Theme } from "../"
+import { User, Document, Plugin, Snippet, Theme } from ".."
 import { SocketSession } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 
-export interface App extends Document {
+export interface Workspace extends Document {
   appId: string
   type: string
   version: string

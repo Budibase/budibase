@@ -10,7 +10,7 @@ import {
   Database,
   RowValue,
   DocumentType,
-  App,
+  Workspace,
 } from "@budibase/types"
 import backups from "../backups"
 import { processMigrations } from "../../../appMigrations/migrationsProcessor"
@@ -29,13 +29,13 @@ const DESIGN_DOCUMENTS_TO_IMPORT = [
 async function getNewAppMetadata(
   tempDb: Database,
   appDb: Database
-): Promise<App> {
+): Promise<Workspace> {
   // static doc denoting app information
   const docId = DocumentType.WORKSPACE_METADATA
   try {
     const [tempMetadata, appMetadata] = await Promise.all([
-      tempDb.get<App>(docId),
-      appDb.get<App>(docId),
+      tempDb.get<Workspace>(docId),
+      appDb.get<Workspace>(docId),
     ])
     return {
       ...appMetadata,
@@ -58,7 +58,7 @@ async function getNewAppMetadata(
 function mergeUpdateAndDeleteDocuments(
   updateDocs: Document[],
   deleteDocs: Document[],
-  metadata: App
+  metadata: Workspace
 ) {
   // compress the documents to create and to delete (if same ID, then just update the rev)
   const finalToDelete = []

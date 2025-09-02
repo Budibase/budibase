@@ -45,7 +45,7 @@ import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
 import {
-  App,
+  Workspace,
   AuthToken,
   Automation,
   CreateViewRequest,
@@ -101,9 +101,9 @@ export default class TestConfiguration {
   appId?: string
   defaultWorkspaceAppId?: string
   name?: string
-  allApps: App[]
-  app?: App
-  prodApp?: App
+  allApps: Workspace[]
+  app?: Workspace
+  prodApp?: Workspace
   prodAppId?: string
   user?: User
   userMetadataId?: string
@@ -270,7 +270,7 @@ export default class TestConfiguration {
     }
   }
 
-  async withApp<R>(app: App | string, f: () => Promise<R>) {
+  async withApp<R>(app: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
     return await context.doInWorkspaceContext(this.appId, async () => {
@@ -592,7 +592,7 @@ export default class TestConfiguration {
     return this.tenantId
   }
 
-  async newTenant(appName = newid()): Promise<App> {
+  async newTenant(appName = newid()): Promise<Workspace> {
     this.csrfToken = generator.hash()
 
     this.tenantId = structures.tenant.id()
@@ -646,7 +646,7 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string, url?: string): Promise<App> {
+  async createApp(appName: string, url?: string): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -654,7 +654,7 @@ export default class TestConfiguration {
         (await this._req(appController.create, {
           name: appName,
           url,
-        })) as App
+        })) as Workspace
     )
     this.appId = this.app.appId
 
@@ -672,7 +672,10 @@ export default class TestConfiguration {
     })
   }
 
-  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+  async createAppWithOnboarding(
+    appName: string,
+    url?: string
+  ): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -681,7 +684,7 @@ export default class TestConfiguration {
           name: appName,
           url,
           isOnboarding: "true",
-        })) as App
+        })) as Workspace
     )
     this.appId = this.app.appId
 
@@ -708,7 +711,7 @@ export default class TestConfiguration {
 
     return context.doInWorkspaceContext(prodAppId, async () => {
       const db = context.getProdWorkspaceDB()
-      return await db.get<App>(dbCore.DocumentType.WORKSPACE_METADATA)
+      return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
     })
   }
 

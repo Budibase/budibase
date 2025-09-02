@@ -4,7 +4,7 @@ import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdWorkspaceID } from "../docIds/conversions"
-import { App, Database } from "@budibase/types"
+import { Workspace, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
 
 export * from "../docIds"
@@ -59,7 +59,7 @@ export async function getAllApps(opts?: {
   all?: boolean
   idsOnly?: false
   efficient?: boolean
-}): Promise<App[]>
+}): Promise<Workspace[]>
 export async function getAllApps({
   dev,
   all,
@@ -70,7 +70,7 @@ export async function getAllApps({
   all?: boolean
   idsOnly?: boolean
   efficient?: boolean
-} = {}): Promise<App[] | string[]> {
+} = {}): Promise<Workspace[] | string[]> {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -151,7 +151,7 @@ export async function getAppsByIDs(appIds: string[]) {
         promise.status === "fulfilled" &&
         (promise.value as DeletedApp).state !== AppState.INVALID
     )
-    .map(promise => (promise as PromiseFulfilledResult<App>).value)
+    .map(promise => (promise as PromiseFulfilledResult<Workspace>).value)
 }
 
 /**

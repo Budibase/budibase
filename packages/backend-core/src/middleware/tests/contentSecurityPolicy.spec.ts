@@ -1,7 +1,7 @@
 import crypto from "crypto"
 import { contentSecurityPolicy } from "../contentSecurityPolicy"
 import { app } from "../../cache"
-import { Feature, App } from "@budibase/types"
+import { Feature, Workspace } from "@budibase/types"
 import { users, licenses } from "../../../tests/core/utilities/structures"
 
 jest.mock("crypto", () => ({
@@ -102,7 +102,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): App {
+    app.getAppMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",
@@ -146,7 +146,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): App {
+    app.getAppMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",

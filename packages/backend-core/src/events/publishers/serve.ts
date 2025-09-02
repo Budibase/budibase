@@ -1,6 +1,6 @@
 import { publishEvent } from "../events"
 import {
-  App,
+  Workspace,
   BuilderServedEvent,
   Event,
   AppPreviewServedEvent,
@@ -15,7 +15,7 @@ async function servedBuilder(timezone: string) {
 }
 
 async function servedApp(
-  app: App,
+  app: Workspace,
   timezone: string,
   embed?: boolean | undefined
 ) {
@@ -27,7 +27,7 @@ async function servedApp(
   await publishEvent(Event.SERVED_APP, properties)
 }
 
-async function servedAppPreview(app: App, timezone: string) {
+async function servedAppPreview(app: Workspace, timezone: string) {
   const properties: AppPreviewServedEvent = {
     appId: app.appId,
     appVersion: app.version,

@@ -4,7 +4,7 @@ import env from "../environment"
 import * as tenancy from "../tenancy"
 import * as context from "../context"
 import {
-  App,
+  Workspace,
   AuditedEventFriendlyName,
   Ctx,
   Event,
@@ -36,9 +36,9 @@ export async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for an url that matches
-  const apps: App[] = await context.doInTenant(
+  const apps: Workspace[] = await context.doInTenant(
     tenantId,
-    () => getAllApps({ dev: false }) as Promise<App[]>
+    () => getAllApps({ dev: false }) as Promise<Workspace[]>
   )
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl

@@ -1,5 +1,5 @@
 export * from "../document"
-export * from "./app"
+export * from "./workspace"
 export * from "./automation"
 export * from "./backup"
 export * from "./component"
