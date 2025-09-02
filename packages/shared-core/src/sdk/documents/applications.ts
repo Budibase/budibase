@@ -1,35 +1,35 @@
 import { DocumentType, prefixed } from "@budibase/types"
 
-const APP_PREFIX = prefixed(DocumentType.WORKSPACE)
-const APP_DEV_PREFIX = prefixed(DocumentType.WORKSPACE_DEV)
+const WORKSPACE_PREFIX = prefixed(DocumentType.WORKSPACE)
+const WORKSPACE_DEV_PREFIX = prefixed(DocumentType.WORKSPACE_DEV)
 
-export function getDevAppID(appId: string) {
-  if (!appId) {
-    throw new Error("No app ID provided")
+export function getDevWorkspaceID(workspaceId: string) {
+  if (!workspaceId) {
+    throw new Error("No workspace ID provided")
   }
-  if (appId.startsWith(APP_DEV_PREFIX)) {
-    return appId
+  if (workspaceId.startsWith(WORKSPACE_DEV_PREFIX)) {
+    return workspaceId
   }
   // split to take off the app_ element, then join it together incase any other app_ exist
-  const split = appId.split(APP_PREFIX)
+  const split = workspaceId.split(WORKSPACE_PREFIX)
   split.shift()
-  const rest = split.join(APP_PREFIX)
-  return `${APP_DEV_PREFIX}${rest}`
+  const rest = split.join(WORKSPACE_PREFIX)
+  return `${WORKSPACE_DEV_PREFIX}${rest}`
 }
 
 /**
- * Convert a development app ID to a deployed app ID.
+ * Convert a development workspace ID to a production workspace ID.
  */
-export function getProdAppID(appId: string) {
-  if (!appId) {
-    throw new Error("No app ID provided")
+export function getProdWorkspaceID(workspaceId: string) {
+  if (!workspaceId) {
+    throw new Error("No workspace ID provided")
   }
-  if (!appId.startsWith(APP_DEV_PREFIX)) {
-    return appId
+  if (!workspaceId.startsWith(WORKSPACE_DEV_PREFIX)) {
+    return workspaceId
   }
   // split to take off the app_dev element, then join it together incase any other app_ exist
-  const split = appId.split(APP_DEV_PREFIX)
+  const split = workspaceId.split(WORKSPACE_DEV_PREFIX)
   split.shift()
-  const rest = split.join(APP_DEV_PREFIX)
-  return `${APP_PREFIX}${rest}`
+  const rest = split.join(WORKSPACE_DEV_PREFIX)
+  return `${WORKSPACE_PREFIX}${rest}`
 }

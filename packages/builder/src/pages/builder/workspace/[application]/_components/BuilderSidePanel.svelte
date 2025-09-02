@@ -68,7 +68,7 @@
 
   let inviteFailureResponse = ""
   $: validEmail = emailValidator(email) === true
-  $: prodAppId = appsStore.getProdAppID($appStore.appId)
+  $: prodAppId = appsStore.getProdWorkspaceID($appStore.appId)
   $: promptInvite = showInvite(
     filteredInvites,
     filteredUsers,

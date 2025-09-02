@@ -9,7 +9,7 @@ import {
   UserAdminInfo,
   UserRoleInfo,
 } from "@budibase/types"
-import { getProdAppID } from "./applications"
+import { getProdWorkspaceID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
 export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
@@ -18,7 +18,7 @@ export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   }
   if (user.builder?.global) {
     return true
-  } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+  } else if (appId && user.builder?.apps?.includes(getProdWorkspaceID(appId))) {
     return true
   }
   return false
@@ -145,7 +145,7 @@ export function getUserAppGroups(
   user: User,
   groups?: UserGroup[]
 ) {
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = getProdWorkspaceID(appId)
   const userGroups = getUserGroups(user, groups)
   return userGroups.filter(group =>
     Object.keys(group.roles || {}).find(app => app === prodAppId)

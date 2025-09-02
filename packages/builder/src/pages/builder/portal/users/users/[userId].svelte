@@ -113,10 +113,10 @@
     let availableApps = $appsStore.apps
       .slice()
       .filter(app =>
-        appIds.find(id => id === appsStore.getProdAppID(app.devId))
+        appIds.find(id => id === appsStore.getProdWorkspaceID(app.devId))
       )
     return availableApps.map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
+      const prodAppId = appsStore.getProdWorkspaceID(app.devId)
       return {
         name: app.name,
         devId: app.devId,

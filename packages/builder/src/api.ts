@@ -15,7 +15,7 @@ const newClient = (opts?: { production?: boolean }) =>
       let appId = get(appStore).appId
       if (appId) {
         headers[Header.APP_ID] = opts?.production
-          ? sdk.applications.getProdAppID(appId)
+          ? sdk.applications.getProdWorkspaceID(appId)
           : appId
         headers[Header.CLIENT] = ClientHeader.BUILDER
       }

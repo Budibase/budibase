@@ -16,7 +16,7 @@
   let selectingRole = false
 
   async function appSelected() {
-    const prodAppId = appsStore.getProdAppID(selectedApp.devId)
+    const prodAppId = appsStore.getProdWorkspaceID(selectedApp.devId)
     if (!selectingRole) {
       selectingRole = true
       await roles.fetchByAppId(prodAppId)

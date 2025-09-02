@@ -18,7 +18,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     })
 
     this.extractAppId = this.extractAppId.bind(this)
-    this.getProdAppID = this.getProdAppID.bind(this)
+    this.getProdWorkspaceID = this.getProdWorkspaceID.bind(this)
     this.updateSort = this.updateSort.bind(this)
     this.load = this.load.bind(this)
     this.save = this.save.bind(this)
@@ -29,7 +29,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     return split.length ? split[split.length - 1] : null
   }
 
-  getProdAppID(appId: string) {
+  getProdWorkspaceID(appId: string) {
     if (!appId) {
       return appId
     }

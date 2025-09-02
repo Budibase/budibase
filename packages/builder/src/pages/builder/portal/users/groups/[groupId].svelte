@@ -53,13 +53,17 @@
   $: readonly = !isAdmin || isScimGroup
   $: groupApps = $appsStore.apps
     .filter(app =>
-      groups.getGroupAppIds(group).includes(appsStore.getProdAppID(app.devId))
+      groups
+        .getGroupAppIds(group)
+        .includes(appsStore.getProdWorkspaceID(app.devId))
     )
     .map(app => ({
       ...app,
-      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
+      role: group?.builder?.apps.includes(
+        appsStore.getProdWorkspaceID(app.devId)
+      )
         ? Constants.Roles.CREATOR
-        : group?.roles?.[appsStore.getProdAppID(app.devId)],
+        : group?.roles?.[appsStore.getProdWorkspaceID(app.devId)],
     }))
 
   $: {
@@ -91,7 +95,7 @@
   }
 
   const removeApp = async app => {
-    await groups.removeApp(groupId, appsStore.getProdAppID(app.devId))
+    await groups.removeApp(groupId, appsStore.getProdWorkspaceID(app.devId))
   }
   setContext("roles", {
     updateRole: () => {},
