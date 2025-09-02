@@ -6,7 +6,7 @@
     "@babel/eslint-parser": "7.25.9",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@sveltejs/vite-plugin-svelte": "1.4.0",
+    "@sveltejs/vite-plugin-svelte": "2.4.6",
     "@swc/core": "1.13.5",
     "@swc/jest": "0.2.39",
     "@types/jest": "^30.0.0",
