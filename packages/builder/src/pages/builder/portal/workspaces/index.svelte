@@ -27,7 +27,6 @@
     enrichedApps,
     sortBy,
     templates,
-    featureFlags,
     appCreationStore,
     backups,
   } from "@/stores/portal"
@@ -63,8 +62,6 @@
   $: if ($appCreationStore.showTemplatesModal && templatesModal) {
     templatesModal.show()
   }
-
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -268,21 +265,19 @@
   })
 </script>
 
-{#if $featureFlags.WORKSPACES}
-  <HeroBanner
-    title="Workspaces are live"
-    linkTitle="Learn about workspaces"
-    linkHref="https://budibase.com/blog/updates/workspaces/"
-    color="var(--spectrum-global-color-gray-100)"
-    image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
-    key={BannerType.PORTAL}
-  >
-    Previously, Budibase centered everything around building a single app. With
-    Workspaces, that changes. Now, you can group multiple apps, automations, and
-    data sources together within a single workspace. Existing apps now have
-    their own workspace.
-  </HeroBanner>
-{/if}
+<HeroBanner
+  title="Workspaces are live"
+  linkTitle="Learn about workspaces"
+  linkHref="https://budibase.com/blog/updates/workspaces/"
+  color="var(--spectrum-global-color-gray-100)"
+  image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
+  key={BannerType.PORTAL}
+>
+  Previously, Budibase centered everything around building a single app. With
+  Workspaces, that changes. Now, you can group multiple apps, automations, and
+  data sources together within a single workspace. Existing apps now have their
+  own workspace.
+</HeroBanner>
 <Page>
   <Layout noPadding gap="L">
     {#each Object.keys(automationErrors || {}) as appId}
@@ -333,11 +328,7 @@
         <Layout noPadding gap="XS">
           <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
-            {#if $featureFlags.WORKSPACES}
-              Below you'll find the list of workspaces that you have access to
-            {:else}
-              Below you'll find the list of apps that you have access to
-            {/if}
+            Below you'll find the list of workspaces that you have access to
           </Body>
         </Layout>
       </div>
@@ -353,11 +344,7 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                {#if $featureFlags.WORKSPACES}
-                  Create new workspace
-                {:else}
-                  Create new app
-                {/if}
+                Create new workspace
               </Button>
 
               {#if $appsStore.apps?.length > 0}
@@ -375,7 +362,7 @@
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
-                  Import {appOrWorkspace}
+                  Import workspace
                 </Button>
               {/if}
             </div>
