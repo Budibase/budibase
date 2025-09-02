@@ -1,10 +1,10 @@
-import semver from "semver"
-import path, { join } from "path"
-import { ObjectStoreBuckets } from "../../constants"
-import fs from "fs"
 import { objectStore } from "@budibase/backend-core"
-import { resolve } from "../centralPath"
+import fs from "fs"
+import path, { join } from "path"
+import semver from "semver"
+import { ObjectStoreBuckets } from "../../constants"
 import env from "../../environment"
+import { resolve } from "../centralPath"
 import { TOP_LEVEL_PATH } from "./filesystem"
 
 export function devClientLibPath() {
@@ -194,7 +194,11 @@ export function shouldServeLocally(version: string) {
     return false
   }
 
-  if (env.isDev() && env.USE_LOCAL_COMPONENT_LIBS === "false") {
+  if (!env.USE_LOCAL_COMPONENT_LIBS) {
+    return false
+  }
+
+  if (env.isDev()) {
     return true
   }
 
