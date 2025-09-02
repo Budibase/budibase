@@ -5,7 +5,7 @@ import { db } from "@budibase/backend-core"
 export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
-  const app = await sdk.applications.metadata.get()
+  const app = await sdk.workspaces.metadata.get()
   const baseAppUrl = db.isProdWorkspaceID(app.appId)
     ? `/app/${app.url}`.replace("//", "/")
     : `/${app.appId}`

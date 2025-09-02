@@ -8,7 +8,11 @@ export function UserGroup(): UserGroupType {
     (p: UserGroupRoles) => {
       return {
         ...p,
-        [db.generateAppID()]: generator.pickone(["ADMIN", "POWER", "BASIC"]),
+        [db.generateWorkspaceID()]: generator.pickone([
+          "ADMIN",
+          "POWER",
+          "BASIC",
+        ]),
       }
     },
     {}

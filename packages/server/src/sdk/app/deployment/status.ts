@@ -61,7 +61,7 @@ export async function status() {
 
   let metadata: Workspace | undefined
   if (productionExists) {
-    metadata = await sdk.applications.metadata.tryGet({
+    metadata = await sdk.workspaces.metadata.tryGet({
       production: true,
     })
     await context.doInWorkspaceContext(context.getProdWorkspaceId(), async () =>

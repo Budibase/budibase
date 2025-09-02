@@ -60,7 +60,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     const executionOrder: string[] = []
     let syncCallCount = 0
 
-    jest.spyOn(sdk.applications, "syncApp").mockImplementation(async () => {
+    jest.spyOn(sdk.workspaces, "syncApp").mockImplementation(async () => {
       syncCallCount++
       executionOrder.push(`sync-${syncCallCount}`)
       return undefined as any
@@ -322,7 +322,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     let spySyncApp: jest.SpyInstance
 
     beforeEach(() => {
-      spySyncApp = jest.spyOn(sdk.applications, "syncApp")
+      spySyncApp = jest.spyOn(sdk.workspaces, "syncApp")
     })
 
     it("should sync dev app after migrating published app", async () => {
@@ -407,7 +407,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       let mockSyncApp: jest.SpyInstance
 
       beforeEach(async () => {
-        mockSyncApp = jest.spyOn(sdk.applications, "syncApp")
+        mockSyncApp = jest.spyOn(sdk.workspaces, "syncApp")
         await config.unpublish()
       })
 

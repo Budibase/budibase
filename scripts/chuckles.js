@@ -101,7 +101,7 @@ const parseCurlCommand = curlCommand => {
     // Try unquoted URL (stops at first space followed by dash)
     urlMatch = curlCommand.match(/curl\s+([^\s]+)/)
   }
-  
+
   if (!urlMatch) {
     throw new Error("Could not extract URL from cURL command")
   }
@@ -112,9 +112,9 @@ const parseCurlCommand = curlCommand => {
   // Extract headers from -H flags (both quoted and unquoted)
   const quotedHeaderRegex = /-H\s+['"]([^'"]+)['"]/g
   const unquotedHeaderRegex = /-H\s+([^-]+?)(?=\s+-|$)/g
-  
+
   let headerMatch
-  
+
   // Try quoted headers first
   while ((headerMatch = quotedHeaderRegex.exec(curlCommand)) !== null) {
     const headerLine = headerMatch[1]
@@ -125,7 +125,7 @@ const parseCurlCommand = curlCommand => {
       headers[key] = value
     }
   }
-  
+
   // If no quoted headers found, try unquoted
   if (Object.keys(headers).length === 0) {
     while ((headerMatch = unquotedHeaderRegex.exec(curlCommand)) !== null) {
@@ -310,7 +310,7 @@ const setupDatabase = metadata => {
     throw new Error(`Invalid appId format: ${metadata.appId}`)
   }
 
-  const devDbName = db.APP_DEV_PREFIX + uuid
+  const devDbName = db.WORKSPACE_DEV_PREFIX + uuid
   const prodDbName = db.APP_PREFIX + uuid
   const targetDbName = dev ? devDbName : prodDbName
 

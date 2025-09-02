@@ -50,7 +50,7 @@ export async function checkMissingMigrations(
 
   const appExists = await context.doInWorkspaceContext(
     appId,
-    async () => !!(await sdk.applications.metadata.tryGet())
+    async () => !!(await sdk.workspaces.metadata.tryGet())
   )
   if (!appExists) {
     return next()

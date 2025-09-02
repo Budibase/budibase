@@ -149,7 +149,7 @@
           $auth.user?.email === user.email
             ? false
             : true,
-        apps: sdk.users.userAppAccessList(user, $groups),
+        apps: sdk.users.userWorkspaceAccessList(user, $groups),
         access: role.sortOrder,
       }
     })

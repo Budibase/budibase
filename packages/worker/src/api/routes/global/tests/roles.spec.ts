@@ -60,7 +60,7 @@ describe("/api/global/roles", () => {
   })
 
   beforeEach(async () => {
-    appId = db.generateAppID(config.tenantId)
+    appId = db.generateWorkspaceID(config.tenantId)
     appDb = db.getDB(appId)
     const mockAppDB = context.getWorkspaceDB as jest.Mock
     mockAppDB.mockReturnValue(appDb)
