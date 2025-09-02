@@ -635,7 +635,7 @@
       "hAlign": "center",
       "vAlign": "center"
     },
-    "styles": ["margin", "background", "font"],
+    "styles": ["padding", "background", "font"],
     "settings": [
       {
         "type": "text",
