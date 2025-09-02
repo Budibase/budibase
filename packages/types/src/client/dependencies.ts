@@ -1,18 +1,18 @@
-interface LibDependency {
+export interface LibDependency {
   sourceFile: string
   outFile: string
-  windowObject: string
+  globalProperty: string
 }
 
-export const libDependencies: LibDependency[] = [
-  {
+export const libDependencies: Record<string, LibDependency> = {
+  charts: {
     sourceFile: "apexcharts.ts",
     outFile: "apexcharts.js",
-    windowObject: "_charts",
+    globalProperty: "_charts",
   },
-  {
+  qrcode: {
     sourceFile: "html5-qrcode.ts",
     outFile: "html5-qrcode.js",
-    windowObject: "_qrcode",
+    globalProperty: "_qrcode",
   },
-]
+}

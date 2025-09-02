@@ -1,1 +1,1 @@
-export { libDependencies } from "./dependencies"
+export { libDependencies, type LibDependency } from "./dependencies"

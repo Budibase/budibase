@@ -1,5 +1,5 @@
 export * from "./api"
-export { libDependencies } from "./client"
+export { libDependencies, type LibDependency } from "./client"
 export * from "./core"
 export * from "./documents"
 export * from "./sdk"

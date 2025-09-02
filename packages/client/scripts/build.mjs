@@ -28,7 +28,7 @@ async function buildAll() {
         lib: {
           entry: `./src/dependencies/${dep.sourceFile}`,
           formats: ["iife"],
-          name: dep.windowObject,
+          name: dep.globalProperty,
           fileName: () => dep.outFile,
         },
         rollupOptions: {

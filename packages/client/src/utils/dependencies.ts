@@ -1,19 +1,14 @@
 import { appStore } from "@/stores"
+import { libDependencies, LibDependency } from "@budibase/types"
 import { get } from "svelte/store"
 
 const loadedDependencies = new Map<string, Promise<any>>()
 
-interface DependencyConfig {
-  name: string
-  scriptName: string
-  globalProperty: string
-}
+export async function loadDependency(config: LibDependency): Promise<any> {
+  const { outFile, globalProperty } = config
 
-export async function loadDependency(config: DependencyConfig): Promise<any> {
-  const { name, scriptName, globalProperty } = config
-
-  if (loadedDependencies.has(name)) {
-    return loadedDependencies.get(name)!
+  if (loadedDependencies.has(outFile)) {
+    return loadedDependencies.get(outFile)!
   }
 
   if (typeof window !== "undefined" && (window as any)[globalProperty]) {
@@ -22,44 +17,31 @@ export async function loadDependency(config: DependencyConfig): Promise<any> {
 
   const promise = new Promise((resolve, reject) => {
     if (typeof window === "undefined") {
-      reject(new Error(`${scriptName} requires browser environment`))
+      reject(new Error(`${outFile} requires browser environment`))
       return
     }
 
     const { appId } = get(appStore)
     const script = document.createElement("script")
-    script.src = `/api/assets/${scriptName}?appId=${appId}`
+    script.src = `/api/assets/${outFile}?appId=${appId}`
     script.onload = () => {
       if ((window as any)[globalProperty]) {
         resolve((window as any)[globalProperty])
       } else {
-        reject(new Error(`Failed to load ${scriptName}`))
+        reject(new Error(`Failed to load ${outFile}`))
       }
     }
     script.onerror = () => {
-      reject(new Error(`Failed to load ${scriptName} script`))
+      reject(new Error(`Failed to load ${outFile} script`))
     }
 
     document.head.appendChild(script)
   })
 
-  loadedDependencies.set(name, promise)
+  loadedDependencies.set(outFile, promise)
   return promise
 }
 
 // Specific loaders
-export async function loadCharts(): Promise<any> {
-  return loadDependency({
-    name: "charts",
-    scriptName: "apexcharts.js",
-    globalProperty: "_charts",
-  })
-}
-
-export async function loadQRCode(): Promise<any> {
-  return loadDependency({
-    name: "qrcode",
-    scriptName: "html5-qrcode.js",
-    globalProperty: "_qrcode",
-  })
-}
+export const loadCharts = loadDependency(libDependencies.charts)
+export const loadQRCode = loadDependency(libDependencies.qrcode)
