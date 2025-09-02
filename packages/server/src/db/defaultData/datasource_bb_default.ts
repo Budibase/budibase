@@ -155,9 +155,9 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
       width: 220,
     },
     Status: {
-      type: FieldType.ARRAY,
+      type: FieldType.OPTIONS,
       constraints: {
-        type: JsonFieldSubType.ARRAY,
+        type: FieldType.STRING,
         presence: {
           allowEmpty: false,
         },
