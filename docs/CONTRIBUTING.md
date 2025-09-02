@@ -132,16 +132,17 @@ then `cd ` into your local copy.
 
 ## Windows Users
 
-On Windows, Budibase works best with *Git Bash* (comes with Git for Windows).  
-- Download Git for Windows: https://git-scm.com/download/win  
-- During installation, enable *“Git Bash Here”* option.  
+On Windows, Budibase works best with **Git Bash** (comes with Git for Windows).  
+1. Download Git for Windows: https://git-scm.com/download/win  
+2. During installation, enable **“Git Bash Here”**.  
+3. Open **Git Bash** and run all `yarn` and `lerna` commands there.
 
 Once installed, open Git Bash and run all yarn and lerna commands there.  
 
-⚠ If you prefer PowerShell or CMD, you must prefix environment variables differently:  
+⚠ If you prefer PowerShell, prefix environment variables differently:
 powershell
 setx DISABLE_V8_COMPILE_CACHE 1
-setx NODE_OPTIONS --max-old-space-size=1500
+setx NODE_OPTIONS "--max-old-space-size=1500"
 yarn build
 
 
