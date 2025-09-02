@@ -39,7 +39,7 @@
     "typescript": "5.9.2",
     "typescript-eslint": "8.17.0",
     "update-dotenv": "1.1.1",
-    "vite": "^5.4.19",
+    "vite": "^6.3.5",
     "yargs": "^17.7.2"
   },
   "scripts": {
