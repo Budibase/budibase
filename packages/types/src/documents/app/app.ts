@@ -15,7 +15,7 @@ export interface Workspace extends Document {
   tenantId: string
   status: string
   theme?: Theme
-  customTheme?: WorkspaceCustomTheme
+  customTheme?: AppCustomTheme
   revertableVersion?: string
   lockedBy?: User
   sessions?: SocketSession[]
@@ -67,7 +67,7 @@ export interface AppNavigationLink {
   icon?: string
 }
 
-export interface WorkspaceCustomTheme {
+export interface AppCustomTheme {
   buttonBorderRadius?: string
   primaryColor?: string
   primaryColorHover?: string
