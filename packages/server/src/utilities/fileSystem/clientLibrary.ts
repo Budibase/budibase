@@ -1,4 +1,5 @@
 import { objectStore } from "@budibase/backend-core"
+import { libDependencies } from "@budibase/types"
 import fs from "fs"
 import path, { join } from "path"
 import semver from "semver"
@@ -91,23 +92,26 @@ export async function backupClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function updateClientLibrary(appId: string) {
-  let manifest, client, apexCharts
+  let manifest, client
+  let dependencies = []
 
   if (env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
     manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
     client = clientPath
-    apexCharts = join(
-      path.dirname(path.dirname(clientPath)),
-      "dist",
-      "apexcharts.js"
-    )
+    for (const lib of libDependencies) {
+      dependencies.push(
+        join(path.dirname(path.dirname(clientPath)), "dist", lib.outFile)
+      )
+    }
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    apexCharts = resolve(TOP_LEVEL_PATH, "client", "apexcharts.js")
+    for (const lib of libDependencies) {
+      dependencies.push(resolve(TOP_LEVEL_PATH, "client", lib.outFile))
+    }
   }
 
   // Upload latest manifest and client library
@@ -127,23 +131,23 @@ export async function updateClientLibrary(appId: string) {
       ContentType: "application/javascript",
     },
   })
-  const apexChartsUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "_dependencies", "apexcharts.js"),
-    stream: fs.createReadStream(apexCharts),
-    extra: {
-      ContentType: "application/javascript",
-    },
-  })
+  let depUploads = []
+  for (const dependency of dependencies) {
+    depUploads.push(
+      objectStore.streamUpload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: join(appId, "_dependencies", path.basename(dependency)),
+        stream: fs.createReadStream(dependency),
+        extra: {
+          ContentType: "application/javascript",
+        },
+      })
+    )
+  }
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
 
-  await Promise.all([
-    manifestUpload,
-    clientUpload,
-    manifestSrc,
-    apexChartsUpload,
-  ])
+  await Promise.all([manifestUpload, clientUpload, manifestSrc, ...depUploads])
 
   return JSON.parse(await manifestSrc)
 }
