@@ -269,7 +269,7 @@ export async function rebootTrigger() {
   }
   // iterate through all production apps, find the reboot crons
   // and trigger events for them
-  const appIds = (await dbCore.getAllApps({
+  const appIds = (await dbCore.getAllWorkspaces({
     dev: false,
     idsOnly: true,
   })) as string[]

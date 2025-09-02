@@ -156,7 +156,7 @@ export const fetchAppsByIds = async (
   processedAppIds: string[],
   appPrefix: string
 ) => {
-  return await dbCore.getAppsByIDs(
+  return await dbCore.getWorkspacesByIDs(
     processedAppIds.map(appId => {
       return `${appPrefix}${appId}`
     })

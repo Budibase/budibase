@@ -26,7 +26,7 @@ function filterWorkspaceList(user: User, workspaces: Workspace[]) {
 export async function fetch(status: AppStatus, user: ContextUser) {
   const dev = status === AppStatus.DEV
   const all = status === AppStatus.ALL
-  let workspaces = (await dbCore.getAllApps({ dev, all })) as Workspace[]
+  let workspaces = (await dbCore.getAllWorkspaces({ dev, all })) as Workspace[]
 
   // need to type this correctly - add roles back in to convert from ContextUser to User
   const completeUser: User = {

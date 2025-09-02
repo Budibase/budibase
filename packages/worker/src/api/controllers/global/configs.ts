@@ -646,10 +646,13 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
       cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
       async (): Promise<ConfigChecklistResponse> => {
-        let apps = []
+        let workspaces = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist
-          apps = await dbCore.getAllApps({ idsOnly: true, efficient: true })
+          workspaces = await dbCore.getAllWorkspaces({
+            idsOnly: true,
+            efficient: true,
+          })
         }
 
         // They have set up SMTP
@@ -671,7 +674,7 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
 
         return {
           apps: {
-            checked: apps.length > 0,
+            checked: workspaces.length > 0,
             label: "Create your first app",
             link: "/builder/portal/workspaces",
           },

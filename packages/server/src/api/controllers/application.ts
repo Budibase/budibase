@@ -357,7 +357,7 @@ export async function fetchAppPackage(
 async function performAppCreate(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
+  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
@@ -677,7 +677,7 @@ export async function find(ctx: UserCtx) {
 export async function update(
   ctx: UserCtx<UpdateWorkspaceRequest, UpdateWorkspaceResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
+  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
   // validation
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
@@ -914,13 +914,13 @@ export async function duplicateApp(
 ) {
   const { name: appName, url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
-  const [app] = await dbCore.getAppsByIDs([sourceAppId])
+  const [app] = await dbCore.getWorkspacesByIDs([sourceAppId])
 
   if (!app) {
     ctx.throw(404, "Source app not found")
   }
 
-  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
+  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
 
   checkAppName(ctx, apps, appName)
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })

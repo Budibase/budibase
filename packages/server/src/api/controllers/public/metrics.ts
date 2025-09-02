@@ -13,9 +13,9 @@ export async function fetch(ctx: Ctx) {
 
   // *** APPS ***
   const allDatabases = await dbCore.getAllDbs()
-  const devAppIDs = await dbCore.getDevAppIDs()
-  const prodAppIDs = await dbCore.getProdAppIDs()
-  const allAppIds = await dbCore.getAllApps({ idsOnly: true })
+  const devAppIDs = await dbCore.getDevWorkspaceIDs()
+  const prodAppIDs = await dbCore.getProdWorkspaceIDs()
+  const allAppIds = await dbCore.getAllWorkspaces({ idsOnly: true })
 
   // *** USERS ***
   const usersObject = await userCore.getAllUserIds()

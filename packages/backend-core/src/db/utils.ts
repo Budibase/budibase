@@ -13,7 +13,7 @@ export * from "../docIds"
  * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
  * when using Pouch it will use the pouchdb-all-dbs package.
  * opts.efficient can be provided to make sure this call is always quick in a multi-tenant environment,
- * but it may not be 100% accurate in full efficiency mode (some tenantless apps may be missed).
+ * but it may not be 100% accurate in full efficiency mode (some tenantless workspaces may be missed).
  */
 export async function getAllDbs(opts = { efficient: false }) {
   const efficient = opts && opts.efficient
@@ -28,13 +28,13 @@ export async function getAllDbs(opts = { efficient: false }) {
     // just get all DBs when:
     // - single tenancy
     // - default tenant
-    //    - apps dbs don't contain tenant id
-    //    - non-default tenant dbs are filtered out application side in getAllApps
+    //    - workspaces dbs don't contain tenant id
+    //    - non-default tenant dbs are filtered out workspaces side in getAllWorkspaces
     await addDbs()
   } else {
-    // get prod apps
+    // get prod workspaces
     await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE, tenantId))
-    // get dev apps
+    // get dev workspaces
     await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
@@ -43,24 +43,24 @@ export async function getAllDbs(opts = { efficient: false }) {
 }
 
 /**
- * Lots of different points in the system need to find the full list of apps, this will
- * enumerate the entire CouchDB cluster and get the list of databases (every app).
+ * Lots of different points in the system need to find the full list of workspaces, this will
+ * enumerate the entire CouchDB cluster and get the list of databases (every workspace).
  *
- * @return returns the app information document stored in each app database.
+ * @return returns the workspace information document stored in each workspace database.
  */
-export async function getAllApps(opts: {
+export async function getAllWorkspaces(opts: {
   dev?: boolean
   all?: boolean
   idsOnly: true
   efficient?: boolean
 }): Promise<string[]>
-export async function getAllApps(opts?: {
+export async function getAllWorkspaces(opts?: {
   dev?: boolean
   all?: boolean
   idsOnly?: false
   efficient?: boolean
 }): Promise<Workspace[]>
-export async function getAllApps({
+export async function getAllWorkspaces({
   dev,
   all,
   idsOnly,
@@ -76,13 +76,13 @@ export async function getAllApps({
     tenantId = DEFAULT_TENANT_ID
   }
   let dbs = await getAllDbs({ efficient: efficient || false })
-  const appDbNames = dbs.filter((dbName: any) => {
+  const workspaceDbNames = dbs.filter((dbName: any) => {
     if (env.isTest() && !dbName) {
       return false
     }
 
     const split = dbName.split(SEPARATOR)
-    // it is an app, check the tenantId
+    // it is an workspace, check the tenantId
     if (split[0] === DocumentType.WORKSPACE) {
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
@@ -98,26 +98,30 @@ export async function getAllApps({
     return false
   })
   if (idsOnly) {
-    const devAppIds = appDbNames.filter(appId => isDevAppID(appId))
-    const prodAppIds = appDbNames.filter(appId => !isDevAppID(appId))
+    const devWorkspaceIds = workspaceDbNames.filter(workspaceId =>
+      isDevAppID(workspaceId)
+    )
+    const prodWorkspaceIds = workspaceDbNames.filter(
+      workspaceId => !isDevAppID(workspaceId)
+    )
     switch (dev) {
       case true:
-        return devAppIds
+        return devWorkspaceIds
       case false:
-        return prodAppIds
+        return prodWorkspaceIds
       default:
-        return appDbNames
+        return workspaceDbNames
     }
   }
-  const appPromises = appDbNames.map((app: any) =>
+  const workspacePromises = workspaceDbNames.map(workspace =>
     // skip setup otherwise databases could be re-created
-    getAppMetadata(app)
+    getAppMetadata(workspace)
   )
-  if (appPromises.length === 0) {
+  if (workspacePromises.length === 0) {
     return []
   } else {
-    const response = await Promise.allSettled(appPromises)
-    const apps = response
+    const response = await Promise.allSettled(workspacePromises)
+    const workspaces = response
       .filter(
         (result: any) =>
           result.status === "fulfilled" &&
@@ -125,26 +129,26 @@ export async function getAllApps({
       )
       .map(({ value }: any) => value)
     if (!all) {
-      return apps.filter((app: any) => {
+      return workspaces.filter((workspace: any) => {
         if (dev) {
-          return isDevApp(app)
+          return isDevApp(workspace)
         }
-        return !isDevApp(app)
+        return !isDevApp(workspace)
       })
     } else {
-      return apps.map((app: any) => ({
-        ...app,
-        status: isDevApp(app) ? "development" : "published",
+      return workspaces.map((workspace: any) => ({
+        ...workspace,
+        status: isDevApp(workspace) ? "development" : "published",
       }))
     }
   }
 }
 
-export async function getAppsByIDs(appIds: string[]) {
+export async function getWorkspacesByIDs(workspaceIds: string[]) {
   const settled = await Promise.allSettled(
-    appIds.map(appId => getAppMetadata(appId))
+    workspaceIds.map(workspaceId => getAppMetadata(workspaceId))
   )
-  // have to list the apps which exist, some may have been deleted
+  // have to list the workspaces which exist, some may have been deleted
   return settled
     .filter(
       promise =>
@@ -155,29 +159,29 @@ export async function getAppsByIDs(appIds: string[]) {
 }
 
 /**
- * Utility function for getAllApps but filters to production apps only.
+ * Utility function for getAllWorkspaces but filters to production workspaces only.
  */
-export async function getProdAppIDs() {
-  const apps = await getAllApps({ idsOnly: true })
-  return apps.filter((id: any) => !isDevAppID(id))
+export async function getProdWorkspaceIDs() {
+  const workspaces = await getAllWorkspaces({ idsOnly: true })
+  return workspaces.filter((id: any) => !isDevAppID(id))
 }
 
 /**
  * Utility function for the inverse of above.
  */
-export async function getDevAppIDs() {
-  const apps = await getAllApps({ idsOnly: true })
-  return apps.filter((id: any) => isDevAppID(id))
+export async function getDevWorkspaceIDs() {
+  const workspaces = await getAllWorkspaces({ idsOnly: true })
+  return workspaces.filter((id: any) => isDevAppID(id))
 }
 
-export function isSameAppID(
-  appId1: string | undefined,
-  appId2: string | undefined
+export function isSameWorkspaceID(
+  workspaceId1: string | undefined,
+  workspaceId2: string | undefined
 ) {
-  if (appId1 == undefined || appId2 == undefined) {
+  if (workspaceId1 == undefined || workspaceId2 == undefined) {
     return false
   }
-  return getProdWorkspaceID(appId1) === getProdWorkspaceID(appId2)
+  return getProdWorkspaceID(workspaceId1) === getProdWorkspaceID(workspaceId2)
 }
 
 export async function dbExists(dbName: any) {

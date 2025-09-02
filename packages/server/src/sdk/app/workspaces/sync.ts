@@ -92,7 +92,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
       finalUsers.push(user)
     }
   }
-  const devAppIds = await dbCore.getDevAppIDs()
+  const devAppIds = await dbCore.getDevWorkspaceIDs()
   let promises = []
   for (let devAppId of devAppIds) {
     const prodAppId = dbCore.getProdWorkspaceID(devAppId)

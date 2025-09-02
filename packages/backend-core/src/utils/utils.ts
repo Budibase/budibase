@@ -1,4 +1,4 @@
-import { getAllApps, getDevWorkspaceID } from "../db"
+import { getAllWorkspaces, getDevWorkspaceID } from "../db"
 import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
 import env from "../environment"
 import * as tenancy from "../tenancy"
@@ -38,7 +38,7 @@ export async function resolveAppUrl(ctx: Ctx) {
   // search prod apps for an url that matches
   const apps: Workspace[] = await context.doInTenant(
     tenantId,
-    () => getAllApps({ dev: false }) as Promise<Workspace[]>
+    () => getAllWorkspaces({ dev: false }) as Promise<Workspace[]>
   )
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl

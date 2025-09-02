@@ -17,7 +17,7 @@ export async function exportAppDump(
   const { appId } = ctx.query as any
   const { excludeRows, encryptPassword } = ctx.request.body
 
-  const [app] = await db.getAppsByIDs([appId])
+  const [app] = await db.getWorkspacesByIDs([appId])
   const appName = app.name
 
   // remove the 120 second limit for the request
