@@ -248,28 +248,31 @@
               />
             </div>
           </div>
-          {#if hasSelection}
-            <div class="selection-controls">
-              <Button warning on:click={bulkDeleteDialog.show}>
-                Delete selected ({selectedRows.length})
-              </Button>
-            </div>
-          {/if}
-          <Button cta disabled={loading} on:click={createManualBackup}>
-            Create backup
-          </Button>
+          <div class="actions">
+            {#if hasSelection}
+              <div class="selection-controls">
+                <Button warning on:click={bulkDeleteDialog.show}>
+                  Delete selected ({selectedRows.length})
+                </Button>
+              </div>
+            {/if}
+            <Button cta disabled={loading} on:click={createManualBackup}>
+              Create backup
+            </Button>
+          </div>
         </div>
         <div class="table">
           <Table
             {schema}
             disableSorting
-            allowSelectRows={false}
+            allowSelectRows={true}
             allowEditColumns={false}
             allowEditRows={false}
             data={backupData}
             {customRenderers}
             placeholderText="No backups found"
             border={false}
+            bind:selectedRows
             on:buttonclick={handleButtonClick}
           />
           <div class="pagination">

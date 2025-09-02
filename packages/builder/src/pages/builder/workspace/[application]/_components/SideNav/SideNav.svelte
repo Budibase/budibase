@@ -289,7 +289,6 @@
           <SideNavLink
             icon="gear"
             text="Settings"
-            url={$url("./settings")}
             {collapsed}
             on:click={() => {
               bb.settings()

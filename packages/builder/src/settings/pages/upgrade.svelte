@@ -101,7 +101,6 @@
   const getOfflineLicense = async () => {
     try {
       const license = await API.getOfflineLicense()
-      console.log("Test")
       if (license) {
         offlineLicense = {
           name: "license",

@@ -82,7 +82,7 @@
 
   .header {
     align-items: center;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-gray-800);
   }
 
   .icon {
@@ -110,12 +110,10 @@
   }
 
   .active {
-    background: var(--spectrum-global-color-green-100);
-    color: var(--spectrum-global-color-gray-900);
+    background: #004c2e;
   }
 
   .disabled {
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
+    background: var(--grey-3);
   }
 </style>

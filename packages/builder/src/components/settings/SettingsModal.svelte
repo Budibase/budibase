@@ -55,7 +55,7 @@
   $: resetScroll(matchedRoute?.entry?.path)
 
   // Pull out the default route
-  $: defaultRoute = $flattenedRoutes.find(r => r.path === "/people/users")
+  $: defaultRoute = $flattenedRoutes.find(r => r.path === "/general/info")
 
   // Default path when none is set
   $: if (!matchedRoute && flattenedRoutes && open) {
@@ -247,6 +247,10 @@
     padding: var(--spacing-l);
   }
 
+  .setting-page :global(> *) {
+    padding-bottom: 30px;
+  }
+
   .setting-main .setting-page {
     transition: box-shadow 0.2s ease;
   }
@@ -276,19 +280,20 @@
 
   .settings-nav {
     height: 100%;
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--background-alt);
     display: flex;
     flex-direction: column;
     border-top-left-radius: var(--spectrum-global-dimension-size-100);
     border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
     min-width: 250px;
+    border-right: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   .setting-main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--background);
   }
 
   .settings-nav .heading {
