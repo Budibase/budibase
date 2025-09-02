@@ -1,6 +1,6 @@
 import { context, objectStore } from "@budibase/backend-core"
-import { App, DocumentType } from "@budibase/types"
-import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
+import { DocumentType, Workspace } from "@budibase/types"
+import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
 
 describe("PWA Manifest", () => {
   let request = getRequest()
@@ -16,7 +16,7 @@ describe("PWA Manifest", () => {
   it("should serve a valid manifest.json with properly configured PWA", async () => {
     await context.doInAppContext(config.getAppId(), async () => {
       const appDb = context.getAppDB()
-      let appDoc = await appDb.get<App>(DocumentType.APP_METADATA)
+      let appDoc = await appDb.get<Workspace>(DocumentType.APP_METADATA)
 
       const pwaConfig = {
         name: "Test App",

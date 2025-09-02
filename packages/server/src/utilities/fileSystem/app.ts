@@ -1,13 +1,13 @@
-import { budibaseTempDir } from "../budibaseDir"
+import { context, objectStore } from "@budibase/backend-core"
+import { Workspace } from "@budibase/types"
 import fs from "fs"
 import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
-import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
-import env from "../../environment"
-import { objectStore, context } from "@budibase/backend-core"
-import { TOP_LEVEL_PATH } from "./filesystem"
 import { DocumentType } from "../../db/utils"
-import { App } from "@budibase/types"
+import env from "../../environment"
+import { budibaseTempDir } from "../budibaseDir"
+import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
+import { TOP_LEVEL_PATH } from "./filesystem"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -38,7 +38,7 @@ export const getComponentLibraryManifest = async (library: string) => {
 
   if (env.USE_LOCAL_COMPONENT_LIBS) {
     const db = context.getAppDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
+    const app = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
       const paths = [

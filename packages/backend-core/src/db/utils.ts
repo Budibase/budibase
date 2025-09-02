@@ -1,11 +1,11 @@
-import env from "../environment"
-import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
-import { getTenantId, getGlobalDBName } from "../context"
-import { doWithDB, directCouchAllDbs } from "./db"
+import { Database, Workspace } from "@budibase/types"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
-import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
-import { App, Database } from "@budibase/types"
+import { DEFAULT_TENANT_ID, DocumentType, SEPARATOR } from "../constants"
+import { getGlobalDBName, getTenantId } from "../context"
 import { getStartEndKeyURL } from "../docIds"
+import { getProdAppID, isDevApp, isDevAppID } from "../docIds/conversions"
+import env from "../environment"
+import { directCouchAllDbs, doWithDB } from "./db"
 
 export * from "../docIds"
 
@@ -59,7 +59,7 @@ export async function getAllApps(opts?: {
   all?: boolean
   idsOnly?: false
   efficient?: boolean
-}): Promise<App[]>
+}): Promise<Workspace[]>
 export async function getAllApps({
   dev,
   all,
@@ -70,7 +70,7 @@ export async function getAllApps({
   all?: boolean
   idsOnly?: boolean
   efficient?: boolean
-} = {}): Promise<App[] | string[]> {
+} = {}): Promise<Workspace[] | string[]> {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -151,7 +151,7 @@ export async function getAppsByIDs(appIds: string[]) {
         promise.status === "fulfilled" &&
         (promise.value as DeletedApp).state !== AppState.INVALID
     )
-    .map(promise => (promise as PromiseFulfilledResult<App>).value)
+    .map(promise => (promise as PromiseFulfilledResult<Workspace>).value)
 }
 
 /**
