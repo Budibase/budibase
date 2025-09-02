@@ -1,30 +1,30 @@
 import { builderSocket } from "../../websockets"
 import { Workspace, SocketSession } from "@budibase/types"
 
-export const enrichApps = async (apps: Workspace[]) => {
-  // Sessions can only exist for dev app IDs
-  const devAppIds = apps
-    .filter(app => app.status === "development")
-    .map(app => app.appId)
+export const enrichWorkspaces = async (workspaces: Workspace[]) => {
+  // Sessions can only exist for dev workspaces IDs
+  const devIds = workspaces
+    .filter(workspace => workspace.status === "development")
+    .map(workspace => workspace.appId)
 
-  // Get all sessions for all apps and enrich app list
-  const sessions = await builderSocket?.getRoomSessions(devAppIds)
+  // Get all sessions for all workspaces and enrich workspace list
+  const sessions = await builderSocket?.getRoomSessions(devIds)
   if (sessions?.length) {
-    let appSessionMap: Record<string, SocketSession[]> = {}
+    let workspaceSessionMap: Record<string, SocketSession[]> = {}
     sessions.forEach(session => {
       const room = session.room
       if (!room) {
         return
       }
-      if (!appSessionMap[room]) {
-        appSessionMap[room] = []
+      if (!workspaceSessionMap[room]) {
+        workspaceSessionMap[room] = []
       }
-      appSessionMap[room].push(session)
+      workspaceSessionMap[room].push(session)
     })
-    return apps.map(app => {
+    return workspaces.map(workspace => {
       // Shallow clone to avoid mutating original reference
-      let enriched = { ...app }
-      const sessions = appSessionMap[app.appId]
+      let enriched = { ...workspace }
+      const sessions = workspaceSessionMap[workspace.appId]
       if (sessions?.length) {
         enriched.sessions = sessions
       } else {
@@ -33,6 +33,6 @@ export const enrichApps = async (apps: Workspace[]) => {
       return enriched
     })
   } else {
-    return apps
+    return workspaces
   }
 }
