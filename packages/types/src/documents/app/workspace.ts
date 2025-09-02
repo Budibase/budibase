@@ -39,7 +39,7 @@ export interface Workspace extends Document {
   recaptchaEnabled?: boolean
 }
 
-interface WorkspaceInstance {
+export interface WorkspaceInstance {
   _id: string
 }
 
