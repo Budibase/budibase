@@ -72,13 +72,7 @@ export function queryParametersToKeyValue(
   return obj
 }
 
-export function customQueryIconText(
-  datasource: { source: SourceName },
-  query: Query
-) {
-  if (datasource.source !== IntegrationTypes.REST) {
-    return
-  }
+export function customQueryIconText(query: Query) {
   switch (query.queryVerb) {
     case "create":
       return "POST"
@@ -90,16 +84,12 @@ export function customQueryIconText(
       return "DEL"
     case "patch":
       return "PATCH"
+    default:
+      return
   }
 }
 
-export function customQueryIconColor(
-  datasource: { source: SourceName },
-  query: Query
-) {
-  if (datasource.source !== IntegrationTypes.REST) {
-    return
-  }
+export function customQueryIconColor(query: Query) {
   switch (query.queryVerb) {
     case "create":
       return "#dcc339"
