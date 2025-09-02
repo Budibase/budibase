@@ -13,7 +13,7 @@ export async function fetchAppComponentDefinitions(
 ) {
   try {
     const db = context.getWorkspaceDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
+    const app = await db.get<App>(DocumentType.WORKSPACE_METADATA)
 
     let componentManifests = await Promise.all(
       app.componentLibraries.map(async (library: any) => {

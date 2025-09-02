@@ -34,7 +34,7 @@ export async function exportAppDump(
 
   await context.doInWorkspaceContext(appId, async () => {
     const appDb = context.getWorkspaceDB()
-    const app = await appDb.get<App>(DocumentType.APP_METADATA)
+    const app = await appDb.get<App>(DocumentType.WORKSPACE_METADATA)
     await events.app.exported(app)
   })
 }

@@ -114,7 +114,7 @@ describe("Replication", () => {
       const opts = replication.appReplicateOpts({ isCreation: true })
 
       const appMetadataDoc = {
-        _id: DocumentType.APP_METADATA,
+        _id: DocumentType.WORKSPACE_METADATA,
         type: "app_metadata",
       }
 

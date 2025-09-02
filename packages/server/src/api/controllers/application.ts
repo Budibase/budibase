@@ -408,7 +408,7 @@ async function performAppCreate(
     }
 
     let newApplication: App = {
-      _id: DocumentType.APP_METADATA,
+      _id: DocumentType.WORKSPACE_METADATA,
       _rev: undefined,
       appId,
       type: "app",

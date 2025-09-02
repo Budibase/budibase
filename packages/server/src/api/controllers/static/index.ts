@@ -338,7 +338,7 @@ export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
   const db = context.getWorkspaceDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const appInfo = await db.get<App>(DocumentType.WORKSPACE_METADATA)
 
   if (!env.isJest()) {
     let appId = context.getWorkspaceId()
@@ -468,7 +468,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
 
   try {
     const db = context.getWorkspaceDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const appInfo = await db.get<App>(DocumentType.WORKSPACE_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)

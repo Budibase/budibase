@@ -114,7 +114,7 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.AUTOMATION_LOG)) {
           return false
         }
-        if (doc._id === DocumentType.APP_METADATA) {
+        if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }
         return filter ? filter(doc, params) : true

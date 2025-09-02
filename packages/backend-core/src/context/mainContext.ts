@@ -362,7 +362,7 @@ export async function ensureSnippetContext() {
   let snippets: Snippet[] | undefined
   const db = getWorkspaceDB()
   if (db) {
-    const workspace = await db.tryGet<App>(DocumentType.APP_METADATA)
+    const workspace = await db.tryGet<App>(DocumentType.WORKSPACE_METADATA)
     snippets = workspace?.snippets
   }
 

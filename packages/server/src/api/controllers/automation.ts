@@ -142,7 +142,7 @@ export async function clearLogError(
   const { automationId, appId } = ctx.request.body
   await context.doInWorkspaceContext(appId, async () => {
     const db = context.getProdWorkspaceDB()
-    const metadata = await db.get<App>(DocumentType.APP_METADATA)
+    const metadata = await db.get<App>(DocumentType.WORKSPACE_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (

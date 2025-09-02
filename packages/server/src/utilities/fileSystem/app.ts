@@ -38,7 +38,7 @@ export const getComponentLibraryManifest = async (library: string) => {
 
   if (env.USE_LOCAL_COMPONENT_LIBS) {
     const db = context.getWorkspaceDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
+    const app = await db.get<App>(DocumentType.WORKSPACE_METADATA)
 
     if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
       const paths = [
