@@ -35,7 +35,7 @@ export async function getAllDbs(opts = { efficient: false }) {
     // get prod apps
     await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE, tenantId))
     // get dev apps
-    await addDbs(getStartEndKeyURL(DocumentType.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
