@@ -5,7 +5,7 @@ import { getTenantIDFromWorkspaceID, isMultiTenant } from "../../context"
 jest.mock("../../context", () => ({
   getTenantId: jest.fn(() => "budibase"),
   isMultiTenant: jest.fn(() => true),
-  getTenantIDFromAppID: jest.fn(),
+  getTenantIDFromWorkspaceID: jest.fn(),
   getPlatformURL: jest.fn(() => "https://app.com"),
   DEFAULT_TENANT_ID: "default",
 }))
