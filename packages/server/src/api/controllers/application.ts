@@ -33,7 +33,6 @@ import {
   users,
   utils,
   configs,
-  features,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -72,7 +71,6 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FetchPublishedAppsResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -194,7 +192,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
-    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACES),
+    disabled: true,
     isDefault: true,
   })
 
@@ -513,17 +511,7 @@ async function performAppCreate(
       }
     }
 
-    if (
-      !addSampleData &&
-      !(await features.isEnabled(FeatureFlag.WORKSPACES)) &&
-      !(await sdk.workspaceApps.fetch()).length
-    ) {
-      await createDefaultWorkspaceApp()
-    }
-
-    if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
-      await disableAllAppsAndAutomations()
-    }
+    await disableAllAppsAndAutomations()
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
@@ -793,9 +781,7 @@ async function unpublishApp(ctx: UserCtx) {
   // automations only in production
   await cleanupAutomations(appId)
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
-    await disableAllAppsAndAutomations()
-  }
+  await disableAllAppsAndAutomations()
 
   await cache.app.invalidateAppMetadata(appId)
   return result

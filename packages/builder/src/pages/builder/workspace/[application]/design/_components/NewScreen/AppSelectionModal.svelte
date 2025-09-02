@@ -2,8 +2,6 @@
   import { ModalContent, Body, Select } from "@budibase/bbui"
   import { workspaceAppStore } from "@/stores/builder"
 
-  import { featureFlags } from "@/stores/portal"
-
   export let onConfirm: (_selectedAppId: string) => Promise<void> | void
   export let selectedAppId: string | undefined = undefined
 
@@ -43,7 +41,7 @@
       bind:value={selectedAppId}
     />
   </ModalContent>
-{:else if $featureFlags.WORKSPACES}
+{:else}
   <ModalContent
     title="Create App"
     confirmText="Create app"
