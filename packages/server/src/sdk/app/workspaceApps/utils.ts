@@ -6,11 +6,11 @@ export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
   const app = await sdk.applications.metadata.get()
-  const baseAppUrl = db.isProdAppID(app.appId)
+  const baseAppUrl = db.isProdWorkspaceID(app.appId)
     ? `/app/${app.url}`.replace("//", "/")
     : `/${app.appId}`
 
-  const embedAppUrl = db.isProdAppID(app.appId)
+  const embedAppUrl = db.isProdWorkspaceID(app.appId)
     ? `/embed/${app.url}`.replace("//", "/")
     : null
 

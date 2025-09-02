@@ -11,7 +11,7 @@ import {
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
     const appId = context.getWorkspaceId()
-    if (!dbCore.isProdAppID(appId)) {
+    if (!dbCore.isProdWorkspaceID(appId)) {
       const prodAppId = dbCore.getProdWorkspaceID(appId!)
       // if prod exists, then don't allow deleting
       const exists = await dbCore.dbExists(prodAppId)

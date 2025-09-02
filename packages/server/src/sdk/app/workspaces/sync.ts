@@ -121,7 +121,7 @@ export async function syncApp(
     }
   }
 
-  if (dbCore.isProdAppID(appId)) {
+  if (dbCore.isProdWorkspaceID(appId)) {
     throw new Error("This action cannot be performed for production apps")
   }
 

@@ -19,7 +19,7 @@ export function getAppUrl(opts?: { name?: string; url?: string }) {
 }
 
 export async function isAppPublished(prodAppId: string): Promise<boolean> {
-  if (db.isDevAppID(prodAppId)) {
+  if (db.isDevWorkspaceID(prodAppId)) {
     prodAppId = db.getProdWorkspaceID(prodAppId)
   }
 

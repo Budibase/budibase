@@ -7,7 +7,11 @@ import {
   DeletedWorkspace,
   getWorkspaceMetadata,
 } from "../cache/workspaceMetadata"
-import { isDevApp, isDevAppID, getProdWorkspaceID } from "../docIds/conversions"
+import {
+  isDevWorkspace,
+  isDevWorkspaceID,
+  getProdWorkspaceID,
+} from "../docIds/conversions"
 import { Workspace, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
 
@@ -103,10 +107,10 @@ export async function getAllWorkspaces({
   })
   if (idsOnly) {
     const devWorkspaceIds = workspaceDbNames.filter(workspaceId =>
-      isDevAppID(workspaceId)
+      isDevWorkspaceID(workspaceId)
     )
     const prodWorkspaceIds = workspaceDbNames.filter(
-      workspaceId => !isDevAppID(workspaceId)
+      workspaceId => !isDevWorkspaceID(workspaceId)
     )
     switch (dev) {
       case true:
@@ -135,14 +139,14 @@ export async function getAllWorkspaces({
     if (!all) {
       return workspaces.filter((workspace: any) => {
         if (dev) {
-          return isDevApp(workspace)
+          return isDevWorkspace(workspace)
         }
-        return !isDevApp(workspace)
+        return !isDevWorkspace(workspace)
       })
     } else {
       return workspaces.map((workspace: any) => ({
         ...workspace,
-        status: isDevApp(workspace) ? "development" : "published",
+        status: isDevWorkspace(workspace) ? "development" : "published",
       }))
     }
   }
@@ -167,7 +171,7 @@ export async function getWorkspacesByIDs(workspaceIds: string[]) {
  */
 export async function getProdWorkspaceIDs() {
   const workspaces = await getAllWorkspaces({ idsOnly: true })
-  return workspaces.filter((id: any) => !isDevAppID(id))
+  return workspaces.filter((id: any) => !isDevWorkspaceID(id))
 }
 
 /**
@@ -175,7 +179,7 @@ export async function getProdWorkspaceIDs() {
  */
 export async function getDevWorkspaceIDs() {
   const workspaces = await getAllWorkspaces({ idsOnly: true })
-  return workspaces.filter((id: any) => isDevAppID(id))
+  return workspaces.filter((id: any) => isDevWorkspaceID(id))
 }
 
 export function isSameWorkspaceID(

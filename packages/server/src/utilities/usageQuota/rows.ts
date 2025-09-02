@@ -13,7 +13,7 @@ function getAppPairs(appIds: string[]) {
     if (!pairs[devId]) {
       pairs[devId] = {}
     }
-    if (dbCore.isDevAppID(appId)) {
+    if (dbCore.isDevWorkspaceID(appId)) {
       pairs[devId].devId = appId
     } else {
       pairs[devId].prodId = appId

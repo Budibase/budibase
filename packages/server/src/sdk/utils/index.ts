@@ -7,7 +7,7 @@ export async function getEnvironmentVariables() {
   let envVars = context.getEnvironmentVariables()
   if (!envVars) {
     const appId = context.getWorkspaceId()
-    const appEnv = dbCore.isDevAppID(appId)
+    const appEnv = dbCore.isDevWorkspaceID(appId)
       ? AppEnvironment.DEVELOPMENT
       : AppEnvironment.PRODUCTION
 

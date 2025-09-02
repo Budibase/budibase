@@ -7,7 +7,7 @@ import sdk from "../../sdk"
 export async function getRoutingInfo(
   urlPath: string
 ): Promise<ScreenRoutesViewOutput[]> {
-  const isDev = coreDb.isDevAppID(context.getWorkspaceId())
+  const isDev = coreDb.isDevWorkspaceID(context.getWorkspaceId())
   const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
   if (!workspaceApp) {
     return []
