@@ -12,5 +12,5 @@ export async function clearErrors(backupId?: string) {
     delete metadata.backupErrors[backupId]
   }
   await database.put(metadata)
-  await cache.app.invalidateAppMetadata(metadata.appId, metadata)
+  await cache.app.invalidateWorkspaceMetadata(metadata.appId, metadata)
 }

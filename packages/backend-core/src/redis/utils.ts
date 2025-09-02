@@ -20,7 +20,7 @@ export enum Databases {
   SESSIONS = "session",
   USER_CACHE = "users",
   FLAGS = "flags",
-  APP_METADATA = "appMetadata",
+  WORKSPACE_METADATA = "appMetadata",
   QUERY_VARS = "queryVars",
   LICENSES = "license",
   GENERIC_CACHE = "data_cache",

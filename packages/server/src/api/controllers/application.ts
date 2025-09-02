@@ -513,7 +513,7 @@ async function performAppCreate(
 
     await disableAllAppsAndAutomations()
 
-    await cache.app.invalidateAppMetadata(appId, newApplication)
+    await cache.app.invalidateWorkspaceMetadata(appId, newApplication)
     return newApplication
   })
 }
@@ -789,13 +789,13 @@ async function unpublishApp(ctx: UserCtx) {
 
   await disableAllAppsAndAutomations()
 
-  await cache.app.invalidateAppMetadata(appId)
+  await cache.app.invalidateWorkspaceMetadata(appId)
   return result
 }
 
 async function invalidateAppCache(appId: string) {
-  await cache.app.invalidateAppMetadata(dbCore.getDevWorkspaceID(appId))
-  await cache.app.invalidateAppMetadata(dbCore.getProdWorkspaceID(appId))
+  await cache.app.invalidateWorkspaceMetadata(dbCore.getDevWorkspaceID(appId))
+  await cache.app.invalidateWorkspaceMetadata(dbCore.getProdWorkspaceID(appId))
 }
 
 async function destroyApp(ctx: UserCtx) {
@@ -998,7 +998,7 @@ export async function updateAppPackage(
 
     await db.put(newAppPackage)
     // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateAppMetadata(appId)
+    await cache.app.invalidateWorkspaceMetadata(appId)
     return newAppPackage
   })
 }

@@ -2,7 +2,11 @@ import env from "../environment"
 import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
-import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
+import {
+  WorkspaceState,
+  DeletedWorkspace,
+  getWorkspaceMetadata,
+} from "../cache/workspaceMetadata"
 import { isDevApp, isDevAppID, getProdWorkspaceID } from "../docIds/conversions"
 import { Workspace, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
@@ -115,7 +119,7 @@ export async function getAllWorkspaces({
   }
   const workspacePromises = workspaceDbNames.map(workspace =>
     // skip setup otherwise databases could be re-created
-    getAppMetadata(workspace)
+    getWorkspaceMetadata(workspace)
   )
   if (workspacePromises.length === 0) {
     return []
@@ -125,7 +129,7 @@ export async function getAllWorkspaces({
       .filter(
         (result: any) =>
           result.status === "fulfilled" &&
-          result.value?.state !== AppState.INVALID
+          result.value?.state !== WorkspaceState.INVALID
       )
       .map(({ value }: any) => value)
     if (!all) {
@@ -146,14 +150,14 @@ export async function getAllWorkspaces({
 
 export async function getWorkspacesByIDs(workspaceIds: string[]) {
   const settled = await Promise.allSettled(
-    workspaceIds.map(workspaceId => getAppMetadata(workspaceId))
+    workspaceIds.map(workspaceId => getWorkspaceMetadata(workspaceId))
   )
   // have to list the workspaces which exist, some may have been deleted
   return settled
     .filter(
       promise =>
         promise.status === "fulfilled" &&
-        (promise.value as DeletedApp).state !== AppState.INVALID
+        (promise.value as DeletedWorkspace).state !== WorkspaceState.INVALID
     )
     .map(promise => (promise as PromiseFulfilledResult<Workspace>).value)
 }

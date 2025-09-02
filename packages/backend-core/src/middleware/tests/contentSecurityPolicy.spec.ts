@@ -77,12 +77,12 @@ describe("contentSecurityPolicy middleware", () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation()
     const error = new Error("Test error")
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(() => {
+    app.getWorkspaceMetadata.mockImplementation(() => {
       throw error
     })
     await contentSecurityPolicy(ctx, next)
 
-    expect(app.getAppMetadata).toHaveBeenCalledWith(fakeAppId)
+    expect(app.getWorkspaceMetadata).toHaveBeenCalledWith(fakeAppId)
     expect(consoleSpy).toHaveBeenCalledWith(
       `Error occurred in Content-Security-Policy middleware: ${error}`
     )
@@ -102,7 +102,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): Workspace {
+    app.getWorkspaceMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",
@@ -129,7 +129,7 @@ describe("contentSecurityPolicy middleware", () => {
 
     const cspHeader = ctx.set.mock.calls[0][1]
     expect(cspHeader).toContain(`default-src 'self' ${domain};`)
-    expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
+    expect(app.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
 
@@ -146,7 +146,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): Workspace {
+    app.getWorkspaceMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",
@@ -174,7 +174,7 @@ describe("contentSecurityPolicy middleware", () => {
     const cspHeader = ctx.set.mock.calls[0][1]
     expect(cspHeader).toContain(`default-src 'self' ${validDomain};`)
     expect(cspHeader).not.toContain(invalidDomain)
-    expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
+    expect(app.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
 })
