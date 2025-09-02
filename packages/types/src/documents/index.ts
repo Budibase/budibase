@@ -1,5 +1,5 @@
 export * from "./account"
-export * from "./app"
+export * from "./workspace"
 export * from "./global"
 export * from "./platform"
 export * from "./document"
