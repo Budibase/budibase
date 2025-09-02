@@ -38,14 +38,6 @@ export function generateRowID(tableId: string, id?: string) {
 }
 
 /**
- * Generates a new workspace ID.
- * @returns The new workspace ID which the workspace doc can be stored under.
- */
-export function generateWorkspaceID() {
-  return `${DocumentType.WORKSPACE}${SEPARATOR}${newid()}`
-}
-
-/**
  * Generates a new global user ID.
  * @returns The new user ID which the user doc can be stored under.
  */

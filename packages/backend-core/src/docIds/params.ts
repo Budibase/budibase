@@ -65,20 +65,6 @@ export function getQueryIndex(viewName: ViewName) {
 }
 
 /**
- * Gets parameters for retrieving workspaces.
- */
-export function getWorkspaceParams(
-  id = "",
-  otherProps: Partial<DatabaseQueryOpts> = {}
-): DatabaseQueryOpts {
-  return {
-    ...otherProps,
-    startkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}`,
-    endkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
-  }
-}
-
-/**
  * Gets parameters for retrieving users.
  */
 export function getGlobalUserParams(
