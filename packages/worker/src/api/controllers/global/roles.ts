@@ -8,7 +8,7 @@ import {
 import sdk from "../../../sdk"
 import {
   Ctx,
-  App,
+  Workspace,
   FetchGlobalRolesResponse,
   FindGlobalRoleResponse,
   RemoveAppRoleResponse,
@@ -27,7 +27,7 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
     const roleList = await Promise.all(promises)
     const response: any = {}
     for (let app of apps) {
-      const deployedAppId = dbCore.getProdAppID(app.appId)
+      const deployedAppId = dbCore.getProdWorkspaceID(app.appId)
       response[deployedAppId] = {
         roles: roleList.shift(),
         name: app.name,
@@ -41,16 +41,21 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
 
 export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   const appId = ctx.params.appId
-  await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
-    const db = context.getAppDB()
-    const app = await db.get<App>(dbCore.DocumentType.APP_METADATA)
-    ctx.body = {
-      roles: await roles.getAllRoles(),
-      name: app.name,
-      version: app.version,
-      url: app.url,
+  await context.doInWorkspaceContext(
+    dbCore.getDevWorkspaceID(appId),
+    async () => {
+      const db = context.getWorkspaceDB()
+      const app = await db.get<Workspace>(
+        dbCore.DocumentType.WORKSPACE_METADATA
+      )
+      ctx.body = {
+        roles: await roles.getAllRoles(),
+        name: app.name,
+        version: app.version,
+        url: app.url,
+      }
     }
-  })
+  )
 }
 
 export async function removeAppRole(ctx: Ctx<void, RemoveAppRoleResponse>) {
@@ -59,7 +64,7 @@ export async function removeAppRole(ctx: Ctx<void, RemoveAppRoleResponse>) {
   const users = await sdk.users.db.allUsers()
   const bulk = []
   const cacheInvalidations = []
-  const prodAppId = dbCore.getProdAppID(appId)
+  const prodAppId = dbCore.getProdWorkspaceID(appId)
   for (let user of users) {
     let updated = false
     if (user.roles[prodAppId]) {

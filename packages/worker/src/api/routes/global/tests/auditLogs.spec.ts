@@ -36,7 +36,7 @@ describe("/api/global/auditlogs (%s)", () => {
           for (let i = 0; i < USER_AUDIT_LOG_COUNT; i++) {
             await events.user.created(structures.users.user())
           }
-          await context.doInAppContext(APP_ID, async () => {
+          await context.doInWorkspaceContext(APP_ID, async () => {
             await events.app.created(structures.apps.app(APP_ID))
           })
           // fetch the user created events

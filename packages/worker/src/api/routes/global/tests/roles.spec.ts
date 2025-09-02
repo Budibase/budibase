@@ -1,7 +1,7 @@
 import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, roles } from "@budibase/backend-core"
 import {
-  App,
+  Workspace,
   Database,
   BuiltinPermissionID,
   WithoutDocMetadata,
@@ -16,7 +16,7 @@ jest.mock("@budibase/backend-core", () => {
     },
     context: {
       ...core.context,
-      getAppDB: jest.fn(),
+      getWorkspaceDB: jest.fn(),
     },
   }
 })
@@ -35,7 +35,9 @@ async function addAppMetadata() {
   })
 }
 
-async function updateAppMetadata(update: Partial<WithoutDocMetadata<App>>) {
+async function updateAppMetadata(
+  update: Partial<WithoutDocMetadata<Workspace>>
+) {
   const app = await appDb.get("app_metadata")
   await appDb.put({
     ...app,
@@ -60,7 +62,7 @@ describe("/api/global/roles", () => {
   beforeEach(async () => {
     appId = db.generateAppID(config.tenantId)
     appDb = db.getDB(appId)
-    const mockAppDB = context.getAppDB as jest.Mock
+    const mockAppDB = context.getWorkspaceDB as jest.Mock
     mockAppDB.mockReturnValue(appDb)
 
     await addAppMetadata()

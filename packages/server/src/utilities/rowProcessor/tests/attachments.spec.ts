@@ -23,7 +23,7 @@ jest.mock("@budibase/backend-core", () => {
     },
     db: {
       isProdAppID: jest.fn(),
-      getProdAppID: jest.fn(),
+      getProdWorkspaceID: jest.fn(),
       dbExists: jest.fn(),
     },
   }

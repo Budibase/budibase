@@ -206,7 +206,7 @@ describe("context", () => {
           context.doInWorkspaceMigrationContext(db.generateAppID(), () => {}),
       ],
       [
-        "doInAppContext",
+        "doInWorkspaceContext",
         () => context.doInWorkspaceContext(db.generateAppID(), () => {}),
       ],
       [
