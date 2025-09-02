@@ -2,7 +2,7 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { getAppMigrationVersion } from "../../../appMigrations"
+import { getWorkspaceMigrationVersion } from "../../../appMigrations"
 import * as appMigrations from "../../../appMigrations/migrations"
 
 jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
@@ -137,7 +137,7 @@ describe("/templates", () => {
       })
 
       await config.withApp(app, async () => {
-        const migrationVersion = await getAppMigrationVersion(app.appId)
+        const migrationVersion = await getWorkspaceMigrationVersion(app.appId)
 
         expect(migrationVersion).toBe("202506021500_test")
 

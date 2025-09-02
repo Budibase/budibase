@@ -14,10 +14,10 @@ import {
 } from "../../../db/utils"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
-import { AppMigration, updateAppMigrationMetadata } from "../../"
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../../"
 import sdk from "../../../sdk"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20240604153647_initial_sqs",
     func: migration,
@@ -82,8 +82,8 @@ describe.each([
   beforeEach(async () => {
     for (const appId of [config.getAppId(), config.getProdAppId()]) {
       await config.doInTenant(async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "",
         })
       })

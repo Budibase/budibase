@@ -22,9 +22,9 @@ export const appMigrations = (async (ctx: UserCtx, next: Next) => {
 
 export async function skipMigrationRedirect(ctx: UserCtx, next: Next) {
   const result = await next()
-  if (ctx.response.get(Header.MIGRATING_APP)) {
+  if (ctx.response.get(Header.MIGRATING_WORKSPACE)) {
     console.log("Skipping migration redirect")
-    ctx.response.remove(Header.MIGRATING_APP)
+    ctx.response.remove(Header.MIGRATING_WORKSPACE)
   }
 
   return result

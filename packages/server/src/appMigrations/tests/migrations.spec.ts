@@ -2,14 +2,14 @@ import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 import {
-  AppMigration,
+  WorkspaceMigration,
   getLatestEnabledMigrationId,
   checkMissingMigrations,
 } from "../index"
 import {
-  getAppMigrationVersion,
-  updateAppMigrationMetadata,
-} from "../appMigrationMetadata"
+  getWorkspaceMigrationVersion,
+  updateWorkspaceMigrationMetadata,
+} from "../workspaceMigrationMetadata"
 
 jest.mock<typeof migrations>("../migrations", () => ({
   MIGRATIONS: [
@@ -30,7 +30,9 @@ describe("migrations", () => {
     await config.init()
 
     await config.doInContext(config.getAppId(), async () => {
-      const migrationVersion = await getAppMigrationVersion(config.getAppId())
+      const migrationVersion = await getWorkspaceMigrationVersion(
+        config.getAppId()
+      )
 
       expect(migrationVersion).toEqual("20231211101320_test")
     })
@@ -43,7 +45,7 @@ describe("migrations", () => {
     const appId = config.getAppId()
 
     await config.api.application.get(appId, {
-      headersNotPresent: [Header.MIGRATING_APP],
+      headersNotPresent: [Header.MIGRATING_WORKSPACE],
     })
   })
 
@@ -60,7 +62,7 @@ describe("migrations", () => {
 
     await config.api.application.get(appId, {
       headers: {
-        [Header.MIGRATING_APP]: appId,
+        [Header.MIGRATING_WORKSPACE]: appId,
       },
     })
   })
@@ -70,7 +72,7 @@ describe("migrations", () => {
       MIGRATION_ID2 = "20231211105812_new-test",
       MIGRATION_ID3 = "20231211105814_new-test"
     // create some migrations to test with
-    const migrations: AppMigration[] = [
+    const migrations: WorkspaceMigration[] = [
       {
         id: MIGRATION_ID1,
         func: migrationLogic(),
@@ -108,8 +110,8 @@ describe("migrations", () => {
 
       // Set app to first migration
       await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "20231211101320_test",
         })
       })
@@ -121,7 +123,10 @@ describe("migrations", () => {
         checkMissingMigrations(ctx, mockNext, appId)
       )
 
-      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(ctx.response.set).toHaveBeenCalledWith(
+        Header.MIGRATING_WORKSPACE,
+        appId
+      )
       expect(mockNext).toHaveBeenCalled()
     })
 
@@ -132,8 +137,8 @@ describe("migrations", () => {
 
       // Set app to latest migration
       await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "20231211101340_test3",
         })
       })
@@ -156,8 +161,8 @@ describe("migrations", () => {
 
       // Set app to non-existent migration
       await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "nonexistent_migration",
         })
       })
@@ -169,7 +174,10 @@ describe("migrations", () => {
         checkMissingMigrations(ctx, mockNext, appId)
       )
 
-      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(ctx.response.set).toHaveBeenCalledWith(
+        Header.MIGRATING_WORKSPACE,
+        appId
+      )
       expect(mockNext).toHaveBeenCalled()
     })
   })

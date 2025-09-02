@@ -7,7 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { Database, Document } from "@budibase/types"
 
-export interface AppMigrationDoc extends Document {
+export interface WorkspaceMigrationDoc extends Document {
   version: string
   initialVersion: string
   history: Record<string, { runAt: string }>
@@ -15,21 +15,23 @@ export interface AppMigrationDoc extends Document {
 
 const EXPIRY_SECONDS = Duration.fromDays(1).toSeconds()
 
-async function getFromDB(appId: string) {
+async function getFromDB(workspaceId: string) {
   return db.doWithDB(
-    appId,
+    workspaceId,
     (db: Database) => {
-      return db.get<AppMigrationDoc>(DesignDocuments.MIGRATIONS)
+      return db.get<WorkspaceMigrationDoc>(DesignDocuments.MIGRATIONS)
     },
     { skip_setup: true }
   )
 }
 
-export const getAppMigrationCacheKey = (appId: string) =>
-  `appmigrations_${env.VERSION}_${appId}`
+export const getWorkspaceMigrationCacheKey = (workspaceId: string) =>
+  `workspacemigrations_${env.VERSION}_${workspaceId}`
 
-export async function getAppMigrationVersion(appId: string): Promise<string> {
-  const cacheKey = getAppMigrationCacheKey(appId)
+export async function getWorkspaceMigrationVersion(
+  workspaceId: string
+): Promise<string> {
+  const cacheKey = getWorkspaceMigrationCacheKey(workspaceId)
 
   let version: string | undefined = await cache.get(cacheKey)
 
@@ -39,7 +41,7 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
   }
 
   try {
-    const metadata = await getFromDB(appId)
+    const metadata = await getFromDB(workspaceId)
     version = metadata.version || ""
   } catch (err: any) {
     if (err.status !== 404) {
@@ -57,45 +59,45 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
   return version
 }
 
-export async function updateAppMigrationMetadata({
-  appId,
+export async function updateWorkspaceMigrationMetadata({
+  workspaceId,
   version,
   skipHistory,
 }: {
-  appId: string
+  workspaceId: string
   version: string
   skipHistory?: boolean
 }): Promise<void> {
-  const appDb = db.getDB(appId)
-  let appMigrationDoc: AppMigrationDoc
+  const workspaceDb = db.getDB(workspaceId)
+  let workspaceMigrationDoc: WorkspaceMigrationDoc
 
   try {
-    appMigrationDoc = await getFromDB(appId)
+    workspaceMigrationDoc = await getFromDB(workspaceId)
   } catch (err: any) {
     if (err.status !== 404) {
       throw err
     }
 
-    appMigrationDoc = {
+    workspaceMigrationDoc = {
       _id: DesignDocuments.MIGRATIONS,
       version: "",
       initialVersion: version,
       history: {},
     }
-    await appDb.put(appMigrationDoc)
-    appMigrationDoc = await getFromDB(appId)
+    await workspaceDb.put(workspaceMigrationDoc)
+    workspaceMigrationDoc = await getFromDB(workspaceId)
   }
 
-  const updatedMigrationDoc: AppMigrationDoc = {
-    ...appMigrationDoc,
+  const updatedMigrationDoc: WorkspaceMigrationDoc = {
+    ...workspaceMigrationDoc,
     version,
   }
   if (!skipHistory) {
     updatedMigrationDoc.history[version] = { runAt: new Date().toISOString() }
   }
-  await appDb.put(updatedMigrationDoc)
+  await workspaceDb.put(updatedMigrationDoc)
 
-  const cacheKey = getAppMigrationCacheKey(appId)
+  const cacheKey = getWorkspaceMigrationCacheKey(workspaceId)
 
   await cache.destroy(cacheKey)
 }

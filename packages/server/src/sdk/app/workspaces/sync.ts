@@ -110,23 +110,23 @@ export async function syncUsersToAllApps(userIds: string[]) {
   }
 }
 
-export async function syncApp(
-  appId: string,
+export async function syncWorkspace(
+  workspaceId: string,
   opts?: { automationOnly?: boolean }
 ): Promise<{ message: string }> {
-  if (env.DISABLE_AUTO_PROD_APP_SYNC) {
+  if (env.DISABLE_AUTO_PROD_WORKSPACE_SYNC) {
     return {
       message:
-        "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable.",
+        "Workspace sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable.",
     }
   }
 
-  if (dbCore.isProdWorkspaceID(appId)) {
-    throw new Error("This action cannot be performed for production apps")
+  if (dbCore.isProdWorkspaceID(workspaceId)) {
+    throw new Error("This action cannot be performed for production workspaces")
   }
 
   // replicate prod to dev
-  const prodAppId = dbCore.getProdWorkspaceID(appId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
 
   // specific case, want to make sure setup is skipped
   const prodDb = context.getProdWorkspaceDB({ skip_setup: true })
@@ -135,11 +135,11 @@ export async function syncApp(
   let error
   if (exists) {
     const replication = new dbCore.Replication({
-      source: prodAppId,
-      target: appId,
+      source: prodWorkspaceId,
+      target: workspaceId,
     })
     try {
-      const replOpts = replication.appReplicateOpts()
+      const replOpts = replication.workspaceReplicateOpts()
       if (opts?.automationOnly) {
         replOpts.filter = (doc: any) =>
           doc._id.startsWith(dbCore.DocumentType.AUTOMATION)

@@ -507,8 +507,8 @@ async function performAppCreate(
         await processMigrations(appId)
       } else if (!isImport) {
         // Initialise the app migration version as the latest one
-        await appMigrations.updateAppMigrationMetadata({
-          appId,
+        await appMigrations.updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: latestMigrationId,
           skipHistory: true,
         })
@@ -810,7 +810,7 @@ async function destroyApp(ctx: UserCtx) {
   // check if we need to unpublish first
   if (await dbCore.dbExists(appId)) {
     // app is deployed, run through unpublish flow
-    await sdk.workspaces.syncApp(devAppId, {
+    await sdk.workspaces.syncWorkspace(devAppId, {
       automationOnly: true,
     })
     await unpublishApp(ctx)
@@ -879,7 +879,7 @@ export async function unpublish(
 export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   const appId = ctx.params.appId
   try {
-    ctx.body = await sdk.workspaces.syncApp(appId)
+    ctx.body = await sdk.workspaces.syncWorkspace(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err.message)
   }

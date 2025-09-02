@@ -23,7 +23,7 @@ describe("appMigrations middleware", () => {
       const next = jest.fn().mockResolvedValue("next-result")
       const result = await skipMigrationRedirect(ctx, next)
 
-      expect(ctx.response.get(Header.MIGRATING_APP)).toBeUndefined()
+      expect(ctx.response.get(Header.MIGRATING_WORKSPACE)).toBeUndefined()
 
       expect(next).toHaveBeenCalledTimes(1)
       expect(result).toBe("next-result")
@@ -33,11 +33,11 @@ describe("appMigrations middleware", () => {
       const next = jest.fn().mockResolvedValue("next-result")
 
       const consoleSpy = jest.spyOn(console, "log").mockImplementation()
-      ctx.response.set(Header.MIGRATING_APP, "mockHeader")
+      ctx.response.set(Header.MIGRATING_WORKSPACE, "mockHeader")
 
-      expect(ctx.response.get(Header.MIGRATING_APP)).toBeDefined()
+      expect(ctx.response.get(Header.MIGRATING_WORKSPACE)).toBeDefined()
       const result = await skipMigrationRedirect(ctx, next)
-      expect(ctx.response.get(Header.MIGRATING_APP)).toBeUndefined()
+      expect(ctx.response.get(Header.MIGRATING_WORKSPACE)).toBeUndefined()
 
       expect(next).toHaveBeenCalledTimes(1)
       expect(result).toBe("next-result")

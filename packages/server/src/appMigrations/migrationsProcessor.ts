@@ -1,122 +1,137 @@
 import { context, db, logging } from "@budibase/backend-core"
 
 import {
-  getAppMigrationVersion,
-  updateAppMigrationMetadata,
-} from "./appMigrationMetadata"
-import { AppMigration, doInMigrationLock } from "."
+  getWorkspaceMigrationVersion,
+  updateWorkspaceMigrationMetadata,
+} from "./workspaceMigrationMetadata"
+import { WorkspaceMigration, doInMigrationLock } from "."
 import { MIGRATIONS } from "./migrations"
 import sdk from "../sdk"
 import tracer from "dd-trace"
 
-async function getPendingMigrationsForApp(
-  appId: string,
-  allMigrations: AppMigration[]
-): Promise<AppMigration[]> {
-  const currentVersion = await getAppMigrationVersion(appId)
+async function getPendingMigrationsForWorkspace(
+  workspaceId: string,
+  allMigrations: WorkspaceMigration[]
+): Promise<WorkspaceMigration[]> {
+  const currentVersion = await getWorkspaceMigrationVersion(workspaceId)
   const currentIndex = allMigrations.findIndex(m => m.id === currentVersion)
   return allMigrations.slice(currentIndex + 1)
 }
 
 function getAllPendingMigrationIds(
-  pendingMigrationsPerApp: Record<string, AppMigration[]>
+  pendingMigrationsPerWorkspace: Record<string, WorkspaceMigration[]>
 ): string[] {
-  return Object.values(pendingMigrationsPerApp)
+  return Object.values(pendingMigrationsPerWorkspace)
     .flatMap(migrations => migrations)
     .map(migration => migration.id)
 }
 
 function getUniquePendingMigrations(
-  allMigrations: AppMigration[],
+  allMigrations: WorkspaceMigration[],
   pendingMigrationIds: string[]
-): AppMigration[] {
+): WorkspaceMigration[] {
   return allMigrations.filter(migration =>
     pendingMigrationIds.includes(migration.id)
   )
 }
 
-async function runMigrationForApp({
+async function runMigrationForWorkspace({
   migrationId,
   migrationFunc,
-  appId,
+  workspaceId,
 }: {
   migrationId: string
   migrationFunc: () => Promise<void>
-  appId: string
+  workspaceId: string
 }): Promise<void> {
-  await tracer.trace("runMigrationForApp", async span => {
+  await tracer.trace("runMigrationForWorkspace", async span => {
     span.addTags({
-      appId,
+      workspaceId,
       migrationId,
     })
-    await context.doInWorkspaceMigrationContext(appId, async () => {
-      console.log(`Running migration "${migrationId}" for app "${appId}"`)
+    await context.doInWorkspaceMigrationContext(workspaceId, async () => {
+      console.log(
+        `Running migration "${migrationId}" for workspace "${workspaceId}"`
+      )
       await migrationFunc()
-      console.log(`Migration "${migrationId}" ran for app "${appId}"`)
+      console.log(
+        `Migration "${migrationId}" ran for workspace "${workspaceId}"`
+      )
     })
   })
 }
 
-async function syncDevApp(devAppId: string): Promise<void> {
-  await tracer.trace("runMigrationForApp", async span => {
+async function syncDevWorkspace(devWorkspaceId: string): Promise<void> {
+  await tracer.trace("runMigrationForWorkspace", async span => {
     span.addTags({
-      appId: devAppId,
+      workspaceId: devWorkspaceId,
     })
-    await context.doInWorkspaceMigrationContext(devAppId, async () => {
-      await sdk.workspaces.syncApp(devAppId)
-      console.log(`App synchronized for dev "${devAppId}"`)
+    await context.doInWorkspaceMigrationContext(devWorkspaceId, async () => {
+      await sdk.workspaces.syncWorkspace(devWorkspaceId)
+      console.log(`Workspace synchronized for dev "${devWorkspaceId}"`)
     })
   })
 }
 
 async function updateMigrationVersion(
-  appId: string,
+  workspaceId: string,
   migrationId: string
 ): Promise<void> {
-  await context.doInWorkspaceMigrationContext(appId, () =>
-    updateAppMigrationMetadata({
-      appId,
+  await context.doInWorkspaceMigrationContext(workspaceId, () =>
+    updateWorkspaceMigrationMetadata({
+      workspaceId: workspaceId,
       version: migrationId,
     })
   )
 }
 
 export async function processMigrations(
-  appId: string,
-  migrations: AppMigration[] = MIGRATIONS
+  workspaceId: string,
+  migrations: WorkspaceMigration[] = MIGRATIONS
 ) {
-  console.log(`Processing app migration for "${appId}"`)
+  console.log(`Processing workspace migration for "${workspaceId}"`)
 
-  await tracer.trace("runMigrationForApp", async span => {
-    span.addTags({ appId })
+  await tracer.trace("runMigrationForWorkspace", async span => {
+    span.addTags({ workspaceId })
     try {
-      await context.doInWorkspaceContext(appId, () =>
-        doInMigrationLock(appId, async () => {
-          const devAppId = db.getDevWorkspaceID(appId)
-          const prodAppId = db.getProdWorkspaceID(appId)
-          const isPublished = await sdk.workspaces.isAppPublished(prodAppId)
-          const appIdToMigrate = isPublished ? prodAppId : devAppId
+      await context.doInWorkspaceContext(workspaceId, () =>
+        doInMigrationLock(workspaceId, async () => {
+          const devWorkspaceId = db.getDevWorkspaceID(workspaceId)
+          const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+          const isPublished =
+            await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
+          const workspaceIdToMigrate = isPublished
+            ? prodWorkspaceId
+            : devWorkspaceId
 
-          console.log(`Starting app migration for "${appIdToMigrate}"`)
+          console.log(
+            `Starting workspace migration for "${workspaceIdToMigrate}"`
+          )
 
-          const pendingMigrationsPerApp = {
-            [devAppId]: await getPendingMigrationsForApp(devAppId, migrations),
-            [prodAppId]: isPublished
-              ? await getPendingMigrationsForApp(prodAppId, migrations)
+          const pendingMigrationsPerWorkspace = {
+            [devWorkspaceId]: await getPendingMigrationsForWorkspace(
+              devWorkspaceId,
+              migrations
+            ),
+            [prodWorkspaceId]: isPublished
+              ? await getPendingMigrationsForWorkspace(
+                  prodWorkspaceId,
+                  migrations
+                )
               : [],
           }
 
           function needsToRun(
             migrationId: string,
-            targetAppId: string
+            targetWorkspaceId: string
           ): boolean {
-            return pendingMigrationsPerApp[targetAppId].some(
+            return pendingMigrationsPerWorkspace[targetWorkspaceId].some(
               m => m.id === migrationId
             )
           }
 
           const allPendingMigrationIds = getAllPendingMigrationIds(
-            pendingMigrationsPerApp
+            pendingMigrationsPerWorkspace
           )
           const pendingMigrations = getUniquePendingMigrations(
             migrations,
@@ -126,7 +141,7 @@ export async function processMigrations(
           span.addTags({ migrationsToRun: pendingMigrations.length })
 
           console.log(
-            `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
+            `Workspace migrations to run for "${workspaceIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
           )
 
           let migrationIndex = 0
@@ -148,45 +163,50 @@ export async function processMigrations(
               `Running migration ${migrationId}... ${progressCounter}`,
               {
                 migrationId,
-                appId: appIdToMigrate,
+                workspaceId: workspaceIdToMigrate,
               }
             )
 
-            const runForAppToMigrate = needsToRun(migrationId, appIdToMigrate)
-            const runForDevApp =
-              isPublished && needsToRun(migrationId, devAppId)
+            const runForWorkspaceToMigrate = needsToRun(
+              migrationId,
+              workspaceIdToMigrate
+            )
+            const runForDevWorkspace =
+              isPublished && needsToRun(migrationId, devWorkspaceId)
 
-            if (runForAppToMigrate) {
-              await runMigrationForApp({
+            if (runForWorkspaceToMigrate) {
+              await runMigrationForWorkspace({
                 migrationId,
                 migrationFunc,
-                appId: appIdToMigrate,
+                workspaceId: workspaceIdToMigrate,
               })
             }
 
-            if (runForDevApp) {
-              await syncDevApp(devAppId)
-              await runMigrationForApp({
+            if (runForDevWorkspace) {
+              await syncDevWorkspace(devWorkspaceId)
+              await runMigrationForWorkspace({
                 migrationId,
                 migrationFunc,
-                appId: devAppId,
+                workspaceId: devWorkspaceId,
               })
             }
 
-            if (runForAppToMigrate) {
-              await updateMigrationVersion(appIdToMigrate, migrationId)
+            if (runForWorkspaceToMigrate) {
+              await updateMigrationVersion(workspaceIdToMigrate, migrationId)
             }
 
-            if (runForDevApp) {
-              await updateMigrationVersion(devAppId, migrationId)
+            if (runForDevWorkspace) {
+              await updateMigrationVersion(devWorkspaceId, migrationId)
             }
           }
 
-          console.log(`App migration for "${appIdToMigrate}" processed`)
+          console.log(
+            `Workspace migration for "${workspaceIdToMigrate}" processed`
+          )
         })
       )
     } catch (err) {
-      logging.logAlert("Failed to run app migration", err)
+      logging.logAlert("Failed to run workspace migration", err)
       throw err
     }
   })

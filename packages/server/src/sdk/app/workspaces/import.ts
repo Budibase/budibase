@@ -14,7 +14,7 @@ import {
 } from "@budibase/types"
 import backups from "../backups"
 import { processMigrations } from "../../../appMigrations/migrationsProcessor"
-import { getAppMigrationCacheKey } from "../../../appMigrations"
+import { getWorkspaceMigrationCacheKey } from "../../../appMigrations"
 
 export type FileAttributes = {
   type: string
@@ -172,7 +172,7 @@ export async function updateWithExport(
       throw new HTTPError("Error importing documents", 500)
     }
 
-    await cache.destroy(getAppMigrationCacheKey(devId))
+    await cache.destroy(getWorkspaceMigrationCacheKey(devId))
     await processMigrations(devId)
   } finally {
     await tempDb.destroy()

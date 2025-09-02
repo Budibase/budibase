@@ -190,7 +190,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     if (!config.onMigrationDetected) {
       return
     }
-    const migration = response.headers.get(Header.MIGRATING_APP)
+    const migration = response.headers.get(Header.MIGRATING_WORKSPACE)
 
     if (migration) {
       config.onMigrationDetected(migration)

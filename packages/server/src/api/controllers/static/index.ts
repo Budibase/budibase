@@ -38,7 +38,7 @@ import {
   ServeClientLibraryResponse,
   UserCtx,
 } from "@budibase/types"
-import { isAppFullyMigrated } from "../../../appMigrations"
+import { isWorkspaceFullyMigrated } from "../../../appMigrations"
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
@@ -206,7 +206,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
-    isAppFullyMigrated(appId),
+    isWorkspaceFullyMigrated(appId),
     configs.getSettingsConfigDoc(),
     configs.getRecaptchaConfig(),
   ])

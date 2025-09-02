@@ -108,7 +108,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncApp(app: Workspace) {
+  syncWorkspace(app: Workspace) {
     this.update(state => ({
       ...state,
       name: app.name,
@@ -144,7 +144,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasLock,
       clientLibPath,
     }))
-    this.syncApp(application)
+    this.syncWorkspace(application)
   }
 
   syncClientFeatures(features: Partial<ClientFeatures>) {
@@ -174,7 +174,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
 
   async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
-    this.syncApp(app)
+    this.syncWorkspace(app)
   }
 
   // Returned from socket

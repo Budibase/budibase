@@ -97,7 +97,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.APP_BACKUP]: QueueEventType.APP_BACKUP_EVENT,
   [JobQueue.AUDIT_LOG]: QueueEventType.AUDIT_LOG_EVENT,
   [JobQueue.SYSTEM_EVENT_QUEUE]: QueueEventType.SYSTEM_EVENT,
-  [JobQueue.APP_MIGRATION]: QueueEventType.APP_MIGRATION,
+  [JobQueue.WORKSPACE_MIGRATION]: QueueEventType.APP_MIGRATION,
   [JobQueue.DOC_WRITETHROUGH_QUEUE]: QueueEventType.DOC_WRITETHROUGH,
   [JobQueue.DEV_REVERT_PROCESSOR]: QueueEventType.DEV_REVERT_EVENT,
 }

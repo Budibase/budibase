@@ -2,21 +2,21 @@ import { db, locks } from "@budibase/backend-core"
 import { LockName, LockType } from "@budibase/types"
 
 export async function doInMigrationLock<T>(
-  appId: string,
+  workspaceId: string,
   fn: () => Promise<T>
 ): Promise<T> {
-  console.log(`Acquiring app migration lock for "${appId}"`)
+  console.log(`Acquiring workspace migration lock for "${workspaceId}"`)
 
-  const prodAppId = db.getProdWorkspaceID(appId)
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   const { result } = await locks.doWithLock(
     {
-      name: LockName.APP_MIGRATION,
+      name: LockName.WORKSPACE_MIGRATION,
       type: LockType.AUTO_EXTEND,
-      resource: prodAppId,
+      resource: prodWorkspaceId,
     },
     async () => {
-      console.log(`Migration lock acquired for app "${prodAppId}"`)
+      console.log(`Migration lock acquired for workspace "${prodWorkspaceId}"`)
 
       return await fn()
     }

@@ -1117,7 +1117,7 @@ describe("/applications (workspace apps flag)", () => {
         },
         () =>
           config.api.application.delete(app.appId, {
-            headersNotPresent: [Header.MIGRATING_APP],
+            headersNotPresent: [Header.MIGRATING_WORKSPACE],
           })
       )
 

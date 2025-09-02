@@ -2,11 +2,11 @@ import tk from "timekeeper"
 import * as setup from "../../../api/routes/tests/utilities"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250618162639_workspace_apps"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import sdk from "../../../sdk"
 import { structures } from "@budibase/backend-core/tests"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20250618162639_workspace_apps",
     func: migration,
@@ -28,8 +28,8 @@ describe.each([
     tk.reset()
     for (const appId of [config.getAppId(), config.getProdAppId()]) {
       await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "",
         })
 

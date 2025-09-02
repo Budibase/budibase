@@ -1,7 +1,10 @@
 import { context, DesignDocuments } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
-import { getAppMigrationVersion, updateAppMigrationMetadata } from ".."
+import {
+  getWorkspaceMigrationVersion,
+  updateWorkspaceMigrationMetadata,
+} from ".."
 import { processMigrations } from "../migrationsProcessor"
 import { Database } from "@budibase/types"
 
@@ -15,8 +18,8 @@ describe("migration integrity", () => {
     async function setCurrentVersion(currentMigrationId: string) {
       for (const appId of [config.getAppId(), config.getProdAppId()]) {
         await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+          await updateWorkspaceMigrationMetadata({
+            workspaceId: appId,
             version: currentMigrationId,
           })
         })
@@ -42,19 +45,21 @@ describe("migration integrity", () => {
         const latestMigration =
           migrationsToApply[migrationsToApply.length - 1].id
 
-        const currentVersion = await getAppMigrationVersion(appId)
+        const currentVersion = await getWorkspaceMigrationVersion(appId)
 
         await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        expect(await getWorkspaceMigrationVersion(appId)).toBe(latestMigration)
 
         const afterMigrationDevDocs = await getDocs(devDb)
         const afterMigrationProdDocs = await getDocs(prodDb)
 
         await setCurrentVersion(currentVersion)
-        expect(await getAppMigrationVersion(appId)).not.toBe(latestMigration)
+        expect(await getWorkspaceMigrationVersion(appId)).not.toBe(
+          latestMigration
+        )
 
         await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        expect(await getWorkspaceMigrationVersion(appId)).toBe(latestMigration)
 
         const afterRerunDevDocs = await getDocs(devDb)
         const afterRerunProdDocs = await getDocs(prodDb)

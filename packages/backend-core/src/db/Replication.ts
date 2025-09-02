@@ -52,7 +52,7 @@ class Replication {
     })
   }
 
-  appReplicateOpts(
+  workspaceReplicateOpts(
     opts: PouchDB.Replication.ReplicateOptions & {
       isCreation?: boolean
       tablesToSync?: string[] | "all"

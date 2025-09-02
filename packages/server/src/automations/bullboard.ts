@@ -3,7 +3,7 @@ import { KoaAdapter } from "@bull-board/koa"
 import { queue } from "@budibase/backend-core"
 import * as automation from "../threads/automation"
 import { backups } from "@budibase/pro"
-import { getAppMigrationQueue } from "../appMigrations/queue"
+import { getWorkspaceMigrationQueue } from "../appMigrations/queue"
 import { createBullBoard } from "@bull-board/api"
 import { AutomationData } from "@budibase/types"
 
@@ -34,7 +34,7 @@ export async function init() {
     queues.push(new BullAdapter(backupQueue.getBullQueue()))
   }
 
-  const appMigrationQueue = getAppMigrationQueue()
+  const appMigrationQueue = getWorkspaceMigrationQueue()
   if (appMigrationQueue) {
     queues.push(new BullAdapter(appMigrationQueue.getBullQueue()))
   }

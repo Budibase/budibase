@@ -114,7 +114,7 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.workspaces.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
+  await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
   })
 }
@@ -202,7 +202,7 @@ export const publishApp = async function (
       const devAppId = dbCore.getDevelopmentWorkspaceID(appId)
       const productionAppId = dbCore.getProdWorkspaceID(appId)
 
-      if (!(await sdk.workspaces.isAppPublished(productionAppId))) {
+      if (!(await sdk.workspaces.isWorkspacePublished(productionAppId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -222,7 +222,8 @@ export const publishApp = async function (
         }
       }
 
-      const isPublished = await sdk.workspaces.isAppPublished(productionAppId)
+      const isPublished =
+        await sdk.workspaces.isWorkspacePublished(productionAppId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
@@ -243,7 +244,7 @@ export const publishApp = async function (
       const devDb = context.getDevWorkspaceDB()
       await devDb.compact()
       await replication.replicate(
-        replication.appReplicateOpts({
+        replication.workspaceReplicateOpts({
           isCreation: !isPublished,
           tablesToSync,
           // don't use checkpoints, this can stop data that was previous ignored

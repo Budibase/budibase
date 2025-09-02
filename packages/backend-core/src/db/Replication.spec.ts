@@ -28,7 +28,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({})
+      const opts = replication.workspaceReplicateOpts({})
 
       const migrationsDoc = {
         _id: DesignDocuments.MIGRATIONS,
@@ -45,7 +45,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: false })
+      const opts = replication.workspaceReplicateOpts({ isCreation: false })
 
       const migrationsDoc = {
         _id: DesignDocuments.MIGRATIONS,
@@ -62,7 +62,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.workspaceReplicateOpts({ isCreation: true })
 
       const migrationsDoc = {
         _id: DesignDocuments.MIGRATIONS,
@@ -79,7 +79,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: false })
+      const opts = replication.workspaceReplicateOpts({ isCreation: false })
 
       const deletedDoc = {
         _id: "some_doc",
@@ -95,7 +95,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.workspaceReplicateOpts({ isCreation: true })
 
       const automationLogDoc = {
         _id: `${DocumentType.AUTOMATION_LOG}_123`,
@@ -111,7 +111,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.workspaceReplicateOpts({ isCreation: true })
 
       const appMetadataDoc = {
         _id: DocumentType.WORKSPACE_METADATA,
@@ -127,7 +127,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE_DEV}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.workspaceReplicateOpts({ isCreation: true })
 
       const designDoc = {
         _id: "_design/database",
@@ -143,7 +143,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.workspaceReplicateOpts({ isCreation: true })
 
       const designDoc = {
         _id: "_design/database",
@@ -161,7 +161,7 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({
+      const opts = replication.workspaceReplicateOpts({
         isCreation: true,
         filter: customFilter,
       })
@@ -188,7 +188,7 @@ describe("Replication", () => {
         isCreation: true,
       }
 
-      const opts = replication.appReplicateOpts(inputOpts)
+      const opts = replication.workspaceReplicateOpts(inputOpts)
 
       expect(opts).toBe(inputOpts)
     })
