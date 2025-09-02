@@ -1,6 +1,6 @@
 import { IntegrationTypes } from "@/constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
-import { Query, SourceName } from "@budibase/types"
+import { Query } from "@budibase/types"
 
 export function breakQueryString(qs: string) {
   if (!qs) {
