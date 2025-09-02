@@ -4,7 +4,7 @@ import { SortOrder } from "../../pagination"
 import { ReadStream } from "fs"
 import stream from "node:stream"
 
-export * from "./search"
+export { searchRowRequestValidator } from "./search"
 
 export interface FetchEnrichedRowResponse extends Row {}
 
