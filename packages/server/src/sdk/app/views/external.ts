@@ -53,7 +53,7 @@ export async function create(
   view = ensureQuerySet(view)
   view = ensureQueryUISet(view)
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const ds = await sdk.datasources.get(datasourceId)
@@ -67,7 +67,7 @@ export async function update(
   tableId: string,
   view: Readonly<ViewV2>
 ): Promise<{ view: Readonly<ViewV2>; existingView: ViewV2 }> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const ds = await sdk.datasources.get(datasourceId)
@@ -94,7 +94,7 @@ export async function update(
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const view = await get(viewId)
 

@@ -21,7 +21,7 @@ export async function processUser(
   }
   user = cloneDeep(user)
   delete user.password
-  const appId = opts.appId || context.getAppId()
+  const appId = opts.appId || context.getWorkspaceId()
   if (!appId) {
     throw new Error("Unable to process user without app ID")
   }
@@ -54,7 +54,7 @@ export async function processUser(
   }
   // try to get the role from the user list
   if (!user.roleId && appId && user.roles) {
-    user.roleId = user.roles[dbCore.getProdAppID(appId)]
+    user.roleId = user.roles[dbCore.getProdWorkspaceID(appId)]
   }
   // try to get the role from the group list
   if (!user.roleId && groupList) {
@@ -89,7 +89,7 @@ export async function getRawGlobalUser(userId: string): Promise<User> {
 }
 
 export async function getGlobalUser(userId: string): Promise<ContextUser> {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   let user = await getRawGlobalUser(userId)
   return processUser(user, { appId })
 }

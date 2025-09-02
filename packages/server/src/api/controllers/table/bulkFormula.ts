@@ -117,7 +117,7 @@ async function updateRelatedFormulaLinksOnTables(
   { deletion }: { deletion?: boolean } = {}
 ) {
   const tableId: string = table._id!
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // start by retrieving all tables, remove the current table from the list
   const tables = (await sdk.tables.getAllInternalTables()).filter(
     tbl => tbl._id !== tableId

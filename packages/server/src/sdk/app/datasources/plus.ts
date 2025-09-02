@@ -98,7 +98,7 @@ export async function buildSchemaFromSource(
   datasourceId: string,
   tablesFilter?: string[]
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const datasource = await datasources.get(datasourceId)
 

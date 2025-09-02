@@ -11,9 +11,9 @@ async function runInContext(appId: string, cb: any, db?: Database) {
   if (db) {
     return cb(db)
   } else {
-    const devAppId = dbCore.getDevAppID(appId)
-    return context.doInAppContext(devAppId, () => {
-      const db = context.getAppDB()
+    const devAppId = dbCore.getDevWorkspaceID(appId)
+    return context.doInWorkspaceContext(devAppId, () => {
+      const db = context.getWorkspaceDB()
       return cb(db)
     })
   }

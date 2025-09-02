@@ -32,8 +32,8 @@ export async function exportAppDump(
     encryptPassword,
   })
 
-  await context.doInAppContext(appId, async () => {
-    const appDb = context.getAppDB()
+  await context.doInWorkspaceContext(appId, async () => {
+    const appDb = context.getWorkspaceDB()
     const app = await appDb.get<App>(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
@@ -43,7 +43,7 @@ export async function clearBackupError(
   ctx: UserCtx<ClearBackupErrorRequest, ClearBackupErrorResponse>
 ) {
   const { backupId, appId } = ctx.request.body
-  await context.doInAppContext(appId, async () => {
+  await context.doInWorkspaceContext(appId, async () => {
     await sdk.backups.clearErrors(backupId)
   })
 

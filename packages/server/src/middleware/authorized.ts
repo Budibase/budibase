@@ -29,7 +29,7 @@ const checkAuthorized = async (
   permType: PermissionType,
   permLevel: PermissionLevel
 ) => {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   const isGlobalBuilderApi = permType === PermissionType.GLOBAL_BUILDER
   const isCreatorApi = permType === PermissionType.CREATOR
   const isBuilderApi = permType === PermissionType.BUILDER

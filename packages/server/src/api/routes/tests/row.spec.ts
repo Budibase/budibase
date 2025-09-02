@@ -2301,7 +2301,7 @@ if (descriptions.length) {
           const row = await config.api.row.save(testTable._id!, draftRow)
 
           await withEnv({ SELF_HOSTED: "true" }, async () => {
-            return context.doInAppContext(config.getAppId(), async () => {
+            return context.doInWorkspaceContext(config.getAppId(), async () => {
               const enriched: Row[] = await outputProcessing(testTable, [row])
               const [targetRow] = enriched
               const attachmentEntries = Array.isArray(targetRow[field])

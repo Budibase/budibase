@@ -3,7 +3,7 @@ import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
-import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
+import { isDevApp, isDevAppID, getProdWorkspaceID } from "../docIds/conversions"
 import { App, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
 
@@ -177,7 +177,7 @@ export function isSameAppID(
   if (appId1 == undefined || appId2 == undefined) {
     return false
   }
-  return getProdAppID(appId1) === getProdAppID(appId2)
+  return getProdWorkspaceID(appId1) === getProdWorkspaceID(appId2)
 }
 
 export async function dbExists(dbName: any) {

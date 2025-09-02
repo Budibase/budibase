@@ -32,7 +32,7 @@ export async function updateRelatedFormula(
   table: Table,
   enrichedRows: Row[] | Row
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
     return
@@ -94,7 +94,7 @@ export async function updateRelatedFormula(
 }
 
 export async function updateAllFormulasInTable(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
     await db.allDocs<Row>(
@@ -139,7 +139,7 @@ export async function finaliseRow(
   row: Row,
   opts?: { updateFormula: boolean; updateAIColumns: boolean }
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { updateFormula = true, updateAIColumns = true } = opts || {}
   const table = sdk.views.isView(source)
     ? await sdk.views.getTable(source.id)

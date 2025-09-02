@@ -4,7 +4,7 @@ import { generateScreenID, getScreenParams } from "../../../db/utils"
 import sdk from "../.."
 
 export async function fetch(
-  db: Database = context.getAppDB()
+  db: Database = context.getWorkspaceDB()
 ): Promise<Screen[]> {
   const screens = (
     await db.allDocs<Screen>(
@@ -33,7 +33,7 @@ export async function fetch(
 export async function create(
   screen: WithoutDocMetadata<Screen>
 ): Promise<Screen> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.put({ ...screen, _id: generateScreenID() })
   return {
@@ -44,7 +44,7 @@ export async function create(
 }
 
 export async function update(screen: Screen): Promise<Screen> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.put(screen)
   return {

@@ -35,7 +35,7 @@ import env from "../../../environment"
 import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
@@ -54,7 +54,7 @@ export async function checkForColumnUpdates(
   oldTable?: Table,
   columnRename?: RenameColumn
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let updatedRows = []
   let deletedColumns: any = []
   if (oldTable && oldTable.schema && updatedTable.schema) {
@@ -188,7 +188,7 @@ export async function handleDataImport(
     return table
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const data = parse(importRows, table)
 
   const finalData = await importToRows(data, table, opts?.userId, {
@@ -234,7 +234,7 @@ export async function handleDataImport(
 }
 
 export async function handleSearchIndexes(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // create relevant search indexes
   if (table.indexes && table.indexes.length > 0) {
     const currentIndexes = await db.getIndexes()
@@ -306,7 +306,7 @@ class TableSaveFunctions {
     oldTable?: Table
     importRows?: Row[]
   }) {
-    this.db = context.getAppDB()
+    this.db = context.getWorkspaceDB()
     this.userId = userId
     this.oldTable = oldTable
     this.importRows = importRows
@@ -514,7 +514,7 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
 }
 
 export async function internalTableCleanup(table: Table, rows?: Row[]) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const tableId = table._id!
   // remove table search index
   if (!env.isTest() || env.COUCH_DB_URL) {

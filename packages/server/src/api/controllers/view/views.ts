@@ -24,7 +24,7 @@ export async function fetch(ctx: Ctx) {
 }
 
 export async function save(ctx: Ctx) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { originalName, ...viewToSave } = ctx.request.body
 
   const existingTable = await sdk.tables.getTable(ctx.request.body.tableId)
@@ -64,7 +64,7 @@ export async function save(ctx: Ctx) {
 }
 
 export async function destroy(ctx: Ctx) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
   if (!view || !view.meta) {

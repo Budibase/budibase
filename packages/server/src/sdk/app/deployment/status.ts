@@ -22,7 +22,7 @@ function getPublishedState(
 }
 
 export async function status() {
-  const prodDb = context.getProdAppDB()
+  const prodDb = context.getProdWorkspaceDB()
   const productionExists = await prodDb.exists()
   type State = {
     automations: Automation[]
@@ -55,7 +55,7 @@ export async function status() {
     state.tables = tables
   }
 
-  await context.doInAppContext(context.getDevAppId(), async () =>
+  await context.doInWorkspaceContext(context.getDevWorkspaceId(), async () =>
     updateState(developmentState)
   )
 
@@ -64,7 +64,7 @@ export async function status() {
     metadata = await sdk.applications.metadata.tryGet({
       production: true,
     })
-    await context.doInAppContext(context.getProdAppId(), async () =>
+    await context.doInWorkspaceContext(context.getProdWorkspaceId(), async () =>
       updateState(productionState)
     )
   }

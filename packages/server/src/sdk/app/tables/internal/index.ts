@@ -73,7 +73,7 @@ export async function save(
     isImport?: boolean
   }
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   // if the table obj had an _id then it will have been retrieved
   let oldTable: Table | undefined
@@ -176,7 +176,7 @@ export async function save(
 }
 
 export async function destroy(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const tableId = table._id!
 
   // Delete all rows for that table - we have to retrieve the full rows for

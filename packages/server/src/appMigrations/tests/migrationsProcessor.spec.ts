@@ -70,7 +70,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       (_, i) => ({
         id: generateMigrationId(),
         func: async () => {
-          const db = context.getAppDB()
+          const db = context.getWorkspaceDB()
           executionOrder.push(`${db.name}-migration-${i + 1}`)
         },
       })
@@ -100,8 +100,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       id: generateMigrationId(),
       func: async () => {
         expect(context.getCurrentContext()?.isMigrating).toBe(true)
-        migrationCallPerApp[context.getAppId()!] ??= 0
-        migrationCallPerApp[context.getAppId()!]++
+        migrationCallPerApp[context.getWorkspaceId()!] ??= 0
+        migrationCallPerApp[context.getWorkspaceId()!]++
       },
     }))
 
@@ -120,7 +120,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       {
         id: generateMigrationId(),
         func: async () => {
-          await context.doInAppMigrationContext(config.getAppId(), () => {})
+          await context.doInWorkspaceMigrationContext(
+            config.getAppId(),
+            () => {}
+          )
         },
       },
     ]
@@ -137,21 +140,21 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         {
           id: `migration_a`,
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - 1`)
           },
         },
         {
           id: `migration_c`,
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - 3`)
           },
         },
         {
           id: `migration_b`,
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - 2`)
           },
         },
@@ -181,14 +184,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         {
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - 2`)
           },
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - 3`)
           },
         },
@@ -219,7 +222,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - ${i + 1}`)
           },
         })
@@ -276,7 +279,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - ${i + 1}`)
           },
         })
@@ -378,7 +381,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           {
             id: generateMigrationId(),
             func: async () => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               executionOrder.push(db.name)
             },
           },
@@ -414,7 +417,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           (_, i) => ({
             id: generateMigrationId(),
             func: async () => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               executionOrder.push(`migration ${i + 1} - ${db.name}`)
             },
           })
@@ -448,11 +451,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           func: jest
             .fn()
             .mockImplementationOnce(() => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               expect(db.name).toBe(config.getProdAppId())
             })
             .mockImplementationOnce(() => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               expect(db.name).toBe(config.getAppId())
               throw new Error("Migration failed")
             }),
@@ -480,11 +483,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           func: jest
             .fn()
             .mockImplementationOnce(() => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               expect(db.name).toBe(config.getProdAppId())
             })
             .mockImplementationOnce(() => {
-              const db = context.getAppDB()
+              const db = context.getWorkspaceDB()
               expect(db.name).toBe(config.getAppId())
               throw new Error("Migration failed")
             }),
@@ -517,14 +520,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         {
           id: migration1Id,
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name}-migration-1`)
           },
         },
         {
           id: migration2Id,
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             attemptCount[db.name] ??= 0
             attemptCount[db.name]++
             if (db.name === config.getAppId() && attemptCount[db.name] === 1) {
@@ -581,7 +584,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - migration-${i + 1}`)
           },
         })
@@ -626,7 +629,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - migration-${i + 1}`)
           },
         })
@@ -672,7 +675,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
+            const db = context.getWorkspaceDB()
             executionOrder.push(`${db.name} - migration-${i + 1}`)
           },
         })
@@ -713,7 +716,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       MIGRATIONS.push({
         id: generateMigrationId(),
         func: async () => {
-          const db = context.getAppDB()
+          const db = context.getWorkspaceDB()
           executionOrder.push(`${db.name}-via-middleware`)
         },
       })

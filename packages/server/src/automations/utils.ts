@@ -87,7 +87,11 @@ export async function processEvent(job: AutomationJob) {
       }
     }
 
-    return await context.doInAutomationContext({ appId, automationId, task })
+    return await context.doInAutomationContext({
+      workspaceId: appId,
+      automationId,
+      task,
+    })
   })
 }
 
@@ -141,7 +145,7 @@ export async function disableCronById(jobId: JobId) {
 }
 
 export async function clearMetadata() {
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   const automationMetadata = (
     await db.allDocs(
       getAutomationMetadataParams({

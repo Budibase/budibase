@@ -73,7 +73,7 @@ export async function find(sourceId: string, rowId: string): Promise<Row> {
 
 export async function findRow(sourceId: string, rowId: string) {
   const { tableId } = tryExtractingTableAndViewId(sourceId)
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let row: Row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {

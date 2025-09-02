@@ -10,7 +10,7 @@ export async function trigger(
   fields: Record<string, any> = {},
   timeout?: number
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const automation = await db.get<Automation>(automationId)
 
   if (!automation) {
@@ -45,7 +45,7 @@ export async function trigger(
     )
     return collectedValue?.outputs
   } else {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     await triggers.externalTrigger(automation, {
       fields,
       appId,

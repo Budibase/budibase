@@ -35,8 +35,8 @@ describe("migration integrity", () => {
     const appId = config.getAppId()
     await config.doInContext(appId, async () => {
       await setCurrentVersion("")
-      const devDb = context.getAppDB()
-      const prodDb = context.getProdAppDB()
+      const devDb = context.getWorkspaceDB()
+      const prodDb = context.getProdWorkspaceDB()
       for (let i = 0; i < migrations.MIGRATIONS.length; i++) {
         const migrationsToApply = migrations.MIGRATIONS.slice(0, i + 1)
         const latestMigration =

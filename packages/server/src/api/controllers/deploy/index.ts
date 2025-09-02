@@ -55,7 +55,7 @@ async function checkAllDeployments(
 
 async function storeDeploymentHistory(deployment: any) {
   const deploymentJSON = deployment.getJSON()
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   let deploymentDoc
   try {
@@ -83,7 +83,7 @@ async function storeDeploymentHistory(deployment: any) {
 }
 
 async function initDeployedApp(prodAppId: any) {
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
     await db.allDocs<Automation>(
@@ -114,7 +114,7 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
+  await sdk.applications.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
   })
 }
@@ -123,7 +123,7 @@ export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(deploymentDoc)
     if (updated) {
@@ -141,7 +141,7 @@ export async function deploymentProgress(
   ctx: UserCtx<void, DeploymentProgressResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
     if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
       ctx.throw(404, "No deployment found")
@@ -192,15 +192,15 @@ export const publishApp = async function (
     }
   }
 
-  const appId = context.getAppId()!
+  const appId = context.getWorkspaceId()!
 
   // Wrap the entire publish operation in migration lock to prevent race conditions
   const result = await doInMigrationLock(appId, async () => {
     let app
     let replication
     try {
-      const devAppId = dbCore.getDevelopmentAppID(appId)
-      const productionAppId = dbCore.getProdAppID(appId)
+      const devAppId = dbCore.getDevelopmentWorkspaceID(appId)
+      const productionAppId = dbCore.getProdWorkspaceID(appId)
 
       if (!(await sdk.applications.isAppPublished(productionAppId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
@@ -240,7 +240,7 @@ export const publishApp = async function (
         target: productionAppId,
       }
       replication = new dbCore.Replication(config)
-      const devDb = context.getDevAppDB()
+      const devDb = context.getDevWorkspaceDB()
       await devDb.compact()
       await replication.replicate(
         replication.appReplicateOpts({
@@ -253,7 +253,7 @@ export const publishApp = async function (
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
-      const db = context.getProdAppDB()
+      const db = context.getProdWorkspaceDB()
       const appDoc = await sdk.applications.metadata.tryGet({
         production: false,
       })

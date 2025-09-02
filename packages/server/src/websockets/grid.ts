@@ -53,7 +53,7 @@ export default class GridSocket extends BaseSocket {
       } else if (ds.type === "viewV2") {
         // If this is a view filtered by current user, don't sync changes
         try {
-          await context.doInAppContext(appId, async () => {
+          await context.doInWorkspaceContext(appId, async () => {
             const view = await sdk.views.get(ds.id)
             if (this.containsCurrentUserBinding(view)) {
               valid = false

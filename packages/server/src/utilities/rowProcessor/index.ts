@@ -113,7 +113,7 @@ export async function processAutoColumn(
   }
 
   if (tableMutated) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const resp = await db.put(table)
     table._rev = resp.rev
   }

@@ -58,7 +58,7 @@ type RowFilterInputs = Extract<
 >
 
 async function getAllAutomations() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let automations = await db.allDocs<Automation>(
     getAutomationParams(null, { include_docs: true })
   )
@@ -79,7 +79,7 @@ async function queueRelevantRowAutomations(
     return
   }
 
-  await context.doInAppContext(event.appId, async () => {
+  await context.doInWorkspaceContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type and enabled automations
@@ -252,7 +252,7 @@ export async function externalTrigger(
   if (getResponses) {
     data.event = {
       ...data.event,
-      appId: context.getAppId(),
+      appId: context.getWorkspaceId(),
       automation,
     }
     return executeInThread({ data } as AutomationJob)
@@ -274,7 +274,7 @@ export async function rebootTrigger() {
     idsOnly: true,
   })) as string[]
   for (let prodAppId of appIds) {
-    await context.doInAppContext(prodAppId, async () => {
+    await context.doInWorkspaceContext(prodAppId, async () => {
       let automations = await getAllAutomations()
       let rebootEvents = []
       for (let automation of automations) {

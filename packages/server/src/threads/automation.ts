@@ -250,13 +250,13 @@ class Orchestrator {
 
   async getMetadata(): Promise<AutomationMetadata> {
     const metadataId = generateAutomationMetadataID(this.automation._id!)
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const metadata = await db.tryGet<AutomationMetadata>(metadataId)
     return metadata || { _id: metadataId, errorCount: 0 }
   }
 
   async incrementErrorCount() {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     let err: Error | undefined = undefined
     for (let attempt = 0; attempt < 10; attempt++) {
       const metadata = await this.getMetadata()
@@ -699,7 +699,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   }
 
   return context.doInAutomationContext({
-    appId,
+    workspaceId: appId,
     automationId,
     task: async () => {
       await context.ensureSnippetContext()
@@ -724,7 +724,7 @@ export async function executeInThread(
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
-  return await context.doInAppContext(appId, async () => {
+  return await context.doInWorkspaceContext(appId, async () => {
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
@@ -739,7 +739,7 @@ export const removeStalled = async (job: Job<AutomationData>) => {
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
-  await context.doInAppContext(appId, async () => {
+  await context.doInWorkspaceContext(appId, async () => {
     const orchestrator = new Orchestrator(job)
     await orchestrator.stopCron("stalled")
   })

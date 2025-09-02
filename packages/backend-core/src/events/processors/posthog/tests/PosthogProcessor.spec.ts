@@ -123,7 +123,7 @@ describe("PosthogProcessor", () => {
         const properties = {}
 
         const runAppEvents = async (appId: string) => {
-          await context.doInAppContext(appId, async () => {
+          await context.doInWorkspaceContext(appId, async () => {
             tk.freeze(new Date(2022, 0, 1, 14, 0))
             await processor.processEvent(Event.SERVED_APP, identity, properties)
             await processor.processEvent(

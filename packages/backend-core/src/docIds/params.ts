@@ -5,7 +5,7 @@ import {
   UNICODE_MAX,
   ViewName,
 } from "../constants"
-import { getProdAppID } from "./conversions"
+import { getProdWorkspaceID } from "./conversions"
 import { DatabaseQueryOpts } from "@budibase/types"
 
 /**
@@ -113,7 +113,7 @@ export function getUsersByAppParams(
   appId: any,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ): DatabaseQueryOpts {
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = getProdWorkspaceID(appId)
   return {
     ...otherProps,
     startkey: prodAppId,

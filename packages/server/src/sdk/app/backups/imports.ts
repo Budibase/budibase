@@ -92,11 +92,11 @@ async function updateAutomations(prodAppId: string, db: Database) {
       })
     )
   ).rows.map(row => row.doc) as Automation[]
-  const devAppId = dbCore.getDevAppID(prodAppId)
+  const devAppId = dbCore.getDevWorkspaceID(prodAppId)
   let toSave: Automation[] = []
   for (let automation of automations) {
     const oldDevAppId = automation.appId,
-      oldProdAppId = dbCore.getProdAppID(automation.appId)
+      oldProdAppId = dbCore.getProdWorkspaceID(automation.appId)
     if (
       automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
     ) {
@@ -178,7 +178,7 @@ export async function importApp(
     updateAttachmentColumns: boolean
   } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
-  let prodAppId = dbCore.getProdAppID(appId)
+  let prodAppId = dbCore.getProdWorkspaceID(appId)
   let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =

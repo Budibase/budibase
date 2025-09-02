@@ -724,7 +724,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
 export async function setupCreationAuth(datasouce: GoogleSheetsConfig) {
   if (datasouce.continueSetupId) {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     const tokens = await cache.get(
       `datasource:creation:${appId}:google:${datasouce.continueSetupId}`
     )

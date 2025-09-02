@@ -83,7 +83,7 @@ import { processMigrations } from "../../appMigrations/migrationsProcessor"
 
 // utility function, need to do away with this
 async function getLayouts() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   return (
     await db.allDocs<Layout>(
       getLayoutParams(null, {
@@ -142,7 +142,7 @@ interface AppTemplate {
 }
 
 async function createInstance(appId: string, template: AppTemplate) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -171,7 +171,7 @@ async function createInstance(appId: string, template: AppTemplate) {
 }
 
 async function addSampleDataDocs() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   try {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
@@ -200,7 +200,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
 }
 
 async function addSampleDataScreen() {
-  const workspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
+  const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
   const workspaceApp = workspaceApps.find(wa => wa.isDefault)
 
   if (!workspaceApp) {
@@ -286,7 +286,7 @@ export async function fetchAppDefinition(
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   let [application, layouts, screens, license, recaptchaConfig] =
     await Promise.all([
       sdk.applications.metadata.get(),
@@ -397,9 +397,9 @@ async function performAppCreate(
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
-  return await context.doInAppContext(appId, async () => {
+  return await context.doInWorkspaceContext(appId, async () => {
     const instance = await createInstance(appId, instanceConfig)
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
     const addSampleData = isOnboarding && !isImport && !useTemplate
 
@@ -535,7 +535,7 @@ async function updateUserColumns(
   db: Database,
   toUserId: string
 ) {
-  await context.doInAppContext(appId, async () => {
+  await context.doInWorkspaceContext(appId, async () => {
     const allTables = await sdk.tables.getAllTables()
     const tablesWithUserColumns = []
     for (const table of allTables) {
@@ -630,7 +630,7 @@ async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
-        await context.doInAppContext(app.appId, () => {
+        await context.doInWorkspaceContext(app.appId, () => {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
@@ -771,9 +771,9 @@ export async function revertClient(
 
 async function unpublishApp(ctx: UserCtx) {
   let appId = ctx.params.appId
-  appId = dbCore.getProdAppID(appId)
+  appId = dbCore.getProdWorkspaceID(appId)
 
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   const result = await db.destroy()
 
   await events.app.unpublished({ appId } as App)
@@ -788,14 +788,14 @@ async function unpublishApp(ctx: UserCtx) {
 }
 
 async function invalidateAppCache(appId: string) {
-  await cache.app.invalidateAppMetadata(dbCore.getDevAppID(appId))
-  await cache.app.invalidateAppMetadata(dbCore.getProdAppID(appId))
+  await cache.app.invalidateAppMetadata(dbCore.getDevWorkspaceID(appId))
+  await cache.app.invalidateAppMetadata(dbCore.getProdWorkspaceID(appId))
 }
 
 async function destroyApp(ctx: UserCtx) {
   let appId = ctx.params.appId
-  appId = dbCore.getProdAppID(appId)
-  const devAppId = dbCore.getDevAppID(appId)
+  appId = dbCore.getProdWorkspaceID(appId)
+  const devAppId = dbCore.getDevWorkspaceID(appId)
 
   // check if we need to unpublish first
   if (await dbCore.dbExists(appId)) {
@@ -847,7 +847,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
 }
 
 export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
-  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
   // check app has been published
@@ -963,8 +963,8 @@ export async function updateAppPackage(
   appPackage: Partial<App>,
   appId: string
 ) {
-  return context.doInAppContext(appId, async () => {
-    const db = context.getAppDB()
+  return context.doInWorkspaceContext(appId, async () => {
+    const db = context.getWorkspaceDB()
     const application = await sdk.applications.metadata.get()
 
     const newAppPackage: App = { ...application, ...appPackage }
@@ -996,7 +996,7 @@ export async function updateAppPackage(
 }
 
 async function migrateAppNavigation() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const existing = await sdk.applications.metadata.get()
   const layouts: Layout[] = await getLayouts()
   const screens: Screen[] = await sdk.screens.fetch()

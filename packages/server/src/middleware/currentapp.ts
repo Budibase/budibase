@@ -99,7 +99,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
     })
   }
 
-  return context.doInAppContext(appId, async () => {
+  return context.doInWorkspaceContext(appId, async () => {
     ctx.appId = appId
     if (roleId) {
       ctx.roleId = roleId

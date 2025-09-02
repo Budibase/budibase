@@ -20,7 +20,7 @@ class Request {
 }
 
 function runRequest(appId: any, controlFunc: any, request?: any) {
-  return context.doInAppContext(appId, async () => {
+  return context.doInWorkspaceContext(appId, async () => {
     return controlFunc(request)
   })
 }
@@ -146,7 +146,7 @@ export const checkPermissionsEndpoint = async ({
 }
 
 export const getDB = () => {
-  return context.getAppDB()
+  return context.getWorkspaceDB()
 }
 
 export const testAutomation = async (

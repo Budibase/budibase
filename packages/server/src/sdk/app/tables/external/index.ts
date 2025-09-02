@@ -160,7 +160,7 @@ export async function save(
     )
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasource = await datasourceSdk.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
@@ -286,7 +286,7 @@ export async function save(
 }
 
 export async function destroy(datasourceId: string, table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasource = await datasourceSdk.get(datasourceId)
   const tables = datasource.entities
 

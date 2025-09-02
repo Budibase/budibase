@@ -208,7 +208,7 @@ if (!env.DISABLE_PINO_LOGGER) {
   const getAppId = () => {
     let appId
     try {
-      appId = context.getAppId()
+      appId = context.getWorkspaceId()
     } catch (e) {
       // do nothing
     }

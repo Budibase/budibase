@@ -40,7 +40,7 @@ export async function exportRows(
     delimiter,
     customHeaders,
   } = options
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const table = await sdk.tables.getTable(tableId)
 
   let result: Row[] = []
@@ -133,7 +133,7 @@ export async function fetchRaw(
   tableId: string,
   limit?: number
 ): Promise<Row[]> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     rows = await sdk.users.fetchMetadata()
@@ -158,7 +158,7 @@ export async function fetchLegacyView(
     return fetch(viewName)
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { calculation, group, field } = options
   const viewInfo = await getView(db, viewName)
   let response

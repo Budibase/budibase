@@ -76,7 +76,7 @@ export const limited = async (event: Event): Promise<boolean> => {
 const eventKey = (event: RateLimitedEvent) => {
   let key = `${CacheKey.EVENTS_RATE_LIMIT}:${event}`
   if (isPerApp(event)) {
-    key = key + ":" + context.getAppId()
+    key = key + ":" + context.getWorkspaceId()
   }
   return key
 }

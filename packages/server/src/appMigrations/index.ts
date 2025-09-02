@@ -48,7 +48,7 @@ export async function checkMissingMigrations(
     return next()
   }
 
-  const appExists = await context.doInAppContext(
+  const appExists = await context.doInWorkspaceContext(
     appId,
     async () => !!(await sdk.applications.metadata.tryGet())
   )
@@ -84,7 +84,7 @@ const waitForMigration = async (
 ): Promise<{ applied: boolean }> => {
   const start = Date.now()
 
-  const devAppId = db.getDevAppID(appId)
+  const devAppId = db.getDevWorkspaceID(appId)
 
   while (Date.now() - start < timeoutMs) {
     if (await isAppFullyMigrated(devAppId)) {

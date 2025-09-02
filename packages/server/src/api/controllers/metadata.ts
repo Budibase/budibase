@@ -39,7 +39,7 @@ export async function deleteMetadata(
 
 export async function getMetadata(ctx: UserCtx<void, FindMetadataResponse>) {
   const { type, entityId } = ctx.params
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = generateMetadataID(type, entityId)
   ctx.body = (await db.tryGet(id)) || {}
 }

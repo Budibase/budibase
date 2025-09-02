@@ -226,7 +226,7 @@ class QueryRunner {
     queryId: string,
     currentParameters: Record<string, any>
   ) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
@@ -367,7 +367,7 @@ export function execute(input: QueryEvent, callback: WorkerCallback) {
       callback(err)
     }
   }
-  context.doInAppContext(input.appId!, async () => {
+  context.doInWorkspaceContext(input.appId!, async () => {
     if (input.environmentVariables) {
       return context.doInEnvironmentContext(input.environmentVariables, () => {
         return run()

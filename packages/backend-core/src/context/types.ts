@@ -7,7 +7,7 @@ export type ContextMap = {
   tenantId?: string
   isSelfHostUsingCloud?: boolean
   license?: License
-  appId?: string
+  workspaceId?: string
   identity?: IdentityContext
   environmentVariables?: Record<string, string>
   isScim?: boolean

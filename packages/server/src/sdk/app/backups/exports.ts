@@ -116,7 +116,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       "config.filter": !!config?.filter,
     })
 
-    const prodAppId = dbCore.getProdAppID(appId)
+    const prodAppId = dbCore.getProdWorkspaceID(appId)
     const appPath = `${prodAppId}/`
     let tmpPath = createTempFolder(uuid())
     span.addTags({ prodAppId, tmpPath })

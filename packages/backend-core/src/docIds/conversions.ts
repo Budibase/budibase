@@ -28,7 +28,7 @@ export function isDevApp(app: App) {
  * Generates a development app ID from a real app ID.
  * @returns the dev app ID which can be used for dev database.
  */
-export function getDevelopmentAppID(appId: string) {
+export function getDevelopmentWorkspaceID(appId: string) {
   if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }
@@ -38,12 +38,12 @@ export function getDevelopmentAppID(appId: string) {
   const rest = split.join(APP_PREFIX)
   return `${APP_DEV_PREFIX}${rest}`
 }
-export const getDevAppID = getDevelopmentAppID
+export const getDevWorkspaceID = getDevelopmentWorkspaceID
 
 /**
  * Convert a development app ID to a deployed app ID.
  */
-export function getProdAppID(appId: string) {
+export function getProdWorkspaceID(appId: string) {
   if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }

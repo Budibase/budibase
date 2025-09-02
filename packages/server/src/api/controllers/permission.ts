@@ -35,7 +35,7 @@ export function fetchLevels(ctx: UserCtx<void, FetchPermissionLevelsRequest>) {
 export async function fetch(
   ctx: UserCtx<void, FetchResourcePermissionInfoResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const dbRoles = await sdk.permissions.getAllDBRoles(db)
   let permissions: Record<string, Record<string, string>> = {}
   // create an object with structure role ID -> resource ID -> level

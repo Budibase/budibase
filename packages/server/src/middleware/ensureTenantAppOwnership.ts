@@ -10,7 +10,7 @@ export async function ensureTenantAppOwnershipMiddleware(
     ctx.throw(400, "appId must be provided")
   }
 
-  const appTenantId = context.getTenantIDFromAppID(appId)
+  const appTenantId = context.getTenantIDFromWorkspaceID(appId)
   const tenantId = tenancy.getTenantId()
 
   if (appTenantId !== tenantId) {

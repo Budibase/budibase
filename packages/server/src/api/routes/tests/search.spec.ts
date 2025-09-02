@@ -3508,21 +3508,24 @@ if (descriptions.length) {
                       type: FieldType.STRING,
                     },
                   })
-                  await context.doInAppContext(config.getAppId(), async () => {
-                    const db = context.getAppDB()
-                    const tableDoc = await db.get<Table>(tableOrViewId)
-                    tableDoc.schema.Name = {
-                      name: "Name",
-                      type: FieldType.STRING,
+                  await context.doInWorkspaceContext(
+                    config.getAppId(),
+                    async () => {
+                      const db = context.getWorkspaceDB()
+                      const tableDoc = await db.get<Table>(tableOrViewId)
+                      tableDoc.schema.Name = {
+                        name: "Name",
+                        type: FieldType.STRING,
+                      }
+                      try {
+                        // remove the SQLite definitions so that they can be rebuilt as part of the search
+                        const sqliteDoc = await db.get(SQLITE_DESIGN_DOC_ID)
+                        await db.remove(sqliteDoc)
+                      } catch (err) {
+                        // no-op
+                      }
                     }
-                    try {
-                      // remove the SQLite definitions so that they can be rebuilt as part of the search
-                      const sqliteDoc = await db.get(SQLITE_DESIGN_DOC_ID)
-                      await db.remove(sqliteDoc)
-                    } catch (err) {
-                      // no-op
-                    }
-                  })
+                  )
                   await createRows([{ name: "foo", Name: "bar" }])
                 })
 

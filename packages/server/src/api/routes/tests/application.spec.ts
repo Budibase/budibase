@@ -434,11 +434,11 @@ describe("/applications (workspace apps flag)", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "App Two",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: `${secondWorkspace.url}/apptwo`,
           },
@@ -517,11 +517,11 @@ describe("/applications (workspace apps flag)", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "Default",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: secondWorkspace.url,
           },
@@ -1188,7 +1188,7 @@ describe("/applications (workspace apps flag)", () => {
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
-      await context.doInAppContext(app.appId, () =>
+      await context.doInWorkspaceContext(app.appId, () =>
         config.createAutomationLog(automation)
       )
 
@@ -1243,7 +1243,7 @@ describe("/applications (workspace apps flag)", () => {
       })
 
       // Switch to production context and verify data was seeded
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1276,7 +1276,7 @@ describe("/applications (workspace apps flag)", () => {
       expect(result).toBeDefined()
 
       // Verify data was published to production (since test mode publishes all data)
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1287,7 +1287,7 @@ describe("/applications (workspace apps flag)", () => {
       })
 
       // Test that we can call listEmptyProductionTables without error
-      const emptyTables = await context.doInAppContext(
+      const emptyTables = await context.doInWorkspaceContext(
         config.getAppId(),
         async () => {
           return await sdk.tables.listEmptyProductionTables()

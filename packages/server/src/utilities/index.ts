@@ -61,7 +61,7 @@ export async function updateEntityMetadata(
   entityId: string,
   updateFn: (metadata: Document) => Document
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = generateMetadataID(type, entityId)
   const metadata = updateFn((await db.tryGet(id)) || {})
   metadata._id = id
@@ -78,7 +78,7 @@ export async function saveEntityMetadata(
 }
 
 export async function deleteEntityMetadata(type: string, entityId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = generateMetadataID(type, entityId)
   const metadata = await db.tryGet(id)
   if (!metadata) {

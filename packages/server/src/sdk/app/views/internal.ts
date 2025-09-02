@@ -44,7 +44,7 @@ export async function create(
   view = ensureQuerySet(view)
   view = ensureQueryUISet(view)
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
@@ -58,7 +58,7 @@ export async function update(
   tableId: string,
   view: Readonly<ViewV2>
 ): Promise<{ view: ViewV2; existingView: ViewV2 }> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
 
@@ -83,7 +83,7 @@ export async function update(
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const view = await get(viewId)
   const table = await sdk.tables.getTable(view?.tableId)

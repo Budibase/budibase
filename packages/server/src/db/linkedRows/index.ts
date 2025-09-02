@@ -80,7 +80,7 @@ async function getLinksForRows(rows: Row[]): Promise<LinkDocumentValue[]> {
 
 async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   // create DBs
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
   let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })

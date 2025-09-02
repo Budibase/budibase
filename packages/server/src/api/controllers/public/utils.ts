@@ -14,7 +14,7 @@ export async function addRev(
   if (body._id.startsWith(APP_PREFIX)) {
     id = DocumentType.APP_METADATA
   }
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const dbDoc = await db.get<any>(id)
   body._rev = dbDoc._rev
   // update ID in case it is an app ID

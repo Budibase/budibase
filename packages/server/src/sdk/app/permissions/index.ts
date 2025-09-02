@@ -122,7 +122,7 @@ export async function updatePermissionOnRole(
   }: { roleId: string; resourceId: string; level: PermissionLevel },
   updateType: PermissionUpdateType
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = roles.isBuiltin(roleId)
   const dbRoleId = roles.getDBRoleID(roleId)

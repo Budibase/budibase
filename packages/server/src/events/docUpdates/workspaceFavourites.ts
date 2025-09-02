@@ -22,7 +22,7 @@ export default function process(updateCb?: UpdateCallback) {
       ].find(type => docId.startsWith(type))
 
       if (isWSResource!! && appId) {
-        context.doInAppContext(appId, async () => {
+        context.doInWorkspaceContext(appId, async () => {
           const result = await sdk.workspace.findByResourceId(docId)
           const [fav] = result
           if (fav) {

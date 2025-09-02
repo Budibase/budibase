@@ -17,7 +17,7 @@ describe("test link functionality", () => {
     })
 
     it("should be able to retrieve a linked table from a list", async () => {
-      await context.doInAppContext(appId, async () => {
+      await context.doInWorkspaceContext(appId, async () => {
         const retrieved = await linkUtils.getLinkedTable(table._id!, [table])
         expect(retrieved._id).toBe(table._id)
       })
@@ -25,7 +25,7 @@ describe("test link functionality", () => {
 
     it("should be able to retrieve a table from DB and update list", async () => {
       const tables: Table[] = []
-      await context.doInAppContext(appId, async () => {
+      await context.doInWorkspaceContext(appId, async () => {
         const retrieved = await linkUtils.getLinkedTable(table._id!, tables)
         expect(retrieved._id).toBe(table._id)
         expect(tables[0]).toBeDefined()
@@ -59,7 +59,7 @@ describe("test link functionality", () => {
   describe("getLinkDocuments", () => {
     it("should create the link view when it doesn't exist", async () => {
       // create the DB and a very basic app design DB
-      await context.doInAppContext(appId, async () => {
+      await context.doInWorkspaceContext(appId, async () => {
         const output = await linkUtils.getLinkDocuments({
           tableId: "test",
           rowId: "test",

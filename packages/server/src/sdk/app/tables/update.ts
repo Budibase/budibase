@@ -13,7 +13,7 @@ export * as external from "./external"
 export * as internal from "./internal"
 
 export async function saveTable(table: Table): Promise<Table> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let resp: DocumentInsertResponse
   if (isExternalTableID(table._id!)) {
     const datasource = await sdk.datasources.get(table.sourceId!)

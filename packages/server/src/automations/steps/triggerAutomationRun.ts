@@ -23,7 +23,7 @@ export async function run({
         status: AutomationStatus.ERROR,
       }
     } else {
-      const db = context.getAppDB()
+      const db = context.getWorkspaceDB()
       let automation = await db.get<Automation>(inputs.automation.automationId)
 
       let timeout = env.AUTOMATION_THREAD_TIMEOUT

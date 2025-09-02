@@ -216,7 +216,7 @@ abstract class UserColumnMigrator<T> implements ColumnMigrator {
       this.updateRow(row, userSide)
     }
 
-    let db = context.getAppDB()
+    let db = context.getWorkspaceDB()
     await db.bulkDocs(rows)
 
     delete this.table.schema[this.oldColumn.name]

@@ -46,7 +46,7 @@ export async function fetch(opts?: {
   enriched: boolean
 }): Promise<Datasource[]> {
   // Get internal tables
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -171,7 +171,7 @@ export async function get(
   datasourceId: string,
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
-  const appDb = context.getAppDB()
+  const appDb = context.getWorkspaceDB()
   let datasource = await appDb.get<Datasource>(datasourceId)
   datasource = addDatasourceFlags(datasource)
   if (opts?.enriched) {
@@ -182,7 +182,7 @@ export async function get(
 }
 
 export async function getWithEnvVars(datasourceId: string) {
-  const appDb = context.getAppDB()
+  const appDb = context.getWorkspaceDB()
   const datasource = await appDb.get<Datasource>(datasourceId)
   return enrichDatasourceWithValues(datasource)
 }
@@ -301,7 +301,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
 }
 
 export async function getExternalDatasources(): Promise<Datasource[]> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   let dsResponse = await db.allDocs<Datasource>(
     getDatasourcePlusParams(undefined, {
@@ -320,7 +320,7 @@ export async function save(
   // getIntegration throws an error if the integration is not found
   await getIntegration(datasource.source)
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const plus = datasource.plus
 
   const fetchSchema = opts?.fetchSchema || false

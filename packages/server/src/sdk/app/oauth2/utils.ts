@@ -63,7 +63,7 @@ async function fetchToken(config: {
 
 const trackUsage = async (id: string) => {
   const writethrough = new DocWritethrough<OAuth2LogDocument>(
-    context.getAppDB(),
+    context.getWorkspaceDB(),
     docIds.generateOAuth2LogID(id)
   )
   await writethrough.patch({
@@ -124,13 +124,13 @@ export async function validateConfig(config: {
 
 export async function getLastUsages(ids: string[]) {
   const devDocs = await context
-    .getAppDB()
+    .getWorkspaceDB()
     .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
       allowMissing: true,
     })
 
   const prodDocs = await context
-    .getProdAppDB()
+    .getProdWorkspaceDB()
     .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
       allowMissing: true,
     })

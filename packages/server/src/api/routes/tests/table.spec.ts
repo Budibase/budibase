@@ -885,8 +885,8 @@ if (descriptions.length) {
 
       describe("indexing", () => {
         it("should be able to create a table with indexes", async () => {
-          await context.doInAppContext(config.getAppId(), async () => {
-            const db = context.getAppDB()
+          await context.doInWorkspaceContext(config.getAppId(), async () => {
+            const db = context.getWorkspaceDB()
             const initialIndexes = await db.getIndexes()
             const initialIndexCount = initialIndexes.total_rows
 

@@ -58,7 +58,7 @@ export class RestImporter {
       })
 
     // persist queries
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors

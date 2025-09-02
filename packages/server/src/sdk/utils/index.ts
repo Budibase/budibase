@@ -6,7 +6,7 @@ import { processString } from "@budibase/string-templates"
 export async function getEnvironmentVariables() {
   let envVars = context.getEnvironmentVariables()
   if (!envVars) {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     const appEnv = dbCore.isDevAppID(appId)
       ? AppEnvironment.DEVELOPMENT
       : AppEnvironment.PRODUCTION

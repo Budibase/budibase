@@ -129,7 +129,7 @@ async function invalidateVariables(
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasourceId = ctx.params.datasourceId
   const baseDatasource = await sdk.datasources.get(datasourceId)
   await invalidateVariables(baseDatasource, ctx.request.body)
@@ -213,7 +213,7 @@ export async function save(
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   // Get all internal tables
   const internalTables = await db.allDocs<Table>(
@@ -257,7 +257,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasourceId = ctx.params.datasourceId
 
   const datasource = await sdk.datasources.get(datasourceId)

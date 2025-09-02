@@ -11,7 +11,7 @@ export async function getAllInternalRows(appId?: string) {
   if (appId) {
     db = dbCore.getDB(appId)
   } else {
-    db = context.getAppDB()
+    db = context.getWorkspaceDB()
   }
   const response = await db.allDocs(
     getRowParams(null, null, {

@@ -27,7 +27,7 @@ class LinkController {
   _oldTable?: Table
 
   constructor({ tableId, row, table, oldTable }: LinkControllerOpts) {
-    this._db = context.getAppDB()
+    this._db = context.getWorkspaceDB()
     this._tableId = tableId
     this._row = row
     this._table = table

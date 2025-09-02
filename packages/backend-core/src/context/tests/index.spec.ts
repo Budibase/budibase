@@ -154,11 +154,11 @@ describe("context", () => {
     it("the context is set correctly", async () => {
       const appId = db.generateAppID()
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          workspaceId: appId,
           isMigrating: true,
         }
         expect(context).toEqual(expected)
@@ -169,11 +169,11 @@ describe("context", () => {
       const tenantId = structures.tenant.id()
       const appId = db.generateAppID(tenantId)
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          workspaceId: appId,
           isMigrating: true,
           tenantId,
         }
@@ -186,11 +186,11 @@ describe("context", () => {
 
       expect(Context.get()).toBeUndefined()
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          workspaceId: appId,
           isMigrating: true,
         }
         expect(context).toEqual(expected)
@@ -202,17 +202,18 @@ describe("context", () => {
     it.each([
       [
         "doInAppMigrationContext",
-        () => context.doInAppMigrationContext(db.generateAppID(), () => {}),
+        () =>
+          context.doInWorkspaceMigrationContext(db.generateAppID(), () => {}),
       ],
       [
         "doInAppContext",
-        () => context.doInAppContext(db.generateAppID(), () => {}),
+        () => context.doInWorkspaceContext(db.generateAppID(), () => {}),
       ],
       [
         "doInAutomationContext",
         () =>
           context.doInAutomationContext({
-            appId: db.generateAppID(),
+            workspaceId: db.generateAppID(),
             automationId: structures.generator.guid(),
             task: () => {},
           }),
@@ -243,9 +244,12 @@ describe("context", () => {
       "a nested context.%s function cannot run",
       async (_, otherContextCall: () => Promise<void>) => {
         await expect(
-          context.doInAppMigrationContext(db.generateAppID(), async () => {
-            await otherContextCall()
-          })
+          context.doInWorkspaceMigrationContext(
+            db.generateAppID(),
+            async () => {
+              await otherContextCall()
+            }
+          )
         ).rejects.toThrow(
           "The context cannot be changed, a migration is currently running"
         )

@@ -25,7 +25,7 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
     return
   }
 
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   let user: ContextUser = await getFullUser(userId)
   // add globalId of user
   user.globalId = dbCore.getGlobalIDFromUserMetadataID(userId)
@@ -35,7 +35,7 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
   user.csrfToken = ctx.user.csrfToken
 
   if (appId) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     // check for group permissions
     if (!user.roleId || user.roleId === PUBLIC_ROLE) {
       user = await processUser(user, { appId })

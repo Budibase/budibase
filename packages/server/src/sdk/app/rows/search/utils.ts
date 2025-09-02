@@ -17,7 +17,7 @@ export async function paginatedSearch(
   query: SearchFilters,
   params: RowSearchParams
 ): Promise<SearchResponse<Row>> {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   return dbCore.paginatedSearch(appId!, SearchIndex.ROWS, query, params)
 }
 
@@ -25,7 +25,7 @@ export async function fullSearch(
   query: SearchFilters,
   params: RowSearchParams
 ): Promise<{ rows: Row[] }> {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   return dbCore.fullSearch(appId!, SearchIndex.ROWS, query, params)
 }
 

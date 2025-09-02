@@ -53,7 +53,7 @@ export async function getLinkDocuments(args: {
   includeDocs?: boolean
 }): Promise<LinkDocumentValue[] | LinkDocument[]> {
   const { tableId, rowId, fieldName, includeDocs } = args
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let params: DatabaseQueryOpts
   if (rowId) {
     params = { key: [tableId, rowId] }

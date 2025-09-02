@@ -422,7 +422,7 @@ export async function handleFileResponse(
     : ""
 
   const processedFileName = `${v4()}.${fileExtension}`
-  const key = `${context.getProdAppId()}/${processedFileName}`
+  const key = `${context.getProdWorkspaceId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
   // put the response stream to disk temporarily as a buffer

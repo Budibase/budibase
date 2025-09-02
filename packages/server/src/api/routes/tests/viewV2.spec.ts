@@ -1970,8 +1970,8 @@ if (descriptions.length) {
             const rawView = table.views![res.name] as ViewV2
             delete rawView.queryUI
 
-            await context.doInAppContext(config.getAppId(), async () => {
-              const db = context.getAppDB()
+            await context.doInWorkspaceContext(config.getAppId(), async () => {
+              const db = context.getWorkspaceDB()
 
               if (!rawDatasource) {
                 await db.put(table)

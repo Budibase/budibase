@@ -28,7 +28,7 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
  * so it may be slow.
  */
 export async function createLinkView() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const designDoc = await db.get<any>("_design/database")
   const view = {
     map: function (doc: LinkDocument) {
@@ -64,7 +64,7 @@ export async function createLinkView() {
 }
 
 export async function createRoutingView() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const designDoc = await db.get<any>("_design/database")
   const view: DBView = {
     // if using variables in a map function need to inject them before use
@@ -87,7 +87,7 @@ export async function createRoutingView() {
 }
 
 async function searchIndex(indexName: string, fnString: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const designDoc = await db.get<any>("_design/database")
   designDoc.indexes = {
     [indexName]: {

@@ -47,7 +47,7 @@ export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
 export const generateAppID = dbCore.generateAppID
-export const generateDevAppID = dbCore.getDevelopmentAppID
+export const generateDevAppID = dbCore.getDevelopmentWorkspaceID
 export const generateRoleID = dbCore.generateRoleID
 export const getRoleParams = dbCore.getRoleParams
 export const getQueryIndex = dbCore.getQueryIndex
@@ -128,7 +128,7 @@ function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
  * Gets all the link docs document from the current app db.
  */
 export async function allLinkDocs() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.allDocs<LinkDocument>(
     getLinkParams({

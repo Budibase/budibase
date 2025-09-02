@@ -29,7 +29,7 @@ const migration = async () => {
     }
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (docsToUpdate.length) {
     await db.bulkDocs(docsToUpdate)
   }

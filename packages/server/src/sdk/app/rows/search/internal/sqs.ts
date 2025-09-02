@@ -290,7 +290,7 @@ async function runSqlQuery(
       throw new Error("SQS cannot currently handle multiple queries")
     }
 
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
 
     return await tracer.trace("sqs.runSqlQuery", async span => {
       span?.addTags({ sql })
@@ -519,7 +519,7 @@ export async function search(
         {
           type: LockType.AUTO_EXTEND,
           name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: context.getAppId(),
+          resource: context.getWorkspaceId(),
         },
         sdk.tables.sqs.syncDefinition
       )

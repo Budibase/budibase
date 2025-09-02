@@ -10,7 +10,7 @@ const migration = async () => {
       b.updatedAt!.localeCompare(a.updatedAt!)
     )
 
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
 
     const docsToUpdate: Document[] = []
 

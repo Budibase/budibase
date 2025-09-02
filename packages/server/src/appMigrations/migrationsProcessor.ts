@@ -49,7 +49,7 @@ async function runMigrationForApp({
       appId,
       migrationId,
     })
-    await context.doInAppMigrationContext(appId, async () => {
+    await context.doInWorkspaceMigrationContext(appId, async () => {
       console.log(`Running migration "${migrationId}" for app "${appId}"`)
       await migrationFunc()
       console.log(`Migration "${migrationId}" ran for app "${appId}"`)
@@ -62,7 +62,7 @@ async function syncDevApp(devAppId: string): Promise<void> {
     span.addTags({
       appId: devAppId,
     })
-    await context.doInAppMigrationContext(devAppId, async () => {
+    await context.doInWorkspaceMigrationContext(devAppId, async () => {
       await sdk.applications.syncApp(devAppId)
       console.log(`App synchronized for dev "${devAppId}"`)
     })
@@ -73,7 +73,7 @@ async function updateMigrationVersion(
   appId: string,
   migrationId: string
 ): Promise<void> {
-  await context.doInAppMigrationContext(appId, () =>
+  await context.doInWorkspaceMigrationContext(appId, () =>
     updateAppMigrationMetadata({
       appId,
       version: migrationId,
@@ -90,10 +90,10 @@ export async function processMigrations(
   await tracer.trace("runMigrationForApp", async span => {
     span.addTags({ appId })
     try {
-      await context.doInAppContext(appId, () =>
+      await context.doInWorkspaceContext(appId, () =>
         doInMigrationLock(appId, async () => {
-          const devAppId = db.getDevAppID(appId)
-          const prodAppId = db.getProdAppID(appId)
+          const devAppId = db.getDevWorkspaceID(appId)
+          const prodAppId = db.getProdWorkspaceID(appId)
           const isPublished = await sdk.applications.isAppPublished(prodAppId)
           const appIdToMigrate = isPublished ? prodAppId : devAppId
 

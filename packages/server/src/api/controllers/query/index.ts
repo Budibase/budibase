@@ -119,7 +119,7 @@ const _import = async (
 export { _import as import }
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
 
   // Validate query name
@@ -211,7 +211,7 @@ export async function preview(
   let existingSchema = query.schema
   if (queryId && !existingSchema) {
     try {
-      const db = context.getAppDB()
+      const db = context.getWorkspaceDB()
       const existing = (await db.get(queryId)) as Query
       existingSchema = existing.schema
     } catch (err: any) {
@@ -371,7 +371,7 @@ async function execute(
   >,
   opts = { rowsOnly: false, isAutomation: false }
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const query = await db.get<Query>(ctx.params.queryId)
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
@@ -446,7 +446,7 @@ export async function executeV2AsAutomation(
 }
 
 const removeDynamicVariables = async (queryId: string) => {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   const dynamicVariables = datasource.config?.dynamicVariables as any[]
@@ -467,12 +467,12 @@ const removeDynamicVariables = async (queryId: string) => {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const queryId = ctx.params.queryId as string
   await removeDynamicVariables(queryId)
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }
-  await events.query.deleted(datasource, query, context.getAppId()!)
+  await events.query.deleted(datasource, query, context.getWorkspaceId()!)
 }

@@ -13,7 +13,7 @@ export async function fetch(tableId: string): Promise<LinkDocumentValue[]> {
     throw new Error(`Invalid tableId: ${tableId}`)
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const params: DatabaseQueryOpts = {
     startkey: [tableId],
     endkey: [tableId, {}],
@@ -29,7 +29,7 @@ export async function fetchWithDocument(
     throw new Error(`Invalid tableId: ${tableId}`)
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const params: DatabaseQueryOpts = {
     startkey: [tableId],
     endkey: [tableId, {}],

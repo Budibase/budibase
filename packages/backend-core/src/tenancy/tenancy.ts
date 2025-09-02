@@ -1,7 +1,7 @@
 import {
   DEFAULT_TENANT_ID,
   getTenantId,
-  getTenantIDFromAppID,
+  getTenantIDFromWorkspaceID,
   isMultiTenant,
   getPlatformURL,
 } from "../context"
@@ -30,7 +30,7 @@ export const isUserInAppTenant = (appId: string, user?: any) => {
   } else {
     userTenantId = getTenantId()
   }
-  const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
+  const tenantId = getTenantIDFromWorkspaceID(appId) || DEFAULT_TENANT_ID
   return tenantId === userTenantId
 }
 

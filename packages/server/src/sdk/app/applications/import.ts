@@ -141,7 +141,7 @@ export async function updateWithExport(
   file: FileAttributes,
   password?: string
 ) {
-  const devId = dbCore.getDevAppID(appId)
+  const devId = dbCore.getDevWorkspaceID(appId)
   const tempAppName = `temp_${devId}`
   const tempDb = dbCore.getDB(tempAppName)
   const appDb = dbCore.getDB(devId)
