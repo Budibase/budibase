@@ -2,8 +2,8 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { getWorkspaceMigrationVersion } from "../../../appMigrations"
-import * as appMigrations from "../../../appMigrations/migrations"
+import { getWorkspaceMigrationVersion } from "../../../workspaceMigrations"
+import * as appMigrations from "../../../workspaceMigrations/migrations"
 
 jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
   MIGRATIONS: [

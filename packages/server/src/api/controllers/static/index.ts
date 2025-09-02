@@ -38,7 +38,7 @@ import {
   ServeClientLibraryResponse,
   UserCtx,
 } from "@budibase/types"
-import { isWorkspaceFullyMigrated } from "../../../appMigrations"
+import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"

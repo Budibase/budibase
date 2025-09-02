@@ -27,7 +27,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { doInMigrationLock } from "../../../appMigrations"
+import { doInMigrationLock } from "../../../workspaceMigrations"
 import env from "../../../environment"
 
 // the max time we can wait for an invalidation to complete before considering it failed

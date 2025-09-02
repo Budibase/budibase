@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { Ctx, GetMigrationStatus } from "@budibase/types"
-import { isWorkspaceFullyMigrated } from "../../appMigrations"
+import { isWorkspaceFullyMigrated } from "../../workspaceMigrations"
 
 export async function getMigrationStatus(ctx: Ctx<void, GetMigrationStatus>) {
   const appId = context.getWorkspaceId()

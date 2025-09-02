@@ -14,7 +14,7 @@ import {
 } from "../../../db/utils"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
-import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../../"
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import sdk from "../../../sdk"
 
 const MIGRATIONS: WorkspaceMigration[] = [

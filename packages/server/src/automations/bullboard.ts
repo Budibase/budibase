@@ -3,7 +3,7 @@ import { KoaAdapter } from "@bull-board/koa"
 import { queue } from "@budibase/backend-core"
 import * as automation from "../threads/automation"
 import { backups } from "@budibase/pro"
-import { getWorkspaceMigrationQueue } from "../appMigrations/queue"
+import { getWorkspaceMigrationQueue } from "../workspaceMigrations/queue"
 import { createBullBoard } from "@bull-board/api"
 import { AutomationData } from "@budibase/types"
 

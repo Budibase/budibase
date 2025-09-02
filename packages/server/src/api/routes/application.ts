@@ -1,7 +1,7 @@
 import * as controller from "../controllers/application"
 import * as deploymentController from "../controllers/deploy"
 import { applicationValidator } from "./utils/validators"
-import { skipMigrationRedirect } from "../../middleware/appMigrations"
+import { skipMigrationRedirect } from "../../middleware/workspaceMigrations"
 import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
 
 builderRoutes

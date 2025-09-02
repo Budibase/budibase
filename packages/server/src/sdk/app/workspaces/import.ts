@@ -13,8 +13,8 @@ import {
   Workspace,
 } from "@budibase/types"
 import backups from "../backups"
-import { processMigrations } from "../../../appMigrations/migrationsProcessor"
-import { getWorkspaceMigrationCacheKey } from "../../../appMigrations"
+import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
+import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 
 export type FileAttributes = {
   type: string

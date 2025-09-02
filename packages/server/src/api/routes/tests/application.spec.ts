@@ -1096,7 +1096,7 @@ describe("/applications (workspace apps flag)", () => {
 
     it("should remove MIGRATING_APP header if present during deletion", async () => {
       const appMigrationsModule = await import(
-        "../../../appMigrations/migrations"
+        "../../../workspaceMigrations/migrations"
       )
 
       const migrationMock = jest.fn()

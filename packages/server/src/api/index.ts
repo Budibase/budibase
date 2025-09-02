@@ -11,7 +11,7 @@ import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes, assetRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import { apiEnabled, automationsEnabled } from "../features"
-import { appMigrations as migrations } from "../middleware/appMigrations"
+import { workspaceMigrations as migrations } from "../middleware/workspaceMigrations"
 import { automationQueue } from "../automations"
 import { getState } from "../startup"
 
