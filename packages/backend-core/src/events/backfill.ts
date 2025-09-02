@@ -14,11 +14,11 @@ import {
   ViewCreatedEvent,
   ViewCalculationCreatedEvent,
   ViewFilterCreatedEvent,
-  AppPublishedEvent,
+  WorkspacePublishedEvent,
   UserCreatedEvent,
   RoleAssignedEvent,
   UserPermissionAssignedEvent,
-  AppCreatedEvent,
+  WorkspaceCreatedEvent,
 } from "@budibase/types"
 import * as context from "../context"
 import { CacheKey } from "../cache/generic"
@@ -131,10 +131,10 @@ const CUSTOM_PROPERTY_SUFFIX: any = {
   [Event.VIEW_FILTER_CREATED]: (properties: ViewFilterCreatedEvent) => {
     return properties.tableId // best uniqueness
   },
-  [Event.APP_CREATED]: (properties: AppCreatedEvent) => {
+  [Event.APP_CREATED]: (properties: WorkspaceCreatedEvent) => {
     return properties.appId // best uniqueness
   },
-  [Event.APP_PUBLISHED]: (properties: AppPublishedEvent) => {
+  [Event.APP_PUBLISHED]: (properties: WorkspacePublishedEvent) => {
     return properties.appId // best uniqueness
   },
   // GLOBAL EVENTS
