@@ -1,5 +1,5 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
-import { setEnv, withEnv } from "../../../environment"
+import { withEnv } from "../../../environment"
 
 import {
   Header,
@@ -37,18 +37,12 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 describe("/applications (workspace apps flag)", () => {
   let config = setup.getConfig()
   let app: Workspace
-  const cleanup: (() => void)[] = []
 
   afterAll(() => {
     setup.afterAll()
-    for (const fn of cleanup) {
-      fn()
-    }
   })
 
   beforeAll(async () => {
-    cleanup.push(setEnv({ USE_LOCAL_COMPONENT_LIBS: "0" }))
-
     await config.init()
   })
 
