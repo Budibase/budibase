@@ -103,7 +103,7 @@
   <Divider id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">Client version</Heading>
-    {#if $admin.isDev}
+    {#if $admin.isDev && !$admin.serveDevClientFromStorage}
       <Body size="S">
         You're running the latest client version from your file system, as
         you're in developer mode.

@@ -171,7 +171,7 @@ export async function revertClientLibrary(appId: string) {
 
 export function shouldServeLocally() {
   if (env.isDev()) {
-    if (env.USE_CLIENT_FROM_STORAGE) {
+    if (env.DEV_USE_CLIENT_FROM_STORAGE) {
       return false
     }
     return true

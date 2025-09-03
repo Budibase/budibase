@@ -1,14 +1,14 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { get } from "svelte/store"
 import Analytics from "../../analytics"
+import { BudiStore } from "../BudiStore"
+import { auth } from "./auth"
 
 interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
@@ -26,6 +26,7 @@ export class AdminStore extends BudiStore<AdminState> {
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
+      serveDevClientFromStorage: false,
     })
   }
 
@@ -57,6 +58,7 @@ export class AdminStore extends BudiStore<AdminState> {
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
       store.passwordMinLength = environment.passwordMinLength
+      store.serveDevClientFromStorage = environment.serveDevClientFromStorage
       return store
     })
   }
