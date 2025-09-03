@@ -1,23 +1,23 @@
 // some test cases call functions directly, need to
 // store an app ID to pretend there is a context
-import env from "../environment"
-import Context from "./Context"
-import * as conversions from "../docIds/conversions"
-import { getDB } from "../db/db"
-import {
-  DocumentType,
-  SEPARATOR,
-  StaticDatabases,
-  DEFAULT_TENANT_ID,
-} from "../constants"
 import {
   Database,
   IdentityContext,
-  Snippet,
-  App,
-  Table,
   License,
+  Snippet,
+  Table,
+  Workspace,
 } from "@budibase/types"
+import {
+  DEFAULT_TENANT_ID,
+  DocumentType,
+  SEPARATOR,
+  StaticDatabases,
+} from "../constants"
+import { getDB } from "../db/db"
+import * as conversions from "../docIds/conversions"
+import env from "../environment"
+import Context from "./Context"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -356,7 +356,7 @@ export async function ensureSnippetContext() {
   let snippets: Snippet[] | undefined
   const db = getAppDB()
   if (db) {
-    const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+    const app = await db.tryGet<Workspace>(DocumentType.APP_METADATA)
     snippets = app?.snippets
   }
 

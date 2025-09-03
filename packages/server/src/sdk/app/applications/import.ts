@@ -5,16 +5,16 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import {
-  DocumentTypesToImport,
-  Document,
   Database,
-  RowValue,
+  Document,
   DocumentType,
-  App,
+  DocumentTypesToImport,
+  RowValue,
+  Workspace,
 } from "@budibase/types"
-import backups from "../backups"
-import { processMigrations } from "../../../appMigrations/migrationsProcessor"
 import { getAppMigrationCacheKey } from "../../../appMigrations"
+import { processMigrations } from "../../../appMigrations/migrationsProcessor"
+import backups from "../backups"
 
 export type FileAttributes = {
   type: string
@@ -29,13 +29,13 @@ const DESIGN_DOCUMENTS_TO_IMPORT = [
 async function getNewAppMetadata(
   tempDb: Database,
   appDb: Database
-): Promise<App> {
+): Promise<Workspace> {
   // static doc denoting app information
   const docId = DocumentType.APP_METADATA
   try {
     const [tempMetadata, appMetadata] = await Promise.all([
-      tempDb.get<App>(docId),
-      appDb.get<App>(docId),
+      tempDb.get<Workspace>(docId),
+      appDb.get<Workspace>(docId),
     ])
     return {
       ...appMetadata,
@@ -58,7 +58,7 @@ async function getNewAppMetadata(
 function mergeUpdateAndDeleteDocuments(
   updateDocs: Document[],
   deleteDocs: Document[],
-  metadata: App
+  metadata: Workspace
 ) {
   // compress the documents to create and to delete (if same ID, then just update the rev)
   const finalToDelete = []

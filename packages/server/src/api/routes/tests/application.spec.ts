@@ -1,42 +1,42 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { setEnv, withEnv } from "../../../environment"
 
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
-import { AppStatus } from "../../../db/utils"
 import {
-  events,
-  utils,
-  context,
-  roles,
   Header,
+  context,
   db,
+  events,
+  roles,
+  utils,
 } from "@budibase/backend-core"
-import env from "../../../environment"
+import { structures } from "@budibase/backend-core/tests"
 import {
-  type App,
+  type Workspace,
   BuiltinPermissionID,
   PermissionLevel,
   Screen,
   WorkspaceApp,
 } from "@budibase/types"
-import tk from "timekeeper"
-import * as uuid from "uuid"
-import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
-import {
-  basicScreen,
-  customScreen,
-  basicTable,
-  basicQuery,
-} from "../../../tests/utilities/structures"
+import tk from "timekeeper"
+import * as uuid from "uuid"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { AppStatus } from "../../../db/utils"
+import env from "../../../environment"
 import sdk from "../../../sdk"
+import {
+  basicQuery,
+  basicScreen,
+  basicTable,
+  customScreen,
+} from "../../../tests/utilities/structures"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/applications (workspace apps flag)", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: Workspace
   const cleanup: (() => void)[] = []
 
   afterAll(() => {

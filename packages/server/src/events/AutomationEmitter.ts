@@ -1,16 +1,16 @@
-import { rowEmission, tableEmission } from "./utils"
-import mainEmitter from "./index"
-import env from "../environment"
-import {
-  Table,
-  Row,
-  DocumentType,
-  App,
-  ContextEmitter,
-  EventType,
-  UserBindings,
-} from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import {
+  ContextEmitter,
+  DocumentType,
+  EventType,
+  Row,
+  Table,
+  UserBindings,
+  Workspace,
+} from "@budibase/types"
+import env from "../environment"
+import mainEmitter from "./index"
+import { rowEmission, tableEmission } from "./utils"
 
 const MAX_AUTOMATIONS_ALLOWED = 5
 
@@ -27,7 +27,7 @@ class AutomationEmitter implements ContextEmitter {
 
   async getMaxAutomationChain() {
     const db = context.getAppDB()
-    const appMetadata = await db.get<App>(DocumentType.APP_METADATA)
+    const appMetadata = await db.get<Workspace>(DocumentType.APP_METADATA)
     let chainAutomations = appMetadata?.automations?.chainAutomations
 
     if (chainAutomations === true) {

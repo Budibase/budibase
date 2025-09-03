@@ -1,45 +1,45 @@
-import * as triggers from "../../automations/triggers"
-import { sdk as coreSdk } from "@budibase/shared-core"
-import { DocumentType } from "../../db/utils"
-import { updateTestHistory } from "../../automations/utils"
-import { withTestFlag } from "../../utilities/redis"
 import {
-  context,
   cache,
-  events,
+  context,
   db as dbCore,
+  events,
   HTTPError,
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
+import { sdk as coreSdk } from "@budibase/shared-core"
 import {
-  App,
   Automation,
   AutomationActionStepId,
-  UserCtx,
-  DeleteAutomationResponse,
-  FetchAutomationResponse,
-  GetAutomationTriggerDefinitionsResponse,
-  GetAutomationStepDefinitionsResponse,
-  GetAutomationActionDefinitionsResponse,
-  FindAutomationResponse,
-  UpdateAutomationRequest,
-  UpdateAutomationResponse,
-  CreateAutomationRequest,
-  CreateAutomationResponse,
-  SearchAutomationLogsRequest,
-  SearchAutomationLogsResponse,
   ClearAutomationLogRequest,
   ClearAutomationLogResponse,
-  TriggerAutomationRequest,
-  TriggerAutomationResponse,
+  CreateAutomationRequest,
+  CreateAutomationResponse,
+  DeleteAutomationResponse,
+  FetchAutomationResponse,
+  FindAutomationResponse,
+  GetAutomationActionDefinitionsResponse,
+  GetAutomationStepDefinitionsResponse,
+  GetAutomationTriggerDefinitionsResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
+  Table,
   TestAutomationRequest,
   TestAutomationResponse,
-  Table,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
+  UpdateAutomationRequest,
+  UpdateAutomationResponse,
+  UserCtx,
+  Workspace,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
+import * as triggers from "../../automations/triggers"
+import { updateTestHistory } from "../../automations/utils"
+import { DocumentType } from "../../db/utils"
 import env from "../../environment"
+import sdk from "../../sdk"
+import { withTestFlag } from "../../utilities/redis"
+import { builderSocket } from "../../websockets"
 
 /*************************
  *                       *
@@ -142,7 +142,7 @@ export async function clearLogError(
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
-    const metadata = await db.get<App>(DocumentType.APP_METADATA)
+    const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (
