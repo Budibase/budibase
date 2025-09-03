@@ -1,15 +1,5 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  shouldServeLocally,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
   configs,
@@ -17,12 +7,9 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
   App,
   BudibaseAppProps,
@@ -38,13 +25,26 @@ import {
   ServeClientLibraryResponse,
   UserCtx,
 } from "@budibase/types"
+import fs from "fs"
+import fsp from "fs/promises"
+import * as uuid from "uuid"
 import { isAppFullyMigrated } from "../../../appMigrations"
+import { ObjectStoreBuckets } from "../../../constants"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  shouldServeLocally,
+} from "../../../utilities/fileSystem"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
-import send from "koa-send"
-import { getThemeVariables } from "../../../constants/themes"
-import path from "path"
 import extract from "extract-zip"
+import send from "koa-send"
 import { tmpdir } from "os"
+import path from "path"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -370,19 +370,13 @@ export const serveBuilderPreview = async function (
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
-
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
