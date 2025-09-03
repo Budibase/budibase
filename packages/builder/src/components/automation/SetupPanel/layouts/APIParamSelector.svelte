@@ -46,27 +46,25 @@
   }
 
   $: parameters = query?.parameters ?? []
-  $: queryOptions = getQueryOptions($queries.list)
 
   // Selected query and source
   $: query = $queries.list.find(query => query._id === value?.queryId)
   $: queryDataSource =
     $datasources?.list?.find(ds => ds._id === query?.datasourceId) || dataSource
+  $: filtered = $queries.list.filter(
+    q =>
+      q?.datasourceId === queryDataSource?._id &&
+      queryDataSource?.source === SourceName.REST
+  )
+
+  $: queryOptions = getQueryOptions(filtered)
 
   const getQueryOptions = (queries: Query[]): QueryWithIcon[] => {
     return queries.reduce<QueryWithIcon[]>((acc, q) => {
-      const datasource = $datasources?.list?.find(
-        ds => ds._id === q?.datasourceId
-      )
-      if (datasource?.source === SourceName.REST) {
-        acc.push({
-          ...q,
-          icon: getQueryIcon(
-            customQueryIconText(datasource, q),
-            customQueryIconColor(datasource, q)
-          ),
-        })
-      }
+      acc.push({
+        ...q,
+        icon: getQueryIcon(customQueryIconText(q), customQueryIconColor(q)),
+      })
       return acc
     }, [])
   }
@@ -112,7 +110,7 @@
       icon="Add"
       disabled={!queryDataSource?._id}
       on:click={() => {
-        $goto(`/builder/app/:application/data/query/new/:id`, {
+        $goto(`/builder/workspace/:application/data/query/new/:id`, {
           application: $params.application,
           id: queryDataSource?._id,
         })
@@ -165,8 +163,8 @@
     text-transform: capitalize;
   }
 
-  .wrap :global(.option-extra img),
-  :global(.popover-content .option-extra img) {
+  .wrap :global(.option-extra img.icon-dims),
+  :global(.popover-content .option-extra img.icon-dims) {
     width: 30px;
   }
 </style>

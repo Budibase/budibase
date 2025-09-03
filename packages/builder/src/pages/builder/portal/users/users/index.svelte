@@ -20,7 +20,6 @@
     licensing,
     organisation,
     admin,
-    featureFlags,
   } from "@/stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
@@ -80,11 +79,10 @@
   let selectedInvites: EnrichedUser[] = []
   let bulkSaveResponse: BulkUserCreated
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
-    { column: appsOrWorkspaces, component: AppsTableRenderer },
+    { column: "workspaces", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
   let userData: UserData = { users: [], groups: [] }
@@ -109,7 +107,7 @@
     ...($licensing.groupsEnabled && {
       userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
-    [appsOrWorkspaces]: {
+    workspaces: {
       sortable: false,
       width: "1fr",
     },
@@ -379,7 +377,7 @@
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body
-      >Add users and control who gets access to your published {appsOrWorkspaces}</Body
+      >Add users and control who gets access to your published workspaces</Body
     >
   </Layout>
   <Divider />

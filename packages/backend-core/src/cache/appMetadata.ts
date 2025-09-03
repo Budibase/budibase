@@ -1,6 +1,6 @@
+import { Database, Workspace } from "@budibase/types"
+import { DocumentType, doWithDB } from "../db"
 import { getAppClient } from "../redis/init"
-import { doWithDB, DocumentType } from "../db"
-import { Database, App } from "@budibase/types"
 
 export enum AppState {
   INVALID = "invalid",
@@ -20,7 +20,7 @@ async function populateFromDB(appId: string) {
   return doWithDB(
     appId,
     (db: Database) => {
-      return db.get<App>(DocumentType.APP_METADATA)
+      return db.get<Workspace>(DocumentType.APP_METADATA)
     },
     { skip_setup: true }
   )
@@ -37,7 +37,9 @@ function isInvalid(metadata?: { state: string }) {
  * @param appId the id of the app to get metadata from.
  * @returns the app metadata.
  */
-export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
+export async function getAppMetadata(
+  appId: string
+): Promise<Workspace | DeletedApp> {
   const client = await getAppClient()
   // try cache
   let metadata = await client.get(appId)

@@ -2,6 +2,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig } from "vite"
 import path from "path"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
+import { visualizer } from "rollup-plugin-visualizer"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -39,6 +40,10 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cssInjectedByJsPlugin(),
+      visualizer({
+        filename: "dist/budibase-client-analysis.html",
+        open: false,
+      }),
     ],
     resolve: {
       dedupe: ["svelte", "svelte/internal"],
@@ -62,6 +67,27 @@ export default defineConfig(({ mode }) => {
         {
           find: "@",
           replacement: path.resolve(__dirname, "src"),
+        },
+        {
+          find: "leaflet/dist/leaflet.css",
+          replacement: path.resolve(
+            __dirname,
+            "../../node_modules/leaflet/dist/leaflet.css"
+          ),
+        },
+        {
+          find: "leaflet",
+          replacement: path.resolve(
+            __dirname,
+            "../../node_modules/leaflet/dist/leaflet.js"
+          ),
+        },
+        {
+          find: "html2canvas",
+          replacement: path.resolve(
+            __dirname,
+            "../../node_modules/html2canvas/dist/html2canvas.min.js"
+          ),
         },
       ],
     },

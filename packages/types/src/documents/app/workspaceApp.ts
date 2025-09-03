@@ -1,5 +1,5 @@
 import { Document } from "../document"
-import { AppNavigation } from "./app"
+import { AppNavigation } from "./workspace"
 
 export interface WorkspaceApp extends Document {
   name: string

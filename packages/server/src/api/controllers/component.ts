@@ -1,11 +1,11 @@
-import { DocumentType } from "../../db/utils"
+import { context, db as dbCore, tenancy } from "@budibase/backend-core"
 import {
-  App,
   FetchComponentDefinitionResponse,
   Plugin,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
-import { db as dbCore, context, tenancy } from "@budibase/backend-core"
+import { DocumentType } from "../../db/utils"
 import { getComponentLibraryManifest } from "../../utilities/fileSystem"
 
 export async function fetchAppComponentDefinitions(
@@ -13,7 +13,7 @@ export async function fetchAppComponentDefinitions(
 ) {
   try {
     const db = context.getAppDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
+    const app = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     let componentManifests = await Promise.all(
       app.componentLibraries.map(async (library: any) => {

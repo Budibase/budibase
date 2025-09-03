@@ -1,26 +1,6 @@
-import env from "../../environment"
-import {
-  createAllSearchIndex,
-  createLinkView,
-  createRoutingView,
-} from "../../db/views/staticViews"
-import {
-  backupClientLibrary,
-  uploadAppFiles,
-  deleteAppFiles,
-  revertClientLibrary,
-  updateClientLibrary,
-} from "../../utilities/fileSystem"
-import {
-  AppStatus,
-  DocumentType,
-  generateAppID,
-  generateDevAppID,
-  getLayoutParams,
-  isDevAppID,
-} from "../../db/utils"
 import {
   cache,
+  configs,
   context,
   db,
   db as dbCore,
@@ -32,56 +12,74 @@ import {
   tenancy,
   users,
   utils,
-  configs,
-  features,
 } from "@budibase/backend-core"
-import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { doesUserHaveLock } from "../../utilities/redis"
-import { cleanupAutomations } from "../../automations/utils"
-import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
+import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import {
-  App,
-  Layout,
-  PlanType,
-  Screen,
-  UserCtx,
+  AddAppSampleDataResponse,
+  BBReferenceFieldSubType,
+  BBRequest,
   CreateAppRequest,
-  FetchAppDefinitionResponse,
-  FetchAppPackageResponse,
+  CreateAppResponse,
+  Database,
+  DeleteAppResponse,
   DuplicateAppRequest,
   DuplicateAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
-  Database,
-  FieldType,
-  BBReferenceFieldSubType,
-  Row,
-  BBRequest,
-  SyncAppResponse,
-  CreateAppResponse,
+  ErrorCode,
+  FetchAppDefinitionResponse,
+  FetchAppPackageResponse,
   FetchAppsResponse,
-  UpdateAppClientResponse,
-  RevertAppClientResponse,
-  DeleteAppResponse,
+  FetchPublishedAppsResponse,
+  FieldType,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
-  AddAppSampleDataResponse,
+  Layout,
+  PlanType,
+  RevertAppClientResponse,
+  Row,
+  Screen,
+  SyncAppResponse,
   UnpublishAppResponse,
-  ErrorCode,
-  FetchPublishedAppsResponse,
-  FeatureFlag,
+  UpdateAppClientResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
+  UserCtx,
+  Workspace,
 } from "@budibase/types"
-import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
-import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
-import { createSampleDataTableScreen } from "../../constants/screens"
-import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
+import { cleanupAutomations } from "../../automations/utils"
+import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import { defaultAppNavigator } from "../../constants/definitions"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { createSampleDataTableScreen } from "../../constants/screens"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+import {
+  AppStatus,
+  DocumentType,
+  generateAppID,
+  generateDevAppID,
+  getLayoutParams,
+  isDevAppID,
+} from "../../db/utils"
+import {
+  createAllSearchIndex,
+  createLinkView,
+  createRoutingView,
+} from "../../db/views/staticViews"
+import env from "../../environment"
+import sdk from "../../sdk"
+import {
+  backupClientLibrary,
+  deleteAppFiles,
+  revertClientLibrary,
+  updateClientLibrary,
+  uploadAppFiles,
+} from "../../utilities/fileSystem"
+import { doesUserHaveLock } from "../../utilities/redis"
+import { getUniqueRows } from "../../utilities/usageQuota/rows"
+import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -103,7 +101,7 @@ function getUserRoleId(ctx: UserCtx) {
 
 function checkAppUrl(
   ctx: UserCtx,
-  apps: App[],
+  apps: Workspace[],
   url: string,
   currentAppId?: string
 ) {
@@ -117,7 +115,7 @@ function checkAppUrl(
 
 function checkAppName(
   ctx: UserCtx,
-  apps: App[],
+  apps: Workspace[],
   name: string,
   currentAppId?: string
 ) {
@@ -194,7 +192,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
-    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACES),
+    disabled: true,
     isDefault: true,
   })
 
@@ -319,11 +317,15 @@ export async function fetchAppPackage(
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
 
-    const urlPath = ctx.headers.referer
-      ? new URL(ctx.headers.referer).pathname
-      : ""
+    const embedPath: string | undefined = ctx.request.get(
+      "x-budibase-embed-location"
+    )
 
-    const [matchedWorkspaceApp] =
+    const urlPath =
+      embedPath ||
+      (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+
+    const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
 
     // disabled workspace apps should appear to not exist
@@ -355,7 +357,7 @@ export async function fetchAppPackage(
 async function performAppCreate(
   ctx: UserCtx<CreateAppRequest, CreateAppResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
@@ -405,7 +407,7 @@ async function performAppCreate(
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
-    let newApplication: App = {
+    let newApplication: Workspace = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -443,7 +445,7 @@ async function performAppCreate(
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
     if (existing) {
-      const keys: (keyof App)[] = [
+      const keys: (keyof Workspace)[] = [
         "_rev",
         "navigation",
         "theme",
@@ -509,17 +511,7 @@ async function performAppCreate(
       }
     }
 
-    if (
-      !addSampleData &&
-      !(await features.isEnabled(FeatureFlag.WORKSPACES)) &&
-      !(await sdk.workspaceApps.fetch()).length
-    ) {
-      await createDefaultWorkspaceApp()
-    }
-
-    if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
-      await disableAllAppsAndAutomations()
-    }
+    await disableAllAppsAndAutomations()
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
@@ -598,8 +590,11 @@ async function updateUserColumns(
   })
 }
 
-async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
-  let creationFns: ((app: App) => Promise<void>)[] = []
+async function creationEvents(
+  request: BBRequest<CreateAppRequest>,
+  app: Workspace
+) {
+  let creationFns: ((app: Workspace) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
   if (useTemplate === "true") {
@@ -629,7 +624,10 @@ async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
   }
 }
 
-async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
+async function appPostCreate(
+  ctx: UserCtx<CreateAppRequest, Workspace>,
+  app: Workspace
+) {
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
@@ -679,7 +677,7 @@ export async function find(ctx: UserCtx) {
 export async function update(
   ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
 ) {
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
   // validation
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
@@ -784,14 +782,12 @@ async function unpublishApp(ctx: UserCtx) {
   const db = context.getProdAppDB()
   const result = await db.destroy()
 
-  await events.app.unpublished({ appId } as App)
+  await events.app.unpublished({ appId } as Workspace)
 
   // automations only in production
   await cleanupAutomations(appId)
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
-    await disableAllAppsAndAutomations()
-  }
+  await disableAllAppsAndAutomations()
 
   await cache.app.invalidateAppMetadata(appId)
   return result
@@ -922,7 +918,7 @@ export async function duplicateApp(
     ctx.throw(404, "Source app not found")
   }
 
-  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+  const apps = (await dbCore.getAllApps({ dev: true })) as Workspace[]
 
   checkAppName(ctx, apps, appName)
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
@@ -953,7 +949,7 @@ export async function duplicateApp(
     request: {
       body: createRequestBody,
     },
-  } as UserCtx<CreateAppRequest, App>
+  } as UserCtx<CreateAppRequest, Workspace>
 
   // Build the new application
   await create(createRequest)
@@ -970,14 +966,14 @@ export async function duplicateApp(
 }
 
 export async function updateAppPackage(
-  appPackage: Partial<App>,
+  appPackage: Partial<Workspace>,
   appId: string
 ) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await sdk.applications.metadata.get()
 
-    const newAppPackage: App = { ...application, ...appPackage }
+    const newAppPackage: Workspace = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
     }

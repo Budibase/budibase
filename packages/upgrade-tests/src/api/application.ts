@@ -1,19 +1,21 @@
+import { Workspace } from "@budibase/types"
 import * as fs from "fs"
-import { App } from "@budibase/types"
 import type { BudibaseClient } from "./BudibaseClient"
 
 export class ApplicationAPI {
   constructor(private client: BudibaseClient) {}
 
-  async fetch(): Promise<App[]> {
-    const { data } = await this.client.get<App[]>(
+  async fetch(): Promise<Workspace[]> {
+    const { data } = await this.client.get<Workspace[]>(
       "/api/applications?status=all"
     )
     return data
   }
 
-  async get(appId: string): Promise<App> {
-    const { data } = await this.client.get<App>(`/api/applications/${appId}`)
+  async get(appId: string): Promise<Workspace> {
+    const { data } = await this.client.get<Workspace>(
+      `/api/applications/${appId}`
+    )
     return data
   }
 
@@ -29,7 +31,9 @@ export class ApplicationAPI {
     const form = new FormData()
 
     // Create a Blob from the buffer with the correct type
-    const blob = new Blob([fileBuffer], { type: "application/gzip" })
+    const blob = new Blob([new Uint8Array(fileBuffer)], {
+      type: "application/gzip",
+    })
 
     // Append the file
     form.append("fileToImport", blob, filename)
@@ -37,7 +41,10 @@ export class ApplicationAPI {
     form.append("useTemplate", "true")
 
     // Send the form - native FormData will set the correct headers automatically
-    const { data } = await this.client.post<App>("/api/applications", form)
+    const { data } = await this.client.post<Workspace>(
+      "/api/applications",
+      form
+    )
     return data.appId || data._id!
   }
 }

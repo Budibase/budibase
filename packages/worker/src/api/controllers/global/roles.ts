@@ -1,18 +1,18 @@
 import {
+  cache,
+  context,
   db as dbCore,
   roles,
-  context,
-  cache,
   tenancy,
 } from "@budibase/backend-core"
-import sdk from "../../../sdk"
 import {
   Ctx,
-  App,
   FetchGlobalRolesResponse,
   FindGlobalRoleResponse,
   RemoveAppRoleResponse,
+  Workspace,
 } from "@budibase/types"
+import sdk from "../../../sdk"
 
 export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
   const tenantId = ctx.user!.tenantId
@@ -43,7 +43,7 @@ export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   const appId = ctx.params.appId
   await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
     const db = context.getAppDB()
-    const app = await db.get<App>(dbCore.DocumentType.APP_METADATA)
+    const app = await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
     ctx.body = {
       roles: await roles.getAllRoles(),
       name: app.name,

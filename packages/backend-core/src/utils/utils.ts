@@ -1,24 +1,24 @@
-import { getAllApps, getDevAppID } from "../db"
-import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
-import env from "../environment"
-import * as tenancy from "../tenancy"
-import * as context from "../context"
 import {
-  App,
   AuditedEventFriendlyName,
   Ctx,
   Event,
   TenantResolutionStrategy,
+  Workspace,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
+import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
+import * as context from "../context"
+import { getAllApps, getDevAppID } from "../db"
+import env from "../environment"
+import * as tenancy from "../tenancy"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREVIEW_PATH = "/app/preview"
 const BUILDER_PREFIX = "/builder"
-const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
+const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/workspace/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
 export async function resolveAppUrl(ctx: Ctx) {
@@ -36,9 +36,9 @@ export async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for an url that matches
-  const apps: App[] = await context.doInTenant(
+  const apps: Workspace[] = await context.doInTenant(
     tenantId,
-    () => getAllApps({ dev: false }) as Promise<App[]>
+    () => getAllApps({ dev: false }) as Promise<Workspace[]>
   )
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl
