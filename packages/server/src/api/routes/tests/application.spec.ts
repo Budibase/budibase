@@ -11,7 +11,7 @@ import {
 } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
-  type App,
+  type Workspace,
   BuiltinPermissionID,
   PermissionLevel,
   Screen,
@@ -36,7 +36,7 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/applications (workspace apps flag)", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: Workspace
 
   afterAll(() => {
     setup.afterAll()

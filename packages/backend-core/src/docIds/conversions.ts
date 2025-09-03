@@ -1,5 +1,5 @@
+import { Workspace } from "@budibase/types"
 import { APP_DEV_PREFIX, APP_PREFIX } from "../constants"
-import { App } from "@budibase/types"
 
 const NO_APP_ERROR = "No app provided"
 
@@ -17,7 +17,7 @@ export function isProdAppID(appId?: string) {
   return appId.startsWith(APP_PREFIX) && !isDevAppID(appId)
 }
 
-export function isDevApp(app: App) {
+export function isDevApp(app: Workspace) {
   if (!app) {
     throw NO_APP_ERROR
   }

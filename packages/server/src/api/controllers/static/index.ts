@@ -11,7 +11,6 @@ import * as pro from "@budibase/pro"
 import { InvalidFileExtensions } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
 import {
-  App,
   BudibaseAppProps,
   Ctx,
   DocumentType,
@@ -24,6 +23,7 @@ import {
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
 import fs from "fs"
 import fsp from "fs/promises"
@@ -181,7 +181,7 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: App,
+  app: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
@@ -338,7 +338,7 @@ export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
   const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
     let appId = context.getAppId()
@@ -462,7 +462,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
 
   try {
     const db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)

@@ -1,15 +1,15 @@
-import sdk from "../../sdk"
-import { events, context, db } from "@budibase/backend-core"
-import { DocumentType } from "../../db/utils"
+import { context, db, events } from "@budibase/backend-core"
 import {
-  App,
+  ClearBackupErrorRequest,
+  ClearBackupErrorResponse,
   Ctx,
   ExportAppDumpRequest,
   ExportAppDumpResponse,
   UserCtx,
-  ClearBackupErrorRequest,
-  ClearBackupErrorResponse,
+  Workspace,
 } from "@budibase/types"
+import { DocumentType } from "../../db/utils"
+import sdk from "../../sdk"
 
 export async function exportAppDump(
   ctx: Ctx<ExportAppDumpRequest, ExportAppDumpResponse>
@@ -34,7 +34,7 @@ export async function exportAppDump(
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
-    const app = await appDb.get<App>(DocumentType.APP_METADATA)
+    const app = await appDb.get<Workspace>(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
 }
