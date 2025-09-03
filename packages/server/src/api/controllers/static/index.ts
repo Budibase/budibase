@@ -1,29 +1,17 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  shouldServeLocally,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
+  cache,
   configs,
   context,
+  env as coreEnv,
   objectStore,
   utils,
-  env as coreEnv,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
   App,
   BudibaseAppProps,
@@ -39,13 +27,25 @@ import {
   ServeClientLibraryResponse,
   UserCtx,
 } from "@budibase/types"
-import { isAppFullyMigrated } from "../../../appMigrations"
-
-import send from "koa-send"
-import { getThemeVariables } from "../../../constants/themes"
-import path from "path"
 import extract from "extract-zip"
+import fs from "fs"
+import fsp from "fs/promises"
+import send from "koa-send"
 import { tmpdir } from "os"
+import path from "path"
+import * as uuid from "uuid"
+import { isAppFullyMigrated } from "../../../appMigrations"
+import { ObjectStoreBuckets } from "../../../constants"
+import { getThemeVariables } from "../../../constants/themes"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  shouldServeLocally,
+} from "../../../utilities/fileSystem"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -390,6 +390,8 @@ export const serveClientLibrary = async function (
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
+  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
+
   const serveLocally = shouldServeLocally(version || "")
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
@@ -406,6 +408,8 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   const { file } = ctx.params
 
   const appId = context.getAppId()
+
+  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
 
   const serveLocally = shouldServeLocally(coreEnv.VERSION)
   if (!serveLocally) {
