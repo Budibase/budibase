@@ -177,5 +177,9 @@ export function shouldServeLocally() {
     return true
   }
 
+  if (env.isTest()) {
+    return true
+  }
+
   return false
 }
