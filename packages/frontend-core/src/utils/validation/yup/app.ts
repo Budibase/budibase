@@ -1,11 +1,13 @@
-import { string, mixed } from "yup"
-import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
-import { App } from "@budibase/types"
+import { Workspace } from "@budibase/types"
+import { mixed, string } from "yup"
 import { ValidationStore } from "."
+import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
 
 export const name = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] }
+  { apps, currentApp }: { apps: Workspace[]; currentApp?: Workspace } = {
+    apps: [],
+  }
 ) => {
   validation.addValidator(
     "name",
@@ -37,7 +39,9 @@ export const name = (
 
 export const url = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] }
+  { apps, currentApp }: { apps: Workspace[]; currentApp?: Workspace } = {
+    apps: [],
+  }
 ) => {
   validation.addValidator(
     "url",

@@ -3,9 +3,9 @@ import {
   AnalyticsEnabledResponse,
   AnalyticsPingRequest,
   AnalyticsPingResponse,
-  App,
   Ctx,
   PingSource,
+  Workspace,
 } from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
 
@@ -25,7 +25,7 @@ export const ping = async (
   switch (body.source) {
     case PingSource.APP: {
       const db = context.getAppDB({ skip_setup: true })
-      const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+      const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
       let appId = context.getAppId()
 
       if (isDevAppID(appId)) {

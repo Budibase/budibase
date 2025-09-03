@@ -1,13 +1,13 @@
-import { AppStatus } from "../../../db/utils"
-import { App, ContextUser, User } from "@budibase/types"
-import { getLocksById } from "../../../utilities/redis"
-import { enrichApps } from "../../users/sessions"
-import { checkAppMetadata } from "../../../automations/logging"
 import { db, db as dbCore, users } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
+import { ContextUser, User, Workspace } from "@budibase/types"
 import sdk from "../.."
+import { checkAppMetadata } from "../../../automations/logging"
+import { AppStatus } from "../../../db/utils"
+import { getLocksById } from "../../../utilities/redis"
+import { enrichApps } from "../../users/sessions"
 
-export function filterAppList(user: User, apps: App[]) {
+export function filterAppList(user: User, apps: Workspace[]) {
   let appList: string[] = []
   const roleApps = Object.keys(user.roles)
   if (users.hasAppBuilderPermissions(user)) {
@@ -24,7 +24,7 @@ export function filterAppList(user: User, apps: App[]) {
 export async function fetch(status: AppStatus, user: ContextUser) {
   const dev = status === AppStatus.DEV
   const all = status === AppStatus.ALL
-  let apps = (await dbCore.getAllApps({ dev, all })) as App[]
+  let apps = (await dbCore.getAllApps({ dev, all })) as Workspace[]
 
   // need to type this correctly - add roles back in to convert from ContextUser to User
   const completeUser: User = {
@@ -58,7 +58,7 @@ export async function fetch(status: AppStatus, user: ContextUser) {
   return await checkAppMetadata(enrichedApps)
 }
 
-export async function enrichWithDefaultWorkspaceAppUrl(apps: App[]) {
+export async function enrichWithDefaultWorkspaceAppUrl(apps: Workspace[]) {
   const result = []
   for (const app of apps) {
     const workspaceApps = await db.doWithDB(app.appId, db =>

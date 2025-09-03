@@ -1,24 +1,24 @@
-import semver from "semver"
+import { RoleColor, helpers } from "@budibase/shared-core"
 import {
-  prefixRoleID,
-  getRoleParams,
+  BuiltinPermissionID,
+  Database,
+  PermissionLevel,
+  Role as RoleDoc,
+  RoleUIMetadata,
+  Screen,
+  Workspace,
+} from "@budibase/types"
+import { uniqBy } from "lodash"
+import cloneDeep from "lodash/fp/cloneDeep"
+import semver from "semver"
+import { getAppDB } from "../context"
+import {
   DocumentType,
   SEPARATOR,
   doWithDB,
+  getRoleParams,
+  prefixRoleID,
 } from "../db"
-import { getAppDB } from "../context"
-import {
-  Screen,
-  Role as RoleDoc,
-  RoleUIMetadata,
-  Database,
-  App,
-  BuiltinPermissionID,
-  PermissionLevel,
-} from "@budibase/types"
-import cloneDeep from "lodash/fp/cloneDeep"
-import { RoleColor, helpers } from "@budibase/shared-core"
-import { uniqBy } from "lodash"
 import { default as env } from "../environment"
 
 export const BUILTIN_ROLE_IDS = {
@@ -548,7 +548,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 }
 
 async function shouldIncludePowerRole(db: Database) {
-  const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+  const app = await db.tryGet<Workspace>(DocumentType.APP_METADATA)
   const creationVersion = app?.creationVersion
   if (!creationVersion || !semver.valid(creationVersion)) {
     // Old apps don't have creationVersion, so we should include it for backward compatibility

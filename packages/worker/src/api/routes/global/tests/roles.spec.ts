@@ -1,11 +1,11 @@
-import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, roles } from "@budibase/backend-core"
 import {
-  App,
-  Database,
   BuiltinPermissionID,
+  Database,
   WithoutDocMetadata,
+  Workspace,
 } from "@budibase/types"
+import { structures, TestConfiguration } from "../../../../tests"
 
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
@@ -35,7 +35,9 @@ async function addAppMetadata() {
   })
 }
 
-async function updateAppMetadata(update: Partial<WithoutDocMetadata<App>>) {
+async function updateAppMetadata(
+  update: Partial<WithoutDocMetadata<Workspace>>
+) {
   const app = await appDb.get("app_metadata")
   await appDb.put({
     ...app,

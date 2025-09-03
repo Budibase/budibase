@@ -1,27 +1,27 @@
+import { constants } from "@budibase/backend-core"
 import {
-  App,
+  DuplicateAppResponse,
   PublishAppRequest,
   PublishAppResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
+  Workspace,
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
   type FetchPublishedAppsResponse,
-  DuplicateAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
 } from "@budibase/types"
-import { Expectations, RequestOpts, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
-import { constants } from "@budibase/backend-core"
+import { Expectations, RequestOpts, TestAPI } from "./base"
 
 export class ApplicationAPI extends TestAPI {
   create = async (
     app: CreateAppRequest,
     expectations?: Expectations
-  ): Promise<App> => {
+  ): Promise<Workspace> => {
     const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
     delete app.fileToImport
-    return await this._post<App>("/api/applications", {
+    return await this._post<Workspace>("/api/applications", {
       fields: app,
       files,
       expectations,
@@ -81,8 +81,11 @@ export class ApplicationAPI extends TestAPI {
     )
   }
 
-  get = async (appId: string, expectations?: Expectations): Promise<App> => {
-    return await this._get<App>(`/api/applications/${appId}`, {
+  get = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<Workspace> => {
+    return await this._get<Workspace>(`/api/applications/${appId}`, {
       // While the get endpoint does take an :appId parameter, it doesn't use
       // it. It uses the appId from the context.
       headers: {
@@ -133,7 +136,7 @@ export class ApplicationAPI extends TestAPI {
     app: UpdateAppRequest,
     expectations?: Expectations
   ): Promise<UpdateAppResponse> => {
-    return await this._put<App>(`/api/applications/${appId}`, {
+    return await this._put<Workspace>(`/api/applications/${appId}`, {
       body: app,
       expectations,
     })
@@ -166,8 +169,8 @@ export class ApplicationAPI extends TestAPI {
   fetch = async (
     { status }: { status?: AppStatus } = {},
     expectations?: Expectations
-  ): Promise<App[]> => {
-    return await this._get<App[]>("/api/applications", {
+  ): Promise<Workspace[]> => {
+    return await this._get<Workspace[]>("/api/applications", {
       query: { status },
       expectations,
     })
