@@ -1,17 +1,18 @@
 <script lang="ts">
   import {
-    ModalContent,
-    keepOpen,
-    Toggle,
     Body,
     InlineAlert,
     Input,
+    keepOpen,
+    ModalContent,
     notifications,
+    Toggle,
   } from "@budibase/bbui"
   import { downloadFile } from "@budibase/frontend-core"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
+  import { sdk } from "@budibase/shared-core"
 
-  export let app
+  export let appId: string
   export let published
   let includeInternalTablesRows = true
   let encrypt = true
@@ -56,7 +57,9 @@
   }
 
   const exportApp = async () => {
-    const id = published ? app.prodId : app.devId
+    const id = published
+      ? sdk.applications.getProdAppID(appId)
+      : sdk.applications.getDevAppID(appId)
     const url = `/api/backups/export?appId=${id}`
 
     try {
