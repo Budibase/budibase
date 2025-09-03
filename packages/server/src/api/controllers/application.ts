@@ -1,26 +1,6 @@
-import env from "../../environment"
-import {
-  createAllSearchIndex,
-  createLinkView,
-  createRoutingView,
-} from "../../db/views/staticViews"
-import {
-  backupClientLibrary,
-  uploadAppFiles,
-  deleteAppFiles,
-  revertClientLibrary,
-  updateClientLibrary,
-} from "../../utilities/fileSystem"
-import {
-  AppStatus,
-  DocumentType,
-  generateAppID,
-  generateDevAppID,
-  getLayoutParams,
-  isDevAppID,
-} from "../../db/utils"
 import {
   cache,
+  configs,
   context,
   db,
   db as dbCore,
@@ -32,54 +12,74 @@ import {
   tenancy,
   users,
   utils,
-  configs,
 } from "@budibase/backend-core"
-import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { doesUserHaveLock } from "../../utilities/redis"
-import { cleanupAutomations } from "../../automations/utils"
-import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
+import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import {
+  AddAppSampleDataResponse,
   App,
-  Layout,
-  PlanType,
-  Screen,
-  UserCtx,
+  BBReferenceFieldSubType,
+  BBRequest,
   CreateAppRequest,
-  FetchAppDefinitionResponse,
-  FetchAppPackageResponse,
+  CreateAppResponse,
+  Database,
+  DeleteAppResponse,
   DuplicateAppRequest,
   DuplicateAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
-  Database,
-  FieldType,
-  BBReferenceFieldSubType,
-  Row,
-  BBRequest,
-  SyncAppResponse,
-  CreateAppResponse,
+  ErrorCode,
+  FetchAppDefinitionResponse,
+  FetchAppPackageResponse,
   FetchAppsResponse,
-  UpdateAppClientResponse,
-  RevertAppClientResponse,
-  DeleteAppResponse,
+  FetchPublishedAppsResponse,
+  FieldType,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
-  AddAppSampleDataResponse,
+  Layout,
+  PlanType,
+  RevertAppClientResponse,
+  Row,
+  Screen,
+  SyncAppResponse,
   UnpublishAppResponse,
-  ErrorCode,
-  FetchPublishedAppsResponse,
+  UpdateAppClientResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
+  UserCtx,
 } from "@budibase/types"
-import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
-import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
-import { createSampleDataTableScreen } from "../../constants/screens"
-import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
+import { cleanupAutomations } from "../../automations/utils"
+import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import { defaultAppNavigator } from "../../constants/definitions"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { createSampleDataTableScreen } from "../../constants/screens"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+import {
+  AppStatus,
+  DocumentType,
+  generateAppID,
+  generateDevAppID,
+  getLayoutParams,
+  isDevAppID,
+} from "../../db/utils"
+import {
+  createAllSearchIndex,
+  createLinkView,
+  createRoutingView,
+} from "../../db/views/staticViews"
+import env from "../../environment"
+import sdk from "../../sdk"
+import {
+  backupClientLibrary,
+  deleteAppFiles,
+  revertClientLibrary,
+  updateClientLibrary,
+  uploadAppFiles,
+} from "../../utilities/fileSystem"
+import { doesUserHaveLock } from "../../utilities/redis"
+import { getUniqueRows } from "../../utilities/usageQuota/rows"
+import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -479,9 +479,7 @@ async function performAppCreate(
     const response = await db.put(newApplication, { force: true })
     newApplication._rev = response.rev
 
-    if (!env.USE_LOCAL_COMPONENT_LIBS) {
-      await uploadAppFiles(appId)
-    }
+    await uploadAppFiles(appId)
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
@@ -813,9 +811,7 @@ async function destroyApp(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.USE_LOCAL_COMPONENT_LIBS) {
-    await deleteAppFiles(appId)
-  }
+  await deleteAppFiles(appId)
 
   await removeAppFromUserRoles(ctx, appId)
   await invalidateAppCache(appId)
