@@ -701,10 +701,6 @@ export async function update(
 export async function updateClient(
   ctx: UserCtx<void, UpdateAppClientResponse>
 ) {
-  // Don't allow updating in dev
-  if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
-  }
   // Get current app version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
@@ -734,11 +730,6 @@ export async function updateClient(
 export async function revertClient(
   ctx: UserCtx<void, RevertAppClientResponse>
 ) {
-  // Don't allow reverting in dev
-  if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
-  }
-
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
