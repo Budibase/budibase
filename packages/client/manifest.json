@@ -5272,6 +5272,11 @@
       },
       {
         "type": "text",
+        "label": "Search Text",
+        "key": "searchText"
+      },
+      {
+        "type": "text",
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false

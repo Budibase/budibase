@@ -10,6 +10,7 @@
   export let value: Primitive[] = []
   export let id: string | undefined = undefined
   export let placeholder: string | null = null
+  export let searchText: string | undefined = undefined
   export let disabled: boolean = false
   export let options: Option[] = []
   export let getOptionLabel = (option: Option, _index?: number) => option
@@ -111,6 +112,7 @@
   {fieldText}
   {options}
   isPlaceholder={!arrayValue.length}
+  {searchText}
   {autocomplete}
   bind:searchTerm
   bind:open
