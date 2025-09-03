@@ -1,10 +1,9 @@
-import semver from "semver"
+import { objectStore } from "@budibase/backend-core"
+import fs from "fs"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
-import fs from "fs"
-import { objectStore } from "@budibase/backend-core"
-import { resolve } from "../centralPath"
 import env from "../../environment"
+import { resolve } from "../centralPath"
 import { TOP_LEVEL_PATH } from "./filesystem"
 
 export function devClientLibPath() {
@@ -170,18 +169,14 @@ export async function revertClientLibrary(appId: string) {
   return JSON.parse(await manifestSrc)
 }
 
-export function shouldServeLocally(version: string) {
-  if (env.isProd() || !env.isDev()) {
+export function shouldServeLocally() {
+  if (!env.isDev()) {
     return false
   }
 
-  if (env.isDev()) {
-    return true
+  if (env.USE_CLIENT_FROM_STORAGE) {
+    return false
   }
 
-  const parsedSemver = semver.parse(version)
-  if (parsedSemver?.build?.[0] === "local") {
-    return true
-  }
-  return false
+  return true
 }

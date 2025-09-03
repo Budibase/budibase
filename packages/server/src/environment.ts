@@ -1,9 +1,9 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import { join, resolve } from "path"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
-import { join, resolve } from "path"
 
 const TOP_LEVEL_PATH =
   process.env.TOP_LEVEL_PATH ||
@@ -139,6 +139,7 @@ const environment = {
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
+  USE_CLIENT_FROM_STORAGE: process.env.USE_CLIENT_FROM_STORAGE,
   USE_LOCAL_COMPONENT_LIBS:
     process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
   SYNC_MIGRATION_CHECKS_MS:
