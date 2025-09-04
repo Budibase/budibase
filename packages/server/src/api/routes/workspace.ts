@@ -1,4 +1,4 @@
-import { skipMigrationRedirect } from "../../middleware/appMigrations"
+import { skipMigrationRedirect } from "../../middleware/workspaceMigrations"
 import * as deploymentController from "../controllers/deploy"
 import * as controller from "../controllers/workspace"
 import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
