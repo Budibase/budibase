@@ -1,39 +1,39 @@
 <script lang="ts">
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
+  import { BannerType } from "@/constants/banners"
+  import { capitalise, durationFromNow } from "@/helpers"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
+    appStore,
     contextMenuStore,
+    isOnlyUser,
     workspaceAppStore,
     workspaceFavouriteStore,
-    appStore,
-    isOnlyUser,
   } from "@/stores/builder"
   import { admin } from "@/stores/portal"
   import {
-    WorkspaceResource,
-    PublishResourceState,
-    type UIWorkspaceApp,
-  } from "@budibase/types"
-  import {
     AbsTooltip,
     ActionButton,
-    Button,
     Body,
+    Button,
     Helpers,
     Icon,
     notifications,
-    TooltipPosition,
     StatusLight,
+    TooltipPosition,
   } from "@budibase/bbui"
-  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import {
+    PublishResourceState,
+    WorkspaceResource,
+    type UIWorkspaceApp,
+  } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
-  import { capitalise, durationFromNow } from "@/helpers"
-  import TopBar from "@/components/common/TopBar.svelte"
-  import { BannerType } from "@/constants/banners"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import NoResults from "../_components/NoResults.svelte"
-  import VersionModal from "@/components/deploy/VersionModal.svelte"
 
   type ShowUI = { show: () => void }
 
@@ -197,7 +197,7 @@
   </HeroBanner>
 
   <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
-    {#if updateAvailable && $isOnlyUser && !$admin.isDev}
+    {#if updateAvailable && $isOnlyUser && !$admin.usingLocalComponentLibs}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="update-version" on:click={versionModal.show}>

@@ -1,12 +1,12 @@
 import { context } from "@budibase/backend-core"
 import {
-  App,
   Automation,
   PublishResourceState,
   PublishStatusResource,
   Screen,
-  WorkspaceApp,
   Table,
+  Workspace,
+  WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -59,7 +59,7 @@ export async function status() {
     updateState(developmentState)
   )
 
-  let metadata: App | undefined
+  let metadata: Workspace | undefined
   if (productionExists) {
     metadata = await sdk.applications.metadata.tryGet({
       production: true,

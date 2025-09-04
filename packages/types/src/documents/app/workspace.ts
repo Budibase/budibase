@@ -1,9 +1,9 @@
-import { User, Document, Plugin, Snippet, Theme } from "../"
+import { Document, Plugin, Snippet, Theme, User } from ".."
 import { SocketSession } from "../../sdk"
 
-export type AppMetadataErrors = { [key: string]: string[] }
+export type WorkspaceMetadataErrors = { [key: string]: string[] }
 
-export interface App extends Document {
+export interface Workspace extends Document {
   appId: string
   type: string
   version: string
@@ -11,7 +11,7 @@ export interface App extends Document {
   name: string
   url: string | undefined
   template: string | undefined
-  instance: AppInstance
+  instance: WorkspaceInstance
   tenantId: string
   status: string
   theme?: Theme
@@ -21,10 +21,10 @@ export interface App extends Document {
   sessions?: SocketSession[]
   /** @deprecated use workspace app navigation instead */
   navigation?: AppNavigation
-  automationErrors?: AppMetadataErrors
-  backupErrors?: AppMetadataErrors
-  icon?: AppIcon
-  features?: AppFeatures
+  automationErrors?: WorkspaceMetadataErrors
+  backupErrors?: WorkspaceMetadataErrors
+  icon?: WorkspaceIcon
+  features?: WorkspaceFeatures
   automations?: AutomationSettings
   usedPlugins?: Plugin[]
   upgradableVersion?: string
@@ -39,7 +39,7 @@ export interface App extends Document {
   recaptchaEnabled?: boolean
 }
 
-export interface AppInstance {
+export interface WorkspaceInstance {
   _id: string
 }
 
@@ -77,12 +77,12 @@ export interface AppCustomTheme {
   navBackground?: string
 }
 
-export interface AppIcon {
+export interface WorkspaceIcon {
   name: string
   color: string
 }
 
-export interface AppFeatures {
+export interface WorkspaceFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
   skeletonLoader?: boolean

@@ -5,7 +5,6 @@ import {
   cache,
   configs,
   context,
-  env as coreEnv,
   objectStore,
   utils,
 } from "@budibase/backend-core"
@@ -13,7 +12,6 @@ import * as pro from "@budibase/pro"
 import { InvalidFileExtensions } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
 import {
-  App,
   BudibaseAppProps,
   Ctx,
   DocumentType,
@@ -26,6 +24,7 @@ import {
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
 import extract from "extract-zip"
 import fs from "fs"
@@ -182,7 +181,7 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: App,
+  app: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
@@ -339,7 +338,7 @@ export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
   const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
     let appId = context.getAppId()
@@ -379,12 +378,6 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
-
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
@@ -392,7 +385,7 @@ export const serveClientLibrary = async function (
 
   ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
@@ -411,7 +404,7 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
 
   ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
 
-  const serveLocally = shouldServeLocally(coreEnv.VERSION)
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
@@ -492,7 +485,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
 
   try {
     const db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)
