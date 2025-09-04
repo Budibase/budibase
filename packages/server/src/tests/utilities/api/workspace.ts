@@ -14,7 +14,7 @@ import {
 import { AppStatus } from "../../../db/utils"
 import { Expectations, RequestOpts, TestAPI } from "./base"
 
-export class ApplicationAPI extends TestAPI {
+export class WorkspaceAPI extends TestAPI {
   create = async (
     app: CreateAppRequest,
     expectations?: Expectations
