@@ -1,9 +1,9 @@
-import * as setup from "./utilities"
+import { db as dbCore } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
+import { Automation, PublishResourceState, WorkspaceApp } from "@budibase/types"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
-import { Automation, PublishResourceState, WorkspaceApp } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
+import * as setup from "./utilities"
 
 describe("/api/deploy", () => {
   let config = setup.getConfig()
@@ -283,7 +283,7 @@ describe("/api/deploy", () => {
       await config.api.application.sync(config.getAppId())
     }
 
-    it("should define the disable value for all workspace apps when publishing for the first time (only when flag is true, workspace apps flag %s)", async () => {
+    it("should define the disable value for all workspace apps when publishing for the first time", async () => {
       const { workspaceApp: publishedApp } =
         await config.api.workspaceApp.create({
           name: "Test App 1",
@@ -322,7 +322,7 @@ describe("/api/deploy", () => {
       await expectApp(disabledApp).disabled(true, PublishResourceState.DISABLED)
     })
 
-    it("should define the disable value for all automations when publishing for the first time (only when flag is true, workspace apps flag %s)", async () => {
+    it("should define the disable value for all automations when publishing for the first time", async () => {
       const table = await config.api.table.save(basicTable())
 
       const { automation: disabledAutomation } = await createAutomationBuilder(
