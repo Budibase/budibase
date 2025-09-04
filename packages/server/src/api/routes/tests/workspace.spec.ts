@@ -34,7 +34,7 @@ import {
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
-describe("/applications (workspace apps flag)", () => {
+describe("/applications", () => {
   let config = setup.getConfig()
   let app: Workspace
 
@@ -609,7 +609,7 @@ describe("/applications (workspace apps flag)", () => {
       const res = await config.withHeaders(
         { referer: `http://localhost:10000/app${app.url}` },
         () =>
-          config.api.application.getAppPackage(app.appId, {
+          config.api.application.getAppPackage(config.getProdAppId(), {
             publicUser: true,
           })
       )
@@ -798,7 +798,7 @@ describe("/applications (workspace apps flag)", () => {
               },
               async () => {
                 const res = await config.api.application.getAppPackage(
-                  app.appId,
+                  config.getAppId(),
                   {
                     headers: {
                       [Header.TYPE]: "client",
@@ -1033,9 +1033,10 @@ describe("/applications (workspace apps flag)", () => {
     })
 
     it("app should not sync if production", async () => {
-      const { message } = await config.api.application.sync(
-        app.appId.replace("_dev", ""),
-        { status: 400 }
+      const { message } = await config.withProdApp(() =>
+        config.api.application.sync(app.appId.replace("_dev", ""), {
+          status: 400,
+        })
       )
 
       expect(message).toEqual(
@@ -1060,7 +1061,9 @@ describe("/applications (workspace apps flag)", () => {
     })
 
     it("should unpublish app with prod app ID", async () => {
-      await config.api.application.unpublish(app.appId.replace("_dev", ""))
+      await config.withProdApp(() =>
+        config.api.application.unpublish(app.appId.replace("_dev", ""))
+      )
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
   })
@@ -1083,7 +1086,7 @@ describe("/applications (workspace apps flag)", () => {
         .delete(`/api/global/roles/${prodAppId}`)
         .reply(200, {})
 
-      await config.api.application.delete(prodAppId)
+      await config.withProdApp(() => config.api.application.delete(prodAppId))
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })

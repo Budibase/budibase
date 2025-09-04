@@ -788,12 +788,13 @@ async function invalidateAppCache(appId: string) {
 }
 
 async function destroyApp(ctx: UserCtx) {
-  let appId = ctx.params.appId
-  appId = dbCore.getProdAppID(appId)
-  const devAppId = dbCore.getDevAppID(appId)
+  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const devAppId = dbCore.getDevAppID(ctx.params.appId)
+
+  const app = await sdk.applications.metadata.get()
 
   // check if we need to unpublish first
-  if (await dbCore.dbExists(appId)) {
+  if (await dbCore.dbExists(prodAppId)) {
     // app is deployed, run through unpublish flow
     await sdk.applications.syncApp(devAppId, {
       automationOnly: true,
@@ -803,15 +804,14 @@ async function destroyApp(ctx: UserCtx) {
 
   const db = dbCore.getDB(devAppId)
   // standard app deletion flow
-  const app = await sdk.applications.metadata.get()
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  await deleteAppFiles(appId)
+  await deleteAppFiles(prodAppId)
 
-  await removeAppFromUserRoles(ctx, appId)
-  await invalidateAppCache(appId)
+  await removeAppFromUserRoles(ctx, prodAppId)
+  await invalidateAppCache(prodAppId)
   return result
 }
 
