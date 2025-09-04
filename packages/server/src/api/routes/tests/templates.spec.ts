@@ -5,12 +5,15 @@ import { getAppMigrationVersion } from "../../../workspaceMigrations"
 import * as appMigrations from "../../../workspaceMigrations/migrations"
 import * as setup from "./utilities"
 
-jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
-  MIGRATIONS: [
-    { id: `202506011400_test`, func: jest.fn() },
-    { id: `202506021500_test`, func: jest.fn() },
-  ],
-}))
+jest.mock<typeof appMigrations>(
+  "../../../workspaceMigrations/migrations",
+  () => ({
+    MIGRATIONS: [
+      { id: `202506011400_test`, func: jest.fn() },
+      { id: `202506021500_test`, func: jest.fn() },
+    ],
+  })
+)
 
 interface Workspace {
   background: string
