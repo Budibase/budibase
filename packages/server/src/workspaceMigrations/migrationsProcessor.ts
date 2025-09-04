@@ -1,13 +1,13 @@
 import { context, db, logging } from "@budibase/backend-core"
 
+import tracer from "dd-trace"
+import { AppMigration, doInMigrationLock } from "."
+import sdk from "../sdk"
+import { MIGRATIONS } from "./migrations"
 import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
-} from "./appMigrationMetadata"
-import { AppMigration, doInMigrationLock } from "."
-import { MIGRATIONS } from "./migrations"
-import sdk from "../sdk"
-import tracer from "dd-trace"
+} from "./workspaceMigrationMetadata"
 
 async function getPendingMigrationsForApp(
   appId: string,

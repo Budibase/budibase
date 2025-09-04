@@ -1,16 +1,16 @@
+import { context, Header } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
+import { AppMigration } from ".."
 import * as setup from "../../api/routes/tests/utilities"
+import { withEnv } from "../../environment"
+import sdk from "../../sdk"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { MIGRATIONS } from "../migrations"
 import { processMigrations } from "../migrationsProcessor"
 import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
-} from "../appMigrationMetadata"
-import { context, Header } from "@budibase/backend-core"
-import { AppMigration } from ".."
-import { generator } from "@budibase/backend-core/tests"
-import sdk from "../../sdk"
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { MIGRATIONS } from "../migrations"
-import { withEnv } from "../../environment"
+} from "../workspaceMigrationMetadata"
 
 function generateMigrationId() {
   return generator.guid()

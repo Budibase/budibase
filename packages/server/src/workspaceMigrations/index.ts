@@ -1,14 +1,14 @@
-import { getAppMigrationQueue } from "./queue"
-import { Next } from "koa"
-import { getAppMigrationVersion } from "./appMigrationMetadata"
-import { MIGRATIONS } from "./migrations"
-import { UserCtx } from "@budibase/types"
 import { context, db, Header } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
+import { Next } from "koa"
 import environment from "../environment"
 import sdk from "../sdk"
+import { MIGRATIONS } from "./migrations"
+import { getAppMigrationQueue } from "./queue"
+import { getAppMigrationVersion } from "./workspaceMigrationMetadata"
 
-export * from "./appMigrationMetadata"
 export * from "./migrationLock"
+export * from "./workspaceMigrationMetadata"
 
 export type AppMigration = {
   id: string
