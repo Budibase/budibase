@@ -70,6 +70,8 @@
 
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
   $: viewHidden = viewVisibiltyMap[activeId] === false
+  $: tableName =
+    table?._id === TableNames.USERS ? "App users" : table?.name || ""
 
   const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
     return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
@@ -238,11 +240,9 @@
     class:active={tableId === activeId}
     on:contextmenu={openTableContextMenu}
   >
-    <AbsTooltip
-      text={table?._id === TableNames.USERS ? "App users" : table?.name || ""}
-    >
+    <AbsTooltip text={tableName}>
       <div class="nav-item__title">
-        {table?._id === TableNames.USERS ? "App users" : table?.name || ""}
+        {tableName}
       </div>
     </AbsTooltip>
     {#if tableSelectedBy}
