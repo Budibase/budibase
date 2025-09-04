@@ -32,7 +32,8 @@
   let revertModal: RevertModal
   let deleteModal: DeleteModal
 
-  $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
+  $: updateAvailable =
+    $appStore.upgradableVersion !== $appStore.version || $admin.isDev
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
 

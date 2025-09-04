@@ -11,7 +11,7 @@ import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 
 interface AdminState
-  extends Omit<GetEnvironmentResponse, "isDev" | "serveDevClientFromStorage"> {
+  extends Omit<GetEnvironmentResponse, "serveDevClientFromStorage"> {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
@@ -22,6 +22,7 @@ export class AdminStore extends BudiStore<AdminState> {
   constructor() {
     super({
       loaded: false,
+      isDev: false,
       multiTenancy: false,
       cloud: false,
       disableAccountPortal: false,
@@ -50,6 +51,7 @@ export class AdminStore extends BudiStore<AdminState> {
   async getEnvironment() {
     const environment = await API.getEnvironment()
     this.update(store => {
+      store.isDev = environment.isDev
       store.multiTenancy = environment.multiTenancy
       store.cloud = environment.cloud
       store.disableAccountPortal = environment.disableAccountPortal
