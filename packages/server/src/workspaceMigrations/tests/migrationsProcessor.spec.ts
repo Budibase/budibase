@@ -20,7 +20,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   let config: TestConfiguration
 
   beforeAll(async () => {
-    setEnv({ DISABLE_APP_MIGRATIONS: false })
+    setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false })
 
     config = setup.getConfig()
     await config.init()
