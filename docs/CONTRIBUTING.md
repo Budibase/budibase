@@ -130,9 +130,21 @@ then `cd ` into your local copy.
 
 #### 3. Install and Build
 
-| **NOTE**: On Windows, all yarn commands must be executed on a bash shell (e.g. git bash)
+## Windows Users
 
-To develop the Budibase platform you'll need [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
+On Windows, Budibase works best with **Git Bash** (comes with Git for Windows).  
+1. Download Git for Windows: https://git-scm.com/download/win  
+2. During installation, enable **“Git Bash Here”**.  
+3. Open **Git Bash** and run all `yarn` and `lerna` commands there.
+
+Once installed, open Git Bash and run all yarn and lerna commands there.  
+
+⚠ If you prefer PowerShell, prefix environment variables differently:
+powershell
+setx DISABLE_V8_COMPILE_CACHE 1
+setx NODE_OPTIONS "--max-old-space-size=1500"
+yarn build
+
 
 ##### Quick method
 
