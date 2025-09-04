@@ -1,5 +1,5 @@
-jest.mock("../../sdk/app/permissions", () => ({
-  ...jest.requireActual("../../sdk/app/permissions"),
+jest.mock("../../sdk/workspace/permissions", () => ({
+  ...jest.requireActual("../../sdk/workspace/permissions"),
   getResourcePerms: jest.fn().mockResolvedValue([]),
 }))
 
