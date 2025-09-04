@@ -1,4 +1,5 @@
 import { objectStore } from "@budibase/backend-core"
+import { sdk, utils } from "@budibase/shared-core"
 import fs from "fs"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
@@ -17,13 +18,17 @@ export function devClientLibPath() {
  * was ever needed. Therefore we need to support old apps which may still have
  * the manifest at this location for the first update.
  *
- * The new paths for the in-use version are:
+ * The paths for the in-use version are:
  * {appId}/manifest.json
  * {appId}/budibase-client.js
+ * {appId}/_dependencies/...
+ * {appId}/... (and any other app files)
  *
  * The paths for the backups are:
- * {appId}/manifest.json.bak
- * {appId}/budibase-client.js.bak
+ * {appId}.bak/manifest.json
+ * {appId}.bak/budibase-client.js
+ * {appId}.bak/_dependencies/...
+ * {appId}.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
  * we pull both the manifest and client bundle from the server's dependencies
@@ -31,56 +36,45 @@ export function devClientLibPath() {
  */
 
 /**
- * Backs up the current client library version by copying both the manifest
- * and client bundle to .bak extensions in the object store. Only the one
- * previous version is stored as a backup, which can be reverted to.
+ * Backs up the current client library version by copying the entire app folder
+ * to a backup location in the object store. Only the one previous version is
+ * stored as a backup, which can be reverted to.
  * @param appId The app ID to backup
  * @returns {Promise<void>}
  */
 export async function backupClientLibrary(appId: string) {
-  // Copy existing manifest to tmp
-  let tmpManifestPath
+  appId = sdk.applications.getProdAppID(appId)
+  // First, remove any existing backup folder
   try {
-    // Try to load the manifest from the new file location
-    tmpManifestPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(appId, "manifest.json")
-    )
+    await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}.bak`)
   } catch (error) {
-    // Fallback to loading it from the old location for old apps
-    tmpManifestPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(
-        appId,
-        "node_modules",
-        "budibase",
-        "standard-components",
-        "package",
-        "manifest.json"
-      )
-    )
+    // Ignore errors if backup doesn't exist
   }
 
-  // Copy existing client lib to tmp
-  const tmpClientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js")
-  )
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
+    async file => {
+      if (file.Key?.endsWith(".bak")) {
+        return
+      }
 
-  // Upload manifest and client library as backups
-  const manifestUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json.bak"),
-    path: tmpManifestPath,
-    type: "application/json",
-  })
-  const clientUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js.bak"),
-    path: tmpClientPath,
-    type: "application/javascript",
-  })
-  await Promise.all([manifestUpload, clientUpload])
+      const tmpPath = await objectStore.retrieveToTmp(
+        ObjectStoreBuckets.APPS,
+        file.Key!
+      )
+
+      const backupKey = file.Key!.replace(appId, `${appId}.bak`)
+      await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: backupKey,
+        path: tmpPath,
+        extra: {
+          ContentType: "application/json",
+        },
+      })
+    },
+    5
+  )
 }
 
 /**
@@ -130,43 +124,57 @@ export async function updateClientLibrary(appId: string) {
 
 /**
  * Reverts the version of the client library and manifest to the previously
- * used version for an app.
+ * used version for an app by restoring the entire backed up folder.
  * @param appId The app ID to revert
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  let manifestPath, clientPath
+  appId = sdk.applications.getProdAppID(appId)
 
-  // Copy backups manifest to tmp directory
-  manifestPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "manifest.json.bak")
+  let manifestContent
+  let hasBackup = false
+
+  // Process all files in the backup folder using parallelForeach
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}.bak`),
+    async file => {
+      hasBackup = true
+
+      // Download the backup file to temp
+      const tmpPath = await objectStore.retrieveToTmp(
+        ObjectStoreBuckets.APPS,
+        file.Key!
+      )
+
+      // Restore to original location
+      const restoreKey = file.Key!.replace(`${appId}.bak`, appId)
+
+      // Read manifest content if this is the manifest file
+      if (restoreKey.endsWith("manifest.json")) {
+        manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+      }
+
+      await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: restoreKey,
+        path: tmpPath,
+        extra: {
+          ContentType: "application/json",
+        },
+      })
+    },
+    5
   )
 
-  // Copy backup client lib to tmp
-  clientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js.bak")
-  )
+  if (!hasBackup) {
+    throw new Error(`No backup found for app ${appId}`)
+  }
 
-  const manifestSrc = fs.promises.readFile(manifestPath, "utf8")
+  if (!manifestContent) {
+    throw new Error(`No manifest found in backup for app ${appId}`)
+  }
 
-  // Upload backups as new versions
-  const manifestUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json"),
-    path: manifestPath,
-    type: "application/json",
-  })
-  const clientUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js"),
-    path: clientPath,
-    type: "application/javascript",
-  })
-  await Promise.all([manifestSrc, manifestUpload, clientUpload])
-
-  return JSON.parse(await manifestSrc)
+  return JSON.parse(manifestContent)
 }
 
 export function shouldServeLocally() {
