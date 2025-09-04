@@ -21,8 +21,8 @@ import { utils } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 import sdk from "../../../../.."
 
-jest.mock("../../../../../../sdk/app/views", () => ({
-  ...jest.requireActual("../../../../../../sdk/app/views"),
+jest.mock("../../../../../../sdk/workspace/views", () => ({
+  ...jest.requireActual("../../../../../../sdk/workspace/views"),
   getTable: jest.fn(),
 }))
 const getTableMock = sdk.views.getTable as jest.MockedFunction<
