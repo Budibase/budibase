@@ -4,16 +4,16 @@ jest.mock("../../sdk/app/permissions", () => ({
 }))
 
 import {
-  PermissionType,
   PermissionLevel,
   PermissionSource,
+  PermissionType,
 } from "@budibase/types"
 
-import { authorizedMiddleware } from "../authorized"
-import env from "../../environment"
 import { generator, mocks } from "@budibase/backend-core/tests"
+import env from "../../environment"
+import { getResourcePerms } from "../../sdk/workspace/permissions"
 import { initProMocks } from "../../tests/utilities/mocks/pro"
-import { getResourcePerms } from "../../sdk/app/permissions"
+import { authorizedMiddleware } from "../authorized"
 
 const APP_ID = ""
 
