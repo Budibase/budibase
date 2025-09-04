@@ -96,28 +96,6 @@ describe("utils", () => {
       })
     })
 
-    it("gets appId from referer", async () => {
-      const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
-      ctx.request.headers = {
-        referer: `http://example.com/builder/workspace/${expected}/design/screen_123/screens`,
-      }
-
-      const actual = await utils.getAppIdFromCtx(ctx)
-      expect(actual).toBe(expected)
-    })
-
-    it("doesn't get appId from referer when not builder", async () => {
-      const ctx = structures.koa.newContext()
-      const appId = db.generateAppID()
-      ctx.request.headers = {
-        referer: `http://example.com/foo/app/${appId}/bar`,
-      }
-
-      const actual = await utils.getAppIdFromCtx(ctx)
-      expect(actual).toBe(undefined)
-    })
-
     it("throws 403 when header and body have different valid app IDs", async () => {
       const ctx = structures.koa.newContext()
 

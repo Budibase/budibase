@@ -130,15 +130,6 @@ export async function getAppIdFromCtx(ctx: Ctx) {
     appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
-  // look in the referer - builder only
-  // make sure this is performed after prod app url resolution, in case the
-  // referer header is present from a builder redirect
-  const referer = ctx.request.headers.referer
-  if (referer?.includes(BUILDER_APP_PREFIX)) {
-    const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
-    appId = confirmAppId(refererId)
-  }
-
   return appId
 }
 
