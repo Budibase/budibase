@@ -9,7 +9,7 @@ import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
 import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
 import * as context from "../context"
-import { getAllApps, getDevAppID } from "../db"
+import { getAllApps } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 
@@ -88,8 +88,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
       return appId
     }
 
-    if (appId && getDevAppID(appId) !== getDevAppID(possibleAppId)) {
-      // TODO: check dev/prod conflicts
+    if (appId && appId !== possibleAppId) {
       ctx.throw("App id conflict", 403)
     }
     return appId ?? possibleAppId
