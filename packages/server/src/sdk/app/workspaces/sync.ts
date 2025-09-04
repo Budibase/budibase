@@ -1,10 +1,10 @@
-import env from "../../../environment"
-import { db as dbCore, context, logging, roles } from "@budibase/backend-core"
-import { User, ContextUser, UserGroup } from "@budibase/types"
+import { context, db as dbCore, logging, roles } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
-import sdk from "../../"
-import { getRawGlobalUsers, processUser } from "../../../utilities/global"
+import { ContextUser, User, UserGroup } from "@budibase/types"
+import sdk from "../.."
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
+import env from "../../../environment"
+import { getRawGlobalUsers, processUser } from "../../../utilities/global"
 
 type DeletedUser = { _id: string; deleted: boolean }
 
