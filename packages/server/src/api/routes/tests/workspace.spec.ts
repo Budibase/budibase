@@ -1084,12 +1084,12 @@ describe("/applications (workspace apps flag)", () => {
     })
 
     it("should remove MIGRATING_APP header if present during deletion", async () => {
-      const appMigrationsModule = await import(
+      const migrationsModule = await import(
         "../../../workspaceMigrations/migrations"
       )
 
       const migrationMock = jest.fn()
-      appMigrationsModule.MIGRATIONS.push({
+      migrationsModule.MIGRATIONS.push({
         id: "99999999999999_test_deletion",
         func: migrationMock,
       })
@@ -1113,7 +1113,7 @@ describe("/applications (workspace apps flag)", () => {
       expect(migrationMock).toHaveBeenCalledTimes(2)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
 
-      appMigrationsModule.MIGRATIONS.pop()
+      migrationsModule.MIGRATIONS.pop()
     })
   })
 
