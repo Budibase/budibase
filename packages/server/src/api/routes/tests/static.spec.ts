@@ -1,7 +1,7 @@
+import { constants } from "@budibase/backend-core"
 import { Datasource, SourceName } from "@budibase/types"
 import { setEnv } from "../../../environment"
-import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
-import { constants } from "@budibase/backend-core"
+import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
 
 describe("/static", () => {
   let request = getRequest()
@@ -130,14 +130,17 @@ describe("/static", () => {
     })
   })
 
-  describe("/app/preview", () => {
+  describe("/app/:appId/preview", () => {
     beforeEach(() => {
       jest.clearAllMocks()
     })
 
     it("should serve the builder preview", async () => {
       const headers = config.defaultHeaders()
-      const res = await request.get(`/app/preview`).set(headers).expect(200)
+      const res = await request
+        .get(`/app/${config.getAppId()}/preview`)
+        .set(headers)
+        .expect(200)
 
       expect(res.body.appId).toBe(config.appId)
       expect(res.body.builderPreview).toBe(true)
