@@ -1,4 +1,3 @@
-import { DocumentType } from "../../db/utils"
 import {
   context,
   db as dbCore,
@@ -6,7 +5,7 @@ import {
   roles,
   tenancy,
 } from "@budibase/backend-core"
-import { updateAppPackage } from "./application"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 import {
   DeleteScreenResponse,
   FetchScreenResponse,
@@ -19,9 +18,10 @@ import {
   UsageInScreensResponse,
   UserCtx,
 } from "@budibase/types"
-import { builderSocket } from "../../websockets"
+import { DocumentType } from "../../db/utils"
 import sdk from "../../sdk"
-import { sdk as sharedSdk } from "@budibase/shared-core"
+import { builderSocket } from "../../websockets"
+import { updateAppPackage } from "./workspace"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()

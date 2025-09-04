@@ -1,12 +1,12 @@
-import TestConfig from "../../tests/utilities/TestConfiguration"
 import { db as dbCore } from "@budibase/backend-core"
-import sdk from "../index"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
 } from "@budibase/types"
-import { FIND_LIMIT } from "../app/rows/attachments"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import sdk from "../index"
+import { FIND_LIMIT } from "../workspace/rows/attachments"
 
 const attachment = {
   size: 73479,
