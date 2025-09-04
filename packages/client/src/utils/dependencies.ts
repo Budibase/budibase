@@ -43,5 +43,5 @@ export async function loadDependency(config: LibDependency): Promise<any> {
 }
 
 // Specific loaders
-export const loadCharts = loadDependency(libDependencies.charts)
-export const loadQRCode = loadDependency(libDependencies.qrcode)
+export const loadCharts = () => loadDependency(libDependencies.charts)
+export const loadQRCode = () => loadDependency(libDependencies.qrcode)
