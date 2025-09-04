@@ -277,6 +277,11 @@ export async function streamUpload({
         ...extra,
         ContentType: "application/javascript",
       }
+    } else if (filename?.endsWith(".json")) {
+      extra = {
+        ...extra,
+        ContentType: "application/json",
+      }
     } else if (filename?.endsWith(".svg")) {
       extra = {
         ...extra,
