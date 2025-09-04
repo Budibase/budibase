@@ -15,16 +15,19 @@ async function buildAll() {
   }
 
   const config = {
-    build: { watch: isWatch ? {} : false },
+    build: {
+      watch: isWatch ? {} : false,
+    },
     mode: isDev ? "development" : "production",
   }
 
-  for (const dep of libDependencies) {
+  for (const dep of Object.values(libDependencies)) {
     console.log(`Building ${dep.sourceFile} dependency...`)
     await build({
       ...config,
       configFile: false,
       build: {
+        ...config.build,
         lib: {
           entry: `./src/dependencies/${dep.sourceFile}`,
           formats: ["iife"],
