@@ -10,7 +10,7 @@ import { getAppMigrationQueue } from "../workspaceMigrations/queue"
 export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
   {
-    removeStalledCb: automation.removeStalled,
+    removeStalledCb: job => automation.removeStalled(job),
     jobTags: (job: AutomationData) => {
       return {
         "automation.id": job.automation._id,
