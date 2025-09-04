@@ -12,8 +12,8 @@ import {
   RowValue,
   Workspace,
 } from "@budibase/types"
-import { getAppMigrationCacheKey } from "../../../appMigrations"
-import { processMigrations } from "../../../appMigrations/migrationsProcessor"
+import { getAppMigrationCacheKey } from "../../../workspaceMigrations"
+import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
 
 export type FileAttributes = {

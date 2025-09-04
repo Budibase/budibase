@@ -46,8 +46,6 @@ import {
   UserCtx,
   Workspace,
 } from "@budibase/types"
-import * as appMigrations from "../../appMigrations"
-import { processMigrations } from "../../appMigrations/migrationsProcessor"
 import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
@@ -80,6 +78,8 @@ import { doesUserHaveLock } from "../../utilities/redis"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
+import * as appMigrations from "../../workspaceMigrations"
+import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
 
 // utility function, need to do away with this
 async function getLayouts() {

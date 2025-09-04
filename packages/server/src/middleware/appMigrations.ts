@@ -1,8 +1,8 @@
 import { Header } from "@budibase/shared-core"
 import { UserCtx } from "@budibase/types"
 import type { Middleware, Next } from "koa"
-import { checkMissingMigrations } from "../appMigrations"
 import env from "../environment"
+import { checkMissingMigrations } from "../workspaceMigrations"
 
 export const appMigrations = (async (ctx: UserCtx, next: Next) => {
   const { appId } = ctx
