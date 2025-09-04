@@ -33,7 +33,6 @@ import send from "koa-send"
 import { tmpdir } from "os"
 import path from "path"
 import * as uuid from "uuid"
-import { isAppFullyMigrated } from "../../../appMigrations"
 import { ObjectStoreBuckets } from "../../../constants"
 import { getThemeVariables } from "../../../constants/themes"
 import env from "../../../environment"
@@ -44,6 +43,7 @@ import {
   NODE_MODULES_PATH,
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
+import { isAppFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 
 export const uploadFile = async function (

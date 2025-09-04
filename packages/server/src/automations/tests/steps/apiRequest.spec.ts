@@ -1,7 +1,7 @@
-import nock from "nock"
-import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import * as setup from "../utilities"
+import { setEnv } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
+import { environmentVariables } from "@budibase/pro"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   AutomationActionStepId,
   AutomationStepOutputs,
@@ -9,10 +9,10 @@ import {
   PaginationConfig,
   RestQueryFields,
 } from "@budibase/types"
-import { encodeJSBinding } from "@budibase/string-templates"
-import { environmentVariables } from "@budibase/pro"
-import { mocks } from "@budibase/backend-core/tests"
-import { setEnv } from "@budibase/backend-core"
+import nock from "nock"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
+import * as setup from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("API REST request", () => {
   const config = new TestConfiguration()
@@ -25,7 +25,7 @@ describe("API REST request", () => {
 
     await config.init()
     // No snippet/js support in queries. Snippet support in auto
-    config.app = await config.api.application.update(config.getAppId(), {
+    config.app = await config.api.workspace.update(config.getAppId(), {
       snippets: [
         {
           name: "tester",
