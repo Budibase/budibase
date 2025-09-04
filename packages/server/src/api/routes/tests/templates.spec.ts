@@ -99,7 +99,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",
@@ -131,7 +131,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",

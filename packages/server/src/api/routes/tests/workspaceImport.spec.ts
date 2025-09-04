@@ -1,5 +1,5 @@
-import * as setup from "./utilities"
 import path from "path"
+import * as setup from "./utilities"
 
 const PASSWORD = "testtest"
 
@@ -22,7 +22,7 @@ describe("/applications/:appId/import", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    const appPackage = await config.api.application.get(appId!)
+    const appPackage = await config.api.workspace.get(appId!)
     expect(appPackage.navigation?.links?.length).toBe(2)
     expect(appPackage.navigation?.links?.[0].url).toBe("/blank")
     expect(appPackage.navigation?.links?.[1].url).toBe("/derp")

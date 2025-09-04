@@ -1,11 +1,11 @@
+import { setEnv } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { environmentVariables } from "@budibase/pro"
-import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import { encodeJSBinding } from "@budibase/string-templates"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { AutomationStatus } from "@budibase/types"
 import { v4 as uuidv4 } from "uuid"
-import { setEnv } from "@budibase/backend-core"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("Extract state Automations", () => {
   const config = new TestConfiguration()
@@ -17,7 +17,7 @@ describe("Extract state Automations", () => {
     })
     await config.init()
 
-    config.app = await config.api.application.update(config.getAppId(), {
+    config.app = await config.api.workspace.update(config.getAppId(), {
       snippets: [
         {
           name: "tester",

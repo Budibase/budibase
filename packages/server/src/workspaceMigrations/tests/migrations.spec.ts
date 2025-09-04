@@ -42,7 +42,7 @@ describe("migrations", () => {
 
     const appId = config.getAppId()
 
-    await config.api.application.get(appId, {
+    await config.api.workspace.get(appId, {
       headersNotPresent: [Header.MIGRATING_APP],
     })
   })
@@ -58,7 +58,7 @@ describe("migrations", () => {
       func: migrationLogic(5000),
     })
 
-    await config.api.application.get(appId, {
+    await config.api.workspace.get(appId, {
       headers: {
         [Header.MIGRATING_APP]: appId,
       },
