@@ -15,6 +15,7 @@
     ActionMenu,
     MenuItem,
     notifications,
+    AbsTooltip,
   } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
@@ -69,6 +70,8 @@
 
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
   $: viewHidden = viewVisibiltyMap[activeId] === false
+  $: tableName =
+    table?._id === TableNames.USERS ? "App users" : table?.name || ""
 
   const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
     return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
@@ -237,9 +240,11 @@
     class:active={tableId === activeId}
     on:contextmenu={openTableContextMenu}
   >
-    <div class="nav-item__title">
-      {table?._id === TableNames.USERS ? "App users" : table?.name || ""}
-    </div>
+    <AbsTooltip text={tableName}>
+      <div class="nav-item__title">
+        {tableName}
+      </div>
+    </AbsTooltip>
     {#if tableSelectedBy}
       <UserAvatars size="XS" users={tableSelectedBy} />
     {/if}
@@ -295,9 +300,11 @@
           on:contextmenu={e => openViewContextMenu(e, view)}
           data-id={view.id}
         >
-          <div class="nav-item__title">
-            {view.name}
-          </div>
+          <AbsTooltip text={view.name}>
+            <div class="nav-item__title">
+              {view.name}
+            </div>
+          </AbsTooltip>
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}

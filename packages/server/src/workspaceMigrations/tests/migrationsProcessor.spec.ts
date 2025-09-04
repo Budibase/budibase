@@ -2,7 +2,7 @@ import { context, Header } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { AppMigration } from ".."
 import * as setup from "../../api/routes/tests/utilities"
-import { withEnv } from "../../environment"
+import { setEnv, withEnv } from "../../environment"
 import sdk from "../../sdk"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { MIGRATIONS } from "../migrations"
@@ -20,6 +20,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   let config: TestConfiguration
 
   beforeAll(async () => {
+    setEnv({ DISABLE_APP_MIGRATIONS: false })
+
     config = setup.getConfig()
     await config.init()
   })

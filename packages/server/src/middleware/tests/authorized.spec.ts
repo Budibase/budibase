@@ -182,7 +182,8 @@ describe("Authorization middleware", () => {
 
     describe("with resource", () => {
       let resourceId: string
-      const mockedGetResourcePerms = sdk.permissions.getResourcePerms as jest.MockedFunction<
+      const mockedGetResourcePerms = sdk.permissions
+        .getResourcePerms as jest.MockedFunction<
         typeof sdk.permissions.getResourcePerms
       >
 
