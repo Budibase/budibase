@@ -1,5 +1,6 @@
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
+import { setEnv } from "../../environment"
 import {
   AppMigration,
   checkMissingMigrations,
@@ -25,6 +26,8 @@ function migrationLogic(executionMS = 0): () => Promise<void> {
 }
 
 describe("migrations", () => {
+  beforeAll(() => setEnv({ DISABLE_APP_MIGRATIONS: false }))
+
   it("new apps are created with the latest app migration version set", async () => {
     const config = setup.getConfig()
     await config.init()
