@@ -479,9 +479,7 @@ async function performAppCreate(
     const response = await db.put(newApplication, { force: true })
     newApplication._rev = response.rev
 
-    if (!env.USE_LOCAL_COMPONENT_LIBS) {
-      await uploadAppFiles(appId)
-    }
+    await uploadAppFiles(appId)
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
@@ -709,10 +707,6 @@ export async function update(
 export async function updateClient(
   ctx: UserCtx<void, UpdateAppClientResponse>
 ) {
-  // Don't allow updating in dev
-  if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
-  }
   // Get current app version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
@@ -742,11 +736,6 @@ export async function updateClient(
 export async function revertClient(
   ctx: UserCtx<void, RevertAppClientResponse>
 ) {
-  // Don't allow reverting in dev
-  if (env.isDev() && !env.isTest()) {
-    ctx.throw(400, "Updating or reverting apps is not supported in dev")
-  }
-
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
@@ -819,9 +808,7 @@ async function destroyApp(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.USE_LOCAL_COMPONENT_LIBS) {
-    await deleteAppFiles(appId)
-  }
+  await deleteAppFiles(appId)
 
   await removeAppFromUserRoles(ctx, appId)
   await invalidateAppCache(appId)

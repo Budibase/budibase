@@ -1,44 +1,42 @@
-<script>
-  import {
-    Layout,
-    Divider,
-    Heading,
-    Body,
-    Button,
-    Modal,
-    Icon,
-    notifications,
-  } from "@budibase/bbui"
+<script lang="ts">
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
-  import {
-    isOnlyUser,
-    appStore,
-    deploymentStore,
-    recaptchaStore,
-  } from "@/stores/builder"
+  import DeleteModal from "@/components/deploy/DeleteModal.svelte"
+  import RevertModal from "@/components/deploy/RevertModal.svelte"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin, licensing } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import RevertModal from "@/components/deploy/RevertModal.svelte"
-  import DeleteModal from "@/components/deploy/DeleteModal.svelte"
+  import {
+    appStore,
+    deploymentStore,
+    isOnlyUser,
+    recaptchaStore,
+  } from "@/stores/builder"
+  import { admin, licensing } from "@/stores/portal"
+  import {
+    Body,
+    Button,
+    Divider,
+    Heading,
+    Icon,
+    Layout,
+    Modal,
+    notifications,
+  } from "@budibase/bbui"
 
-  let versionModal
-  let exportModal
-  let importModal
-  let exportPublishedVersion = false
-  let unpublishModal
-  let revertModal
-  let deleteModal
+  let versionModal: VersionModal
+  let exportModal: Modal
+  let importModal: Modal
+  let exportPublishedVersion: boolean = false
+  let unpublishModal: ConfirmDialog
+  let revertModal: RevertModal
+  let deleteModal: DeleteModal
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
-  $: selectedApp = filteredApps.length ? filteredApps[0] : {}
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
 
-  const exportApp = opts => {
+  const exportApp = (opts: { published: any }) => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
   }
@@ -48,7 +46,7 @@
       const newState = !appRecaptchaEnabled
       await recaptchaStore.setState(newState)
       notifications.success(`Recaptcha ${newState ? "enabled" : "disabled"}`)
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(`Failed to set recaptcha state: ${err.message}`)
     }
   }
@@ -91,7 +89,7 @@
         icon="arrow-circle-up"
         primary
         disabled={$deploymentStore.isPublishing}
-        on:click={deploymentStore.publishApp}
+        on:click={() => deploymentStore.publishApp()}
       >
         Publish
       </Button>
@@ -100,10 +98,12 @@
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">Client version</Heading>
-    {#if $admin.isDev}
+    {#if $admin.usingLocalComponentLibs}
       <Body size="S">
         You're running the latest client version from your file system, as
         you're in developer mode.
+        <br />
+        Use the env var DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
       </Body>
     {:else if updateAvailable}
       <Body size="S">
@@ -222,12 +222,12 @@
 
 <VersionModal bind:this={versionModal} hideIcon={true} />
 
-<Modal bind:this={exportModal} padding={false}>
-  <ExportAppModal app={selectedApp} published={exportPublishedVersion} />
+<Modal bind:this={exportModal}>
+  <ExportAppModal appId={$appStore.appId} published={exportPublishedVersion} />
 </Modal>
 
-<Modal bind:this={importModal} padding={false}>
-  <ImportAppModal app={selectedApp} />
+<Modal bind:this={importModal}>
+  <ImportAppModal app={$appStore} />
 </Modal>
 
 <ConfirmDialog
@@ -237,7 +237,7 @@
   onOk={deploymentStore.unpublishApp}
 >
   Are you sure you want to unpublish the workspace
-  <b>{selectedApp?.name}</b>?
+  <b>{$appStore.name}</b>?
 
   <p>This will make all apps and automations in this workspace unavailable</p>
 </ConfirmDialog>

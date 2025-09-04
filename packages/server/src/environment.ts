@@ -1,9 +1,9 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import { join, resolve } from "path"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
-import { join, resolve } from "path"
 
 const TOP_LEVEL_PATH =
   process.env.TOP_LEVEL_PATH ||
@@ -32,7 +32,6 @@ const DEFAULTS = {
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
   JS_RUNNER_MEMORY_LIMIT: 64,
-  USE_LOCAL_COMPONENT_LIBS: coreEnv.isDev() || coreEnv.isTest(),
   RECAPTCHA_SESSION_SECONDS: 1800,
   AUTOMATION_MAX_NESTED_LOOPS: 3,
   AUTOMATION_MAX_STORED_LOOP_RESULTS: 50,
@@ -139,8 +138,7 @@ const environment = {
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
-  USE_LOCAL_COMPONENT_LIBS:
-    process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
+  DEV_USE_CLIENT_FROM_STORAGE: process.env.DEV_USE_CLIENT_FROM_STORAGE,
   SYNC_MIGRATION_CHECKS_MS:
     parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
   // old

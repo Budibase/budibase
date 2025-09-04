@@ -370,19 +370,13 @@ export const serveBuilderPreview = async function (
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
-
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
