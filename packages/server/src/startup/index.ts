@@ -27,7 +27,7 @@ import * as redis from "../utilities/redis"
 import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
-import * as appMigrations from "../workspaceMigrations/queue"
+import * as workspaceMigrations from "../workspaceMigrations/queue"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -129,7 +129,7 @@ export async function startup(
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
-    queuePromises.push(appMigrations.init())
+    queuePromises.push(workspaceMigrations.init())
   }
   queuePromises.push(initPro())
   queuePromises.push(sdk.dev.init())

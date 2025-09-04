@@ -26,7 +26,7 @@ function migrationLogic(executionMS = 0): () => Promise<void> {
 }
 
 describe("migrations", () => {
-  beforeAll(() => setEnv({ DISABLE_APP_MIGRATIONS: false }))
+  beforeAll(() => setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false }))
 
   it("new apps are created with the latest app migration version set", async () => {
     const config = setup.getConfig()
@@ -45,7 +45,7 @@ describe("migrations", () => {
 
     const appId = config.getAppId()
 
-    await config.api.application.get(appId, {
+    await config.api.workspace.get(appId, {
       headersNotPresent: [Header.MIGRATING_APP],
     })
   })
@@ -61,7 +61,7 @@ describe("migrations", () => {
       func: migrationLogic(5000),
     })
 
-    await config.api.application.get(appId, {
+    await config.api.workspace.get(appId, {
       headers: {
         [Header.MIGRATING_APP]: appId,
       },

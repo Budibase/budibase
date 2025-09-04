@@ -28,13 +28,13 @@ import { TemplateAPI } from "./template"
 import { UserAPI } from "./user"
 import { ViewV2API } from "./viewV2"
 import { WebhookAPI } from "./webhook"
-import { ApplicationAPI } from "./workspace"
+import { WorkspaceAPI } from "./workspace"
 import { WorkspaceAppAPI } from "./workspaceApp"
 import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
   ai: AIAPI
-  application: ApplicationAPI
+  workspace: WorkspaceAPI
   attachment: AttachmentAPI
   automation: AutomationAPI
   backup: BackupAPI
@@ -71,7 +71,7 @@ export default class API {
 
   constructor(config: TestConfiguration) {
     this.ai = new AIAPI(config)
-    this.application = new ApplicationAPI(config)
+    this.workspace = new WorkspaceAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)

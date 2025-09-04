@@ -48,10 +48,10 @@ export { default as staticRoutes } from "./static"
 
 const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
-const appEndpoints = endpointGroupList.listAllEndpoints()
+const endpoints = endpointGroupList.listAllEndpoints()
 
 const appRoutes = new Router()
-for (let endpoint of appEndpoints) {
+for (let endpoint of endpoints) {
   endpoint.apply(appRoutes)
 }
 

@@ -6,6 +6,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
   roles,
 } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { automations } from "@budibase/pro"
 import {
   CreateRowActionRequest,
@@ -16,14 +17,13 @@ import {
   Table,
   TableRowActions,
 } from "@budibase/types"
-import * as setup from "./utilities"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { Expectations } from "../../../tests/utilities/api/base"
+import { generateRowActionsID } from "../../../db/utils"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
-import { generateRowActionsID } from "../../../db/utils"
+import { Expectations } from "../../../tests/utilities/api/base"
+import * as setup from "./utilities"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -994,7 +994,7 @@ if (descriptions.length) {
 
       async function getTable(): Promise<Table> {
         if (isInternal) {
-          await config.api.application.addSampleData(config.getAppId())
+          await config.api.workspace.addSampleData(config.getAppId())
           const tables = await config.api.table.fetch()
           return tables.find(t => t.sourceId === DEFAULT_BB_DATASOURCE_ID)!
         } else {

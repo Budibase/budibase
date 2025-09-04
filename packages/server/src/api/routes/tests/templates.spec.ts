@@ -2,10 +2,10 @@ import { generator } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
 import { getAppMigrationVersion } from "../../../workspaceMigrations"
-import * as appMigrations from "../../../workspaceMigrations/migrations"
+import * as workspaceMigrations from "../../../workspaceMigrations/migrations"
 import * as setup from "./utilities"
 
-jest.mock<typeof appMigrations>(
+jest.mock<typeof workspaceMigrations>(
   "../../../workspaceMigrations/migrations",
   () => ({
     MIGRATIONS: [
@@ -99,7 +99,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",
@@ -131,7 +131,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",
@@ -144,8 +144,8 @@ describe("/templates", () => {
 
         expect(migrationVersion).toBe("202506021500_test")
 
-        expect(appMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
-        expect(appMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
       })
     })
   })
