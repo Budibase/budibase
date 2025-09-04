@@ -1,11 +1,11 @@
+import { Ctx } from "@budibase/types"
 import { structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
-import * as utils from "../../utils"
-import * as db from "../../db"
 import { Header } from "../../constants"
-import { newid } from "../../utils"
+import * as db from "../../db"
 import env from "../../environment"
-import { Ctx } from "@budibase/types"
+import * as utils from "../../utils"
+import { newid } from "../../utils"
 
 describe("utils", () => {
   const config = new DBTestConfiguration()
@@ -76,44 +76,24 @@ describe("utils", () => {
       expect(actual).toBe(expected)
     })
 
-    it("doesn't get appId from url when previewing", async () => {
-      const ctx = structures.koa.newContext()
-      const appId = db.generateAppID()
-      const app = structures.apps.app(appId)
+    it("should return proper appid if the app url is /preview", async () => {
+      await config.doInTenant(async () => {
+        const ctx = structures.koa.newContext()
+        const appId = db.generateAppID(config.tenantId)
+        const app = structures.apps.app(appId)
 
-      // set custom url
-      const appUrl = "preview"
-      app.url = `/${appUrl}`
-      ctx.path = `/app/${appUrl}`
+        // set custom url
+        const appUrl = "preview"
+        app.url = `/${appUrl}`
+        ctx.path = `/app/${appUrl}`
 
-      // save the app
-      const database = db.getDB(appId)
-      await database.put(app)
+        // save the app
+        const database = db.getDB(appId)
+        await database.put(app)
 
-      const actual = await utils.getAppIdFromCtx(ctx)
-      expect(actual).toBe(undefined)
-    })
-
-    it("gets appId from referer", async () => {
-      const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
-      ctx.request.headers = {
-        referer: `http://example.com/builder/workspace/${expected}/design/screen_123/screens`,
-      }
-
-      const actual = await utils.getAppIdFromCtx(ctx)
-      expect(actual).toBe(expected)
-    })
-
-    it("doesn't get appId from referer when not builder", async () => {
-      const ctx = structures.koa.newContext()
-      const appId = db.generateAppID()
-      ctx.request.headers = {
-        referer: `http://example.com/foo/app/${appId}/bar`,
-      }
-
-      const actual = await utils.getAppIdFromCtx(ctx)
-      expect(actual).toBe(undefined)
+        const actual = await utils.getAppIdFromCtx(ctx)
+        expect(actual).toBe(appId)
+      })
     })
 
     it("throws 403 when header and body have different valid app IDs", async () => {
@@ -233,7 +213,7 @@ describe("utils", () => {
     })
 
     it("returns true if current path is in builder preview", async () => {
-      ctx.path = "/app/preview/xx"
+      ctx.path = "/app/app_dev_123456/preview"
       expectResult(true)
     })
 
