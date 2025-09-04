@@ -137,8 +137,8 @@ describe("/recaptcha", () => {
 
     async function setRecaptchaEnabled(value: boolean) {
       app.recaptchaEnabled = value
-      await config.api.application.update(app.appId, app)
-      await config.api.application.publish(app.appId)
+      await config.api.workspace.update(app.appId, app)
+      await config.api.workspace.publish(app.appId)
     }
 
     it("should return 498 when recaptcha enabled but no cookie present", async () => {

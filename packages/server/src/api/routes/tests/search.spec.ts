@@ -1,5 +1,3 @@
-import { tableForDatasource } from "../../../tests/utilities/structures"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
@@ -10,7 +8,12 @@ import {
   utils,
   withEnv as withCoreEnv,
 } from "@budibase/backend-core"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
+import { dataFilters, isViewId } from "@budibase/shared-core"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   AIOperationEnum,
   AutoFieldSubType,
@@ -34,15 +37,12 @@ import {
   User,
   ViewV2Schema,
 } from "@budibase/types"
-import _ from "lodash"
-import tk from "timekeeper"
-import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters, isViewId } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { generator, structures, mocks } from "@budibase/backend-core/tests"
+import _ from "lodash"
+import { cloneDeep } from "lodash/fp"
+import tk from "timekeeper"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
-import { cloneDeep } from "lodash/fp"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -101,7 +101,7 @@ if (descriptions.length) {
         datasource = ds.datasource
         client = ds.client
 
-        config.app = await config.api.application.update(config.getAppId(), {
+        config.app = await config.api.workspace.update(config.getAppId(), {
           snippets: [
             {
               name: "WeeksAgo",
@@ -3328,7 +3328,7 @@ if (descriptions.length) {
             isInternal &&
               describe("sample data", () => {
                 beforeAll(async () => {
-                  await config.api.application.addSampleData(config.appId!)
+                  await config.api.workspace.addSampleData(config.appId!)
                   tableOrViewId = DEFAULT_EMPLOYEE_TABLE_SCHEMA._id!
                   rows = await config.api.row.fetch(tableOrViewId)
                 })
