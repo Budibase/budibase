@@ -1,5 +1,5 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
-import { withEnv } from "../../../environment"
+import { setEnv, withEnv } from "../../../environment"
 
 import {
   Header,
@@ -1084,6 +1084,8 @@ describe("/applications (workspace apps flag)", () => {
     })
 
     it("should remove MIGRATING_APP header if present during deletion", async () => {
+      setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false })
+
       const migrationsModule = await import(
         "../../../workspaceMigrations/migrations"
       )
