@@ -59,19 +59,16 @@ export async function backupClientLibrary(appId: string) {
         return
       }
 
-      const tmpPath = await objectStore.retrieveToTmp(
+      const stream = await objectStore.getReadStream(
         ObjectStoreBuckets.APPS,
         file.Key!
       )
 
       const backupKey = file.Key!.replace(appId, `${appId}.bak`)
-      await objectStore.upload({
+      await objectStore.streamUpload({
         bucket: ObjectStoreBuckets.APPS,
         filename: backupKey,
-        path: tmpPath,
-        extra: {
-          ContentType: "application/json",
-        },
+        stream,
       })
     },
     5
@@ -112,17 +109,11 @@ export async function updateClientLibrary(appId: string) {
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
     stream: fs.createReadStream(manifest),
-    extra: {
-      ContentType: "application/json",
-    },
   })
   const clientUpload = objectStore.streamUpload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
     stream: fs.createReadStream(client),
-    extra: {
-      ContentType: "application/javascript",
-    },
   })
   let depUploads = []
   for (const dependency of dependencies) {
@@ -131,9 +122,6 @@ export async function updateClientLibrary(appId: string) {
         bucket: ObjectStoreBuckets.APPS,
         filename: join(appId, "_dependencies", path.basename(dependency)),
         stream: fs.createReadStream(dependency),
-        extra: {
-          ContentType: "application/javascript",
-        },
       })
     )
   }
@@ -163,28 +151,35 @@ export async function revertClientLibrary(appId: string) {
     async file => {
       hasBackup = true
 
-      // Download the backup file to temp
-      const tmpPath = await objectStore.retrieveToTmp(
-        ObjectStoreBuckets.APPS,
-        file.Key!
-      )
-
       // Restore to original location
       const restoreKey = file.Key!.replace(`${appId}.bak`, appId)
 
-      // Read manifest content if this is the manifest file
+      // For manifest file, we need to read the content to return it
       if (restoreKey.endsWith("manifest.json")) {
+        const tmpPath = await objectStore.retrieveToTmp(
+          ObjectStoreBuckets.APPS,
+          file.Key!
+        )
         manifestContent = await fs.promises.readFile(tmpPath, "utf8")
-      }
 
-      await objectStore.upload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: restoreKey,
-        path: tmpPath,
-        extra: {
-          ContentType: "application/json",
-        },
-      })
+        await objectStore.upload({
+          bucket: ObjectStoreBuckets.APPS,
+          filename: restoreKey,
+          path: tmpPath,
+        })
+      } else {
+        // For all other files, use streaming
+        const stream = await objectStore.getReadStream(
+          ObjectStoreBuckets.APPS,
+          file.Key!
+        )
+
+        await objectStore.streamUpload({
+          bucket: ObjectStoreBuckets.APPS,
+          filename: restoreKey,
+          stream,
+        })
+      }
     },
     5
   )
