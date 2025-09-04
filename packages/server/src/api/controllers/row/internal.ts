@@ -1,15 +1,5 @@
-import * as linkRows from "../../../db/linkedRows"
-import { InternalTables } from "../../../db/utils"
-import * as userController from "../user"
-import {
-  AttachmentCleanup,
-  inputProcessing,
-  outputProcessing,
-} from "../../../utilities/rowProcessor"
-import * as utils from "./utils"
-import { cloneDeep } from "lodash/fp"
 import { context, HTTPError } from "@budibase/backend-core"
-import { finaliseRow, updateRelatedFormula } from "./staticFormula"
+import { helpers } from "@budibase/shared-core"
 import {
   FieldType,
   LinkDocumentValue,
@@ -19,11 +9,21 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
-import sdk from "../../../sdk"
-import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
-import { findRow } from "../../../sdk/app/rows/internal"
-import { helpers } from "@budibase/shared-core"
+import { cloneDeep } from "lodash/fp"
+import * as linkRows from "../../../db/linkedRows"
+import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
+import { InternalTables } from "../../../db/utils"
+import sdk from "../../../sdk"
+import { findRow } from "../../../sdk/workspace/rows/internal"
+import {
+  AttachmentCleanup,
+  inputProcessing,
+  outputProcessing,
+} from "../../../utilities/rowProcessor"
+import * as userController from "../user"
+import { finaliseRow, updateRelatedFormula } from "./staticFormula"
+import * as utils from "./utils"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const { tableId } = utils.getSourceId(ctx)

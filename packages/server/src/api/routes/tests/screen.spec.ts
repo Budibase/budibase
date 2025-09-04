@@ -1,16 +1,16 @@
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
 import {
-  Screen,
-  Role,
   BuiltinPermissionID,
+  Role,
+  Screen,
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
-import { structures } from "@budibase/backend-core/tests"
+import { basicDatasourcePlus } from "../../../tests/utilities/structures"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 const {
   basicScreen,
@@ -110,7 +110,7 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.withProdApp(() =>
-          config.api.application.getDefinition(config.getProdAppId())
+          config.api.workspace.getDefinition(config.getProdAppId())
         )
 
         // Filter out sample screen
@@ -145,7 +145,7 @@ describe("/screens", () => {
           "x-budibase-role": role1._id!,
         },
         async () => {
-          const res = await config.api.application.getDefinition(
+          const res = await config.api.workspace.getDefinition(
             config.getAppId()
           )
 

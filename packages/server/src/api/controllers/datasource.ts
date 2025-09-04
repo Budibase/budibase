@@ -1,5 +1,3 @@
-import { getQueryParams, getTableParams } from "../../db/utils"
-import { invalidateCachedVariable } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
@@ -8,29 +6,31 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  DeleteDatasourceResponse,
   Document,
+  DynamicVariable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchDatasourcesResponse,
+  FetchExternalSchemaResponse,
   FieldType,
+  FindDatasourcesResponse,
   RelationshipFieldMetadata,
+  RowValue,
   SourceName,
+  Table,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
-  Table,
-  RowValue,
-  DynamicVariable,
-  FetchDatasourcesResponse,
-  FindDatasourcesResponse,
-  DeleteDatasourceResponse,
-  FetchExternalSchemaResponse,
 } from "@budibase/types"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
-import { processTable } from "../../sdk/app/tables/getters"
+import { getQueryParams, getTableParams } from "../../db/utils"
+import sdk from "../../sdk"
+import { processTable } from "../../sdk/workspace/tables/getters"
+import { invalidateCachedVariable } from "../../threads/utils"
+import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()

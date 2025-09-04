@@ -28,7 +28,6 @@ import {
 import fs from "fs"
 import fsp from "fs/promises"
 import * as uuid from "uuid"
-import { isAppFullyMigrated } from "../../../appMigrations"
 import { ObjectStoreBuckets } from "../../../constants"
 import env from "../../../environment"
 import sdk from "../../../sdk"
@@ -38,6 +37,7 @@ import {
   NODE_MODULES_PATH,
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
+import { isAppFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 
 import extract from "extract-zip"

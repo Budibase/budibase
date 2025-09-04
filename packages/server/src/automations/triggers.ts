@@ -1,41 +1,41 @@
-import emitter from "../events/index"
-import { getAutomationParams, isDevAppID } from "../db/utils"
-import { coerce } from "../utilities/rowProcessor"
 import { automations } from "@budibase/shared-core"
+import { getAutomationParams, isDevAppID } from "../db/utils"
+import emitter from "../events/index"
+import { coerce } from "../utilities/rowProcessor"
 // need this to call directly, so we can get a response
-import { automationQueue } from "./bullboard"
-import { checkTestFlag } from "../utilities/redis"
-import * as utils from "./utils"
-import env from "../environment"
-import { context, logging, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, logging } from "@budibase/backend-core"
+import { dataFilters, sdk } from "@budibase/shared-core"
 import {
   Automation,
-  Row,
   AutomationData,
-  AutomationJob,
   AutomationEventType,
-  UpdatedRowEventEmitter,
-  SearchFilters,
-  AutomationStoppedReason,
-  AutomationStatus,
-  AutomationRowEvent,
-  UserBindings,
+  AutomationJob,
   AutomationResults,
-  DidNotTriggerResponse,
-  Table,
-  AutomationTriggerStepId,
+  AutomationRowEvent,
+  AutomationStatus,
+  AutomationStoppedReason,
   AutomationTriggerInputs,
+  AutomationTriggerStepId,
+  DidNotTriggerResponse,
+  Row,
+  SearchFilters,
+  Table,
+  UpdatedRowEventEmitter,
+  UserBindings,
 } from "@budibase/types"
+import * as automationUtils from "../automations/automationUtils"
+import env from "../environment"
+import { doesTableExist } from "../sdk/workspace/tables/getters"
 import { executeInThread } from "../threads/automation"
-import { dataFilters, sdk } from "@budibase/shared-core"
+import { checkTestFlag } from "../utilities/redis"
+import { automationQueue } from "./bullboard"
+import * as utils from "./utils"
 
 export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
-import * as automationUtils from "../automations/automationUtils"
-import { doesTableExist } from "../sdk/app/tables/getters"
 
 type RowTriggerStepId =
   | AutomationTriggerStepId.ROW_ACTION

@@ -22,7 +22,7 @@ describe("/api/deploy", () => {
 
   describe("GET /api/deploy/status", () => {
     it("returns empty state when unpublished", async () => {
-      await config.api.application.unpublish(config.appId!)
+      await config.api.workspace.unpublish(config.appId!)
       const res = await config.api.deploy.publishStatus()
       for (const automation of Object.values(res.automations)) {
         expect(automation.published).toBe(false)
@@ -81,7 +81,7 @@ describe("/api/deploy", () => {
         })
       )
 
-      await config.api.application.publish(config.app!.appId)
+      await config.api.workspace.publish(config.app!.appId)
 
       const res = await config.api.deploy.publishStatus()
 
@@ -127,7 +127,7 @@ describe("/api/deploy", () => {
           })
         )
 
-      await config.api.application.publish(config.app!.appId)
+      await config.api.workspace.publish(config.app!.appId)
 
       const { automation: unpublishedAutomation } =
         await createAutomationBuilder(config)
@@ -190,7 +190,7 @@ describe("/api/deploy", () => {
         })
       )
 
-      await config.api.application.publish(config.app!.appId)
+      await config.api.workspace.publish(config.app!.appId)
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
@@ -217,7 +217,7 @@ describe("/api/deploy", () => {
         .serverLog({ text: "Test automation" })
         .save()
 
-      await config.api.application.publish(config.app!.appId)
+      await config.api.workspace.publish(config.app!.appId)
 
       // Delete automation from development
       await config.api.automation.delete(automation)
@@ -279,8 +279,8 @@ describe("/api/deploy", () => {
     }
 
     async function publishProdApp() {
-      await config.api.application.publish(config.getAppId())
-      await config.api.application.sync(config.getAppId())
+      await config.api.workspace.publish(config.getAppId())
+      await config.api.workspace.sync(config.getAppId())
     }
 
     it("should define the disable value for all workspace apps when publishing for the first time", async () => {
