@@ -78,7 +78,7 @@ import { doesUserHaveLock } from "../../utilities/redis"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
-import * as appMigrations from "../../workspaceMigrations"
+import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
 
 // utility function, need to do away with this
@@ -495,13 +495,13 @@ async function performAppCreate(
       }
     }
 
-    const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
+    const latestMigrationId = workspaceMigrations.getLatestEnabledMigrationId()
     if (latestMigrationId) {
       if (useTemplate) {
         await processMigrations(appId)
       } else if (!isImport) {
         // Initialise the app migration version as the latest one
-        await appMigrations.updateAppMigrationMetadata({
+        await workspaceMigrations.updateAppMigrationMetadata({
           appId,
           version: latestMigrationId,
           skipHistory: true,
@@ -848,7 +848,7 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
     return ctx.throw(400, "App has not been published.")
   }
 
-  await appMigrations.doInMigrationLock(prodAppId, async () => {
+  await workspaceMigrations.doInMigrationLock(prodAppId, async () => {
     await preDestroyApp(ctx)
     await unpublishApp(ctx)
     await postDestroyApp(ctx)

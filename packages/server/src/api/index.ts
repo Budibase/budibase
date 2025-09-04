@@ -11,7 +11,7 @@ import { automationQueue } from "../automations"
 import { apiEnabled, automationsEnabled } from "../features"
 import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
 import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
-import { appMigrations as migrations } from "../middleware/workspaceMigrations"
+import { workspaceMigrations as migrations } from "../middleware/workspaceMigrations"
 import { getState } from "../startup"
 import { assetRoutes, mainRoutes, publicRoutes, staticRoutes } from "./routes"
 

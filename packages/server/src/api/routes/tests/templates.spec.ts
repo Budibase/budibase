@@ -2,15 +2,18 @@ import { generator } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
 import { getAppMigrationVersion } from "../../../workspaceMigrations"
-import * as appMigrations from "../../../workspaceMigrations/migrations"
+import * as workspaceMigrations from "../../../workspaceMigrations/migrations"
 import * as setup from "./utilities"
 
-jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
-  MIGRATIONS: [
-    { id: `202506011400_test`, func: jest.fn() },
-    { id: `202506021500_test`, func: jest.fn() },
-  ],
-}))
+jest.mock<typeof workspaceMigrations>(
+  "../../../workspaceMigrations/migrations",
+  () => ({
+    MIGRATIONS: [
+      { id: `202506011400_test`, func: jest.fn() },
+      { id: `202506021500_test`, func: jest.fn() },
+    ],
+  })
+)
 
 interface Workspace {
   background: string
@@ -141,8 +144,8 @@ describe("/templates", () => {
 
         expect(migrationVersion).toBe("202506021500_test")
 
-        expect(appMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
-        expect(appMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
       })
     })
   })
