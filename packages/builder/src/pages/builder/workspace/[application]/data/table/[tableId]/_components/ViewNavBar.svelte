@@ -15,6 +15,7 @@
     ActionMenu,
     MenuItem,
     notifications,
+    AbsTooltip,
   } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
@@ -237,9 +238,13 @@
     class:active={tableId === activeId}
     on:contextmenu={openTableContextMenu}
   >
-    <div class="nav-item__title">
-      {table?._id === TableNames.USERS ? "App users" : table?.name || ""}
-    </div>
+    <AbsTooltip
+      text={table?._id === TableNames.USERS ? "App users" : table?.name || ""}
+    >
+      <div class="nav-item__title">
+        {table?._id === TableNames.USERS ? "App users" : table?.name || ""}
+      </div>
+    </AbsTooltip>
     {#if tableSelectedBy}
       <UserAvatars size="XS" users={tableSelectedBy} />
     {/if}
@@ -295,9 +300,11 @@
           on:contextmenu={e => openViewContextMenu(e, view)}
           data-id={view.id}
         >
-          <div class="nav-item__title">
-            {view.name}
-          </div>
+          <AbsTooltip text={view.name}>
+            <div class="nav-item__title">
+              {view.name}
+            </div>
+          </AbsTooltip>
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
