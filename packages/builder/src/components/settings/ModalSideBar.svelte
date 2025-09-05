@@ -1,8 +1,6 @@
 <script lang="ts">
   import { Context, Icon } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
-  import { url } from "@roxi/routify"
-  import BBLogo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
 
   import { onDestroy, setContext, createEventDispatcher } from "svelte"
