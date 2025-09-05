@@ -378,11 +378,25 @@ export const serveClientLibrary = async function (
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
-    ctx.body = await objectStore.getReadStream(
-      ObjectStoreBuckets.APPS,
-      objectStore.clientLibraryPath(appId!)
-    )
-    ctx.set("Content-Type", "application/javascript")
+    const { stream, etag, lastModified, contentType, contentLength } =
+      await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        objectStore.clientLibraryPath(appId!)
+      )
+
+    if (etag) {
+      ctx.set("ETag", etag)
+    }
+    if (lastModified) {
+      ctx.set("Last-Modified", lastModified.toUTCString())
+    }
+    if (contentLength) {
+      ctx.set("Content-Length", contentLength.toString())
+    }
+    ctx.set("Content-Type", contentType || "application/javascript")
+    ctx.set("Cache-Control", "no-cache")
+
+    ctx.body = stream
   } else {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
