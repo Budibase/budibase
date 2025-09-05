@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
-import { cloneDeep } from "lodash"
 import { createSecretKey } from "crypto"
+import { existsSync, readFileSync } from "fs"
+import { cloneDeep } from "lodash"
 import { join, resolve } from "path"
 
 const TOP_LEVEL_PATH =
@@ -264,6 +264,7 @@ const environment = {
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
   DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
   BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
+  USE_REAL_LOCKS_IN_TESTS: process.env.USE_REAL_LOCKS_IN_TESTS,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

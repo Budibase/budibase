@@ -1,8 +1,15 @@
-import { LockName, LockType, LockOptions } from "@budibase/types"
-import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
+import { LockName, LockOptions, LockType } from "@budibase/types"
 import { DBTestConfiguration, generator } from "../../../tests"
+import { setEnv } from "../../environment"
+import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
 
 describe("redlockImpl", () => {
+  beforeAll(() => {
+    setEnv({
+      USE_REAL_LOCKS_IN_TESTS: "1",
+    })
+  })
+
   beforeEach(() => {
     jest.useFakeTimers()
   })

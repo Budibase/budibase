@@ -119,7 +119,7 @@ export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
-  if (env.isTest()) {
+  if (env.isTest() && !env.USE_REAL_LOCKS_IN_TESTS) {
     console.log(`Bypassing lock for in test environment`)
     return { result: await task(), executed: true }
   }
