@@ -141,6 +141,8 @@ const environment = {
   DEV_USE_CLIENT_FROM_STORAGE: process.env.DEV_USE_CLIENT_FROM_STORAGE,
   SYNC_MIGRATION_CHECKS_MS:
     parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
+  SKIP_MIGRATION_LOCKS_IN_TESTS:
+    process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

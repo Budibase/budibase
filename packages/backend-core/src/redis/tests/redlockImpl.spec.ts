@@ -1,6 +1,6 @@
-import { LockName, LockType, LockOptions } from "@budibase/types"
-import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
+import { LockName, LockOptions, LockType } from "@budibase/types"
 import { DBTestConfiguration, generator } from "../../../tests"
+import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
 
 describe("redlockImpl", () => {
   beforeEach(() => {
