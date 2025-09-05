@@ -384,10 +384,8 @@ export const serveClientLibrary = async function (
         objectStore.clientLibraryPath(appId!)
       )
 
-    // Set metadata for ETag middleware to use
     if (etag) {
       ctx.set("ETag", etag)
-      ctx.set("Cache-Control", "no-cache")
     }
     if (lastModified) {
       ctx.set("Last-Modified", lastModified.toUTCString())
@@ -396,6 +394,7 @@ export const serveClientLibrary = async function (
       ctx.set("Content-Length", contentLength.toString())
     }
     ctx.set("Content-Type", contentType || "application/javascript")
+    ctx.set("Cache-Control", "no-cache")
 
     ctx.body = stream
   } else {
