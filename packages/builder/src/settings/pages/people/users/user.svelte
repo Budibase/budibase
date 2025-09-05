@@ -18,7 +18,11 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext, getContext } from "svelte"
-  import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
+  import { users } from "@/stores/portal/users"
+  import { auth } from "@/stores/portal/auth"
+  import { groups } from "@/stores/portal/groups"
+  import { appsStore } from "@/stores/portal/apps"
+  import { licensing } from "@/stores/portal/licensing"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"

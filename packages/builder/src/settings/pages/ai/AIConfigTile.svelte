@@ -55,7 +55,7 @@
 
 <style>
   .option {
-    background-color: var(--background);
+    background-color: var(--background-alt);
     border: 1px solid var(--grey-2);
     padding: 16px;
     border-radius: 8px;
@@ -77,6 +77,10 @@
   }
 
   .option:hover {
+    background-color: var(--grey-2);
+  }
+
+  .option:hover .icon {
     background-color: var(--background-alt);
   }
 
@@ -110,7 +114,7 @@
   }
 
   .active {
-    background: #004c2e;
+    background: var(--spectrum-global-color-static-green-500);
   }
 
   .disabled {

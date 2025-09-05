@@ -1,5 +1,5 @@
 import { Target, type Route } from "@/types/routing"
-import * as Pages from "./pages"
+import { Pages } from "./pages"
 
 import { sdk } from "@budibase/shared-core"
 import { GetGlobalSelfResponse } from "@budibase/types"
@@ -16,7 +16,7 @@ export const globalRoutes = (user: GetGlobalSelfResponse) => {
         comp: UserAvatar,
         props: { user, size: "XS" },
       },
-      comp: Pages.lazy("profile"),
+      comp: Pages.get("profile"),
     },
   ]
 }
@@ -39,19 +39,19 @@ export const orgRoutes = (
         {
           path: "usage",
           title: "Usage",
-          comp: Pages.lazy("usage"),
+          comp: Pages.get("usage"),
         },
         {
           path: "org",
           access: () => isAdmin,
           title: "Organisation",
-          comp: Pages.lazy("org"),
+          comp: Pages.get("org"),
         },
         {
           path: "branding",
           access: () => isAdmin,
           title: "Branding",
-          comp: Pages.lazy("branding"),
+          comp: Pages.get("branding"),
         },
       ],
     },
@@ -64,22 +64,20 @@ export const orgRoutes = (
         {
           path: "users",
           title: "Users",
-          comp: Pages.lazy("users"),
-          routes: [
-            { path: ":userId", comp: Pages.lazy("user"), title: "User" },
-          ],
+          comp: Pages.get("users"),
+          routes: [{ path: ":userId", comp: Pages.get("user"), title: "User" }],
         },
         {
           path: "invites",
           title: "Invites",
-          comp: Pages.lazy("user_invites"),
+          comp: Pages.get("user_invites"),
         },
         {
           path: "groups",
           title: "Groups",
-          comp: Pages.lazy("groups"),
+          comp: Pages.get("groups"),
           routes: [
-            { path: ":groupId", comp: Pages.lazy("group"), title: "Group" },
+            { path: ":groupId", comp: Pages.get("group"), title: "Group" },
           ],
         },
       ],
@@ -89,14 +87,14 @@ export const orgRoutes = (
       access: () => isGlobalBuilder,
       path: "plugins",
       icon: "plug",
-      comp: Pages.lazy("plugins"),
+      comp: Pages.get("plugins"),
     },
     {
       section: "Environment",
       access: () => isAdmin,
       path: "environment",
       icon: "shipping-container",
-      comp: Pages.lazy("environment"),
+      comp: Pages.get("environment"),
     },
     {
       section: "Email",
@@ -107,17 +105,17 @@ export const orgRoutes = (
         {
           path: "smtp",
           title: "SMTP",
-          comp: Pages.lazy("email"),
+          comp: Pages.get("email"),
         },
         {
           path: "templates",
           title: "Templates",
-          comp: Pages.lazy("email_templates"),
+          comp: Pages.get("email_templates"),
           routes: [
             {
               path: ":templateId",
               title: "Template",
-              comp: Pages.lazy("email_template"),
+              comp: Pages.get("email_template"),
             },
           ],
         },
@@ -128,21 +126,21 @@ export const orgRoutes = (
       access: () => isAdmin,
       path: "ai",
       icon: "sparkle",
-      comp: Pages.lazy("ai"),
+      comp: Pages.get("ai"),
     },
     {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
       icon: "key",
-      comp: Pages.lazy("auth"),
+      comp: Pages.get("auth"),
     },
     {
       section: "Audit logs",
       access: () => isAdmin,
       path: "audit",
       icon: "notepad",
-      comp: Pages.lazy("audit_logs"),
+      comp: Pages.get("audit_logs"),
     },
     {
       section: "Self host",
@@ -152,17 +150,17 @@ export const orgRoutes = (
       routes: [
         {
           path: "version",
-          comp: Pages.lazy("version"),
+          comp: Pages.get("version"),
           title: "Version",
         },
         {
           path: "diagnostics",
-          comp: Pages.lazy("diagnostics"),
+          comp: Pages.get("diagnostics"),
           title: "Diagnostics",
         },
         {
           path: "systemLogs",
-          comp: Pages.lazy("system_logs"),
+          comp: Pages.get("system_logs"),
           title: "System logs",
         },
       ],
@@ -181,7 +179,7 @@ export const orgRoutes = (
       access: () => !cloud && isAdmin,
       icon: "arrow-circle-up",
       path: "upgrade",
-      comp: Pages.lazy("upgrade"),
+      comp: Pages.get("upgrade"),
       color: "var(--spectrum-global-color-blue-500)",
     },
     {
@@ -212,17 +210,17 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
       icon: "sliders-horizontal",
       path: "general",
       routes: [
-        { path: "info", comp: Pages.lazy("general_info"), title: "Info" },
+        { path: "info", comp: Pages.get("general_info"), title: "Info" },
         {
           path: "backups",
-          comp: Pages.lazy("backups"),
+          comp: Pages.get("backups"),
           title: "Backups",
         },
         {
           section: "Data",
           icon: "lock-simple",
           path: "data",
-          routes: [{ path: "oauth2", comp: Pages.lazy("oauth2") }],
+          routes: [{ path: "oauth2", comp: Pages.get("oauth2") }],
         },
       ],
     },
@@ -230,10 +228,11 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
       section: "Automations",
       icon: "lightning-a",
       path: "automations",
+      new: true,
       routes: [
         {
           path: "logs",
-          comp: Pages.lazy("automations"),
+          comp: Pages.get("automations"),
         },
       ],
     },
@@ -242,9 +241,9 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
       icon: "layout",
       path: "app",
       routes: [
-        { path: "pwa", comp: Pages.lazy("pwa"), title: "PWA" },
-        { path: "embed", comp: Pages.lazy("embed"), title: "Embed" },
-        { path: "scripts", comp: Pages.lazy("scripts"), title: "Scripts" },
+        { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
+        { path: "embed", comp: Pages.get("embed"), title: "Embed" },
+        { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
       ],
     },
   ].map((entry: Route) => ({

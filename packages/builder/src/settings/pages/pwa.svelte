@@ -15,7 +15,7 @@
     Helpers,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
+  import { licensing } from "@/stores/portal/licensing"
   import { API } from "@/api"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
 

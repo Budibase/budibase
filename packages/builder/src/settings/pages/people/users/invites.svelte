@@ -1,8 +1,9 @@
 <script lang="ts">
   import { Table, notifications, Layout } from "@budibase/bbui"
-  import { licensing, users, auth } from "@/stores/portal"
+  import { licensing } from "@/stores/portal/licensing"
+  import { users } from "@/stores/portal/users"
+  import { auth } from "@/stores/portal/auth"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
-  // import AppsTableRenderer from "@/pages/people/users/_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"

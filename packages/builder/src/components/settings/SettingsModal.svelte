@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Modal, Divider } from "@budibase/bbui"
-  import NavItem from "@/components/common/NavItem.svelte"
+  import { Modal, Divider, Body, StatusLight, Icon } from "@budibase/bbui"
   import NewPill from "@/components/common/NewPill.svelte"
   import { permittedRoutes, flattenedRoutes } from "@/stores/routing"
   import { bb } from "@/stores/bb"
@@ -10,6 +9,8 @@
   import { isRouteHREF, isSettingIcon, type Route } from "@/types/routing"
   import { beforeUrlChange, goto } from "@roxi/routify"
   import { onMount } from "svelte"
+  import ModalSideBar from "./ModalSideBar.svelte"
+  import SideNavLink from "@/pages/builder/workspace/[application]/_components/SideNav/SideNavLink.svelte"
 
   export const show = () => {
     modal.show()
@@ -23,6 +24,8 @@
   let scrolling = false
   let page: HTMLDivElement
   let settingsModalOpen = false
+  let settingsSideBarCollapsed = false
+  let settingsNav: ModalSideBar
 
   $: ({ route, open } = $bb.settings ?? {})
   $: matchedRoute = route
@@ -143,28 +146,58 @@
       aria-modal="true"
     >
       <section class="spectrum-Dialog-content">
-        <div class="settings-nav">
-          <div class="heading">Settings</div>
-          <Divider noMargin size={"S"} />
-          <div class="groups">
+        <ModalSideBar
+          bind:this={settingsNav}
+          on:toggle={e => {
+            settingsSideBarCollapsed = e.detail
+          }}
+        >
+          <div class="groups" class:full={!settingsSideBarCollapsed}>
             {#each groupEntries as [key, group], idx}
               {#if key !== "none"}
                 <div class="group-title">
-                  {key}
+                  <div class="placeholder">
+                    <Icon
+                      name="dot-outline"
+                      color="var(--spectrum-global-color-gray-700)"
+                    />
+                  </div>
+                  <div class="group-title-text">
+                    <Body
+                      color="var(--spectrum-global-color-gray-700)"
+                      size="XS"
+                    >
+                      {key}
+                    </Body>
+                  </div>
                 </div>
               {/if}
               {#each group || [] as route}
+                {@const selected =
+                  route.section === matchedRoute?.entry?.section}
                 <span
                   class="root-nav"
+                  class:selected
                   style={route.color ? `--routeColour:${route.color}` : ""}
                 >
-                  <NavItem
-                    icon={typeof route?.icon === "string" ? route?.icon : null}
+                  {#if route.new && settingsSideBarCollapsed}
+                    <span class="status-indicator">
+                      <StatusLight color="#433872" size="M" />
+                    </span>
+                  {/if}
+                  <SideNavLink
+                    icon={typeof route?.icon === "string"
+                      ? route?.icon
+                      : undefined}
+                    text={route.section || ""}
+                    collapsed={settingsSideBarCollapsed}
+                    on:click={() => {
+                      settingsNav.keepCollapsed()
+                      navItemClick(route)
+                    }}
+                    forceActive={selected}
                     iconColor={route.color ||
                       "var(--spectrum-global-color-gray-800)"}
-                    text={route.section || ""}
-                    on:click={() => navItemClick(route)}
-                    selected={route.section === matchedRoute?.entry?.section}
                   >
                     <svelte:fragment slot="icon">
                       {#if route.icon && isSettingIcon(route.icon)}
@@ -182,15 +215,15 @@
                         <NewPill />
                       {/if}
                     </svelte:fragment>
-                  </NavItem>
+                  </SideNavLink>
                 </span>
               {/each}
-              {#if idx < groupEntries.length - 1 && idx > 0}
+              {#if idx < groupEntries.length - 1}
                 <div class="group-divider"><Divider size="S" noMargin /></div>
               {/if}
             {/each}
           </div>
-        </div>
+        </ModalSideBar>
         <div class="setting-main" class:scrolling>
           <RouteHeader />
           <div bind:this={page} class="setting-page" on:scroll={handleScroll}>
@@ -203,16 +236,44 @@
 </div>
 
 <style>
+  .status-indicator {
+    position: absolute;
+    top: -10px;
+    z-index: 3;
+    right: -6px;
+  }
+
+  .status-indicator :global(.spectrum-StatusLight::before) {
+    border: 0.5px solid #5645a1;
+  }
+
   .setting-main .setting-page {
     padding-left: calc(var(--spacing-xl) * 2);
     padding-right: calc(var(--spacing-xl) * 2);
   }
 
+  .groups .root-nav:first-of-type {
+    height: 48px;
+    display: flex;
+    width: 100%;
+    align-items: center;
+  }
+
+  .groups .root-nav:first-of-type :global(.link) {
+    width: 100%;
+  }
+
+  .groups .group-divider:first-of-type {
+    margin-top: 0px;
+  }
+
+  .root-nav {
+    position: relative;
+  }
   .root-nav :global(.custom-icon .spectrum-Avatar) {
     line-height: 0.8em;
   }
 
-  .settings-nav :global(hr),
   .setting-main :global(hr) {
     background-color: var(--spectrum-global-color-gray-300);
   }
@@ -237,8 +298,55 @@
   }
 
   .group-title {
-    padding: var(--spacing-s) calc(var(--spacing-l) + 4px);
+    padding: 0 calc(var(--nav-padding) / 2);
     color: var(--spectrum-global-color-gray-900);
+    position: relative;
+    padding: 0 calc(var(--nav-padding) / 2);
+    margin: 8px 0;
+  }
+
+  .group-title .group-title-text {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0ms,
+      visibility 0ms;
+    position: absolute;
+  }
+
+  .groups.full .group-title .group-title-text {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 200ms ease-in,
+      visibility 0ms;
+    position: static;
+  }
+
+  .placeholder {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 200ms ease-in,
+      visibility 0ms;
+  }
+
+  .groups.full .group-title .placeholder {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0ms,
+      visibility 0ms;
+    position: absolute;
+  }
+
+  .group-title :global(p) {
+    text-transform: uppercase;
+  }
+
+  .groups:not(.full) .root-nav:not(.selected) .status-indicator {
+    top: -5px;
+    right: -5px;
   }
 
   .setting-page {
@@ -315,5 +423,16 @@
     color: var(--spectrum-global-color-gray-600);
     order: 1;
     margin-right: 2px;
+  }
+
+  .spectrum-Dialog-content :global(.nav_wrapper .nav) {
+    border-top-left-radius: var(--spectrum-global-dimension-size-100);
+    border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
+  }
+
+  .spectrum-Dialog-content :global(.nav_header) {
+    padding-top: var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+    flex: 0 0 32px;
   }
 </style>

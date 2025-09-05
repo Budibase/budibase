@@ -1,8 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"
-
-  import { users } from "@/stores/portal"
+  import { users } from "@/stores/portal/users"
 
   export let user
 

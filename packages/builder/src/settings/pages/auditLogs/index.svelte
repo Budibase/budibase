@@ -17,7 +17,10 @@
     Divider,
     ActionButton,
   } from "@budibase/bbui"
-  import { licensing, users, appsStore, auditLogs } from "@/stores/portal"
+  import { licensing } from "@/stores/portal/licensing"
+  import { users } from "@/stores/portal/users"
+  import { appsStore } from "@/stores/portal/apps"
+  import { auditLogs } from "@/stores/portal/auditLogs"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount, setContext } from "svelte"

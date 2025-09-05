@@ -7,7 +7,7 @@
     ButtonGroup,
     Button,
   } from "@budibase/bbui"
-  import { email } from "@/stores/portal"
+  import { email } from "@/stores/portal/email"
   import {
     type FindConfigResponse,
     type FetchGlobalTemplateDefinitionResponse,

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ModalContent, Link } from "@budibase/bbui"
-  import { admin } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
 
   export let confirmHandler: () => void
   export let cancelHandler: () => void

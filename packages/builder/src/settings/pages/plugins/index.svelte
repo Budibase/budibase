@@ -10,7 +10,8 @@
     TooltipPosition,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { plugins, admin } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
+  import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"

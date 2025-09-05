@@ -7,7 +7,7 @@
     notifications,
     ProgressCircle,
   } from "@budibase/bbui"
-  import { groups } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
   import { type BulkAddUsersToGroupResponse } from "@budibase/types"
 
   export let groupId

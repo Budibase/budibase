@@ -17,7 +17,8 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
-  import { organisation, admin } from "@/stores/portal"
+  import { organisation } from "@/stores/portal/organisation"
+  import { admin } from "@/stores/portal/admin"
 
   const ConfigTypes = {
     Google: "google",

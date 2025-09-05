@@ -25,14 +25,8 @@
   $: params = { ...($memoRoute?.params || {}) }
   $: routing.update(state => ({ ...state, params: { ...params } }))
 
-  $: if (path && comp instanceof Promise) {
-    comp.then(comp => {
-      if (!comp) {
-        console.error("Invalid route component config.")
-        return
-      }
-      page = comp
-    })
+  $: if (path && comp) {
+    page = comp
   }
 </script>
 

@@ -8,7 +8,7 @@
     Select,
     Checkbox,
   } from "@budibase/bbui"
-  import { admin } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
   import { API } from "@/api"
   import { cloneDeep } from "lodash/fp"
   import { onMount } from "svelte"

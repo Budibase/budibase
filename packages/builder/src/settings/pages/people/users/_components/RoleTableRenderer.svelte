@@ -1,5 +1,5 @@
 <script>
-  import { users } from "@/stores/portal"
+  import { users } from "@/stores/portal/users"
   import { Constants } from "@budibase/frontend-core"
 
   export let row

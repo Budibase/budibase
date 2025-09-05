@@ -10,8 +10,8 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin } from "@/stores/portal"
-  import { auth } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
+  import { auth } from "@/stores/portal/auth"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"

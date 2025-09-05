@@ -2,7 +2,8 @@
   import { Button, Popover, notifications } from "@budibase/bbui"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
-  import { groups, users } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
+  import { users } from "@/stores/portal/users"
 
   export let groupId
   export let onUsersUpdated

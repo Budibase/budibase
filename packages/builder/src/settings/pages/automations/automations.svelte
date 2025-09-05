@@ -1,7 +1,8 @@
 <script>
   import { Layout, Body, Heading, Toggle, notifications } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
-  import { admin, appsStore } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
+  import { appsStore } from "@/stores/portal/apps"
 
   $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
   $: isCloud = $admin.cloud

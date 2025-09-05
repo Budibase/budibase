@@ -8,7 +8,7 @@
     Select,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore } from "@/stores/portal/apps"
   import { appStore, workspaceAppStore } from "@/stores/builder"
 
   let selectedApp

@@ -10,7 +10,8 @@
     Body,
     Table,
   } from "@budibase/bbui"
-  import { backups, licensing } from "@/stores/portal"
+  import { backups } from "@/stores/portal/backups"
+  import { licensing } from "@/stores/portal/licensing"
   import { appStore } from "@/stores/builder"
   import { createPaginationStore } from "@/helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"

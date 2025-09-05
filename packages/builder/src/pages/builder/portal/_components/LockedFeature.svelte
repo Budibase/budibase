@@ -11,7 +11,8 @@
     TooltipPosition,
     Heading,
   } from "@budibase/bbui"
-  import { auth, admin } from "@/stores/portal"
+  import { auth } from "@/stores/portal/auth"
+  import { admin } from "@/stores/portal/admin"
 
   export let planType: string | undefined = undefined
   export let description: string | undefined = undefined

@@ -12,7 +12,10 @@
     Label,
     TextArea,
   } from "@budibase/bbui"
-  import { auth, organisation, licensing, admin } from "@/stores/portal"
+  import { auth } from "@/stores/portal/auth"
+  import { organisation } from "@/stores/portal/organisation"
+  import { licensing } from "@/stores/portal/licensing"
+  import { admin } from "@/stores/portal/admin"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
   import { routeActions } from "@/settings/pages"
 

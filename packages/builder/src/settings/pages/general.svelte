@@ -12,7 +12,8 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { admin, licensing } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
+  import { licensing } from "@/stores/portal/licensing"
   import {
     Body,
     Button,

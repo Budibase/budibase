@@ -1,3 +1,4 @@
+import { ComponentType } from "svelte"
 import { SvelteComponent } from "svelte"
 
 export interface Routing {
@@ -36,7 +37,7 @@ export interface RouteIcon {
 
 export interface Route {
   path?: string
-  comp?: Promise<typeof SvelteComponent<any> | undefined>
+  comp?: ComponentType | undefined
   routes?: Route[]
   section?: string
   title?: string
@@ -45,7 +46,7 @@ export interface Route {
   access?: () => boolean
   href?: string | RouteHREF
   keys?: string[] // e.g path/to/:userId > ["userId"]
-  group?: string // for grouping
+  group?: string
   color?: string // for highlighting
 
   nav?: Route[]

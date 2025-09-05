@@ -13,7 +13,9 @@
     notifications,
     File,
   } from "@budibase/bbui"
-  import { auth, admin, licensing } from "@/stores/portal"
+  import { auth } from "@/stores/portal/auth"
+  import { admin } from "@/stores/portal/admin"
+  import { licensing } from "@/stores/portal/licensing"
   import { redirect } from "@roxi/routify"
   import { processStringSync } from "@budibase/string-templates"
   import DeleteLicenseKeyModal from "@/components/portal/licensing/DeleteLicenseKeyModal.svelte"

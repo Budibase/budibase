@@ -7,7 +7,9 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
+  import { auth } from "@/stores/portal/auth"
+  import { licensing } from "@/stores/portal/licensing"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"

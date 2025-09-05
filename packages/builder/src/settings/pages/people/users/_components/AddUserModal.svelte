@@ -9,7 +9,8 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
+  import { licensing } from "@/stores/portal/licensing"
   import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
 

@@ -19,7 +19,9 @@
   import { type AppScript } from "@budibase/types"
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { licensing, auth, admin } from "@/stores/portal"
+  import { licensing } from "@/stores/portal/licensing"
+  import { auth } from "@/stores/portal/auth"
+  import { admin } from "@/stores/portal/admin"
   import { routeActions } from "@/settings/pages"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
 

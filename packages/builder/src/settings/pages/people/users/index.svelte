@@ -12,14 +12,12 @@
     Icon,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import {
-    users,
-    groups,
-    auth,
-    licensing,
-    organisation,
-    admin,
-  } from "@/stores/portal"
+  import { users } from "@/stores/portal/users"
+  import { groups } from "@/stores/portal/groups"
+  import { auth } from "@/stores/portal/auth"
+  import { licensing } from "@/stores/portal/licensing"
+  import { organisation } from "@/stores/portal/organisation"
+  import { admin } from "@/stores/portal/admin"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"

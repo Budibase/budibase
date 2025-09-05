@@ -7,18 +7,21 @@
     InlineAlert,
     notifications,
   } from "@budibase/bbui"
-  import { environment, licensing } from "@/stores/portal"
+  import { environment } from "@/stores/portal/environment"
+  import { licensing } from "@/stores/portal/licensing"
   import { onMount } from "svelte"
   import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
   import { routeActions } from "@/settings/pages"
 
-  let modal
-
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
-  $: noEncryptionKey = $environment.status?.encryptionKeyAvailable === false
+  let modal
+  let loading = true
+
+  $: noEncryptionKey =
+    loading == false && $environment.status?.encryptionKeyAvailable === false
   $: schema = buildSchema(noEncryptionKey)
 
   onMount(async () => {
@@ -30,6 +33,7 @@
         `Error loading environment variables: ${error.message}`
       )
     }
+    loading = false
   })
 
   const buildSchema = noEncryptionKey => {
@@ -90,6 +94,7 @@
       allowEditRows={false}
       allowSelectRows={false}
       {customRenderers}
+      {loading}
     />
   </Layout>
 </LockedFeature>

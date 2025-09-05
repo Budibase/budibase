@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "@/api"
-  import { groups } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
   import { setContext } from "svelte"
   import { bb } from "@/stores/bb"
 

@@ -7,7 +7,9 @@
     notifications,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing, admin } from "@/stores/portal"
+  import { groups } from "@/stores/portal/groups"
+  import { licensing } from "@/stores/portal/licensing"
+  import { admin } from "@/stores/portal/admin"
   import { emailValidator, Constants } from "@budibase/frontend-core"
   import { capitalise, parseUserEmailsFromCSV } from "@/helpers"
   const BYTES_IN_MB = 1000000

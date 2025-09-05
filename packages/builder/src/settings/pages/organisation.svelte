@@ -7,7 +7,8 @@
     notifications,
     Toggle,
   } from "@budibase/bbui"
-  import { organisation, admin } from "@/stores/portal"
+  import { organisation } from "@/stores/portal/organisation"
+  import { admin } from "@/stores/portal/admin"
   import { writable } from "svelte/store"
 
   const values = writable({

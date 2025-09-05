@@ -17,9 +17,10 @@
     ButtonGroup,
     Modal,
   } from "@budibase/bbui"
-  import { auth, admin } from "@/stores/portal"
+  import { auth } from "@/stores/portal/auth"
+  import { admin } from "@/stores/portal/admin"
+  import { themeStore } from "@/stores/portal/theme"
   import { type UpdateSelfRequest } from "@budibase/types"
-  import { themeStore } from "@/stores/portal"
   import { ThemeOptions } from "@budibase/shared-core"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
   import { bb } from "@/stores/bb"

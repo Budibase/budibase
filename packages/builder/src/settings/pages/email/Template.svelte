@@ -9,7 +9,7 @@
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import { email } from "@/stores/portal"
+  import { email } from "@/stores/portal/email"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
   import type { Template, GlobalTemplateBinding } from "@budibase/types"
