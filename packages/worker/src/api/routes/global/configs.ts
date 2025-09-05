@@ -1,7 +1,7 @@
-import * as controller from "../../controllers/global/configs"
 import { auth } from "@budibase/backend-core"
-import Joi from "joi"
 import { ConfigType, PKCEMethod } from "@budibase/types"
+import Joi from "joi"
+import * as controller from "../../controllers/global/configs"
 import { adminRoutes, loggedInRoutes } from "../endpointGroups"
 
 function smtpValidation() {
