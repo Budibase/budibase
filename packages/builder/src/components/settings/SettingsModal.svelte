@@ -152,6 +152,9 @@
             settingsSideBarCollapsed = e.detail
           }}
         >
+          <div slot="header_icon">
+            <Icon name="gear" />
+          </div>
           <div class="groups" class:full={!settingsSideBarCollapsed}>
             {#each groupEntries as [key, group], idx}
               {#if key !== "none"}
@@ -386,32 +389,11 @@
     height: 100%;
   }
 
-  .settings-nav {
-    height: 100%;
-    background-color: var(--background-alt);
-    display: flex;
-    flex-direction: column;
-    border-top-left-radius: var(--spectrum-global-dimension-size-100);
-    border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
-    min-width: 250px;
-    border-right: 1px solid var(--spectrum-global-color-gray-300);
-  }
-
   .setting-main {
     flex: 1;
     display: flex;
     flex-direction: column;
     background-color: var(--background);
-  }
-
-  .settings-nav .heading {
-    padding: var(--spacing-l) var(--spacing-xl);
-    font-size: 16px;
-    font-weight: 600;
-    /* To accomodate page header action UI */
-    min-height: 32px;
-    display: flex;
-    align-items: center;
   }
 
   .custom-icon {

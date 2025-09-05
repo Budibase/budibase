@@ -74,17 +74,19 @@
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <a href={$url("/builder/portal/workspaces")}>
-        <img src={BBLogo} alt="Budibase logo" />
-      </a>
+      <div class="icon">
+        <slot name="header_icon" />
+      </div>
       <div class="nav_title">
         <h1>Settings</h1>
       </div>
-      <Icon
-        name="sidebar-simple"
-        hoverable
-        on:click={() => pinned.set(!$pinned)}
-      />
+      <div class="collapse_icon">
+        <Icon
+          name="sidebar-simple"
+          hoverable
+          on:click={() => pinned.set(!$pinned)}
+        />
+      </div>
     </div>
 
     <div class="nav_body">
@@ -147,22 +149,11 @@
     align-items: center;
     flex: 0 0 50px;
     padding: 0 var(--nav-padding);
-    gap: var(--spacing-m);
+    gap: 5px;
     border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
   }
-  .nav_header a {
-    display: grid;
-    place-items: center;
-    transition: filter 130ms ease-out;
-  }
-  .nav_header a:hover {
-    cursor: pointer;
-    filter: brightness(1.2);
-  }
-  .nav_header img {
-    width: var(--nav-logo-width);
-  }
+
   .nav_title {
     width: 0;
     flex: 1 1 auto;
@@ -171,7 +162,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: 4px;
-    transition: color 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
   }
   .nav_title h1 {
@@ -183,6 +173,13 @@
     padding: 0;
     overflow: hidden;
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .nav_header .icon {
+    display: grid;
+    place-items: center;
+    min-width: var(--nav-logo-width);
+    padding-left: 1px;
   }
 
   .nav_body {
@@ -214,6 +211,11 @@
     min-height: 0;
     overflow: hidden;
     flex: 1 1 auto;
+  }
+
+  .nav:not(.pinned):not(.focused) .nav_title,
+  .nav:not(.pinned):not(.focused) .collapse_icon {
+    display: none;
   }
 
   @container (max-width: 239px) {
