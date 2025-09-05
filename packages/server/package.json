@@ -99,6 +99,7 @@
     "koa": "2.15.4",
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
+    "koa-conditional-get": "^3.0.0",
     "koa-send": "5.0.1",
     "koa-useragent": "^4.1.0",
     "koa2-ratelimit": "1.1.1",

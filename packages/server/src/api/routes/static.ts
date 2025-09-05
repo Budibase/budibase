@@ -7,6 +7,7 @@ import recaptcha from "../../middleware/recaptcha"
 import { paramResource } from "../../middleware/resourceId"
 import * as controller from "../controllers/static"
 import { addFileManagement } from "../utils"
+const conditional = require("koa-conditional-get")
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
@@ -14,6 +15,7 @@ const router: Router = new Router()
 
 addFileManagement(router)
 
+router.use(conditional())
 router.use(etag())
 
 router
