@@ -367,7 +367,7 @@
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="sidebar"
+        name="caret-line-right"
         hoverable
         on:click={sidePanelStore.actions.close}
       />
