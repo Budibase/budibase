@@ -2,6 +2,7 @@ import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
+  cache,
   configs,
   context,
   objectStore,
@@ -25,10 +26,15 @@ import {
   UserCtx,
   Workspace,
 } from "@budibase/types"
+import extract from "extract-zip"
 import fs from "fs"
 import fsp from "fs/promises"
+import send from "koa-send"
+import { tmpdir } from "os"
+import path from "path"
 import * as uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
+import { getThemeVariables } from "../../../constants/themes"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { join } from "../../../utilities/centralPath"
@@ -39,12 +45,6 @@ import {
 } from "../../../utilities/fileSystem"
 import { isAppFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
-
-import extract from "extract-zip"
-import send from "koa-send"
-import { tmpdir } from "os"
-import path from "path"
-import { getThemeVariables } from "../../../constants/themes"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -367,14 +367,23 @@ export const serveBuilderPreview = async function (
   }
 }
 
+function serveLocalFile(ctx: Ctx, fileName: string) {
+  const tsPath = join(require.resolve("@budibase/client"), "..")
+  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  return send(ctx, fileName, {
+    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
+  })
+}
+
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
   const appId = context.getAppId() || (ctx.request.query.appId as string)
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
+
+  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
@@ -384,11 +393,25 @@ export const serveClientLibrary = async function (
     )
     ctx.set("Content-Type", "application/javascript")
   } else {
-    // incase running from TS directly
-    const tsPath = join(require.resolve("@budibase/client"), "..")
-    return send(ctx, "budibase-client.js", {
-      root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-    })
+    return serveLocalFile(ctx, "budibase-client.js")
+  }
+}
+
+export const serve3rdPartyFile = async function (ctx: Ctx) {
+  const { file } = ctx.params
+
+  const appId = context.getAppId()
+
+  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
+
+  const serveLocally = shouldServeLocally()
+  if (!serveLocally) {
+    ctx.body = await objectStore.getReadStream(
+      ObjectStoreBuckets.APPS,
+      objectStore.client3rdPartyLibrary(appId!, file)
+    )
+  } else {
+    return serveLocalFile(ctx, file)
   }
 }
 
