@@ -1,4 +1,5 @@
 import { permissions } from "@budibase/backend-core"
+import etag from "@koa/etag"
 import Router from "@koa/router"
 import { devAppIdPath } from "../../constants/paths"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
@@ -12,6 +13,8 @@ const { BUILDER, PermissionType, PermissionLevel } = permissions
 const router: Router = new Router()
 
 addFileManagement(router)
+
+router.use(etag())
 
 router
   .get("/apple-touch-icon.png", async ctx => {

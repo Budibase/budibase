@@ -5,7 +5,6 @@ import {
   middleware,
 } from "@budibase/backend-core"
 import { middleware as pro } from "@budibase/pro"
-import etag from "@koa/etag"
 import Router from "@koa/router"
 import zlib from "zlib"
 import { automationQueue } from "../automations"
@@ -55,8 +54,6 @@ if (apiEnabled()) {
     )
     // re-direct before any middlewares occur
     .redirect("/", "/builder")
-
-  router.use(etag())
 
   // send assets before middleware
   router.use(assetRoutes.routes())
