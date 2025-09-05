@@ -1,9 +1,10 @@
-import Redlock from "redlock"
-import { getLockClient } from "./init"
-import { LockOptions, LockType } from "@budibase/types"
-import * as context from "../context"
 import { utils } from "@budibase/shared-core"
+import { LockOptions, LockType } from "@budibase/types"
+import Redlock from "redlock"
+import * as context from "../context"
+import env from "../environment"
 import { Duration } from "../utils"
+import { getLockClient } from "./init"
 
 async function getClient(
   type: LockType,
@@ -118,6 +119,11 @@ export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
+  if (env.isTest()) {
+    console.log(`Bypassing lock for in test environment`)
+    return { result: await task(), executed: true }
+  }
+
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
   let timeout
