@@ -8,6 +8,7 @@
   export let collapsed = false
   export let target: string | undefined = undefined
   export let forceActive: boolean | undefined = undefined
+  export let iconColor: string = ""
 
   $: active = forceActive ?? (url ? $isActive(url) : false)
 </script>
@@ -22,18 +23,27 @@
   tabindex="0"
 >
   <div class="link_icon">
-    {#if $$slots.icon}
-      <slot name="icon" />
-    {:else}
+    <slot name="icon" />
+    {#if icon}
       <Icon
         name={icon}
         size="M"
         weight="regular"
-        color="var(--spectrum-global-color-gray-800)"
+        color={iconColor || "var(--spectrum-global-color-gray-800)"}
       />
     {/if}
   </div>
-  <div class="link_text">{text}</div>
+  <div class="link_content">
+    <div class="link_text" style={iconColor ? `color: ${iconColor};` : ""}>
+      {text}
+    </div>
+    {#if $$slots.right}
+      <div class="right">
+        <slot name="right" />
+      </div>
+    {/if}
+  </div>
+
   {#if $$slots.actions}
     <div class="actions">
       <slot name="actions" />
@@ -88,9 +98,14 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex: 1;
   }
-  .link.collapsed .link_text {
+
+  .link .link_content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+  }
+  .link.collapsed .link_content {
     display: none;
   }
 </style>

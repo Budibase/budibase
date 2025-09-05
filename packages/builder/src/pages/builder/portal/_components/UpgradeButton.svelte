@@ -1,8 +1,8 @@
 <script>
   import { Button } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
+  import { bb } from "@/stores/bb"
 </script>
 
 {#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
@@ -18,12 +18,7 @@
       Upgrade
     </Button>
   {:else if !$admin.cloud && sdk.users.isAdmin($auth.user)}
-    <Button
-      cta
-      size="M"
-      on:click={() => $goto("/builder/portal/account/upgrade")}
-      on:click
-    >
+    <Button cta size="M" on:click={() => bb.settings("/upgrade")} on:click>
       Upgrade
     </Button>
   {/if}
