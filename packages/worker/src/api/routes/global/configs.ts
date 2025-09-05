@@ -51,7 +51,7 @@ function oidcValidation() {
         uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
         scopes: Joi.array().optional(),
-        pkce: Joi.string().valid(...Object.values(PKCEMethod)).optional()
+        pkce: Joi.string().valid(...Object.values(PKCEMethod)).optional().allow(null)
       })
     ).required()
   }).unknown(true)
