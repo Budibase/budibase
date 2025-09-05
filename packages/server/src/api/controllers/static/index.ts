@@ -380,13 +380,14 @@ export const serveClientLibrary = async function (
   if (!serveLocally) {
     const { stream, etag, lastModified, contentType, contentLength } =
       await objectStore.getReadStream(
-      ObjectStoreBuckets.APPS,
-      objectStore.clientLibraryPath(appId!)
-    )
+        ObjectStoreBuckets.APPS,
+        objectStore.clientLibraryPath(appId!)
+      )
 
     // Set metadata for ETag middleware to use
     if (etag) {
       ctx.set("ETag", etag)
+      ctx.set("Cache-Control", "no-cache")
     }
     if (lastModified) {
       ctx.set("Last-Modified", lastModified.toUTCString())
