@@ -147,6 +147,68 @@ describe("/static", () => {
     })
   })
 
+  describe("/api/assets/client", () => {
+    it("should serve the client library with ETag headers", async () => {
+      const res = await request
+        .get(`/api/assets/client?appId=${config.getAppId()}&version=test`)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      expect(res.headers.etag).toBeDefined()
+      expect(res.headers["content-type"]).toBe(
+        "application/javascript; charset=utf-8"
+      )
+
+      expect(res.headers["cache-control"]).toBe("max-age=0")
+    })
+
+    it("should return 304 when If-None-Match header matches ETag", async () => {
+      const firstRes = await request
+        .get(`/api/assets/client?appId=${config.getAppId()}&version=test`)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      const etag = firstRes.headers.etag
+      expect(etag).toBeDefined()
+
+      const secondRes = await request
+        .get(`/api/assets/client?appId=${config.getAppId()}&version=test`)
+        .set({
+          ...config.defaultHeaders(),
+          "If-None-Match": etag,
+        })
+        .expect(304)
+      expect(secondRes.text).toBe("")
+    })
+
+    it("should return 200 when If-None-Match header does not match ETag", async () => {
+      const res = await request
+        .get(`/api/assets/client?appId=${config.getAppId()}&version=test`)
+        .set({
+          ...config.defaultHeaders(),
+          "If-None-Match": '"different-etag"',
+        })
+        .expect(200)
+
+      expect(res.headers.etag).toBeDefined()
+      expect(res.headers["content-type"]).toBe(
+        "application/javascript; charset=utf-8"
+      )
+    })
+
+    it("should require appId parameter", async () => {
+      const headers = config.defaultHeaders()
+      delete headers[constants.Header.APP_ID]
+
+      const res = await request
+        .get("/api/assets/client")
+        .set(headers)
+        .expect(400)
+
+      expect(res.body.message).toContain("No app ID provided")
+    })
+  })
+
   describe("/", () => {
     it("should move permanently from base call (public call)", async () => {
       const res = await request.get(`/`)
