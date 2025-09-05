@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
-import { cloneDeep } from "lodash"
 import { createSecretKey } from "crypto"
+import { existsSync, readFileSync } from "fs"
+import { cloneDeep } from "lodash"
 import { join, resolve } from "path"
 
 const TOP_LEVEL_PATH =
