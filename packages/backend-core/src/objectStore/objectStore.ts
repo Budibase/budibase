@@ -455,7 +455,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!
           span.addTags({ filename })
-          const stream = await getReadStream(bucketName, filename)
+          const { stream } = await getReadStream(bucketName, filename)
           const possiblePath = filename.split("/")
           const dirs = possiblePath.slice(0, possiblePath.length - 1)
           const possibleDir = join(writePath, ...dirs)
@@ -607,7 +607,13 @@ export async function downloadTarball(
 export async function getReadStream(
   bucketName: string,
   path: string
-): Promise<Readable> {
+): Promise<{
+  stream: Readable
+  etag?: string
+  lastModified?: Date
+  contentType?: string
+  contentLength?: number
+}> {
   return await tracer.trace("getReadStream", async span => {
     bucketName = sanitizeBucket(bucketName)
     path = sanitizeKey(path)
@@ -624,8 +630,16 @@ export async function getReadStream(
     span.addTags({
       contentLength: response.ContentLength,
       contentType: response.ContentType,
+      etag: response.ETag,
     })
-    return response.Body
+
+    return {
+      stream: response.Body,
+      etag: response.ETag,
+      lastModified: response.LastModified,
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+    }
   })
 }
 

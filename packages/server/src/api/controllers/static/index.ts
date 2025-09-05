@@ -378,11 +378,12 @@ export const serveClientLibrary = async function (
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
-    ctx.body = await objectStore.getReadStream(
+    const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
-    ctx.set("Content-Type", "application/javascript")
+
+    ctx.body = stream
   } else {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
