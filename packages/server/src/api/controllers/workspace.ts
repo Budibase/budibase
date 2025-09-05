@@ -343,6 +343,11 @@ export async function fetchAppPackage(
     application.version
   )
 
+  const clientCacheKey = objectStore.getClientCacheKey(
+    ctx.params.appId,
+    application.version
+  )
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -351,6 +356,7 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
+    clientCacheKey,
   }
 }
 

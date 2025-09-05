@@ -255,7 +255,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
-        clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+        clientCacheKey: objectStore.getClientCacheKey(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""

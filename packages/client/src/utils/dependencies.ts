@@ -21,9 +21,9 @@ export async function loadDependency(config: LibDependency): Promise<any> {
       return
     }
 
-    const { appId } = get(appStore)
+    const { clientCacheKey } = get(appStore)
     const script = document.createElement("script")
-    script.src = `/api/assets/${outFile}?appId=${appId}`
+    script.src = `/api/assets/${outFile}?${clientCacheKey}&`
     script.onload = () => {
       if ((window as any)[globalProperty]) {
         resolve((window as any)[globalProperty])

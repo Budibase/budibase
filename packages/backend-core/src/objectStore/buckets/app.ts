@@ -1,9 +1,9 @@
-import env from "../../environment"
-import * as objectStore from "../objectStore"
-import * as cloudfront from "../cloudfront"
+import { PWAManifestImage } from "@budibase/types"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
-import { PWAManifestImage } from "@budibase/types"
+import env from "../../environment"
+import * as cloudfront from "../cloudfront"
+import * as objectStore from "../objectStore"
 
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
@@ -46,6 +46,22 @@ export function clientLibraryUrl(appId: string, version: string) {
     qsParams.tenantId = tenantId
   }
   return `/api/assets/client?${qs.encode(qsParams)}`
+}
+
+export function getClientCacheKey(appId: string, version: string) {
+  let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
+  try {
+    tenantId = getTenantId()
+  } finally {
+    qsParams = {
+      appId,
+      version,
+    }
+  }
+  if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
+    qsParams.tenantId = tenantId
+  }
+  return qs.encode(qsParams)
 }
 
 export async function getAppFileUrl(s3Key: string) {
