@@ -174,7 +174,7 @@ export async function getDevWorkspaceIDs() {
   return workspaceIds.filter((id: any) => isDevAppID(id))
 }
 
-export function isSameAppID(
+export function isSameWorkspaceID(
   workspaceId1: string | undefined,
   workspaceId2: string | undefined
 ) {
