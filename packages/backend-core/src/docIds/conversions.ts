@@ -10,11 +10,11 @@ export function isDevWorkspaceID(workspaceId?: string) {
   return workspaceId.startsWith(APP_DEV_PREFIX)
 }
 
-export function isProdAppID(appId?: string) {
-  if (!appId) {
+export function isProdWorkspaceID(workspaceId?: string) {
+  if (!workspaceId) {
     throw NO_WORKSPACE_ERROR
   }
-  return appId.startsWith(APP_PREFIX) && !isDevWorkspaceID(appId)
+  return workspaceId.startsWith(APP_PREFIX) && !isDevWorkspaceID(workspaceId)
 }
 
 export function isDevApp(app: Workspace) {

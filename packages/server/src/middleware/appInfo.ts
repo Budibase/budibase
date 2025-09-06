@@ -1,5 +1,5 @@
 import { Ctx } from "@budibase/types"
-import { isDevWorkspaceID, isProdAppID } from "../db/utils"
+import { isDevWorkspaceID, isProdWorkspaceID } from "../db/utils"
 
 export enum AppType {
   DEV = "dev",
@@ -16,7 +16,11 @@ export function middleware({ appType }: { appType?: AppType } = {}) {
     ) {
       ctx.throw(400, "Only apps in development support this endpoint")
     }
-    if (appType === AppType.PROD && workspaceId && !isProdAppID(workspaceId)) {
+    if (
+      appType === AppType.PROD &&
+      workspaceId &&
+      !isProdWorkspaceID(workspaceId)
+    ) {
       ctx.throw(400, "Only apps in production support this endpoint")
     }
     return next()

@@ -2,7 +2,7 @@ import {
   getDevelopmentAppID,
   getProdAppID,
   isDevWorkspaceID,
-  isProdAppID,
+  isProdWorkspaceID,
 } from "../../docIds/conversions"
 import { generateAppID } from "../utils"
 
@@ -52,12 +52,12 @@ describe("utils", () => {
 
     it("should be able to confirm prod app ID is prod", () => {
       const { appId } = getID()
-      expect(isProdAppID(appId)).toEqual(true)
+      expect(isProdWorkspaceID(appId)).toEqual(true)
     })
 
     it("should be able to confirm dev app ID is not prod", () => {
       const { devAppId } = getID()
-      expect(isProdAppID(devAppId)).toEqual(false)
+      expect(isProdWorkspaceID(devAppId)).toEqual(false)
     })
   })
 })
