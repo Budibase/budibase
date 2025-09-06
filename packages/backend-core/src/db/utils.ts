@@ -144,7 +144,7 @@ export async function getAllWorkspaces({
   }
 }
 
-export async function getAppsByIDs(workspaceIds: string[]) {
+export async function getWorkspacesByIDs(workspaceIds: string[]) {
   const settled = await Promise.allSettled(
     workspaceIds.map(workspaceId => getAppMetadata(workspaceId))
   )

@@ -23,6 +23,6 @@ export async function isAppPublished(prodAppId: string): Promise<boolean> {
     prodAppId = db.getProdAppID(prodAppId)
   }
 
-  const existingApps = await db.getAppsByIDs([prodAppId])
-  return !!existingApps.length
+  const existingWorkspaces = await db.getWorkspacesByIDs([prodAppId])
+  return !!existingWorkspaces.length
 }
