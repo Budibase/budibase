@@ -1,16 +1,16 @@
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
+  AIFieldMetadata,
   DatabaseQueryOpts,
   Datasource,
   DocumentType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  LinkDocument,
   RelationshipFieldMetadata,
   SourceName,
   VirtualDocumentType,
-  LinkDocument,
-  AIFieldMetadata,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -37,7 +37,7 @@ export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
 export const APP_PREFIX = dbCore.APP_PREFIX
 export const APP_DEV_PREFIX = dbCore.APP_DEV_PREFIX
-export const isDevAppID = dbCore.isDevAppID
+export const isDevWorkspaceID = dbCore.isDevWorkspaceID
 export const isProdAppID = dbCore.isProdAppID
 export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`

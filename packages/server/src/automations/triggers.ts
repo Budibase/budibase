@@ -1,5 +1,5 @@
 import { automations } from "@budibase/shared-core"
-import { getAutomationParams, isDevAppID } from "../db/utils"
+import { getAutomationParams, isDevWorkspaceID } from "../db/utils"
 import emitter from "../events/index"
 import { coerce } from "../utilities/rowProcessor"
 // need this to call directly, so we can get a response
@@ -103,7 +103,7 @@ async function queueRelevantRowAutomations(
       // be checked due to lazy evaluation (first always false)
       if (
         !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevAppID(event.appId) &&
+        isDevWorkspaceID(event.appId) &&
         !(await checkTestFlag(automation._id!))
       ) {
         continue

@@ -1,27 +1,27 @@
 import { Workspace } from "@budibase/types"
 import { APP_DEV_PREFIX, APP_PREFIX } from "../constants"
 
-const NO_APP_ERROR = "No app provided"
+const NO_WORKSPACE_ERROR = "No app provided"
 
-export function isDevAppID(appId?: string) {
-  if (!appId) {
-    throw NO_APP_ERROR
+export function isDevWorkspaceID(workspaceId?: string) {
+  if (!workspaceId) {
+    throw NO_WORKSPACE_ERROR
   }
-  return appId.startsWith(APP_DEV_PREFIX)
+  return workspaceId.startsWith(APP_DEV_PREFIX)
 }
 
 export function isProdAppID(appId?: string) {
   if (!appId) {
-    throw NO_APP_ERROR
+    throw NO_WORKSPACE_ERROR
   }
-  return appId.startsWith(APP_PREFIX) && !isDevAppID(appId)
+  return appId.startsWith(APP_PREFIX) && !isDevWorkspaceID(appId)
 }
 
 export function isDevApp(app: Workspace) {
   if (!app) {
-    throw NO_APP_ERROR
+    throw NO_WORKSPACE_ERROR
   }
-  return isDevAppID(app.appId)
+  return isDevWorkspaceID(app.appId)
 }
 
 /**

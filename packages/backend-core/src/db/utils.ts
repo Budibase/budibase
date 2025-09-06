@@ -3,7 +3,7 @@ import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { DEFAULT_TENANT_ID, DocumentType, SEPARATOR } from "../constants"
 import { getGlobalDBName, getTenantId } from "../context"
 import { getStartEndKeyURL } from "../docIds"
-import { getProdAppID, isDevApp, isDevAppID } from "../docIds/conversions"
+import { getProdAppID, isDevApp, isDevWorkspaceID } from "../docIds/conversions"
 import env from "../environment"
 import { directCouchAllDbs, doWithDB } from "./db"
 
@@ -99,10 +99,10 @@ export async function getAllWorkspaces({
   })
   if (idsOnly) {
     const devWorkspaceIds = workspaceDbNames.filter(workspaceId =>
-      isDevAppID(workspaceId)
+      isDevWorkspaceID(workspaceId)
     )
     const prodWorkspaceIds = workspaceDbNames.filter(
-      workspaceId => !isDevAppID(workspaceId)
+      workspaceId => !isDevWorkspaceID(workspaceId)
     )
     switch (dev) {
       case true:
@@ -163,7 +163,7 @@ export async function getWorkspacesByIDs(workspaceIds: string[]) {
  */
 export async function getProdWorkpaceIDs() {
   const workspaceIds = await getAllWorkspaces({ idsOnly: true })
-  return workspaceIds.filter((id: any) => !isDevAppID(id))
+  return workspaceIds.filter(id => !isDevWorkspaceID(id))
 }
 
 /**
@@ -171,7 +171,7 @@ export async function getProdWorkpaceIDs() {
  */
 export async function getDevWorkspaceIDs() {
   const workspaceIds = await getAllWorkspaces({ idsOnly: true })
-  return workspaceIds.filter((id: any) => isDevAppID(id))
+  return workspaceIds.filter(id => isDevWorkspaceID(id))
 }
 
 export function isSameWorkspaceID(

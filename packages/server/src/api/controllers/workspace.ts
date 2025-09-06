@@ -58,7 +58,7 @@ import {
   generateAppID,
   generateDevAppID,
   getLayoutParams,
-  isDevAppID,
+  isDevWorkspaceID,
 } from "../../db/utils"
 import {
   createAllSearchIndex,
@@ -311,7 +311,7 @@ export async function fetchAppPackage(
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
 
-  const isDev = isDevAppID(ctx.params.appId)
+  const isDev = isDevWorkspaceID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
