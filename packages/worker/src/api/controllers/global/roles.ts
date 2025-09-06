@@ -18,21 +18,21 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
   const tenantId = ctx.user!.tenantId
   await context.doInTenant(tenantId, async () => {
     // always use the dev apps as they'll be most up to date (true)
-    const apps = await dbCore.getAllWorkspaces({ all: true })
+    const workspaces = await dbCore.getAllWorkspaces({ all: true })
     const promises = []
-    for (let app of apps) {
+    for (let workspace of workspaces) {
       // use dev app IDs
-      promises.push(roles.getAllRoles(app.appId))
+      promises.push(roles.getAllRoles(workspace.appId))
     }
     const roleList = await Promise.all(promises)
     const response: any = {}
-    for (let app of apps) {
-      const deployedAppId = dbCore.getProdAppID(app.appId)
+    for (let workspace of workspaces) {
+      const deployedAppId = dbCore.getProdAppID(workspace.appId)
       response[deployedAppId] = {
         roles: roleList.shift(),
-        name: app.name,
-        version: app.version,
-        url: app.url,
+        name: workspace.name,
+        version: workspace.version,
+        url: workspace.url,
       }
     }
     ctx.body = response

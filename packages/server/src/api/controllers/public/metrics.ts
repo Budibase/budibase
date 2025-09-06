@@ -15,7 +15,7 @@ export async function fetch(ctx: Ctx) {
   const allDatabases = await dbCore.getAllDbs()
   const devAppIDs = await dbCore.getDevAppIDs()
   const prodAppIDs = await dbCore.getProdAppIDs()
-  const allAppIds = await dbCore.getAllWorkspaces({ idsOnly: true })
+  const allWorkspaceIds = await dbCore.getAllWorkspaces({ idsOnly: true })
 
   // *** USERS ***
   const usersObject = await userCore.getAllUserIds()
@@ -107,7 +107,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_app_count",
     "The number of apps created by a user",
     "gauge",
-    allAppIds.length
+    allWorkspaceIds.length
   )
 
   // **** budibase_tenant_production_app_count ****

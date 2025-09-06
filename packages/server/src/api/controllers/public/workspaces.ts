@@ -34,8 +34,8 @@ async function setResponseApp(ctx: UserCtx) {
 
 export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
-  const apps = await dbCore.getAllWorkspaces({ all: true })
-  ctx.body = stringSearch(apps, name)
+  const workspaces = await dbCore.getAllWorkspaces({ all: true })
+  ctx.body = stringSearch(workspaces, name)
   await next()
 }
 

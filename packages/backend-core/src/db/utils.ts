@@ -158,16 +158,16 @@ export async function getAppsByIDs(appIds: string[]) {
  * Utility function for getAllWorkspaces but filters to production apps only.
  */
 export async function getProdAppIDs() {
-  const apps = await getAllWorkspaces({ idsOnly: true })
-  return apps.filter((id: any) => !isDevAppID(id))
+  const workspaceIds = await getAllWorkspaces({ idsOnly: true })
+  return workspaceIds.filter((id: any) => !isDevAppID(id))
 }
 
 /**
  * Utility function for the inverse of above.
  */
 export async function getDevAppIDs() {
-  const apps = await getAllWorkspaces({ idsOnly: true })
-  return apps.filter((id: any) => isDevAppID(id))
+  const workspaceIds = await getAllWorkspaces({ idsOnly: true })
+  return workspaceIds.filter((id: any) => isDevAppID(id))
 }
 
 export function isSameAppID(

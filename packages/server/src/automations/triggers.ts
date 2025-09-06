@@ -269,12 +269,12 @@ export async function rebootTrigger() {
   }
   // iterate through all production apps, find the reboot crons
   // and trigger events for them
-  const appIds = (await dbCore.getAllWorkspaces({
+  const workspaceIds = (await dbCore.getAllWorkspaces({
     dev: false,
     idsOnly: true,
   })) as string[]
-  for (let prodAppId of appIds) {
-    await context.doInAppContext(prodAppId, async () => {
+  for (let prodId of workspaceIds) {
+    await context.doInAppContext(prodId, async () => {
       let automations = await getAllAutomations()
       let rebootEvents = []
       for (let automation of automations) {
@@ -282,7 +282,7 @@ export async function rebootTrigger() {
           const job = {
             automation,
             event: {
-              appId: prodAppId,
+              appId: prodId,
               timestamp: Date.now(),
             },
           }

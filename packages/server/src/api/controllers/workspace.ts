@@ -357,7 +357,7 @@ export async function fetchAppPackage(
 async function performAppCreate(
   ctx: UserCtx<CreateAppRequest, CreateAppResponse>
 ) {
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
@@ -375,9 +375,9 @@ async function performAppCreate(
     useTemplate = body.useTemplate
   }
 
-  checkAppName(ctx, apps, name)
+  checkAppName(ctx, workspaces, name)
   const appUrl = sdk.applications.getAppUrl({ name, url })
-  checkAppUrl(ctx, apps, appUrl)
+  checkAppUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
     useTemplate,
@@ -675,16 +675,16 @@ export async function find(ctx: UserCtx) {
 export async function update(
   ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
 ) {
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
   // validation
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
   if (name) {
-    checkAppName(ctx, apps, name, ctx.params.appId)
+    checkAppName(ctx, workspaces, name, ctx.params.appId)
   }
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   if (url) {
-    checkAppUrl(ctx, apps, url, ctx.params.appId)
+    checkAppUrl(ctx, workspaces, url, ctx.params.appId)
     ctx.request.body.url = url
   }
 
@@ -905,11 +905,11 @@ export async function duplicateApp(
     ctx.throw(404, "Source app not found")
   }
 
-  const apps = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
+  const workspaces = (await dbCore.getAllWorkspaces({ dev: true })) as Workspace[]
 
-  checkAppName(ctx, apps, appName)
+  checkAppName(ctx, workspaces, appName)
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
-  checkAppUrl(ctx, apps, url)
+  checkAppUrl(ctx, workspaces, url)
 
   const tmpPath = await sdk.backups.exportApp(sourceAppId, {
     excludeRows: false,
