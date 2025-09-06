@@ -9,7 +9,7 @@ import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
 import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
 import * as context from "../context"
-import { getAllApps } from "../db"
+import { getAllWorkspaces } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 
@@ -37,7 +37,7 @@ async function resolveAppUrl(ctx: Ctx) {
   // search prod apps for an url that matches
   const apps: Workspace[] = await context.doInTenant(
     tenantId,
-    () => getAllApps({ dev: false }) as Promise<Workspace[]>
+    () => getAllWorkspaces({ dev: false }) as Promise<Workspace[]>
   )
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl

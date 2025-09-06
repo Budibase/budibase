@@ -29,7 +29,7 @@ export async function getAllDbs(opts = { efficient: false }) {
     // - single tenancy
     // - default tenant
     //    - apps dbs don't contain tenant id
-    //    - non-default tenant dbs are filtered out application side in getAllApps
+    //    - non-default tenant dbs are filtered out application side in getAllWorkspaces
     await addDbs()
   } else {
     // get prod apps
@@ -48,19 +48,19 @@ export async function getAllDbs(opts = { efficient: false }) {
  *
  * @return returns the app information document stored in each app database.
  */
-export async function getAllApps(opts: {
+export async function getAllWorkspaces(opts: {
   dev?: boolean
   all?: boolean
   idsOnly: true
   efficient?: boolean
 }): Promise<string[]>
-export async function getAllApps(opts?: {
+export async function getAllWorkspaces(opts?: {
   dev?: boolean
   all?: boolean
   idsOnly?: false
   efficient?: boolean
 }): Promise<Workspace[]>
-export async function getAllApps({
+export async function getAllWorkspaces({
   dev,
   all,
   idsOnly,
@@ -155,10 +155,10 @@ export async function getAppsByIDs(appIds: string[]) {
 }
 
 /**
- * Utility function for getAllApps but filters to production apps only.
+ * Utility function for getAllWorkspaces but filters to production apps only.
  */
 export async function getProdAppIDs() {
-  const apps = await getAllApps({ idsOnly: true })
+  const apps = await getAllWorkspaces({ idsOnly: true })
   return apps.filter((id: any) => !isDevAppID(id))
 }
 
@@ -166,7 +166,7 @@ export async function getProdAppIDs() {
  * Utility function for the inverse of above.
  */
 export async function getDevAppIDs() {
-  const apps = await getAllApps({ idsOnly: true })
+  const apps = await getAllWorkspaces({ idsOnly: true })
   return apps.filter((id: any) => isDevAppID(id))
 }
 

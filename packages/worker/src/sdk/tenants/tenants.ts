@@ -21,7 +21,7 @@ async function removeGlobalDB(tenantId: string) {
 
 async function removeTenantApps(tenantId: string) {
   try {
-    const apps = (await dbCore.getAllApps({ all: true })) as Workspace[]
+    const apps = (await dbCore.getAllWorkspaces({ all: true })) as Workspace[]
     const destroyPromises = apps.map(app => {
       const db = dbCore.getDB(app.appId)
       return db.destroy()

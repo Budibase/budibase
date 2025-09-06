@@ -1,6 +1,6 @@
+import { db as dbCore, users as userCore } from "@budibase/backend-core"
+import { licensing, quotas } from "@budibase/pro"
 import { Ctx } from "@budibase/types"
-import { users as userCore, db as dbCore } from "@budibase/backend-core"
-import { quotas, licensing } from "@budibase/pro"
 
 import os from "os"
 
@@ -15,7 +15,7 @@ export async function fetch(ctx: Ctx) {
   const allDatabases = await dbCore.getAllDbs()
   const devAppIDs = await dbCore.getDevAppIDs()
   const prodAppIDs = await dbCore.getProdAppIDs()
-  const allAppIds = await dbCore.getAllApps({ idsOnly: true })
+  const allAppIds = await dbCore.getAllWorkspaces({ idsOnly: true })
 
   // *** USERS ***
   const usersObject = await userCore.getAllUserIds()

@@ -18,7 +18,7 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
   const tenantId = ctx.user!.tenantId
   await context.doInTenant(tenantId, async () => {
     // always use the dev apps as they'll be most up to date (true)
-    const apps = await dbCore.getAllApps({ all: true })
+    const apps = await dbCore.getAllWorkspaces({ all: true })
     const promises = []
     for (let app of apps) {
       // use dev app IDs
