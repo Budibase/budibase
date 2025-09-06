@@ -92,12 +92,12 @@ export async function syncUsersToAllApps(userIds: string[]) {
       finalUsers.push(user)
     }
   }
-  const devAppIds = await dbCore.getDevAppIDs()
+  const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
   let promises = []
-  for (let devAppId of devAppIds) {
-    const prodAppId = dbCore.getProdAppID(devAppId)
-    for (let appId of [prodAppId, devAppId]) {
-      promises.push(syncUsersToApp(appId, finalUsers, groups))
+  for (const devId of devWorkspaceIds) {
+    const prodId = dbCore.getProdAppID(devId)
+    for (const workspaceId of [prodId, devId]) {
+      promises.push(syncUsersToApp(workspaceId, finalUsers, groups))
     }
   }
   const resp = await Promise.allSettled(promises)

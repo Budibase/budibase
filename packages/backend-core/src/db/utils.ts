@@ -161,7 +161,7 @@ export async function getWorkspacesByIDs(workspaceIds: string[]) {
 /**
  * Utility function for getAllWorkspaces but filters to production workspaces only.
  */
-export async function getProdAppIDs() {
+export async function getProdWorkpaceIDs() {
   const workspaceIds = await getAllWorkspaces({ idsOnly: true })
   return workspaceIds.filter((id: any) => !isDevAppID(id))
 }
@@ -169,7 +169,7 @@ export async function getProdAppIDs() {
 /**
  * Utility function for the inverse of above.
  */
-export async function getDevAppIDs() {
+export async function getDevWorkspaceIDs() {
   const workspaceIds = await getAllWorkspaces({ idsOnly: true })
   return workspaceIds.filter((id: any) => isDevAppID(id))
 }

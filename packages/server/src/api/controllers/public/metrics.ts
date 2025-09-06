@@ -13,8 +13,8 @@ export async function fetch(ctx: Ctx) {
 
   // *** APPS ***
   const allDatabases = await dbCore.getAllDbs()
-  const devAppIDs = await dbCore.getDevAppIDs()
-  const prodAppIDs = await dbCore.getProdAppIDs()
+  const devWorkspaceIDs = await dbCore.getDevWorkspaceIDs()
+  const prodWorkspaceIDs = await dbCore.getProdWorkpaceIDs()
   const allWorkspaceIds = await dbCore.getAllWorkspaces({ idsOnly: true })
 
   // *** USERS ***
@@ -115,7 +115,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_production_app_count",
     "The number of apps a user has published",
     "gauge",
-    prodAppIDs.length
+    prodWorkspaceIDs.length
   )
 
   // **** budibase_tenant_dev_app_count ****
@@ -123,7 +123,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_dev_app_count",
     "The number of apps a user has unpublished in development",
     "gauge",
-    devAppIDs.length
+    devWorkspaceIDs.length
   )
 
   // **** budibase_tenant_db_count ****
