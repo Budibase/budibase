@@ -41,7 +41,7 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
 
 export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   const appId = ctx.params.appId
-  await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
+  await context.doInAppContext(dbCore.getDevWorkspaceID(appId), async () => {
     const db = context.getAppDB()
     const app = await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
     ctx.body = {
