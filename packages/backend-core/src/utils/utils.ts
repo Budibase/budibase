@@ -35,9 +35,8 @@ async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for an url that matches
-  const workspaces: Workspace[] = await context.doInTenant(
-    tenantId,
-    () => getAllWorkspaces({ dev: false }) as Promise<Workspace[]>
+  const workspaces: Workspace[] = await context.doInTenant(tenantId, () =>
+    getAllWorkspaces({ dev: false })
   )
   const workspace = workspaces.filter(
     a => a.url && a.url.toLowerCase() === possibleUrl

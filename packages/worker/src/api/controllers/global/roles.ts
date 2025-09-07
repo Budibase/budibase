@@ -17,11 +17,11 @@ import sdk from "../../../sdk"
 export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
   const tenantId = ctx.user!.tenantId
   await context.doInTenant(tenantId, async () => {
-    // always use the dev apps as they'll be most up to date (true)
+    // always use the dev workspaces as they'll be most up to date (true)
     const workspaces = await dbCore.getAllWorkspaces({ all: true })
     const promises = []
     for (let workspace of workspaces) {
-      // use dev app IDs
+      // use dev workspace IDs
       promises.push(roles.getAllRoles(workspace.appId))
     }
     const roleList = await Promise.all(promises)

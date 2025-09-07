@@ -98,7 +98,7 @@ async function queueRelevantRowAutomations(
     })
 
     for (const automation of automations) {
-      // don't queue events which are for dev apps, only way to test automations is
+      // don't queue events which are for dev workspaces, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
       if (
@@ -267,12 +267,12 @@ export async function rebootTrigger() {
   if (env.isInThread() || !env.SELF_HOSTED || env.MULTI_TENANCY) {
     return
   }
-  // iterate through all production apps, find the reboot crons
+  // iterate through all production workspaces, find the reboot crons
   // and trigger events for them
-  const workspaceIds = (await dbCore.getAllWorkspaces({
+  const workspaceIds = await dbCore.getAllWorkspaces({
     dev: false,
     idsOnly: true,
-  })) as string[]
+  })
   for (let prodId of workspaceIds) {
     await context.doInAppContext(prodId, async () => {
       let automations = await getAllAutomations()

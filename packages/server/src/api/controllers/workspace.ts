@@ -329,7 +329,7 @@ export async function fetchAppPackage(
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
 
     // disabled workspace apps should appear to not exist
-    // if the dev app is being served, allow the request regardless
+    // if the dev workspace is being served, allow the request regardless
     if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
@@ -444,8 +444,8 @@ async function performAppCreate(
     }
 
     const existing = await sdk.applications.metadata.tryGet()
-    // If we used a template or imported an app there will be an existing doc.
-    // Fetch and migrate some metadata from the existing app.
+    // If we used a template or imported a workspace there will be an existing doc.
+    // Fetch and migrate some metadata from the existing workspace.
     if (existing) {
       const keys: (keyof Workspace)[] = [
         "_rev",
@@ -490,7 +490,7 @@ async function performAppCreate(
         await addSampleDataDocs()
         await addSampleDataScreen()
 
-        // Fetch the latest version of the app after these changes
+        // Fetch the latest version of the workspace after these changes
         newApplication = await sdk.applications.metadata.get()
       } catch (err) {
         ctx.throw(400, "App created, but failed to add sample data")
@@ -611,7 +611,7 @@ async function creationEvents(
     }
     // from server file path
     else if (file) {
-      // explicitly pass in the newly created app id
+      // explicitly pass in the newly created workspace id
       creationFns.push(a => events.app.duplicated(a, app.appId))
     }
     // unknown
@@ -714,7 +714,7 @@ export async function update(
 export async function updateClient(
   ctx: UserCtx<void, UpdateAppClientResponse>
 ) {
-  // Get current app version
+  // Get current workspace version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
 
