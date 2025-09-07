@@ -9,8 +9,8 @@ jest.mock("crypto", () => ({
   randomUUID: jest.fn(),
 }))
 jest.mock("../../cache", () => ({
-  app: {
-    getAppMetadata: jest.fn(),
+  workspace: {
+    getWorkspaceMetadata: jest.fn(),
   },
 }))
 
