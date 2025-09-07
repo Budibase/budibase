@@ -19,7 +19,7 @@ const newid = utils.newid
 
 type Optional = string | null
 
-export const enum AppStatus {
+export const enum WorkspaceStatus {
   DEV = "development",
   ALL = "all",
   DEPLOYED = "published",
@@ -125,7 +125,7 @@ function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
 }
 
 /**
- * Gets all the link docs document from the current app db.
+ * Gets all the link docs document from the current workspace db.
  */
 export async function allLinkDocs() {
   const db = context.getAppDB()
@@ -229,7 +229,7 @@ export function generateAutomationMetadataID(automationId: string) {
 }
 
 /**
- * Retrieve all automation metadata in an app database.
+ * Retrieve all automation metadata in a workspace database.
  */
 export function getAutomationMetadataParams(otherProps: any = {}) {
   return getDocParams(DocumentType.AUTOMATION_METADATA, null, otherProps)

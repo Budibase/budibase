@@ -3,7 +3,7 @@ import { groups } from "@budibase/pro"
 import { ContextUser, User, Workspace } from "@budibase/types"
 import sdk from "../.."
 import { checkAppMetadata } from "../../../automations/logging"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import { getLocksById } from "../../../utilities/redis"
 import { enrichApps } from "../../users/sessions"
 
@@ -23,9 +23,9 @@ export function filterAppList(user: User, apps: Workspace[]) {
   )
 }
 
-export async function fetch(status: AppStatus, user: ContextUser) {
-  const dev = status === AppStatus.DEV
-  const all = status === AppStatus.ALL
+export async function fetch(status: WorkspaceStatus, user: ContextUser) {
+  const dev = status === WorkspaceStatus.DEV
+  const all = status === WorkspaceStatus.ALL
   let workspaces = await dbCore.getAllWorkspaces({ dev, all })
 
   // need to type this correctly - add roles back in to convert from ContextUser to User

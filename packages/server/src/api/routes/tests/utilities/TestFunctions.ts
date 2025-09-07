@@ -1,6 +1,6 @@
 import { context, db, roles, tenancy } from "@budibase/backend-core"
 import Nano from "@budibase/nano"
-import { AppStatus } from "../../../../db/utils"
+import { WorkspaceStatus } from "../../../../db/utils"
 import env from "../../../../environment"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import * as rowController from "../../../controllers/row"
@@ -37,7 +37,7 @@ export const clearAllApps = async (
 ) => {
   await tenancy.doInTenant(tenantId, async () => {
     const req: any = {
-      query: { status: AppStatus.DEV },
+      query: { status: WorkspaceStatus.DEV },
       user: { tenantId, builder: { global: true } },
     }
     await appController.fetch(req)

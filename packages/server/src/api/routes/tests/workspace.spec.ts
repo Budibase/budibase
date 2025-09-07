@@ -22,7 +22,7 @@ import path from "path"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import {
@@ -282,7 +282,7 @@ describe("/applications", () => {
   describe("fetch", () => {
     it("lists all applications", async () => {
       const apps = await config.api.workspace.fetch({
-        status: AppStatus.DEV,
+        status: WorkspaceStatus.DEV,
       })
       expect(apps.length).toBeGreaterThan(0)
     })

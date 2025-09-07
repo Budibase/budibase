@@ -53,12 +53,12 @@ import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
-  AppStatus,
   DocumentType,
   generateWorkspaceID,
   getDevWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
+  WorkspaceStatus,
 } from "../../db/utils"
 import {
   createAllSearchIndex,
@@ -230,7 +230,7 @@ export const addSampleData = async (
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
   const apps = await sdk.applications.fetch(
-    ctx.query.status as AppStatus,
+    ctx.query.status as WorkspaceStatus,
     ctx.user
   )
 
@@ -239,7 +239,7 @@ export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
 ) {
-  const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
+  const apps = await sdk.applications.fetch(WorkspaceStatus.DEPLOYED, ctx.user)
 
   const result: FetchPublishedAppsResponse["apps"] = []
   for (const app of apps) {
@@ -423,7 +423,7 @@ async function performAppCreate(
       tenantId: tenancy.getTenantId(),
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
-      status: AppStatus.DEV,
+      status: WorkspaceStatus.DEV,
       navigation: defaultAppNavigator(name),
       theme: DefaultAppTheme,
       customTheme: {
