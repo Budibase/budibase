@@ -1,6 +1,6 @@
 import { Database, Workspace } from "@budibase/types"
 import { DocumentType, doWithDB } from "../db"
-import { getAppClient } from "../redis/init"
+import { getWorkspaceClient } from "../redis/init"
 
 export enum WorkspaceState {
   INVALID = "invalid",
@@ -40,7 +40,7 @@ function isInvalid(metadata?: { state: string }) {
 export async function getWorkspaceMetadata(
   workspaceId: string
 ): Promise<Workspace | DeletedWorkspace> {
-  const client = await getAppClient()
+  const client = await getWorkspaceClient()
   // try cache
   let metadata = await client.get(workspaceId)
   if (!metadata) {
@@ -85,7 +85,7 @@ export async function invalidateWorkspaceMetadata(
   if (!workspaceId) {
     throw "Cannot invalidate if no app ID provided."
   }
-  const client = await getAppClient()
+  const client = await getWorkspaceClient()
   await client.delete(workspaceId)
   if (newMetadata) {
     await client.store(workspaceId, newMetadata, EXPIRY_SECONDS)
