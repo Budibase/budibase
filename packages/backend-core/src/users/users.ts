@@ -147,7 +147,7 @@ export async function searchGlobalUsersByApp(
     include_docs: true,
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
-  let response = await queryGlobalView<User>(ViewName.USER_BY_APP, params)
+  let response = await queryGlobalView<User>(ViewName.USER_BY_WORKSPACE, params)
 
   if (!response) {
     response = []
