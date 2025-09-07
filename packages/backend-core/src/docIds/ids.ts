@@ -7,8 +7,8 @@ import {
 import { newid } from "./newid"
 
 /**
- * Generates a new app ID.
- * @returns The new app ID which the app doc can be stored under.
+ * Generates a new workspace ID.
+ * @returns The new workspace ID which the workspace doc can be stored under.
  */
 export const generateAppID = (tenantId?: string | null) => {
   let id = WORKSPACE_PREFIX
@@ -86,8 +86,8 @@ export function generateTemplateID(ownerId: string) {
   return `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
-export function generateAppUserID(prodAppId: string, userId: string) {
-  return `${prodAppId}${SEPARATOR}${userId}`
+export function generateAppUserID(prodWorkspaceId: string, userId: string) {
+  return `${prodWorkspaceId}${SEPARATOR}${userId}`
 }
 
 /**
