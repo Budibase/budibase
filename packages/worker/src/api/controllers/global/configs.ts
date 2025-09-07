@@ -651,7 +651,10 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
         let workspaces = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist
-          workspaces = await dbCore.getAllWorkspaces({ idsOnly: true, efficient: true })
+          workspaces = await dbCore.getAllWorkspaces({
+            idsOnly: true,
+            efficient: true,
+          })
         }
 
         // They have set up SMTP
