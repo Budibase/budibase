@@ -428,11 +428,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "App Two",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: `${secondWorkspace.url}/apptwo`,
           },
@@ -511,11 +511,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "Default",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: secondWorkspace.url,
           },

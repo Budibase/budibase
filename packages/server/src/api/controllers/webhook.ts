@@ -1,24 +1,24 @@
-import { getWebhookParams } from "../../db/utils"
-import * as triggers from "../../automations/triggers"
-import { db as dbCore, context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 import {
-  Webhook,
-  WebhookActionType,
-  Ctx,
   Automation,
   AutomationActionStepId,
-  FetchWebhooksResponse,
-  SaveWebhookResponse,
-  SaveWebhookRequest,
-  DeleteWebhookResponse,
+  AutomationIOType,
   BuildWebhookSchemaRequest,
   BuildWebhookSchemaResponse,
+  Ctx,
+  DeleteWebhookResponse,
+  FetchWebhooksResponse,
+  SaveWebhookRequest,
+  SaveWebhookResponse,
   TriggerWebhookRequest,
   TriggerWebhookResponse,
-  AutomationIOType,
+  Webhook,
+  WebhookActionType,
 } from "@budibase/types"
+import * as triggers from "../../automations/triggers"
+import { getWebhookParams } from "../../db/utils"
 import sdk from "../../sdk"
-import * as pro from "@budibase/pro"
 
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
@@ -88,7 +88,7 @@ export async function buildSchema(
 export async function trigger(
   ctx: Ctx<TriggerWebhookRequest, TriggerWebhookResponse>
 ) {
-  const prodAppId = dbCore.getProdAppID(ctx.params.instance)
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.instance)
   const appNotDeployed = () => {
     ctx.body = {
       message: "Application not deployed yet.",

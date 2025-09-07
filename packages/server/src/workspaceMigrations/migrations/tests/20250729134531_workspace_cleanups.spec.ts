@@ -190,7 +190,7 @@ describe.each([
   })
 
   it("handles different workspace apps between dev and prod", async () => {
-    const prodAppId = db.getProdAppID(getAppId())
+    const prodAppId = db.getProdWorkspaceID(getAppId())
     const devId = db.getDevWorkspaceID(getAppId())
     await config.doInContext(prodAppId, async () => {
       await createWorkspaceApp(true)

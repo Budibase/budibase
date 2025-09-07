@@ -317,7 +317,7 @@ export const getProdAppId = () => {
   if (!appId) {
     throw new Error("Could not get appId")
   }
-  return conversions.getProdAppID(appId)
+  return conversions.getProdWorkspaceID(appId)
 }
 
 export function doInEnvironmentContext<T>(
@@ -420,7 +420,7 @@ export function getProdAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
   }
-  return getDB(conversions.getProdAppID(appId), opts)
+  return getDB(conversions.getProdWorkspaceID(appId), opts)
 }
 
 /**

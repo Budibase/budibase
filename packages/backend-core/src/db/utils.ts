@@ -4,7 +4,7 @@ import { DEFAULT_TENANT_ID, DocumentType, SEPARATOR } from "../constants"
 import { getGlobalDBName, getTenantId } from "../context"
 import { getStartEndKeyURL } from "../docIds"
 import {
-  getProdAppID,
+  getProdWorkspaceID,
   isDevWorkspace,
   isDevWorkspaceID,
 } from "../docIds/conversions"
@@ -185,7 +185,7 @@ export function isSameWorkspaceID(
   if (workspaceId1 == undefined || workspaceId2 == undefined) {
     return false
   }
-  return getProdAppID(workspaceId1) === getProdAppID(workspaceId2)
+  return getProdWorkspaceID(workspaceId1) === getProdWorkspaceID(workspaceId2)
 }
 
 export async function dbExists(dbName: any) {

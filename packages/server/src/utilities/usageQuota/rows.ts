@@ -71,7 +71,7 @@ export async function getUniqueRows(workspaceIds: string[]) {
     // this can't be done on all rows because app import results in
     // duplicate row ids across apps
     // the array pre-concat is important to avoid stack overflow
-    const prodId = dbCore.getProdAppID((pair.devId || pair.prodId)!)
+    const prodId = dbCore.getProdWorkspaceID((pair.devId || pair.prodId)!)
     rowsByApp[prodId] = [...new Set(appRows)]
     uniqueRows = uniqueRows.concat(rowsByApp[prodId])
   }

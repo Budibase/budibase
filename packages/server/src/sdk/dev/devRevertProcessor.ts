@@ -35,7 +35,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     data: DevRevertQueueData
   ): Promise<{ message: string }> {
     const { appId } = data
-    const productionAppId = dbCore.getProdAppID(appId)
+    const productionAppId = dbCore.getProdWorkspaceID(appId)
 
     // App must have been deployed first
     const db = context.getProdAppDB({ skip_setup: true })

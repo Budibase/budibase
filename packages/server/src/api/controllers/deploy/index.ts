@@ -200,7 +200,7 @@ export const publishApp = async function (
     let replication
     try {
       const devId = dbCore.getDevWorkspaceID(appId)
-      const prodId = dbCore.getProdAppID(appId)
+      const prodId = dbCore.getProdWorkspaceID(appId)
 
       if (!(await sdk.applications.isAppPublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()

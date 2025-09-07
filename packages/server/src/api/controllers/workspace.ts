@@ -770,7 +770,7 @@ export async function revertClient(
 
 async function unpublishApp(ctx: UserCtx) {
   let appId = ctx.params.appId
-  appId = dbCore.getProdAppID(appId)
+  appId = dbCore.getProdWorkspaceID(appId)
 
   const db = context.getProdAppDB()
   const result = await db.destroy()
@@ -788,11 +788,11 @@ async function unpublishApp(ctx: UserCtx) {
 
 async function invalidateAppCache(appId: string) {
   await cache.app.invalidateAppMetadata(dbCore.getDevWorkspaceID(appId))
-  await cache.app.invalidateAppMetadata(dbCore.getProdAppID(appId))
+  await cache.app.invalidateAppMetadata(dbCore.getProdWorkspaceID(appId))
 }
 
 async function destroyApp(ctx: UserCtx) {
-  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const devAppId = dbCore.getDevWorkspaceID(ctx.params.appId)
 
   const app = await sdk.applications.metadata.get()
@@ -844,7 +844,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
 }
 
 export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
-  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
   // check app has been published

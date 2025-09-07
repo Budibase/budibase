@@ -42,7 +42,7 @@ export function getDevWorkspaceID(workspaceId: string) {
 /**
  * Convert a development app ID to a deployed app ID.
  */
-export function getProdAppID(appId: string) {
+export function getProdWorkspaceID(appId: string) {
   if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }

@@ -23,7 +23,7 @@ jest.mock("@budibase/backend-core", () => {
     },
     db: {
       isProdWorkspaceID: jest.fn(),
-      getProdAppID: jest.fn(),
+      getProdWorkspaceID: jest.fn(),
       dbExists: jest.fn(),
     },
   }
@@ -125,7 +125,7 @@ describe.each(rowGenerators)(
 
       jest.spyOn(context, "getAppId").mockReturnValue(DEV_APPID)
       jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
-      jest.spyOn(db, "getProdAppID").mockReturnValue(PROD_APPID)
+      jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_APPID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
 

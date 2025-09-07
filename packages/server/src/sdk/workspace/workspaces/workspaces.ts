@@ -18,7 +18,9 @@ export function filterAppList(user: User, apps: Workspace[]) {
   } else {
     return apps
   }
-  return apps.filter(app => appList.includes(dbCore.getProdAppID(app.appId)))
+  return apps.filter(app =>
+    appList.includes(dbCore.getProdWorkspaceID(app.appId))
+  )
 }
 
 export async function fetch(status: AppStatus, user: ContextUser) {

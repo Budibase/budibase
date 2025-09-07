@@ -1,20 +1,20 @@
 import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
+import { automations as sharedAutomations } from "@budibase/shared-core"
+import {
   Automation,
+  MetadataType,
   RequiredKeys,
   Webhook,
   WebhookActionType,
-  MetadataType,
 } from "@budibase/types"
+import automations from "."
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
-import {
-  context,
-  events,
-  HTTPError,
-  db as dbCore,
-} from "@budibase/backend-core"
-import { automations as sharedAutomations } from "@budibase/shared-core"
-import automations from "."
 
 export interface PersistedAutomation extends Automation {
   _id: string
@@ -257,7 +257,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
     // the app ID has to be development for this endpoint
     // it can only be used when building the app
     // but the trigger endpoint will always be used in production
-    const prodAppId = dbCore.getProdAppID(appId)
+    const prodAppId = dbCore.getProdWorkspaceID(appId)
     newTrigger.inputs = {
       schemaUrl: `api/webhooks/schema/${appId}/${id}`,
       triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,

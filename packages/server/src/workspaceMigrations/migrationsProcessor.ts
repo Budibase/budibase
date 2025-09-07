@@ -93,7 +93,7 @@ export async function processMigrations(
       await context.doInAppContext(appId, () =>
         doInMigrationLock(appId, async () => {
           const devWorkspaceId = db.getDevWorkspaceID(appId)
-          const prodAppId = db.getProdAppID(appId)
+          const prodAppId = db.getProdWorkspaceID(appId)
           const isPublished = await sdk.applications.isAppPublished(prodAppId)
           const appIdToMigrate = isPublished ? prodAppId : devWorkspaceId
 

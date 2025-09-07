@@ -95,7 +95,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
   const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
   let promises = []
   for (const devId of devWorkspaceIds) {
-    const prodId = dbCore.getProdAppID(devId)
+    const prodId = dbCore.getProdWorkspaceID(devId)
     for (const workspaceId of [prodId, devId]) {
       promises.push(syncUsersToApp(workspaceId, finalUsers, groups))
     }
@@ -126,7 +126,7 @@ export async function syncApp(
   }
 
   // replicate prod to dev
-  const prodAppId = dbCore.getProdAppID(appId)
+  const prodAppId = dbCore.getProdWorkspaceID(appId)
 
   // specific case, want to make sure setup is skipped
   const prodDb = context.getProdAppDB({ skip_setup: true })

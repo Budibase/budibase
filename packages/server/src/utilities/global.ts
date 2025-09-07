@@ -1,16 +1,16 @@
-import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
-  roles,
-  db as dbCore,
   cache,
-  tenancy,
   context,
+  db as dbCore,
+  roles,
+  tenancy,
   users,
 } from "@budibase/backend-core"
-import env from "../environment"
 import { groups } from "@budibase/pro"
-import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
+import { ContextUser, User, UserCtx, UserGroup } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import env from "../environment"
 
 export async function processUser(
   user: ContextUser,
@@ -54,7 +54,7 @@ export async function processUser(
   }
   // try to get the role from the user list
   if (!user.roleId && appId && user.roles) {
-    user.roleId = user.roles[dbCore.getProdAppID(appId)]
+    user.roleId = user.roles[dbCore.getProdWorkspaceID(appId)]
   }
   // try to get the role from the group list
   if (!user.roleId && groupList) {

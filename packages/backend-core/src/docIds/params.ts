@@ -1,3 +1,4 @@
+import { DatabaseQueryOpts } from "@budibase/types"
 import {
   DocumentType,
   InternalTable,
@@ -5,8 +6,7 @@ import {
   UNICODE_MAX,
   ViewName,
 } from "../constants"
-import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts } from "@budibase/types"
+import { getProdWorkspaceID } from "./conversions"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -113,7 +113,7 @@ export function getUsersByAppParams(
   appId: any,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ): DatabaseQueryOpts {
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = getProdWorkspaceID(appId)
   return {
     ...otherProps,
     startkey: prodAppId,
