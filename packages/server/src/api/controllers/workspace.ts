@@ -55,7 +55,7 @@ import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   AppStatus,
   DocumentType,
-  generateAppID,
+  generateWorkspaceID,
   getDevWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
@@ -397,7 +397,7 @@ async function performAppCreate(
   }
 
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const workspaceId = getDevWorkspaceID(generateAppID(tenantId))
+  const workspaceId = getDevWorkspaceID(generateWorkspaceID(tenantId))
 
   return await context.doInAppContext(workspaceId, async () => {
     const instance = await createInstance(workspaceId, instanceConfig)

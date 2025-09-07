@@ -4,12 +4,12 @@ import {
   isDevWorkspaceID,
   isProdWorkspaceID,
 } from "../../docIds/conversions"
-import { generateAppID } from "../utils"
+import { generateWorkspaceID } from "../utils"
 
 describe("utils", () => {
-  describe("generateAppID", () => {
+  describe("generateWorkspaceID", () => {
     function getID() {
-      const appId = generateAppID()
+      const appId = generateWorkspaceID()
       const split = appId.split("_")
       const uuid = split[split.length - 1]
       const devAppId = `app_dev_${uuid}`
@@ -17,7 +17,7 @@ describe("utils", () => {
     }
 
     it("should be able to generate a new app ID", () => {
-      expect(generateAppID().startsWith("app_")).toEqual(true)
+      expect(generateWorkspaceID().startsWith("app_")).toEqual(true)
     })
 
     it("should be able to convert a production app ID to development", () => {

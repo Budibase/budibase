@@ -1,11 +1,11 @@
-import { testEnv } from "../../../tests/extra"
+import { IdentityType } from "@budibase/types"
 import * as context from "../"
-import { DEFAULT_TENANT_ID } from "../../constants"
 import { structures } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
+import { DEFAULT_TENANT_ID } from "../../constants"
 import * as db from "../../db"
 import Context from "../Context"
 import { ContextMap } from "../types"
-import { IdentityType } from "@budibase/types"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -152,7 +152,7 @@ describe("context", () => {
 
   describe("doInAppMigrationContext", () => {
     it("the context is set correctly", async () => {
-      const appId = db.generateAppID()
+      const appId = db.generateWorkspaceID()
 
       await context.doInAppMigrationContext(appId, () => {
         const context = Context.get()
@@ -167,7 +167,7 @@ describe("context", () => {
 
     it("the context is set correctly when running in a tenant id", async () => {
       const tenantId = structures.tenant.id()
-      const appId = db.generateAppID(tenantId)
+      const appId = db.generateWorkspaceID(tenantId)
 
       await context.doInAppMigrationContext(appId, () => {
         const context = Context.get()
@@ -182,7 +182,7 @@ describe("context", () => {
     })
 
     it("the context is not modified outside the delegate", async () => {
-      const appId = db.generateAppID()
+      const appId = db.generateWorkspaceID()
 
       expect(Context.get()).toBeUndefined()
 
@@ -202,22 +202,26 @@ describe("context", () => {
     it.each([
       [
         "doInAppMigrationContext",
-        () => context.doInAppMigrationContext(db.generateAppID(), () => {}),
+        () =>
+          context.doInAppMigrationContext(db.generateWorkspaceID(), () => {}),
       ],
       [
         "doInAppContext",
-        () => context.doInAppContext(db.generateAppID(), () => {}),
+        () => context.doInAppContext(db.generateWorkspaceID(), () => {}),
       ],
       [
         "doInAutomationContext",
         () =>
           context.doInAutomationContext({
-            appId: db.generateAppID(),
+            appId: db.generateWorkspaceID(),
             automationId: structures.generator.guid(),
             task: () => {},
           }),
       ],
-      ["doInContext", () => context.doInContext(db.generateAppID(), () => {})],
+      [
+        "doInContext",
+        () => context.doInContext(db.generateWorkspaceID(), () => {}),
+      ],
       [
         "doInEnvironmentContext",
         () => context.doInEnvironmentContext({}, () => {}),
@@ -243,9 +247,12 @@ describe("context", () => {
       "a nested context.%s function cannot run",
       async (_, otherContextCall: () => Promise<void>) => {
         await expect(
-          context.doInAppMigrationContext(db.generateAppID(), async () => {
-            await otherContextCall()
-          })
+          context.doInAppMigrationContext(
+            db.generateWorkspaceID(),
+            async () => {
+              await otherContextCall()
+            }
+          )
         ).rejects.toThrow(
           "The context cannot be changed, a migration is currently running"
         )

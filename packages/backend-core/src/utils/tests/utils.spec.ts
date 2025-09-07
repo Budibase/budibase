@@ -13,7 +13,7 @@ describe("utils", () => {
   describe("getAppIdFromCtx", () => {
     it("gets appId from header", async () => {
       const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
+      const expected = db.generateWorkspaceID()
       ctx.request.headers = {
         [Header.APP_ID]: expected,
       }
@@ -24,7 +24,7 @@ describe("utils", () => {
 
     it("gets appId from body", async () => {
       const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
+      const expected = db.generateWorkspaceID()
       ctx.request.body = {
         appId: expected,
       }
@@ -35,7 +35,7 @@ describe("utils", () => {
 
     it("gets appId from path", async () => {
       const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
+      const expected = db.generateWorkspaceID()
       ctx.path = `/apps/${expected}`
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -50,7 +50,7 @@ describe("utils", () => {
         const ctx = structures.koa.newContext()
         ctx.host = `${config.tenantId}.example.com`
 
-        const expected = db.generateAppID(config.tenantId)
+        const expected = db.generateWorkspaceID(config.tenantId)
         const app = structures.apps.app(expected)
 
         // set custom url
@@ -69,7 +69,7 @@ describe("utils", () => {
 
     it("gets appId from query params", async () => {
       const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
+      const expected = db.generateWorkspaceID()
       ctx.query = { appId: expected }
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -79,7 +79,7 @@ describe("utils", () => {
     it("should return proper appid if the app url is /preview", async () => {
       await config.doInTenant(async () => {
         const ctx = structures.koa.newContext()
-        const appId = db.generateAppID(config.tenantId)
+        const appId = db.generateWorkspaceID(config.tenantId)
         const app = structures.apps.app(appId)
 
         // set custom url
@@ -99,8 +99,8 @@ describe("utils", () => {
     it("throws 403 when header and body have different valid app IDs", async () => {
       const ctx = structures.koa.newContext()
 
-      const appId1 = db.generateAppID()
-      const appId2 = db.generateAppID()
+      const appId1 = db.generateWorkspaceID()
+      const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
         [Header.APP_ID]: appId1,
@@ -117,8 +117,8 @@ describe("utils", () => {
     it("throws 403 when header and path have different valid app IDs", async () => {
       const ctx = structures.koa.newContext()
 
-      const appId1 = db.generateAppID()
-      const appId2 = db.generateAppID()
+      const appId1 = db.generateWorkspaceID()
+      const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
         [Header.APP_ID]: appId1,
@@ -132,7 +132,7 @@ describe("utils", () => {
 
     it("returns same app ID when found across multiple sources consistently", async () => {
       const ctx = structures.koa.newContext()
-      const expected = db.generateAppID()
+      const expected = db.generateWorkspaceID()
 
       ctx.request.headers = {
         [Header.APP_ID]: expected,
@@ -148,7 +148,7 @@ describe("utils", () => {
 
     it("ignores invalid app IDs that don't start with app prefix", async () => {
       const ctx = structures.koa.newContext()
-      const validAppId = db.generateAppID()
+      const validAppId = db.generateWorkspaceID()
       const invalidAppId = "invalid_app_id"
 
       ctx.request.headers = {

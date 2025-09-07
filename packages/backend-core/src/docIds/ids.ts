@@ -10,7 +10,7 @@ import { newid } from "./newid"
  * Generates a new workspace ID.
  * @returns The new workspace ID which the workspace doc can be stored under.
  */
-export const generateAppID = (tenantId?: string | null) => {
+export const generateWorkspaceID = (tenantId?: string | null) => {
   let id = WORKSPACE_PREFIX
   if (tenantId) {
     id += `${tenantId}${SEPARATOR}`
@@ -35,14 +35,6 @@ export function generateTableID() {
 export function generateRowID(tableId: string, id?: string) {
   id = id || newid()
   return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
-}
-
-/**
- * Generates a new workspace ID.
- * @returns The new workspace ID which the workspace doc can be stored under.
- */
-export function generateWorkspaceID() {
-  return `${DocumentType.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
