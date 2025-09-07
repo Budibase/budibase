@@ -7,7 +7,7 @@ export const enrichApps = async (apps: Workspace[]) => {
     .filter(app => app.status === "development")
     .map(app => app.appId)
 
-  // Get all sessions for all apps and enrich app list
+  // Get all sessions for all workspaces and enrich workspace list
   const sessions = await builderSocket?.getRoomSessions(devAppIds)
   if (sessions?.length) {
     let appSessionMap: Record<string, SocketSession[]> = {}

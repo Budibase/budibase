@@ -40,7 +40,7 @@ export async function fetch(status: WorkspaceStatus, user: ContextUser) {
     .filter(workspace => workspace.status === "development")
     .map(workspace => workspace.appId)
 
-  // get the locks for all the dev apps
+  // get the locks for all the dev workspaces
   if (dev || all) {
     const locks = await getLocksById(workspaceIds)
     for (let workspace of workspaces) {

@@ -101,7 +101,7 @@ export default class TestConfiguration {
   appId?: string
   defaultWorkspaceAppId?: string
   name?: string
-  allApps: Workspace[]
+  allWorkspaces: Workspace[]
   app?: Workspace
   prodApp?: Workspace
   prodAppId?: string
@@ -127,7 +127,7 @@ export default class TestConfiguration {
       this.started = false
     }
     this.appId = undefined
-    this.allApps = []
+    this.allWorkspaces = []
 
     this.api = new API(this)
   }
@@ -255,8 +255,8 @@ export default class TestConfiguration {
     } else {
       require("../../app").getServer().close()
     }
-    if (this.allApps) {
-      cleanup(this.allApps.map(app => app.appId))
+    if (this.allWorkspaces) {
+      cleanup(this.allWorkspaces.map(app => app.appId))
     }
   }
 
@@ -665,8 +665,8 @@ export default class TestConfiguration {
       // create production app
       this.prodApp = await this.publish()
 
-      this.allApps.push(this.prodApp)
-      this.allApps.push(this.app!)
+      this.allWorkspaces.push(this.prodApp)
+      this.allWorkspaces.push(this.app!)
 
       return this.app!
     })
@@ -696,8 +696,8 @@ export default class TestConfiguration {
       // create production app
       this.prodApp = await this.publish()
 
-      this.allApps.push(this.prodApp)
-      this.allApps.push(this.app!)
+      this.allWorkspaces.push(this.prodApp)
+      this.allWorkspaces.push(this.app!)
 
       return this.app!
     })

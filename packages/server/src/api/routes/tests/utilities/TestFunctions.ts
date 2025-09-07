@@ -4,7 +4,7 @@ import { WorkspaceStatus } from "../../../../db/utils"
 import env from "../../../../environment"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import * as rowController from "../../../controllers/row"
-import * as appController from "../../../controllers/workspace"
+import * as workspaceController from "../../../controllers/workspace"
 
 class Request {
   appId: any
@@ -31,7 +31,7 @@ export const getAllTableRows = async (config: any) => {
   return req.body
 }
 
-export const clearAllApps = async (
+export const clearAllWorkspaces = async (
   tenantId: string,
   exceptions: Array<string> = []
 ) => {
@@ -40,15 +40,17 @@ export const clearAllApps = async (
       query: { status: WorkspaceStatus.DEV },
       user: { tenantId, builder: { global: true } },
     }
-    await appController.fetch(req)
-    const apps = req.body
-    if (!apps || apps.length <= 0) {
+    await workspaceController.fetch(req)
+    const workspaces = req.body
+    if (!workspaces || workspaces.length <= 0) {
       return
     }
-    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
-      const { appId } = app
+    for (let workspace of workspaces.filter(
+      (x: any) => !exceptions.includes(x.appId)
+    )) {
+      const { appId } = workspace
       const req = new Request(null, { appId })
-      await runRequest(appId, appController.destroy, req)
+      await runRequest(appId, workspaceController.destroy, req)
     }
   })
 }

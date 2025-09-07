@@ -79,7 +79,7 @@ async function syncUsersToApp(
   })
 }
 
-export async function syncUsersToAllApps(userIds: string[]) {
+export async function syncUsersToAllWorkspaces(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
   const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
