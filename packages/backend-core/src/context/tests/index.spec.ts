@@ -150,15 +150,15 @@ describe("context", () => {
     })
   })
 
-  describe("doInAppMigrationContext", () => {
+  describe("doInWorkspaceMigrationContext", () => {
     it("the context is set correctly", async () => {
-      const appId = db.generateWorkspaceID()
+      const workspaceId = db.generateWorkspaceID()
 
-      await context.doInWorkspaceMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(workspaceId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          appId: workspaceId,
           isMigrating: true,
         }
         expect(context).toEqual(expected)
@@ -167,13 +167,13 @@ describe("context", () => {
 
     it("the context is set correctly when running in a tenant id", async () => {
       const tenantId = structures.tenant.id()
-      const appId = db.generateWorkspaceID(tenantId)
+      const workspaceId = db.generateWorkspaceID(tenantId)
 
-      await context.doInWorkspaceMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(workspaceId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          appId: workspaceId,
           isMigrating: true,
           tenantId,
         }
@@ -182,15 +182,15 @@ describe("context", () => {
     })
 
     it("the context is not modified outside the delegate", async () => {
-      const appId = db.generateWorkspaceID()
+      const workspaceId = db.generateWorkspaceID()
 
       expect(Context.get()).toBeUndefined()
 
-      await context.doInWorkspaceMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(workspaceId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
-          appId,
+          appId: workspaceId,
           isMigrating: true,
         }
         expect(context).toEqual(expected)
@@ -201,7 +201,7 @@ describe("context", () => {
 
     it.each([
       [
-        "doInAppMigrationContext",
+        "doInWorkspaceMigrationContext",
         () =>
           context.doInWorkspaceMigrationContext(
             db.generateWorkspaceID(),

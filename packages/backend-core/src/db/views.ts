@@ -87,8 +87,8 @@ export const createUserAppView = async () => {
   const db = getGlobalDB()
   const viewJs = `function(doc) {
     if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") && doc.roles) {
-      for (let prodAppId of Object.keys(doc.roles)) {
-        let emitted = prodAppId + "${SEPARATOR}" + doc._id
+      for (let prodWorkspaceId of Object.keys(doc.roles)) {
+        let emitted = prodWorkspaceId + "${SEPARATOR}" + doc._id
         emit(emitted, null)
       }
     }

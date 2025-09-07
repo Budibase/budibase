@@ -109,15 +109,15 @@ export function getUserMetadataParams(
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
-export function getUsersByAppParams(
+export function getUsersByWorkspaceParams(
   appId: any,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ): DatabaseQueryOpts {
-  const prodAppId = getProdWorkspaceID(appId)
+  const prodWorkspaceId = getProdWorkspaceID(appId)
   return {
     ...otherProps,
-    startkey: prodAppId,
-    endkey: `${prodAppId}${UNICODE_MAX}`,
+    startkey: prodWorkspaceId,
+    endkey: `${prodWorkspaceId}${UNICODE_MAX}`,
   }
 }
 

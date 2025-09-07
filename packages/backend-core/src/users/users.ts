@@ -13,7 +13,7 @@ import {
   generateAppUserID,
   getGlobalUserParams,
   getProdWorkspaceID,
-  getUsersByAppParams,
+  getUsersByWorkspaceParams,
   pagination,
   queryGlobalView,
   queryGlobalViewRaw,
@@ -136,14 +136,14 @@ export async function doesUserExist(email: string) {
 }
 
 export async function searchGlobalUsersByApp(
-  appId: any,
+  workspaceId: any,
   opts: DatabaseQueryOpts,
   getOpts?: GetOpts
 ) {
-  if (typeof appId !== "string") {
-    throw new Error("Must provide a string based app ID")
+  if (typeof workspaceId !== "string") {
+    throw new Error("Must provide a string based workspace ID")
   }
-  const params = getUsersByAppParams(appId, {
+  const params = getUsersByWorkspaceParams(workspaceId, {
     include_docs: true,
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
