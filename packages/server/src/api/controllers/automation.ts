@@ -152,7 +152,7 @@ export async function clearLogError(
       delete metadata.automationErrors[automationId]
     }
     await db.put(metadata)
-    await cache.app.invalidateAppMetadata(metadata.appId, metadata)
+    await cache.app.invalidateWorkspaceMetadata(metadata.appId, metadata)
     ctx.body = { message: `Error logs cleared.` }
   })
 }

@@ -139,8 +139,8 @@ export const syncAppFavourites = async (processedAppIds: string[]) => {
   const tenantId = tenancy.getTenantId()
   const appPrefix =
     tenantId === tenancy.DEFAULT_TENANT_ID
-      ? dbCore.APP_DEV_PREFIX
-      : `${dbCore.APP_DEV_PREFIX}${tenantId}_`
+      ? dbCore.WORKSPACE_DEV_PREFIX
+      : `${dbCore.WORKSPACE_DEV_PREFIX}${tenantId}_`
 
   const apps = await fetchAppsByIds(processedAppIds, appPrefix)
   return apps?.reduce((acc: string[], app) => {

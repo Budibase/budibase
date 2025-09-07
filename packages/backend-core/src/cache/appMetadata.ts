@@ -2,23 +2,23 @@ import { Database, Workspace } from "@budibase/types"
 import { DocumentType, doWithDB } from "../db"
 import { getAppClient } from "../redis/init"
 
-export enum AppState {
+export enum WorkspaceState {
   INVALID = "invalid",
 }
 
-export interface DeletedApp {
-  state: AppState
+export interface DeletedWorkspace {
+  state: WorkspaceState
 }
 
 const EXPIRY_SECONDS = 3600
 const INVALID_EXPIRY_SECONDS = 60
 
 /**
- * The default populate app metadata function
+ * The default populate workspace metadata function
  */
-async function populateFromDB(appId: string) {
+async function populateFromDB(workspaceId: string) {
   return doWithDB(
-    appId,
+    workspaceId,
     (db: Database) => {
       return db.get<Workspace>(DocumentType.APP_METADATA)
     },
@@ -27,31 +27,31 @@ async function populateFromDB(appId: string) {
 }
 
 function isInvalid(metadata?: { state: string }) {
-  return !metadata || metadata.state === AppState.INVALID
+  return !metadata || metadata.state === WorkspaceState.INVALID
 }
 
 /**
- * Get the requested app metadata by id.
- * Use redis cache to first read the app metadata.
- * If not present fallback to loading the app metadata directly and re-caching.
- * @param appId the id of the app to get metadata from.
- * @returns the app metadata.
+ * Get the requested workspace metadata by id.
+ * Use redis cache to first read the workspace metadata.
+ * If not present fallback to loading the workspace metadata directly and re-caching.
+ * @param workspaceId the id of the workspace to get metadata from.
+ * @returns the workspace metadata.
  */
-export async function getAppMetadata(
-  appId: string
-): Promise<Workspace | DeletedApp> {
+export async function getWorkspaceMetadata(
+  workspaceId: string
+): Promise<Workspace | DeletedWorkspace> {
   const client = await getAppClient()
   // try cache
-  let metadata = await client.get(appId)
+  let metadata = await client.get(workspaceId)
   if (!metadata) {
     let expiry: number | undefined = EXPIRY_SECONDS
     try {
-      metadata = await populateFromDB(appId)
+      metadata = await populateFromDB(workspaceId)
     } catch (err: any) {
-      // app DB left around, but no metadata, it is invalid
+      // workspace DB left around, but no metadata, it is invalid
       if (err && err.status === 404) {
-        metadata = { state: AppState.INVALID }
-        // expire invalid apps regularly, in-case it was only briefly invalid
+        metadata = { state: WorkspaceState.INVALID }
+        // expire invalid workspaces regularly, in-case it was only briefly invalid
         expiry = INVALID_EXPIRY_SECONDS
       } else {
         throw err
@@ -61,12 +61,12 @@ export async function getAppMetadata(
     // so quickly the requests can get slightly out of sync
     // might store its invalid just before it stores its valid
     if (isInvalid(metadata)) {
-      const temp = await client.get(appId)
+      const temp = await client.get(workspaceId)
       if (temp) {
         metadata = temp
       }
     }
-    await client.store(appId, metadata, expiry)
+    await client.store(workspaceId, metadata, expiry)
   }
 
   return metadata
@@ -74,17 +74,20 @@ export async function getAppMetadata(
 
 /**
  * Invalidate/reset the cached metadata when a change occurs in the db.
- * @param appId the cache key to bust/update.
+ * @param workspaceId the cache key to bust/update.
  * @param newMetadata optional - can simply provide the new metadata to update with.
  * @return will respond with success when cache is updated.
  */
-export async function invalidateAppMetadata(appId: string, newMetadata?: any) {
-  if (!appId) {
+export async function invalidateWorkspaceMetadata(
+  workspaceId: string,
+  newMetadata?: any
+) {
+  if (!workspaceId) {
     throw "Cannot invalidate if no app ID provided."
   }
   const client = await getAppClient()
-  await client.delete(appId)
+  await client.delete(workspaceId)
   if (newMetadata) {
-    await client.store(appId, newMetadata, EXPIRY_SECONDS)
+    await client.store(workspaceId, newMetadata, EXPIRY_SECONDS)
   }
 }
