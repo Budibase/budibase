@@ -1,9 +1,6 @@
-import { Thread, ThreadType } from "../threads"
-import { automationQueue } from "./bullboard"
-import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
-import { getAutomationMetadataParams } from "../db/utils"
 import { quotas } from "@budibase/pro"
+import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import {
   Automation,
   AutomationJob,
@@ -11,10 +8,13 @@ import {
   isCronTrigger,
   MetadataType,
 } from "@budibase/types"
-import { automationsEnabled } from "../features"
-import { helpers, REBOOT_CRON } from "@budibase/shared-core"
-import tracer from "dd-trace"
 import { JobId } from "bull"
+import tracer from "dd-trace"
+import { getAutomationMetadataParams } from "../db/utils"
+import { automationsEnabled } from "../features"
+import { Thread, ThreadType } from "../threads"
+import { updateEntityMetadata } from "../utilities"
+import { automationQueue } from "./bullboard"
 
 let Runner: Thread
 if (automationsEnabled()) {
@@ -87,7 +87,11 @@ export async function processEvent(job: AutomationJob) {
       }
     }
 
-    return await context.doInAutomationContext({ appId, automationId, task })
+    return await context.doInAutomationContext({
+      workspaceId: appId,
+      automationId,
+      task,
+    })
   })
 }
 
@@ -141,7 +145,7 @@ export async function disableCronById(jobId: JobId) {
 }
 
 export async function clearMetadata() {
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   const automationMetadata = (
     await db.allDocs(
       getAutomationMetadataParams({

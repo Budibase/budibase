@@ -140,8 +140,8 @@ export async function clearLogError(
   ctx: UserCtx<ClearAutomationLogRequest, ClearAutomationLogResponse>
 ) {
   const { automationId, appId } = ctx.request.body
-  await context.doInAppContext(appId, async () => {
-    const db = context.getProdAppDB()
+  await context.doInWorkspaceContext(appId, async () => {
+    const db = context.getProdWorkspaceDB()
     const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
@@ -187,7 +187,7 @@ export async function getDefinitionList(
 export async function trigger(
   ctx: UserCtx<TriggerAutomationRequest, TriggerAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
@@ -248,7 +248,7 @@ function prepareTestInput(input: TestAutomationRequest) {
 export async function test(
   ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const automation = await db.tryGet<Automation>(ctx.params.id)
   if (!automation) {
     ctx.throw(404, `Automation ${ctx.params.id} not found`)

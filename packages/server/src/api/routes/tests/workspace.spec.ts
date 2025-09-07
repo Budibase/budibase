@@ -1182,7 +1182,7 @@ describe("/applications", () => {
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
-      await context.doInAppContext(app.appId, () =>
+      await context.doInWorkspaceContext(app.appId, () =>
         config.createAutomationLog(automation)
       )
 
@@ -1237,7 +1237,7 @@ describe("/applications", () => {
       })
 
       // Switch to production context and verify data was seeded
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1270,7 +1270,7 @@ describe("/applications", () => {
       expect(result).toBeDefined()
 
       // Verify data was published to production (since test mode publishes all data)
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1281,7 +1281,7 @@ describe("/applications", () => {
       })
 
       // Test that we can call listEmptyProductionTables without error
-      const emptyTables = await context.doInAppContext(
+      const emptyTables = await context.doInWorkspaceContext(
         config.getAppId(),
         async () => {
           return await sdk.tables.listEmptyProductionTables()

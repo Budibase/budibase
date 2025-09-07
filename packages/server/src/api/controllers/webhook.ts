@@ -26,7 +26,7 @@ const validate = require("jsonschema").validate
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
 export async function fetch(ctx: Ctx<void, FetchWebhooksResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const response = await db.allDocs<Webhook>(
     getWebhookParams(null, {
       include_docs: true,
@@ -53,8 +53,8 @@ export async function destroy(ctx: Ctx<void, DeleteWebhookResponse>) {
 export async function buildSchema(
   ctx: Ctx<BuildWebhookSchemaRequest, BuildWebhookSchemaResponse>
 ) {
-  await context.doInAppContext(ctx.params.instance, async () => {
-    const db = context.getAppDB()
+  await context.doInWorkspaceContext(ctx.params.instance, async () => {
+    const db = context.getWorkspaceDB()
     const webhook = await db.get<Webhook>(ctx.params.id)
     webhook.bodySchema = toJsonSchema(ctx.request.body)
     // update the automation outputs
@@ -94,8 +94,8 @@ export async function trigger(
       message: "Application not deployed yet.",
     }
   }
-  await context.doInAppContext(prodAppId, async () => {
-    const db = context.getAppDB()
+  await context.doInWorkspaceContext(prodAppId, async () => {
+    const db = context.getWorkspaceDB()
     const webhook = await db.tryGet<Webhook>(ctx.params.id)
     if (!webhook) {
       return appNotDeployed()

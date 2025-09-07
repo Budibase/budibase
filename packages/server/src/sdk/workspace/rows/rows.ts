@@ -1,17 +1,17 @@
-import { db as dbCore, context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { getTableIdFromViewId, isViewId } from "@budibase/shared-core"
 import { Database, Row } from "@budibase/types"
 import { getRowParams } from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
-import * as internal from "./internal"
 import * as external from "./external"
-import { getTableIdFromViewId, isViewId } from "@budibase/shared-core"
+import * as internal from "./internal"
 
 export async function getAllInternalRows(appId?: string) {
   let db: Database
   if (appId) {
     db = dbCore.getDB(appId)
   } else {
-    db = context.getAppDB()
+    db = context.getWorkspaceDB()
   }
   const response = await db.allDocs(
     getRowParams(null, null, {

@@ -7,7 +7,7 @@ import { isProdWorkspaceID } from "../db/utils"
 import { isRecaptchaVerified } from "../utilities/redis"
 
 const middleware = (async (ctx: UserCtx, next: Next) => {
-  const workspaceId = context.getAppId()
+  const workspaceId = context.getWorkspaceId()
   // no app ID, requests are not targeting an app
   // if not production app - this is in the builder, recaptcha isn't enabled
   if (!workspaceId || !isProdWorkspaceID(workspaceId)) {

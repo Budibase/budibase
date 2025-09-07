@@ -6,7 +6,7 @@ import { AppEnvironment } from "@budibase/types"
 export async function getEnvironmentVariables() {
   let envVars = context.getEnvironmentVariables()
   if (!envVars) {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     const workspaceEnv = dbCore.isDevWorkspaceID(appId)
       ? AppEnvironment.DEVELOPMENT
       : AppEnvironment.PRODUCTION

@@ -20,8 +20,8 @@ async function syncUsersToApp(
   if (!(await dbCore.dbExists(appId))) {
     return
   }
-  await context.doInAppContext(appId, async () => {
-    const db = context.getAppDB()
+  await context.doInWorkspaceContext(appId, async () => {
+    const db = context.getWorkspaceDB()
     for (let user of users) {
       let ctxUser = user as ContextUser
       let deletedUser = false
@@ -129,7 +129,7 @@ export async function syncApp(
   const prodAppId = dbCore.getProdWorkspaceID(appId)
 
   // specific case, want to make sure setup is skipped
-  const prodDb = context.getProdAppDB({ skip_setup: true })
+  const prodDb = context.getProdWorkspaceDB({ skip_setup: true })
   const exists = await prodDb.exists()
 
   let error

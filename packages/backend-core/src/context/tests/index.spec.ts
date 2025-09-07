@@ -154,7 +154,7 @@ describe("context", () => {
     it("the context is set correctly", async () => {
       const appId = db.generateWorkspaceID()
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
@@ -169,7 +169,7 @@ describe("context", () => {
       const tenantId = structures.tenant.id()
       const appId = db.generateWorkspaceID(tenantId)
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
@@ -186,7 +186,7 @@ describe("context", () => {
 
       expect(Context.get()).toBeUndefined()
 
-      await context.doInAppMigrationContext(appId, () => {
+      await context.doInWorkspaceMigrationContext(appId, () => {
         const context = Context.get()
 
         const expected: ContextMap = {
@@ -203,17 +203,20 @@ describe("context", () => {
       [
         "doInAppMigrationContext",
         () =>
-          context.doInAppMigrationContext(db.generateWorkspaceID(), () => {}),
+          context.doInWorkspaceMigrationContext(
+            db.generateWorkspaceID(),
+            () => {}
+          ),
       ],
       [
         "doInAppContext",
-        () => context.doInAppContext(db.generateWorkspaceID(), () => {}),
+        () => context.doInWorkspaceContext(db.generateWorkspaceID(), () => {}),
       ],
       [
         "doInAutomationContext",
         () =>
           context.doInAutomationContext({
-            appId: db.generateWorkspaceID(),
+            workspaceId: db.generateWorkspaceID(),
             automationId: structures.generator.guid(),
             task: () => {},
           }),
@@ -247,7 +250,7 @@ describe("context", () => {
       "a nested context.%s function cannot run",
       async (_, otherContextCall: () => Promise<void>) => {
         await expect(
-          context.doInAppMigrationContext(
+          context.doInWorkspaceMigrationContext(
             db.generateWorkspaceID(),
             async () => {
               await otherContextCall()

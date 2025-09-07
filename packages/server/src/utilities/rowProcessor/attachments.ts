@@ -10,7 +10,7 @@ import { ObjectStoreBuckets } from "../../constants"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     if (!dbCore.isProdWorkspaceID(appId)) {
       const prodAppId = dbCore.getProdWorkspaceID(appId!)
       // if prod exists, then don't allow deleting

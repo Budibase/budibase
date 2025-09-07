@@ -38,8 +38,8 @@ function enrichQueries(input: any) {
 }
 
 export async function find(queryId: string) {
-  const db = context.getAppDB()
-  const workspaceId = context.getAppId()
+  const db = context.getWorkspaceDB()
+  const workspaceId = context.getWorkspaceId()
   const query = enrichQueries(await db.get(queryId))
   // remove properties that could be dangerous in real app
   if (isProdWorkspaceID(workspaceId)) {
@@ -50,7 +50,7 @@ export async function find(queryId: string) {
 }
 
 export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const body = await db.allDocs(
     getQueryParams(null, {

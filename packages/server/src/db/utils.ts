@@ -128,7 +128,7 @@ function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
  * Gets all the link docs document from the current workspace db.
  */
 export async function allLinkDocs() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.allDocs<LinkDocument>(
     getLinkParams({

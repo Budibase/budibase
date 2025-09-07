@@ -1,3 +1,4 @@
+import { context } from "@budibase/backend-core"
 import {
   Datasource,
   DatasourcePlus,
@@ -5,11 +6,10 @@ import {
   Schema,
   Table,
 } from "@budibase/types"
-import * as datasources from "./datasources"
-import tableSdk from "../tables"
-import { getIntegration } from "../../../integrations"
-import { context } from "@budibase/backend-core"
 import sdk from "../.."
+import { getIntegration } from "../../../integrations"
+import tableSdk from "../tables"
+import * as datasources from "./datasources"
 
 function checkForSchemaErrors(schema: Record<string, Table>) {
   const errors: Record<string, string> = {}
@@ -98,7 +98,7 @@ export async function buildSchemaFromSource(
   datasourceId: string,
   tablesFilter?: string[]
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const datasource = await datasources.get(datasourceId)
 

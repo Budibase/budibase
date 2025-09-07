@@ -1,4 +1,6 @@
+import { context, HTTPError } from "@budibase/backend-core"
 import {
+  AutoFieldSubType,
   FieldType,
   Operation,
   RelationshipType,
@@ -6,33 +8,31 @@ import {
   Table,
   TableRequest,
   ViewV2,
-  AutoFieldSubType,
   WithoutDocMetadata,
 } from "@budibase/types"
-import { context, HTTPError } from "@budibase/backend-core"
-import {
-  breakExternalTableId,
-  buildExternalTableId,
-} from "../../../../integrations/utils"
+import { cloneDeep } from "lodash/fp"
+import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
   foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
 } from "../../../../api/controllers/table/utils"
-import { cloneDeep } from "lodash/fp"
-import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
-  isRelationshipSetup,
+  breakExternalTableId,
+  buildExternalTableId,
+} from "../../../../integrations/utils"
+import {
   cleanupRelationships,
   generateLinkSchema,
   generateManyLinkSchema,
   generateRelatedSchema,
+  isRelationshipSetup,
 } from "./utils"
 
-import { getTable } from "../getters"
-import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
+import { getTable } from "../getters"
+import { populateExternalTableSchemas } from "../validation"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
 
@@ -160,7 +160,7 @@ export async function save(
     )
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasource = await datasourceSdk.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
@@ -286,7 +286,7 @@ export async function save(
 }
 
 export async function destroy(datasourceId: string, table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasource = await datasourceSdk.get(datasourceId)
   const tables = datasource.entities
 

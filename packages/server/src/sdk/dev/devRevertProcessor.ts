@@ -28,7 +28,9 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
   protected processFn = async (
     data: DevRevertQueueData
   ): Promise<{ message: string }> => {
-    return await context.doInAppContext(data.appId, () => this.revertApp(data))
+    return await context.doInWorkspaceContext(data.appId, () =>
+      this.revertApp(data)
+    )
   }
 
   private async revertApp(
@@ -38,7 +40,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     const productionAppId = dbCore.getProdWorkspaceID(appId)
 
     // App must have been deployed first
-    const db = context.getProdAppDB({ skip_setup: true })
+    const db = context.getProdWorkspaceDB({ skip_setup: true })
     const exists = await db.exists()
     if (!exists) {
       throw new queue.UnretriableError("App must be deployed to be reverted.")
@@ -60,7 +62,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
       await replication.rollback()
 
       // update appID in reverted app to be dev version again
-      const db = context.getAppDB()
+      const db = context.getWorkspaceDB()
       const appDoc = await db.get<Workspace>(DocumentType.APP_METADATA)
       appDoc.appId = appId
       appDoc.instance._id = appId

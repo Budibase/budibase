@@ -1,4 +1,17 @@
 import {
+  context,
+  locks,
+  sql,
+  SQLITE_DESIGN_DOC_ID,
+  SQS_DATASOURCE_INTERNAL,
+} from "@budibase/backend-core"
+import {
+  dataFilters,
+  helpers,
+  isInternalColumnName,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
+import {
   Aggregation,
   CalculationType,
   DocumentType,
@@ -21,36 +34,23 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
+import tracer from "dd-trace"
+import { cloneDeep } from "lodash"
+import pick from "lodash/pick"
 import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../../api/controllers/row/utils"
+import { generateJunctionTableID } from "../../../../../db/utils"
+import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import sdk from "../../../../index"
 import {
   mapToUserColumn,
   USER_COLUMN_PREFIX,
 } from "../../../tables/internal/sqs"
-import {
-  context,
-  locks,
-  sql,
-  SQLITE_DESIGN_DOC_ID,
-  SQS_DATASOURCE_INTERNAL,
-} from "@budibase/backend-core"
-import { generateJunctionTableID } from "../../../../../db/utils"
 import AliasTables from "../../sqlAlias"
-import { outputProcessing } from "../../../../../utilities/rowProcessor"
-import pick from "lodash/pick"
 import { enrichQueryJson, processRowCountResponse } from "../../utils"
-import {
-  dataFilters,
-  helpers,
-  isInternalColumnName,
-  PROTECTED_INTERNAL_COLUMNS,
-} from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
-import tracer from "dd-trace"
-import { cloneDeep } from "lodash"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const SQLITE_COLUMN_LIMIT = 2000
@@ -290,7 +290,7 @@ async function runSqlQuery(
       throw new Error("SQS cannot currently handle multiple queries")
     }
 
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
 
     return await tracer.trace("sqs.runSqlQuery", async span => {
       span?.addTags({ sql })
@@ -519,7 +519,7 @@ export async function search(
         {
           type: LockType.AUTO_EXTEND,
           name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: context.getAppId(),
+          resource: context.getWorkspaceId(),
         },
         sdk.tables.sqs.syncDefinition
       )

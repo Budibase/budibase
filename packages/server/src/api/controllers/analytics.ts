@@ -24,9 +24,9 @@ export const ping = async (
   let pingType: PingSource | undefined
   switch (body.source) {
     case PingSource.APP: {
-      const db = context.getAppDB({ skip_setup: true })
+      const db = context.getWorkspaceDB({ skip_setup: true })
       const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
-      const workspaceId = context.getAppId()
+      const workspaceId = context.getWorkspaceId()
 
       if (isDevWorkspaceID(workspaceId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)

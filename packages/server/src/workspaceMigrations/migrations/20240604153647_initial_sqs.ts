@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
-import { allLinkDocs } from "../../db/utils"
 import LinkDocumentImpl from "../../db/linkedRows/LinkDocument"
+import { allLinkDocs } from "../../db/utils"
 import sdk from "../../sdk"
 
 const migration = async () => {
@@ -29,7 +29,7 @@ const migration = async () => {
     }
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (docsToUpdate.length) {
     await db.bulkDocs(docsToUpdate)
   }

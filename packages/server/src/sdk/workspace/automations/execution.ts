@@ -1,16 +1,16 @@
 import { context } from "@budibase/backend-core"
-import * as triggers from "../../../automations/triggers"
 import { features } from "@budibase/pro"
-import { AutomationActionStepId, Automation } from "@budibase/types"
-import env from "../../../environment"
+import { Automation, AutomationActionStepId } from "@budibase/types"
 import sdk from "../.."
+import * as triggers from "../../../automations/triggers"
+import env from "../../../environment"
 
 export async function trigger(
   automationId: string,
   fields: Record<string, any> = {},
   timeout?: number
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const automation = await db.get<Automation>(automationId)
 
   if (!automation) {
@@ -45,7 +45,7 @@ export async function trigger(
     )
     return collectedValue?.outputs
   } else {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     await triggers.externalTrigger(automation, {
       fields,
       appId,

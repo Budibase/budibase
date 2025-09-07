@@ -2,7 +2,7 @@ import { cache, context } from "@budibase/backend-core"
 import { DocumentType, Workspace } from "@budibase/types"
 
 export async function clearErrors(backupId?: string) {
-  const database = context.getProdAppDB()
+  const database = context.getProdWorkspaceDB()
   const metadata = await database.get<Workspace>(DocumentType.APP_METADATA)
   if (!backupId) {
     delete metadata.backupErrors
