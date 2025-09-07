@@ -65,7 +65,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
       appDoc.appId = appId
       appDoc.instance._id = appId
       await db.put(appDoc)
-      await cache.app.invalidateWorkspaceMetadata(appId)
+      await cache.workspace.invalidateWorkspaceMetadata(appId)
       await events.app.reverted(appDoc)
 
       return { message: "Reverted changes successfully." }

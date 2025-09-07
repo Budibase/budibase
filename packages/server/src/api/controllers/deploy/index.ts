@@ -294,7 +294,7 @@ export const publishApp = async function (
       // remove automation errors if they exist
       delete appDoc.automationErrors
       await db.put(appDoc)
-      await cache.app.invalidateWorkspaceMetadata(prodId)
+      await cache.workspace.invalidateWorkspaceMetadata(prodId)
       await initDeployedApp(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)

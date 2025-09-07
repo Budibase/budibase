@@ -3,7 +3,7 @@ import {
   DeletedWorkspace,
   getWorkspaceMetadata,
   WorkspaceState,
-} from "../cache/appMetadata"
+} from "../cache/workspaceMetadata"
 import { DEFAULT_TENANT_ID, DocumentType, SEPARATOR } from "../constants"
 import { getGlobalDBName, getTenantId } from "../context"
 import { getStartEndKeyURL } from "../docIds"
