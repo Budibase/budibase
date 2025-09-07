@@ -92,15 +92,18 @@ export async function processMigrations(
     try {
       await context.doInAppContext(appId, () =>
         doInMigrationLock(appId, async () => {
-          const devAppId = db.getDevAppID(appId)
+          const devWorkspaceId = db.getDevWorkspaceID(appId)
           const prodAppId = db.getProdAppID(appId)
           const isPublished = await sdk.applications.isAppPublished(prodAppId)
-          const appIdToMigrate = isPublished ? prodAppId : devAppId
+          const appIdToMigrate = isPublished ? prodAppId : devWorkspaceId
 
           console.log(`Starting app migration for "${appIdToMigrate}"`)
 
           const pendingMigrationsPerApp = {
-            [devAppId]: await getPendingMigrationsForApp(devAppId, migrations),
+            [devWorkspaceId]: await getPendingMigrationsForApp(
+              devWorkspaceId,
+              migrations
+            ),
             [prodAppId]: isPublished
               ? await getPendingMigrationsForApp(prodAppId, migrations)
               : [],
@@ -154,7 +157,7 @@ export async function processMigrations(
 
             const runForAppToMigrate = needsToRun(migrationId, appIdToMigrate)
             const runForDevApp =
-              isPublished && needsToRun(migrationId, devAppId)
+              isPublished && needsToRun(migrationId, devWorkspaceId)
 
             if (runForAppToMigrate) {
               await runMigrationForApp({
@@ -165,11 +168,11 @@ export async function processMigrations(
             }
 
             if (runForDevApp) {
-              await syncDevApp(devAppId)
+              await syncDevApp(devWorkspaceId)
               await runMigrationForApp({
                 migrationId,
                 migrationFunc,
-                appId: devAppId,
+                appId: devWorkspaceId,
               })
             }
 
@@ -178,7 +181,7 @@ export async function processMigrations(
             }
 
             if (runForDevApp) {
-              await updateMigrationVersion(devAppId, migrationId)
+              await updateMigrationVersion(devWorkspaceId, migrationId)
             }
           }
 

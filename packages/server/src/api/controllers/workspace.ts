@@ -56,7 +56,7 @@ import {
   AppStatus,
   DocumentType,
   generateAppID,
-  generateDevAppID,
+  getDevWorkspaceID,
   getLayoutParams,
   isDevWorkspaceID,
 } from "../../db/utils"
@@ -397,22 +397,22 @@ async function performAppCreate(
   }
 
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const appId = generateDevAppID(generateAppID(tenantId))
+  const workspaceId = getDevWorkspaceID(generateAppID(tenantId))
 
-  return await context.doInAppContext(appId, async () => {
-    const instance = await createInstance(appId, instanceConfig)
+  return await context.doInAppContext(workspaceId, async () => {
+    const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getAppDB()
     const isImport = !!instanceConfig.file
     const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
-      await updateUserColumns(appId, db, ctx.user._id!)
+      await updateUserColumns(workspaceId, db, ctx.user._id!)
     }
 
     let newApplication: Workspace = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
-      appId,
+      appId: workspaceId,
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
@@ -481,7 +481,7 @@ async function performAppCreate(
     const response = await db.put(newApplication, { force: true })
     newApplication._rev = response.rev
 
-    await uploadAppFiles(appId)
+    await uploadAppFiles(workspaceId)
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
@@ -500,11 +500,11 @@ async function performAppCreate(
     const latestMigrationId = workspaceMigrations.getLatestEnabledMigrationId()
     if (latestMigrationId) {
       if (useTemplate) {
-        await processMigrations(appId)
+        await processMigrations(workspaceId)
       } else if (!isImport) {
         // Initialise the app migration version as the latest one
         await workspaceMigrations.updateAppMigrationMetadata({
-          appId,
+          appId: workspaceId,
           version: latestMigrationId,
           skipHistory: true,
         })
@@ -513,7 +513,7 @@ async function performAppCreate(
 
     await disableAllAppsAndAutomations()
 
-    await cache.app.invalidateAppMetadata(appId, newApplication)
+    await cache.app.invalidateAppMetadata(workspaceId, newApplication)
     return newApplication
   })
 }
@@ -787,13 +787,13 @@ async function unpublishApp(ctx: UserCtx) {
 }
 
 async function invalidateAppCache(appId: string) {
-  await cache.app.invalidateAppMetadata(dbCore.getDevAppID(appId))
+  await cache.app.invalidateAppMetadata(dbCore.getDevWorkspaceID(appId))
   await cache.app.invalidateAppMetadata(dbCore.getProdAppID(appId))
 }
 
 async function destroyApp(ctx: UserCtx) {
   const prodAppId = dbCore.getProdAppID(ctx.params.appId)
-  const devAppId = dbCore.getDevAppID(ctx.params.appId)
+  const devAppId = dbCore.getDevWorkspaceID(ctx.params.appId)
 
   const app = await sdk.applications.metadata.get()
 

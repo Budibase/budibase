@@ -9,7 +9,7 @@ function getWorkspacePairs(workspaceIds: string[]) {
   // keyed by the dev app id
   const pairs: { [key: string]: { devId?: string; prodId?: string } } = {}
   for (let workspaceId of workspaceIds) {
-    const devId = dbCore.getDevelopmentAppID(workspaceId)
+    const devId = dbCore.getDevWorkspaceID(workspaceId)
     if (!pairs[devId]) {
       pairs[devId] = {}
     }

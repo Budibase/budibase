@@ -114,7 +114,7 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
+  await sdk.applications.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
   })
 }
@@ -199,10 +199,10 @@ export const publishApp = async function (
     let app
     let replication
     try {
-      const devAppId = dbCore.getDevelopmentAppID(appId)
-      const productionAppId = dbCore.getProdAppID(appId)
+      const devId = dbCore.getDevWorkspaceID(appId)
+      const prodId = dbCore.getProdAppID(appId)
 
-      if (!(await sdk.applications.isAppPublished(productionAppId))) {
+      if (!(await sdk.applications.isAppPublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -222,22 +222,18 @@ export const publishApp = async function (
         }
       }
 
-      const isPublished = await sdk.applications.isAppPublished(productionAppId)
+      const isPublished = await sdk.applications.isAppPublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
-        await backups.triggerAppBackup(
-          productionAppId,
-          AppBackupTrigger.PUBLISH,
-          {
-            createdBy: ctx.user._id,
-          }
-        )
+        await backups.triggerAppBackup(prodId, AppBackupTrigger.PUBLISH, {
+          createdBy: ctx.user._id,
+        })
       }
       const config = {
-        source: devAppId,
-        target: productionAppId,
+        source: devId,
+        target: prodId,
       }
       replication = new dbCore.Replication(config)
       const devDb = context.getDevAppDB()
@@ -273,8 +269,8 @@ export const publishApp = async function (
 
       // switch to production app ID
       deployment.appUrl = appDoc.url
-      appDoc.appId = productionAppId
-      appDoc.instance._id = productionAppId
+      appDoc.appId = prodId
+      appDoc.instance._id = prodId
       const [automations, workspaceApps, tables] = await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
@@ -298,8 +294,8 @@ export const publishApp = async function (
       // remove automation errors if they exist
       delete appDoc.automationErrors
       await db.put(appDoc)
-      await cache.app.invalidateAppMetadata(productionAppId)
-      await initDeployedApp(productionAppId)
+      await cache.app.invalidateAppMetadata(prodId)
+      await initDeployedApp(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

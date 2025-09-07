@@ -309,7 +309,7 @@ export const getDevAppId = () => {
   if (!appId) {
     throw new Error("Could not get appId")
   }
-  return conversions.getDevAppID(appId)
+  return conversions.getDevWorkspaceID(appId)
 }
 
 export const getProdAppId = () => {
@@ -432,7 +432,7 @@ export function getDevAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
-  return getDB(conversions.getDevelopmentAppID(appId), opts)
+  return getDB(conversions.getDevWorkspaceID(appId), opts)
 }
 
 export function isScim(): boolean {

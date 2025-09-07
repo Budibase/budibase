@@ -1,5 +1,5 @@
 import {
-  getDevelopmentAppID,
+  getDevWorkspaceID,
   getProdAppID,
   isDevWorkspaceID,
   isProdWorkspaceID,
@@ -22,12 +22,12 @@ describe("utils", () => {
 
     it("should be able to convert a production app ID to development", () => {
       const { appId, uuid } = getID()
-      expect(getDevelopmentAppID(appId)).toEqual(`app_dev_${uuid}`)
+      expect(getDevWorkspaceID(appId)).toEqual(`app_dev_${uuid}`)
     })
 
     it("should be able to convert a development app ID to development", () => {
       const { devAppId, uuid } = getID()
-      expect(getDevelopmentAppID(devAppId)).toEqual(`app_dev_${uuid}`)
+      expect(getDevWorkspaceID(devAppId)).toEqual(`app_dev_${uuid}`)
     })
 
     it("should be able to convert a development ID to a production", () => {

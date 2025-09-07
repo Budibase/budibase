@@ -17,28 +17,27 @@ export function isProdWorkspaceID(workspaceId?: string) {
   return workspaceId.startsWith(APP_PREFIX) && !isDevWorkspaceID(workspaceId)
 }
 
-export function isDevApp(app: Workspace) {
-  if (!app) {
+export function isDevWorkspace(workspace: Workspace) {
+  if (!workspace) {
     throw NO_WORKSPACE_ERROR
   }
-  return isDevWorkspaceID(app.appId)
+  return isDevWorkspaceID(workspace.appId)
 }
 
 /**
  * Generates a development app ID from a real app ID.
  * @returns the dev app ID which can be used for dev database.
  */
-export function getDevelopmentAppID(appId: string) {
-  if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
-    return appId
+export function getDevWorkspaceID(workspaceId: string) {
+  if (!workspaceId || workspaceId.startsWith(APP_DEV_PREFIX)) {
+    return workspaceId
   }
   // split to take off the app_ element, then join it together incase any other app_ exist
-  const split = appId.split(APP_PREFIX)
+  const split = workspaceId.split(APP_PREFIX)
   split.shift()
   const rest = split.join(APP_PREFIX)
   return `${APP_DEV_PREFIX}${rest}`
 }
-export const getDevAppID = getDevelopmentAppID
 
 /**
  * Convert a development app ID to a deployed app ID.

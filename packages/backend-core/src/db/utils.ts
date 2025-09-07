@@ -3,7 +3,11 @@ import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { DEFAULT_TENANT_ID, DocumentType, SEPARATOR } from "../constants"
 import { getGlobalDBName, getTenantId } from "../context"
 import { getStartEndKeyURL } from "../docIds"
-import { getProdAppID, isDevApp, isDevWorkspaceID } from "../docIds/conversions"
+import {
+  getProdAppID,
+  isDevWorkspace,
+  isDevWorkspaceID,
+} from "../docIds/conversions"
 import env from "../environment"
 import { directCouchAllDbs, doWithDB } from "./db"
 
@@ -131,14 +135,14 @@ export async function getAllWorkspaces({
     if (!all) {
       return workspaces.filter((workspace: any) => {
         if (dev) {
-          return isDevApp(workspace)
+          return isDevWorkspace(workspace)
         }
-        return !isDevApp(workspace)
+        return !isDevWorkspace(workspace)
       })
     } else {
       return workspaces.map((workspace: any) => ({
         ...workspace,
-        status: isDevApp(workspace) ? "development" : "published",
+        status: isDevWorkspace(workspace) ? "development" : "published",
       }))
     }
   }

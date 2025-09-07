@@ -84,10 +84,10 @@ const waitForMigration = async (
 ): Promise<{ applied: boolean }> => {
   const start = Date.now()
 
-  const devAppId = db.getDevAppID(appId)
+  const devId = db.getDevWorkspaceID(appId)
 
   while (Date.now() - start < timeoutMs) {
-    if (await isAppFullyMigrated(devAppId)) {
+    if (await isAppFullyMigrated(devId)) {
       console.log(`Migration ran in ${Date.now() - start}ms`)
       return { applied: true }
     }

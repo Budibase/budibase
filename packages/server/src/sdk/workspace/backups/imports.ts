@@ -92,7 +92,7 @@ async function updateAutomations(prodAppId: string, db: Database) {
       })
     )
   ).rows.map(row => row.doc) as Automation[]
-  const devAppId = dbCore.getDevAppID(prodAppId)
+  const devId = dbCore.getDevWorkspaceID(prodAppId)
   let toSave: Automation[] = []
   for (let automation of automations) {
     const oldDevAppId = automation.appId,
@@ -102,11 +102,11 @@ async function updateAutomations(prodAppId: string, db: Database) {
     ) {
       const old = automation.definition.trigger.inputs as WebhookTriggerInputs
       automation.definition.trigger.inputs = {
-        schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
+        schemaUrl: old.schemaUrl.replace(oldDevAppId, devId),
         triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),
       }
     }
-    automation.appId = devAppId
+    automation.appId = devId
     toSave.push(automation)
   }
   await db.bulkDocs(toSave)

@@ -1,8 +1,8 @@
-import { AttachmentCleanup } from "../attachments"
-import { FieldType, Table, Row, TableSourceType } from "@budibase/types"
-import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
-import { objectStore, db, context } from "@budibase/backend-core"
+import { context, db, objectStore } from "@budibase/backend-core"
+import { FieldType, Row, Table, TableSourceType } from "@budibase/types"
 import * as uuid from "uuid"
+import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
+import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = "prod-budi-app-assets"
 const FILE_NAME = "file/thing.jpg"
@@ -22,7 +22,7 @@ jest.mock("@budibase/backend-core", () => {
       ObjectStoreBuckets: actual.objectStore.ObjectStoreBuckets,
     },
     db: {
-      isProdAppID: jest.fn(),
+      isProdWorkspaceID: jest.fn(),
       getProdAppID: jest.fn(),
       dbExists: jest.fn(),
     },
@@ -124,7 +124,7 @@ describe.each(rowGenerators)(
       jest.resetAllMocks()
 
       jest.spyOn(context, "getAppId").mockReturnValue(DEV_APPID)
-      jest.spyOn(db, "isProdAppID").mockReturnValue(false)
+      jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
       jest.spyOn(db, "getProdAppID").mockReturnValue(PROD_APPID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
