@@ -209,7 +209,7 @@ describe("context", () => {
           ),
       ],
       [
-        "doInAppContext",
+        "doInWorkspaceContext",
         () => context.doInWorkspaceContext(db.generateWorkspaceID(), () => {}),
       ],
       [

@@ -41,16 +41,19 @@ export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
 
 export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   const appId = ctx.params.appId
-  await context.doInAppContext(dbCore.getDevWorkspaceID(appId), async () => {
-    const db = context.getAppDB()
-    const app = await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
-    ctx.body = {
-      roles: await roles.getAllRoles(),
-      name: app.name,
-      version: app.version,
-      url: app.url,
+  await context.doInWorkspaceContext(
+    dbCore.getDevWorkspaceID(appId),
+    async () => {
+      const db = context.getWorkspaceDB()
+      const app = await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
+      ctx.body = {
+        roles: await roles.getAllRoles(),
+        name: app.name,
+        version: app.version,
+        url: app.url,
+      }
     }
-  })
+  )
 }
 
 export async function removeAppRole(ctx: Ctx<void, RemoveAppRoleResponse>) {

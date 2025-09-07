@@ -204,7 +204,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id.toString()
-    // can't use getAppDB here as this is likely to be called from dev workspace,
+    // can't use getWorkspaceDB here as this is likely to be called from dev workspace,
     // but this call could be for dev workspace or prod workspace, need to just use what
     // was passed in
     await dbCore.doWithDB(appId, async db => {

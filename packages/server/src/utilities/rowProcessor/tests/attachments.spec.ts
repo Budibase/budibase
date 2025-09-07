@@ -6,8 +6,8 @@ import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = "prod-budi-app-assets"
 const FILE_NAME = "file/thing.jpg"
-const DEV_APPID = "abc_dev_123"
-const PROD_APPID = "abc_123"
+const DEV_WORKSPACEID = "abc_dev_123"
+const PROD_WORKSPACEID = "abc_123"
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -123,9 +123,9 @@ describe.each(rowGenerators)(
       mockedDeleteFiles.mockClear()
       jest.resetAllMocks()
 
-      jest.spyOn(context, "getAppId").mockReturnValue(DEV_APPID)
+      jest.spyOn(context, "getWorkspaceId").mockReturnValue(DEV_WORKSPACEID)
       jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
-      jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_APPID)
+      jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_WORKSPACEID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
 
