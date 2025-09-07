@@ -58,7 +58,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await expectMigrationVersion(testMigrations[2].id)
   })
 
-  it("syncs the dev app before applying each migration", async () => {
+  it("syncs the dev workspace before applying each migration", async () => {
     const executionOrder: string[] = []
     let syncCallCount = 0
 
@@ -317,14 +317,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
   })
 
-  describe("published app handling", () => {
+  describe("published workspace handling", () => {
     let spySyncApp: jest.SpyInstance
 
     beforeEach(() => {
       spySyncApp = jest.spyOn(sdk.applications, "syncApp")
     })
 
-    it("should sync dev app after migrating published app", async () => {
+    it("should sync dev workspace after migrating published workspace", async () => {
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
@@ -358,7 +358,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       expect(spySyncApp).toHaveBeenCalledWith(config.getAppId())
     })
 
-    it("should update migration metadata for both prod and dev apps", async () => {
+    it("should update migration metadata for both prod and dev workspaces", async () => {
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
@@ -374,7 +374,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
 
     !fromProd &&
-      it("should migrate dev app when app is not published", async () => {
+      it("should migrate dev workspace when workspace is not published", async () => {
         const executionOrder: string[] = []
         const testMigrations: AppMigration[] = [
           {
@@ -402,7 +402,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   !fromProd &&
-    describe("non-published app handling", () => {
+    describe("non-published workspace handling", () => {
       let mockSyncApp: jest.SpyInstance
 
       beforeEach(async () => {
@@ -410,7 +410,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         await config.unpublish()
       })
 
-      it("should sync only dev app", async () => {
+      it("should sync only dev workspace", async () => {
         const executionOrder: string[] = []
         const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
           (_, i) => ({
@@ -668,7 +668,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       }
     })
 
-    it("should only run migrations needed by each app individually", async () => {
+    it("should only run migrations needed by each workspace individually", async () => {
       const executionOrder: string[] = []
       const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
         (_, i) => ({
