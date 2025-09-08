@@ -65,13 +65,13 @@ jobs:
           build-args: |
             BUDIBASE_VERSION=0.0.0+local
             TARGETBUILD=single
-          outputs: type=docker,dest=/tmp/budibase-current.tar
+          outputs: type=docker,dest=/tmp/budibase-${{ github.run_id }}.tar
 
       - name: Upload Docker image
         uses: actions/upload-artifact@v4
         with:
           name: budibase-current-image-${{ github.run_id }}
-          path: /tmp/budibase-current.tar
+          path: /tmp/budibase-${{ github.run_id }}.tar
           retention-days: 1
 
   get-test-config:
@@ -183,7 +183,7 @@ jobs:
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/budibase-current.tar
+          docker load -i /tmp/budibase-${{ github.run_id }}.tar
           echo "✅ Docker image loaded successfully"
 
       - name: Run upgrade test
