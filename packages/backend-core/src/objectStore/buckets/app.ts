@@ -1,8 +1,8 @@
-import { features } from "@budibase/backend-core"
 import { FeatureFlag, PWAManifestImage } from "@budibase/types"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
 import env from "../../environment"
+import * as features from "../../features"
 import * as cloudfront from "../cloudfront"
 import * as objectStore from "../objectStore"
 
