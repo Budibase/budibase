@@ -1,19 +1,21 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { get } from "svelte/store"
 import Analytics from "../../analytics"
+import { BudiStore } from "../BudiStore"
+import { auth } from "./auth"
 
-interface AdminState extends GetEnvironmentResponse {
+interface AdminState
+  extends Omit<GetEnvironmentResponse, "isDev" | "serveDevClientFromStorage"> {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
+  usingLocalComponentLibs: boolean
 }
 
 export class AdminStore extends BudiStore<AdminState> {
@@ -22,10 +24,10 @@ export class AdminStore extends BudiStore<AdminState> {
       loaded: false,
       multiTenancy: false,
       cloud: false,
-      isDev: false,
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
+      usingLocalComponentLibs: false,
     })
   }
 
@@ -52,11 +54,12 @@ export class AdminStore extends BudiStore<AdminState> {
       store.cloud = environment.cloud
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
-      store.isDev = environment.isDev
       store.baseUrl = environment.baseUrl
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
       store.passwordMinLength = environment.passwordMinLength
+      store.usingLocalComponentLibs =
+        environment.isDev && !environment.serveDevClientFromStorage
       return store
     })
   }

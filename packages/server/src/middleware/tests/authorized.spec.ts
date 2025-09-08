@@ -1,19 +1,19 @@
-jest.mock("../../sdk/app/permissions", () => ({
-  ...jest.requireActual("../../sdk/app/permissions"),
-  getResourcePerms: jest.fn().mockResolvedValue([]),
+jest.mock("../../sdk/workspace/permissions", () => ({
+  ...jest.requireActual("../../sdk/workspace/permissions"),
+  getResourcePerms: jest.fn().mockResolvedValue({}),
 }))
 
 import {
-  PermissionType,
   PermissionLevel,
   PermissionSource,
+  PermissionType,
 } from "@budibase/types"
 
-import { authorizedMiddleware } from "../authorized"
-import env from "../../environment"
 import { generator, mocks } from "@budibase/backend-core/tests"
+import env from "../../environment"
+import sdk from "../../sdk"
 import { initProMocks } from "../../tests/utilities/mocks/pro"
-import { getResourcePerms } from "../../sdk/app/permissions"
+import { authorizedMiddleware } from "../authorized"
 
 const APP_ID = ""
 
@@ -182,8 +182,9 @@ describe("Authorization middleware", () => {
 
     describe("with resource", () => {
       let resourceId: string
-      const mockedGetResourcePerms = getResourcePerms as jest.MockedFunction<
-        typeof getResourcePerms
+      const mockedGetResourcePerms = sdk.permissions
+        .getResourcePerms as jest.MockedFunction<
+        typeof sdk.permissions.getResourcePerms
       >
 
       beforeEach(() => {

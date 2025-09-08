@@ -1,26 +1,26 @@
 <script>
-  import { get } from "svelte/store"
-  import { onMount, onDestroy } from "svelte"
-  import {
-    previewStore,
-    builderStore,
-    themeStore,
-    componentStore,
-    appStore,
-    navigationStore,
-    selectedScreen,
-    hoverStore,
-    componentTreeNodesStore,
-    screenComponentErrors,
-    snippets,
-  } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
-  import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "@/helpers/components"
-  import { isActive, goto } from "@roxi/routify"
+  import {
+    appStore,
+    builderStore,
+    componentStore,
+    componentTreeNodesStore,
+    hoverStore,
+    navigationStore,
+    previewStore,
+    screenComponentErrors,
+    selectedScreen,
+    snippets,
+    themeStore,
+  } from "@/stores/builder"
+  import { Body, Heading, Icon, Layout, notifications } from "@budibase/bbui"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
+  import { goto, isActive } from "@roxi/routify"
+  import { onDestroy, onMount } from "svelte"
+  import { get } from "svelte/store"
 
   let iframe
   let layout
@@ -272,7 +272,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    src="/app/preview"
+    src={`/app/${$appStore.appId}/preview`}
     class:hidden={loading || error}
   />
   <div class="underlay" />

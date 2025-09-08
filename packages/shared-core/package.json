@@ -4,6 +4,7 @@
   "description": "Shared data utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {

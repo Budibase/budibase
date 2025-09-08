@@ -2,9 +2,9 @@ import { generator } from "@budibase/backend-core/tests"
 import {
   BBRequest,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   Row,
   Table,
-  INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
 } from "@budibase/types"
 import * as utils from "../../db/utils"
@@ -12,7 +12,7 @@ import { trimViewRowInfoMiddleware } from "../trimViewRowInfo"
 
 jest.mock("../../sdk", () => ({
   views: {
-    ...jest.requireActual("../../sdk/app/views"),
+    ...jest.requireActual("../../sdk/workspace/views"),
     get: jest.fn(),
   },
   tables: {
@@ -20,8 +20,8 @@ jest.mock("../../sdk", () => ({
   },
 }))
 
-import sdk from "../../sdk"
 import { Next } from "koa"
+import sdk from "../../sdk"
 
 const tableId = utils.generateTableID()
 const mockGetView = sdk.views.get as jest.MockedFunction<typeof sdk.views.get>

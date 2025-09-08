@@ -1,5 +1,4 @@
-import { App } from "@budibase/types"
-import { tenancy, db as dbCore, platform } from "@budibase/backend-core"
+import { db as dbCore, platform, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 
 export async function deleteTenant(tenantId: string) {
@@ -21,9 +20,11 @@ async function removeGlobalDB(tenantId: string) {
 
 async function removeTenantApps(tenantId: string) {
   try {
-    const apps = (await dbCore.getAllApps({ all: true })) as App[]
-    const destroyPromises = apps.map(app => {
-      const db = dbCore.getDB(app.appId)
+    const workspaces = await dbCore.getAllWorkspaces({
+      all: true,
+    })
+    const destroyPromises = workspaces.map(workspace => {
+      const db = dbCore.getDB(workspace.appId)
       return db.destroy()
     })
     await Promise.allSettled(destroyPromises)

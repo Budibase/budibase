@@ -1,41 +1,41 @@
-import emitter from "../events/index"
-import { getAutomationParams, isDevAppID } from "../db/utils"
-import { coerce } from "../utilities/rowProcessor"
 import { automations } from "@budibase/shared-core"
+import { getAutomationParams, isDevWorkspaceID } from "../db/utils"
+import emitter from "../events/index"
+import { coerce } from "../utilities/rowProcessor"
 // need this to call directly, so we can get a response
-import { automationQueue } from "./bullboard"
-import { checkTestFlag } from "../utilities/redis"
-import * as utils from "./utils"
-import env from "../environment"
-import { context, logging, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, logging } from "@budibase/backend-core"
+import { dataFilters, sdk } from "@budibase/shared-core"
 import {
   Automation,
-  Row,
   AutomationData,
-  AutomationJob,
   AutomationEventType,
-  UpdatedRowEventEmitter,
-  SearchFilters,
-  AutomationStoppedReason,
-  AutomationStatus,
-  AutomationRowEvent,
-  UserBindings,
+  AutomationJob,
   AutomationResults,
-  DidNotTriggerResponse,
-  Table,
-  AutomationTriggerStepId,
+  AutomationRowEvent,
+  AutomationStatus,
+  AutomationStoppedReason,
   AutomationTriggerInputs,
+  AutomationTriggerStepId,
+  DidNotTriggerResponse,
+  Row,
+  SearchFilters,
+  Table,
+  UpdatedRowEventEmitter,
+  UserBindings,
 } from "@budibase/types"
+import * as automationUtils from "../automations/automationUtils"
+import env from "../environment"
+import { doesTableExist } from "../sdk/workspace/tables/getters"
 import { executeInThread } from "../threads/automation"
-import { dataFilters, sdk } from "@budibase/shared-core"
+import { checkTestFlag } from "../utilities/redis"
+import { automationQueue } from "./bullboard"
+import * as utils from "./utils"
 
 export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
-import * as automationUtils from "../automations/automationUtils"
-import { doesTableExist } from "../sdk/app/tables/getters"
 
 type RowTriggerStepId =
   | AutomationTriggerStepId.ROW_ACTION
@@ -58,7 +58,7 @@ type RowFilterInputs = Extract<
 >
 
 async function getAllAutomations() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let automations = await db.allDocs<Automation>(
     getAutomationParams(null, { include_docs: true })
   )
@@ -79,7 +79,7 @@ async function queueRelevantRowAutomations(
     return
   }
 
-  await context.doInAppContext(event.appId, async () => {
+  await context.doInWorkspaceContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type and enabled automations
@@ -98,12 +98,12 @@ async function queueRelevantRowAutomations(
     })
 
     for (const automation of automations) {
-      // don't queue events which are for dev apps, only way to test automations is
+      // don't queue events which are for dev workspaces, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
       if (
         !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevAppID(event.appId) &&
+        isDevWorkspaceID(event.appId) &&
         !(await checkTestFlag(automation._id!))
       ) {
         continue
@@ -252,7 +252,7 @@ export async function externalTrigger(
   if (getResponses) {
     data.event = {
       ...data.event,
-      appId: context.getAppId(),
+      appId: context.getWorkspaceId(),
       automation,
     }
     return executeInThread({ data } as AutomationJob)
@@ -267,14 +267,14 @@ export async function rebootTrigger() {
   if (env.isInThread() || !env.SELF_HOSTED || env.MULTI_TENANCY) {
     return
   }
-  // iterate through all production apps, find the reboot crons
+  // iterate through all production workspaces, find the reboot crons
   // and trigger events for them
-  const appIds = (await dbCore.getAllApps({
+  const workspaceIds = await dbCore.getAllWorkspaces({
     dev: false,
     idsOnly: true,
-  })) as string[]
-  for (let prodAppId of appIds) {
-    await context.doInAppContext(prodAppId, async () => {
+  })
+  for (let prodId of workspaceIds) {
+    await context.doInWorkspaceContext(prodId, async () => {
       let automations = await getAllAutomations()
       let rebootEvents = []
       for (let automation of automations) {
@@ -282,7 +282,7 @@ export async function rebootTrigger() {
           const job = {
             automation,
             event: {
-              appId: prodAppId,
+              appId: prodId,
               timestamp: Date.now(),
             },
           }

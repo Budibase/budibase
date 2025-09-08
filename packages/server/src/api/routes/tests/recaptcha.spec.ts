@@ -1,8 +1,8 @@
-import * as setup from "./utilities"
-import nock from "nock"
 import { mocks } from "@budibase/backend-core/tests"
-import { App, RecaptchaConfig, ConfigType } from "@budibase/types"
+import { ConfigType, RecaptchaConfig, Workspace } from "@budibase/types"
+import nock from "nock"
 import { basicTable } from "../../../tests/utilities/structures"
+import * as setup from "./utilities"
 
 // need to mock the config, this is setup in the worker service
 // we don't have a nice way to do this properly, it will always be mock
@@ -45,7 +45,7 @@ function recaptchaError() {
 
 describe("/recaptcha", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: Workspace
 
   beforeAll(async () => {
     await config.init()
@@ -137,8 +137,8 @@ describe("/recaptcha", () => {
 
     async function setRecaptchaEnabled(value: boolean) {
       app.recaptchaEnabled = value
-      await config.api.application.update(app.appId, app)
-      await config.api.application.publish(app.appId)
+      await config.api.workspace.update(app.appId, app)
+      await config.api.workspace.publish(app.appId)
     }
 
     it("should return 498 when recaptcha enabled but no cookie present", async () => {
