@@ -10,7 +10,7 @@
   let workspaceName: string = "My first workspace"
   let workspaceUrl: string = "my-first-workspace"
 
-  let appName: string = "My first App"
+  let appName: string = "My first app"
   let appUrl: string = "my-first-app"
   let appId: string | null = null
 
