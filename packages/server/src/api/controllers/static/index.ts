@@ -257,7 +257,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
-        clientCacheKey: objectStore.getClientCacheKey(appId!, appInfo.version),
+        clientCacheKey: await objectStore.getClientCacheKey(
+          appId!,
+          appInfo.version
+        ),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
@@ -352,7 +355,10 @@ export const serveBuilderPreview = async function (
       ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
       false
     let props: any = {
-      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+      clientLibPath: await objectStore.clientLibraryUrl(
+        appId!,
+        appInfo.version
+      ),
       nonce,
     }
 

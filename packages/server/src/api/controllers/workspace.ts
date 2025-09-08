@@ -338,12 +338,12 @@ export async function fetchAppPackage(
     application.navigation = matchedWorkspaceApp.navigation
   }
 
-  const clientLibPath = objectStore.clientLibraryUrl(
+  const clientLibPath = await objectStore.clientLibraryUrl(
     ctx.params.appId,
     application.version
   )
 
-  const clientCacheKey = objectStore.getClientCacheKey(
+  const clientCacheKey = await objectStore.getClientCacheKey(
     ctx.params.appId,
     application.version
   )

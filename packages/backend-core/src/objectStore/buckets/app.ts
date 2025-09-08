@@ -37,24 +37,18 @@ export async function clientLibraryCDNUrl(appId: string, version: string) {
   }
 }
 
-export function clientLibraryUrl(appId: string, version: string) {
-  let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
-  try {
-    tenantId = getTenantId()
-  } finally {
-    qsParams = {
-      appId,
-      version,
-    }
-  }
-  if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
-    qsParams.tenantId = tenantId
-  }
-  return `/api/assets/client?${qs.encode(qsParams)}`
+export async function clientLibraryUrl(appId: string, version: string) {
+  return `/api/assets/client?${await getClientCacheKey(appId, version)}`
 }
 
-export function getClientCacheKey(appId: string, version: string) {
-  let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
+export async function getClientCacheKey(appId: string, version: string) {
+  let tenantId,
+    qsParams: {
+      appId: string
+      version: string
+      tenantId?: string
+      dynamic?: boolean
+    }
   try {
     tenantId = getTenantId()
   } finally {
@@ -66,6 +60,7 @@ export function getClientCacheKey(appId: string, version: string) {
   if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
     qsParams.tenantId = tenantId
   }
+  qsParams.dynamic = await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING)
   return qs.encode(qsParams)
 }
 
