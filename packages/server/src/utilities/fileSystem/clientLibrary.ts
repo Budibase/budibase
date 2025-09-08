@@ -25,10 +25,10 @@ export function devClientLibPath() {
  * {appId}/... (and any other app files)
  *
  * The paths for the backups are:
- * {appId}.bak/manifest.json
- * {appId}.bak/budibase-client.js
- * {appId}.bak/_dependencies/...
- * {appId}.bak/... (complete folder backup)
+ * {appId}/.bak/manifest.json
+ * {appId}/.bak/budibase-client.js
+ * {appId}/.bak/_dependencies/...
+ * {appId}/.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
  * we pull both the manifest and client bundle from the server's dependencies
@@ -46,7 +46,7 @@ export async function backupClientLibrary(appId: string) {
   appId = sdk.applications.getProdAppID(appId)
   // First, remove any existing backup folder
   try {
-    await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}.bak`)
+    await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/.bak`)
   } catch (error) {
     // Ignore errors if backup doesn't exist
   }
@@ -54,7 +54,7 @@ export async function backupClientLibrary(appId: string) {
   await utils.parallelForeach(
     objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
     async file => {
-      if (file.Key?.endsWith(".bak")) {
+      if (file.Key?.includes("/.bak/") || file.Key?.endsWith(".bak")) {
         return
       }
 
@@ -136,7 +136,7 @@ export async function revertClientLibrary(appId: string) {
 
   // First try to process files from the backup folder
   await utils.parallelForeach(
-    objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}.bak`),
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}/.bak`),
     async file => {
       hasBackup = true
 
