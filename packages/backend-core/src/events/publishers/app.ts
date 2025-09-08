@@ -1,22 +1,22 @@
-import { publishEvent } from "../events"
 import {
-  Event,
-  App,
   AppCreatedEvent,
-  AppUpdatedEvent,
   AppDeletedEvent,
-  AppPublishedEvent,
-  AppUnpublishedEvent,
-  AppFileImportedEvent,
-  AppTemplateImportedEvent,
-  AppVersionUpdatedEvent,
-  AppVersionRevertedEvent,
-  AppRevertedEvent,
-  AppExportedEvent,
   AppDuplicatedEvent,
+  AppExportedEvent,
+  AppFileImportedEvent,
+  AppPublishedEvent,
+  AppRevertedEvent,
+  AppTemplateImportedEvent,
+  AppUnpublishedEvent,
+  AppUpdatedEvent,
+  AppVersionRevertedEvent,
+  AppVersionUpdatedEvent,
+  Event,
+  Workspace,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
-const created = async (app: App, timestamp?: string | number) => {
+const created = async (app: Workspace, timestamp?: string | number) => {
   const properties: AppCreatedEvent = {
     appId: app.appId,
     version: app.version,
@@ -27,7 +27,7 @@ const created = async (app: App, timestamp?: string | number) => {
   await publishEvent(Event.APP_CREATED, properties, timestamp)
 }
 
-async function updated(app: App) {
+async function updated(app: Workspace) {
   const properties: AppUpdatedEvent = {
     appId: app.appId,
     version: app.version,
@@ -38,7 +38,7 @@ async function updated(app: App) {
   await publishEvent(Event.APP_UPDATED, properties)
 }
 
-async function deleted(app: App) {
+async function deleted(app: Workspace) {
   const properties: AppDeletedEvent = {
     appId: app.appId,
     audited: {
@@ -48,7 +48,7 @@ async function deleted(app: App) {
   await publishEvent(Event.APP_DELETED, properties)
 }
 
-async function published(app: App, timestamp?: string | number) {
+async function published(app: Workspace, timestamp?: string | number) {
   const properties: AppPublishedEvent = {
     appId: app.appId,
     audited: {
@@ -58,7 +58,7 @@ async function published(app: App, timestamp?: string | number) {
   await publishEvent(Event.APP_PUBLISHED, properties, timestamp)
 }
 
-async function unpublished(app: App) {
+async function unpublished(app: Workspace) {
   const properties: AppUnpublishedEvent = {
     appId: app.appId,
     audited: {
@@ -68,7 +68,7 @@ async function unpublished(app: App) {
   await publishEvent(Event.APP_UNPUBLISHED, properties)
 }
 
-async function fileImported(app: App) {
+async function fileImported(app: Workspace) {
   const properties: AppFileImportedEvent = {
     appId: app.appId,
     audited: {
@@ -78,7 +78,7 @@ async function fileImported(app: App) {
   await publishEvent(Event.APP_FILE_IMPORTED, properties)
 }
 
-async function duplicated(app: App, duplicateAppId: string) {
+async function duplicated(app: Workspace, duplicateAppId: string) {
   const properties: AppDuplicatedEvent = {
     duplicateAppId,
     appId: app.appId,
@@ -89,7 +89,7 @@ async function duplicated(app: App, duplicateAppId: string) {
   await publishEvent(Event.APP_DUPLICATED, properties)
 }
 
-async function templateImported(app: App, templateKey: string) {
+async function templateImported(app: Workspace, templateKey: string) {
   const properties: AppTemplateImportedEvent = {
     appId: app.appId,
     templateKey,
@@ -101,7 +101,7 @@ async function templateImported(app: App, templateKey: string) {
 }
 
 async function versionUpdated(
-  app: App,
+  app: Workspace,
   currentVersion: string,
   updatedToVersion: string
 ) {
@@ -117,7 +117,7 @@ async function versionUpdated(
 }
 
 async function versionReverted(
-  app: App,
+  app: Workspace,
   currentVersion: string,
   revertedToVersion: string
 ) {
@@ -132,7 +132,7 @@ async function versionReverted(
   await publishEvent(Event.APP_VERSION_REVERTED, properties)
 }
 
-async function reverted(app: App) {
+async function reverted(app: Workspace) {
   const properties: AppRevertedEvent = {
     appId: app.appId,
     audited: {
@@ -142,7 +142,7 @@ async function reverted(app: App) {
   await publishEvent(Event.APP_REVERTED, properties)
 }
 
-async function exported(app: App) {
+async function exported(app: Workspace) {
   const properties: AppExportedEvent = {
     appId: app.appId,
     audited: {

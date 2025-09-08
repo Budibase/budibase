@@ -1,23 +1,23 @@
-import { generateUserFlagID, InternalTables } from "../../db/utils"
-import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
 import {
   ContextUserMetadata,
   Ctx,
+  DeleteUserMetadataResponse,
   FetchUserMetadataResponse,
   FindUserMetadataResponse,
   Flags,
+  GetUserFlagsResponse,
   SetUserFlagRequest,
+  SetUserFlagResponse,
   UpdateSelfMetadataRequest,
   UpdateSelfMetadataResponse,
-  UpdateUserMetadataResponse,
   UpdateUserMetadataRequest,
+  UpdateUserMetadataResponse,
   UserCtx,
-  DeleteUserMetadataResponse,
-  SetUserFlagResponse,
-  GetUserFlagsResponse,
 } from "@budibase/types"
+import { generateUserFlagID, InternalTables } from "../../db/utils"
 import sdk from "../../sdk"
+import { getFullUser } from "../../utilities/users"
 
 export async function fetchMetadata(ctx: Ctx<void, FetchUserMetadataResponse>) {
   ctx.body = await sdk.users.fetchMetadata()
@@ -38,7 +38,7 @@ export async function updateSelfMetadata(
 export async function updateMetadata(
   ctx: UserCtx<UpdateUserMetadataRequest, UpdateUserMetadataResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const user = ctx.request.body
   const metadata: ContextUserMetadata = {
     tableId: InternalTables.USER_METADATA,
@@ -52,7 +52,7 @@ export async function updateMetadata(
 export async function destroyMetadata(
   ctx: UserCtx<void, DeleteUserMetadataResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   try {
     const dbUser = await sdk.users.get(ctx.params.id)
     await db.remove(dbUser._id!, dbUser._rev)
@@ -79,7 +79,7 @@ export async function setFlag(
     ctx.throw(400, "Must supply a 'flag' field in request body.")
   }
   const flagDocId = generateUserFlagID(userId!)
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let doc: Flags
   try {
     doc = await db.get<Flags>(flagDocId)
@@ -94,7 +94,7 @@ export async function setFlag(
 export async function getFlags(ctx: UserCtx<void, GetUserFlagsResponse>) {
   const userId = ctx.user?._id
   const docId = generateUserFlagID(userId!)
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let doc: Flags
   try {
     doc = await db.get<Flags>(docId)

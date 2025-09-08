@@ -272,8 +272,23 @@ export class RestIntegration implements IntegrationBase {
     }
 
     if (queryString) {
-      // make sure the query string is fully encoded
-      queryString = "?" + qs.encode(qs.decode(queryString))
+      // decode the query string to get individual parameters
+      const decoded = qs.decode(queryString)
+
+      // filter out parameters with empty string values
+      const filtered: Record<string, string | string[]> = {}
+      for (const [key, value] of Object.entries(decoded)) {
+        if (value !== "" && value != null) {
+          filtered[key] = value
+        }
+      }
+
+      // only add query string if there are remaining parameters
+      if (Object.keys(filtered).length > 0) {
+        queryString = "?" + qs.encode(filtered)
+      } else {
+        queryString = ""
+      }
     }
     const main = `${path}${queryString}`
 

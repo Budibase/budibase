@@ -1,13 +1,13 @@
+import { context } from "@budibase/backend-core"
+import { features } from "@budibase/pro"
 import {
   Automation,
   AutomationStatus,
   TriggerAutomationStepInputs,
   TriggerAutomationStepOutputs,
 } from "@budibase/types"
-import * as triggers from "../triggers"
-import { context } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
 import env from "../../environment"
+import * as triggers from "../triggers"
 
 export async function run({
   inputs,
@@ -23,7 +23,7 @@ export async function run({
         status: AutomationStatus.ERROR,
       }
     } else {
-      const db = context.getAppDB()
+      const db = context.getWorkspaceDB()
       let automation = await db.get<Automation>(inputs.automation.automationId)
 
       let timeout = env.AUTOMATION_THREAD_TIMEOUT

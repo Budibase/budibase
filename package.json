@@ -119,14 +119,14 @@
     "msgpackr": "1.10.1",
     "axios": "1.7.7",
     "xml2js": "0.6.2",
-    "unset-value": "2.0.1",
     "passport": "0.6.0",
     "fast-xml-parser": "4.4.1",
     "@azure/identity": "4.2.1",
     "kind-of": "6.0.3",
     "**/nan": "2.22.0",
     "globals": "15.13.0",
-    "esm": "npm:esm-wallaby@3.2.35"
+    "esm": "npm:esm-wallaby@3.2.35",
+    "@types/koa": "2.13.4"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"

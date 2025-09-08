@@ -1,7 +1,7 @@
 import { constants, logging } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
 import { DocUpdateEvent, UserGroupSyncEvents } from "@budibase/types"
-import { syncUsersToAllApps } from "../../sdk/app/applications/sync"
+import { syncUsersToAllWorkspaces } from "../../sdk/workspace/workspaces/sync"
 import { UpdateCallback } from "./processors"
 
 export default function process(updateCb?: UpdateCallback) {
@@ -17,7 +17,7 @@ export default function process(updateCb?: UpdateCallback) {
         userIds = [docId]
       }
       if (userIds.length > 0) {
-        await syncUsersToAllApps(userIds)
+        await syncUsersToAllWorkspaces(userIds)
       }
       if (updateCb) {
         updateCb(docId)

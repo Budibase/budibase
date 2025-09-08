@@ -1,15 +1,5 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  shouldServeLocally,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
   configs,
@@ -17,14 +7,10 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
-  App,
   BudibaseAppProps,
   Ctx,
   DocumentType,
@@ -37,14 +23,28 @@ import {
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
-import { isAppFullyMigrated } from "../../../appMigrations"
+import fs from "fs"
+import fsp from "fs/promises"
+import * as uuid from "uuid"
+import { ObjectStoreBuckets } from "../../../constants"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  shouldServeLocally,
+} from "../../../utilities/fileSystem"
+import { isAppFullyMigrated } from "../../../workspaceMigrations"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
-import send from "koa-send"
-import { getThemeVariables } from "../../../constants/themes"
-import path from "path"
 import extract from "extract-zip"
+import send from "koa-send"
 import { tmpdir } from "os"
+import path from "path"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -83,7 +83,7 @@ export const uploadFile = async function (
       // filenames converted to UUIDs so they are unique
       const processedFileName = `${uuid.v4()}.${extension}`
 
-      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+      const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
@@ -138,7 +138,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
-    const appId = context.getProdAppId()
+    const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
@@ -181,7 +181,7 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: App,
+  app: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
@@ -197,7 +197,7 @@ const getAppScriptHTML = (
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   // No app ID found, cannot serve - return message instead
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.body = "No content found - requires app ID"
     return
@@ -218,7 +218,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   }
 
   try {
-    context.getAppDB({ skip_setup: true })
+    context.getWorkspaceDB({ skip_setup: true })
 
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
@@ -337,11 +337,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
-  const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const db = context.getWorkspaceDB({ skip_setup: true })
+  const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = context.getAppId()
+    let appId = context.getWorkspaceId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
@@ -370,19 +370,13 @@ export const serveBuilderPreview = async function (
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
-
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
-  const appId = context.getAppId() || (ctx.request.query.appId as string)
+  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
@@ -461,14 +455,14 @@ export const getSignedUploadURL = async function (
 }
 
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.throw(404)
   }
 
   try {
-    const db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const db = context.getWorkspaceDB({ skip_setup: true })
+    const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)
