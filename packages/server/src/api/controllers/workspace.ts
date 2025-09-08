@@ -81,6 +81,8 @@ import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
 
+const DEFAULT_APP_NAME = "my first app"
+
 // utility function, need to do away with this
 async function getLayouts() {
   const db = context.getWorkspaceDB()
@@ -184,12 +186,11 @@ async function addSampleDataDocs() {
 }
 
 async function createDefaultWorkspaceApp(): Promise<string> {
-  const appMetadata = await sdk.applications.metadata.get()
   const workspaceApp = await sdk.workspaceApps.create({
-    name: appMetadata.name,
+    name: DEFAULT_APP_NAME,
     url: "/",
     navigation: {
-      ...defaultAppNavigator(appMetadata.name),
+      ...defaultAppNavigator(DEFAULT_APP_NAME),
       links: [],
     },
     disabled: true,

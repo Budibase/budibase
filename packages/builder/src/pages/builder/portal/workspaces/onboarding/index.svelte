@@ -10,8 +10,6 @@
   let workspaceName: string = "My first workspace"
   let workspaceUrl: string = "my-first-workspace"
 
-  let appName: string = "My first app"
-  let appUrl: string = "my-first-app"
   let appId: string | null = null
 
   let loading = false
@@ -22,8 +20,8 @@
     // Create form data to create app
     // This is form based and not JSON
     let data = new FormData()
-    data.append("name", appName)
-    data.append("url", appUrl)
+    data.append("name", workspaceName)
+    data.append("url", workspaceUrl)
     data.append("useTemplate", "false")
     data.append("isOnboarding", "true")
 
