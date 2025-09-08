@@ -1,12 +1,17 @@
-import { PWAManifestImage } from "@budibase/types"
+import { features } from "@budibase/backend-core"
+import { FeatureFlag, PWAManifestImage } from "@budibase/types"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
 import env from "../../environment"
 import * as cloudfront from "../cloudfront"
 import * as objectStore from "../objectStore"
 
-export function clientLibraryPath(appId: string) {
-  return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+export async function clientLibraryPath(appId: string) {
+  if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+    return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+  } else {
+    return `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
+  }
 }
 export function client3rdPartyLibrary(appId: string, file: string) {
   return `${objectStore.sanitizeKey(appId)}/_dependencies/${file}`
@@ -18,7 +23,7 @@ export function client3rdPartyLibrary(appId: string, file: string) {
  * incase we are able to switch back to CDN path again in future.
  */
 export async function clientLibraryCDNUrl(appId: string, version: string) {
-  let file = clientLibraryPath(appId)
+  let file = await clientLibraryPath(appId)
   if (env.CLOUDFRONT_CDN) {
     // append app version to bust the cache
     if (version) {

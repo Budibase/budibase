@@ -5,6 +5,7 @@ import {
   cache,
   configs,
   context,
+  features,
   objectStore,
   utils,
 } from "@budibase/backend-core"
@@ -16,6 +17,7 @@ import {
   Ctx,
   DocumentType,
   Feature,
+  FeatureFlag,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
@@ -389,11 +391,15 @@ export const serveClientLibrary = async function (
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      objectStore.clientLibraryPath(appId!)
+      await objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
   } else {
-    return serveLocalFile(ctx, "budibase-client.js")
+    if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+      return serveLocalFile(ctx, "budibase-client.js")
+    } else {
+      return serveLocalFile(ctx, "budibase-client.new.js")
+    }
   }
 }
 
