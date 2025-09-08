@@ -1,10 +1,10 @@
-import * as rowController from "../../../controllers/row"
-import * as appController from "../../../controllers/application"
-import { AppStatus } from "../../../../db/utils"
-import { roles, tenancy, context, db } from "@budibase/backend-core"
-import env from "../../../../environment"
+import { context, db, roles, tenancy } from "@budibase/backend-core"
 import Nano from "@budibase/nano"
+import { WorkspaceStatus } from "../../../../db/utils"
+import env from "../../../../environment"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import * as rowController from "../../../controllers/row"
+import * as workspaceController from "../../../controllers/workspace"
 
 class Request {
   appId: any
@@ -20,7 +20,7 @@ class Request {
 }
 
 function runRequest(appId: any, controlFunc: any, request?: any) {
-  return context.doInAppContext(appId, async () => {
+  return context.doInWorkspaceContext(appId, async () => {
     return controlFunc(request)
   })
 }
@@ -31,24 +31,26 @@ export const getAllTableRows = async (config: any) => {
   return req.body
 }
 
-export const clearAllApps = async (
+export const clearAllWorkspaces = async (
   tenantId: string,
   exceptions: Array<string> = []
 ) => {
   await tenancy.doInTenant(tenantId, async () => {
     const req: any = {
-      query: { status: AppStatus.DEV },
+      query: { status: WorkspaceStatus.DEV },
       user: { tenantId, builder: { global: true } },
     }
-    await appController.fetch(req)
-    const apps = req.body
-    if (!apps || apps.length <= 0) {
+    await workspaceController.fetch(req)
+    const workspaces = req.body
+    if (!workspaces || workspaces.length <= 0) {
       return
     }
-    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
-      const { appId } = app
+    for (let workspace of workspaces.filter(
+      (x: any) => !exceptions.includes(x.appId)
+    )) {
+      const { appId } = workspace
       const req = new Request(null, { appId })
-      await runRequest(appId, appController.destroy, req)
+      await runRequest(appId, workspaceController.destroy, req)
     }
   })
 }
@@ -146,7 +148,7 @@ export const checkPermissionsEndpoint = async ({
 }
 
 export const getDB = () => {
-  return context.getAppDB()
+  return context.getWorkspaceDB()
 }
 
 export const testAutomation = async (

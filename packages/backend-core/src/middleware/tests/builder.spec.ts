@@ -1,10 +1,10 @@
+import { ServiceType, User } from "@budibase/types"
+import { structures } from "../../../tests"
+import { doInWorkspaceContext } from "../../context"
+import env from "../../environment"
 import { adminOnly } from "../adminOnly"
 import { builderOnly } from "../builderOnly"
 import { builderOrAdmin } from "../builderOrAdmin"
-import { structures } from "../../../tests"
-import { User, ServiceType } from "@budibase/types"
-import { doInAppContext } from "../../context"
-import env from "../../environment"
 
 env._set("SERVICE_TYPE", ServiceType.APPS)
 
@@ -67,7 +67,7 @@ describe("builderOnly middleware", () => {
   it("should allow app builder user", () => {
     const ctx = buildUserCtx(appBuilderUser),
       next = jest.fn()
-    doInAppContext(appId, () => {
+    doInWorkspaceContext(appId, () => {
       builderOnly(ctx, next)
     })
     passed(ctx.throw, next)
@@ -90,7 +90,7 @@ describe("builderOnly middleware", () => {
   it("should not allow app builder user to different app", () => {
     const ctx = buildUserCtx(appBuilderUser),
       next = jest.fn()
-    doInAppContext("app_bbb", () => {
+    doInWorkspaceContext("app_bbb", () => {
       builderOnly(ctx, next)
     })
     threw(ctx.throw)
@@ -129,7 +129,7 @@ describe("builderOrAdmin middleware", () => {
   it("should allow app builder user", () => {
     const ctx = buildUserCtx(appBuilderUser),
       next = jest.fn()
-    doInAppContext(appId, () => {
+    doInWorkspaceContext(appId, () => {
       builderOrAdmin(ctx, next)
     })
     passed(ctx.throw, next)
@@ -154,11 +154,11 @@ describe("check service difference", () => {
       },
     })
     const next = jest.fn()
-    doInAppContext(appId, () => {
+    doInWorkspaceContext(appId, () => {
       builderOnly(ctx, next)
     })
     passed(ctx.throw, next)
-    doInAppContext("app_b", () => {
+    doInWorkspaceContext("app_b", () => {
       builderOnly(ctx, next)
     })
     threw(ctx.throw)
@@ -173,7 +173,7 @@ describe("check service difference", () => {
       },
     })
     const next = jest.fn()
-    doInAppContext("app_b", () => {
+    doInWorkspaceContext("app_b", () => {
       builderOnly(ctx, next)
     })
     passed(ctx.throw, next)

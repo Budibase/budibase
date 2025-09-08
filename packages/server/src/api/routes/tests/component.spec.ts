@@ -1,6 +1,6 @@
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as env from "../../../environment"
 import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/component", () => {
   let request = setup.getRequest()
@@ -16,7 +16,7 @@ describe("/component", () => {
     it("should be able to fetch definitions locally", async () => {
       await env.withEnv(
         {
-          USE_LOCAL_COMPONENT_LIBS: "1",
+          DEV_USE_CLIENT_FROM_STORAGE: "0",
         },
         async () => {
           const res = await request
@@ -34,7 +34,7 @@ describe("/component", () => {
     it("should be able to fetch definitions from object store", async () => {
       await env.withEnv(
         {
-          USE_LOCAL_COMPONENT_LIBS: "0",
+          DEV_USE_CLIENT_FROM_STORAGE: "1",
         },
         async () => {
           // init again to make an app with a real component lib

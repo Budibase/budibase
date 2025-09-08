@@ -1,48 +1,46 @@
-import { default as threadUtils } from "./utils"
-import { events } from "@budibase/backend-core"
-import { Job } from "bull"
-import { disableCronById } from "../automations/utils"
-import * as actions from "../automations/actions"
-import * as automationUtils from "../automations/automationUtils"
-import { dataFilters, helpers } from "@budibase/shared-core"
-import { default as AutomationEmitter } from "../events/AutomationEmitter"
-import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
-import { automations } from "@budibase/shared-core"
-import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
-import { storeLog } from "../automations/logging"
+import { configs, context, events, logging } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import { automations, dataFilters, helpers } from "@budibase/shared-core"
+import {
+  findHBSBlocks,
+  processObject,
+  processStringSync,
+} from "@budibase/string-templates"
 import {
   Automation,
   AutomationActionStepId,
   AutomationData,
   AutomationJob,
   AutomationMetadata,
+  AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AutomationStepResult,
   AutomationStepStatus,
+  AutomationTriggerResult,
+  Branch,
   BranchSearchFilters,
   BranchStep,
-  LoopV2StepInputs,
   ContextEmitter,
-  AutomationTriggerResult,
-  AutomationResults,
-  AutomationStepResult,
   isLogicalFilter,
-  Branch,
   LoopV2Step,
+  LoopV2StepInputs,
 } from "@budibase/types"
-import { AutomationContext } from "../definitions/automations"
-import { WorkerCallback } from "./definitions"
-import { context, logging, configs } from "@budibase/backend-core"
-import {
-  findHBSBlocks,
-  processObject,
-  processStringSync,
-} from "@budibase/string-templates"
-import { cloneDeep } from "lodash/fp"
-import * as sdkUtils from "../sdk/utils"
-import env from "../environment"
+import { Job } from "bull"
 import tracer from "dd-trace"
-import { quotas } from "@budibase/pro"
+import { cloneDeep } from "lodash/fp"
+import * as actions from "../automations/actions"
+import * as automationUtils from "../automations/automationUtils"
+import { storeLog } from "../automations/logging"
+import { disableCronById } from "../automations/utils"
+import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { generateAutomationMetadataID, isProdWorkspaceID } from "../db/utils"
+import { AutomationContext } from "../definitions/automations"
+import env from "../environment"
+import { default as AutomationEmitter } from "../events/AutomationEmitter"
+import * as sdkUtils from "../sdk/utils"
+import { WorkerCallback } from "./definitions"
+import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
@@ -250,13 +248,13 @@ class Orchestrator {
 
   async getMetadata(): Promise<AutomationMetadata> {
     const metadataId = generateAutomationMetadataID(this.automation._id!)
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const metadata = await db.tryGet<AutomationMetadata>(metadataId)
     return metadata || { _id: metadataId, errorCount: 0 }
   }
 
   async incrementErrorCount() {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     let err: Error | undefined = undefined
     for (let attempt = 0; attempt < 10; attempt++) {
       const metadata = await this.getMetadata()
@@ -281,8 +279,8 @@ class Orchestrator {
     return undefined
   }
 
-  private isProdApp(): boolean {
-    return isProdAppID(this.appId)
+  private isProd(): boolean {
+    return isProdWorkspaceID(this.appId)
   }
 
   hasErrored(context: AutomationContext): boolean {
@@ -354,7 +352,7 @@ class Orchestrator {
       result.steps.push(...stepResults)
 
       let errorCount = 0
-      if (this.isProdApp() && this.isCron() && this.hasErrored(ctx)) {
+      if (this.isProd() && this.isCron() && this.hasErrored(ctx)) {
         errorCount = (await this.incrementErrorCount()) || 0
       }
 
@@ -699,7 +697,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   }
 
   return context.doInAutomationContext({
-    appId,
+    workspaceId: appId,
     automationId,
     task: async () => {
       await context.ensureSnippetContext()
@@ -724,7 +722,7 @@ export async function executeInThread(
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
-  return await context.doInAppContext(appId, async () => {
+  return await context.doInWorkspaceContext(appId, async () => {
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
@@ -739,7 +737,7 @@ export const removeStalled = async (job: Job<AutomationData>) => {
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
-  await context.doInAppContext(appId, async () => {
+  await context.doInWorkspaceContext(appId, async () => {
     const orchestrator = new Orchestrator(job)
     await orchestrator.stopCron("stalled")
   })

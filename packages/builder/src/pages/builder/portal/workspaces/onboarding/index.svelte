@@ -7,8 +7,8 @@
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
 
-  let name: string = "My first app"
-  let url: string = "my-first-app"
+  let name: string = "My first workspace"
+  let url: string = "my-first-workspace"
   let appId: string | null = null
 
   let loading = false

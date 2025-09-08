@@ -48,8 +48,8 @@
 
 <div>
   <PanelHeader
-    title="Build your first app"
-    subtitle="Name your app and set the URL"
+    title="Create your first workspace"
+    subtitle="Name your workspace and set the URL"
   />
   <FancyForm>
     <FancyInput

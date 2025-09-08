@@ -6,10 +6,10 @@ import {
   users,
 } from "@budibase/backend-core"
 import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
-import { builderMiddleware } from "./builder"
-import { isWebhookEndpoint } from "./utils"
-import { paramResource } from "./resourceId"
 import sdk from "../sdk"
+import { builderMiddleware } from "./builder"
+import { paramResource } from "./resourceId"
+import { isWebhookEndpoint } from "./utils"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
@@ -29,7 +29,7 @@ const checkAuthorized = async (
   permType: PermissionType,
   permLevel: PermissionLevel
 ) => {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   const isGlobalBuilderApi = permType === PermissionType.GLOBAL_BUILDER
   const isCreatorApi = permType === PermissionType.CREATOR
   const isBuilderApi = permType === PermissionType.BUILDER

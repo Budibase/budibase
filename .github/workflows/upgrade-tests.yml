@@ -39,6 +39,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
       - name: Setup Node.js

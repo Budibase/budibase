@@ -1,4 +1,3 @@
-import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import {
   FieldType,
@@ -7,12 +6,13 @@ import {
   RowAttachment,
   Table,
 } from "@budibase/types"
+import { ObjectStoreBuckets } from "../../constants"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
-    const appId = context.getAppId()
-    if (!dbCore.isProdAppID(appId)) {
-      const prodAppId = dbCore.getProdAppID(appId!)
+    const appId = context.getWorkspaceId()
+    if (!dbCore.isProdWorkspaceID(appId)) {
+      const prodAppId = dbCore.getProdWorkspaceID(appId!)
       // if prod exists, then don't allow deleting
       const exists = await dbCore.dbExists(prodAppId)
       if (exists) {
