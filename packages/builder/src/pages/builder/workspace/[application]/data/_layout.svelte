@@ -3,7 +3,7 @@
   import DatasourceNavigator from "@/components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
-  import { datasources } from "@/stores/builder"
+  import { datasources, builderStore } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
@@ -47,7 +47,7 @@
 </script>
 
 <!-- routify:options index=1 -->
-<div class="wrapper">
+<div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
@@ -140,5 +140,11 @@
     width: 12px;
     left: -5px;
     top: 0;
+  }
+  .wrapper.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>
