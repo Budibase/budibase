@@ -1,5 +1,3 @@
-// Import after mocks
-
 import { Upload } from "@aws-sdk/lib-storage"
 import { PassThrough } from "stream"
 import { streamUpload } from "../objectStore"
@@ -7,15 +5,15 @@ import { streamUpload } from "../objectStore"
 // Get mock instances
 const mockUpload = Upload as jest.MockedClass<typeof Upload>
 
-describe("objectStore - streamUpload content type handling (real function)", () => {
+describe("objectStore", () => {
   const mockStream = new PassThrough()
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  describe("actual streamUpload function with content type inference", () => {
-    it("should call Upload with application/javascript for .js files", async () => {
+  describe("streamUpload", () => {
+    it("should upload with application/javascript for .js files", async () => {
       await streamUpload({
         bucket: "test-bucket",
         filename: "budibase-client.js",
@@ -33,7 +31,7 @@ describe("objectStore - streamUpload content type handling (real function)", () 
       })
     })
 
-    it("should call Upload with application/json for .json files", async () => {
+    it("should upload with application/json for .json files", async () => {
       await streamUpload({
         bucket: "test-bucket",
         filename: "manifest.json",
@@ -51,7 +49,7 @@ describe("objectStore - streamUpload content type handling (real function)", () 
       })
     })
 
-    it("should call Upload with image for .svg files", async () => {
+    it("should upload with image for .svg files", async () => {
       await streamUpload({
         bucket: "test-bucket",
         filename: "icon.svg",
