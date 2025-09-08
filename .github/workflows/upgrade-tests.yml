@@ -67,13 +67,15 @@ jobs:
           build-args: |
             BUDIBASE_VERSION=0.0.0+local
             TARGETBUILD=single
-          outputs: type=docker,dest=/tmp/budibase-${{ github.run_id }}.tar
+          outputs: type=docker,dest=/tmp/budibase-current.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Upload Docker image
         uses: actions/upload-artifact@v4
         with:
-          name: budibase-current-image-${{ github.run_id }}
-          path: /tmp/budibase-${{ github.run_id }}.tar
+          name: budibase-current-image
+          path: /tmp/budibase-current.tar
           retention-days: 1
 
   get-test-config:
@@ -180,12 +182,12 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v4
         with:
-          name: budibase-current-image-${{ github.run_id }}
+          name: budibase-current-image
           path: /tmp
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/budibase-${{ github.run_id }}.tar
+          docker load -i /tmp/budibase-current.tar
           echo "✅ Docker image loaded successfully"
 
       - name: Run upgrade test
