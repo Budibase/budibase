@@ -43,7 +43,25 @@ async function buildAll() {
     })
   }
 
-  console.log("Building client...")
+  console.log("Building new client...")
+  await build({
+    ...config,
+    define: {
+      ...config.define,
+      __USE_DYNAMIC_LOADING__: true,
+    },
+
+    build: {
+      ...config.build,
+      lib: {
+        ...config.build.lib,
+        fileName: () => "budibase-client.new.js",
+      },
+    },
+    configFile: "./vite.config.mjs",
+  })
+
+  console.log("Building old client...")
   await build({
     ...config,
     configFile: "./vite.config.mjs",
