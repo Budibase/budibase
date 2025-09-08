@@ -527,7 +527,7 @@
   }
 
   .operator-picker {
-    width: 72px;
+    width: 74px;
   }
 
   .empty-filter-picker {

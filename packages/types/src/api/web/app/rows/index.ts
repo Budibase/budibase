@@ -1,10 +1,16 @@
-import { SearchFilters } from "../../../../sdk"
-import { Row } from "../../../../documents"
-import { SortOrder } from "../../pagination"
 import { ReadStream } from "fs"
 import stream from "node:stream"
+import { Row } from "../../../../documents"
+import { SearchFilters } from "../../../../sdk"
+import { SortOrder } from "../../pagination"
 
-export * from "./search"
+export {
+  searchRowRequestValidator,
+  type PaginatedSearchRowResponse,
+  type SearchRowRequest,
+  type SearchRowResponse,
+  type SearchViewRowRequest,
+} from "./search"
 
 export interface FetchEnrichedRowResponse extends Row {}
 

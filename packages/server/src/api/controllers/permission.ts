@@ -1,23 +1,23 @@
-import { permissions, roles, context } from "@budibase/backend-core"
+import { context, permissions, roles } from "@budibase/backend-core"
 import {
-  UserCtx,
-  GetResourcePermsResponse,
-  ResourcePermissionInfo,
-  GetDependantResourcesResponse,
-  AddPermissionResponse,
   AddPermissionRequest,
-  RemovePermissionRequest,
-  RemovePermissionResponse,
-  FetchResourcePermissionInfoResponse,
+  AddPermissionResponse,
   FetchBuiltinPermissionsResponse,
   FetchPermissionLevelsRequest,
+  FetchResourcePermissionInfoResponse,
+  GetDependantResourcesResponse,
+  GetResourcePermsResponse,
+  RemovePermissionRequest,
+  RemovePermissionResponse,
+  ResourcePermissionInfo,
+  UserCtx,
 } from "@budibase/types"
+import sdk from "../../sdk"
+import { PermissionUpdateType } from "../../sdk/workspace/permissions"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../utilities/security"
-import sdk from "../../sdk"
-import { PermissionUpdateType } from "../../sdk/app/permissions"
 
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
@@ -35,7 +35,7 @@ export function fetchLevels(ctx: UserCtx<void, FetchPermissionLevelsRequest>) {
 export async function fetch(
   ctx: UserCtx<void, FetchResourcePermissionInfoResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const dbRoles = await sdk.permissions.getAllDBRoles(db)
   let permissions: Record<string, Record<string, string>> = {}
   // create an object with structure role ID -> resource ID -> level
