@@ -14,8 +14,12 @@ const ignoredWarnings = [
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
+  const useDynamicLoading = process.env.USE_DYNAMIC_LOADING === "true"
 
   return {
+    define: {
+      __USE_DYNAMIC_LOADING__: JSON.stringify(useDynamicLoading),
+    },
     server: {
       open: false,
     },
