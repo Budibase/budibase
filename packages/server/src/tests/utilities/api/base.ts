@@ -1,12 +1,11 @@
-import SwaggerParser from "@apidevtools/swagger-parser"
+import jestOpenAPI from "jest-openapi"
 import { spec } from "../../../../specs/generate"
 import TestConfiguration from "../TestConfiguration"
 import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 import { getServer } from "../../../app"
 
-// Validate OpenAPI spec on startup
-SwaggerParser.validate(spec() as any).catch(console.error)
+jestOpenAPI(spec() as any)
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"
