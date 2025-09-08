@@ -1,15 +1,7 @@
 <script>
-  import CodeScannerNew from "./CodeScanner/CodeScanner.new.svelte"
-  import CodeScannerOld from "./CodeScanner/CodeScanner.old.svelte"
+  import { onMount } from "svelte"
 
   let CodeScannerComponent
-
-  // @ts-ignore
-  if (__USE_DYNAMIC_LOADING__) {
-    CodeScannerComponent = CodeScannerNew
-  } else {
-    CodeScannerComponent = CodeScannerOld
-  }
 
   export let value
   export let disabled = false
@@ -22,20 +14,35 @@
   export let preferredCamera = "environment"
   export let defaultZoom = 1
   export let validator
+
+  onMount(async () => {
+    // eslint-disable-next-line no-undef
+    if (__USE_DYNAMIC_LOADING__) {
+      CodeScannerComponent = (
+        await import("./CodeScanner/CodeScanner.new.svelte")
+      ).default
+    } else {
+      CodeScannerComponent = (
+        await import("./CodeScanner/CodeScanner.old.svelte")
+      ).default
+    }
+  })
 </script>
 
-<svelte:component
-  this={CodeScannerComponent}
-  {value}
-  {disabled}
-  {allowManualEntry}
-  {autoConfirm}
-  {scanButtonText}
-  {beepOnScan}
-  {beepFrequency}
-  {customFrequency}
-  {preferredCamera}
-  {defaultZoom}
-  {validator}
-  on:change
-/>
+{#if CodeScannerComponent}
+  <svelte:component
+    this={CodeScannerComponent}
+    {value}
+    {disabled}
+    {allowManualEntry}
+    {autoConfirm}
+    {scanButtonText}
+    {beepOnScan}
+    {beepFrequency}
+    {customFrequency}
+    {preferredCamera}
+    {defaultZoom}
+    {validator}
+    on:change
+  />
+{/if}

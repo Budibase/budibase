@@ -1,18 +1,19 @@
 <script>
-import ApexChartNew from "./ApexChart/ApexChart.new.svelte"
-import ApexChartOld from "./ApexChart/ApexChart.old.svelte"
+  import { onMount } from "svelte"
   
-
   let ApexChartComponent
-
-  // @ts-ignore
-  if (__USE_DYNAMIC_LOADING__) {
-    ApexChartComponent = ApexChartNew
-  } else {
-    ApexChartComponent = ApexChartOld
-  }
-
   export let options
+
+  onMount(async () => {
+    // eslint-disable-next-line no-undef
+    if (__USE_DYNAMIC_LOADING__) {
+      ApexChartComponent = (await import("./ApexChart/ApexChart.new.svelte")).default
+    } else {
+      ApexChartComponent = (await import("./ApexChart/ApexChart.old.svelte")).default
+    }
+  })
 </script>
 
-<svelte:component this={ApexChartComponent} {options} />
+{#if ApexChartComponent}
+  <svelte:component this={ApexChartComponent} {options} />
+{/if}
