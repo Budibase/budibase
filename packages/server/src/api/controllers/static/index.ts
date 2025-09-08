@@ -2,7 +2,6 @@ import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
-  cache,
   configs,
   context,
   features,
@@ -391,8 +390,6 @@ export const serveClientLibrary = async function (
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
-
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
@@ -413,8 +410,6 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   const { file } = ctx.params
 
   const appId = context.getAppId()
-
-  ctx.set("Cache-Control", `private, max-age=${cache.TTL.ONE_DAY}`)
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
