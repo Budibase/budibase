@@ -126,6 +126,8 @@
     width: 2px;
     background: var(--spectrum-global-color-gray-200);
     transition: background 130ms ease-out;
+    min-width: 2px;
+    z-index: 2;
   }
   .divider:hover {
     background: var(--spectrum-global-color-gray-300);
