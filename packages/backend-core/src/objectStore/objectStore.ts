@@ -271,19 +271,6 @@ export async function streamUpload({
       await objectStore.putBucketLifecycleConfiguration(ttlConfig)
     }
 
-    // Set content type for certain known extensions
-    if (filename?.endsWith(".js")) {
-      extra = {
-        ...extra,
-        ContentType: "application/javascript",
-      }
-    } else if (filename?.endsWith(".svg")) {
-      extra = {
-        ...extra,
-        ContentType: "image",
-      }
-    }
-
     let contentType = type
     if (!contentType) {
       contentType = extension
