@@ -133,8 +133,9 @@ export async function revertClientLibrary(appId: string) {
 
   let manifestContent
   let hasBackup = false
+  const restoredFiles = new Set<string>()
 
-  // First try to process files from the backup folder
+  // First, restore all files from the backup folder
   await utils.parallelForeach(
     objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}/.bak`),
     async file => {
@@ -147,7 +148,8 @@ export async function revertClientLibrary(appId: string) {
       )
 
       // Restore to original location
-      const restoreKey = file.Key!.replace(`${appId}.bak`, appId)
+      const restoreKey = file.Key!.replace(`${appId}/.bak`, appId)
+      restoredFiles.add(restoreKey)
 
       // Read manifest content if this is the manifest file
       if (restoreKey.endsWith("manifest.json")) {
@@ -165,6 +167,21 @@ export async function revertClientLibrary(appId: string) {
     },
     5
   )
+
+  // After successful restore, clean up any extra files that weren't in backup
+  if (hasBackup) {
+    await utils.parallelForeach(
+      objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
+      async file => {
+        if (!file.Key?.includes("/.bak/") && 
+            !file.Key?.endsWith(".bak") && 
+            !restoredFiles.has(file.Key!)) {
+          await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.Key!)
+        }
+      },
+      5
+    )
+  }
 
   // If no backup folder found, try to find old .bak files
   if (!hasBackup) {
