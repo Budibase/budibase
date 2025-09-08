@@ -1,63 +1,63 @@
 import {
-  getDevelopmentAppID,
-  getProdAppID,
-  isDevAppID,
-  isProdAppID,
+  getDevWorkspaceID,
+  getProdWorkspaceID,
+  isDevWorkspaceID,
+  isProdWorkspaceID,
 } from "../../docIds/conversions"
-import { generateAppID } from "../utils"
+import { generateWorkspaceID } from "../utils"
 
 describe("utils", () => {
-  describe("generateAppID", () => {
+  describe("generateWorkspaceID", () => {
     function getID() {
-      const appId = generateAppID()
-      const split = appId.split("_")
+      const workspaceId = generateWorkspaceID()
+      const split = workspaceId.split("_")
       const uuid = split[split.length - 1]
-      const devAppId = `app_dev_${uuid}`
-      return { appId, devAppId, split, uuid }
+      const devWorkspaceId = `app_dev_${uuid}`
+      return { workspaceId, devWorkspaceId, split, uuid }
     }
 
-    it("should be able to generate a new app ID", () => {
-      expect(generateAppID().startsWith("app_")).toEqual(true)
+    it("should be able to generate a new workspace ID", () => {
+      expect(generateWorkspaceID().startsWith("app_")).toEqual(true)
     })
 
-    it("should be able to convert a production app ID to development", () => {
-      const { appId, uuid } = getID()
-      expect(getDevelopmentAppID(appId)).toEqual(`app_dev_${uuid}`)
+    it("should be able to convert a production workspace ID to development", () => {
+      const { workspaceId, uuid } = getID()
+      expect(getDevWorkspaceID(workspaceId)).toEqual(`app_dev_${uuid}`)
     })
 
-    it("should be able to convert a development app ID to development", () => {
-      const { devAppId, uuid } = getID()
-      expect(getDevelopmentAppID(devAppId)).toEqual(`app_dev_${uuid}`)
+    it("should be able to convert a development workspace ID to development", () => {
+      const { devWorkspaceId, uuid } = getID()
+      expect(getDevWorkspaceID(devWorkspaceId)).toEqual(`app_dev_${uuid}`)
     })
 
     it("should be able to convert a development ID to a production", () => {
-      const { devAppId, uuid } = getID()
-      expect(getProdAppID(devAppId)).toEqual(`app_${uuid}`)
+      const { devWorkspaceId, uuid } = getID()
+      expect(getProdWorkspaceID(devWorkspaceId)).toEqual(`app_${uuid}`)
     })
 
     it("should be able to convert a production ID to production", () => {
-      const { appId, uuid } = getID()
-      expect(getProdAppID(appId)).toEqual(`app_${uuid}`)
+      const { workspaceId, uuid } = getID()
+      expect(getProdWorkspaceID(workspaceId)).toEqual(`app_${uuid}`)
     })
 
-    it("should be able to confirm dev app ID is development", () => {
-      const { devAppId } = getID()
-      expect(isDevAppID(devAppId)).toEqual(true)
+    it("should be able to confirm dev workspace ID is development", () => {
+      const { devWorkspaceId } = getID()
+      expect(isDevWorkspaceID(devWorkspaceId)).toEqual(true)
     })
 
-    it("should be able to confirm prod app ID is not development", () => {
-      const { appId } = getID()
-      expect(isDevAppID(appId)).toEqual(false)
+    it("should be able to confirm prod workspace ID is not development", () => {
+      const { workspaceId } = getID()
+      expect(isDevWorkspaceID(workspaceId)).toEqual(false)
     })
 
-    it("should be able to confirm prod app ID is prod", () => {
-      const { appId } = getID()
-      expect(isProdAppID(appId)).toEqual(true)
+    it("should be able to confirm prod workspace ID is prod", () => {
+      const { workspaceId } = getID()
+      expect(isProdWorkspaceID(workspaceId)).toEqual(true)
     })
 
-    it("should be able to confirm dev app ID is not prod", () => {
-      const { devAppId } = getID()
-      expect(isProdAppID(devAppId)).toEqual(false)
+    it("should be able to confirm dev workspace ID is not prod", () => {
+      const { devWorkspaceId } = getID()
+      expect(isProdWorkspaceID(devWorkspaceId)).toEqual(false)
     })
   })
 })

@@ -133,7 +133,7 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
 }
 
 export async function syncDefinition(): Promise<void> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let existing: SQLiteDefinition | undefined
   try {
     existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
@@ -153,7 +153,7 @@ export async function syncDefinition(): Promise<void> {
 }
 
 export async function addTable(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let definition: PreSaveSQLiteDefinition | SQLiteDefinition
   try {
     definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
@@ -168,7 +168,7 @@ export async function addTable(table: Table) {
 }
 
 export async function removeTable(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   try {
     const [tables, definition] = await Promise.all([
       tablesSdk.getAllInternalTables(),

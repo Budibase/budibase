@@ -16,19 +16,19 @@ jest.mock("@budibase/backend-core", () => {
     },
     context: {
       ...core.context,
-      getAppDB: jest.fn(),
+      getWorkspaceDB: jest.fn(),
     },
   }
 })
 
-let appId: string
-let appDb: Database
+let workspaceId: string
+let workspaceDb: Database
 const ROLE_NAME = "newRole"
 
 async function addAppMetadata() {
-  await appDb.put({
+  await workspaceDb.put({
     _id: "app_metadata",
-    appId: appId,
+    appId: workspaceId,
     name: "New App",
     version: "version",
     url: "url",
@@ -38,8 +38,8 @@ async function addAppMetadata() {
 async function updateAppMetadata(
   update: Partial<WithoutDocMetadata<Workspace>>
 ) {
-  const app = await appDb.get("app_metadata")
-  await appDb.put({
+  const app = await workspaceDb.get("app_metadata")
+  await workspaceDb.put({
     ...app,
     ...update,
   })
@@ -60,13 +60,13 @@ describe("/api/global/roles", () => {
   })
 
   beforeEach(async () => {
-    appId = db.generateAppID(config.tenantId)
-    appDb = db.getDB(appId)
-    const mockAppDB = context.getAppDB as jest.Mock
-    mockAppDB.mockReturnValue(appDb)
+    workspaceId = db.generateWorkspaceID(config.tenantId)
+    workspaceDb = db.getDB(workspaceId)
+    const mockWorkspaceDB = context.getWorkspaceDB as jest.Mock
+    mockWorkspaceDB.mockReturnValue(workspaceDb)
 
     await addAppMetadata()
-    await appDb.put(role)
+    await workspaceDb.put(role)
   })
 
   afterAll(async () => {
@@ -81,8 +81,10 @@ describe("/api/global/roles", () => {
     it("retrieves roles", async () => {
       const res = await config.api.roles.get()
       expect(res.body).toBeDefined()
-      expect(res.body[appId].roles.length).toEqual(5)
-      expect(res.body[appId].roles.map((r: any) => r._id)).toContain(ROLE_NAME)
+      expect(res.body[workspaceId].roles.length).toEqual(5)
+      expect(res.body[workspaceId].roles.map((r: any) => r._id)).toContain(
+        ROLE_NAME
+      )
     })
 
     it.each(["3.0.0", "3.0.1", "3.1.0", "3.0.0+2146.b125a7c"])(
@@ -91,7 +93,7 @@ describe("/api/global/roles", () => {
         await updateAppMetadata({ creationVersion })
         const res = await config.api.roles.get()
         expect(res.body).toBeDefined()
-        expect(res.body[appId].roles.map((r: any) => r._id)).toEqual([
+        expect(res.body[workspaceId].roles.map((r: any) => r._id)).toEqual([
           ROLE_NAME,
           roles.BUILTIN_ROLE_IDS.ADMIN,
           roles.BUILTIN_ROLE_IDS.BASIC,
@@ -106,7 +108,7 @@ describe("/api/global/roles", () => {
         await updateAppMetadata({ creationVersion })
         const res = await config.api.roles.get()
         expect(res.body).toBeDefined()
-        expect(res.body[appId].roles.map((r: any) => r._id)).toEqual([
+        expect(res.body[workspaceId].roles.map((r: any) => r._id)).toEqual([
           ROLE_NAME,
           roles.BUILTIN_ROLE_IDS.ADMIN,
           roles.BUILTIN_ROLE_IDS.POWER,
@@ -122,7 +124,7 @@ describe("/api/global/roles", () => {
         await updateAppMetadata({ creationVersion })
         const res = await config.api.roles.get()
 
-        expect(res.body[appId].roles.map((r: any) => r._id)).toEqual([
+        expect(res.body[workspaceId].roles.map((r: any) => r._id)).toEqual([
           ROLE_NAME,
           roles.BUILTIN_ROLE_IDS.ADMIN,
           roles.BUILTIN_ROLE_IDS.POWER,
@@ -135,7 +137,7 @@ describe("/api/global/roles", () => {
 
   describe("GET api/global/roles/:appId", () => {
     it("finds a role by appId", async () => {
-      const res = await config.api.roles.find(appId)
+      const res = await config.api.roles.find(workspaceId)
       expect(res.body).toBeDefined()
       expect(res.body.name).toEqual("New App")
     })
@@ -160,9 +162,9 @@ describe("/api/global/roles", () => {
         app_test: "role1",
       }
       const userResponse = await config.createUser(user)
-      const res = await config.api.roles.remove(appId)
+      const res = await config.api.roles.remove(workspaceId)
       const updatedUser = await config.api.users.getUser(userResponse._id!)
-      expect(updatedUser.body.roles).not.toHaveProperty(appId)
+      expect(updatedUser.body.roles).not.toHaveProperty(workspaceId)
       expect(res.body.message).toEqual("App role removed from all users")
     })
 
@@ -170,7 +172,7 @@ describe("/api/global/roles", () => {
       const builderUser = await createBuilderUser()
 
       const res = await config.withUser(builderUser, () =>
-        config.api.roles.remove(appId, { status: 403 })
+        config.api.roles.remove(workspaceId, { status: 403 })
       )
       expect(res.body.message).toBe("Admin user only endpoint.")
     })

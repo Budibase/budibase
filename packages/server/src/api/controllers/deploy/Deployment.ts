@@ -45,7 +45,7 @@ export default class Deployment {
   getJSON() {
     const obj: any = {
       _id: this._id,
-      appId: context.getAppId(),
+      appId: context.getWorkspaceId(),
       status: this.status,
     }
     if (this.err) {

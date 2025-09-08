@@ -12,7 +12,7 @@ export async function fetchAppComponentDefinitions(
   ctx: UserCtx<void, FetchComponentDefinitionResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const app = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     let componentManifests = await Promise.all(

@@ -26,7 +26,7 @@ class AutomationEmitter implements ContextEmitter {
   }
 
   async getMaxAutomationChain() {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const appMetadata = await db.get<Workspace>(DocumentType.APP_METADATA)
     let chainAutomations = appMetadata?.automations?.chainAutomations
 
