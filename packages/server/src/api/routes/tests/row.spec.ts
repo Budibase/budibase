@@ -2,51 +2,51 @@ import * as setup from "./utilities"
 
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 
-import tk from "timekeeper"
-import emitter from "../../../../src/events"
-import { outputProcessing } from "../../../utilities/rowProcessor"
 import {
   context,
-  setEnv,
   InternalTable,
+  setEnv,
   tenancy,
   utils,
 } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
+import { JsTimeoutError } from "@budibase/string-templates"
 import {
   AIOperationEnum,
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   DeleteRow,
   FieldSchema,
   FieldType,
-  BBReferenceFieldSubType,
+  FormulaResponseType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
   QuotaUsageType,
+  RelationSchemaField,
   RelationshipType,
   Row,
+  RowExportFormat,
   SaveTableRequest,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
-  TableSchema,
-  JsonFieldSubType,
-  RowExportFormat,
-  RelationSchemaField,
-  FormulaResponseType,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import _, { merge } from "lodash"
-import * as uuid from "uuid"
 import { Knex } from "knex"
+import _, { merge } from "lodash"
+import nock from "nock"
+import tk from "timekeeper"
+import * as uuid from "uuid"
+import emitter from "../../../../src/events"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
-import { JsTimeoutError } from "@budibase/string-templates"
-import { isDate } from "../../../utilities"
-import nock from "nock"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { isDate } from "../../../utilities"
+import { outputProcessing } from "../../../utilities/rowProcessor"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -2301,7 +2301,7 @@ if (descriptions.length) {
           const row = await config.api.row.save(testTable._id!, draftRow)
 
           await withEnv({ SELF_HOSTED: "true" }, async () => {
-            return context.doInAppContext(config.getAppId(), async () => {
+            return context.doInWorkspaceContext(config.getAppId(), async () => {
               const enriched: Row[] = await outputProcessing(testTable, [row])
               const [targetRow] = enriched
               const attachmentEntries = Array.isArray(targetRow[field])
@@ -3645,6 +3645,12 @@ if (descriptions.length) {
               OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
             })
 
+            // Ensure MockAgent is installed for OpenAI interceptors
+            const { installHttpMocking } = require("../../../tests/jestEnv")
+            installHttpMocking()
+
+            //We need to supply multiple interceptors.
+            mockChatGPTResponse("Mock LLM Response")
             mockChatGPTResponse("Mock LLM Response")
 
             table = await config.api.table.save(

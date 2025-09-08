@@ -1,39 +1,40 @@
 import TestConfiguration from "../TestConfiguration"
-import { PermissionAPI } from "./permission"
-import { RowAPI } from "./row"
-import { TableAPI } from "./table"
-import { ViewV2API } from "./viewV2"
-import { DatasourceAPI } from "./datasource"
-import { LegacyViewAPI } from "./legacyView"
-import { ScreenAPI } from "./screen"
-import { ApplicationAPI } from "./application"
-import { BackupAPI } from "./backup"
-import { AttachmentAPI } from "./attachment"
-import { UserAPI } from "./user"
-import { QueryAPI } from "./query"
-import { RoleAPI } from "./role"
-import { TemplateAPI } from "./template"
-import { RowActionAPI } from "./rowAction"
-import { AutomationAPI } from "./automation"
-import { PluginAPI } from "./plugin"
-import { WebhookAPI } from "./webhook"
-import { EnvironmentAPI } from "./environment"
-import { UserPublicAPI } from "./public/user"
-import { RowPublicAPI } from "./public/row"
-import { MiscAPI } from "./misc"
-import { OAuth2API } from "./oauth2"
-import { AssetsAPI } from "./assets"
 import { AIAPI } from "./ai"
-import { WorkspaceAppAPI } from "./workspaceApp"
-import { ResourceAPI } from "./resource"
+import { AssetsAPI } from "./assets"
+import { AttachmentAPI } from "./attachment"
+import { AutomationAPI } from "./automation"
+import { BackupAPI } from "./backup"
+import { DatasourceAPI } from "./datasource"
 import { DeployAPI } from "./deploy"
+import { EnvironmentAPI } from "./environment"
+import { LegacyViewAPI } from "./legacyView"
+import { MiscAPI } from "./misc"
 import { NavigationAPI } from "./navigation"
+import { OAuth2API } from "./oauth2"
+import { PermissionAPI } from "./permission"
+import { PluginAPI } from "./plugin"
+import { RowPublicAPI } from "./public/row"
+import { UserPublicAPI } from "./public/user"
+import { QueryAPI } from "./query"
 import { RecaptchaAPI } from "./recaptcha"
+import { ResourceAPI } from "./resource"
+import { RoleAPI } from "./role"
 import { RoutingAPI } from "./routing"
+import { RowAPI } from "./row"
+import { RowActionAPI } from "./rowAction"
+import { ScreenAPI } from "./screen"
+import { TableAPI } from "./table"
+import { TemplateAPI } from "./template"
+import { UserAPI } from "./user"
+import { ViewV2API } from "./viewV2"
+import { WebhookAPI } from "./webhook"
+import { WorkspaceAPI } from "./workspace"
+import { WorkspaceAppAPI } from "./workspaceApp"
+import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
   ai: AIAPI
-  application: ApplicationAPI
+  workspace: WorkspaceAPI
   attachment: AttachmentAPI
   automation: AutomationAPI
   backup: BackupAPI
@@ -61,6 +62,7 @@ export default class API {
   navigation: NavigationAPI
   recaptcha: RecaptchaAPI
   routing: RoutingAPI
+  workspaceFavourites: WorkspaceFavouriteAPI
 
   public: {
     user: UserPublicAPI
@@ -69,7 +71,7 @@ export default class API {
 
   constructor(config: TestConfiguration) {
     this.ai = new AIAPI(config)
-    this.application = new ApplicationAPI(config)
+    this.workspace = new WorkspaceAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
@@ -97,6 +99,7 @@ export default class API {
     this.navigation = new NavigationAPI(config)
     this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
+    this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

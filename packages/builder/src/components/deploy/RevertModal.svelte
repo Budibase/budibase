@@ -40,11 +40,11 @@
     onConfirm={revert}
     disabled={appName !== $appStore.name}
   >
-    <span
-      >The changes you have made will be deleted and the application reverted
-      back to its production state.</span
-    >
-    <span>Please enter your app name to continue.</span>
+    <span>
+      The changes you have made will be deleted and the workspace reverted back
+      to its production state.
+    </span>
+    <span>Please enter your workspace name to continue.</span>
     <Input bind:value={appName} />
   </ModalContent>
 </Modal>

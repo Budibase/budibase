@@ -1,6 +1,6 @@
-import controller from "../../controllers/public/applications"
 import { Endpoint } from "@budibase/backend-core"
-import { nameValidator, applicationValidator } from "../utils/validators"
+import controller from "../../controllers/public/workspaces"
+import { applicationValidator, nameValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -9,6 +9,7 @@ const read = [],
  * @openapi
  * /applications:
  *   post:
+ *     deprecated: true
  *     operationId: appCreate
  *     summary: Create an application
  *     tags:
@@ -42,6 +43,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   put:
+ *     deprecated: true
  *     operationId: appUpdate
  *     summary: Update an application
  *     tags:
@@ -75,6 +77,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   delete:
+ *     deprecated: true
  *     operationId: appDestroy
  *     summary: Delete an application
  *     tags:
@@ -98,6 +101,7 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  * @openapi
  * /applications/{appId}/unpublish:
  *   post:
+ *     deprecated: true
  *     operationId: appUnpublish
  *     summary: Unpublish an application
  *     tags:
@@ -116,6 +120,7 @@ write.push(
  * @openapi
  * /applications/{appId}/publish:
  *   post:
+ *     deprecated: true
  *     operationId: appPublish
  *     summary: Publish an application
  *     tags:
@@ -141,6 +146,7 @@ write.push(
  * @openapi
  * /applications/{appId}/import:
  *   post:
+ *     deprecated: true
  *     operationId: appImport
  *     summary: Import an app to an existing app 🔒
  *     description: This endpoint is only available on a business or enterprise license.
@@ -175,6 +181,7 @@ write.push(
  * @openapi
  * /applications/{appId}/export:
  *   post:
+ *     deprecated: true
  *     operationId: appExport
  *     summary: Export an app 🔒
  *     description: This endpoint is only available on a business or enterprise license.
@@ -205,6 +212,7 @@ read.push(
  * @openapi
  * /applications/{appId}:
  *   get:
+ *     deprecated: true
  *     operationId: appGetById
  *     summary: Retrieve an application
  *     tags:
@@ -228,6 +236,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  * @openapi
  * /applications/search:
  *   post:
+ *     deprecated: true
  *     operationId: appSearch
  *     summary: Search for applications
  *     description: Based on application properties (currently only name) search for applications.

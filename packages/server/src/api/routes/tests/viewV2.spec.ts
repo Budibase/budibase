@@ -1,3 +1,6 @@
+import { context, db, events, roles, setEnv } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
   ArrayOperator,
@@ -9,6 +12,7 @@ import {
   EmptyFilterOption,
   FieldSchema,
   FieldType,
+  FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
   JsonTypes,
@@ -35,15 +39,11 @@ import {
   ViewV2,
   ViewV2Schema,
   ViewV2Type,
-  FormulaType,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
-import { quotas } from "@budibase/pro"
-import { context, db, events, roles, setEnv } from "@budibase/backend-core"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -944,7 +944,12 @@ if (descriptions.length) {
                   OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
                 })
 
-                mockChatGPTResponse(prompt => {
+                // Ensure MockAgent is installed for OpenAI interceptors
+                const { installHttpMocking } = require("../../../tests/jestEnv")
+                installHttpMocking()
+
+                // Set up 3 interceptors for the 3 animals that will be processed
+                const responseFunction = (prompt: string) => {
                   if (prompt.includes("elephant")) {
                     return "big"
                   }
@@ -955,7 +960,12 @@ if (descriptions.length) {
                     return "big"
                   }
                   return "unknown"
-                })
+                }
+
+                // Each row save will trigger AI processing
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
               })
 
               afterAll(() => {
@@ -1797,11 +1807,19 @@ if (descriptions.length) {
             const getPersistedView = async () =>
               (await config.api.table.get(tableId)).views![view.name]
 
-            expect(await getPersistedView()).toBeDefined()
+            const first = (await getPersistedView()) as ViewV2
+            expect(first).toBeDefined()
 
             await config.api.viewV2.delete(view.id)
 
             expect(await getPersistedView()).toBeUndefined()
+
+            expect(events.view.deleted).toHaveBeenCalledTimes(1)
+
+            expect(events.view.deleted).toHaveBeenCalledWith(
+              expect.objectContaining({ name: first.name, id: first.id }),
+              config.appId
+            )
           })
         })
 
@@ -1952,8 +1970,8 @@ if (descriptions.length) {
             const rawView = table.views![res.name] as ViewV2
             delete rawView.queryUI
 
-            await context.doInAppContext(config.getAppId(), async () => {
-              const db = context.getAppDB()
+            await context.doInWorkspaceContext(config.getAppId(), async () => {
+              const db = context.getWorkspaceDB()
 
               if (!rawDatasource) {
                 await db.put(table)

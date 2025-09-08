@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { initialise } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, admin, auth, featureFlags } from "@/stores/portal"
+  import { appsStore, admin, auth, appCreationStore } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -18,8 +18,6 @@
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
   import type { AppTemplate } from "@/types"
-
-  export let template: AppTemplate | null
 
   let creating = false
   let defaultAppName: string
@@ -36,6 +34,8 @@
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
   const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
+
+  $: template = $appCreationStore.template
 
   $: {
     const { url } = $values
@@ -58,10 +58,10 @@
         : null
       defaultAppName =
         lastChar && lastChar.toLowerCase() == "s"
-          ? `${$auth.user.firstName} ${appOrWorkspace}`
-          : `${$auth.user.firstName}s ${appOrWorkspace}`
+          ? `${$auth.user.firstName} workspace`
+          : `${$auth.user.firstName}s workspace`
     } else {
-      defaultAppName = `My ${appOrWorkspace}`
+      defaultAppName = `My workspace`
     }
 
     $values.name = resolveAppName(template, defaultAppName)
@@ -69,7 +69,7 @@
     await setupValidation()
   })
 
-  $: appPrefix = `/${appOrWorkspace}`
+  $: appPrefix = `/workspace`
 
   $: appUrl = `${window.location.origin}${
     $values.url
@@ -106,8 +106,8 @@
 
   const setupValidation = async () => {
     const applications = svelteGet(appsStore).apps
-    appValidation.name(validation, { apps: applications }, appOrWorkspace)
-    appValidation.url(validation, { apps: applications }, appOrWorkspace)
+    appValidation.name(validation, { apps: applications })
+    appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })
 
     encryptionValidation.addValidatorType("encryptionPassword", "text", true)
@@ -137,11 +137,13 @@
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
-      } else if (template) {
+      } else if (template && !template.fromFile) {
         data.append("useTemplate", "true")
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
       }
+
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
@@ -162,7 +164,7 @@
         await auth.getSelf()
       }
 
-      $goto(`/builder/app/${createdApp.instance._id}`)
+      $goto(`/builder/workspace/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
       throw error
@@ -172,15 +174,10 @@
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
 
-  let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
-
   $: stepConfig = {
     [Step.CONFIG]: {
-      title: `Create your ${appOrWorkspace}`,
-      confirmText: template?.fromFile
-        ? `Import ${appOrWorkspace}`
-        : `Create ${appOrWorkspace}`,
+      title: `Create your workspace`,
+      confirmText: template?.fromFile ? `Import workspace` : `Create workspace`,
       onConfirm: async () => {
         if (encryptedFile) {
           currentStep = Step.SET_PASSWORD
@@ -189,9 +186,7 @@
           try {
             await createNewApp()
           } catch (error: any) {
-            notifications.error(
-              `Error creating ${appOrWorkspace} - ${error.message}`
-            )
+            notifications.error(`Error creating workspace - ${error.message}`)
           }
         }
       },
@@ -199,12 +194,12 @@
     },
     [Step.SET_PASSWORD]: {
       title: "Provide the export password",
-      confirmText: `Import ${appOrWorkspace}`,
+      confirmText: `Import workspace`,
       onConfirm: async () => {
         try {
           await createNewApp()
         } catch (e: any) {
-          let message = `Error creating ${appOrWorkspace}`
+          let message = `Error creating workspace`
           if (e.message) {
             message += `: ${lowercase(e.message)}`
           }

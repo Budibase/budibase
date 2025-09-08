@@ -50,7 +50,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ConfirmDialog
   bind:this={deletionModal}
-  title="Delete app"
+  title={`Delete workspace`}
   okText="Delete"
   onOk={deleteApp}
   onCancel={() => (deletionConfirmationAppName = null)}
@@ -62,7 +62,7 @@
   </span>?
 
   <br />
-  Please enter the app name below to confirm.
+  Please enter the workspace name below to confirm.
   <br /><br />
   <Input bind:value={deletionConfirmationAppName} placeholder={appName} />
 </ConfirmDialog>

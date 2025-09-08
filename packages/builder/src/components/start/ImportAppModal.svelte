@@ -30,9 +30,9 @@
       const pkg = await API.fetchAppPackage(appId)
       await initialise(pkg)
 
-      notifications.success("App updated successfully")
+      notifications.success("Workspace updated successfully")
     } catch (err) {
-      notifications.error(`Failed to update app - ${err.message || err}`)
+      notifications.error(`Failed to update workspace - ${err.message || err}`)
     }
   }
 </script>
@@ -43,15 +43,15 @@
   onConfirm={updateApp}
   bind:disabled
 >
-  <Body size="S"
-    >Updating an app using an app export will replace all tables, datasources,
-    queries, screens and automations. It is recommended to perform a backup
-    before running this operation.</Body
-  >
+  <Body size="S">
+    Updating a workspace using an export bundle will replace all tables,
+    datasources, queries, screens and automations. It is recommended to perform
+    a backup before running this operation.
+  </Body>
   <Layout noPadding gap="XS">
     <Dropzone
       gallery={false}
-      label="App export"
+      label={"Workspace export"}
       on:change={e => {
         file = e.detail?.[0]
         encrypted = file?.name?.endsWith(".enc.tar.gz")

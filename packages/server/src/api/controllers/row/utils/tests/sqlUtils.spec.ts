@@ -1,3 +1,4 @@
+import { generator } from "@budibase/backend-core/tests"
 import {
   AIOperationEnum,
   CalculationType,
@@ -8,17 +9,16 @@ import {
   ViewV2,
   ViewV2Type,
 } from "@budibase/types"
-import { buildSqlFieldList } from "../sqlUtils"
-import { structures } from "../../../../routes/tests/utilities"
-import { generator } from "@budibase/backend-core/tests"
 import { generateViewID } from "../../../../../db/utils"
+import { structures } from "../../../../routes/tests/utilities"
+import { buildSqlFieldList } from "../sqlUtils"
 
+import { context } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../../integrations/tests/utils"
-import { context } from "@budibase/backend-core"
 
 const descriptions = datasourceDescribe({
   only: [DatabaseName.POSTGRES],
@@ -196,7 +196,7 @@ if (descriptions.length) {
         allTables,
         opts
       ) => {
-        return context.doInAppContext(config.getAppId(), () =>
+        return context.doInWorkspaceContext(config.getAppId(), () =>
           buildSqlFieldList(table, allTables, opts)
         )
       }

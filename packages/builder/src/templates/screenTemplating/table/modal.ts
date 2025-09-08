@@ -1,5 +1,5 @@
 import { capitalise } from "@/helpers"
-import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
+import { SourceOption } from "@/pages/builder/workspace/[application]/design/_components/NewScreen/utils"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
 import { Utils } from "@budibase/frontend-core"
 import { makePropSafe as safe } from "@budibase/string-templates"

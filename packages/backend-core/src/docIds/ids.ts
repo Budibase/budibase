@@ -1,17 +1,17 @@
 import {
-  APP_PREFIX,
   DocumentType,
   InternalTable,
   SEPARATOR,
+  WORKSPACE_PREFIX,
 } from "../constants"
 import { newid } from "./newid"
 
 /**
- * Generates a new app ID.
- * @returns The new app ID which the app doc can be stored under.
+ * Generates a new workspace ID.
+ * @returns The new workspace ID which the workspace doc can be stored under.
  */
-export const generateAppID = (tenantId?: string | null) => {
-  let id = APP_PREFIX
+export const generateWorkspaceID = (tenantId?: string | null) => {
+  let id = WORKSPACE_PREFIX
   if (tenantId) {
     id += `${tenantId}${SEPARATOR}`
   }
@@ -35,14 +35,6 @@ export function generateTableID() {
 export function generateRowID(tableId: string, id?: string) {
   id = id || newid()
   return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
-}
-
-/**
- * Generates a new workspace ID.
- * @returns The new workspace ID which the workspace doc can be stored under.
- */
-export function generateWorkspaceID() {
-  return `${DocumentType.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -86,8 +78,8 @@ export function generateTemplateID(ownerId: string) {
   return `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
-export function generateAppUserID(prodAppId: string, userId: string) {
-  return `${prodAppId}${SEPARATOR}${userId}`
+export function generateAppUserID(prodWorkspaceId: string, userId: string) {
+  return `${prodWorkspaceId}${SEPARATOR}${userId}`
 }
 
 /**
@@ -139,4 +131,8 @@ export const generateAgentToolSourceID = () => {
 
 export const generateWorkspaceAppID = () => {
   return `${DocumentType.WORKSPACE_APP}${SEPARATOR}${newid()}`
+}
+
+export const generateWorkspaceFavouriteID = () => {
+  return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }

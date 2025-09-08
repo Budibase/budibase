@@ -1,15 +1,5 @@
-import * as linkRows from "../../../db/linkedRows"
-import { InternalTables } from "../../../db/utils"
-import * as userController from "../user"
-import {
-  AttachmentCleanup,
-  inputProcessing,
-  outputProcessing,
-} from "../../../utilities/rowProcessor"
-import * as utils from "./utils"
-import { cloneDeep } from "lodash/fp"
 import { context, HTTPError } from "@budibase/backend-core"
-import { finaliseRow, updateRelatedFormula } from "./staticFormula"
+import { helpers } from "@budibase/shared-core"
 import {
   FieldType,
   LinkDocumentValue,
@@ -19,11 +9,21 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
-import sdk from "../../../sdk"
-import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
-import { findRow } from "../../../sdk/app/rows/internal"
-import { helpers } from "@budibase/shared-core"
+import { cloneDeep } from "lodash/fp"
+import * as linkRows from "../../../db/linkedRows"
+import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
+import { InternalTables } from "../../../db/utils"
+import sdk from "../../../sdk"
+import { findRow } from "../../../sdk/workspace/rows/internal"
+import {
+  AttachmentCleanup,
+  inputProcessing,
+  outputProcessing,
+} from "../../../utilities/rowProcessor"
+import * as userController from "../user"
+import { finaliseRow, updateRelatedFormula } from "./staticFormula"
+import * as utils from "./utils"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const { tableId } = utils.getSourceId(ctx)
@@ -98,7 +98,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 }
 
 export async function destroy(ctx: UserCtx) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const source = await utils.getSource(ctx)
 
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
@@ -178,7 +178,7 @@ export async function bulkDestroy(ctx: UserCtx) {
       })
     )
   } else {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
@@ -190,7 +190,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const fieldName = ctx.request.query.field as string | undefined
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { tableId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs

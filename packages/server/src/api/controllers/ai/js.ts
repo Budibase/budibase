@@ -1,10 +1,5 @@
-import {
-  FeatureFlag,
-  GenerateJsRequest,
-  GenerateJsResponse,
-  UserCtx,
-} from "@budibase/types"
-import { context, features } from "@budibase/backend-core"
+import { GenerateJsRequest, GenerateJsResponse, UserCtx } from "@budibase/types"
+import { context } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 
 const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
@@ -12,10 +7,6 @@ const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
 export async function generateJs(
   ctx: UserCtx<GenerateJsRequest, GenerateJsResponse>
 ) {
-  if (!(await features.isEnabled(FeatureFlag.AI_JS_GENERATION))) {
-    ctx.throw(500, "AI JS generation is disabled")
-  }
-
   const llm = await ai.getLLMOrThrow()
 
   await context.ensureSnippetContext()

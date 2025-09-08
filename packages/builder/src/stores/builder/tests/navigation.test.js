@@ -5,7 +5,7 @@ import {
   INITIAL_NAVIGATION_STATE,
   NavigationStore,
 } from "@/stores/builder/navigation"
-import { appStore } from "@/stores/builder"
+import { appStore, workspaceAppStore } from "@/stores/builder"
 
 vi.mock("@/api", () => {
   return {
@@ -25,12 +25,15 @@ vi.mock("@/stores/builder", async () => {
     set: mockAppStore.set,
   }
 
+  const mockWorkspaceApp = {
+    _id: "mockWorkspaceAppId",
+    isDefault: true,
+    navigation: {},
+  }
   const mockWorkspaceAppStore = writable({
-    selectedWorkspaceApp: {
-      _id: "mockWorkspaceAppId",
-      isDefault: true,
-      navigation: null,
-    },
+    selectedWorkspaceAppId: mockWorkspaceApp._id,
+    selectedWorkspaceApp: mockWorkspaceApp,
+    workspaceApps: [mockWorkspaceApp],
   })
   const workspaceAppStore = {
     subscribe: mockWorkspaceAppStore.subscribe,
@@ -56,6 +59,11 @@ describe("Navigation store", () => {
       },
       navigationStore,
     }
+
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = []
+      return state
+    })
   })
 
   it("Create base navigation store with defaults", ctx => {
@@ -82,10 +90,10 @@ describe("Navigation store", () => {
       },
     ]
 
-    ctx.test.navigationStore.update(state => ({
-      ...state,
-      links,
-    }))
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = links
+      return state
+    })
 
     await ctx.test.navigationStore.addLink({
       url: "/test-url",
@@ -108,16 +116,16 @@ describe("Navigation store", () => {
   })
 
   it("Skip save if the link already exists", async ctx => {
-    ctx.test.navigationStore.update(state => ({
-      ...state,
-      links: [
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = [
         {
           url: "/home",
           text: "Home",
           type: "link",
         },
-      ],
-    }))
+      ]
+      return state
+    })
     const saveSpy = vi
       .spyOn(ctx.test.navigationStore, "save")
       .mockImplementation(() => {})
@@ -132,9 +140,8 @@ describe("Navigation store", () => {
   })
 
   it("Should delete all links matching the provided URLs string array", async ctx => {
-    ctx.test.navigationStore.update(state => ({
-      ...state,
-      links: [
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = [
         {
           url: "/home",
           text: "Home",
@@ -156,8 +163,9 @@ describe("Navigation store", () => {
             },
           ],
         },
-      ],
-    }))
+      ]
+      return state
+    })
 
     const saveSpy = vi
       .spyOn(ctx.test.navigationStore, "save")
@@ -197,10 +205,10 @@ describe("Navigation store", () => {
       },
     ]
 
-    ctx.test.navigationStore.update(state => ({
-      ...state,
-      links,
-    }))
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = links
+      return state
+    })
 
     const saveSpy = vi
       .spyOn(ctx.test.navigationStore, "save")
@@ -240,9 +248,8 @@ describe("Navigation store", () => {
       appId: "testing_123",
     }))
 
-    ctx.test.navigationStore.update(state => ({
-      ...state,
-      links: [
+    workspaceAppStore.update(state => {
+      state.selectedWorkspaceApp.navigation.links = [
         {
           url: "/home",
           text: "Home",
@@ -259,8 +266,9 @@ describe("Navigation store", () => {
             },
           ],
         },
-      ],
-    }))
+      ]
+      return state
+    })
 
     // Build the update to add 1 new link
     const update = {

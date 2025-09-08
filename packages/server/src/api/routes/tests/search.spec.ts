@@ -1,5 +1,3 @@
-import { tableForDatasource } from "../../../tests/utilities/structures"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
@@ -10,7 +8,12 @@ import {
   utils,
   withEnv as withCoreEnv,
 } from "@budibase/backend-core"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
+import { dataFilters, isViewId } from "@budibase/shared-core"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   AIOperationEnum,
   AutoFieldSubType,
@@ -34,15 +37,12 @@ import {
   User,
   ViewV2Schema,
 } from "@budibase/types"
-import _ from "lodash"
-import tk from "timekeeper"
-import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters, isViewId } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { generator, structures, mocks } from "@budibase/backend-core/tests"
+import _ from "lodash"
+import { cloneDeep } from "lodash/fp"
+import tk from "timekeeper"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
-import { cloneDeep } from "lodash/fp"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -101,7 +101,7 @@ if (descriptions.length) {
         datasource = ds.datasource
         client = ds.client
 
-        config.app = await config.api.application.update(config.getAppId(), {
+        config.app = await config.api.workspace.update(config.getAppId(), {
           snippets: [
             {
               name: "WeeksAgo",
@@ -1926,6 +1926,15 @@ if (descriptions.length) {
                   mocks.licenses.useAICustomConfigs()
 
                   envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
+
+                  // Ensure MockAgent is installed for OpenAI interceptors
+                  const {
+                    installHttpMocking,
+                  } = require("../../../tests/jestEnv")
+                  installHttpMocking()
+
+                  // Set up 2 interceptors for the 2 rows that will be processed
+                  mockChatGPTResponse("Mock LLM Response")
                   mockChatGPTResponse("Mock LLM Response")
 
                   tableOrViewId = await createTableOrView({
@@ -3319,7 +3328,7 @@ if (descriptions.length) {
             isInternal &&
               describe("sample data", () => {
                 beforeAll(async () => {
-                  await config.api.application.addSampleData(config.appId!)
+                  await config.api.workspace.addSampleData(config.appId!)
                   tableOrViewId = DEFAULT_EMPLOYEE_TABLE_SCHEMA._id!
                   rows = await config.api.row.fetch(tableOrViewId)
                 })
@@ -3499,21 +3508,24 @@ if (descriptions.length) {
                       type: FieldType.STRING,
                     },
                   })
-                  await context.doInAppContext(config.getAppId(), async () => {
-                    const db = context.getAppDB()
-                    const tableDoc = await db.get<Table>(tableOrViewId)
-                    tableDoc.schema.Name = {
-                      name: "Name",
-                      type: FieldType.STRING,
+                  await context.doInWorkspaceContext(
+                    config.getAppId(),
+                    async () => {
+                      const db = context.getWorkspaceDB()
+                      const tableDoc = await db.get<Table>(tableOrViewId)
+                      tableDoc.schema.Name = {
+                        name: "Name",
+                        type: FieldType.STRING,
+                      }
+                      try {
+                        // remove the SQLite definitions so that they can be rebuilt as part of the search
+                        const sqliteDoc = await db.get(SQLITE_DESIGN_DOC_ID)
+                        await db.remove(sqliteDoc)
+                      } catch (err) {
+                        // no-op
+                      }
                     }
-                    try {
-                      // remove the SQLite definitions so that they can be rebuilt as part of the search
-                      const sqliteDoc = await db.get(SQLITE_DESIGN_DOC_ID)
-                      await db.remove(sqliteDoc)
-                    } catch (err) {
-                      // no-op
-                    }
-                  })
+                  )
                   await createRows([{ name: "foo", Name: "bar" }])
                 })
 

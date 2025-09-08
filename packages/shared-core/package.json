@@ -4,12 +4,14 @@
   "description": "Shared data utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "build": "node ../../scripts/build.js && yarn build:types",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "build:types": " tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "jest",
     "test:watch": "yarn test --watchAll"
@@ -19,8 +21,7 @@
     "cron-validate": "1.4.5"
   },
   "devDependencies": {
-    "rimraf": "3.0.2",
-    "typescript": "5.7.2"
+    "rimraf": "3.0.2"
   },
   "nx": {
     "targets": {

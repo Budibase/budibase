@@ -64,9 +64,11 @@
   $: dataSource =
     restSources?.find(ds => ds._id === targetSource) || restSources?.[0]
 
-  $: restQueries = $queries.list.filter(q => {
-    return q.datasourceId === dataSource._id
-  })
+  $: restQueries = dataSource
+    ? $queries.list.filter(q => {
+        return q.datasourceId === dataSource._id
+      })
+    : []
 
   // The configured query
   $: query = $queries.list.find(query => query._id === value?.queryId)
@@ -145,7 +147,7 @@
                 })
                 .then(datasource => {
                   notifications.success("REST API created successfully")
-                  $goto(`/builder/app/:application/data/query/new/:id`, {
+                  $goto(`/builder/workspace/:application/data/query/new/:id`, {
                     application: $params.application,
                     id: datasource._id,
                   })
@@ -200,7 +202,7 @@
               icon={"Add"}
               secondary
               on:click={() => {
-                $goto(`/builder/app/:application/data/query/new/:id`, {
+                $goto(`/builder/workspace/:application/data/query/new/:id`, {
                   application: $params.application,
                   id: dataSource._id,
                 })
@@ -304,7 +306,8 @@
     tab-size: 1;
   }
   .btn {
-    text-align: center;
+    display: flex;
+    justify-content: center;
   }
   .btn :global(.spectrum-Button-label) {
     line-height: 1em;

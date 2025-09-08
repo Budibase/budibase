@@ -9,6 +9,7 @@
     Link,
   } from "@budibase/bbui"
   import { appStore, initialise } from "@/stores/builder"
+
   import { API } from "@/api"
   import { ChangelogURL } from "@/constants"
 
@@ -64,7 +65,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$appStore.revertableVersion}`
+        `Workspace reverted successfully to version ${$appStore.revertableVersion}`
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
@@ -78,7 +79,7 @@
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
-    title="App version"
+    title={"Client version"}
     confirmText="Update"
     cancelText={updateAvailable ? "Cancel" : "Close"}
     onConfirm={update}
@@ -91,15 +92,15 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b>, but
-        version
+        This workspace is currently using version
+        <b>{$appStore.version}</b>, but version
         <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
         features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b> which is the
-        latest version available.
+        This workspace is currently using version
+        <b>{$appStore.version}</b> which is the latest version available.
       </Body>
     {/if}
     <Body size="S">
@@ -108,7 +109,7 @@
     </Body>
     {#if revertAvailable}
       <Body size="S">
-        You can revert this app to version
+        You can revert this workspace to client version
         <b>{$appStore.revertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>

@@ -1,16 +1,4 @@
-import {
-  DocumentType,
-  generateAppUserID,
-  getGlobalUserParams,
-  getProdAppID,
-  getUsersByAppParams,
-  pagination,
-  queryGlobalView,
-  queryGlobalViewRaw,
-  SEPARATOR,
-  UNICODE_MAX,
-  ViewName,
-} from "../db"
+import { dataFilters } from "@budibase/shared-core"
 import {
   BulkDocsResponse,
   ContextUser,
@@ -20,9 +8,21 @@ import {
 } from "@budibase/types"
 import * as context from "../context"
 import { getGlobalDB } from "../context"
-import { creatorsInList } from "./utils"
+import {
+  DocumentType,
+  generateAppUserID,
+  getGlobalUserParams,
+  getProdWorkspaceID,
+  getUsersByWorkspaceParams,
+  pagination,
+  queryGlobalView,
+  queryGlobalViewRaw,
+  SEPARATOR,
+  UNICODE_MAX,
+  ViewName,
+} from "../db"
 import { UserDB } from "./db"
-import { dataFilters } from "@budibase/shared-core"
+import { creatorsInList } from "./utils"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -136,18 +136,18 @@ export async function doesUserExist(email: string) {
 }
 
 export async function searchGlobalUsersByApp(
-  appId: any,
+  workspaceId: any,
   opts: DatabaseQueryOpts,
   getOpts?: GetOpts
 ) {
-  if (typeof appId !== "string") {
-    throw new Error("Must provide a string based app ID")
+  if (typeof workspaceId !== "string") {
+    throw new Error("Must provide a string based workspace ID")
   }
-  const params = getUsersByAppParams(appId, {
+  const params = getUsersByWorkspaceParams(workspaceId, {
     include_docs: true,
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
-  let response = await queryGlobalView<User>(ViewName.USER_BY_APP, params)
+  let response = await queryGlobalView<User>(ViewName.USER_BY_WORKSPACE, params)
 
   if (!response) {
     response = []
@@ -204,7 +204,7 @@ export function getGlobalUserByAppPage(appId: string, user: User) {
   if (!user) {
     return
   }
-  return generateAppUserID(getProdAppID(appId)!, user._id!)
+  return generateAppUserID(getProdWorkspaceID(appId)!, user._id!)
 }
 
 /**
@@ -333,7 +333,7 @@ export function cleanseUserObject(user: User | ContextUser, base?: User) {
 }
 
 export async function addAppBuilder(user: User, appId: string) {
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = getProdWorkspaceID(appId)
   user.builder ??= {}
   user.builder.creator = true
   user.builder.apps ??= []
@@ -342,7 +342,7 @@ export async function addAppBuilder(user: User, appId: string) {
 }
 
 export async function removeAppBuilder(user: User, appId: string) {
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = getProdWorkspaceID(appId)
   if (user.builder && user.builder.apps?.includes(prodAppId)) {
     user.builder.apps = user.builder.apps.filter(id => id !== prodAppId)
   }

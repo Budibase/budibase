@@ -7,37 +7,37 @@ mocks.licenses.init(mocks.pro)
 mocks.licenses.useUnlimited()
 
 import * as dbConfig from "../db"
-
-dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
+dbConfig.init()
+
 import supertest from "supertest"
 
-import { Config } from "../constants"
 import {
-  users,
-  context,
-  sessions,
   constants,
+  context,
   env as coreEnv,
   db as dbCore,
   encryption,
+  sessions,
+  users,
   utils,
 } from "@budibase/backend-core"
-import structures, { CSRF_TOKEN } from "./structures"
 import {
-  SaveUserResponse,
-  User,
   AuthToken,
-  SCIMConfig,
   ConfigType,
+  SaveUserResponse,
+  SCIMConfig,
   SMTPConfig,
   SMTPInnerConfig,
+  User,
 } from "@budibase/types"
-import API from "./api"
-import jwt, { Secret } from "jsonwebtoken"
 import http from "http"
+import jwt, { Secret } from "jsonwebtoken"
+import { Config } from "../constants"
+import API from "./api"
+import structures, { CSRF_TOKEN } from "./structures"
 
 class TestConfiguration {
   server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse> =
@@ -138,9 +138,9 @@ class TestConfiguration {
 
   // TENANCY
 
-  doInTenant(task: any) {
-    return context.doInTenant(this.tenantId, () => {
-      return task()
+  async doInTenant<T>(task: () => Promise<T>): Promise<T> {
+    return await context.doInTenant(this.tenantId, async () => {
+      return await task()
     })
   }
 
@@ -169,6 +169,15 @@ class TestConfiguration {
     } catch (e) {
       return this.tenantId!
     }
+  }
+
+  async doInSpecificTenant<T>(
+    tenantId: string,
+    task: () => Promise<T>
+  ): Promise<T> {
+    return await context.doInTenant(tenantId, async () => {
+      return await task()
+    })
   }
 
   // AUTH
@@ -214,11 +223,11 @@ class TestConfiguration {
     }
   }
 
-  async withUser(user: User, f: () => Promise<void>) {
+  async withUser<T>(user: User, f: () => Promise<T>): Promise<T> {
     const oldUser = this.user
     this.user = user
     try {
-      await f()
+      return await f()
     } finally {
       this.user = oldUser
     }

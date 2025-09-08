@@ -1,35 +1,34 @@
-import Deployment from "./Deployment"
 import {
+  cache,
   context,
   db as dbCore,
-  events,
-  cache,
-  features,
   errors,
+  events,
 } from "@budibase/backend-core"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import { backups } from "@budibase/pro"
+import {
+  AppBackupTrigger,
+  Automation,
+  DeploymentDoc,
+  DeploymentProgressResponse,
+  DeploymentStatus,
+  FetchDeploymentResponse,
+  PublishAppRequest,
+  PublishAppResponse,
+  PublishStatusResponse,
+  UserCtx,
+} from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronTrigger,
 } from "../../../automations/utils"
-import { backups } from "@budibase/pro"
-import {
-  AppBackupTrigger,
-  DeploymentDoc,
-  FetchDeploymentResponse,
-  PublishAppResponse,
-  UserCtx,
-  DeploymentStatus,
-  DeploymentProgressResponse,
-  Automation,
-  PublishAppRequest,
-  PublishStatusResponse,
-  FeatureFlag,
-} from "@budibase/types"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
+import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { doInMigrationLock } from "../../../appMigrations"
+import { doInMigrationLock } from "../../../workspaceMigrations"
+import Deployment from "./Deployment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -56,7 +55,7 @@ async function checkAllDeployments(
 
 async function storeDeploymentHistory(deployment: any) {
   const deploymentJSON = deployment.getJSON()
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   let deploymentDoc
   try {
@@ -84,7 +83,7 @@ async function storeDeploymentHistory(deployment: any) {
 }
 
 async function initDeployedApp(prodAppId: any) {
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
     await db.allDocs<Automation>(
@@ -115,7 +114,7 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
+  await sdk.applications.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
   })
 }
@@ -124,7 +123,7 @@ export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(deploymentDoc)
     if (updated) {
@@ -142,7 +141,7 @@ export async function deploymentProgress(
   ctx: UserCtx<void, DeploymentProgressResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
     if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
       ctx.throw(404, "No deployment found")
@@ -157,15 +156,12 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {} })
-  }
-
-  const { automations, workspaceApps } = await sdk.deployment.status()
+  const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
     automations,
     workspaceApps,
+    tables,
   }
 }
 
@@ -177,46 +173,83 @@ export const publishApp = async function (
       "Publishing resources by ID not currently supported"
     )
   }
+  const seedProductionTables = ctx.request.body?.seedProductionTables
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
+  let tablesToSync: "all" | string[] | undefined
+  if (env.isTest()) {
+    // TODO: a lot of tests depend on old behaviour of data being published
+    // we could do with going through the tests and updating them all to write
+    // data to production instead of development - but doesn't improve test
+    // quality - so keep publishing data in dev for now
+    tablesToSync = "all"
+  } else if (seedProductionTables) {
+    try {
+      tablesToSync = await sdk.tables.listEmptyProductionTables()
+    } catch (e) {
+      tablesToSync = []
+    }
+  }
 
-  const appId = context.getAppId()!
+  const appId = context.getWorkspaceId()!
 
   // Wrap the entire publish operation in migration lock to prevent race conditions
   const result = await doInMigrationLock(appId, async () => {
     let app
     let replication
     try {
-      const devAppId = dbCore.getDevelopmentAppID(appId)
-      const productionAppId = dbCore.getProdAppID(appId)
+      const devId = dbCore.getDevWorkspaceID(appId)
+      const prodId = dbCore.getProdWorkspaceID(appId)
 
-      const isPublished = await sdk.applications.isAppPublished(productionAppId)
+      if (!(await sdk.applications.isAppPublished(prodId))) {
+        const allWorkspaceApps = await sdk.workspaceApps.fetch()
+        for (const workspaceApp of allWorkspaceApps) {
+          if (workspaceApp.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+        }
+
+        const allAutomations = await sdk.automations.fetch()
+        for (const automation of allAutomations) {
+          if (automation.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.automations.update({ ...automation, disabled: true })
+        }
+      }
+
+      const isPublished = await sdk.applications.isAppPublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
-        await backups.triggerAppBackup(
-          productionAppId,
-          AppBackupTrigger.PUBLISH,
-          {
-            createdBy: ctx.user._id,
-          }
-        )
+        await backups.triggerAppBackup(prodId, AppBackupTrigger.PUBLISH, {
+          createdBy: ctx.user._id,
+        })
       }
       const config = {
-        source: devAppId,
-        target: productionAppId,
+        source: devId,
+        target: prodId,
       }
       replication = new dbCore.Replication(config)
-      const devDb = context.getDevAppDB()
+      const devDb = context.getDevWorkspaceDB()
       await devDb.compact()
       await replication.replicate(
-        replication.appReplicateOpts({ isCreation: !isPublished })
+        replication.appReplicateOpts({
+          isCreation: !isPublished,
+          tablesToSync,
+          // don't use checkpoints, this can stop data that was previous ignored
+          // getting written - if not seeding tables we don't need to worry about it
+          checkpoint: !seedProductionTables,
+        })
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
-      const db = context.getProdAppDB()
+      const db = context.getProdWorkspaceDB()
       const appDoc = await sdk.applications.metadata.tryGet({
         production: false,
       })
@@ -236,15 +269,21 @@ export const publishApp = async function (
 
       // switch to production app ID
       deployment.appUrl = appDoc.url
-      appDoc.appId = productionAppId
-      appDoc.instance._id = productionAppId
-      const [automations, workspaceApps] = await Promise.all([
+      appDoc.appId = prodId
+      appDoc.instance._id = prodId
+      const [automations, workspaceApps, tables] = await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
+        sdk.tables.getAllInternalTables(),
       ])
       const automationIds = automations.map(auto => auto._id!)
       const workspaceAppIds = workspaceApps.map(app => app._id!)
-      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      const tableIds = tables.map(table => table._id!)
+      const fullMap = [
+        ...(automationIds ?? []),
+        ...(workspaceAppIds ?? []),
+        ...(tableIds ?? []),
+      ]
       // if resource publishing, need to restrict this list
       appDoc.resourcesPublishedAt = {
         ...prodAppDoc?.resourcesPublishedAt,
@@ -255,8 +294,8 @@ export const publishApp = async function (
       // remove automation errors if they exist
       delete appDoc.automationErrors
       await db.put(appDoc)
-      await cache.app.invalidateAppMetadata(productionAppId)
-      await initDeployedApp(productionAppId)
+      await cache.workspace.invalidateWorkspaceMetadata(prodId)
+      await initDeployedApp(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

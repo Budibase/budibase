@@ -1,8 +1,8 @@
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { Automation, Table } from "@budibase/types"
 import { basicTable } from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("row updated trigger", () => {
   const config = new TestConfiguration()
@@ -19,7 +19,7 @@ describe("row updated trigger", () => {
       .save()
       .then(({ automation }) => automation)
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
   })
 
   afterAll(() => {
@@ -45,7 +45,7 @@ describe("row updated trigger", () => {
 
   it("should not fire for rows updated in other tables", async () => {
     const otherTable = await config.api.table.save(basicTable())
-    await config.api.application.publish()
+    await config.api.workspace.publish()
 
     const results = await captureAutomationResults(automation, async () => {
       await config.withProdApp(async () => {

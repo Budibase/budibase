@@ -115,6 +115,15 @@ export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
   value?: string
 }
 
+export type ExtractStateStepInputs = {
+  key: string
+  value: string
+}
+
+export type ExtractStateStepOutputs = BaseAutomationOutputs & {
+  value?: string
+}
+
 export type FilterStepInputs = {
   field: any
   condition: FilterCondition
@@ -138,6 +147,7 @@ export type LoopStepOutputs = {
   items: AutomationStepResult[]
   success: boolean
   iterations: number
+  status?: string
 }
 
 export type BranchStepInputs = {
@@ -245,23 +255,51 @@ export type ExtractFileDataStepInputs = {
   schema: Record<string, any>
 }
 
-export type ExtractFileDataStepOutputs =
-  | {
-      success: true
-      data: Record<string, any>
-      response?: string
-    }
-  | {
-      success: false
-      data?: Record<string, any>
-      response?: string
-    }
+export type ExtractFileDataStepOutputs = {
+  success: boolean
+  data: Record<string, any>
+  response?: string
+}
+
+export type LoopV2StepInputs = {
+  option: LoopStepType
+  binding: any
+  iterations?: number
+  failure?: string
+  children?: AutomationStep[]
+  resultOptions?: {
+    maxStoredIterations?: number
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
+}
+
+export interface LoopSummary {
+  totalProcessed: number
+  successCount: number
+  failureCount: number
+  firstFailure?: { iteration: number; error: string }
+}
+
+export type LoopV2StepOutputs = {
+  success: boolean
+  iterations: number
+  status?: string
+  summary: LoopSummary
+  items?: Record<string, AutomationStepResult[]>
+  recentItems?: Record<string, AutomationStepResult[]>
+  nestedSummaries?: Record<string, LoopSummary[]>
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
   GPT_4O = "gpt-4o",
   GPT_4O_MINI = "gpt-4o-mini",
+  GPT_5_MINI = "gpt-5-mini",
+  GPT_5 = "gpt-5",
+  GPT_5_NANO = "gpt-5-nano",
 }
 
 export enum SummariseLength {

@@ -1,12 +1,12 @@
+import { events } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
 import { Datasource, Query, QueryPreview } from "@budibase/types"
+import { Knex } from "knex"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../integrations/tests/utils"
 import { Expectations } from "../../../../tests/utilities/api/base"
-import { events } from "@budibase/backend-core"
-import { Knex } from "knex"
-import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({
   plus: true,
@@ -160,7 +160,11 @@ if (descriptions.length) {
             expect(queries).not.toContainEqual(query)
 
             expect(events.query.deleted).toHaveBeenCalledTimes(1)
-            expect(events.query.deleted).toHaveBeenCalledWith(datasource, query)
+            expect(events.query.deleted).toHaveBeenCalledWith(
+              datasource,
+              query,
+              config.appId
+            )
           })
         })
 
@@ -183,7 +187,7 @@ if (descriptions.length) {
               },
             })
 
-            await config.api.application.publish()
+            await config.api.workspace.publish()
             const prodQuery = await config.api.query.getProd(query._id!)
 
             expect(prodQuery._id).toEqual(query._id)

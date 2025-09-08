@@ -1,18 +1,15 @@
-import * as email from "../../../utilities/email"
-import env from "../../../environment"
-import * as auth from "./auth"
 import {
   BadRequestError,
-  ForbiddenError,
   cache,
   configs,
-  db as dbCore,
   env as coreEnv,
+  db as dbCore,
   events,
+  ForbiddenError,
   objectStore,
   tenancy,
 } from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
+import * as pro from "@budibase/pro"
 import {
   AIInnerConfig,
   Config,
@@ -44,7 +41,10 @@ import {
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
-import * as pro from "@budibase/pro"
+import env from "../../../environment"
+import * as email from "../../../utilities/email"
+import { checkAnyUserExists } from "../../../utilities/users"
+import * as auth from "./auth"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -240,6 +240,8 @@ async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   if (anyPkceSettings && !(await pro.features.isPkceOidcEnabled())) {
     throw new Error("License does not allow OIDC PKCE method support")
   }
+
+  config.configs.filter(c => c.pkce === null).forEach(c => delete c.pkce)
 
   if (existing) {
     for (const c of config.configs) {
@@ -646,10 +648,13 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
       cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
       async (): Promise<ConfigChecklistResponse> => {
-        let apps = []
+        let workspaces = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist
-          apps = await dbCore.getAllApps({ idsOnly: true, efficient: true })
+          workspaces = await dbCore.getAllWorkspaces({
+            idsOnly: true,
+            efficient: true,
+          })
         }
 
         // They have set up SMTP
@@ -671,9 +676,9 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
 
         return {
           apps: {
-            checked: apps.length > 0,
+            checked: workspaces.length > 0,
             label: "Create your first app",
-            link: "/builder/portal/apps",
+            link: "/builder/portal/workspaces",
           },
           smtp: {
             checked: !!smtpConfig,

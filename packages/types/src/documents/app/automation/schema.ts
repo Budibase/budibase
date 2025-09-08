@@ -74,6 +74,10 @@ import {
   APIRequestStepInputs,
   APIRequestStepOutputs,
   BranchSearchFilters,
+  ExtractStateStepInputs,
+  ExtractStateStepOutputs,
+  LoopV2StepInputs,
+  LoopV2StepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -185,6 +189,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractFileDataStepInputs,
     ExtractFileDataStepOutputs
   >
+  [AutomationActionStepId.EXTRACT_STATE]: ActionImplementation<
+    ExtractStateStepInputs,
+    ExtractStateStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -206,6 +214,7 @@ export interface AutomationStepSchemaBase {
   deprecated?: boolean
   new?: boolean
   blockToLoop?: string
+  isLegacyLoop?: boolean
   schema: {
     inputs: InputOutputBlock
     outputs: InputOutputBlock
@@ -275,7 +284,11 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                             ? GenerateTextStepInputs
                                                             : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                               ? ExtractFileDataStepInputs
-                                                              : never
+                                                              : T extends AutomationActionStepId.EXTRACT_STATE
+                                                                ? ExtractStateStepInputs
+                                                                : T extends AutomationActionStepId.LOOP_V2
+                                                                  ? LoopV2StepInputs
+                                                                  : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -334,7 +347,11 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                         ? GenerateTextStepOutputs
                                                         : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                           ? ExtractFileDataStepOutputs
-                                                          : never
+                                                          : T extends AutomationActionStepId.EXTRACT_STATE
+                                                            ? ExtractStateStepOutputs
+                                                            : T extends AutomationActionStepId.LOOP_V2
+                                                              ? LoopV2StepOutputs
+                                                              : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -421,6 +438,11 @@ export type GenerateTextStep =
 export type ExtractFileDataStep =
   AutomationStepSchema<AutomationActionStepId.EXTRACT_FILE_DATA>
 
+export type ExtractStateStep =
+  AutomationStepSchema<AutomationActionStepId.EXTRACT_STATE>
+
+export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -457,6 +479,8 @@ export type AutomationStep =
   | SummariseStep
   | GenerateTextStep
   | ExtractFileDataStep
+  | ExtractStateStep
+  | LoopV2Step
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
@@ -486,6 +510,18 @@ export function isAppTrigger(
   step: AutomationStep | AutomationTrigger
 ): step is AppActionTrigger {
   return step.stepId === AutomationTriggerStepId.APP
+}
+
+export function isWebhookTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.WEBHOOK
+}
+
+export function isRowActionTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_ACTION
 }
 
 export function isFilterStep(
@@ -570,7 +606,7 @@ export interface AutomationTriggerSchema<
   event?: AutomationEventType
   cronJobId?: string
   stepId: TTrigger
-  inputs: AutomationTriggerInputs<AutomationTriggerStepId>
+  inputs: AutomationTriggerInputs<TTrigger>
 }
 
 export type AutomationTrigger =

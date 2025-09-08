@@ -1,6 +1,6 @@
-import type { PlanType } from "../../../sdk"
-import type { Layout, App, Screen } from "../../../documents"
 import { ReadStream } from "fs"
+import type { Layout, Screen, Workspace } from "../../../documents"
+import type { PlanType } from "../../../sdk"
 
 export interface SyncAppResponse {
   message: string
@@ -15,9 +15,10 @@ export interface CreateAppRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
+  isOnboarding?: string
 }
 
-export interface CreateAppResponse extends App {}
+export interface CreateAppResponse extends Workspace {}
 
 export interface DuplicateAppRequest {
   name: string
@@ -36,7 +37,7 @@ export interface FetchAppDefinitionResponse {
 }
 
 export interface FetchAppPackageResponse {
-  application: App
+  application: Workspace
   licenseType: PlanType
   screens: Screen[]
   layouts: Layout[]
@@ -49,7 +50,9 @@ export interface AddAppSampleDataResponse {
   message: string
 }
 
-export type FetchAppsResponse = (App & { defaultWorkspaceAppUrl: string })[]
+export type FetchAppsResponse = (Workspace & {
+  defaultWorkspaceAppUrl: string
+})[]
 
 export interface PublishedAppData {
   name: string
@@ -63,10 +66,10 @@ export interface FetchPublishedAppsResponse {
   apps: PublishedAppData[]
 }
 
-export interface UpdateAppRequest extends Partial<App> {}
-export interface UpdateAppResponse extends App {}
-export interface UpdateAppClientResponse extends App {}
-export interface RevertAppClientResponse extends App {}
+export interface UpdateAppRequest extends Partial<Workspace> {}
+export interface UpdateAppResponse extends Workspace {}
+export interface UpdateAppClientResponse extends Workspace {}
+export interface RevertAppClientResponse extends Workspace {}
 
 export interface DeleteAppResponse {
   ok: boolean

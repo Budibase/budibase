@@ -3,31 +3,25 @@ import { API } from "@/api"
 import { appStore, workspaceAppStore } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
-import { featureFlags } from "../portal"
 import { notifications } from "@budibase/bbui"
 
-export interface AppNavigationStore extends AppNavigation {}
+export interface DerivedAppNavigationStore extends AppNavigation {}
 
-export const INITIAL_NAVIGATION_STATE: AppNavigationStore = {
+export const INITIAL_NAVIGATION_STATE: DerivedAppNavigationStore = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
 }
 
-export interface DerivedAppNavigationStore extends AppNavigationStore {}
-
 export class NavigationStore extends DerivedBudiStore<
-  AppNavigationStore,
+  {},
   DerivedAppNavigationStore
 > {
   constructor() {
-    const makeDerivedStore = (store: Writable<AppNavigationStore>) => {
+    const makeDerivedStore = (store: Writable<{}>) => {
       return derived(
-        [store, workspaceAppStore, featureFlags],
-        ([$store, $workspaceAppStore, $featureFlags]) => {
-          if (!$featureFlags.WORKSPACE_APPS) {
-            return $store
-          }
+        [store, workspaceAppStore],
+        ([$store, $workspaceAppStore]) => {
           const navigation = $workspaceAppStore.selectedWorkspaceApp?.navigation
 
           return {
@@ -42,9 +36,17 @@ export class NavigationStore extends DerivedBudiStore<
   }
 
   syncAppNavigation(nav?: AppNavigation) {
+    workspaceAppStore.update(state => {
+      const selectedWorkspaceApp = state.workspaceApps.find(
+        a => a._id === state.selectedWorkspaceAppId
+      )
+      if (selectedWorkspaceApp && nav) {
+        selectedWorkspaceApp.navigation = nav
+      }
+      return state
+    })
     this.update(state => ({
       ...state,
-      ...nav,
     }))
   }
 
@@ -74,7 +76,7 @@ export class NavigationStore extends DerivedBudiStore<
     title: string
     roleId: string
   }) {
-    const navigation = get(this.store)
+    const navigation = get(this.derivedStore)
     let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
 
     // Skip if we have an identical link
@@ -96,7 +98,7 @@ export class NavigationStore extends DerivedBudiStore<
   }
 
   async deleteLink(urls: string[] | string) {
-    const navigation = get(this.store)
+    const navigation = get(this.derivedStore)
     let links = navigation?.links
     if (!links?.length) {
       return

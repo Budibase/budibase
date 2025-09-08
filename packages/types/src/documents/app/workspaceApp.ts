@@ -1,11 +1,10 @@
 import { Document } from "../document"
-import { AppNavigation } from "./app"
+import { AppNavigation } from "./workspace"
 
 export interface WorkspaceApp extends Document {
   name: string
   url: string
   navigation: AppNavigation
-  // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
   isDefault: boolean
   disabled?: boolean
 }

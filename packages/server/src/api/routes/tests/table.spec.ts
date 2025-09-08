@@ -10,8 +10,11 @@ import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
+  JsonFieldSubType,
+  PermissionLevel,
   RelationshipType,
   Row,
+  RowExportFormat,
   SaveTableRequest,
   Table,
   TableSchema,
@@ -20,18 +23,15 @@ import {
   ValidateTableImportResponse,
   ViewCalculation,
   ViewV2Enriched,
-  RowExportFormat,
-  PermissionLevel,
-  JsonFieldSubType,
 } from "@budibase/types"
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import * as uuid from "uuid"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 import { generator } from "@budibase/backend-core/tests"
+import timekeeper from "timekeeper"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import timekeeper from "timekeeper"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -885,8 +885,8 @@ if (descriptions.length) {
 
       describe("indexing", () => {
         it("should be able to create a table with indexes", async () => {
-          await context.doInAppContext(config.getAppId(), async () => {
-            const db = context.getAppDB()
+          await context.doInWorkspaceContext(config.getAppId(), async () => {
+            const db = context.getWorkspaceDB()
             const initialIndexes = await db.getIndexes()
             const initialIndexCount = initialIndexes.total_rows
 
@@ -991,7 +991,8 @@ if (descriptions.length) {
             expect.objectContaining({
               ...testTable,
               tableId: testTable._id,
-            })
+            }),
+            config.appId
           )
         })
 

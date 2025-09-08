@@ -1,8 +1,8 @@
-import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
-import env from "../../../environment"
 import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
-import nodeFetch from "node-fetch"
 import { helpers } from "@budibase/shared-core"
+import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
+import nodeFetch from "node-fetch"
+import env from "../../../environment"
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {
@@ -49,6 +49,10 @@ export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
     passwordMinLength: env.PASSWORD_MIN_LENGTH,
+    serveDevClientFromStorage:
+      env.DEV_USE_CLIENT_FROM_STORAGE !== undefined
+        ? !!env.DEV_USE_CLIENT_FROM_STORAGE
+        : false,
   }
 
   if (env.SELF_HOSTED) {

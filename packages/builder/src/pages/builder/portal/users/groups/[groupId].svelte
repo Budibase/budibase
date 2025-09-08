@@ -13,7 +13,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { Breadcrumb, Breadcrumbs } from "@/components/portal/page"
   import { roles } from "@/stores/builder"
-  import { appsStore, auth, featureFlags, groups } from "@/stores/portal"
+  import { appsStore, auth, groups } from "@/stores/portal"
   import { onMount, setContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
@@ -22,7 +22,6 @@
   import GroupUsers from "./_components/GroupUsers.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
-  import { capitalise } from "@/helpers"
 
   export let groupId
 
@@ -107,8 +106,6 @@
       notifications.error("Error fetching user group data")
     }
   })
-
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -149,19 +146,19 @@
     </Layout>
 
     <Layout noPadding gap="S">
-      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
+      <Heading size="S">Workspaces</Heading>
       <Table
         schema={appSchema}
         data={groupApps}
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
+        on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
           <Heading size="S"
-            >This group doesn't have access to any {appsOrWorkspaces}</Heading
+            >This group doesn't have access to any workspaces</Heading
           >
         </div>
       </Table>

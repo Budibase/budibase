@@ -1,7 +1,4 @@
-import { IncludeDocs, getLinkDocuments } from "./linkUtils"
-import { InternalTables, getUserMetadataParams } from "../utils"
 import { context, logging } from "@budibase/backend-core"
-import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
@@ -11,6 +8,9 @@ import {
   Row,
   Table,
 } from "@budibase/types"
+import { InternalTables, getUserMetadataParams } from "../utils"
+import LinkDocument from "./LinkDocument"
+import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 
 type LinkControllerOpts = {
   tableId?: string
@@ -27,7 +27,7 @@ class LinkController {
   _oldTable?: Table
 
   constructor({ tableId, row, table, oldTable }: LinkControllerOpts) {
-    this._db = context.getAppDB()
+    this._db = context.getWorkspaceDB()
     this._tableId = tableId
     this._row = row
     this._table = table

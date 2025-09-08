@@ -1,22 +1,23 @@
-import { authorizedMiddleware as authorized } from "../middleware/authorized"
-import { BaseSocket, EmitOptions } from "./websocket"
-import { permissions, events, context } from "@budibase/backend-core"
+import { context, events, permissions } from "@budibase/backend-core"
+import { BuilderSocketEvent } from "@budibase/shared-core"
+import {
+  Automation,
+  ContextUser,
+  Datasource,
+  Role,
+  Screen,
+  SocketSession,
+  Table,
+  Workspace,
+  WorkspaceApp,
+} from "@budibase/types"
 import http from "http"
 import Koa from "koa"
-import {
-  Datasource,
-  Table,
-  SocketSession,
-  ContextUser,
-  Screen,
-  App,
-  Automation,
-  Role,
-} from "@budibase/types"
-import { gridSocket } from "./index"
-import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent } from "@budibase/shared-core"
+import { authorizedMiddleware as authorized } from "../middleware/authorized"
+import { clearLock, updateLock } from "../utilities/redis"
+import { gridSocket } from "./index"
+import { BaseSocket, EmitOptions } from "./websocket"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -37,7 +38,7 @@ export default class BuilderSocket extends BaseSocket {
         }
       })
 
-      const tenantId = context.getTenantIDFromAppID(appId)
+      const tenantId = context.getTenantIDFromWorkspaceID(appId)
       if (tenantId) {
         await context.doInTenant(tenantId, async () => {
           await events.user.dataCollaboration(Object.keys(userIdMap).length)
@@ -115,6 +116,24 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
+  emitWorkspaceAppUpdate(
+    ctx: any,
+    workspaceApp: WorkspaceApp,
+    options?: EmitOptions
+  ) {
+    this.emitToRoom(
+      ctx,
+      ctx.appId,
+      BuilderSocketEvent.WorkspaceAppChange,
+      {
+        id: workspaceApp._id,
+        workspaceApp,
+      },
+      options
+    )
+    gridSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
+  }
+
   emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {
     if (table.sourceId == null || table.sourceId === "") {
       throw new Error("Table sourceId is not set")
@@ -169,7 +188,7 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  emitAppMetadataUpdate(ctx: any, metadata: Partial<App>) {
+  emitAppMetadataUpdate(ctx: any, metadata: Partial<Workspace>) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppMetadataChange, {
       metadata,
     })
