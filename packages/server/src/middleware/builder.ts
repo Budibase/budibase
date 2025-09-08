@@ -1,12 +1,15 @@
-import { APP_DEV_PREFIX, getGlobalIDFromUserMetadataID } from "../db/utils"
+import { cache, db as dbCore } from "@budibase/backend-core"
+import { Database, DocumentType, UserCtx } from "@budibase/types"
 import {
-  doesUserHaveLock,
-  updateLock,
+  WORKSPACE_DEV_PREFIX,
+  getGlobalIDFromUserMetadataID,
+} from "../db/utils"
+import {
   checkDebounce,
+  doesUserHaveLock,
   setDebounce,
+  updateLock,
 } from "../utilities/redis"
-import { db as dbCore, cache } from "@budibase/backend-core"
-import { DocumentType, UserCtx, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -28,7 +31,7 @@ async function checkDevAppLocks(ctx: UserCtx) {
   }
 
   // not a development app, don't need to do anything
-  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+  if (!appId || !appId.startsWith(WORKSPACE_DEV_PREFIX)) {
     return
   }
 
@@ -54,7 +57,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
 
       const response = await db.put(metadata)
       metadata._rev = response.rev
-      await cache.app.invalidateAppMetadata(appId, metadata)
+      await cache.workspace.invalidateWorkspaceMetadata(appId, metadata)
       // set a new debounce record with a short TTL
       await setDebounce(appId, DEBOUNCE_TIME_SEC)
     } catch (err: any) {

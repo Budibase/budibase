@@ -1,29 +1,29 @@
-import * as setup from "./utilities"
-import { checkBuilderEndpoint, allowUndefined } from "./utilities/TestFunctions"
-import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { getCachedVariable } from "../../../threads/utils"
+import * as setup from "./utilities"
+import { allowUndefined, checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 import { generator } from "@budibase/backend-core/tests"
 import {
+  BBReferenceFieldSubType,
   Datasource,
   FieldSchema,
-  BBReferenceFieldSubType,
   FieldType,
+  JsonFieldSubType,
   RelationshipType,
   SourceName,
+  SupportedSqlTypes,
   Table,
   TableSchema,
-  SupportedSqlTypes,
-  JsonFieldSubType,
 } from "@budibase/types"
+import { Knex } from "knex"
+import nock from "nock"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import nock from "nock"
-import { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -229,7 +229,7 @@ if (descriptions.length) {
         })
 
         it("should not overwrite database password with --secret-value--", async () => {
-          const password = await context.doInAppContext(
+          const password = await context.doInWorkspaceContext(
             config.getAppId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)
@@ -246,7 +246,7 @@ if (descriptions.length) {
             await config.api.datasource.get(datasource._id!)
           )
 
-          const newPassword = await context.doInAppContext(
+          const newPassword = await context.doInWorkspaceContext(
             config.getAppId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)

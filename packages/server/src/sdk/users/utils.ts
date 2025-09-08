@@ -1,20 +1,20 @@
-import { getGlobalUsers } from "../../utilities/global"
 import { context, roles as rolesCore } from "@budibase/backend-core"
 import {
-  getGlobalIDFromUserMetadataID,
+  ContextUser,
+  ContextUserMetadata,
+  Database,
+  isSSOUser,
+  UserBindings,
+  UserMetadata,
+} from "@budibase/types"
+import isEqual from "lodash/isEqual"
+import {
   generateUserMetadataID,
+  getGlobalIDFromUserMetadataID,
   getUserMetadataParams,
   InternalTables,
 } from "../../db/utils"
-import isEqual from "lodash/isEqual"
-import {
-  ContextUser,
-  UserMetadata,
-  Database,
-  ContextUserMetadata,
-  UserBindings,
-  isSSOUser,
-} from "@budibase/types"
+import { getGlobalUsers } from "../../utilities/global"
 
 export function combineMetadataAndUser(
   user: ContextUser,
@@ -64,7 +64,7 @@ export function combineMetadataAndUser(
 
 export async function rawUserMetadata(db?: Database): Promise<UserMetadata[]> {
   if (!db) {
-    db = context.getAppDB()
+    db = context.getWorkspaceDB()
   }
   return (
     await db.allDocs<UserMetadata>(
@@ -96,7 +96,7 @@ export async function fetchMetadata(): Promise<ContextUserMetadata[]> {
 
 export async function syncGlobalUsers() {
   // sync user metadata
-  const dbs = [context.getDevAppDB(), context.getProdAppDB()]
+  const dbs = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
   for (let db of dbs) {
     if (!(await db.exists())) {
       continue

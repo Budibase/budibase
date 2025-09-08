@@ -83,7 +83,7 @@ export const uploadFile = async function (
       // filenames converted to UUIDs so they are unique
       const processedFileName = `${uuid.v4()}.${extension}`
 
-      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+      const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
@@ -138,7 +138,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
-    const appId = context.getProdAppId()
+    const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
@@ -197,7 +197,7 @@ const getAppScriptHTML = (
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   // No app ID found, cannot serve - return message instead
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.body = "No content found - requires app ID"
     return
@@ -218,7 +218,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   }
 
   try {
-    context.getAppDB({ skip_setup: true })
+    context.getWorkspaceDB({ skip_setup: true })
 
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
@@ -337,11 +337,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
-  const db = context.getAppDB({ skip_setup: true })
+  const db = context.getWorkspaceDB({ skip_setup: true })
   const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = context.getAppId()
+    let appId = context.getWorkspaceId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
@@ -370,7 +370,7 @@ export const serveBuilderPreview = async function (
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const appId = context.getAppId() || (ctx.request.query.appId as string)
+  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
@@ -455,13 +455,13 @@ export const getSignedUploadURL = async function (
 }
 
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.throw(404)
   }
 
   try {
-    const db = context.getAppDB({ skip_setup: true })
+    const db = context.getWorkspaceDB({ skip_setup: true })
     const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
 
     if (!appInfo.pwa) {

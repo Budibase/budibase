@@ -1007,13 +1007,16 @@ if (descriptions.length) {
 
       it("should delete all the row actions (and automations) for its tables when a datasource is deleted", async () => {
         async function getRowActionsFromDb(tableId: string) {
-          return await context.doInAppContext(config.getAppId(), async () => {
-            const db = context.getAppDB()
-            const tableDoc = await db.tryGet<TableRowActions>(
-              generateRowActionsID(tableId)
-            )
-            return tableDoc
-          })
+          return await context.doInWorkspaceContext(
+            config.getAppId(),
+            async () => {
+              const db = context.getWorkspaceDB()
+              const tableDoc = await db.tryGet<TableRowActions>(
+                generateRowActionsID(tableId)
+              )
+              return tableDoc
+            }
+          )
         }
 
         const table = await getTable()

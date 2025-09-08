@@ -6,13 +6,17 @@ import { Workspace } from "@budibase/types"
  * `tryGet` to `get`.
  */
 export async function get(opts?: { production?: boolean }) {
-  const db = opts?.production ? context.getProdAppDB() : context.getAppDB()
+  const db = opts?.production
+    ? context.getProdWorkspaceDB()
+    : context.getWorkspaceDB()
   const application = await db.get<Workspace>(DocumentType.APP_METADATA)
   return application
 }
 
 export async function tryGet(opts?: { production?: boolean }) {
-  const db = opts?.production ? context.getProdAppDB() : context.getAppDB()
+  const db = opts?.production
+    ? context.getProdWorkspaceDB()
+    : context.getWorkspaceDB()
   const application = await db.tryGet<Workspace>(DocumentType.APP_METADATA)
   return application
 }

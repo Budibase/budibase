@@ -1,13 +1,11 @@
-import * as userSdk from "../../../sdk/users"
 import {
+  auth as authCore,
+  db as dbCore,
+  encryption,
   features,
   tenancy,
-  db as dbCore,
   utils,
-  encryption,
-  auth as authCore,
 } from "@budibase/backend-core"
-import env from "../../../environment"
 import { ai, groups } from "@budibase/pro"
 import {
   DevInfo,
@@ -20,6 +18,8 @@ import {
   User,
   UserCtx,
 } from "@budibase/types"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
 
 const { newid } = utils
 
@@ -139,8 +139,8 @@ export const syncAppFavourites = async (processedAppIds: string[]) => {
   const tenantId = tenancy.getTenantId()
   const appPrefix =
     tenantId === tenancy.DEFAULT_TENANT_ID
-      ? dbCore.APP_DEV_PREFIX
-      : `${dbCore.APP_DEV_PREFIX}${tenantId}_`
+      ? dbCore.WORKSPACE_DEV_PREFIX
+      : `${dbCore.WORKSPACE_DEV_PREFIX}${tenantId}_`
 
   const apps = await fetchAppsByIds(processedAppIds, appPrefix)
   return apps?.reduce((acc: string[], app) => {
@@ -156,7 +156,7 @@ export const fetchAppsByIds = async (
   processedAppIds: string[],
   appPrefix: string
 ) => {
-  return await dbCore.getAppsByIDs(
+  return await dbCore.getWorkspacesByIDs(
     processedAppIds.map(appId => {
       return `${appPrefix}${appId}`
     })

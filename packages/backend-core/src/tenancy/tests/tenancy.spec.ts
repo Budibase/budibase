@@ -1,11 +1,11 @@
 import { TenantResolutionStrategy } from "@budibase/types"
-import { addTenantToUrl, isUserInAppTenant, getTenantIDFromCtx } from "../"
-import { isMultiTenant, getTenantIDFromAppID } from "../../context"
+import { addTenantToUrl, getTenantIDFromCtx, isUserInAppTenant } from "../"
+import { getTenantIDFromWorkspaceID, isMultiTenant } from "../../context"
 
 jest.mock("../../context", () => ({
   getTenantId: jest.fn(() => "budibase"),
   isMultiTenant: jest.fn(() => true),
-  getTenantIDFromAppID: jest.fn(),
+  getTenantIDFromWorkspaceID: jest.fn(),
   getPlatformURL: jest.fn(() => "https://app.com"),
   DEFAULT_TENANT_ID: "default",
 }))
@@ -13,9 +13,10 @@ jest.mock("../../context", () => ({
 const mockedIsMultiTenant = isMultiTenant as jest.MockedFunction<
   typeof isMultiTenant
 >
-const mockedGetTenantIDFromAppID = getTenantIDFromAppID as jest.MockedFunction<
-  typeof getTenantIDFromAppID
->
+const mockedGetTenantIDFromWorkspaceID =
+  getTenantIDFromWorkspaceID as jest.MockedFunction<
+    typeof getTenantIDFromWorkspaceID
+  >
 
 describe("addTenantToUrl", () => {
   it("should append tenantId parameter to the URL", () => {
@@ -40,7 +41,7 @@ describe("addTenantToUrl", () => {
 })
 
 describe("isUserInAppTenant", () => {
-  mockedGetTenantIDFromAppID.mockImplementation(() => "budibase")
+  mockedGetTenantIDFromWorkspaceID.mockImplementation(() => "budibase")
   const mockUser = { tenantId: "budibase" }
 
   it("returns true if user tenant ID matches app tenant ID", () => {
@@ -63,7 +64,7 @@ describe("isUserInAppTenant", () => {
 
   it("returns false if user tenant ID does not match app tenant ID", () => {
     const appId = "app-budibase"
-    mockedGetTenantIDFromAppID.mockImplementation(() => "not-budibase")
+    mockedGetTenantIDFromWorkspaceID.mockImplementation(() => "not-budibase")
     const result = isUserInAppTenant(appId, mockUser)
     expect(result).toBe(false)
   })

@@ -1,10 +1,10 @@
 import { UserCtx } from "@budibase/types"
-import { isBuilder, isAdmin, hasBuilderPermissions } from "../users"
-import { getAppId } from "../context"
+import { getWorkspaceId } from "../context"
 import env from "../environment"
+import { hasBuilderPermissions, isAdmin, isBuilder } from "../users"
 
 export async function builderOrAdmin(ctx: UserCtx, next: any) {
-  const appId = getAppId()
+  const appId = getWorkspaceId()
   const builderFn =
     env.isWorker() || !appId
       ? hasBuilderPermissions

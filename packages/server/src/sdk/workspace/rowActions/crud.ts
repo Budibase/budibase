@@ -1,21 +1,21 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  isViewId,
+  automations as sharedAutomations,
+} from "@budibase/shared-core"
+import {
   Automation,
   AutomationTriggerStepId,
+  DocumentType,
   SEPARATOR,
   TableRowActions,
   User,
   VirtualDocumentType,
-  DocumentType,
 } from "@budibase/types"
+import sdk from "../.."
+import * as triggers from "../../../automations/triggers"
 import { generateRowActionsID } from "../../../db/utils"
 import automations from "../automations"
-import {
-  isViewId,
-  automations as sharedAutomations,
-} from "@budibase/shared-core"
-import * as triggers from "../../../automations/triggers"
-import sdk from "../.."
 
 async function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -39,7 +39,7 @@ async function ensureUniqueAndThrow(
 export async function create(tableId: string, rowAction: { name: string }) {
   const action = { name: rowAction.name.trim() }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const rowActionsId = generateRowActionsID(tableId)
   let doc = await db.tryGet<TableRowActions>(rowActionsId)
   if (!doc) {
@@ -48,7 +48,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   await ensureUniqueAndThrow(doc, action.name)
 
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     throw new Error("Could not get the current appId")
   }
@@ -103,13 +103,13 @@ export async function get(tableId: string, rowActionId: string) {
 }
 
 export async function getAllForTable(tableId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const rowActionsId = generateRowActionsID(tableId)
   return await db.tryGet<TableRowActions>(rowActionsId)
 }
 
 export async function getAll() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   return (
     await db.allDocs<TableRowActions>(
       docIds.getDocParams(DocumentType.ROW_ACTIONS, undefined, {
@@ -120,7 +120,7 @@ export async function getAll() {
 }
 
 export async function deleteAll(tableId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const doc = await getAllForTable(tableId)
   if (!doc) {
@@ -138,7 +138,7 @@ export async function deleteAll(tableId: string) {
 }
 
 export async function docExists(tableId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const rowActionsId = generateRowActionsID(tableId)
   const result = await db.exists(rowActionsId)
   return result
@@ -162,7 +162,7 @@ async function updateDoc(
 
   const updated = await transformer(actionsDoc)
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   await db.put(updated)
 
   return {
@@ -260,7 +260,7 @@ export async function run(
         table,
       },
       user,
-      appId: context.getAppId(),
+      appId: context.getWorkspaceId(),
     },
     { getResponses: true }
   )

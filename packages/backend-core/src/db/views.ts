@@ -1,4 +1,12 @@
 import {
+  AllDocsResponse,
+  Database,
+  DatabaseQueryOpts,
+  DBView,
+  DesignDocument,
+  Document,
+} from "@budibase/types"
+import {
   DeprecatedViews,
   DocumentType,
   SEPARATOR,
@@ -6,16 +14,8 @@ import {
   ViewName,
 } from "../constants"
 import { getGlobalDB } from "../context"
-import { doWithDB } from "./"
-import {
-  AllDocsResponse,
-  Database,
-  DatabaseQueryOpts,
-  Document,
-  DesignDocument,
-  DBView,
-} from "@budibase/types"
 import env from "../environment"
+import { doWithDB } from "./"
 
 const DESIGN_DB = "_design/database"
 
@@ -87,13 +87,13 @@ export const createUserAppView = async () => {
   const db = getGlobalDB()
   const viewJs = `function(doc) {
     if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") && doc.roles) {
-      for (let prodAppId of Object.keys(doc.roles)) {
-        let emitted = prodAppId + "${SEPARATOR}" + doc._id
+      for (let prodWorkspaceId of Object.keys(doc.roles)) {
+        let emitted = prodWorkspaceId + "${SEPARATOR}" + doc._id
         emit(emitted, null)
       }
     }
   }`
-  await createView(db, viewJs, ViewName.USER_BY_APP)
+  await createView(db, viewJs, ViewName.USER_BY_WORKSPACE)
 }
 
 export const createApiKeyView = async () => {
@@ -217,7 +217,7 @@ export const queryPlatformView = async <T extends Document>(
 const CreateFuncByName: any = {
   [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
   [ViewName.BY_API_KEY]: createApiKeyView,
-  [ViewName.USER_BY_APP]: createUserAppView,
+  [ViewName.USER_BY_WORKSPACE]: createUserAppView,
 }
 
 export const queryGlobalView = async <T extends Document>(

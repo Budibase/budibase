@@ -1,22 +1,22 @@
-import { getRowParams, USER_METDATA_PREFIX } from "../../db/utils"
 import { db as dbCore } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
+import { getRowParams, USER_METDATA_PREFIX } from "../../db/utils"
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
 
-function getAppPairs(appIds: string[]) {
+function getWorkspacePairs(workspaceIds: string[]) {
   // collect the app ids into dev / prod pairs
   // keyed by the dev app id
   const pairs: { [key: string]: { devId?: string; prodId?: string } } = {}
-  for (let appId of appIds) {
-    const devId = dbCore.getDevelopmentAppID(appId)
+  for (let workspaceId of workspaceIds) {
+    const devId = dbCore.getDevWorkspaceID(workspaceId)
     if (!pairs[devId]) {
       pairs[devId] = {}
     }
-    if (dbCore.isDevAppID(appId)) {
-      pairs[devId].devId = appId
+    if (dbCore.isDevWorkspaceID(workspaceId)) {
+      pairs[devId].devId = workspaceId
     } else {
-      pairs[devId].prodId = appId
+      pairs[devId].prodId = workspaceId
     }
   }
   return pairs
@@ -48,10 +48,10 @@ async function getAppRows(appId: string) {
  * The returned rows will be unique on a per dev/prod app basis.
  * Rows duplicates may exist across apps due to data import so they are not filtered out.
  */
-export async function getUniqueRows(appIds: string[]) {
+export async function getUniqueRows(workspaceIds: string[]) {
   let uniqueRows: Row[] = [],
     rowsByApp: { [key: string]: Row[] } = {}
-  const pairs = getAppPairs(appIds)
+  const pairs = getWorkspacePairs(workspaceIds)
 
   for (let pair of Object.values(pairs)) {
     let appRows: Row[] = []
@@ -71,7 +71,7 @@ export async function getUniqueRows(appIds: string[]) {
     // this can't be done on all rows because app import results in
     // duplicate row ids across apps
     // the array pre-concat is important to avoid stack overflow
-    const prodId = dbCore.getProdAppID((pair.devId || pair.prodId)!)
+    const prodId = dbCore.getProdWorkspaceID((pair.devId || pair.prodId)!)
     rowsByApp[prodId] = [...new Set(appRows)]
     uniqueRows = uniqueRows.concat(rowsByApp[prodId])
   }

@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError, events } from "@budibase/backend-core"
+import { context, docIds, events, HTTPError } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
@@ -10,7 +10,9 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
+export async function fetch(
+  db = context.getWorkspaceDB()
+): Promise<WorkspaceApp[]> {
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
@@ -23,7 +25,7 @@ export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
 }
 
 export async function get(id: string): Promise<WorkspaceApp | undefined> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const workspaceApp = await db.tryGet<WorkspaceApp>(id)
   return workspaceApp
 }
@@ -31,7 +33,7 @@ export async function get(id: string): Promise<WorkspaceApp | undefined> {
 export async function create(
   workspaceApp: WithoutDocMetadata<WorkspaceApp>
 ): Promise<WorkspaceApp> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   await guardName(workspaceApp.name)
 
@@ -48,7 +50,7 @@ export async function create(
 export async function update(
   workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
 ): Promise<WorkspaceApp> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const persisted = await get(workspaceApp._id!)
   if (!persisted) {
@@ -82,7 +84,7 @@ export async function remove(
   workspaceAppId: string,
   _rev: string
 ): Promise<void> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   try {
     const existing = await db.tryGet<WorkspaceApp>(workspaceAppId)
     if (!existing)
@@ -94,7 +96,7 @@ export async function remove(
     await db.remove(workspaceAppId, _rev)
 
     // Clear out any favourites related to this
-    events.workspace.deleted(existing, context.getAppId()!)
+    events.workspace.deleted(existing, context.getWorkspaceId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

@@ -14,8 +14,8 @@ describe("PWA Manifest", () => {
     await config.init()
   })
   it("should serve a valid manifest.json with properly configured PWA", async () => {
-    await context.doInAppContext(config.getAppId(), async () => {
-      const appDb = context.getAppDB()
+    await context.doInWorkspaceContext(config.getAppId(), async () => {
+      const appDb = context.getWorkspaceDB()
       let appDoc = await appDb.get<Workspace>(DocumentType.APP_METADATA)
 
       const pwaConfig = {

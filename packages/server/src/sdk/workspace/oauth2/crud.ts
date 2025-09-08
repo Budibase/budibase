@@ -28,7 +28,7 @@ async function guardName(name: string, id?: string) {
 }
 
 export async function fetch(): Promise<CreatedOAuthConfig[]> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const docs = await db.allDocs<OAuth2Config>(
     docIds.getOAuth2ConfigParams(null, { include_docs: true })
   )
@@ -43,7 +43,7 @@ export async function fetch(): Promise<CreatedOAuthConfig[]> {
 export async function create(
   config: WithoutDocMetadata<OAuth2Config>
 ): Promise<CreatedOAuthConfig> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   await guardName(config.name)
 
@@ -59,14 +59,14 @@ export async function create(
 }
 
 export async function get(id: string): Promise<OAuth2Config | undefined> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   return await db.tryGet(id)
 }
 
 export async function update(
   config: CreatedOAuthConfig
 ): Promise<CreatedOAuthConfig> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   await guardName(config.name, config._id)
 
   const existing = await get(config._id)
@@ -90,7 +90,7 @@ export async function update(
 }
 
 export async function remove(configId: string, _rev: string): Promise<void> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   try {
     await db.remove(configId, _rev)
   } catch (e: any) {

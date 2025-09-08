@@ -1,29 +1,29 @@
+import { context, HTTPError } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import {
   FieldType,
   RenameColumn,
+  Row,
   Table,
+  TableSourceType,
   ViewStatisticsSchema,
   ViewV2,
-  Row,
-  TableSourceType,
   WithoutDocMetadata,
 } from "@budibase/types"
-import {
-  hasTypeChanged,
-  TableSaveFunctions,
-  internalTableCleanup,
-} from "../../../../api/controllers/table/utils"
-import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
-import { context, HTTPError } from "@budibase/backend-core"
-import { findDuplicateInternalColumns } from "@budibase/shared-core"
+import {
+  hasTypeChanged,
+  internalTableCleanup,
+  TableSaveFunctions,
+} from "../../../../api/controllers/table/utils"
+import { EventType, updateLinks } from "../../../../db/linkedRows"
+import { generateTableID, getRowParams } from "../../../../db/utils"
+import * as viewsSdk from "../../views"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
-import * as viewsSdk from "../../views"
-import { generateTableID, getRowParams } from "../../../../db/utils"
-import { quotas } from "@budibase/pro"
 
 export async function create(
   table: WithoutDocMetadata<Table>,
@@ -73,7 +73,7 @@ export async function save(
     isImport?: boolean
   }
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   // if the table obj had an _id then it will have been retrieved
   let oldTable: Table | undefined
@@ -176,7 +176,7 @@ export async function save(
 }
 
 export async function destroy(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const tableId = table._id!
 
   // Delete all rows for that table - we have to retrieve the full rows for

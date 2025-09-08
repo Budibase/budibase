@@ -6,7 +6,9 @@ const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
-  const allWorkspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
+  const allWorkspaceApps = await sdk.workspaceApps.fetch(
+    context.getWorkspaceDB()
+  )
   let [existingWorkspaceApp] = allWorkspaceApps
   if (!existingWorkspaceApp) {
     const workspaceApp = await sdk.workspaceApps.create({
@@ -18,7 +20,7 @@ const migration = async () => {
     existingWorkspaceApp = workspaceApp
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const docsToUpdate: Document[] = screens
     .filter(s => !s.workspaceAppId)
     .map<Screen>(s => ({

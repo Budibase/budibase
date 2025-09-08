@@ -28,7 +28,7 @@ function migrationLogic(executionMS = 0): () => Promise<void> {
 describe("migrations", () => {
   beforeAll(() => setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false }))
 
-  it("new apps are created with the latest app migration version set", async () => {
+  it("new workspaces are created with the latest workspace migration version set", async () => {
     const config = setup.getConfig()
     await config.init()
 
@@ -39,7 +39,7 @@ describe("migrations", () => {
     })
   })
 
-  it("accessing an app that has no pending migrations will not attach the migrating header", async () => {
+  it("accessing a workspace that has no pending migrations will not attach the migrating header", async () => {
     const config = setup.getConfig()
     await config.init()
 
@@ -50,7 +50,7 @@ describe("migrations", () => {
     })
   })
 
-  it("accessing an app that has pending migrations will attach the migrating header", async () => {
+  it("accessing a workspace that has pending migrations will attach the migrating header", async () => {
     const config = setup.getConfig()
     await config.init()
 
@@ -199,7 +199,7 @@ describe("migrations", () => {
     expect(mockNext).toHaveBeenCalled()
   })
 
-  describe("app existence check", () => {
+  describe("workspace existence check", () => {
     beforeEach(() => {
       migrations.MIGRATIONS.length = 0
       migrations.MIGRATIONS.push({
@@ -208,7 +208,7 @@ describe("migrations", () => {
       })
     })
 
-    it("should skip migrations when app does not exist", async () => {
+    it("should skip migrations when workspace does not exist", async () => {
       const config = setup.getConfig()
       await config.init()
 

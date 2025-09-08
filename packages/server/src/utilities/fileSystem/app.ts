@@ -30,7 +30,7 @@ export const deleteAppFiles = async (appId: string) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 export const getComponentLibraryManifest = async (library: string) => {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   const filename = "manifest.json"
 
   if (shouldServeLocally()) {
