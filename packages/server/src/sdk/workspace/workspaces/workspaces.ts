@@ -3,7 +3,7 @@ import { groups } from "@budibase/pro"
 import { ContextUser, User, Workspace } from "@budibase/types"
 import sdk from "../.."
 import { checkAppMetadata } from "../../../automations/logging"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import { getLocksById } from "../../../utilities/redis"
 import { enrichApps } from "../../users/sessions"
 
@@ -18,13 +18,15 @@ export function filterAppList(user: User, apps: Workspace[]) {
   } else {
     return apps
   }
-  return apps.filter(app => appList.includes(dbCore.getProdAppID(app.appId)))
+  return apps.filter(app =>
+    appList.includes(dbCore.getProdWorkspaceID(app.appId))
+  )
 }
 
-export async function fetch(status: AppStatus, user: ContextUser) {
-  const dev = status === AppStatus.DEV
-  const all = status === AppStatus.ALL
-  let apps = (await dbCore.getAllApps({ dev, all })) as Workspace[]
+export async function fetch(status: WorkspaceStatus, user: ContextUser) {
+  const dev = status === WorkspaceStatus.DEV
+  const all = status === WorkspaceStatus.ALL
+  let workspaces = await dbCore.getAllWorkspaces({ dev, all })
 
   // need to type this correctly - add roles back in to convert from ContextUser to User
   const completeUser: User = {
@@ -32,30 +34,30 @@ export async function fetch(status: AppStatus, user: ContextUser) {
     roles: user?.roles || {},
   }
   const enrichedUser = await groups.enrichUserRolesFromGroups(completeUser)
-  apps = filterAppList(enrichedUser, apps)
+  workspaces = filterAppList(enrichedUser, workspaces)
 
-  const appIds = apps
-    .filter(app => app.status === "development")
-    .map(app => app.appId)
+  const workspaceIds = workspaces
+    .filter(workspace => workspace.status === "development")
+    .map(workspace => workspace.appId)
 
-  // get the locks for all the dev apps
+  // get the locks for all the dev workspaces
   if (dev || all) {
-    const locks = await getLocksById(appIds)
-    for (let app of apps) {
-      const lock = locks[app.appId]
+    const locks = await getLocksById(workspaceIds)
+    for (let workspace of workspaces) {
+      const lock = locks[workspace.appId]
       if (lock) {
-        app.lockedBy = lock as any
+        workspace.lockedBy = lock as any
       } else {
         // make sure its definitely not present
-        delete app.lockedBy
+        delete workspace.lockedBy
       }
     }
   }
 
   // Enrich apps with all builder user sessions
-  const enrichedApps = await enrichApps(apps)
+  const enrichedWorkspaces = await enrichApps(workspaces)
 
-  return await checkAppMetadata(enrichedApps)
+  return await checkAppMetadata(enrichedWorkspaces)
 }
 
 export async function enrichWithDefaultWorkspaceAppUrl(apps: Workspace[]) {

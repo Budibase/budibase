@@ -1,8 +1,8 @@
+import { BaseEvent, Event, Group, Identity } from "@budibase/types"
 import { PostHog } from "posthog-node"
-import { Event, Identity, Group, BaseEvent } from "@budibase/types"
-import { EventProcessor } from "../types"
-import env from "../../../environment"
 import * as context from "../../../context"
+import env from "../../../environment"
+import { EventProcessor } from "../types"
 import * as rateLimiting from "./rateLimiting"
 
 const EXCLUDED_EVENTS: Event[] = [
@@ -51,7 +51,7 @@ export default class PosthogProcessor implements EventProcessor {
     properties.environment = identity.environment
     properties.hosting = identity.hosting
 
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     if (appId) {
       properties.appId = appId
     }

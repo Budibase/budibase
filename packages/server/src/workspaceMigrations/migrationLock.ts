@@ -13,7 +13,7 @@ export async function doInMigrationLock<T>(
 
   console.log(`Acquiring app migration lock for "${appId}"`)
 
-  const prodAppId = db.getProdAppID(appId)
+  const prodAppId = db.getProdWorkspaceID(appId)
 
   const { result } = await locks.doWithLock(
     {

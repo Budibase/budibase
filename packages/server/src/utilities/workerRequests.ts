@@ -1,22 +1,22 @@
-import { Response, default as fetch, type RequestInit } from "node-fetch"
-import env from "../environment"
-import { checkSlashesInUrl } from "./index"
 import {
-  db as dbCore,
   constants,
-  tenancy,
-  logging,
   env as coreEnv,
+  db as dbCore,
+  logging,
+  tenancy,
 } from "@budibase/backend-core"
 import {
   Ctx,
-  User,
-  EmailInvite,
   EmailAttachment,
-  SendEmailResponse,
-  SendEmailRequest,
+  EmailInvite,
   EmailTemplatePurpose,
+  SendEmailRequest,
+  SendEmailResponse,
+  User,
 } from "@budibase/types"
+import { Response, default as fetch, type RequestInit } from "node-fetch"
+import env from "../environment"
+import { checkSlashesInUrl } from "./index"
 
 interface Request {
   ctx?: Ctx
@@ -138,7 +138,7 @@ export async function sendSmtpEmail({
 }
 
 export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
-  const prodAppId = dbCore.getProdAppID(appId)
+  const prodAppId = dbCore.getProdWorkspaceID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
     createRequest({
