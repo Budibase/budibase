@@ -167,7 +167,7 @@ export async function revertClientLibrary(appId: string) {
   let manifestContent
   let hasBackup = false
 
-  // Process all files in the backup folder using parallelForeach
+  // First try to process files from the backup folder
   await utils.parallelForeach(
     objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}.bak`),
     async file => {
@@ -205,6 +205,51 @@ export async function revertClientLibrary(appId: string) {
     },
     5
   )
+
+  // If no backup folder found, try to find old .bak files
+  if (!hasBackup) {
+    await utils.parallelForeach(
+      objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
+      async file => {
+        if (!file.Key?.endsWith(".bak")) {
+          return
+        }
+
+        hasBackup = true
+
+        // Restore .bak file to original location
+        const restoreKey = file.Key!.replace(".bak", "")
+
+        // For manifest file, we need to read the content to return it
+        if (restoreKey.endsWith("manifest.json")) {
+          const tmpPath = await objectStore.retrieveToTmp(
+            ObjectStoreBuckets.APPS,
+            file.Key!
+          )
+          manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+
+          await objectStore.upload({
+            bucket: ObjectStoreBuckets.APPS,
+            filename: restoreKey,
+            path: tmpPath,
+          })
+        } else {
+          // For all other files, use streaming
+          const stream = await objectStore.getReadStream(
+            ObjectStoreBuckets.APPS,
+            file.Key!
+          )
+
+          await objectStore.streamUpload({
+            bucket: ObjectStoreBuckets.APPS,
+            filename: restoreKey,
+            stream,
+          })
+        }
+      },
+      5
+    )
+  }
 
   if (!hasBackup) {
     throw new Error(`No backup found for app ${appId}`)
