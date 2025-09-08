@@ -1,5 +1,5 @@
+import { context, db as dbCore } from "@budibase/backend-core"
 import { Webhook, WebhookActionType } from "@budibase/types"
-import { db as dbCore, context } from "@budibase/backend-core"
 import { generateWebhookID } from "../../../db/utils"
 
 function isWebhookID(id: string) {
@@ -22,7 +22,7 @@ export function newDoc(
 }
 
 export async function save(webhook: Webhook) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // check that the webhook exists
   if (webhook._id && isWebhookID(webhook._id)) {
     await db.get(webhook._id)
@@ -35,7 +35,7 @@ export async function save(webhook: Webhook) {
 }
 
 export async function destroy(id: string, rev: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (!id || !isWebhookID(id)) {
     throw new Error("Provided webhook ID is not valid.")
   }

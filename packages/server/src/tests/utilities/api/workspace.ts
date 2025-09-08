@@ -11,7 +11,7 @@ import {
   type FetchAppPackageResponse,
   type FetchPublishedAppsResponse,
 } from "@budibase/types"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import { Expectations, RequestOpts, TestAPI } from "./base"
 
 export class WorkspaceAPI extends TestAPI {
@@ -167,7 +167,7 @@ export class WorkspaceAPI extends TestAPI {
   }
 
   fetch = async (
-    { status }: { status?: AppStatus } = {},
+    { status }: { status?: WorkspaceStatus } = {},
     expectations?: Expectations
   ): Promise<Workspace[]> => {
     return await this._get<Workspace[]>("/api/applications", {

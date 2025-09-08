@@ -22,7 +22,7 @@ import path from "path"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import {
@@ -282,7 +282,7 @@ describe("/applications", () => {
   describe("fetch", () => {
     it("lists all applications", async () => {
       const apps = await config.api.workspace.fetch({
-        status: AppStatus.DEV,
+        status: WorkspaceStatus.DEV,
       })
       expect(apps.length).toBeGreaterThan(0)
     })
@@ -428,11 +428,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "App Two",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: `${secondWorkspace.url}/apptwo`,
           },
@@ -511,11 +511,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "Default",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: secondWorkspace.url,
           },
@@ -1182,7 +1182,7 @@ describe("/applications", () => {
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
-      await context.doInAppContext(app.appId, () =>
+      await context.doInWorkspaceContext(app.appId, () =>
         config.createAutomationLog(automation)
       )
 
@@ -1237,7 +1237,7 @@ describe("/applications", () => {
       })
 
       // Switch to production context and verify data was seeded
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1270,7 +1270,7 @@ describe("/applications", () => {
       expect(result).toBeDefined()
 
       // Verify data was published to production (since test mode publishes all data)
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1281,7 +1281,7 @@ describe("/applications", () => {
       })
 
       // Test that we can call listEmptyProductionTables without error
-      const emptyTables = await context.doInAppContext(
+      const emptyTables = await context.doInWorkspaceContext(
         config.getAppId(),
         async () => {
           return await sdk.tables.listEmptyProductionTables()

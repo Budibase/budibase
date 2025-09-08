@@ -1,22 +1,22 @@
-import {
-  SqlQuery,
-  Table,
-  Datasource,
-  FieldType,
-  FieldSchema,
-  StringFieldSubType,
-} from "@budibase/types"
 import { context, objectStore, sql } from "@budibase/backend-core"
-import { v4 } from "uuid"
-import { parseStringPromise as xmlParser } from "xml2js"
-import { formatBytes } from "../../utilities"
-import env from "../../environment"
-import { InvalidColumns } from "../../constants"
 import { helpers, utils } from "@budibase/shared-core"
+import {
+  Datasource,
+  FieldSchema,
+  FieldType,
+  SqlQuery,
+  StringFieldSubType,
+  Table,
+} from "@budibase/types"
+import fs from "fs"
+import { cloneDeep, merge } from "lodash"
 import { pipeline } from "stream/promises"
 import tmp from "tmp"
-import fs from "fs"
-import { merge, cloneDeep } from "lodash"
+import { v4 } from "uuid"
+import { parseStringPromise as xmlParser } from "xml2js"
+import { InvalidColumns } from "../../constants"
+import env from "../../environment"
+import { formatBytes } from "../../utilities"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -422,7 +422,7 @@ export async function handleFileResponse(
     : ""
 
   const processedFileName = `${v4()}.${fileExtension}`
-  const key = `${context.getProdAppId()}/${processedFileName}`
+  const key = `${context.getProdWorkspaceId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
   // put the response stream to disk temporarily as a buffer

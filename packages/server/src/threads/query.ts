@@ -1,32 +1,32 @@
+import { auth, cache, context } from "@budibase/backend-core"
+import { iifeWrapper, processStringSync } from "@budibase/string-templates"
+import {
+  Datasource,
+  DatasourcePlus,
+  Query,
+  QueryVerb,
+  Row,
+  SourceName,
+  SSOUser,
+} from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import { getIntegration } from "../integrations"
+import { IsolatedVM } from "../jsRunner/vm"
+import sdk from "../sdk"
+import {
+  QueryEvent,
+  QueryEventCtx,
+  QueryResponse,
+  QueryVariable,
+  WorkerCallback,
+} from "./definitions"
 import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
-import {
-  WorkerCallback,
-  QueryEvent,
-  QueryVariable,
-  QueryResponse,
-  QueryEventCtx,
-} from "./definitions"
-import { IsolatedVM } from "../jsRunner/vm"
-import { iifeWrapper, processStringSync } from "@budibase/string-templates"
-import { getIntegration } from "../integrations"
-import { context, cache, auth } from "@budibase/backend-core"
-import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import sdk from "../sdk"
-import { cloneDeep } from "lodash/fp"
-import {
-  Datasource,
-  Query,
-  SourceName,
-  Row,
-  QueryVerb,
-  DatasourcePlus,
-  SSOUser,
-} from "@budibase/types"
 
-import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
+import { isSQL } from "../integrations/utils"
 
 class QueryRunner {
   datasource: Datasource
@@ -226,7 +226,7 @@ class QueryRunner {
     queryId: string,
     currentParameters: Record<string, any>
   ) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
@@ -367,7 +367,7 @@ export function execute(input: QueryEvent, callback: WorkerCallback) {
       callback(err)
     }
   }
-  context.doInAppContext(input.appId!, async () => {
+  context.doInWorkspaceContext(input.appId!, async () => {
     if (input.environmentVariables) {
       return context.doInEnvironmentContext(input.environmentVariables, () => {
         return run()

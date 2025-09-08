@@ -2,14 +2,16 @@ import {
   context,
   db as dbCore,
   events,
-  roles,
   Header,
+  roles,
 } from "@budibase/backend-core"
-import { getUserMetadataParams, InternalTables } from "../../db/utils"
+import { helpers, RoleColor, sdk as sharedSdk } from "@budibase/shared-core"
 import {
   AccessibleRolesResponse,
+  BuiltinPermissionID,
   Database,
   DeleteRoleResponse,
+  DocumentType,
   FetchRolesResponse,
   FindRoleResponse,
   Role,
@@ -17,10 +19,8 @@ import {
   SaveRoleResponse,
   UserCtx,
   UserMetadata,
-  DocumentType,
-  BuiltinPermissionID,
 } from "@budibase/types"
-import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
+import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 
@@ -91,7 +91,7 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
 }
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let { _id, _rev, name, inherits, permissionId, version, uiMetadata } =
     ctx.request.body
   let isCreate = false
@@ -182,8 +182,8 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   role._rev = result.rev
   ctx.body = roles.externalRole(role)
 
-  const devDb = context.getDevAppDB()
-  const prodDb = context.getProdAppDB()
+  const devDb = context.getDevWorkspaceDB()
+  const prodDb = context.getProdWorkspaceDB()
 
   if (await prodDb.exists()) {
     const replication = new dbCore.Replication({
@@ -200,7 +200,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteRoleResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let roleId = ctx.params.roleId as string
   if (roles.isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
@@ -251,7 +251,7 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   const isBuilder = ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)
   let roleIds: string[] = []
   if (!roleHeader && isBuilder) {
-    const appId = context.getAppId()
+    const appId = context.getWorkspaceId()
     if (appId) {
       roleIds = await roles.getAllRoleIds(appId)
     }

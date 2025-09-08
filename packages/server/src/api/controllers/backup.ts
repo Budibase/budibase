@@ -17,14 +17,14 @@ export async function exportAppDump(
   const { appId } = ctx.query as any
   const { excludeRows, encryptPassword } = ctx.request.body
 
-  const [app] = await db.getAppsByIDs([appId])
-  const appName = app.name
+  const [workspace] = await db.getWorkspacesByIDs([appId])
+  const workspaceName = workspace.name
 
   // remove the 120 second limit for the request
   ctx.req.setTimeout(0)
 
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
-  const backupIdentifier = `${appName}-export-${new Date().getTime()}.${extension}`
+  const backupIdentifier = `${workspaceName}-export-${new Date().getTime()}.${extension}`
   ctx.attachment(backupIdentifier)
   ctx.body = await sdk.backups.streamExportApp({
     appId,
@@ -32,8 +32,8 @@ export async function exportAppDump(
     encryptPassword,
   })
 
-  await context.doInAppContext(appId, async () => {
-    const appDb = context.getAppDB()
+  await context.doInWorkspaceContext(appId, async () => {
+    const appDb = context.getWorkspaceDB()
     const app = await appDb.get<Workspace>(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
@@ -43,7 +43,7 @@ export async function clearBackupError(
   ctx: UserCtx<ClearBackupErrorRequest, ClearBackupErrorResponse>
 ) {
   const { backupId, appId } = ctx.request.body
-  await context.doInAppContext(appId, async () => {
+  await context.doInWorkspaceContext(appId, async () => {
     await sdk.backups.clearErrors(backupId)
   })
 

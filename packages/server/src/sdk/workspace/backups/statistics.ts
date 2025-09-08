@@ -1,19 +1,19 @@
 import { context, db as dbCore } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
+import sdk from "../.."
 import {
+  getAutomationParams,
   getDatasourceParams,
   getTableParams,
-  getAutomationParams,
 } from "../../../db/utils"
-import sdk from "../.."
 
 async function runInContext(appId: string, cb: any, db?: Database) {
   if (db) {
     return cb(db)
   } else {
-    const devAppId = dbCore.getDevAppID(appId)
-    return context.doInAppContext(devAppId, () => {
-      const db = context.getAppDB()
+    const devId = dbCore.getDevWorkspaceID(appId)
+    return context.doInWorkspaceContext(devId, () => {
+      const db = context.getWorkspaceDB()
       return cb(db)
     })
   }

@@ -1,7 +1,7 @@
+import { Ctx, Feature } from "@budibase/types"
 import crypto from "crypto"
-import { app } from "../cache"
-import { Feature, Ctx } from "@budibase/types"
 import { Middleware, Next } from "koa"
+import { workspace } from "../cache"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -107,7 +107,7 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   )
   if (licensed && ctx.appId) {
     try {
-      const appMetadata = await app.getAppMetadata(ctx.appId)
+      const appMetadata = await workspace.getWorkspaceMetadata(ctx.appId)
       if ("name" in appMetadata) {
         for (let script of appMetadata.scripts || []) {
           const inclusions = (script.cspWhitelist || "")

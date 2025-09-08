@@ -140,8 +140,8 @@ export async function clearLogError(
   ctx: UserCtx<ClearAutomationLogRequest, ClearAutomationLogResponse>
 ) {
   const { automationId, appId } = ctx.request.body
-  await context.doInAppContext(appId, async () => {
-    const db = context.getProdAppDB()
+  await context.doInWorkspaceContext(appId, async () => {
+    const db = context.getProdWorkspaceDB()
     const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
@@ -152,7 +152,7 @@ export async function clearLogError(
       delete metadata.automationErrors[automationId]
     }
     await db.put(metadata)
-    await cache.app.invalidateAppMetadata(metadata.appId, metadata)
+    await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)
     ctx.body = { message: `Error logs cleared.` }
   })
 }
@@ -187,7 +187,7 @@ export async function getDefinitionList(
 export async function trigger(
   ctx: UserCtx<TriggerAutomationRequest, TriggerAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
@@ -220,7 +220,7 @@ export async function trigger(
       }
     }
   } else {
-    if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
+    if (ctx.appId && !dbCore.isProdWorkspaceID(ctx.appId)) {
       ctx.throw(400, "Only apps in production support this endpoint")
     }
     await triggers.externalTrigger(automation, {
@@ -248,7 +248,7 @@ function prepareTestInput(input: TestAutomationRequest) {
 export async function test(
   ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const automation = await db.tryGet<Automation>(ctx.params.id)
   if (!automation) {
     ctx.throw(404, `Automation ${ctx.params.id} not found`)

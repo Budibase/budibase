@@ -39,7 +39,7 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
 export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
@@ -125,7 +125,7 @@ export async function save(
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 

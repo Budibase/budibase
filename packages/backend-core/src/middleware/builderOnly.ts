@@ -1,11 +1,11 @@
 import { UserCtx } from "@budibase/types"
-import { isBuilder, hasBuilderPermissions } from "../users"
-import { getAppId } from "../context"
+import { getWorkspaceId } from "../context"
 import env from "../environment"
+import { hasBuilderPermissions, isBuilder } from "../users"
 
 type BuilderFn = (user: UserCtx["user"], appId?: string) => boolean
 export async function builderOnly(ctx: UserCtx, next: any) {
-  const appId = getAppId()
+  const appId = getWorkspaceId()
 
   let builderFn: BuilderFn | undefined
   if (env.isWorker() || !appId) {

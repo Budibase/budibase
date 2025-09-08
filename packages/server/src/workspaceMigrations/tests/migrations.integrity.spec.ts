@@ -1,9 +1,9 @@
 import { context, DesignDocuments } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
+import { getAppMigrationVersion, updateAppMigrationMetadata } from ".."
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
-import { getAppMigrationVersion, updateAppMigrationMetadata } from ".."
 import { processMigrations } from "../migrationsProcessor"
-import { Database } from "@budibase/types"
 
 describe("migration integrity", () => {
   // These test is checking that each migration is "idempotent".
@@ -35,8 +35,8 @@ describe("migration integrity", () => {
     const appId = config.getAppId()
     await config.doInContext(appId, async () => {
       await setCurrentVersion("")
-      const devDb = context.getAppDB()
-      const prodDb = context.getProdAppDB()
+      const devDb = context.getWorkspaceDB()
+      const prodDb = context.getProdWorkspaceDB()
       for (let i = 0; i < migrations.MIGRATIONS.length; i++) {
         const migrationsToApply = migrations.MIGRATIONS.slice(0, i + 1)
         const latestMigration =
