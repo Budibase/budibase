@@ -1,23 +1,15 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
   import { Content, SideNav, SideNavItem } from "@/components/portal/page"
-  import { featureFlags } from "@/stores/portal"
   import { Page, Layout } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
-
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACES
 </script>
 
-{#if workspaceAppsEnabled}
-  <TopBar
-    icon="gear"
-    breadcrumbs={[{ text: "Settings" }]}
-    showPublish={false}
-  />
-{/if}
+<TopBar icon="gear" breadcrumbs={[{ text: "Settings" }]} showPublish={false} />
+
 <!-- routify:options index=4 -->
-<div class="settings" class:padding={workspaceAppsEnabled}>
-  <Page wide={workspaceAppsEnabled} noPadding={workspaceAppsEnabled}>
+<div class="settings">
+  <Page wide noPadding>
     <Layout noPadding gap="L">
       <Content showMobileNav>
         <SideNav slot="side-nav">
@@ -71,8 +63,6 @@
     justify-content: flex-start;
     align-items: stretch;
     height: 0;
-  }
-  .settings.padding {
     padding: 10px 12px;
   }
 </style>

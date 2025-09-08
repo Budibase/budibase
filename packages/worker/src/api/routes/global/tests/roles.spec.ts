@@ -1,11 +1,11 @@
-import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, roles } from "@budibase/backend-core"
 import {
-  App,
-  Database,
   BuiltinPermissionID,
+  Database,
   WithoutDocMetadata,
+  Workspace,
 } from "@budibase/types"
+import { structures, TestConfiguration } from "../../../../tests"
 
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
@@ -35,7 +35,9 @@ async function addAppMetadata() {
   })
 }
 
-async function updateAppMetadata(update: Partial<WithoutDocMetadata<App>>) {
+async function updateAppMetadata(
+  update: Partial<WithoutDocMetadata<Workspace>>
+) {
   const app = await appDb.get("app_metadata")
   await appDb.put({
     ...app,
@@ -140,6 +142,18 @@ describe("/api/global/roles", () => {
   })
 
   describe("DELETE /api/global/roles/:appId", () => {
+    async function createBuilderUser() {
+      const saveResponse = await config.api.users.saveUser(
+        structures.users.builderUser(),
+        200
+      )
+      const { body: user } = await config.api.users.getUser(
+        saveResponse.body._id
+      )
+      await config.login(user)
+      return user
+    }
+
     it("removes an app role", async () => {
       let user = structures.users.user()
       user.roles = {
@@ -150,6 +164,15 @@ describe("/api/global/roles", () => {
       const updatedUser = await config.api.users.getUser(userResponse._id!)
       expect(updatedUser.body.roles).not.toHaveProperty(appId)
       expect(res.body.message).toEqual("App role removed from all users")
+    })
+
+    it("should not allow creator users to remove app roles", async () => {
+      const builderUser = await createBuilderUser()
+
+      const res = await config.withUser(builderUser, () =>
+        config.api.roles.remove(appId, { status: 403 })
+      )
+      expect(res.body.message).toBe("Admin user only endpoint.")
     })
   })
 })

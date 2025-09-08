@@ -1,4 +1,7 @@
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { queue } from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import { AutomationData, AutomationStatus } from "@budibase/types"
+import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   captureAutomationMessages,
@@ -6,10 +9,7 @@ import {
   captureAutomationResults,
   triggerCron,
 } from "../utilities"
-import { automations } from "@budibase/pro"
-import { AutomationData, AutomationStatus } from "@budibase/types"
-import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
-import { queue } from "@budibase/backend-core"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
@@ -39,7 +39,7 @@ describe("cron trigger", () => {
       .save()
 
     const messages = await captureAutomationMessages(automation, () =>
-      config.api.application.publish()
+      config.api.workspace.publish()
     )
     expect(messages).toHaveLength(1)
 
@@ -58,7 +58,7 @@ describe("cron trigger", () => {
       })
       .save()
 
-    await config.api.application.publish(config.getAppId(), {
+    await config.api.workspace.publish(config.getAppId(), {
       status: 500,
       body: {
         message: `Deployment Failed: Failed to enable CRON trigger for automation "${automation.name}": Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.`,
@@ -76,7 +76,7 @@ describe("cron trigger", () => {
       .save()
 
     const [message] = await captureAutomationMessages(automation, () =>
-      config.api.application.publish()
+      config.api.workspace.publish()
     )
 
     await config.withProdApp(async () => {
@@ -111,7 +111,7 @@ describe("cron trigger", () => {
       })
       .save()
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
 
     const results = await captureAutomationResults(
       runner.automation,
@@ -135,7 +135,7 @@ describe("cron trigger", () => {
       })
       .save()
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
 
     const results = await captureAutomationResults(
       runner.automation,

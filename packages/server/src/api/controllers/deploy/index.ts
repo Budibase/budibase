@@ -1,36 +1,34 @@
-import Deployment from "./Deployment"
 import {
+  cache,
   context,
   db as dbCore,
-  events,
-  cache,
   errors,
-  features,
+  events,
 } from "@budibase/backend-core"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import { backups } from "@budibase/pro"
+import {
+  AppBackupTrigger,
+  Automation,
+  DeploymentDoc,
+  DeploymentProgressResponse,
+  DeploymentStatus,
+  FetchDeploymentResponse,
+  PublishAppRequest,
+  PublishAppResponse,
+  PublishStatusResponse,
+  UserCtx,
+} from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronTrigger,
 } from "../../../automations/utils"
-import { backups } from "@budibase/pro"
-import {
-  AppBackupTrigger,
-  DeploymentDoc,
-  FetchDeploymentResponse,
-  PublishAppResponse,
-  UserCtx,
-  DeploymentStatus,
-  DeploymentProgressResponse,
-  Automation,
-  PublishAppRequest,
-  PublishStatusResponse,
-  FeatureFlag,
-} from "@budibase/types"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
+import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { doInMigrationLock } from "../../../appMigrations"
-import env from "../../../environment"
+import { doInMigrationLock } from "../../../workspaceMigrations"
+import Deployment from "./Deployment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -204,10 +202,7 @@ export const publishApp = async function (
       const devAppId = dbCore.getDevelopmentAppID(appId)
       const productionAppId = dbCore.getProdAppID(appId)
 
-      if (
-        (await features.isEnabled(FeatureFlag.WORKSPACES)) &&
-        !(await sdk.applications.isAppPublished(productionAppId))
-      ) {
+      if (!(await sdk.applications.isAppPublished(productionAppId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {

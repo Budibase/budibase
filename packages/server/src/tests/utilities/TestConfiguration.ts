@@ -1,9 +1,31 @@
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
+import {
+  cache,
+  constants,
+  context,
+  env as coreEnv,
+  db as dbCore,
+  encryption,
+  roles,
+  sessions,
+  tenancy,
+  utils,
+} from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
 import { init as dbInit } from "../../db"
 import env from "../../environment"
+import {
+  app as appController,
+  automation as automationController,
+  deploy as deployController,
+  layout as layoutController,
+  query as queryController,
+  role as roleController,
+  view as viewController,
+  webhook as webhookController,
+} from "./controllers"
 import {
   basicAutomation,
   basicAutomationResults,
@@ -17,40 +39,13 @@ import {
   basicWebhook,
   TEST_WORKSPACEAPPID_PLACEHOLDER,
 } from "./structures"
-import {
-  cache,
-  constants,
-  context,
-  db as dbCore,
-  encryption,
-  env as coreEnv,
-  roles,
-  sessions,
-  tenancy,
-  utils,
-  features,
-} from "@budibase/backend-core"
-import {
-  app as appController,
-  deploy as deployController,
-  role as roleController,
-  automation as automationController,
-  webhook as webhookController,
-  query as queryController,
-  layout as layoutController,
-  view as viewController,
-} from "./controllers"
 
-import { cleanup } from "../../utilities/fileSystem"
-import { generateUserMetadataID } from "../../db/utils"
-import { startup } from "../../startup"
-import supertest from "supertest"
 import {
-  App,
   AuthToken,
   Automation,
   CreateViewRequest,
   Datasource,
+  DevInfo,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Layout,
@@ -58,8 +53,8 @@ import {
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
-  Screen,
   RowSearchParams,
+  Screen,
   SourceName,
   Table,
   TableSourceType,
@@ -68,13 +63,16 @@ import {
   View,
   Webhook,
   WithRequired,
-  DevInfo,
-  FeatureFlag,
+  Workspace,
 } from "@budibase/types"
+import supertest from "supertest"
+import { generateUserMetadataID } from "../../db/utils"
+import { startup } from "../../startup"
+import { cleanup } from "../../utilities/fileSystem"
 
-import API from "./api"
-import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+import jwt, { Secret } from "jsonwebtoken"
+import API from "./api"
 
 const newid = utils.newid
 
@@ -103,9 +101,9 @@ export default class TestConfiguration {
   appId?: string
   defaultWorkspaceAppId?: string
   name?: string
-  allApps: App[]
-  app?: App
-  prodApp?: App
+  allApps: Workspace[]
+  app?: Workspace
+  prodApp?: Workspace
   prodAppId?: string
   user?: User
   userMetadataId?: string
@@ -272,7 +270,7 @@ export default class TestConfiguration {
     }
   }
 
-  async withApp<R>(app: App | string, f: () => Promise<R>) {
+  async withApp<R>(app: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
     return await context.doInAppContext(this.appId, async () => {
@@ -594,7 +592,7 @@ export default class TestConfiguration {
     return this.tenantId
   }
 
-  async newTenant(appName = newid()): Promise<App> {
+  async newTenant(appName = newid()): Promise<Workspace> {
     this.csrfToken = generator.hash()
 
     this.tenantId = structures.tenant.id()
@@ -648,7 +646,7 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string, url?: string): Promise<App> {
+  async createApp(appName: string, url?: string): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -656,20 +654,12 @@ export default class TestConfiguration {
         (await this._req(appController.create, {
           name: appName,
           url,
-        })) as App
+        })) as Workspace
     )
     this.appId = this.app.appId
 
-    if (
-      await this.doInTenant(() => features.isEnabled(FeatureFlag.WORKSPACES))
-    ) {
-      const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
-      this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
-    } else {
-      const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-        .workspaceApps
-      this.defaultWorkspaceAppId = defaultWorkspaceApp._id
-    }
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -682,7 +672,10 @@ export default class TestConfiguration {
     })
   }
 
-  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+  async createAppWithOnboarding(
+    appName: string,
+    url?: string
+  ): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -691,7 +684,7 @@ export default class TestConfiguration {
           name: appName,
           url,
           isOnboarding: "true",
-        })) as App
+        })) as Workspace
     )
     this.appId = this.app.appId
 
@@ -718,7 +711,7 @@ export default class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get<App>(dbCore.DocumentType.APP_METADATA)
+      return await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
     })
   }
 

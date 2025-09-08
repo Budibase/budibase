@@ -24,7 +24,7 @@ const createMigrationFile = () => {
   const migrationFilename = `${generateTimestamp()}_${title
     .replace(/-/g, "_")
     .replace(/ /g, "_")}`
-  const migrationsDir = "../packages/server/src/appMigrations"
+  const migrationsDir = "../packages/server/src/workspaceMigrations"
 
   const template = `const migration = async () => {
   // Add your migration logic here

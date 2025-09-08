@@ -116,7 +116,6 @@
     "pouchdb-all-dbs": "1.1.1",
     "pouchdb-find": "9.0.0",
     "redis": "4",
-    "semver": "^7.5.4",
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
     "snowflake-sdk": "^1.15.0",

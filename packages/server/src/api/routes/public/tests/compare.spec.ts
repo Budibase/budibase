@@ -1,10 +1,10 @@
 import SwaggerParser from "@apidevtools/swagger-parser"
+import { Row, Table, Workspace } from "@budibase/types"
+import nock from "nock"
 import { run as generateSchema } from "../../../../../specs/generate"
+import environment from "../../../../environment"
 import * as setup from "../../tests/utilities"
 import { generateMakeRequest } from "./utils"
-import { Table, App, Row } from "@budibase/types"
-import nock from "nock"
-import environment from "../../../../environment"
 
 const yamlPath = generateSchema()
 // Validate OpenAPI spec on startup
@@ -12,7 +12,7 @@ SwaggerParser.validate(yamlPath!).catch(console.error)
 
 describe("compare", () => {
   let config = setup.getConfig()
-  let apiKey: string, table: Table, app: App, makeRequest: any
+  let apiKey: string, table: Table, app: Workspace, makeRequest: any
 
   beforeAll(async () => {
     app = await config.init()

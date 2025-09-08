@@ -1,8 +1,8 @@
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { captureAutomationResults } from "../utilities"
 import { Automation, Table } from "@budibase/types"
 import { basicTable } from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { captureAutomationResults } from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("row deleted trigger", () => {
   const config = new TestConfiguration()
@@ -21,7 +21,7 @@ describe("row deleted trigger", () => {
       .save()
       .then(({ automation }) => automation)
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
   })
 
   afterAll(() => {
@@ -47,7 +47,7 @@ describe("row deleted trigger", () => {
 
   it("should not trigger when a row is deleted in a different table", async () => {
     const otherTable = await config.api.table.save(basicTable())
-    await config.api.application.publish()
+    await config.api.workspace.publish()
 
     const jobs = await captureAutomationResults(automation, async () => {
       await config.withProdApp(async () => {
