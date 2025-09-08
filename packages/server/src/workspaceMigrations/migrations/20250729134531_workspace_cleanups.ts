@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
-import sdk from "../../sdk"
 import { Document } from "@budibase/types"
+import sdk from "../../sdk"
 
 const migration = async () => {
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
@@ -10,7 +10,7 @@ const migration = async () => {
       b.updatedAt!.localeCompare(a.updatedAt!)
     )
 
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
 
     const docsToUpdate: Document[] = []
 

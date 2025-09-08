@@ -9,7 +9,7 @@ import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
 import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
 import * as context from "../context"
-import { getAllApps } from "../db"
+import { getAllWorkspaces } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 
@@ -21,8 +21,8 @@ const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/workspace/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
 async function resolveAppUrl(ctx: Ctx) {
-  const appUrl = ctx.path.split("/")[2]
-  let possibleAppUrl = `/${appUrl.toLowerCase()}`
+  const workspaceUrl = ctx.path.split("/")[2]
+  let possibleUrl = `/${workspaceUrl.toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
   if (!env.isDev() && env.MULTI_TENANCY) {
@@ -35,15 +35,14 @@ async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for an url that matches
-  const apps: Workspace[] = await context.doInTenant(
-    tenantId,
-    () => getAllApps({ dev: false }) as Promise<Workspace[]>
+  const workspaces: Workspace[] = await context.doInTenant(tenantId, () =>
+    getAllWorkspaces({ dev: false })
   )
-  const app = apps.filter(
-    a => a.url && a.url.toLowerCase() === possibleAppUrl
+  const workspace = workspaces.filter(
+    a => a.url && a.url.toLowerCase() === possibleUrl
   )[0]
 
-  return app && app.appId ? app.appId : undefined
+  return workspace && workspace.appId ? workspace.appId : undefined
 }
 
 export function isServingApp(ctx: Ctx) {

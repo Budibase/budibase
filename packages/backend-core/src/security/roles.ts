@@ -11,7 +11,7 @@ import {
 import { uniqBy } from "lodash"
 import cloneDeep from "lodash/fp/cloneDeep"
 import semver from "semver"
-import { getAppDB } from "../context"
+import { getWorkspaceDB } from "../context"
 import {
   DocumentType,
   SEPARATOR,
@@ -371,7 +371,7 @@ export async function getRole(
   roleId: string,
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc | undefined> {
-  const db = getAppDB()
+  const db = getWorkspaceDB()
   const roleList = []
   if (!isBuiltin(roleId)) {
     const role = await db.tryGet<RoleDoc>(getDBRoleID(roleId))
@@ -383,7 +383,7 @@ export async function getRole(
 }
 
 export async function saveRoles(roles: RoleDoc[]) {
-  const db = getAppDB()
+  const db = getWorkspaceDB()
   await db.bulkDocs(
     roles
       .filter(role => role._id)
@@ -472,7 +472,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
   } else {
     let appDB
     try {
-      appDB = getAppDB()
+      appDB = getWorkspaceDB()
     } catch (error) {
       // We don't have any apps, so we'll just use the built-in roles
     }

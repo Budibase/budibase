@@ -1,9 +1,9 @@
-import { devRevertProcessor } from "./devRevertProcessor"
-import { DevRevertQueueData } from "@budibase/types"
+import { db } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
+import { DevRevertQueueData } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
-import { db } from "@budibase/backend-core"
+import { devRevertProcessor } from "./devRevertProcessor"
 
 describe("devRevertProcessor", () => {
   const config = new TestConfiguration()
@@ -43,7 +43,7 @@ describe("devRevertProcessor", () => {
   })
 
   describe("unhappy paths", () => {
-    it("should throw error when app is not deployed and not retry", async () => {
+    it("should throw error when workspace is not deployed and not retry", async () => {
       await config.unpublish()
 
       const processor = devRevertProcessor()

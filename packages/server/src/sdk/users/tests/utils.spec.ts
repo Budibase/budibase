@@ -64,7 +64,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are synced", async () => {
+  it("workspace users are synced", async () => {
     const initalDate = new Date()
     tk.freeze(initalDate)
     const user1 = await config.createUser({
@@ -119,7 +119,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users audit data is updated", async () => {
+  it("workspace users audit data is updated", async () => {
     tk.freeze(new Date())
     const user1 = await config.createUser({
       admin: { global: false },
@@ -154,7 +154,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are not synced if not specified", async () => {
+  it("workspace users are not synced if not specified", async () => {
     const user = await config.createUser({
       admin: { global: false },
       builder: { global: false },
@@ -171,7 +171,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are added when group is assigned to app", async () => {
+  it("workspace users are added when group is assigned to workspace", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
       const user1 = await config.createUser({
@@ -212,7 +212,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are removed when app is removed from user group", async () => {
+  it("workspace users are removed when workspace is removed from user group", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
       const user1 = await config.createUser({

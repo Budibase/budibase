@@ -280,12 +280,12 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
   ): Promise<TriggerAutomationResponse> {
     if (!this.config.prodAppId) {
       throw new Error(
-        "Automations can only be triggered in a production app context, call config.api.workspace.publish()"
+        "Automations can only be triggered in a production workspace context, call config.api.workspace.publish()"
       )
     }
-    // Because you can only trigger automations in a production app context, we
+    // Because you can only trigger automations in a production workspace context, we
     // wrap the trigger call to make tests a bit cleaner. If you really want to
-    // test triggering an automation in a dev app context, you can use the
+    // test triggering an automation in a dev workspace context, you can use the
     // automation API directly.
     return await this.config.withProdApp(async () => {
       try {

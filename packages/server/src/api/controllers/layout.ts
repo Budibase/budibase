@@ -1,18 +1,18 @@
-import { EMPTY_LAYOUT } from "../../constants/layouts"
-import { generateLayoutID } from "../../db/utils"
-import { events, context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import {
   DeleteLayoutResponse,
   SaveLayoutRequest,
   SaveLayoutResponse,
   UserCtx,
 } from "@budibase/types"
+import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { generateLayoutID } from "../../db/utils"
 import sdk from "../../sdk"
 
 export async function save(
   ctx: UserCtx<SaveLayoutRequest, SaveLayoutResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let layout = ctx.request.body
 
   if (!layout.props) {
@@ -32,7 +32,7 @@ export async function save(
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 

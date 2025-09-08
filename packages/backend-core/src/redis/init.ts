@@ -3,7 +3,7 @@ import * as utils from "./utils"
 
 let userClient: Client,
   sessionClient: Client,
-  appClient: Client,
+  workspaceClient: Client,
   cacheClient: Client,
   writethroughClient: Client,
   lockClient: Client,
@@ -15,7 +15,7 @@ let userClient: Client,
 export async function init() {
   userClient = await Client.init(utils.Databases.USER_CACHE)
   sessionClient = await Client.init(utils.Databases.SESSIONS)
-  appClient = await Client.init(utils.Databases.APP_METADATA)
+  workspaceClient = await Client.init(utils.Databases.WORKSPACE_METADATA)
   cacheClient = await Client.init(utils.Databases.GENERIC_CACHE)
   lockClient = await Client.init(utils.Databases.LOCKS)
   writethroughClient = await Client.init(utils.Databases.WRITE_THROUGH)
@@ -31,7 +31,7 @@ export async function init() {
 export async function shutdown() {
   if (userClient) await userClient.finish()
   if (sessionClient) await sessionClient.finish()
-  if (appClient) await appClient.finish()
+  if (workspaceClient) await workspaceClient.finish()
   if (cacheClient) await cacheClient.finish()
   if (writethroughClient) await writethroughClient.finish()
   if (lockClient) await lockClient.finish()
@@ -59,11 +59,11 @@ export async function getSessionClient() {
   return sessionClient
 }
 
-export async function getAppClient() {
-  if (!appClient) {
+export async function getWorkspaceClient() {
+  if (!workspaceClient) {
     await init()
   }
-  return appClient
+  return workspaceClient
 }
 
 export async function getCacheClient() {

@@ -77,8 +77,8 @@ describe("/backups", () => {
       const appId = config.getAppId()!
 
       // First manually add a backup error to simulate a failure
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
 
         // Add backup error manually to test the structure
@@ -102,8 +102,8 @@ describe("/backups", () => {
       const appId = config.getAppId()!
 
       // First set up backup errors in app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
         metadata.backupErrors = {
           "backup-123": ["Backup export failed: Test error"],
@@ -120,8 +120,8 @@ describe("/backups", () => {
       expect(response.message).toEqual("Backup errors cleared.")
 
       // Verify the specific error was removed from app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(DocumentType.APP_METADATA)
         expect(metadata.backupErrors).toEqual({
           "backup-456": ["Another backup error"],
