@@ -147,7 +147,6 @@ describe("clientLibrary", () => {
 
   describe("updateClientLibrary", () => {
     beforeEach(() => {
-      mockedFs.createReadStream.mockReturnValue("stream" as any)
       ;(mockedFs.promises.readFile as MockedReadFile).mockResolvedValue(
         '{"version": "1.0.0"}' as any
       )
@@ -157,11 +156,13 @@ describe("clientLibrary", () => {
       ["dev", true],
       ["production", false],
     ])("should upload manifest and client in %s mode", async (_, isDev) => {
+      mockedFs.createReadStream.mockReturnValueOnce("stream1" as any)
+
       mockedEnv.isDev.mockReturnValue(isDev)
 
       const result = await updateClientLibrary(testAppId)
 
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(2)
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(5)
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/manifest.json",
@@ -170,6 +171,21 @@ describe("clientLibrary", () => {
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/budibase-client.js",
+        stream: "stream",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/budibase-client.new.js",
+        stream: "stream",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/_dependencies/apexcharts.js",
+        stream: "stream",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/_dependencies/html5-qrcode.js",
         stream: "stream",
       })
       expect(result).toEqual({ version: "1.0.0" })
