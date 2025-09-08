@@ -51,27 +51,23 @@ export async function backupClientLibrary(appId: string) {
     // Ignore errors if backup doesn't exist
   }
 
-  await utils.parallelForeach(
-    objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
-    async file => {
-      if (file.Key?.includes("/.bak/") || file.Key?.endsWith(".bak")) {
-        return
-      }
+  await forEachObject(appId, async fileKey => {
+    if (fileKey.includes("/.bak/") || fileKey.endsWith(".bak")) {
+      return
+    }
 
-      const tmpPath = await objectStore.retrieveToTmp(
-        ObjectStoreBuckets.APPS,
-        file.Key!
-      )
+    const tmpPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      fileKey
+    )
 
-      const backupKey = file.Key!.replace(appId, `${appId}/.bak`)
-      await objectStore.upload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: backupKey,
-        path: tmpPath,
-      })
-    },
-    5
-  )
+    const backupKey = fileKey.replace(appId, `${appId}/.bak`)
+    await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: backupKey,
+      path: tmpPath,
+    })
+  })
 }
 
 /**
@@ -127,90 +123,78 @@ export async function revertClientLibrary(appId: string) {
   const restoredFiles = new Set<string>()
 
   // First, restore all files from the backup folder
-  await utils.parallelForeach(
-    objectStore.listAllObjects(ObjectStoreBuckets.APPS, `${appId}/.bak`),
-    async file => {
-      hasBackup = true
+  await forEachObject(`${appId}/.bak`, async filePath => {
+    hasBackup = true
 
-      // Download the backup file to temp
-      const tmpPath = await objectStore.retrieveToTmp(
-        ObjectStoreBuckets.APPS,
-        file.Key!
-      )
+    // Download the backup file to temp
+    const tmpPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      filePath
+    )
 
-      // Restore to original location
-      const restoreKey = file.Key!.replace(`${appId}/.bak`, appId)
-      restoredFiles.add(restoreKey)
+    // Restore to original location
+    const restoreKey = filePath.replace(`${appId}/.bak`, appId)
+    restoredFiles.add(restoreKey)
 
-      // Read manifest content if this is the manifest file
-      if (restoreKey.endsWith("manifest.json")) {
-        manifestContent = await fs.promises.readFile(tmpPath, "utf8")
-      }
+    // Read manifest content if this is the manifest file
+    if (restoreKey.endsWith("manifest.json")) {
+      manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+    }
 
-      await objectStore.upload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: restoreKey,
-        path: tmpPath,
-      })
-    },
-    5
-  )
+    await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: restoreKey,
+      path: tmpPath,
+    })
+  })
 
   // After successful restore, clean up any extra files that weren't in backup
   if (hasBackup) {
-    await utils.parallelForeach(
-      objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
-      async file => {
-        if (
-          !file.Key?.includes("/.bak/") &&
-          !file.Key?.endsWith(".bak") &&
-          !restoredFiles.has(file.Key!)
-        ) {
-          await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.Key!)
-        }
-      },
-      5
-    )
+    await forEachObject(appId, async filePath => {
+      if (
+        !filePath.includes("/.bak/") &&
+        !filePath.endsWith(".bak") &&
+        !restoredFiles.has(filePath)
+      ) {
+        await objectStore.deleteFile(ObjectStoreBuckets.APPS, filePath)
+      }
+    })
   }
 
   // If no backup folder found, try to find old .bak files
   if (!hasBackup) {
-    await utils.parallelForeach(
-      objectStore.listAllObjects(ObjectStoreBuckets.APPS, appId),
-      async file => {
-        if (!file.Key?.endsWith(".bak")) {
-          return
-        }
+    await forEachObject(appId, async filePath => {
+      if (!filePath.endsWith(".bak")) {
+        return
+      }
 
-        hasBackup = true
+      hasBackup = true
 
-        // Restore .bak file to original location
-        const restoreKey = file.Key!.replace(".bak", "")
+      // Restore .bak file to original location
+      const restoreKey = filePath.replace(".bak", "")
 
-        // For manifest file, we need to read the content to return it
+      // For manifest file, we need to read the content to return it
 
-        if (restoreKey.endsWith("manifest.json")) {
-          const tmpPath = await objectStore.retrieveToTmp(
-            ObjectStoreBuckets.APPS,
-            file.Key!
-          )
-          manifestContent = await fs.promises.readFile(tmpPath, "utf8")
-        }
-
-        // For all other files, use streaming
-        const stream = await objectStore.getReadStream(
+      if (restoreKey.endsWith("manifest.json")) {
+        const tmpPath = await objectStore.retrieveToTmp(
           ObjectStoreBuckets.APPS,
-          file.Key!
+          filePath
         )
+        manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+      }
 
-        await objectStore.streamUpload({
-          bucket: ObjectStoreBuckets.APPS,
-          filename: restoreKey,
-          stream,
-        })
-      },
-      5
-    )
+      // For all other files, use streaming
+      const stream = await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        filePath
+      )
+
+      await objectStore.streamUpload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: restoreKey,
+        stream,
+      })
+    })
   }
 
   if (!hasBackup) {
@@ -223,6 +207,21 @@ export async function revertClientLibrary(appId: string) {
 
   return JSON.parse(manifestContent)
 }
+
+const forEachObject = (
+  path: string,
+  task: (fileKey: string) => Promise<void>
+) =>
+  utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+      await task(file.Key)
+    },
+    5
+  )
 
 export function shouldServeLocally() {
   if (env.isDev()) {
