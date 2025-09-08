@@ -66,8 +66,6 @@ jobs:
             BUDIBASE_VERSION=0.0.0+local
             TARGETBUILD=single
           outputs: type=docker,dest=/tmp/budibase-current.tar
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Upload Docker image
         uses: actions/upload-artifact@v4
