@@ -7,8 +7,11 @@
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
 
-  let name: string = "My first app"
-  let url: string = "my-first-app"
+  let workspaceName: string = "My first workspace"
+  let workspaceUrl: string = "my-first-workspace"
+
+  let appName: string = "My first App"
+  let appUrl: string = "my-first-app"
   let appId: string | null = null
 
   let loading = false
@@ -19,8 +22,8 @@
     // Create form data to create app
     // This is form based and not JSON
     let data = new FormData()
-    data.append("name", name.trim())
-    data.append("url", url.trim())
+    data.append("name", appName)
+    data.append("url", appUrl)
     data.append("useTemplate", "false")
     data.append("isOnboarding", "true")
 
@@ -55,7 +58,12 @@
 
 <div class="full-width">
   <SplitPage>
-    <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
+    <NamePanel
+      bind:name={workspaceName}
+      bind:url={workspaceUrl}
+      disabled={loading}
+      onNext={handleCreateApp}
+    />
     <div slot="right">
       <ExampleApp />
     </div>
