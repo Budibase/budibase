@@ -70,7 +70,7 @@ jobs:
       - name: Upload Docker image
         uses: actions/upload-artifact@v4
         with:
-          name: budibase-current-image
+          name: budibase-current-image-${{ github.run_id }}
           path: /tmp/budibase-current.tar
           retention-days: 1
 
@@ -178,7 +178,7 @@ jobs:
       - name: Download Docker image
         uses: actions/download-artifact@v4
         with:
-          name: budibase-current-image
+          name: budibase-current-image-${{ github.run_id }}
           path: /tmp
 
       - name: Load Docker image
