@@ -49,6 +49,7 @@
   let deleteViewModal
 
   $: tableId = $params.tableId
+  $: isUsersTable = tableId === TableNames.USERS
   $: table = $tables.list.find(table => table._id === tableId)
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
@@ -225,15 +226,19 @@
 </script>
 
 <div class="nav">
-  <a
-    href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
-  >
-    <IntegrationIcon
-      integrationType={datasource?.source}
-      schema={datasource?.schema}
-      size="24"
-    />
-  </a>
+  {#if !isUsersTable}
+    <a
+      href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
+    >
+      <IntegrationIcon
+        integrationType={datasource?.source}
+        schema={datasource?.schema}
+        size="24"
+      />
+    </a>
+  {:else}
+    <Icon name="users-three" size="L" />
+  {/if}
   <a
     href={$tableUrl(tableId)}
     class="nav-item"
