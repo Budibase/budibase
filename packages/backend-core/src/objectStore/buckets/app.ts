@@ -7,10 +7,16 @@ import * as cloudfront from "../cloudfront"
 import * as objectStore from "../objectStore"
 
 export async function clientLibraryPath(appId: string) {
+  const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
   if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
-    return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+    return oldClient
   } else {
-    return `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
+    const newClientExists = await objectStore.objectExists(
+      env.APPS_BUCKET_NAME,
+      newClient
+    )
+    return newClientExists ? newClient : oldClient
   }
 }
 export function client3rdPartyLibrary(appId: string, file: string) {
