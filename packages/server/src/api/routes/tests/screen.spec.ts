@@ -269,7 +269,6 @@ describe("/screens", () => {
 
   describe("usage", () => {
     beforeEach(async () => {
-      await config.init()
       await config.api.screen.save(basicScreen())
     })
 
