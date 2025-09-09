@@ -64,6 +64,10 @@ async function buildAll() {
   console.log("Building old client...")
   await build({
     ...config,
+    define: {
+      ...config.define,
+      __USE_DYNAMIC_LOADING__: false,
+    },
     configFile: "./vite.config.mjs",
   })
 }
