@@ -1,28 +1,28 @@
 import { sdk } from "@budibase/shared-core"
 import {
-  AddAppSampleDataResponse,
+  AddWorkspaceSampleDataResponse,
   ClearDevLockResponse,
   CreateWorkspaceRequest,
   CreateWorkspaceResponse,
-  DeleteAppResponse,
+  DeleteWorkspaceResponse,
   DuplicateWorkspaceRequest,
   DuplicateWorkspaceResponse,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
-  FetchAppsResponse,
   FetchDeploymentResponse,
   FetchPublishedAppsResponse,
+  FetchWorkspacesResponse,
   GetDiagnosticsResponse,
-  ImportToUpdateAppRequest,
-  ImportToUpdateAppResponse,
+  ImportToUpdateWorkspaceRequest,
+  ImportToUpdateWorkspaceResponse,
   PublishAppRequest,
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
-  UnpublishAppResponse,
+  UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -30,9 +30,9 @@ export interface AppEndpoints {
   fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
   saveAppMetadata: (
     appId: string,
-    metadata: UpdateAppRequest
-  ) => Promise<UpdateAppResponse>
-  unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
+    metadata: UpdateWorkspaceRequest
+  ) => Promise<UpdateWorkspaceResponse>
+  unpublishApp: (appId: string) => Promise<UnpublishWorkspaceResponse>
   publishAppChanges: (
     appId: string,
     opts?: PublishAppRequest
@@ -45,21 +45,21 @@ export interface AppEndpoints {
   createApp: (
     app: CreateWorkspaceRequest | FormData
   ) => Promise<CreateWorkspaceResponse>
-  deleteApp: (appId: string) => Promise<DeleteAppResponse>
+  deleteApp: (appId: string) => Promise<DeleteWorkspaceResponse>
   duplicateApp: (
     appId: string,
     app: DuplicateWorkspaceRequest
   ) => Promise<DuplicateWorkspaceResponse>
   updateAppFromExport: (
     appId: string,
-    body: ImportToUpdateAppRequest
-  ) => Promise<ImportToUpdateAppResponse>
+    body: ImportToUpdateWorkspaceRequest
+  ) => Promise<ImportToUpdateWorkspaceResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
-  getApps: () => Promise<FetchAppsResponse>
+  getApps: () => Promise<FetchWorkspacesResponse>
   fetchComponentLibDefinitions: (
-    appId: string
+    workspaceId: string
   ) => Promise<FetchAppDefinitionResponse>
-  addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
+  addSampleData: (appId: string) => Promise<AddWorkspaceSampleDataResponse>
   getPublishedApps: () => Promise<FetchPublishedAppsResponse["apps"]>
 
   // Missing request or response types

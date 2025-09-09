@@ -46,49 +46,47 @@ export interface FetchAppPackageResponse {
   recaptchaKey?: string
 }
 
-export interface AddAppSampleDataResponse {
+export interface AddWorkspaceSampleDataResponse {
   message: string
 }
 
-export type FetchAppsResponse = (Workspace & {
+export type FetchWorkspacesResponse = (Workspace & {
   defaultWorkspaceAppUrl: string
 })[]
 
-export interface PublishedAppData {
-  name: string
-  appId: string
-  url: string
-  prodId: string
-  updatedAt?: string
-}
-
 export interface FetchPublishedAppsResponse {
-  apps: PublishedAppData[]
+  apps: {
+    name: string
+    appId: string
+    url: string
+    prodId: string
+    updatedAt?: string
+  }[]
 }
 
-export interface UpdateAppRequest extends Partial<Workspace> {}
-export interface UpdateAppResponse extends Workspace {}
+export interface UpdateWorkspaceRequest extends Partial<Workspace> {}
+export interface UpdateWorkspaceResponse extends Workspace {}
 export interface UpdateAppClientResponse extends Workspace {}
 export interface RevertAppClientResponse extends Workspace {}
 
-export interface DeleteAppResponse {
+export interface DeleteWorkspaceResponse {
   ok: boolean
 }
 
-export interface UnpublishAppResponse {
+export interface UnpublishWorkspaceResponse {
   message: string
 }
 
-export interface ImportToUpdateAppRequest {
+export interface ImportToUpdateWorkspaceRequest {
   encryptionPassword?: string
 }
-export interface ImportToUpdateAppResponse {
+export interface ImportToUpdateWorkspaceResponse {
   message: string
 }
 
-export interface ExportAppDumpRequest {
+export interface ExportWorkspaceDumpRequest {
   excludeRows: boolean
   encryptPassword?: string
 }
 
-export type ExportAppDumpResponse = ReadStream
+export type ExportWorkspaceDumpResponse = ReadStream

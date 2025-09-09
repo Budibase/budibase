@@ -16,33 +16,33 @@ import {
 import { groups, licensing, quotas } from "@budibase/pro"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import {
-  AddAppSampleDataResponse,
+  AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
   BBRequest,
   CreateWorkspaceRequest,
   CreateWorkspaceResponse,
   Database,
-  DeleteAppResponse,
+  DeleteWorkspaceResponse,
   DuplicateWorkspaceRequest,
   DuplicateWorkspaceResponse,
   ErrorCode,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
-  FetchAppsResponse,
   FetchPublishedAppsResponse,
+  FetchWorkspacesResponse,
   FieldType,
-  ImportToUpdateAppRequest,
-  ImportToUpdateAppResponse,
+  ImportToUpdateWorkspaceRequest,
+  ImportToUpdateWorkspaceResponse,
   Layout,
   PlanType,
   RevertAppClientResponse,
   Row,
   Screen,
   SyncWorkspaceResponse,
-  UnpublishAppResponse,
+  UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -222,13 +222,13 @@ async function addSampleDataScreen() {
 }
 
 export const addSampleData = async (
-  ctx: UserCtx<void, AddAppSampleDataResponse>
+  ctx: UserCtx<void, AddWorkspaceSampleDataResponse>
 ) => {
   await addSampleDataDocs()
   ctx.body = { message: "Sample tables added." }
 }
 
-export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
+export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
   const apps = await sdk.applications.fetch(
     ctx.query.status as WorkspaceStatus,
     ctx.user
@@ -678,7 +678,7 @@ export async function find(ctx: UserCtx) {
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
-  ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
+  ctx: UserCtx<UpdateWorkspaceRequest, UpdateWorkspaceResponse>
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -843,14 +843,16 @@ async function postDestroyApp(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteWorkspaceResponse>) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)
   ctx.body = result
 }
 
-export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
+export async function unpublish(
+  ctx: UserCtx<void, UnpublishWorkspaceResponse>
+) {
   const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
@@ -878,7 +880,7 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
 }
 
 export async function importToApp(
-  ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
+  ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
   const { appId } = ctx.params
   const appExport = ctx.request.files?.appExport

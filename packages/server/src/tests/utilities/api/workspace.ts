@@ -3,8 +3,8 @@ import {
   DuplicateWorkspaceResponse,
   PublishAppRequest,
   PublishAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
   Workspace,
   type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
@@ -133,9 +133,9 @@ export class WorkspaceAPI extends TestAPI {
 
   update = async (
     appId: string,
-    app: UpdateAppRequest,
+    app: UpdateWorkspaceRequest,
     expectations?: Expectations
-  ): Promise<UpdateAppResponse> => {
+  ): Promise<UpdateWorkspaceResponse> => {
     return await this._put<Workspace>(`/api/applications/${appId}`, {
       body: app,
       expectations,
