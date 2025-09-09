@@ -28,7 +28,8 @@
     "lodash": "^4.17.21",
     "ora-classic": "^5.4.1",
     "semver": "^7.5.4",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
     "@commander-js/extra-typings": "14.0.0",
