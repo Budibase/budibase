@@ -185,7 +185,9 @@ describe("/applications", () => {
       // Check sample resources in the newly created app context
       await config.withApp(newWorkspace, async () => {
         const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
-        const [app] = workspaceAppsFetchResult.workspaceApps
+        const {
+          workspaceApps: [app],
+        } = workspaceAppsFetchResult
         expect(app.name).toBe(newId)
 
         const res = await config.api.workspace.getDefinition(newWorkspace.appId)
