@@ -60,7 +60,7 @@ export enum Event {
   ANALYTICS_OPT_OUT = "analytics:opt:out",
   ANALYTICS_OPT_IN = "analytics:opt:in",
 
-  // APP
+  // WORKSPACE
   APP_CREATED = "app:created",
   APP_UPDATED = "app:updated",
   APP_DELETED = "app:deleted",
@@ -201,11 +201,6 @@ export enum Event {
   ACTION_AUTOMATION_STEP_EXECUTED = "action:automation_step:executed",
   ACTION_CRUD_EXECUTED = "action:crud:executed",
   ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
-
-  // WORKSPACE
-  WORKSPACE_CREATED = "workspace:created",
-  WORKSPACE_UPDATED = "workspace:updated",
-  WORKSPACE_DELETED = "workspace:deleted",
 
   // WORKSPACE APP
   WORKSPACE_APP_CREATED = "workspace_app:created",
