@@ -1,15 +1,15 @@
 import {
-  AppBackupRestoreEvent,
-  AppBackupTriggeredEvent,
   BackupTrigger,
   BackupType,
   Event,
   WorkspaceBackup,
+  WorkspaceBackupRestoreEvent,
+  WorkspaceBackupTriggeredEvent,
 } from "@budibase/types"
 import { publishEvent } from "../events"
 
 async function appBackupRestored(backup: WorkspaceBackup) {
-  const properties: AppBackupRestoreEvent = {
+  const properties: WorkspaceBackupRestoreEvent = {
     appId: backup.appId,
     restoreId: backup._id!,
     backupCreatedAt: backup.timestamp,
@@ -26,7 +26,7 @@ async function appBackupTriggered(
   trigger: BackupTrigger,
   name: string
 ) {
-  const properties: AppBackupTriggeredEvent = {
+  const properties: WorkspaceBackupTriggeredEvent = {
     appId: appId,
     backupId,
     type,
