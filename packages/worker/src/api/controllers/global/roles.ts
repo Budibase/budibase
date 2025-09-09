@@ -45,7 +45,9 @@ export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
     dbCore.getDevWorkspaceID(appId),
     async () => {
       const db = context.getWorkspaceDB()
-      const app = await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
+      const app = await db.get<Workspace>(
+        dbCore.DocumentType.WORKSPACE_METADATA
+      )
       ctx.body = {
         roles: await roles.getAllRoles(),
         name: app.name,
