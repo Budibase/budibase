@@ -1,6 +1,9 @@
 import { Document, DocumentType } from "@budibase/types"
+import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
+
+const _PouchDB = PouchDB // Keep Prettier from removing import
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
