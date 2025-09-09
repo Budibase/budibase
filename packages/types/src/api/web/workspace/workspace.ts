@@ -54,14 +54,16 @@ export type FetchWorkspacesResponse = (Workspace & {
   defaultWorkspaceAppUrl: string
 })[]
 
+export interface PublishedWorkspaceData {
+  name: string
+  appId: string
+  url: string
+  prodId: string
+  updatedAt?: string
+}
+
 export interface FetchPublishedAppsResponse {
-  apps: {
-    name: string
-    appId: string
-    url: string
-    prodId: string
-    updatedAt?: string
-  }[]
+  apps: PublishedWorkspaceData[]
 }
 
 export interface UpdateWorkspaceRequest extends Partial<Workspace> {}
