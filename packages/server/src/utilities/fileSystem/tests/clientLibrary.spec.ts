@@ -157,6 +157,10 @@ describe("clientLibrary", () => {
       ["production", false],
     ])("should upload manifest and client in %s mode", async (_, isDev) => {
       mockedFs.createReadStream.mockReturnValueOnce("stream1" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream2" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream3" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream5" as any)
 
       mockedEnv.isDev.mockReturnValue(isDev)
 
@@ -166,27 +170,27 @@ describe("clientLibrary", () => {
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/manifest.json",
-        stream: "stream",
+        stream: "stream1",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/budibase-client.js",
-        stream: "stream",
+        stream: "stream2",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/budibase-client.new.js",
-        stream: "stream",
+        stream: "stream3",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/_dependencies/apexcharts.js",
-        stream: "stream",
+        stream: "stream4",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/_dependencies/html5-qrcode.js",
-        stream: "stream",
+        stream: "stream5",
       })
       expect(result).toEqual({ version: "1.0.0" })
     })
