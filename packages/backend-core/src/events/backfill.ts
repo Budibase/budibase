@@ -131,10 +131,10 @@ const CUSTOM_PROPERTY_SUFFIX: any = {
   [Event.VIEW_FILTER_CREATED]: (properties: ViewFilterCreatedEvent) => {
     return properties.tableId // best uniqueness
   },
-  [Event.APP_CREATED]: (properties: WorkspaceCreatedEvent) => {
+  [Event.WORKSPACE_CREATED]: (properties: WorkspaceCreatedEvent) => {
     return properties.appId // best uniqueness
   },
-  [Event.APP_PUBLISHED]: (properties: WorkspacePublishedEvent) => {
+  [Event.WORKSPACE_PUBLISHED]: (properties: WorkspacePublishedEvent) => {
     return properties.appId // best uniqueness
   },
   // GLOBAL EVENTS
