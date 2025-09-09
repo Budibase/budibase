@@ -28,13 +28,15 @@
     "lodash": "^4.17.21",
     "ora-classic": "^5.4.1",
     "semver": "^7.5.4",
-    "uuid": "^9.0.1",
-    "wrap-ansi": "^7.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@commander-js/extra-typings": "14.0.0",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^9.0.7"
+  },
+  "resolutions": {
+    "wrap-ansi": "7.0.0"
   },
   "nx": {
     "targets": {
