@@ -1409,22 +1409,22 @@ export interface components {
     };
   };
   parameters: {
-    /** @description The ID of the table which this request is targeting. */
-    tableId: string;
-    /** @description The ID of the view which this request is targeting. */
-    viewId: string;
-    /** @description The ID of the row which this request is targeting. */
-    rowId: string;
     /** @description The ID of the app which this request is targeting. */
     appId: string;
     /** @description The ID of the app which this request is targeting. */
     appIdUrl: string;
-    /** @description The ID of the workspace which this request is targeting. */
-    workspaceId: string;
     /** @description The ID of the query which this request is targeting. */
     queryId: string;
+    /** @description The ID of the row which this request is targeting. */
+    rowId: string;
+    /** @description The ID of the table which this request is targeting. */
+    tableId: string;
     /** @description The ID of the user which this request is targeting. */
     userId: string;
+    /** @description The ID of the view which this request is targeting. */
+    viewId: string;
+    /** @description The ID of the workspace which this request is targeting. */
+    workspaceId: string;
   };
 }
 
