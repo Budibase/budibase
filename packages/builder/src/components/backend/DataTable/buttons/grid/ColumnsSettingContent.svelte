@@ -213,7 +213,8 @@
           <Input
             placeholder="Column display name"
             value={column.schema.displayName || column.name}
-            on:change={e => debouncedUpdateDisplayName(column, e.detail || undefined)}
+            on:change={e =>
+              debouncedUpdateDisplayName(column, e.detail || undefined)}
             quiet
           />
         </div>
