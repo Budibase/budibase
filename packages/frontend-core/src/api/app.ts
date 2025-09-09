@@ -18,7 +18,7 @@ import {
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   RevertAppClientResponse,
-  RevertAppResponse,
+  RevertWorkspaceResponse,
   UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
   UpdateWorkspaceRequest,
@@ -37,7 +37,7 @@ export interface AppEndpoints {
     appId: string,
     opts?: PublishWorkspaceRequest
   ) => Promise<PublishWorkspaceResponse>
-  revertAppChanges: (appId: string) => Promise<RevertAppResponse>
+  revertAppChanges: (appId: string) => Promise<RevertWorkspaceResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
