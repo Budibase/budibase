@@ -81,7 +81,7 @@ import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
 
-const DEFAULT_APP_NAME = "my first app"
+const DEFAULT_APP_NAME = "My first app"
 
 // utility function, need to do away with this
 async function getLayouts() {
