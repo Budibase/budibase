@@ -159,8 +159,12 @@ describe("/applications", () => {
     }
 
     it("creates empty app without sample data", async () => {
-      const app = await config.api.workspace.create({ name: utils.newid() })
-      expect(app._id).toBeDefined()
+      const newId = utils.newid()
+      const newWorkspace = await config.api.workspace.create({
+        name: newId,
+      })
+      expect(newWorkspace.name).toBe(newId)
+      expect(newWorkspace._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Ensure we created a blank app without sample data
@@ -169,16 +173,22 @@ describe("/applications", () => {
     })
 
     it("creates app with sample data when onboarding", async () => {
-      const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+      const newId = utils.newid()
+      const newWorkspace = await config.api.workspace.create({
+        name: newId,
         isOnboarding: "true",
       })
-      expect(newApp._id).toBeDefined()
+      expect(newWorkspace._id).toBeDefined()
+      expect(newWorkspace.name).toBe("Default workspace")
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Check sample resources in the newly created app context
-      await config.withApp(newApp, async () => {
-        const res = await config.api.workspace.getDefinition(newApp.appId)
+      await config.withApp(newWorkspace, async () => {
+        const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
+        const [app] = workspaceAppsFetchResult.workspaceApps
+        expect(app.name).toBe(newId)
+
+        const res = await config.api.workspace.getDefinition(newWorkspace.appId)
         expect(res.screens.length).toEqual(1)
 
         const tables = await config.api.table.fetch()
