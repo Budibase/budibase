@@ -132,7 +132,7 @@ function applyRoutes(
     : paramResource(resource)
   const publicApiMiddleware = publicApi({
     requiresAppId:
-      permType !== PermissionType.APP && permType !== PermissionType.USER,
+      permType !== PermissionType.WORKSPACE && permType !== PermissionType.USER,
   })
   addMiddleware(endpoints.read, publicApiMiddleware)
   addMiddleware(endpoints.write, publicApiMiddleware)
@@ -155,8 +155,8 @@ function applyRoutes(
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
-applyRoutes(workspaceEndpoints, PermissionType.APP, "workspaceId")
-applyRoutes(appEndpoints_deprecated, PermissionType.APP, "appId")
+applyRoutes(workspaceEndpoints, PermissionType.WORKSPACE, "workspaceId")
+applyRoutes(appEndpoints_deprecated, PermissionType.WORKSPACE, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")
