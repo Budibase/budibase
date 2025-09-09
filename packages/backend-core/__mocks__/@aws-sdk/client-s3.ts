@@ -1,4 +1,7 @@
 export class S3 {
+  headObject() {
+    return jest.fn().mockReturnThis()
+  }
   headBucket() {
     return jest.fn().mockReturnThis()
   }
