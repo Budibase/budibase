@@ -17,7 +17,7 @@ import { isApiKey, isBrowser, isWebhookEndpoint } from "./utils"
 
 export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the appID from the request
-  let requestAppId = await utils.getAppIdFromCtx(ctx)
+  let requestAppId = await utils.getWorkspaceIdFromCtx(ctx)
   if (!requestAppId) {
     return next()
   }

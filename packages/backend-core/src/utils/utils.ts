@@ -13,11 +13,11 @@ import { getAllWorkspaces } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 
-const APP_PREFIX = DocumentType.WORKSPACE + SEPARATOR
+const WORKSPACE_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREFIX = "/builder"
-const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/workspace/`
+const BUILDER_WORKSPACE_PREFIX = `${BUILDER_PREFIX}/workspace/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
 async function resolveAppUrl(ctx: Ctx) {
@@ -47,7 +47,7 @@ async function resolveAppUrl(ctx: Ctx) {
 
 export function isServingApp(ctx: Ctx) {
   // dev app
-  if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
+  if (ctx.path.startsWith(`/${WORKSPACE_PREFIX}`)) {
     return true
   }
   // prod app
@@ -55,7 +55,7 @@ export function isServingApp(ctx: Ctx) {
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
-  return ctx.path.startsWith(BUILDER_APP_PREFIX)
+  return ctx.path.startsWith(BUILDER_WORKSPACE_PREFIX)
 }
 
 export function isServingBuilderPreview(ctx: Ctx): boolean {
@@ -75,48 +75,51 @@ export function isPublicApiRequest(ctx: Ctx): boolean {
  * @param ctx The main request body to look through.
  * @returns If an appId was found it will be returned.
  */
-export async function getAppIdFromCtx(ctx: Ctx) {
-  let appId: string | undefined
+export async function getWorkspaceIdFromCtx(ctx: Ctx) {
+  let workspaceId: string | undefined
 
-  function confirmAppId(possibleAppId: string | undefined) {
-    if (!possibleAppId) {
-      return appId
+  function checkWorkspaceId(possibleWorkspaceId: string | undefined) {
+    if (!possibleWorkspaceId) {
+      return
     }
 
-    if (!possibleAppId.startsWith(APP_PREFIX)) {
-      return appId
+    if (!possibleWorkspaceId.startsWith(WORKSPACE_PREFIX)) {
+      return
     }
 
-    if (appId && appId !== possibleAppId) {
+    if (workspaceId && workspaceId !== possibleWorkspaceId) {
       ctx.throw("App id conflict", 403)
     }
-    return appId ?? possibleAppId
+
+    workspaceId = possibleWorkspaceId
+    return
+  }
+
+  function checkPossibleValues(values: string | string[] | undefined) {
+    if (!values) {
+      return
+    }
+
+    if (typeof values === "string") {
+      values = [values]
+    }
+    for (let value of values) {
+      checkWorkspaceId(value)
+    }
   }
 
   // look in headers
-  let headers = ctx.request.headers[Header.APP_ID] || []
-  if (typeof headers === "string") {
-    headers = [headers]
-  }
-  for (let header of headers) {
-    appId = confirmAppId(header)
-  }
+  checkPossibleValues(ctx.request.headers[Header.APP_ID])
 
   // look in body
-  if (ctx.request.body && ctx.request.body.appId) {
-    appId = confirmAppId(ctx.request.body.appId)
-  }
+  checkWorkspaceId(ctx.request.body?.appId)
 
   // look in the path
   const pathId = parseAppIdFromUrlPath(ctx.path)
-  if (pathId) {
-    appId = confirmAppId(pathId)
-  }
+  checkWorkspaceId(pathId)
 
   // look in queryParams
-  if (ctx.query?.appId) {
-    appId = confirmAppId(ctx.query?.appId as string)
-  }
+  checkPossibleValues(ctx.query?.appId)
 
   // lookup using custom url - prod apps only
   // filter out the builder preview path which collides with the prod app path
@@ -125,10 +128,10 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   const isViewingProdApp =
     ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
   if (isViewingProdApp) {
-    appId = confirmAppId(await resolveAppUrl(ctx))
+    checkWorkspaceId(await resolveAppUrl(ctx))
   }
 
-  return appId
+  return workspaceId
 }
 
 function parseAppIdFromUrlPath(url?: string) {
@@ -138,7 +141,7 @@ function parseAppIdFromUrlPath(url?: string) {
   return url
     .split("?")[0] // Remove any possible query string
     .split("/")
-    .find(subPath => subPath.startsWith(APP_PREFIX))
+    .find(subPath => subPath.startsWith(WORKSPACE_PREFIX))
 }
 
 /**

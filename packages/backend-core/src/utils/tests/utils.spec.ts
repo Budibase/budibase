@@ -18,7 +18,7 @@ describe("utils", () => {
         [Header.APP_ID]: expected,
       }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(expected)
     })
 
@@ -29,7 +29,7 @@ describe("utils", () => {
         appId: expected,
       }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(expected)
     })
 
@@ -38,7 +38,7 @@ describe("utils", () => {
       const expected = db.generateWorkspaceID()
       ctx.path = `/apps/${expected}`
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(expected)
     })
 
@@ -62,7 +62,7 @@ describe("utils", () => {
         const database = db.getDB(expected)
         await database.put(app)
 
-        const actual = await utils.getAppIdFromCtx(ctx)
+        const actual = await utils.getWorkspaceIdFromCtx(ctx)
         expect(actual).toBe(expected)
       })
     })
@@ -72,7 +72,7 @@ describe("utils", () => {
       const expected = db.generateWorkspaceID()
       ctx.query = { appId: expected }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(expected)
     })
 
@@ -91,7 +91,7 @@ describe("utils", () => {
         const database = db.getDB(appId)
         await database.put(app)
 
-        const actual = await utils.getAppIdFromCtx(ctx)
+        const actual = await utils.getWorkspaceIdFromCtx(ctx)
         expect(actual).toBe(appId)
       })
     })
@@ -109,7 +109,7 @@ describe("utils", () => {
         appId: appId2,
       }
 
-      await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
+      await expect(utils.getWorkspaceIdFromCtx(ctx)).rejects.toThrow()
       expect(ctx.throw).toHaveBeenCalledTimes(1)
       expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
     })
@@ -125,7 +125,7 @@ describe("utils", () => {
       }
       ctx.path = `/apps/${appId2}`
 
-      await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
+      await expect(utils.getWorkspaceIdFromCtx(ctx)).rejects.toThrow()
       expect(ctx.throw).toHaveBeenCalledTimes(1)
       expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
     })
@@ -142,7 +142,7 @@ describe("utils", () => {
       }
       ctx.query = { appId: expected }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(expected)
     })
 
@@ -158,7 +158,7 @@ describe("utils", () => {
         appId: validAppId,
       }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(validAppId)
     })
 
@@ -173,7 +173,7 @@ describe("utils", () => {
       }
       ctx.query = { appId: "still_invalid" }
 
-      const actual = await utils.getAppIdFromCtx(ctx)
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
       expect(actual).toBe(undefined)
     })
   })
