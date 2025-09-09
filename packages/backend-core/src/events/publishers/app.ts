@@ -1,23 +1,23 @@
 import {
-  AppCreatedEvent,
-  AppDeletedEvent,
-  AppDuplicatedEvent,
-  AppExportedEvent,
-  AppFileImportedEvent,
-  AppPublishedEvent,
-  AppRevertedEvent,
-  AppTemplateImportedEvent,
-  AppUnpublishedEvent,
-  AppUpdatedEvent,
   AppVersionRevertedEvent,
   AppVersionUpdatedEvent,
   Event,
   Workspace,
+  WorkspaceCreatedEvent,
+  WorkspaceDeletedEvent,
+  WorkspaceDuplicatedEvent,
+  WorkspaceExportedEvent,
+  WorkspaceFileImportedEvent,
+  WorkspacePublishedEvent,
+  WorkspaceRevertedEvent,
+  WorkspaceTemplateImportedEvent,
+  WorkspaceUnpublishedEvent,
+  WorkspaceUpdatedEvent,
 } from "@budibase/types"
 import { publishEvent } from "../events"
 
 const created = async (app: Workspace, timestamp?: string | number) => {
-  const properties: AppCreatedEvent = {
+  const properties: WorkspaceCreatedEvent = {
     appId: app.appId,
     version: app.version,
     audited: {
@@ -28,7 +28,7 @@ const created = async (app: Workspace, timestamp?: string | number) => {
 }
 
 async function updated(app: Workspace) {
-  const properties: AppUpdatedEvent = {
+  const properties: WorkspaceUpdatedEvent = {
     appId: app.appId,
     version: app.version,
     audited: {
@@ -39,7 +39,7 @@ async function updated(app: Workspace) {
 }
 
 async function deleted(app: Workspace) {
-  const properties: AppDeletedEvent = {
+  const properties: WorkspaceDeletedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
@@ -49,7 +49,7 @@ async function deleted(app: Workspace) {
 }
 
 async function published(app: Workspace, timestamp?: string | number) {
-  const properties: AppPublishedEvent = {
+  const properties: WorkspacePublishedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
@@ -59,7 +59,7 @@ async function published(app: Workspace, timestamp?: string | number) {
 }
 
 async function unpublished(app: Workspace) {
-  const properties: AppUnpublishedEvent = {
+  const properties: WorkspaceUnpublishedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
@@ -69,7 +69,7 @@ async function unpublished(app: Workspace) {
 }
 
 async function fileImported(app: Workspace) {
-  const properties: AppFileImportedEvent = {
+  const properties: WorkspaceFileImportedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
@@ -79,7 +79,7 @@ async function fileImported(app: Workspace) {
 }
 
 async function duplicated(app: Workspace, duplicateAppId: string) {
-  const properties: AppDuplicatedEvent = {
+  const properties: WorkspaceDuplicatedEvent = {
     duplicateAppId,
     appId: app.appId,
     audited: {
@@ -90,7 +90,7 @@ async function duplicated(app: Workspace, duplicateAppId: string) {
 }
 
 async function templateImported(app: Workspace, templateKey: string) {
-  const properties: AppTemplateImportedEvent = {
+  const properties: WorkspaceTemplateImportedEvent = {
     appId: app.appId,
     templateKey,
     audited: {
@@ -133,7 +133,7 @@ async function versionReverted(
 }
 
 async function reverted(app: Workspace) {
-  const properties: AppRevertedEvent = {
+  const properties: WorkspaceRevertedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
@@ -143,7 +143,7 @@ async function reverted(app: Workspace) {
 }
 
 async function exported(app: Workspace) {
-  const properties: AppExportedEvent = {
+  const properties: WorkspaceExportedEvent = {
     appId: app.appId,
     audited: {
       name: app.name,
