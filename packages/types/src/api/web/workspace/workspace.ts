@@ -2,11 +2,11 @@ import { ReadStream } from "fs"
 import type { Layout, Screen, Workspace } from "../../../documents"
 import type { PlanType } from "../../../sdk"
 
-export interface SyncAppResponse {
+export interface SyncWorkspaceResponse {
   message: string
 }
 
-export interface CreateAppRequest {
+export interface CreateWorkspaceRequest {
   name: string
   url?: string
   useTemplate?: string | boolean
@@ -18,14 +18,14 @@ export interface CreateAppRequest {
   isOnboarding?: string
 }
 
-export interface CreateAppResponse extends Workspace {}
+export interface CreateWorkspaceResponse extends Workspace {}
 
-export interface DuplicateAppRequest {
+export interface DuplicateWorkspaceRequest {
   name: string
   url?: string
 }
 
-export interface DuplicateAppResponse {
+export interface DuplicateWorkspaceResponse {
   duplicateAppId: string
   sourceAppId: string
 }

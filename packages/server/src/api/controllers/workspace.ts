@@ -19,12 +19,12 @@ import {
   AddAppSampleDataResponse,
   BBReferenceFieldSubType,
   BBRequest,
-  CreateAppRequest,
-  CreateAppResponse,
+  CreateWorkspaceRequest,
+  CreateWorkspaceResponse,
   Database,
   DeleteAppResponse,
-  DuplicateAppRequest,
-  DuplicateAppResponse,
+  DuplicateWorkspaceRequest,
+  DuplicateWorkspaceResponse,
   ErrorCode,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
@@ -38,7 +38,7 @@ import {
   RevertAppClientResponse,
   Row,
   Screen,
-  SyncAppResponse,
+  SyncWorkspaceResponse,
   UnpublishAppResponse,
   UpdateAppClientResponse,
   UpdateAppRequest,
@@ -355,7 +355,7 @@ export async function fetchAppPackage(
 }
 
 async function performAppCreate(
-  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -594,7 +594,7 @@ async function updateUserColumns(
 }
 
 async function creationEvents(
-  request: BBRequest<CreateAppRequest>,
+  request: BBRequest<CreateWorkspaceRequest>,
   app: Workspace
 ) {
   let creationFns: ((app: Workspace) => Promise<void>)[] = []
@@ -628,7 +628,7 @@ async function creationEvents(
 }
 
 async function appPostCreate(
-  ctx: UserCtx<CreateAppRequest, Workspace>,
+  ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
   app: Workspace
 ) {
   await creationEvents(ctx.request, app)
@@ -663,7 +663,7 @@ async function appPostCreate(
 }
 
 export async function create(
-  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
@@ -868,7 +868,7 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
   ctx.body = { message: "App unpublished." }
 }
 
-export async function sync(ctx: UserCtx<void, SyncAppResponse>) {
+export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   const appId = ctx.params.appId
   try {
     ctx.body = await sdk.applications.syncApp(appId)
@@ -906,7 +906,7 @@ export async function importToApp(
  * Performs an export of the app, then imports from the export dir path
  */
 export async function duplicateApp(
-  ctx: UserCtx<DuplicateAppRequest, DuplicateAppResponse>
+  ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
   const { name: appName, url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
@@ -929,7 +929,7 @@ export async function duplicateApp(
     tar: false,
   })
 
-  const createRequestBody: CreateAppRequest = {
+  const createRequestBody: CreateWorkspaceRequest = {
     name: appName,
     url: possibleUrl,
     useTemplate: "true",
@@ -949,7 +949,7 @@ export async function duplicateApp(
     request: {
       body: createRequestBody,
     },
-  } as UserCtx<CreateAppRequest, Workspace>
+  } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
   await create(createRequest)

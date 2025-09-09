@@ -83,12 +83,6 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-export interface CreateAppRequest {
-  appName: string
-  url?: string
-  snippets?: any[]
-}
-
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType

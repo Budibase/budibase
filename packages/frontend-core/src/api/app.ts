@@ -1,13 +1,12 @@
 import { sdk } from "@budibase/shared-core"
-import { BaseAPIClient } from "./types"
 import {
   AddAppSampleDataResponse,
   ClearDevLockResponse,
-  CreateAppRequest,
-  CreateAppResponse,
+  CreateWorkspaceRequest,
+  CreateWorkspaceResponse,
   DeleteAppResponse,
-  DuplicateAppRequest,
-  DuplicateAppResponse,
+  DuplicateWorkspaceRequest,
+  DuplicateWorkspaceResponse,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchAppsResponse,
@@ -25,6 +24,7 @@ import {
   UpdateAppRequest,
   UpdateAppResponse,
 } from "@budibase/types"
+import { BaseAPIClient } from "./types"
 
 export interface AppEndpoints {
   fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
@@ -42,12 +42,14 @@ export interface AppEndpoints {
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
   getAppDeployments: () => Promise<FetchDeploymentResponse>
-  createApp: (app: CreateAppRequest | FormData) => Promise<CreateAppResponse>
+  createApp: (
+    app: CreateWorkspaceRequest | FormData
+  ) => Promise<CreateWorkspaceResponse>
   deleteApp: (appId: string) => Promise<DeleteAppResponse>
   duplicateApp: (
     appId: string,
-    app: DuplicateAppRequest
-  ) => Promise<DuplicateAppResponse>
+    app: DuplicateWorkspaceRequest
+  ) => Promise<DuplicateWorkspaceResponse>
   updateAppFromExport: (
     appId: string,
     body: ImportToUpdateAppRequest
