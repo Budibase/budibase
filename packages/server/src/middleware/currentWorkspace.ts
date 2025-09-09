@@ -15,44 +15,44 @@ import env from "../environment"
 import { getCachedSelf } from "../utilities/global"
 import { isApiKey, isBrowser, isWebhookEndpoint } from "./utils"
 
-export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
-  // try to get the appID from the request
-  let requestAppId = await utils.getWorkspaceIdFromCtx(ctx)
-  if (!requestAppId) {
+export const currentWorkspaceMiddleware = (async (ctx: UserCtx, next: Next) => {
+  // try to get the workspaceID from the request
+  let requestWorkspaceId = await utils.getWorkspaceIdFromCtx(ctx)
+  if (!requestWorkspaceId) {
     return next()
   }
 
-  if (requestAppId) {
+  if (requestWorkspaceId) {
     const span = tracer.scope().active()
-    span?.setTag("appId", requestAppId)
+    span?.setTag("appId", requestWorkspaceId)
   }
 
   // deny access to application preview
   if (isBrowser(ctx) && !isApiKey(ctx)) {
     if (
-      isDevWorkspaceID(requestAppId) &&
+      isDevWorkspaceID(requestWorkspaceId) &&
       !isWebhookEndpoint(ctx) &&
-      !users.isBuilder(ctx.user, requestAppId)
+      !users.isBuilder(ctx.user, requestWorkspaceId)
     ) {
       return ctx.redirect("/")
     }
   }
 
-  let appId: string | undefined,
+  let workspaceId: string | undefined,
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user?._id) {
     // not logged in, try to set a cookie for public apps
-    appId = requestAppId
-  } else if (requestAppId != null) {
-    // Different App ID means cookie needs reset, or if the same public user has logged in
-    const globalUser = await getCachedSelf(ctx, requestAppId)
-    appId = requestAppId
+    workspaceId = requestWorkspaceId
+  } else if (requestWorkspaceId != null) {
+    // Different Workspace ID means cookie needs reset, or if the same public user has logged in
+    const globalUser = await getCachedSelf(ctx, requestWorkspaceId)
+    workspaceId = requestWorkspaceId
     // retrieving global user gets the right role
     roleId = globalUser.roleId || roleId
 
     // Allow builders to specify their role via a header
-    const isBuilder = users.isBuilder(globalUser, appId)
-    const isDev = appId && isDevWorkspaceID(appId)
+    const isBuilder = users.isBuilder(globalUser, workspaceId)
+    const isDev = workspaceId && isDevWorkspaceID(workspaceId)
     const roleHeader =
       ctx.request &&
       (ctx.request.headers[constants.Header.PREVIEW_ROLE] as string)
@@ -64,7 +64,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   }
 
   // nothing more to do
-  if (!appId) {
+  if (!workspaceId) {
     return next()
   }
 
@@ -85,8 +85,8 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   if (
     env.MULTI_TENANCY &&
     userId &&
-    requestAppId &&
-    !tenancy.isUserInAppTenant(requestAppId, ctx.user)
+    requestWorkspaceId &&
+    !tenancy.isUserInAppTenant(requestWorkspaceId, ctx.user)
   ) {
     // clear out the user
     ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
@@ -99,8 +99,8 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
     })
   }
 
-  return context.doInWorkspaceContext(appId, async () => {
-    ctx.appId = appId
+  return context.doInWorkspaceContext(workspaceId, async () => {
+    ctx.appId = workspaceId
     if (roleId) {
       ctx.roleId = roleId
       const globalId = ctx.user ? ctx.user._id : undefined
