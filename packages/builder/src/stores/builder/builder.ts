@@ -14,6 +14,7 @@ interface BuilderState {
   propertyFocus: string | null
   builderSidePanel: boolean
   hoveredComponentId: string | null
+  isResizingPanel: boolean
   websocket?: Socket
 }
 
@@ -23,6 +24,7 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   propertyFocus: null,
   builderSidePanel: false,
   hoveredComponentId: null,
+  isResizingPanel: false,
 }
 
 export class BuilderStore extends BudiStore<BuilderState> {
@@ -40,6 +42,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
     this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
     this.selectResource = this.selectResource.bind(this)
+    this.setResizingPanel = this.setResizingPanel.bind(this)
   }
 
   init(app: Workspace) {
@@ -105,6 +108,13 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.websocket?.emit(BuilderSocketEvent.SelectResource, {
       resourceId: id,
     })
+  }
+
+  setResizingPanel(isResizing: boolean) {
+    this.update(state => ({
+      ...state,
+      isResizingPanel: isResizing,
+    }))
   }
 }
 
