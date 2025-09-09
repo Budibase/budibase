@@ -7,8 +7,8 @@ import {
 } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
 import {
-  AppBackupTrigger,
   Automation,
+  BackupTrigger,
   DeploymentDoc,
   DeploymentProgressResponse,
   DeploymentStatus,
@@ -227,7 +227,7 @@ export const publishApp = async function (
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
-        await backups.triggerAppBackup(prodId, AppBackupTrigger.PUBLISH, {
+        await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
           createdBy: ctx.user._id,
         })
       }

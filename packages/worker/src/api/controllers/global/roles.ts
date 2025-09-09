@@ -9,7 +9,7 @@ import {
   Ctx,
   FetchGlobalRolesResponse,
   FindGlobalRoleResponse,
-  RemoveAppRoleResponse,
+  RemoveWorkspaceRoleResponse,
   Workspace,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -56,7 +56,9 @@ export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   )
 }
 
-export async function removeAppRole(ctx: Ctx<void, RemoveAppRoleResponse>) {
+export async function removeAppRole(
+  ctx: Ctx<void, RemoveWorkspaceRoleResponse>
+) {
   const { appId } = ctx.params
   const db = tenancy.getGlobalDB()
   const users = await sdk.users.db.allUsers()

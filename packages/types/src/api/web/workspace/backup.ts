@@ -1,27 +1,30 @@
-import { AppBackupTrigger, AppBackupType } from "../../../documents"
+import { BackupTrigger, BackupType } from "../../../documents"
 
-export interface SearchAppBackupsRequest {
-  trigger: AppBackupTrigger
-  type: AppBackupType
+export interface SearchWorkspaceBackupsRequest {
+  trigger: BackupTrigger
+  type: BackupType
   startDate: string
   endDate: string
   page?: string
 }
 
-export interface CreateAppBackupRequest {
+export interface CreateWorkspaceBackupRequest {
   name: string
 }
 
-export interface CreateAppBackupResponse {
+export interface CreateWorkspaceBackupResponse {
   backupId: string
   message: string
 }
 
-export interface UpdateAppBackupRequest {
+export interface UpdateWorkspaceBackupRequest {
   name: string
 }
 
-export interface ImportAppBackupResponse {
+export interface ImportWorkspaceBackupRequest {
+  name: string
+}
+export interface ImportWorkspaceBackupResponse {
   restoreId: string
   message: string
 }
@@ -35,19 +38,19 @@ export interface ClearBackupErrorResponse {
   message: string
 }
 
-export interface DeleteAppBackupResult {
+export interface DeleteWorkspaceBackupResult {
   backupId: string
   success: boolean
   error?: string
 }
 
-export interface DeleteAppBackupsRequest {
+export interface DeleteWorkspaceBackupsRequest {
   backupIds: string[]
 }
 
-export interface DeleteAppBackupsResponse {
+export interface DeleteWorkspaceBackupsResponse {
   message: string
-  results: DeleteAppBackupResult[]
+  results: DeleteWorkspaceBackupResult[]
   successCount: number
   failureCount: number
 }
