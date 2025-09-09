@@ -24,7 +24,6 @@
     "commander": "7.1.0",
     "docker-compose": "1.2.0",
     "dotenv": "16.0.1",
-    "download": "8.0.0",
     "find-free-port": "^2.0.0",
     "inquirer": "8.0.0",
     "lookpath": "1.1.0",
@@ -39,6 +38,7 @@
   "devDependencies": {
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
+    "@types/tar": "^6.1.13",
     "ts-node": "10.8.1"
   }
 }
