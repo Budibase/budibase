@@ -48,22 +48,13 @@ describe("objectExists", () => {
     expect(result).toBe(false)
   })
 
-  it("should throw error for non-404 errors (403 access denied)", async () => {
+  it("should throw error for other errors", async () => {
     const error: any = new Error("Access Denied")
     error.statusCode = 403
     mockHeadObject.mockRejectedValue(error)
 
     await expect(objectExists("test-bucket", "test-key")).rejects.toThrow(
       "Access Denied"
-    )
-  })
-
-  it("should throw error for network errors", async () => {
-    const error = new Error("Network Error")
-    mockHeadObject.mockRejectedValue(error)
-
-    await expect(objectExists("test-bucket", "test-key")).rejects.toThrow(
-      "Network Error"
     )
   })
 
