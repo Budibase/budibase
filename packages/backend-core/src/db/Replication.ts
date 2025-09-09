@@ -1,7 +1,6 @@
-import PouchDB from "pouchdb"
-import { closePouchDB, getPouchDB } from "./couch"
 import { Document, DocumentType } from "@budibase/types"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { closePouchDB, getPouchDB } from "./couch"
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -19,13 +18,13 @@ class Replication {
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
     if (
-      source.startsWith(DocumentType.APP_DEV) &&
-      target.startsWith(DocumentType.APP)
+      source.startsWith(DocumentType.WORKSPACE_DEV) &&
+      target.startsWith(DocumentType.WORKSPACE)
     ) {
       this.direction = ReplicationDirection.TO_PRODUCTION
     } else if (
-      source.startsWith(DocumentType.APP) &&
-      target.startsWith(DocumentType.APP_DEV)
+      source.startsWith(DocumentType.WORKSPACE) &&
+      target.startsWith(DocumentType.WORKSPACE_DEV)
     ) {
       this.direction = ReplicationDirection.TO_DEV
     }
