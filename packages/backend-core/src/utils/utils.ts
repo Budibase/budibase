@@ -16,10 +16,6 @@ import * as tenancy from "../tenancy"
 const WORKSPACE_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
-const BUILDER_PREFIX = "/builder"
-const BUILDER_WORKSPACE_PREFIX = `${BUILDER_PREFIX}/workspace/`
-const PUBLIC_API_PREFIX = "/api/public/v"
-
 async function resolveAppUrl(ctx: Ctx) {
   const workspaceUrl = ctx.path.split("/")[2]
   let possibleUrl = `/${workspaceUrl.toLowerCase()}`
@@ -46,16 +42,16 @@ async function resolveAppUrl(ctx: Ctx) {
 }
 
 export function isServingApp(ctx: Ctx) {
-  // dev app
+  // dev workspace
   if (ctx.path.startsWith(`/${WORKSPACE_PREFIX}`)) {
     return true
   }
-  // prod app
+  // prod workspace
   return ctx.path.startsWith(PROD_APP_PREFIX)
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
-  return ctx.path.startsWith(BUILDER_WORKSPACE_PREFIX)
+  return ctx.path.startsWith("/builder/workspace/")
 }
 
 export function isServingBuilderPreview(ctx: Ctx): boolean {
@@ -67,7 +63,7 @@ function isBuilderPreviewUrl(path: string): boolean {
 }
 
 export function isPublicApiRequest(ctx: Ctx): boolean {
-  return ctx.path.startsWith(PUBLIC_API_PREFIX)
+  return ctx.path.startsWith("/api/public/v")
 }
 
 /**
@@ -115,7 +111,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   checkWorkspaceId(ctx.request.body?.appId)
 
   // look in the path
-  const pathId = parseAppIdFromUrlPath(ctx.path)
+  const pathId = parseWorkspaceIdFromUrlPath(ctx.path)
   checkWorkspaceId(pathId)
 
   // look in queryParams
@@ -134,7 +130,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   return workspaceId
 }
 
-function parseAppIdFromUrlPath(url?: string) {
+function parseWorkspaceIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }

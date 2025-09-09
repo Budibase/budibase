@@ -10,8 +10,8 @@ import { newid } from "../../utils"
 describe("utils", () => {
   const config = new DBTestConfiguration()
 
-  describe("getAppIdFromCtx", () => {
-    it("gets appId from header", async () => {
+  describe("getWorkspaceIdFromCtx", () => {
+    it("gets workspaceId from header", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.request.headers = {
@@ -22,7 +22,7 @@ describe("utils", () => {
       expect(actual).toBe(expected)
     })
 
-    it("gets appId from body", async () => {
+    it("gets workspaceId from body", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.request.body = {
@@ -33,7 +33,7 @@ describe("utils", () => {
       expect(actual).toBe(expected)
     })
 
-    it("gets appId from path", async () => {
+    it("gets workspaceId from path", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.path = `/apps/${expected}`
@@ -42,7 +42,7 @@ describe("utils", () => {
       expect(actual).toBe(expected)
     })
 
-    it("gets appId from url", async () => {
+    it("gets workspaceId from url", async () => {
       await config.doInTenant(async () => {
         const url = "http://example.com"
         env._set("PLATFORM_URL", url)
@@ -67,7 +67,7 @@ describe("utils", () => {
       })
     })
 
-    it("gets appId from query params", async () => {
+    it("gets workspaceId from query params", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.query = { appId: expected }
