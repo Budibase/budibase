@@ -1,8 +1,8 @@
 import { constants } from "@budibase/backend-core"
 import {
   DuplicateWorkspaceResponse,
-  PublishAppRequest,
-  PublishAppResponse,
+  PublishWorkspaceRequest,
+  PublishWorkspaceResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
   Workspace,
@@ -38,19 +38,19 @@ export class WorkspaceAPI extends TestAPI {
   publish = async (
     appId?: string,
     expectations?: Expectations
-  ): Promise<PublishAppResponse> => {
+  ): Promise<PublishWorkspaceResponse> => {
     return this.filteredPublish(appId, undefined, expectations)
   }
 
   filteredPublish = async (
     appId?: string,
-    body?: PublishAppRequest,
+    body?: PublishWorkspaceRequest,
     expectations?: Expectations
-  ): Promise<PublishAppResponse> => {
+  ): Promise<PublishWorkspaceResponse> => {
     if (!appId) {
       appId = this.config.getAppId()
     }
-    return await this._post<PublishAppResponse>(
+    return await this._post<PublishWorkspaceResponse>(
       `/api/applications/${appId}/publish`,
       {
         // While the publish endpoint does take an :appId parameter, it doesn't

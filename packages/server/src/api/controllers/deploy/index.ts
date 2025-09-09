@@ -13,9 +13,9 @@ import {
   DeploymentProgressResponse,
   DeploymentStatus,
   FetchDeploymentResponse,
-  PublishAppRequest,
-  PublishAppResponse,
   PublishStatusResponse,
+  PublishWorkspaceRequest,
+  PublishWorkspaceResponse,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -166,7 +166,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
 }
 
 export const publishApp = async function (
-  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
+  ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
   if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
     throw new errors.NotImplementedError(
