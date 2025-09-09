@@ -81,7 +81,7 @@ async function init(opts: PluginOpts | PluginType) {
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
-  await fleshOutSkeleton(type, name, description, version)
+  await fleshOutSkeleton(name, description, version)
   console.log(info("Installing dependencies..."))
   await runPkgCommand("install", join(process.cwd(), name))
   // if no parent directory desired move to cwd
