@@ -362,10 +362,10 @@ jobs:
 
       - name: Check for uncommitted changes
         run: |
-          if [[ -n $(git status --porcelain) ]]; then
+          if [[ -n $(git status --porcelain packages/server) ]]; then
             echo "OpenAPI specs are not up to date. Please run 'yarn build:specs' and commit the changes."
-            git status --porcelain
-            git diff
+            git status --porcelain packages/server
+            git diff packages/server
             exit 1
           else
             echo "OpenAPI specs are up to date."
