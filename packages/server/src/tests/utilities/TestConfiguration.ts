@@ -705,7 +705,7 @@ export default class TestConfiguration {
 
     return context.doInWorkspaceContext(prodAppId, async () => {
       const db = context.getProdWorkspaceDB()
-      return await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
+      return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
     })
   }
 

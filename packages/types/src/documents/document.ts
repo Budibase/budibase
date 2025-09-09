@@ -11,7 +11,7 @@ export enum DocumentType {
   WORKSPACE = "app",
   DEV = "dev",
   WORKSPACE_DEV = "app_dev",
-  APP_METADATA = "app_metadata",
+  WORKSPACE_METADATA = "app_metadata",
   ROLE = "role",
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
