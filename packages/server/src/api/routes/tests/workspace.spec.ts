@@ -180,6 +180,9 @@ describe("/applications", () => {
       await config.withApp(newApp, async () => {
         const res = await config.api.workspace.getDefinition(newApp.appId)
         expect(res.screens.length).toEqual(1)
+        const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
+        const [app] = workspaceAppsFetchResult.workspaceApps
+        expect(app.name).toBe("My first app")
 
         const tables = await config.api.table.fetch()
         expect(tables.length).toEqual(5)
