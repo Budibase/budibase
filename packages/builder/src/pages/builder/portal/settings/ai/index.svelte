@@ -152,8 +152,8 @@
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
       const license = await $licensing.license
-      const isOfflineLicense = () => license && 'identifier' in license
-      if(isOfflineLicense()) {
+      const isOfflineLicense = () => license && "identifier" in license
+      if (isOfflineLicense()) {
         hasLicenseKey = true
       } else {
         const licenseKeyResponse = await API.getLicenseKey()
