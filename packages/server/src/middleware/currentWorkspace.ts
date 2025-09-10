@@ -86,7 +86,7 @@ export const currentWorkspaceMiddleware = (async (ctx: UserCtx, next: Next) => {
     env.MULTI_TENANCY &&
     userId &&
     requestWorkspaceId &&
-    !tenancy.isUserInAppTenant(requestWorkspaceId, ctx.user)
+    !tenancy.isUserInWorkspaceTenant(requestWorkspaceId, ctx.user)
   ) {
     // clear out the user
     ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
