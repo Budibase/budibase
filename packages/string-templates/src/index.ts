@@ -1,8 +1,13 @@
 import browserVM from "@budibase/vm-browserify"
-import vm from "vm"
 import { create, TemplateDelegate } from "handlebars"
+import { convertHBSBlock } from "./conversion"
+import { isTest } from "./environment"
+import { UserScriptError } from "./errors"
 import { registerAll, registerMinimum } from "./helpers/index"
+import { removeJSRunner, setJSRunner } from "./helpers/javascript"
+import manifest from "./manifest.json"
 import { postprocess, postprocessWithLogs, preprocess } from "./processors"
+import { Log, ProcessOptions } from "./types"
 import {
   atob,
   btoa,
@@ -13,19 +18,13 @@ import {
   isBackendService,
   prefixStrings,
 } from "./utilities"
-import { convertHBSBlock } from "./conversion"
-import { removeJSRunner, setJSRunner } from "./helpers/javascript"
-import manifest from "./manifest.json"
-import { Log, ProcessOptions } from "./types"
-import { UserScriptError } from "./errors"
-import { isTest } from "./environment"
 
-export type { Log, LogType } from "./types"
 export { setTestingBackendJS } from "./environment"
-export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
-export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
+export { getJsHelperList, helpersToRemoveForJs } from "./helpers/list"
 export { iifeWrapper } from "./iife"
+export type { Log, LogType } from "./types"
+export { FIND_ANY_HBS_REGEX } from "./utilities"
 
 const hbsInstance = create()
 registerAll(hbsInstance)
@@ -509,7 +508,7 @@ export { JsTimeoutError, UserScriptError } from "./errors"
 
 export function browserJSSetup() {
   // tests are in jest - we need to use node VM for these
-  const jsSandbox = isTest() ? vm : browserVM
+  const jsSandbox = isTest() ? require("vm") : browserVM
   // Use polyfilled vm to run JS scripts in a browser Env
   setJSRunner((js: string, context: Record<string, any>) => {
     jsSandbox.createContext(context)
