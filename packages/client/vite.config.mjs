@@ -16,6 +16,12 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
   return {
+    define: {
+      "process.env.NODE_ENV": JSON.stringify(
+        isProduction ? "production" : "development"
+      ),
+      global: "globalThis",
+    },
     server: {
       open: false,
     },
