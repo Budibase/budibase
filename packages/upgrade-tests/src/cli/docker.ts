@@ -4,7 +4,7 @@ import * as crypto from "crypto"
 import * as path from "path"
 import * as fs from "fs"
 import { blue, red } from "chalk"
-import ora from "ora-classic"
+import ora from "ora"
 
 const execAsync = promisify(exec)
 
