@@ -110,6 +110,7 @@ describe("admin store", () => {
           cloud: true,
           disableAccountPortal: true,
           accountPortalUrl: "url",
+          isDev: true,
           usingLocalComponentLibs: true,
         })
       })

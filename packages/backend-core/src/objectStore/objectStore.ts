@@ -636,6 +636,32 @@ export async function getObjectMetadata(
   }
 }
 
+export async function objectExists(
+  bucket: string,
+  path: string
+): Promise<boolean> {
+  bucket = sanitizeBucket(bucket)
+  path = sanitizeKey(path)
+
+  const client = ObjectStore()
+  const params = {
+    Bucket: bucket,
+    Key: path,
+  }
+
+  try {
+    await client.headObject(params)
+    return true
+  } catch (err: any) {
+    const statusCode = err.statusCode || err.$response?.statusCode
+    if (statusCode === 404) {
+      return false
+    }
+    // Re-throw non-404 errors (access denied, network issues, etc.)
+    throw err
+  }
+}
+
 /*
 Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
 the bucket and the path from it

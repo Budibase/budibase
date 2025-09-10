@@ -1,5 +1,5 @@
-import * as app from "../app"
 import { testEnv } from "../../../../tests/extra"
+import * as app from "../app"
 
 describe("app", () => {
   beforeEach(() => {
@@ -16,8 +16,8 @@ describe("app", () => {
   }
 
   describe("clientLibraryUrl", () => {
-    function getClientUrl() {
-      return app.clientLibraryUrl("app_123/budibase-client.js", "2.0.0")
+    async function getClientUrl() {
+      return await app.clientLibraryUrl("app_123/budibase-client.js", "2.0.0")
     }
 
     describe("single tenant", () => {
@@ -25,21 +25,21 @@ describe("app", () => {
         testEnv.singleTenant()
       })
 
-      it("gets url in dev", () => {
+      it("gets url in dev", async () => {
         testEnv.nodeDev()
-        const url = getClientUrl()
+        const url = await getClientUrl()
         baseCheck(url)
       })
 
-      it("gets url with custom S3", () => {
+      it("gets url with custom S3", async () => {
         testEnv.withS3()
-        const url = getClientUrl()
+        const url = await getClientUrl()
         baseCheck(url)
       })
 
-      it("gets url with cloudfront + s3", () => {
+      it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        const url = getClientUrl()
+        const url = await getClientUrl()
         baseCheck(url)
       })
     })
@@ -51,32 +51,32 @@ describe("app", () => {
 
       it("gets url in dev", async () => {
         testEnv.nodeDev()
-        await testEnv.withTenant(tenantId => {
-          const url = getClientUrl()
+        await testEnv.withTenant(async tenantId => {
+          const url = await getClientUrl()
           baseCheck(url, tenantId)
         })
       })
 
       it("gets url with embedded minio", async () => {
-        await testEnv.withTenant(tenantId => {
+        await testEnv.withTenant(async tenantId => {
           testEnv.withMinio()
-          const url = getClientUrl()
+          const url = await getClientUrl()
           baseCheck(url, tenantId)
         })
       })
 
       it("gets url with custom S3", async () => {
-        await testEnv.withTenant(tenantId => {
+        await testEnv.withTenant(async tenantId => {
           testEnv.withS3()
-          const url = getClientUrl()
+          const url = await getClientUrl()
           baseCheck(url, tenantId)
         })
       })
 
       it("gets url with cloudfront + s3", async () => {
-        await testEnv.withTenant(tenantId => {
+        await testEnv.withTenant(async tenantId => {
           testEnv.withCloudfront()
-          const url = getClientUrl()
+          const url = await getClientUrl()
           baseCheck(url, tenantId)
         })
       })

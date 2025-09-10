@@ -339,7 +339,12 @@ export async function fetchAppPackage(
     application.navigation = matchedWorkspaceApp.navigation
   }
 
-  const clientLibPath = objectStore.clientLibraryUrl(
+  const clientLibPath = await objectStore.clientLibraryUrl(
+    ctx.params.appId,
+    application.version
+  )
+
+  const clientCacheKey = await objectStore.getClientCacheKey(
     ctx.params.appId,
     application.version
   )
@@ -352,6 +357,7 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
+    clientCacheKey,
   }
 }
 

@@ -1,17 +1,18 @@
 <script>
+  import { appStore, initialise } from "@/stores/builder"
   import {
-    Modal,
-    notifications,
-    ModalContent,
     Body,
     Button,
-    StatusLight,
     Link,
+    Modal,
+    ModalContent,
+    notifications,
+    StatusLight,
   } from "@budibase/bbui"
-  import { appStore, initialise } from "@/stores/builder"
 
   import { API } from "@/api"
   import { ChangelogURL } from "@/constants"
+  import { admin } from "@/stores/portal"
 
   export function show() {
     updateModal.show()
@@ -28,9 +29,10 @@
 
   $: appId = $appStore.appId
   $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
+    ($appStore.upgradableVersion &&
+      $appStore.version &&
+      $appStore.upgradableVersion !== $appStore.version) ||
+    $admin.isDev
   $: revertAvailable = $appStore.revertableVersion != null
 
   const refreshAppPackage = async () => {

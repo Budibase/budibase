@@ -1,5 +1,5 @@
 import { API } from "@/api"
-import { Workspace, Layout, Screen } from "@budibase/types"
+import { Layout, Screen, Workspace } from "@budibase/types"
 import { derived, get, writable } from "svelte/store"
 
 interface AppStoreState {
@@ -13,6 +13,7 @@ interface AppStoreState {
   application?: Workspace
   pageWidth?: string
   recaptchaKey?: string
+  clientCacheKey?: string
 }
 
 const initialState: AppStoreState = {
