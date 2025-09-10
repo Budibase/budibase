@@ -1,23 +1,26 @@
 import {
-  CreateAppBackupResponse,
-  ImportAppBackupResponse,
-  SearchAppBackupsRequest,
   ClearBackupErrorRequest,
   ClearBackupErrorResponse,
-  DeleteAppBackupsResponse,
+  CreateWorkspaceBackupResponse,
+  DeleteWorkspaceBackupsResponse,
+  ImportWorkspaceBackupResponse,
+  SearchWorkspaceBackupsRequest,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface BackupEndpoints {
-  createManualBackup: (appId: string) => Promise<CreateAppBackupResponse>
+  createManualBackup: (appId: string) => Promise<CreateWorkspaceBackupResponse>
   restoreBackup: (
     appId: string,
     backupId: string,
     name?: string
-  ) => Promise<ImportAppBackupResponse>
+  ) => Promise<ImportWorkspaceBackupResponse>
 
   // Missing request or response types
-  searchBackups: (appId: string, opts: SearchAppBackupsRequest) => Promise<any>
+  searchBackups: (
+    appId: string,
+    opts: SearchWorkspaceBackupsRequest
+  ) => Promise<any>
   deleteBackup: (
     appId: string,
     backupId: string
@@ -25,7 +28,7 @@ export interface BackupEndpoints {
   deleteBackups: (
     appId: string,
     backupIds: string[]
-  ) => Promise<DeleteAppBackupsResponse>
+  ) => Promise<DeleteWorkspaceBackupsResponse>
   clearBackupErrors: (
     appId: string,
     backupId?: string

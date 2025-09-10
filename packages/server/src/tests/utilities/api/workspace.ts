@@ -1,12 +1,12 @@
 import { constants } from "@budibase/backend-core"
 import {
-  DuplicateAppResponse,
-  PublishAppRequest,
-  PublishAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  DuplicateWorkspaceResponse,
+  PublishWorkspaceRequest,
+  PublishWorkspaceResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
   Workspace,
-  type CreateAppRequest,
+  type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
   type FetchPublishedAppsResponse,
@@ -16,7 +16,7 @@ import { Expectations, RequestOpts, TestAPI } from "./base"
 
 export class WorkspaceAPI extends TestAPI {
   create = async (
-    app: CreateAppRequest,
+    app: CreateWorkspaceRequest,
     expectations?: Expectations
   ): Promise<Workspace> => {
     const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
@@ -38,19 +38,19 @@ export class WorkspaceAPI extends TestAPI {
   publish = async (
     appId?: string,
     expectations?: Expectations
-  ): Promise<PublishAppResponse> => {
+  ): Promise<PublishWorkspaceResponse> => {
     return this.filteredPublish(appId, undefined, expectations)
   }
 
   filteredPublish = async (
     appId?: string,
-    body?: PublishAppRequest,
+    body?: PublishWorkspaceRequest,
     expectations?: Expectations
-  ): Promise<PublishAppResponse> => {
+  ): Promise<PublishWorkspaceResponse> => {
     if (!appId) {
       appId = this.config.getAppId()
     }
-    return await this._post<PublishAppResponse>(
+    return await this._post<PublishWorkspaceResponse>(
       `/api/applications/${appId}/publish`,
       {
         // While the publish endpoint does take an :appId parameter, it doesn't
@@ -99,7 +99,7 @@ export class WorkspaceAPI extends TestAPI {
     appId: string,
     fields: object,
     expectations?: Expectations
-  ): Promise<DuplicateAppResponse> => {
+  ): Promise<DuplicateWorkspaceResponse> => {
     let headers = {
       ...this.config.defaultHeaders(),
       [constants.Header.APP_ID]: appId,
@@ -133,9 +133,9 @@ export class WorkspaceAPI extends TestAPI {
 
   update = async (
     appId: string,
-    app: UpdateAppRequest,
+    app: UpdateWorkspaceRequest,
     expectations?: Expectations
-  ): Promise<UpdateAppResponse> => {
+  ): Promise<UpdateWorkspaceResponse> => {
     return await this._put<Workspace>(`/api/applications/${appId}`, {
       body: app,
       expectations,

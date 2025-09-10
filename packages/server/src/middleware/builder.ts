@@ -50,7 +50,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
   }
   await dbCore.doWithDB(appId, async (db: Database) => {
     try {
-      const metadata = await db.get<any>(DocumentType.APP_METADATA)
+      const metadata = await db.get<any>(DocumentType.WORKSPACE_METADATA)
       metadata.updatedAt = new Date().toISOString()
 
       metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user!.userId!)

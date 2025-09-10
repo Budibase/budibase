@@ -7,15 +7,15 @@ import {
 } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
 import {
-  AppBackupTrigger,
   Automation,
+  BackupTrigger,
   DeploymentDoc,
   DeploymentProgressResponse,
   DeploymentStatus,
   FetchDeploymentResponse,
-  PublishAppRequest,
-  PublishAppResponse,
   PublishStatusResponse,
+  PublishWorkspaceRequest,
+  PublishWorkspaceResponse,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -166,7 +166,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
 }
 
 export const publishApp = async function (
-  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
+  ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
   if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
     throw new errors.NotImplementedError(
@@ -227,7 +227,7 @@ export const publishApp = async function (
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
-        await backups.triggerAppBackup(prodId, AppBackupTrigger.PUBLISH, {
+        await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
           createdBy: ctx.user._id,
         })
       }

@@ -1,52 +1,52 @@
-import { Document } from "../document"
 import { User } from "../../"
+import { Document } from "../document"
 
-export enum AppBackupType {
+export enum BackupType {
   BACKUP = "backup",
   RESTORE = "restore",
 }
 
-export enum AppBackupStatus {
+export enum BackupStatus {
   STARTED = "started",
   PENDING = "pending",
   COMPLETE = "complete",
   FAILED = "failed",
 }
 
-export enum AppBackupTrigger {
+export enum BackupTrigger {
   PUBLISH = "publish",
   MANUAL = "manual",
   SCHEDULED = "scheduled",
   RESTORING = "restoring",
 }
 
-export interface AppBackupContents {
+export interface WorkspaceBackupContents {
   datasources: string[]
   screens: string[]
   automations: string[]
 }
 
-export interface AppBackupMetadata {
+export interface WorkspaceBackupMetadata {
   appId: string
-  trigger?: AppBackupTrigger
-  type: AppBackupType
-  status: AppBackupStatus
+  trigger?: BackupTrigger
+  type: BackupType
+  status: BackupStatus
   name?: string
   createdBy?: string | User
   timestamp: string
   finishedAt?: string
   startedAt?: string
-  contents?: AppBackupContents
+  contents?: WorkspaceBackupContents
 }
 
-export interface AppBackup extends Document, AppBackupMetadata {
+export interface WorkspaceBackup extends Document, WorkspaceBackupMetadata {
   _id: string
   filename?: string
 }
 
-export type AppBackupFetchOpts = {
-  trigger?: AppBackupTrigger
-  type?: AppBackupType
+export type BackupFetchOpts = {
+  trigger?: BackupTrigger
+  type?: BackupType
   limit?: number
   page?: string
   paginate?: boolean
@@ -54,12 +54,12 @@ export type AppBackupFetchOpts = {
   endDate?: string
 }
 
-export interface AppBackupQueueData {
+export interface WorkspaceBackupQueueData {
   appId: string
   docId: string
   docRev: string
   export?: {
-    trigger: AppBackupTrigger
+    trigger: BackupTrigger
     name?: string
     createdBy?: string
   }

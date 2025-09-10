@@ -17,7 +17,7 @@ export async function doInMigrationLock<T>(
 
   const { result } = await locks.doWithLock(
     {
-      name: LockName.APP_MIGRATION,
+      name: LockName.WORKSPACE_MIGRATION,
       type: LockType.AUTO_EXTEND,
       resource: prodAppId,
     },

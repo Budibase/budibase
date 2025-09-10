@@ -83,12 +83,6 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-export interface CreateAppRequest {
-  appName: string
-  url?: string
-  snippets?: any[]
-}
-
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
@@ -711,7 +705,7 @@ export default class TestConfiguration {
 
     return context.doInWorkspaceContext(prodAppId, async () => {
       const db = context.getProdWorkspaceDB()
-      return await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
+      return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
     })
   }
 
