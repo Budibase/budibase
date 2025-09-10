@@ -1,20 +1,20 @@
+import { cache } from "@budibase/backend-core"
 import { generator, utils as testUtils } from "@budibase/backend-core/tests"
+import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
+import path from "path"
 import { GenericContainer, Wait } from "testcontainers"
+import tk from "timekeeper"
 import sdk from "../../.."
+import { startContainer } from "../../../../integrations/tests/utils"
+import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { getToken } from "../utils"
-import path from "path"
-import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
-import { startContainer } from "../../../../integrations/tests/utils"
-import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
-import { cache } from "@budibase/backend-core"
-import tk from "timekeeper"
 
 const config = new TestConfiguration()
 
 const volumePath = path.resolve(__dirname, "docker-volume")
 
-jest.setTimeout(60000)
+jest.setTimeout(90000)
 
 describe("oauth2 utils", () => {
   let keycloakUrl: string
