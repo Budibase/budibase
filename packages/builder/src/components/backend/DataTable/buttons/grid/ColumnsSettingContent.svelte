@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import ToggleActionButtonGroup from "@/components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
-  import { SchemaUtils, Utils } from "@budibase/frontend-core"
+  import { SchemaUtils } from "@budibase/frontend-core"
   import {
     Icon,
     notifications,
@@ -201,7 +201,6 @@
     }
   }
 
-  const debouncedUpdateDisplayName = Utils.debounce(updateDisplayName, 500)
 </script>
 
 <div class="content">
@@ -213,8 +212,8 @@
           <Input
             placeholder="Column display name"
             value={column.schema.displayName || column.name}
-            on:change={e =>
-              debouncedUpdateDisplayName(column, e.detail || undefined)}
+            on:blur={e =>
+              updateDisplayName(column, e.detail || undefined)}
             quiet
           />
         </div>
