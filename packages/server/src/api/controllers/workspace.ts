@@ -81,6 +81,8 @@ import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
 
+const DEFAULT_WORKSPACE_NAME = "Default workspace"
+
 // utility function, need to do away with this
 async function getLayouts() {
   const db = context.getWorkspaceDB()
@@ -183,13 +185,12 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createDefaultWorkspaceApp(): Promise<string> {
-  const appMetadata = await sdk.applications.metadata.get()
+async function createDefaultWorkspaceApp(name: string): Promise<string> {
   const workspaceApp = await sdk.workspaceApps.create({
-    name: appMetadata.name,
+    name: name,
     url: "/",
     navigation: {
-      ...defaultAppNavigator(appMetadata.name),
+      ...defaultAppNavigator(name),
       links: [],
     },
     disabled: true,
@@ -416,7 +417,7 @@ async function performAppCreate(
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: name,
+      name: isOnboarding ? DEFAULT_WORKSPACE_NAME : name,
       url: appUrl,
       template: templateKey,
       instance,
@@ -486,7 +487,7 @@ async function performAppCreate(
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
       try {
-        await createDefaultWorkspaceApp()
+        await createDefaultWorkspaceApp(name)
         await addSampleDataDocs()
         await addSampleDataScreen()
 
