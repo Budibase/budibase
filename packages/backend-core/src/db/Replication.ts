@@ -1,7 +1,9 @@
-import PouchDB from "pouchdb"
-import { closePouchDB, getPouchDB } from "./couch"
 import { Document, DocumentType } from "@budibase/types"
+import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { closePouchDB, getPouchDB } from "./couch"
+
+const _PouchDB = PouchDB // Keep Prettier from removing import
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -19,13 +21,13 @@ class Replication {
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
     if (
-      source.startsWith(DocumentType.APP_DEV) &&
-      target.startsWith(DocumentType.APP)
+      source.startsWith(DocumentType.WORKSPACE_DEV) &&
+      target.startsWith(DocumentType.WORKSPACE)
     ) {
       this.direction = ReplicationDirection.TO_PRODUCTION
     } else if (
-      source.startsWith(DocumentType.APP) &&
-      target.startsWith(DocumentType.APP_DEV)
+      source.startsWith(DocumentType.WORKSPACE) &&
+      target.startsWith(DocumentType.WORKSPACE_DEV)
     ) {
       this.direction = ReplicationDirection.TO_DEV
     }
@@ -114,7 +116,7 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.AUTOMATION_LOG)) {
           return false
         }
-        if (doc._id === DocumentType.APP_METADATA) {
+        if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }
         return filter ? filter(doc, params) : true

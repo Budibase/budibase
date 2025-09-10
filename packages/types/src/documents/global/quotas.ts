@@ -29,7 +29,7 @@ export type QuotaTriggers = {
 }
 
 export interface StaticUsage {
-  [StaticQuotaName.APPS]: number
+  [StaticQuotaName.WORKSPACES]: number
   [StaticQuotaName.PLUGINS]: number
   [StaticQuotaName.USERS]: number
   [StaticQuotaName.CREATORS]: number
