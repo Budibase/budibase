@@ -1,9 +1,9 @@
-import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
+import typescript from "@rollup/plugin-typescript"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
+import path from "path"
 import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
-import path from "path"
-import typescript from "@rollup/plugin-typescript"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -47,6 +47,10 @@ export default defineConfig(({ mode }) => {
   ]
 
   return {
+    define: {
+      global: "globalThis",
+      "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
+    },
     test: {
       setupFiles: ["./vitest.setup.js"],
       globals: true,
@@ -101,6 +105,10 @@ export default defineConfig(({ mode }) => {
         "@budibase/types": path.resolve(__dirname, "../types/src"),
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
         "@budibase/bbui": path.resolve(__dirname, "../bbui/src"),
+        "@budibase/string-templates": path.resolve(
+          __dirname,
+          "../string-templates/src"
+        ),
         "@": path.resolve(__dirname, "src"),
         assets: path.resolve(__dirname, "assets"),
       },
