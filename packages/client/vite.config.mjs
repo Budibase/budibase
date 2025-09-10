@@ -20,7 +20,6 @@ export default defineConfig(({ mode }) => {
       "process.env.NODE_ENV": JSON.stringify(
         isProduction ? "production" : "development"
       ),
-      global: "globalThis",
     },
     server: {
       open: false,
