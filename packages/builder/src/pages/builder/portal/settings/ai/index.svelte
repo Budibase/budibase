@@ -11,7 +11,7 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin } from "@/stores/portal"
+  import { admin, licensing } from "@/stores/portal"
   import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
@@ -41,7 +41,7 @@
   let modalProvider: AIProvider
   let modalConfig: ProviderConfig
   let providerNames: AIProvider[]
-  let hasLicenseKey: string | undefined
+  let hasLicenseKey: boolean
 
   $: isCloud = $admin.cloud
   $: providerNames = isCloud
@@ -151,8 +151,14 @@
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-      const licenseKeyResponse = await API.getLicenseKey()
-      hasLicenseKey = licenseKeyResponse?.licenseKey
+      const license = await $licensing.license
+      const isOfflineLicense = () => license && "identifier" in license
+      if (isOfflineLicense()) {
+        hasLicenseKey = true
+      } else {
+        const licenseKeyResponse = await API.getLicenseKey()
+        hasLicenseKey = !!licenseKeyResponse?.licenseKey
+      }
     } catch {
       notifications.error("Error fetching AI settings")
     }
