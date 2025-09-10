@@ -48,8 +48,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      global: "globalThis",
-      "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
+      "process.env.NODE_ENV": JSON.stringify(
+        isProduction ? "production" : "development"
+      ),
     },
     test: {
       setupFiles: ["./vitest.setup.js"],
