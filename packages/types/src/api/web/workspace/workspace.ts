@@ -2,11 +2,11 @@ import { ReadStream } from "fs"
 import type { Layout, Screen, Workspace } from "../../../documents"
 import type { PlanType } from "../../../sdk"
 
-export interface SyncAppResponse {
+export interface SyncWorkspaceResponse {
   message: string
 }
 
-export interface CreateAppRequest {
+export interface CreateWorkspaceRequest {
   name: string
   url?: string
   useTemplate?: string | boolean
@@ -18,14 +18,14 @@ export interface CreateAppRequest {
   isOnboarding?: string
 }
 
-export interface CreateAppResponse extends Workspace {}
+export interface CreateWorkspaceResponse extends Workspace {}
 
-export interface DuplicateAppRequest {
+export interface DuplicateWorkspaceRequest {
   name: string
   url?: string
 }
 
-export interface DuplicateAppResponse {
+export interface DuplicateWorkspaceResponse {
   duplicateAppId: string
   sourceAppId: string
 }
@@ -46,15 +46,15 @@ export interface FetchAppPackageResponse {
   recaptchaKey?: string
 }
 
-export interface AddAppSampleDataResponse {
+export interface AddWorkspaceSampleDataResponse {
   message: string
 }
 
-export type FetchAppsResponse = (Workspace & {
+export type FetchWorkspacesResponse = (Workspace & {
   defaultWorkspaceAppUrl: string
 })[]
 
-export interface PublishedAppData {
+export interface PublishedWorkspaceData {
   name: string
   appId: string
   url: string
@@ -63,32 +63,32 @@ export interface PublishedAppData {
 }
 
 export interface FetchPublishedAppsResponse {
-  apps: PublishedAppData[]
+  apps: PublishedWorkspaceData[]
 }
 
-export interface UpdateAppRequest extends Partial<Workspace> {}
-export interface UpdateAppResponse extends Workspace {}
+export interface UpdateWorkspaceRequest extends Partial<Workspace> {}
+export interface UpdateWorkspaceResponse extends Workspace {}
 export interface UpdateAppClientResponse extends Workspace {}
 export interface RevertAppClientResponse extends Workspace {}
 
-export interface DeleteAppResponse {
+export interface DeleteWorkspaceResponse {
   ok: boolean
 }
 
-export interface UnpublishAppResponse {
+export interface UnpublishWorkspaceResponse {
   message: string
 }
 
-export interface ImportToUpdateAppRequest {
+export interface ImportToUpdateWorkspaceRequest {
   encryptionPassword?: string
 }
-export interface ImportToUpdateAppResponse {
+export interface ImportToUpdateWorkspaceResponse {
   message: string
 }
 
-export interface ExportAppDumpRequest {
+export interface ExportWorkspaceDumpRequest {
   excludeRows: boolean
   encryptPassword?: string
 }
 
-export type ExportAppDumpResponse = ReadStream
+export type ExportWorkspaceDumpResponse = ReadStream

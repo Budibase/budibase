@@ -1,10 +1,10 @@
 import { API } from "@/api"
-import { writable } from "svelte/store"
 import {
-  AppSelfResponse,
   ContextUserMetadata,
   GetGlobalSelfResponse,
+  SelfResponse,
 } from "@budibase/types"
+import { writable } from "svelte/store"
 
 type AuthState = ContextUserMetadata | GetGlobalSelfResponse | undefined
 
@@ -12,7 +12,7 @@ const createAuthStore = () => {
   const store = writable<AuthState>()
 
   const hasAppSelfUser = (
-    user: AppSelfResponse | null
+    user: SelfResponse | null
   ): user is ContextUserMetadata => {
     return user != null && "_id" in user
   }

@@ -27,7 +27,7 @@ class TestConfiguration {
   ctx: any
 
   constructor() {
-    this.middleware = authorizedMiddleware(PermissionType.APP)
+    this.middleware = authorizedMiddleware(PermissionType.WORKSPACE)
     this.next = jest.fn()
     this.throw = jest.fn()
     this.headers = {}
@@ -169,7 +169,7 @@ describe("Authorization middleware", () => {
         },
       })
       config.setMiddlewareRequiredPermission(
-        PermissionType.APP,
+        PermissionType.WORKSPACE,
         PermissionLevel.READ
       )
 

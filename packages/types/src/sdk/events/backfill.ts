@@ -1,6 +1,6 @@
 import { BaseEvent, Event } from "./event"
 
-export interface AppBackfillSucceededEvent extends BaseEvent {
+export interface WorkspaceBackfillSucceededEvent extends BaseEvent {
   appId: string
   automations: number
   datasources: number
@@ -13,7 +13,7 @@ export interface AppBackfillSucceededEvent extends BaseEvent {
   errorCount?: number
 }
 
-export interface AppBackfillFailedEvent extends BaseEvent {
+export interface WorkspaceBackfillFailedEvent extends BaseEvent {
   error: string
 }
 
