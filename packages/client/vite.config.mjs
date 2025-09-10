@@ -66,6 +66,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("../bbui/src"),
         },
         {
+          find: "@budibase/string-templates",
+          replacement: path.resolve("../string-templates/src"),
+        },
+        {
           find: "@",
           replacement: path.resolve(__dirname, "src"),
         },
