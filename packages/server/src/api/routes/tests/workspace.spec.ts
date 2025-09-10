@@ -1,14 +1,7 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { setEnv, withEnv } from "../../../environment"
 
-import {
-  Header,
-  context,
-  db,
-  events,
-  roles,
-  utils,
-} from "@budibase/backend-core"
+import { Header, context, db, events, roles } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
@@ -33,6 +26,10 @@ import {
 } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+
+const generateAppName = () => {
+  return structures.generator.word({ length: 10 })
+}
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -159,11 +156,11 @@ describe("/applications", () => {
     }
 
     it("creates empty app without sample data", async () => {
-      const newId = utils.newid()
+      const name = generateAppName()
       const newWorkspace = await config.api.workspace.create({
-        name: newId,
+        name,
       })
-      expect(newWorkspace.name).toBe(newId)
+      expect(newWorkspace.name).toBe(name)
       expect(newWorkspace._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
@@ -173,9 +170,9 @@ describe("/applications", () => {
     })
 
     it("creates app with sample data when onboarding", async () => {
-      const newId = utils.newid()
+      const name = generateAppName()
       const newWorkspace = await config.api.workspace.create({
-        name: newId,
+        name,
         isOnboarding: "true",
       })
       expect(newWorkspace._id).toBeDefined()
@@ -188,7 +185,7 @@ describe("/applications", () => {
         const {
           workspaceApps: [app],
         } = workspaceAppsFetchResult
-        expect(app.name).toBe(newId)
+        expect(app.name).toBe(name)
 
         const res = await config.api.workspace.getDefinition(newWorkspace.appId)
         expect(res.screens.length).toEqual(1)
@@ -207,7 +204,7 @@ describe("/applications", () => {
         )
 
       const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         templateKey: "app/expense-approval",
       })
@@ -227,7 +224,7 @@ describe("/applications", () => {
 
     it("creates app from file", async () => {
       const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
@@ -256,7 +253,7 @@ describe("/applications", () => {
 
     it("migrates navigation settings from old apps", async () => {
       const app = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
@@ -1012,7 +1009,8 @@ describe("/applications", () => {
     it("middleware should set updatedAt", async () => {
       const app = await tk.withFreeze(
         "2021-01-01",
-        async () => await config.api.workspace.create({ name: utils.newid() })
+        async () =>
+          await config.api.workspace.create({ name: generateAppName() })
       )
       expect(app.updatedAt).toEqual("2021-01-01T00:00:00.000Z")
 
