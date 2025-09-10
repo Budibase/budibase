@@ -1,3 +1,5 @@
+import { z } from "zod"
+import { Row } from "../../../../documents"
 import {
   ArrayOperator,
   BasicOperator,
@@ -7,13 +9,7 @@ import {
   RangeOperator,
   SearchFilterKey,
 } from "../../../../sdk"
-import { Row } from "../../../../documents"
-import {
-  PaginationResponse,
-  SortOrder,
-  SortType,
-} from "../../../../api/web/pagination"
-import { z } from "zod"
+import { PaginationResponse, SortOrder, SortType } from "../../pagination"
 
 const fieldKey = z
   .string()

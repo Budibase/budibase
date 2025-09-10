@@ -73,8 +73,8 @@ export const StaticDatabases = {
   },
 }
 
-export const WORKSPACE_PREFIX = prefixed(DocumentType.APP)
-export const WORKSPACE_DEV = prefixed(DocumentType.APP_DEV)
+export const WORKSPACE_PREFIX = prefixed(DocumentType.WORKSPACE)
+export const WORKSPACE_DEV = prefixed(DocumentType.WORKSPACE_DEV)
 export const WORKSPACE_DEV_PREFIX = WORKSPACE_DEV
 export const SQS_DATASOURCE_INTERNAL = "internal"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"

@@ -60,19 +60,19 @@ export enum Event {
   ANALYTICS_OPT_OUT = "analytics:opt:out",
   ANALYTICS_OPT_IN = "analytics:opt:in",
 
-  // APP
-  APP_CREATED = "app:created",
-  APP_UPDATED = "app:updated",
-  APP_DELETED = "app:deleted",
-  APP_DUPLICATED = "app:duplicated",
-  APP_PUBLISHED = "app:published",
-  APP_UNPUBLISHED = "app:unpublished",
-  APP_TEMPLATE_IMPORTED = "app:template:imported",
-  APP_FILE_IMPORTED = "app:file:imported",
-  APP_VERSION_UPDATED = "app:version:updated",
-  APP_VERSION_REVERTED = "app:version:reverted",
-  APP_REVERTED = "app:reverted",
-  APP_EXPORTED = "app:exported",
+  // WORKSPACE
+  WORKSPACE_CREATED = "app:created",
+  WORKSPACE_UPDATED = "app:updated",
+  WORKSPACE_DELETED = "app:deleted",
+  WORKSPACE_DUPLICATED = "app:duplicated",
+  WORKSPACE_PUBLISHED = "app:published",
+  WORKSPACE_UNPUBLISHED = "app:unpublished",
+  WORKSPACE_TEMPLATE_IMPORTED = "app:template:imported",
+  WORKSPACE_FILE_IMPORTED = "app:file:imported",
+  WORKSPACE_APP_VERSION_UPDATED = "app:version:updated",
+  WORKSPACE_APP_VERSION_REVERTED = "app:version:reverted",
+  WORKSPACE_REVERTED = "app:reverted",
+  WORKSPACE_EXPORTED = "app:exported",
 
   // ROLE
   ROLE_CREATED = "role:created",
@@ -202,11 +202,6 @@ export enum Event {
   ACTION_CRUD_EXECUTED = "action:crud:executed",
   ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
 
-  // WORKSPACE
-  WORKSPACE_CREATED = "workspace:created",
-  WORKSPACE_UPDATED = "workspace:updated",
-  WORKSPACE_DELETED = "workspace:deleted",
-
   // WORKSPACE APP
   WORKSPACE_APP_CREATED = "workspace_app:created",
   WORKSPACE_APP_UPDATED = "workspace_app:updated",
@@ -297,18 +292,18 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.ORG_PLATFORM_URL_UPDATED]: `Organisation platform URL updated`,
 
   // APP
-  [Event.APP_CREATED]: `App "{{ name }}" created`,
-  [Event.APP_UPDATED]: `App "{{ name }}" updated`,
-  [Event.APP_DELETED]: `App "{{ name }}" deleted`,
-  [Event.APP_DUPLICATED]: `App "{{ name }}" duplicated`,
-  [Event.APP_PUBLISHED]: `App "{{ name }}" published`,
-  [Event.APP_UNPUBLISHED]: `App "{{ name }}" unpublished`,
-  [Event.APP_TEMPLATE_IMPORTED]: `App "{{ name }}" template imported`,
-  [Event.APP_FILE_IMPORTED]: `App "{{ name }}" file imported`,
-  [Event.APP_VERSION_UPDATED]: `App "{{ name }}" version updated`,
-  [Event.APP_VERSION_REVERTED]: `App "{{ name }}" version reverted`,
-  [Event.APP_REVERTED]: `App "{{ name }}" reverted`,
-  [Event.APP_EXPORTED]: `App "{{ name }}" exported`,
+  [Event.WORKSPACE_CREATED]: `App "{{ name }}" created`,
+  [Event.WORKSPACE_UPDATED]: `App "{{ name }}" updated`,
+  [Event.WORKSPACE_DELETED]: `App "{{ name }}" deleted`,
+  [Event.WORKSPACE_DUPLICATED]: `App "{{ name }}" duplicated`,
+  [Event.WORKSPACE_PUBLISHED]: `App "{{ name }}" published`,
+  [Event.WORKSPACE_UNPUBLISHED]: `App "{{ name }}" unpublished`,
+  [Event.WORKSPACE_TEMPLATE_IMPORTED]: `App "{{ name }}" template imported`,
+  [Event.WORKSPACE_FILE_IMPORTED]: `App "{{ name }}" file imported`,
+  [Event.WORKSPACE_APP_VERSION_UPDATED]: `App "{{ name }}" version updated`,
+  [Event.WORKSPACE_APP_VERSION_REVERTED]: `App "{{ name }}" version reverted`,
+  [Event.WORKSPACE_REVERTED]: `App "{{ name }}" reverted`,
+  [Event.WORKSPACE_EXPORTED]: `App "{{ name }}" exported`,
   [Event.APP_BACKUP_RESTORED]: `App backup "{{ name }}" restored`,
   [Event.APP_BACKUP_TRIGGERED]: `App backup "{{ name }}" triggered`,
 
@@ -436,11 +431,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
 
   // ROW ACTIONS - NOT AUDITED
   [Event.ROW_ACTION_CREATED]: undefined,
-
-  // WORKSPACE
-  [Event.WORKSPACE_CREATED]: undefined,
-  [Event.WORKSPACE_DELETED]: undefined,
-  [Event.WORKSPACE_UPDATED]: undefined,
 
   // WORKSPACE APP
   [Event.WORKSPACE_APP_CREATED]: undefined,

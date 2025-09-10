@@ -12,6 +12,6 @@ export interface FetchGlobalRolesResponse
 
 export interface FindGlobalRoleResponse extends GlobalRoleResponse {}
 
-export interface RemoveAppRoleResponse {
+export interface RemoveWorkspaceRoleResponse {
   message: string
 }
