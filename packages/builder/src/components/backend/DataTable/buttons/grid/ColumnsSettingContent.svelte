@@ -200,7 +200,6 @@
       notifications.error(e.message)
     }
   }
-
 </script>
 
 <div class="content">
@@ -212,8 +211,7 @@
           <Input
             placeholder="Column display name"
             value={column.schema.displayName || column.name}
-            on:blur={e =>
-              updateDisplayName(column, e.detail || undefined)}
+            on:blur={e => updateDisplayName(column, e.detail || undefined)}
             quiet
           />
         </div>
