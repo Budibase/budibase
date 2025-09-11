@@ -170,7 +170,7 @@
         ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
         : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
 
-    newQuery.fields.path = url?.split("?")[0]
+    newQuery.fields.path = fromQuery.fields.path
     newQuery.fields.queryString = queryString
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = schema || {}
@@ -387,12 +387,22 @@
 
   const urlChanged = evt => {
     breakQs = {}
-    const qs = evt.target.value.split("?")[1]
+    const fullUrl = evt.target.value
+    const [basePath, qs] = fullUrl.split("?")
+
+    // Update the query fields path with just the base path
+    if (query?.fields) {
+      query.fields.path = basePath
+    }
+
+    // Parse query parameters
     if (qs && qs.length > 0) {
       const parts = qs.split("&")
       for (let part of parts) {
         const [key, value] = part.split("=")
-        breakQs[key] = value
+        if (key) {
+          breakQs[key] = value || ""
+        }
       }
     }
   }
@@ -553,7 +563,7 @@
           <div class="url">
             <Input
               on:blur={urlChanged}
-              bind:value={query.fields.path}
+              bind:value={url}
               placeholder="http://www.api.com/endpoint"
             />
           </div>
