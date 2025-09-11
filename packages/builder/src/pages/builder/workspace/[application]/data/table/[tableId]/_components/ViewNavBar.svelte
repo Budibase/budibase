@@ -49,6 +49,7 @@
   let deleteViewModal
 
   $: tableId = $params.tableId
+  $: isUsersTable = tableId === TableNames.USERS
   $: table = $tables.list.find(table => table._id === tableId)
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
@@ -225,15 +226,21 @@
 </script>
 
 <div class="nav">
-  <a
-    href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
-  >
-    <IntegrationIcon
-      integrationType={datasource?.source}
-      schema={datasource?.schema}
-      size="24"
-    />
-  </a>
+  {#if !isUsersTable}
+    <a
+      href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
+    >
+      <IntegrationIcon
+        integrationType={datasource?.source}
+        schema={datasource?.schema}
+        size="24"
+      />
+    </a>
+  {:else}
+    <span class="user-icon">
+      <Icon name="users-three" />
+    </span>
+  {/if}
   <a
     href={$tableUrl(tableId)}
     class="nav-item"
@@ -441,8 +448,12 @@
     overflow: hidden;
   }
 
-  /* OVerflow items */
+  /* Overflow items */
   .nav-overflow-item:not(.active) :global(> .spectrum-Menu-item > .icon) {
     visibility: hidden;
+  }
+
+  .nav .user-icon :global(i) {
+    font-size: 24px;
   }
 </style>
