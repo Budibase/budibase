@@ -19,7 +19,6 @@
   let loaded = false
   let commandPaletteModal
   let settingsModal
-  let settingsModalOpen = false
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -29,10 +28,6 @@
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
-
-  $: if (settingsModal && $bb.settings.open && !settingsModalOpen) {
-    settingsModal.show()
-  }
 
   navigation.init($redirect)
 

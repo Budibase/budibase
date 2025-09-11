@@ -228,7 +228,6 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
       section: "Automations",
       icon: "lightning-a",
       path: "automations",
-      new: true,
       routes: [
         {
           path: "logs",

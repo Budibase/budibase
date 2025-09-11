@@ -6,9 +6,13 @@
   import Router from "@/settings/Router.svelte"
   import RouteHeader from "@/settings/RouteHeader.svelte"
   import { tick } from "svelte"
-  import { isRouteHREF, isSettingIcon, type Route } from "@/types/routing"
+  import {
+    isRouteHREF,
+    isSettingIcon,
+    type MatchedRoute,
+    type Route,
+  } from "@/types/routing"
   import { beforeUrlChange, goto } from "@roxi/routify"
-  import { onMount } from "svelte"
   import ModalSideBar from "./ModalSideBar.svelte"
   import SideNavLink from "@/pages/builder/workspace/[application]/_components/SideNav/SideNavLink.svelte"
 
@@ -23,7 +27,7 @@
   let modal: Modal
   let scrolling = false
   let page: HTMLDivElement
-  let settingsModalOpen = false
+  let modalOpen = false
   let settingsSideBarCollapsed = false
   let settingsNav: ModalSideBar
 
@@ -31,7 +35,6 @@
   $: matchedRoute = route
 
   $beforeUrlChange(() => {
-    // Triggered on page change AND when intercepting the modal close
     bb.hideSettings()
     return true
   })
@@ -50,7 +53,7 @@
   )
 
   // Show/Hide the settings modal as required
-  $: toggleSettings(open)
+  $: modal, toggleSettings(open)
 
   $: groupEntries = Object.entries(routesByGroup || {})
 
@@ -60,15 +63,34 @@
   // Pull out the default route
   $: defaultRoute = $flattenedRoutes.find(r => r.path === "/general/info")
 
-  // Default path when none is set
-  $: if (!matchedRoute && flattenedRoutes && open) {
-    tick().then(() => {
-      bb.settings(defaultRoute?.path || "/profile")
-    })
-  }
+  // Determine the path when opened
+  $: handlePath($flattenedRoutes, open, matchedRoute)
 
-  // Handle the modal opening and stop the nav actions from leaving the current page
-  $: open && history.pushState({ modal: true }, "", window.location.href)
+  const handlePath = (
+    routes: Route[],
+    open: boolean,
+    matchedRoute?: MatchedRoute
+  ) => {
+    if (routes && open === true) {
+      if (!matchedRoute) {
+        // Default path when none is set
+        tick().then(() => {
+          bb.settings(defaultRoute?.path || "/profile")
+        })
+      } else {
+        const isValidPath = routes.find(
+          r => r.path === matchedRoute?.entry?.path
+        )
+
+        // When the user reopens the modal an the
+        if (!isValidPath) {
+          tick().then(() => {
+            bb.settings(defaultRoute?.path || "/profile")
+          })
+        }
+      }
+    }
+  }
 
   const handleScroll = (e: Event) => {
     const target = e.target as HTMLDivElement
@@ -81,13 +103,13 @@
     }
   }
 
-  const toggleSettings = (settingsOpen: boolean) => {
+  const toggleSettings = async (settingsOpen: boolean) => {
     if (!modal) return
-    if (settingsOpen && !settingsModalOpen) {
-      settingsModalOpen = true
+    if (settingsOpen && !modalOpen) {
+      modalOpen = true
       modal.show()
-    } else {
-      settingsModalOpen = false
+    } else if (!settingsOpen && modalOpen) {
+      modalOpen = false
       modal.hide()
     }
   }
@@ -118,22 +140,6 @@
     }
     bb.settings(`/${path}`)
   }
-
-  onMount(() => {
-    function handlePopState(event: PopStateEvent) {
-      if (open) {
-        bb.hideSettings()
-        // Prevent navigation as the modal is closing
-        event.preventDefault()
-      }
-    }
-
-    window.addEventListener("popstate", handlePopState)
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState)
-    }
-  })
 </script>
 
 <div class="settings-wrap">

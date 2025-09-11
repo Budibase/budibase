@@ -285,15 +285,6 @@
               on:click={keepCollapsed}
             />
           {/if}
-          <SideNavLink
-            icon="gear"
-            text="Settings"
-            {collapsed}
-            on:click={() => {
-              bb.settings()
-              keepCollapsed()
-            }}
-          />
         </div>
         <Divider size="S" />
         <div class="favourite-wrapper">
@@ -351,6 +342,15 @@
         </div>
       </div>
       <div class="links">
+        <SideNavLink
+          icon="gear"
+          text="Settings"
+          {collapsed}
+          on:click={() => {
+            bb.settings()
+            keepCollapsed()
+          }}
+        />
         <SideNavLink
           icon="user-plus"
           text="Invite member"
