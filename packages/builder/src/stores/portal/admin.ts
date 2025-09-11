@@ -10,7 +10,7 @@ import Analytics from "../../analytics"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 
-interface AdminState
+export interface AdminState
   extends Omit<GetEnvironmentResponse, "isDev" | "serveDevClientFromStorage"> {
   loaded: boolean
   checklist?: ConfigChecklistResponse

@@ -32,6 +32,7 @@
   } from "@budibase/types"
   import { derived, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
+  import { bb } from "@/stores/bb"
 
   type ResourceLinkFn = (_id: string) => string
 
@@ -50,14 +51,6 @@
 
   setContext(Context.PopoverRoot, ".nav .popover-container")
 
-  const datasourceLookup = datasources.lookup
-  const favouriteLookup = workspaceFavouriteStore.lookup
-  const pinned = createLocalStorageStore("builder-nav-pinned", true)
-
-  let allResourceStores: Readable<AllResourceStores> | null = null
-  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
-    null
-
   // Default icon mapping
   const ResourceIcons: Record<WorkspaceResource, string> = {
     [WorkspaceResource.AUTOMATION]: "path",
@@ -67,6 +60,27 @@
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
   }
+
+  const datasourceLookup = datasources.lookup
+  const favouriteLookup = workspaceFavouriteStore.lookup
+  const pinned = createLocalStorageStore("builder-nav-pinned", true)
+
+  let ignoreFocus = false
+  let focused = false
+  let timeout: ReturnType<typeof setTimeout> | undefined
+
+  let allResourceStores: Readable<AllResourceStores> | null = null
+  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
+    null
+
+  $: appId = $appStore.appId
+  $: !$pinned && unPin()
+  $: collapsed = !focused && !$pinned
+
+  // Ignore resources without names
+  $: favourites = $workspaceFavouriteStore
+    .filter(f => $resourceLookup?.[f.resourceId])
+    .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   const initResourceStores = (): Readable<AllResourceStores> =>
     derived(
@@ -131,19 +145,6 @@
     allResourceStores = initResourceStores()
     resourceLookup = generateResourceLookup(allResourceStores)
   }
-
-  let ignoreFocus = false
-  let focused = false
-  let timeout: ReturnType<typeof setTimeout> | undefined
-
-  $: appId = $appStore.appId
-  $: collapsed = !focused && !$pinned
-  $: !$pinned && unPin()
-
-  // Ignore resources without names
-  $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceLookup?.[f.resourceId])
-    .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
     const appPrefix = `/builder/workspace/${appId}`
@@ -247,7 +248,6 @@
             {collapsed}
             on:click={keepCollapsed}
           />
-          <!-- <Divider size="S" /> -->
           <SideNavLink
             icon="database"
             text="Data"
@@ -285,13 +285,6 @@
               on:click={keepCollapsed}
             />
           {/if}
-          <SideNavLink
-            icon="gear"
-            text="Settings"
-            url={$url("./settings")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
         </div>
         <Divider size="S" />
         <div class="favourite-wrapper">
@@ -349,6 +342,15 @@
         </div>
       </div>
       <div class="links">
+        <SideNavLink
+          icon="gear"
+          text="Settings"
+          {collapsed}
+          on:click={() => {
+            bb.settings()
+            keepCollapsed()
+          }}
+        />
         <SideNavLink
           icon="user-plus"
           text="Invite member"

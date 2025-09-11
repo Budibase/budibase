@@ -441,7 +441,7 @@
 <AccountLockedModal
   bind:this={accountLockedModal}
   onConfirm={() =>
-    isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage()}
+    isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />
 
 <style>

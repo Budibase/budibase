@@ -1,0 +1,204 @@
+<script>
+  import {
+    ActionMenu,
+    Heading,
+    Icon,
+    Layout,
+    MenuItem,
+    Modal,
+    Table,
+    notifications,
+  } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { roles } from "@/stores/builder"
+  import { appsStore } from "@/stores/portal/apps"
+  import { auth } from "@/stores/portal/auth"
+  import { groups } from "@/stores/portal/groups"
+  import { onMount, setContext, getContext } from "svelte"
+  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
+  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
+  import GroupIcon from "./_components/GroupIcon.svelte"
+  import GroupUsers from "./_components/GroupUsers.svelte"
+  import { sdk } from "@budibase/shared-core"
+  import { Constants } from "@budibase/frontend-core"
+  import { bb } from "@/stores/bb"
+
+  export let groupId
+
+  const routing = getContext("routing")
+
+  // Override
+  $: params = $routing?.params
+  $: if (params.groupId && groupId !== params.groupId) {
+    // Will set, but not clear.
+    groupId = params.groupId
+  }
+
+  const appSchema = {
+    name: {
+      width: "2fr",
+    },
+    role: {
+      width: "1fr",
+    },
+  }
+  const customAppTableRenderers = [
+    {
+      column: "name",
+      component: AppNameTableRenderer,
+    },
+    {
+      column: "role",
+      component: AppRoleTableRenderer,
+    },
+  ]
+
+  let loaded = false
+  let editModal, deleteModal
+
+  $: group = $groups.find(x => x._id === groupId)
+  $: isScimGroup = group?.scimInfo?.isSync
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: readonly = !isAdmin || isScimGroup
+  $: groupApps = $appsStore.apps
+    .filter(app =>
+      groups.getGroupAppIds(group).includes(appsStore.getProdAppID(app.devId))
+    )
+    .map(app => ({
+      ...app,
+      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
+        ? Constants.Roles.CREATOR
+        : group?.roles?.[appsStore.getProdAppID(app.devId)],
+    }))
+
+  // Need to ensure the redirect isn't retriggered
+  $: {
+    if (loaded && !group?._id && groupId) {
+      bb.settings("/people/groups")
+    }
+  }
+
+  async function deleteGroup() {
+    try {
+      await groups.delete(group)
+      notifications.success("User group deleted successfully")
+      bb.settings("/people/groups")
+    } catch (error) {
+      notifications.error(`Failed to delete user group`)
+    }
+  }
+
+  async function saveGroup(group) {
+    try {
+      await groups.save(group)
+    } catch (error) {
+      if (error.message) {
+        notifications.error(error.message)
+      } else {
+        notifications.error(`Failed to save user group`)
+      }
+    }
+  }
+
+  const removeApp = async app => {
+    await groups.removeApp(groupId, appsStore.getProdAppID(app.devId))
+  }
+  setContext("roles", {
+    updateRole: () => {},
+    removeRole: removeApp,
+  })
+
+  onMount(async () => {
+    try {
+      await Promise.all([groups.init(), roles.fetch()])
+      loaded = true
+    } catch (error) {
+      notifications.error("Error fetching user group data")
+    }
+  })
+</script>
+
+{#if loaded}
+  <Layout noPadding gap="L">
+    <div class="header">
+      <GroupIcon {group} size="M" />
+      <Heading size="S">{group?.name}</Heading>
+      <ActionMenu align="right">
+        <span slot="control">
+          <Icon hoverable name="dots-three" />
+        </span>
+        <MenuItem
+          icon="arrow-clockwise"
+          on:click={() => editModal.show()}
+          disabled={!isAdmin}
+        >
+          Edit
+        </MenuItem>
+        <div title={isScimGroup && "Group synced from your AD"}>
+          <MenuItem
+            icon="trash"
+            on:click={() => deleteModal.show()}
+            disabled={readonly}
+          >
+            Delete
+          </MenuItem>
+        </div>
+      </ActionMenu>
+    </div>
+
+    <Layout noPadding gap="S">
+      <GroupUsers {groupId} {readonly} {isScimGroup} />
+    </Layout>
+
+    <Layout noPadding gap="S">
+      <Heading size="S">Workspaces</Heading>
+      <Table
+        schema={appSchema}
+        data={groupApps}
+        customPlaceholder
+        allowEditRows={false}
+        customRenderers={customAppTableRenderers}
+        on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
+        allowEditColumns={false}
+      >
+        <div class="placeholder" slot="placeholder">
+          <Heading size="S"
+            >This group doesn't have access to any workspaces</Heading
+          >
+        </div>
+      </Table>
+    </Layout>
+  </Layout>
+{/if}
+
+<Modal bind:this={editModal}>
+  <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
+
+<ConfirmDialog
+  bind:this={deleteModal}
+  title="Delete user group"
+  okText="Delete user group"
+  onOk={deleteGroup}
+>
+  Are you sure you wish to delete <b>{group?.name}?</b>
+</ConfirmDialog>
+
+<style>
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .header :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+  }
+  .placeholder {
+    width: 100%;
+    text-align: center;
+  }
+</style>
