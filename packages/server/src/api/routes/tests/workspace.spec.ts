@@ -1,14 +1,7 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { setEnv, withEnv } from "../../../environment"
 
-import {
-  Header,
-  context,
-  db,
-  events,
-  roles,
-  utils,
-} from "@budibase/backend-core"
+import { Header, context, db, events, roles } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
@@ -22,7 +15,7 @@ import path from "path"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { AppStatus } from "../../../db/utils"
+import { WorkspaceStatus } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import {
@@ -33,6 +26,10 @@ import {
 } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+
+const generateAppName = () => {
+  return structures.generator.word({ length: 10 })
+}
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -159,8 +156,12 @@ describe("/applications", () => {
     }
 
     it("creates empty app without sample data", async () => {
-      const app = await config.api.workspace.create({ name: utils.newid() })
-      expect(app._id).toBeDefined()
+      const name = generateAppName()
+      const newWorkspace = await config.api.workspace.create({
+        name,
+      })
+      expect(newWorkspace.name).toBe(name)
+      expect(newWorkspace._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Ensure we created a blank app without sample data
@@ -169,16 +170,24 @@ describe("/applications", () => {
     })
 
     it("creates app with sample data when onboarding", async () => {
-      const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+      const name = generateAppName()
+      const newWorkspace = await config.api.workspace.create({
+        name,
         isOnboarding: "true",
       })
-      expect(newApp._id).toBeDefined()
+      expect(newWorkspace._id).toBeDefined()
+      expect(newWorkspace.name).toBe("Default workspace")
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Check sample resources in the newly created app context
-      await config.withApp(newApp, async () => {
-        const res = await config.api.workspace.getDefinition(newApp.appId)
+      await config.withApp(newWorkspace, async () => {
+        const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
+        const {
+          workspaceApps: [app],
+        } = workspaceAppsFetchResult
+        expect(app.name).toBe(name)
+
+        const res = await config.api.workspace.getDefinition(newWorkspace.appId)
         expect(res.screens.length).toEqual(1)
 
         const tables = await config.api.table.fetch()
@@ -195,7 +204,7 @@ describe("/applications", () => {
         )
 
       const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         templateKey: "app/expense-approval",
       })
@@ -215,7 +224,7 @@ describe("/applications", () => {
 
     it("creates app from file", async () => {
       const newApp = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
@@ -244,7 +253,7 @@ describe("/applications", () => {
 
     it("migrates navigation settings from old apps", async () => {
       const app = await config.api.workspace.create({
-        name: utils.newid(),
+        name: generateAppName(),
         useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
@@ -282,7 +291,7 @@ describe("/applications", () => {
   describe("fetch", () => {
     it("lists all applications", async () => {
       const apps = await config.api.workspace.fetch({
-        status: AppStatus.DEV,
+        status: WorkspaceStatus.DEV,
       })
       expect(apps.length).toBeGreaterThan(0)
     })
@@ -428,11 +437,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "App Two",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: `${secondWorkspace.url}/apptwo`,
           },
@@ -511,11 +520,11 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdAppID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
               )
             ),
             name: "Default",
-            prodId: db.getProdAppID(secondWorkspace.appId),
+            prodId: db.getProdWorkspaceID(secondWorkspace.appId),
             updatedAt: secondWorkspace.updatedAt,
             url: secondWorkspace.url,
           },
@@ -1000,7 +1009,8 @@ describe("/applications", () => {
     it("middleware should set updatedAt", async () => {
       const app = await tk.withFreeze(
         "2021-01-01",
-        async () => await config.api.workspace.create({ name: utils.newid() })
+        async () =>
+          await config.api.workspace.create({ name: generateAppName() })
       )
       expect(app.updatedAt).toEqual("2021-01-01T00:00:00.000Z")
 
@@ -1182,7 +1192,7 @@ describe("/applications", () => {
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
-      await context.doInAppContext(app.appId, () =>
+      await context.doInWorkspaceContext(app.appId, () =>
         config.createAutomationLog(automation)
       )
 
@@ -1237,7 +1247,7 @@ describe("/applications", () => {
       })
 
       // Switch to production context and verify data was seeded
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1270,7 +1280,7 @@ describe("/applications", () => {
       expect(result).toBeDefined()
 
       // Verify data was published to production (since test mode publishes all data)
-      await context.doInAppContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodAppId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1281,7 +1291,7 @@ describe("/applications", () => {
       })
 
       // Test that we can call listEmptyProductionTables without error
-      const emptyTables = await context.doInAppContext(
+      const emptyTables = await context.doInWorkspaceContext(
         config.getAppId(),
         async () => {
           return await sdk.tables.listEmptyProductionTables()

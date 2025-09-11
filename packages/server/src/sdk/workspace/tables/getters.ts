@@ -83,7 +83,7 @@ async function processEntities(tables: Record<string, Table>) {
 export async function getAllInternalTables(db?: Database): Promise<Table[]> {
   return await tracer.trace("getAllInternalTables", async span => {
     if (!db) {
-      db = context.getAppDB()
+      db = context.getWorkspaceDB()
     }
     span.addTags({ db: db.name })
     const internalTables = await db.allDocs<Table>(
@@ -99,18 +99,21 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
 export async function listEmptyProductionTables(): Promise<string[]> {
   const internalTables = await getAllInternalTables()
   const emptyTableIds: string[] = []
-  return context.doInAppContext(context.getProdAppId(), async () => {
-    for (let table of internalTables) {
-      if (table._id === InternalTables.USER_METADATA || !table._id) {
-        continue
+  return context.doInWorkspaceContext(
+    context.getProdWorkspaceId(),
+    async () => {
+      for (let table of internalTables) {
+        if (table._id === InternalTables.USER_METADATA || !table._id) {
+          continue
+        }
+        const aRow = await sdk.rows.fetchRaw(table._id, 1)
+        if (aRow.length === 0) {
+          emptyTableIds.push(table._id)
+        }
       }
-      const aRow = await sdk.rows.fetchRaw(table._id, 1)
-      if (aRow.length === 0) {
-        emptyTableIds.push(table._id)
-      }
+      return emptyTableIds
     }
-    return emptyTableIds
-  })
+  )
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
@@ -155,7 +158,7 @@ export async function getExternalTable(
 
 export async function getTable(tableId: string): Promise<Table> {
   return await tracer.trace("getTable", async span => {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     span.addTags({ tableId, db: db.name })
     let output: Table
     if (tableId && isExternalTableID(tableId)) {
@@ -233,7 +236,7 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
       )
     }
     if (internalTableIds.length) {
-      const db = context.getAppDB()
+      const db = context.getWorkspaceDB()
       const internalTables = await db.getMultiple<Table>(internalTableIds, {
         allowMissing: true,
       })

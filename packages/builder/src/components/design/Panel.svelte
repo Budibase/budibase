@@ -19,6 +19,7 @@
   export let noHeaderBorder: boolean | undefined = false
   export let titleCSS: boolean | undefined = true
   export let customWidth: number | undefined = undefined
+  export let resizable: boolean | undefined = false
 
   $: customHeaderContent = $$slots["panel-header-content"]
   $: customTitleContent = $$slots["panel-title-content"]
@@ -26,7 +27,9 @@
   $: panelStyle =
     customWidth && !isNaN(customWidth)
       ? `min-width: ${customWidth}px; width: ${customWidth}px; flex: 0 0 ${customWidth}px;`
-      : undefined
+      : resizable
+        ? `flex: 1 1 auto; min-width: 260px;`
+        : undefined
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

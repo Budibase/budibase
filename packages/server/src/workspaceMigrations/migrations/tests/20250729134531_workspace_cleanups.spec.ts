@@ -1,13 +1,13 @@
+import { db } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
+import { WorkspaceApp } from "@budibase/types"
 import tk from "timekeeper"
+import { AppMigration, updateAppMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
+import sdk from "../../../sdk"
+import { basicScreen } from "../../../tests/utilities/structures"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250729134531_workspace_cleanups"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
-import sdk from "../../../sdk"
-import { structures } from "@budibase/backend-core/tests"
-import { db } from "@budibase/backend-core"
-import { basicScreen } from "../../../tests/utilities/structures"
-import { WorkspaceApp } from "@budibase/types"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -190,13 +190,13 @@ describe.each([
   })
 
   it("handles different workspace apps between dev and prod", async () => {
-    const prodAppId = db.getProdAppID(getAppId())
-    const devAppId = db.getDevAppID(getAppId())
+    const prodAppId = db.getProdWorkspaceID(getAppId())
+    const devId = db.getDevWorkspaceID(getAppId())
     await config.doInContext(prodAppId, async () => {
       await createWorkspaceApp(true)
     })
 
-    await config.doInContext(devAppId, async () => {
+    await config.doInContext(devId, async () => {
       await createWorkspaceApp(true)
     })
 
@@ -205,7 +205,7 @@ describe.each([
         (await sdk.workspaceApps.fetch()).map(a => a._id)
       )
     ).not.toEqual(
-      await config.doInContext(devAppId, async () =>
+      await config.doInContext(devId, async () =>
         (await sdk.workspaceApps.fetch()).map(a => a._id)
       )
     )

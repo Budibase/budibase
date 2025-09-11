@@ -34,8 +34,8 @@ async function setResponseApp(ctx: UserCtx) {
 
 export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
-  const apps = await dbCore.getAllApps({ all: true })
-  ctx.body = stringSearch(apps, name)
+  const workspaces = await dbCore.getAllWorkspaces({ all: true })
+  ctx.body = stringSearch(workspaces, name)
   await next()
 }
 
@@ -52,7 +52,7 @@ export async function create(ctx: UserCtx, next: Next) {
 }
 
 export async function read(ctx: UserCtx, next: Next) {
-  await context.doInAppContext(ctx.params.appId, async () => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
     await setResponseApp(ctx)
     await next()
   })
@@ -60,7 +60,7 @@ export async function read(ctx: UserCtx, next: Next) {
 
 export async function update(ctx: UserCtx, next: Next) {
   ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
-  await context.doInAppContext(ctx.params.appId, async () => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
     await controller.update(ctx)
     await setResponseApp(ctx)
     await next()
@@ -68,7 +68,7 @@ export async function update(ctx: UserCtx, next: Next) {
 }
 
 export async function destroy(ctx: UserCtx, next: Next) {
-  await context.doInAppContext(ctx.params.appId, async () => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
     // get the app before deleting it
     await setResponseApp(ctx)
     const body = ctx.body
@@ -80,7 +80,7 @@ export async function destroy(ctx: UserCtx, next: Next) {
 }
 
 export async function unpublish(ctx: UserCtx, next: Next) {
-  await context.doInAppContext(ctx.params.appId, async () => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
     await controller.unpublish(ctx)
     ctx.body = undefined
     ctx.status = 204
@@ -89,7 +89,7 @@ export async function unpublish(ctx: UserCtx, next: Next) {
 }
 
 export async function publish(ctx: UserCtx, next: Next) {
-  await context.doInAppContext(ctx.params.appId, async () => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
     await deployController.publishApp(ctx)
     await next()
   })

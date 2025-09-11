@@ -31,7 +31,7 @@ async function getNewAppMetadata(
   appDb: Database
 ): Promise<Workspace> {
   // static doc denoting app information
-  const docId = DocumentType.APP_METADATA
+  const docId = DocumentType.WORKSPACE_METADATA
   try {
     const [tempMetadata, appMetadata] = await Promise.all([
       tempDb.get<Workspace>(docId),
@@ -141,7 +141,7 @@ export async function updateWithExport(
   file: FileAttributes,
   password?: string
 ) {
-  const devId = dbCore.getDevAppID(appId)
+  const devId = dbCore.getDevWorkspaceID(appId)
   const tempAppName = `temp_${devId}`
   const tempDb = dbCore.getDB(tempAppName)
   const appDb = dbCore.getDB(devId)

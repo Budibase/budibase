@@ -36,10 +36,12 @@ export interface View {
 export interface BasicViewFieldMetadata extends UIFieldMetadata {
   readonly?: boolean
   columns?: Record<string, RelationSchemaField>
+  displayName?: string
 }
 
 export interface RelationSchemaField extends UIFieldMetadata {
   readonly?: boolean
+  displayName?: string
 }
 
 export interface NumericCalculationFieldMetadata

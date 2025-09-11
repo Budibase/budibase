@@ -3,14 +3,14 @@ import { features } from "@budibase/pro"
 import { ClientHeader, Header, sdk } from "@budibase/shared-core"
 import { RecaptchaSessionCookie, UserCtx, Workspace } from "@budibase/types"
 import { Middleware, Next } from "koa"
-import { isProdAppID } from "../db/utils"
+import { isProdWorkspaceID } from "../db/utils"
 import { isRecaptchaVerified } from "../utilities/redis"
 
 const middleware = (async (ctx: UserCtx, next: Next) => {
-  const appId = context.getAppId()
+  const workspaceId = context.getWorkspaceId()
   // no app ID, requests are not targeting an app
   // if not production app - this is in the builder, recaptcha isn't enabled
-  if (!appId || !isProdAppID(appId)) {
+  if (!workspaceId || !isProdWorkspaceID(workspaceId)) {
     return next()
   }
   if (!(await features.isRecaptchaEnabled())) {
@@ -23,8 +23,8 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
   ) {
     return next()
   }
-  const app = await cache.app.getAppMetadata(appId)
-  if ("state" in app && app.state === cache.app.AppState.INVALID) {
+  const app = await cache.workspace.getWorkspaceMetadata(workspaceId)
+  if ("state" in app && app.state === cache.workspace.WorkspaceState.INVALID) {
     throw new Error("App not found")
   }
   if ((app as Workspace).recaptchaEnabled) {

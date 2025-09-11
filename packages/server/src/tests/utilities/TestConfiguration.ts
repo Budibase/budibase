@@ -83,12 +83,6 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-export interface CreateAppRequest {
-  appName: string
-  url?: string
-  snippets?: any[]
-}
-
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
@@ -101,7 +95,7 @@ export default class TestConfiguration {
   appId?: string
   defaultWorkspaceAppId?: string
   name?: string
-  allApps: Workspace[]
+  allWorkspaces: Workspace[]
   app?: Workspace
   prodApp?: Workspace
   prodAppId?: string
@@ -127,7 +121,7 @@ export default class TestConfiguration {
       this.started = false
     }
     this.appId = undefined
-    this.allApps = []
+    this.allWorkspaces = []
 
     this.api = new API(this)
   }
@@ -225,8 +219,8 @@ export default class TestConfiguration {
       }
 
       // check if already in a context
-      if (context.getAppId() == null && appId) {
-        return context.doInAppContext(appId, async () => {
+      if (context.getWorkspaceId() == null && appId) {
+        return context.doInWorkspaceContext(appId, async () => {
           return task()
         })
       } else {
@@ -255,8 +249,8 @@ export default class TestConfiguration {
     } else {
       require("../../app").getServer().close()
     }
-    if (this.allApps) {
-      cleanup(this.allApps.map(app => app.appId))
+    if (this.allWorkspaces) {
+      cleanup(this.allWorkspaces.map(app => app.appId))
     }
   }
 
@@ -273,7 +267,7 @@ export default class TestConfiguration {
   async withApp<R>(app: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
-    return await context.doInAppContext(this.appId, async () => {
+    return await context.doInWorkspaceContext(this.appId, async () => {
       try {
         return await f()
       } finally {
@@ -410,7 +404,7 @@ export default class TestConfiguration {
     prodApp: boolean
   }) {
     const appId = prodApp ? this.getProdAppId() : this.getAppId()
-    return context.doInAppContext(appId, async () => {
+    return context.doInWorkspaceContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
       if (!this.request) {
         throw "Server has not been opened, cannot login."
@@ -661,12 +655,12 @@ export default class TestConfiguration {
     const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
     this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
-    return await context.doInAppContext(this.app.appId!, async () => {
+    return await context.doInWorkspaceContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
 
-      this.allApps.push(this.prodApp)
-      this.allApps.push(this.app!)
+      this.allWorkspaces.push(this.prodApp)
+      this.allWorkspaces.push(this.app!)
 
       return this.app!
     })
@@ -692,12 +686,12 @@ export default class TestConfiguration {
       .workspaceApps
     this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
-    return await context.doInAppContext(this.app.appId!, async () => {
+    return await context.doInWorkspaceContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
 
-      this.allApps.push(this.prodApp)
-      this.allApps.push(this.app!)
+      this.allWorkspaces.push(this.prodApp)
+      this.allWorkspaces.push(this.app!)
 
       return this.app!
     })
@@ -709,9 +703,9 @@ export default class TestConfiguration {
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
 
-    return context.doInAppContext(prodAppId, async () => {
-      const db = context.getProdAppDB()
-      return await db.get<Workspace>(dbCore.DocumentType.APP_METADATA)
+    return context.doInWorkspaceContext(prodAppId, async () => {
+      const db = context.getProdWorkspaceDB()
+      return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
     })
   }
 
@@ -971,7 +965,7 @@ export default class TestConfiguration {
 
   async createAutomationLog(automation: Automation, appId?: string) {
     appId = appId || this.getProdAppId()
-    return await context.doInAppContext(appId!, async () => {
+    return await context.doInWorkspaceContext(appId!, async () => {
       return await pro.sdk.automations.logs.storeLog(
         automation,
         basicAutomationResults(automation._id!)
@@ -980,7 +974,7 @@ export default class TestConfiguration {
   }
 
   async getAutomationLogs() {
-    return context.doInAppContext(this.getAppId(), async () => {
+    return context.doInWorkspaceContext(this.getAppId(), async () => {
       const now = new Date()
       return await pro.sdk.automations.logs.logSearch({
         startDate: new Date(now.getTime() - 100000).toISOString(),

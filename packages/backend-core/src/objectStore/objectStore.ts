@@ -23,7 +23,7 @@ import { ReadableStream } from "stream/web"
 import tar from "tar-fs"
 import { v4 } from "uuid"
 import zlib from "zlib"
-import { APP_DEV_PREFIX, APP_PREFIX } from "../db"
+import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
 import env from "../environment"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
@@ -83,7 +83,7 @@ export function sanitizeKey(input: string): string {
 
 // simply handles the dev app to app conversion
 export function sanitizeBucket(input: string): string {
-  return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
+  return input.replace(new RegExp(WORKSPACE_DEV_PREFIX, "g"), WORKSPACE_PREFIX)
 }
 
 /**
@@ -269,19 +269,6 @@ export async function streamUpload({
     if (ttl && bucketCreated.created) {
       let ttlConfig = bucketTTLConfig(bucketName, ttl)
       await objectStore.putBucketLifecycleConfiguration(ttlConfig)
-    }
-
-    // Set content type for certain known extensions
-    if (filename?.endsWith(".js")) {
-      extra = {
-        ...extra,
-        ContentType: "application/javascript",
-      }
-    } else if (filename?.endsWith(".svg")) {
-      extra = {
-        ...extra,
-        ContentType: "image",
-      }
     }
 
     let contentType = type

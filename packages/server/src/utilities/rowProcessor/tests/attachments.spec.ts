@@ -1,13 +1,13 @@
-import { AttachmentCleanup } from "../attachments"
-import { FieldType, Table, Row, TableSourceType } from "@budibase/types"
-import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
-import { objectStore, db, context } from "@budibase/backend-core"
+import { context, db, objectStore } from "@budibase/backend-core"
+import { FieldType, Row, Table, TableSourceType } from "@budibase/types"
 import * as uuid from "uuid"
+import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
+import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = "prod-budi-app-assets"
 const FILE_NAME = "file/thing.jpg"
-const DEV_APPID = "abc_dev_123"
-const PROD_APPID = "abc_123"
+const DEV_WORKSPACEID = "abc_dev_123"
+const PROD_WORKSPACEID = "abc_123"
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -22,8 +22,8 @@ jest.mock("@budibase/backend-core", () => {
       ObjectStoreBuckets: actual.objectStore.ObjectStoreBuckets,
     },
     db: {
-      isProdAppID: jest.fn(),
-      getProdAppID: jest.fn(),
+      isProdWorkspaceID: jest.fn(),
+      getProdWorkspaceID: jest.fn(),
       dbExists: jest.fn(),
     },
   }
@@ -123,9 +123,9 @@ describe.each(rowGenerators)(
       mockedDeleteFiles.mockClear()
       jest.resetAllMocks()
 
-      jest.spyOn(context, "getAppId").mockReturnValue(DEV_APPID)
-      jest.spyOn(db, "isProdAppID").mockReturnValue(false)
-      jest.spyOn(db, "getProdAppID").mockReturnValue(PROD_APPID)
+      jest.spyOn(context, "getWorkspaceId").mockReturnValue(DEV_WORKSPACEID)
+      jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
+      jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_WORKSPACEID)
       jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
     })
 

@@ -1,16 +1,16 @@
+import { db } from "@budibase/backend-core"
 import { WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
-import { db } from "@budibase/backend-core"
 
 export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
   const app = await sdk.applications.metadata.get()
-  const baseAppUrl = db.isProdAppID(app.appId)
+  const baseUrl = db.isProdWorkspaceID(app.appId)
     ? `/app/${app.url}`.replace("//", "/")
     : `/${app.appId}`
 
-  const embedAppUrl = db.isProdAppID(app.appId)
+  const embedUrl = db.isProdWorkspaceID(app.appId)
     ? `/embed/${app.url}`.replace("//", "/")
     : null
 
@@ -18,10 +18,10 @@ export async function getMatchedWorkspaceApp(
 
   function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
-      fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}` ||
-      (embedAppUrl &&
+      fromUrl.replace(/\/$/, "") === `${baseUrl}${url.replace(/\/$/, "")}` ||
+      (embedUrl &&
         fromUrl.replace(/\/$/, "") ===
-          `${embedAppUrl}${url.replace(/\/$/, "")}`) ||
+          `${embedUrl}${url.replace(/\/$/, "")}`) ||
       (!fromUrl && isDefault) // Support getMatchedWorkspaceApp without url referrer
     )
   }
