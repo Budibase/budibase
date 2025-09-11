@@ -237,7 +237,9 @@
       />
     </a>
   {:else}
-    <Icon name="users-three" size="L" />
+    <span class="user-icon">
+      <Icon name="users-three" />
+    </span>
   {/if}
   <a
     href={$tableUrl(tableId)}
@@ -446,8 +448,12 @@
     overflow: hidden;
   }
 
-  /* OVerflow items */
+  /* Overflow items */
   .nav-overflow-item:not(.active) :global(> .spectrum-Menu-item > .icon) {
     visibility: hidden;
+  }
+
+  .nav .user-icon :global(i) {
+    font-size: 24px;
   }
 </style>
