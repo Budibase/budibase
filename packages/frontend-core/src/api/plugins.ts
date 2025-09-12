@@ -55,7 +55,7 @@ export const buildPluginEndpoints = (API: BaseAPIClient): PluginEndpoins => ({
    */
   deletePlugin: async pluginId => {
     return await API.delete({
-      url: `/api/plugin/${pluginId}`,
+      url: `/api/plugin/${encodeURIComponent(pluginId)}`,
     })
   },
 })
