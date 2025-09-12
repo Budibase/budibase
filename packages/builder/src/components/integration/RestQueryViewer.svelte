@@ -387,8 +387,10 @@
 
   const urlChanged = evt => {
     breakQs = {}
-    const fullUrl = evt.target.value
-    const [basePath, qs] = fullUrl.split("?")
+    const fullUrl = evt.detail
+    if (!fullUrl) return
+
+    const [basePath, qs] = fullUrl?.split("?")
 
     // Update the query fields path with just the base path
     if (query?.fields) {
@@ -563,7 +565,7 @@
           <div class="url">
             <Input
               on:blur={urlChanged}
-              bind:value={url}
+              value={url}
               placeholder="http://www.api.com/endpoint"
             />
           </div>
@@ -595,12 +597,22 @@
             />
           </Tab>
           <Tab title="Params">
-            <KeyValueBuilder
-              bind:object={breakQs}
-              name="param"
-              headings
-              bindings={mergedBindings}
-            />
+            {#key breakQs}
+              <KeyValueBuilder
+                name="param"
+                defaults={breakQs}
+                headings
+                bindings={mergedBindings}
+                on:change={e => {
+                  let newQs = {}
+                  e.detail.forEach(({ name, value }) => {
+                    newQs[name] = value
+                  })
+
+                  breakQs = newQs
+                }}
+              />
+            {/key}
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder
