@@ -130,7 +130,8 @@ export async function save(
         table.views[view] = viewsSdk.syncSchema(
           oldTable.views[view] as ViewV2,
           table.schema,
-          renaming
+          renaming,
+          table
         )
       }
       continue

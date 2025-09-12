@@ -481,11 +481,18 @@ export async function enrichSchema(
 export function syncSchema(
   view: ViewV2,
   schema: TableSchema,
-  renameColumn: RenameColumn | undefined
+  renameColumn: RenameColumn | undefined,
+  table?: Table
 ): ViewV2 {
   if (renameColumn && view.schema) {
     view.schema[renameColumn.updated] = view.schema[renameColumn.old]
     delete view.schema[renameColumn.old]
+  }
+
+  if (renameColumn && view.primaryDisplay === renameColumn.old) {
+    view.primaryDisplay = renameColumn.updated
+  } else if (table?.primaryDisplay && !view.primaryDisplay) {
+    view.primaryDisplay = table.primaryDisplay
   }
 
   if (view.schema) {
@@ -499,6 +506,12 @@ export function syncSchema(
       if (!view.schema[fieldName]) {
         view.schema[fieldName] = { visible: false }
       }
+    }
+  }
+
+  if (view.primaryDisplay && schema[view.primaryDisplay] && view.schema) {
+    if (!view.schema[view.primaryDisplay]) {
+      view.schema[view.primaryDisplay] = { visible: true }
     }
   }
 
