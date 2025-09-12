@@ -390,7 +390,7 @@
     const fullUrl = evt.detail
     if (!fullUrl) return
 
-    const [basePath, qs] = fullUrl?.split("?")
+    const [basePath, qs] = fullUrl?.split("?") || []
 
     // Update the query fields path with just the base path
     if (query?.fields) {
