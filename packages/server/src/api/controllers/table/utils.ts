@@ -88,7 +88,7 @@ export async function checkForColumnUpdates(
       rename: columnRename,
     })
     // Update views
-    await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
+    await checkForViewUpdates(updatedTable, deletedColumns, columnRename, oldTable)
   }
 
   return { rows: updatedRows, table: updatedTable }
@@ -354,7 +354,8 @@ class TableSaveFunctions {
 export async function checkForViewUpdates(
   table: Table,
   deletedColumns: string[],
-  columnRename?: RenameColumn
+  columnRename?: RenameColumn,
+  oldTable?: Table
 ) {
   const views = await getViews()
   const tableViews = views.filter(view => view.meta?.tableId === table._id)
@@ -417,6 +418,15 @@ export async function checkForViewUpdates(
           }
         }
       })
+    }
+
+    if (
+      oldTable &&
+      table.primaryDisplay !== oldTable.primaryDisplay &&
+      (!viewMetadata.primaryDisplay || viewMetadata.primaryDisplay === oldTable.primaryDisplay)
+    ) {
+      viewMetadata.primaryDisplay = table.primaryDisplay
+      needsUpdated = true
     }
 
     // Update view if required
