@@ -388,6 +388,7 @@ describe("table sdk", () => {
         const result = syncSchema(
           _.cloneDeep(view),
           basicTable.schema,
+          undefined,
           undefined
         )
         expect(result).toEqual(view)
@@ -412,7 +413,7 @@ describe("table sdk", () => {
           },
         }
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined, undefined)
         expect(result).toEqual({
           ...view,
           schema: undefined,
@@ -425,7 +426,7 @@ describe("table sdk", () => {
         }
         const { name, description, ...newTableSchema } = basicTable.schema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined, undefined)
         expect(result).toEqual({
           ...view,
           schema: undefined,
@@ -447,7 +448,7 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, {
           old: "description",
           updated: "updatedDescription",
-        })
+        }, undefined)
         expect(result).toEqual({
           ...view,
           schema: undefined,
@@ -469,6 +470,7 @@ describe("table sdk", () => {
         const result = syncSchema(
           _.cloneDeep(view),
           basicTable.schema,
+          undefined,
           undefined
         )
         expect(result).toEqual(view)
@@ -499,7 +501,7 @@ describe("table sdk", () => {
           },
         }
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined, undefined)
         expect(result).toEqual({
           ...view,
           schema: {
@@ -522,7 +524,7 @@ describe("table sdk", () => {
         }
         const { name, description, ...newTableSchema } = basicTable.schema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined, undefined)
         expect(result).toEqual({
           ...view,
           schema: {
@@ -552,7 +554,7 @@ describe("table sdk", () => {
           },
         } as TableSchema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined, undefined)
         expect(result).toEqual({
           ...view,
           schema: {
@@ -585,7 +587,7 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, {
           old: "description",
           updated: "updatedDescription",
-        })
+        }, undefined)
         expect(result).toEqual({
           ...view,
           schema: {
@@ -615,6 +617,7 @@ describe("table sdk", () => {
               type: FieldType.NUMBER,
             } as FieldSchema,
           },
+          undefined,
           undefined
         )
         expect(result).toEqual(view)
@@ -639,9 +642,111 @@ describe("table sdk", () => {
               visible: !basicTable.schema.id.visible,
             },
           },
+          undefined,
           undefined
         )
         expect(result).toEqual(view)
+      })
+    })
+
+    describe("primaryDisplay sync", () => {
+      it("should inherit primaryDisplay from table when view doesn't have one", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          schema: {
+            id: { visible: true },
+            name: { visible: true },
+          },
+        }
+        const table: Table = {
+          ...basicTable,
+          primaryDisplay: "name",
+        }
+
+        const result = syncSchema(
+          _.cloneDeep(view),
+          basicTable.schema,
+          undefined,
+          table
+        )
+
+        expect(result.primaryDisplay).toBe("name")
+      })
+
+      it("should update primaryDisplay when column is renamed", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          primaryDisplay: "name",
+          schema: {
+            id: { visible: true },
+            name: { visible: true },
+          },
+        }
+
+        const result = syncSchema(
+          _.cloneDeep(view),
+          {
+            ...basicTable.schema,
+            fullName: {
+              ...basicTable.schema.name,
+              name: "fullName",
+            },
+          },
+          {
+            old: "name",
+            updated: "fullName",
+          },
+          undefined
+        )
+
+        expect(result.primaryDisplay).toBe("fullName")
+      })
+
+      it("should not override explicit view primaryDisplay with table primaryDisplay", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          primaryDisplay: "id",
+          schema: {
+            id: { visible: true },
+            name: { visible: true },
+          },
+        }
+        const table: Table = {
+          ...basicTable,
+          primaryDisplay: "name",
+        }
+
+        const result = syncSchema(
+          _.cloneDeep(view),
+          basicTable.schema,
+          undefined,
+          table
+        )
+
+        expect(result.primaryDisplay).toBe("id")
+      })
+
+      it("should ensure primaryDisplay column is visible in view schema", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          primaryDisplay: "name",
+          schema: {
+            id: { visible: true },
+          },
+        }
+        const table: Table = {
+          ...basicTable,
+          primaryDisplay: "name",
+        }
+
+        const result = syncSchema(
+          _.cloneDeep(view),
+          basicTable.schema,
+          undefined,
+          table
+        )
+
+        expect(result.schema?.name?.visible).toBe(true)
       })
     })
   })
