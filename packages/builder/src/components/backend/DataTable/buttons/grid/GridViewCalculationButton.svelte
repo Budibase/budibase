@@ -9,7 +9,6 @@
   import {
     CalculationType,
     canGroupBy,
-    FieldType,
     isNumeric,
     isNumericStaticFormula,
   } from "@budibase/types"
@@ -107,8 +106,7 @@
         // Only allow numeric columns for most calculation types
         if (
           self.type !== CalculationType.COUNT &&
-          !isNumeric(fieldSchema.type) &&
-          fieldSchema.responseType !== FieldType.NUMBER
+          !isNumeric(fieldSchema.type)
         ) {
           return false
         }
