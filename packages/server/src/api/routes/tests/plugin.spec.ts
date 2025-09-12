@@ -94,6 +94,27 @@ describe("/plugins", () => {
       expect(plugins.body.length).toEqual(0)
       expect(events.plugin.deleted).toHaveBeenCalledTimes(1)
     })
+
+    it("should handle URL encoded plugin IDs with special characters", async () => {
+      // Test that the route properly decodes URL-encoded plugin IDs
+      // The route parameter should properly decode special symbols
+      const pluginIdWithSpecialChars = "@budibase/-my-plugin"
+      const encodedPluginId = encodeURIComponent(pluginIdWithSpecialChars)
+
+      // This will return 400 because the plugin doesn't exist
+      // testing that the route is being decoded
+      const res = await request
+        .delete(`/api/plugin/${encodedPluginId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      // The route should properly handle the encoded URL and reach the controller
+      // couch error rather than route error means its worked.
+      expect(res.body).toBeDefined()
+      expect(res.body.message).toContain("Failed to delete plugin")
+    })
+
     it("should handle an error deleting a plugin", async () => {
       mockDeleteFolder.mockImplementationOnce(() => {
         throw new Error()
