@@ -72,4 +72,7 @@ async function buildAll() {
   })
 }
 
-buildAll().catch(console.error)
+buildAll().catch(err => {
+  console.error(err)
+  throw err
+})
