@@ -1,7 +1,7 @@
 import * as fs from "fs"
 import * as path from "path"
 import { yellow, blue, green } from "chalk"
-import ora from "ora-classic"
+import ora from "ora"
 import { BudibaseClient } from "../api/BudibaseClient"
 
 function getFixturesDir(): string {

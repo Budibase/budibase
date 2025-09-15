@@ -30,7 +30,7 @@
     "apexcharts": "^3.48.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
-    "html2pdf.js": "^0.12.0",
+    "html2pdf.js": "^0.9.3",
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.11.6",
     "leaflet": "^1.9.4",

@@ -43,14 +43,17 @@
   }
 
   const getPropsForField = field => {
+    const fieldSchema = getFieldSchema(field)
+    const displayName = fieldSchema?.displayName || field.name
+
     let fieldProps = field._component
       ? {
           ...field,
         }
       : {
           field: field.name,
-          label: field.name,
-          placeholder: field.name,
+          label: displayName,
+          placeholder: displayName,
           _instanceName: field.name,
         }
 

@@ -1,6 +1,6 @@
 import {
-  CreateAppBackupResponse,
-  ImportAppBackupResponse,
+  CreateWorkspaceBackupResponse,
+  ImportWorkspaceBackupResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -20,7 +20,7 @@ export class BackupAPI extends TestAPI {
   }
 
   createBackup = async (appId: string, expectations?: Expectations) => {
-    return await this._post<CreateAppBackupResponse>(
+    return await this._post<CreateWorkspaceBackupResponse>(
       `/api/apps/${appId}/backups`,
       { expectations }
     )
@@ -44,8 +44,8 @@ export class BackupAPI extends TestAPI {
     appId: string,
     backupId: string,
     expectations?: Expectations
-  ): Promise<ImportAppBackupResponse> => {
-    return await this._post<ImportAppBackupResponse>(
+  ): Promise<ImportWorkspaceBackupResponse> => {
+    return await this._post<ImportWorkspaceBackupResponse>(
       `/api/apps/${appId}/backups/${backupId}/import`,
       { expectations }
     )

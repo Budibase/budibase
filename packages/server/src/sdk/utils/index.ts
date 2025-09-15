@@ -1,15 +1,15 @@
 import { context, db as dbCore } from "@budibase/backend-core"
 import { environmentVariables } from "@budibase/pro"
 import { processString } from "@budibase/string-templates"
-import { AppEnvironment } from "@budibase/types"
+import { Environment } from "@budibase/types"
 
 export async function getEnvironmentVariables() {
   let envVars = context.getEnvironmentVariables()
   if (!envVars) {
     const appId = context.getWorkspaceId()
     const workspaceEnv = dbCore.isDevWorkspaceID(appId)
-      ? AppEnvironment.DEVELOPMENT
-      : AppEnvironment.PRODUCTION
+      ? Environment.DEVELOPMENT
+      : Environment.PRODUCTION
 
     envVars = await environmentVariables.fetchValues(workspaceEnv)
   }

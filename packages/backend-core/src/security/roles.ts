@@ -548,7 +548,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 }
 
 async function shouldIncludePowerRole(db: Database) {
-  const app = await db.tryGet<Workspace>(DocumentType.APP_METADATA)
+  const app = await db.tryGet<Workspace>(DocumentType.WORKSPACE_METADATA)
   const creationVersion = app?.creationVersion
   if (!creationVersion || !semver.valid(creationVersion)) {
     // Old apps don't have creationVersion, so we should include it for backward compatibility
