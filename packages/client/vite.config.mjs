@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
       }),
       cssInjectedByJsPlugin(),
       visualizer({
-        filename: "dist/budibase-client-analysis.html",
+        filename: `dist/budibase-client-analysis.${process.env.BUNDLE_VERSION}.html`,
         open: false,
       }),
     ],
