@@ -1,42 +1,42 @@
-import env from "../environment"
-import * as eventHelpers from "./events"
-import * as accountSdk from "../accounts"
-import * as cache from "../cache"
-import { getGlobalDB, getIdentity, getTenantId } from "../context"
-import * as dbUtils from "../db"
-import { EmailUnavailableError, HTTPError } from "../errors"
-import * as platform from "../platform"
-import * as sessions from "../security/sessions"
-import * as usersCore from "./users"
 import {
   Account,
+  AnyDocument,
   BulkUserCreated,
   BulkUserDeleted,
   isSSOAccount,
   isSSOUser,
+  PlatformUserById,
+  PlatformUserBySsoId,
   SaveUserOpts,
   User,
   UserGroup,
   UserIdentifier,
   UserStatus,
-  PlatformUserBySsoId,
-  PlatformUserById,
-  AnyDocument,
 } from "@budibase/types"
-import {
-  getAccountHolderFromUsers,
-  isAdmin,
-  creatorsInList,
-  validateUniqueUser,
-  isCreatorAsync,
-} from "./utils"
+import * as accountSdk from "../accounts"
+import * as cache from "../cache"
+import { getGlobalDB, getIdentity, getTenantId } from "../context"
+import * as dbUtils from "../db"
+import env from "../environment"
+import { EmailUnavailableError, HTTPError } from "../errors"
+import * as platform from "../platform"
+import { validatePassword } from "../security"
+import * as sessions from "../security/sessions"
+import { hash } from "../utils"
+import * as eventHelpers from "./events"
 import {
   getFirstPlatformUser,
   getPlatformUsers,
   searchExistingEmails,
 } from "./lookup"
-import { hash } from "../utils"
-import { validatePassword } from "../security"
+import * as usersCore from "./users"
+import {
+  creatorsInList,
+  getAccountHolderFromUsers,
+  isAdmin,
+  isCreatorAsync,
+  validateUniqueUser,
+} from "./utils"
 
 type QuotaUpdateFn = (
   change: number,
@@ -590,5 +590,27 @@ export class UserDB {
 
   static async getGroupBuilderAppIds(user: User) {
     return await this.groups.getGroupBuilderAppIds(user)
+  }
+
+  static async changeUserRole({
+    id,
+    rev,
+    workspaceId,
+    roleId,
+    currentUserId,
+  }: {
+    id: string
+    rev: string
+    workspaceId: string
+    roleId: string
+    currentUserId: string
+  }) {
+    const existingUser = await this.getUser(id)
+
+    existingUser._rev = rev
+    existingUser.roles[workspaceId] = roleId
+
+    const user = await this.save(existingUser, { currentUserId })
+    return user
   }
 }

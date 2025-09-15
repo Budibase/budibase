@@ -94,6 +94,7 @@ builderOrAdminRoutes
   .get("/api/global/users/count/:appId", controller.countByApp)
   .get("/api/global/users/invites", controller.getUserInvites)
   .get("/api/global/users/:id", controller.find)
+  .post("/api/global/users/:id/role/:roleId", controller.changeUserRole)
 
 adminRoutes
   .post("/api/global/users/invite", buildInviteValidation(), controller.invite)

@@ -173,3 +173,8 @@ export interface ChangeTenantOwnerEmailRequest {
   originalEmail: string
   tenantIds: string[]
 }
+
+export interface ChangeUserRoleRequest {
+  rev: string
+  roleId: string
+}

@@ -1,5 +1,5 @@
-import { Document } from "../document"
 import { ContextUser } from "../../sdk"
+import { Document } from "../document"
 
 // SSO
 
@@ -125,7 +125,7 @@ export enum UserStatus {
   INACTIVE = "inactive",
 }
 
-// specifies a map of app ID to role ID
+// specifies a map of workspace ID to role ID
 export type UserRoles = Record<string, string>
 
 // UTILITY TYPES

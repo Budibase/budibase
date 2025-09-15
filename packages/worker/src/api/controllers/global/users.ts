@@ -1,5 +1,14 @@
-import * as userSdk from "../../../sdk/users"
-import env from "../../../environment"
+import {
+  cache,
+  context,
+  db,
+  events,
+  locks,
+  platform,
+  tenancy,
+  users,
+} from "@budibase/backend-core"
+import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
@@ -8,6 +17,7 @@ import {
   BulkUserRequest,
   BulkUserResponse,
   ChangeTenantOwnerEmailRequest,
+  ChangeUserRoleRequest,
   CheckInviteResponse,
   CountUserResponse,
   CreateAdminUserRequest,
@@ -42,21 +52,12 @@ import {
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import {
-  users,
-  cache,
-  events,
-  platform,
-  tenancy,
-  db,
-  locks,
-  context,
-} from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
-import { isEmailConfigured } from "../../../utilities/email"
-import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
-import emailValidator from "email-validator"
 import crypto from "crypto"
+import emailValidator from "email-validator"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
+import { isEmailConfigured } from "../../../utilities/email"
+import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -612,5 +613,35 @@ export const inviteAccept = async (
     }
     console.warn("Error inviting user", err)
     ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+  }
+}
+
+export const changeUserRole = async (
+  ctx: Ctx<
+    ChangeUserRoleRequest,
+    SaveUserResponse,
+    { id: string; roleId: string }
+  >
+) => {
+  const currentUserId = ctx.user?._id
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+
+  const { id, roleId } = ctx.params
+
+  const user = await userSdk.db.changeUserRole({
+    id,
+    roleId,
+    workspaceId,
+    rev: ctx.request.body.rev,
+    currentUserId,
+  })
+
+  ctx.body = {
+    _id: user._id!,
+    _rev: user._rev!,
+    email: user.email,
   }
 }
