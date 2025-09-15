@@ -122,7 +122,7 @@ const createComponentStore = () => {
     // Handle built-in components
     if (type.startsWith(BudibasePrefix)) {
       type = type.replace(BudibasePrefix, "")
-      return type ? Manifest[type] : null
+      return type ? Manifest[type as keyof typeof Manifest] : null
     }
 
     // Handle custom components

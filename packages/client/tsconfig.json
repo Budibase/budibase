@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "paths": {
+      "manifest.json": ["./manifest.json"],
       "@budibase/*": [
         "../*/src/index.ts",
         "../*/src/index.js",
