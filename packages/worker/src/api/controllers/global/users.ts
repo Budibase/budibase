@@ -41,6 +41,7 @@ import {
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
   OIDCUser,
+  RemoveUserRoleRequest,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -634,6 +635,31 @@ export const changeUserRole = async (
   const user = await userSdk.db.changeUserRole({
     id,
     roleId,
+    workspaceId,
+    rev: ctx.request.body.rev,
+    currentUserId,
+  })
+
+  ctx.body = {
+    _id: user._id!,
+    _rev: user._rev!,
+    email: user.email,
+  }
+}
+
+export const removeUserRole = async (
+  ctx: Ctx<RemoveUserRoleRequest, SaveUserResponse, { id: string }>
+) => {
+  const currentUserId = ctx.user?._id
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+
+  const { id } = ctx.params
+
+  const user = await userSdk.db.removeUserRole({
+    id,
     workspaceId,
     rev: ctx.request.body.rev,
     currentUserId,

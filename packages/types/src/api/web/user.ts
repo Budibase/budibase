@@ -178,3 +178,7 @@ export interface ChangeUserRoleRequest {
   rev: string
   roleId: string
 }
+
+export interface RemoveUserRoleRequest {
+  rev: string
+}

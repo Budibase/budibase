@@ -613,4 +613,24 @@ export class UserDB {
     const user = await this.save(existingUser, { currentUserId })
     return user
   }
+
+  static async removeUserRole({
+    id,
+    rev,
+    workspaceId,
+    currentUserId,
+  }: {
+    id: string
+    rev: string
+    workspaceId: string
+    currentUserId: string
+  }) {
+    const existingUser = await this.getUser(id)
+
+    existingUser._rev = rev
+    delete existingUser.roles[workspaceId]
+
+    const user = await this.save(existingUser, { currentUserId })
+    return user
+  }
 }
