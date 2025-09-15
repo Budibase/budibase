@@ -150,8 +150,10 @@ const createComponentStore = () => {
     return customComponentManifest?.[type]?.Component
   }
 
-  const getComponentInstance = (id: string) => {
-    return derived(store, $store => $store.mountedComponents[id])
+  const getComponentInstance = (id: string | undefined) => {
+    return derived(store, $store =>
+      id ? $store.mountedComponents[id] : undefined
+    )
   }
 
   const registerCustomComponent = ({
