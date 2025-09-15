@@ -190,6 +190,7 @@
       },
       "build": {
         "inputs": [
+          "default",
           "{projectRoot}/src",
           "{projectRoot}/builder",
           "{projectRoot}/client",
