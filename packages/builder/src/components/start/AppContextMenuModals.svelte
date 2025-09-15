@@ -1,9 +1,9 @@
 <script>
-  import { Modal } from "@budibase/bbui"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
-  import ExportAppModal from "./ExportAppModal.svelte"
-  import DuplicateAppModal from "./DuplicateAppModal.svelte"
   import { licensing } from "@/stores/portal"
+  import { Modal } from "@budibase/bbui"
+  import DuplicateAppModal from "./DuplicateAppModal.svelte"
+  import ExportAppModal from "./ExportAppModal.svelte"
 
   export let app
 
@@ -42,7 +42,7 @@
 />
 
 <Modal bind:this={exportModal} padding={false}>
-  <ExportAppModal {app} published={exportPublishedVersion} />
+  <ExportAppModal appId={app.devId} published={exportPublishedVersion} />
 </Modal>
 
 <Modal bind:this={duplicateModal} padding={false}>
