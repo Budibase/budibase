@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
 
   const component = getContext("component")
@@ -9,7 +9,9 @@
 
 {#if $builderStore.inBuilder}
   <div class="component-placeholder">
-    {$component.name || definition?.name || "Component"}
+    {$component.name ||
+      (definition && "name" in definition ? definition.name : undefined) ||
+      "Component"}
   </div>
 {/if}
 

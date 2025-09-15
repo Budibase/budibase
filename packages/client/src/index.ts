@@ -1,38 +1,38 @@
-import ClientApp from "./components/ClientApp.svelte"
-import UpdatingApp from "./components/UpdatingApp.svelte"
+import { ActionTypes } from "@/constants"
 import {
-  authStore,
-  builderStore,
   appStore,
+  authStore,
   blockStore,
+  builderStore,
   componentStore,
-  environmentStore,
   dndStore,
+  environmentStore,
   eventStore,
   hoverStore,
-  stateStore,
-  routeStore,
   notificationStore,
+  routeStore,
+  stateStore,
 } from "@/stores"
-import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import {
-  Screen,
-  Theme,
-  AppCustomTheme,
-  PreviewDevice,
-  AppNavigation,
-  Plugin,
-  Snippet,
-  UIComponentError,
-  CustomComponent,
-  Table,
-  DataFetchDatasource,
-} from "@budibase/types"
-import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
-import BlockComponent from "./components/BlockComponent.svelte"
+import {
+  AppCustomTheme,
+  AppNavigation,
+  CustomComponent,
+  DataFetchDatasource,
+  Plugin,
+  PreviewDevice,
+  Screen,
+  Snippet,
+  Table,
+  Theme,
+  UIComponentError,
+} from "@budibase/types"
+import { get } from "svelte/store"
 import Block from "./components/Block.svelte"
+import BlockComponent from "./components/BlockComponent.svelte"
+import ClientApp from "./components/ClientApp.svelte"
+import UpdatingApp from "./components/UpdatingApp.svelte"
 
 // Set up global PWA install prompt handler
 if (typeof window !== "undefined") {
@@ -101,6 +101,7 @@ export interface SDK {
   notificationStore: typeof notificationStore
   environmentStore: typeof environmentStore
   appStore: typeof appStore
+  componentStore: typeof componentStore
   Block: typeof Block
   BlockComponent: typeof BlockComponent
 }
