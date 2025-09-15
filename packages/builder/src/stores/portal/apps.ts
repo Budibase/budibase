@@ -1,7 +1,7 @@
 import { API } from "@/api"
 import { AppStatus } from "@/constants"
 import { EnrichedApp, StoreApp } from "@/types"
-import { UpdateAppRequest, Workspace } from "@budibase/types"
+import { UpdateWorkspaceRequest, Workspace } from "@budibase/types"
 import { derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
@@ -137,7 +137,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     }
   }
 
-  async save(appId: string, value: UpdateAppRequest) {
+  async save(appId: string, value: UpdateWorkspaceRequest) {
     await API.saveAppMetadata(appId, value)
     this.update(state => {
       const updatedAppIndex = state.apps.findIndex(

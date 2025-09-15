@@ -1,6 +1,6 @@
 import { BaseEvent } from "./event"
 
-export interface AppCreatedEvent extends BaseEvent {
+export interface WorkspaceCreatedEvent extends BaseEvent {
   appId: string
   version: string
   audited: {
@@ -8,7 +8,7 @@ export interface AppCreatedEvent extends BaseEvent {
   }
 }
 
-export interface AppUpdatedEvent extends BaseEvent {
+export interface WorkspaceUpdatedEvent extends BaseEvent {
   appId: string
   version: string
   audited: {
@@ -16,35 +16,35 @@ export interface AppUpdatedEvent extends BaseEvent {
   }
 }
 
-export interface AppDeletedEvent extends BaseEvent {
+export interface WorkspaceDeletedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string
   }
 }
 
-export interface AppPublishedEvent extends BaseEvent {
+export interface WorkspacePublishedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string
   }
 }
 
-export interface AppUnpublishedEvent extends BaseEvent {
+export interface WorkspaceUnpublishedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string
   }
 }
 
-export interface AppFileImportedEvent extends BaseEvent {
+export interface WorkspaceFileImportedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string
   }
 }
 
-export interface AppDuplicatedEvent extends BaseEvent {
+export interface WorkspaceDuplicatedEvent extends BaseEvent {
   duplicateAppId: string
   appId: string
   audited: {
@@ -52,7 +52,7 @@ export interface AppDuplicatedEvent extends BaseEvent {
   }
 }
 
-export interface AppTemplateImportedEvent extends BaseEvent {
+export interface WorkspaceTemplateImportedEvent extends BaseEvent {
   appId: string
   templateKey: string
   audited: {
@@ -78,14 +78,14 @@ export interface AppVersionRevertedEvent extends BaseEvent {
   }
 }
 
-export interface AppRevertedEvent extends BaseEvent {
+export interface WorkspaceRevertedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string
   }
 }
 
-export interface AppExportedEvent extends BaseEvent {
+export interface WorkspaceExportedEvent extends BaseEvent {
   appId: string
   audited: {
     name: string

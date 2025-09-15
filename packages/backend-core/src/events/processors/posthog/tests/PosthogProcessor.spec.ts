@@ -38,7 +38,11 @@ describe("PosthogProcessor", () => {
       const identity = newIdentity()
       const properties = {}
 
-      await processor.processEvent(Event.APP_CREATED, identity, properties)
+      await processor.processEvent(
+        Event.WORKSPACE_CREATED,
+        identity,
+        properties
+      )
       expect(spy).toHaveBeenCalledTimes(1)
     })
 

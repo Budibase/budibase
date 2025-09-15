@@ -1,5 +1,5 @@
-import { ContextUserMetadata, Flags, UserMetadata } from "../../../"
 import { DocumentInsertResponse } from "@budibase/nano"
+import { ContextUserMetadata, Flags, UserMetadata } from "../../.."
 
 export type FetchUserMetadataResponse = ContextUserMetadata[]
 export type FindUserMetadataResponse = ContextUserMetadata
@@ -14,7 +14,7 @@ export interface SetUserFlagResponse {
 
 export interface GetUserFlagsResponse extends Flags {}
 
-export type AppSelfResponse = ContextUserMetadata | {}
+export type SelfResponse = ContextUserMetadata | {}
 
 export interface UpdateSelfMetadataRequest extends UserMetadata {}
 export interface UpdateSelfMetadataResponse extends DocumentInsertResponse {}

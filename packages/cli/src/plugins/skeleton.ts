@@ -3,7 +3,9 @@ import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
-import * as tar from "tar"
+
+const download = require("download")
+const tar = require("tar")
 
 const HBS_FILES = ["package.json.hbs", "schema.json.hbs", "README.md.hbs"]
 
@@ -27,13 +29,8 @@ export async function getSkeleton(type: string, name: string) {
   const url = await getSkeletonUrl(type)
   const tarballFile = join(os.tmpdir(), "skeleton.tar.gz")
 
-  // download the full skeleton tarball using node-fetch
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to download skeleton: ${response.statusText}`)
-  }
-  const buffer = await response.buffer()
-  fs.writeFileSync(tarballFile, new Uint8Array(buffer))
+  // download the full skeleton tarball
+  fs.writeFileSync(tarballFile, await download(url))
   fs.mkdirSync(name)
   // extract it and get what we need
   await tar.extract({
@@ -45,6 +42,7 @@ export async function getSkeleton(type: string, name: string) {
 }
 
 export async function fleshOutSkeleton(
+  type: string,
   name: string,
   description: string,
   version: string

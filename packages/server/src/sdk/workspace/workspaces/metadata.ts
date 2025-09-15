@@ -9,7 +9,7 @@ export async function get(opts?: { production?: boolean }) {
   const db = opts?.production
     ? context.getProdWorkspaceDB()
     : context.getWorkspaceDB()
-  const application = await db.get<Workspace>(DocumentType.APP_METADATA)
+  const application = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
   return application
 }
 
@@ -17,6 +17,8 @@ export async function tryGet(opts?: { production?: boolean }) {
   const db = opts?.production
     ? context.getProdWorkspaceDB()
     : context.getWorkspaceDB()
-  const application = await db.tryGet<Workspace>(DocumentType.APP_METADATA)
+  const application = await db.tryGet<Workspace>(
+    DocumentType.WORKSPACE_METADATA
+  )
   return application
 }

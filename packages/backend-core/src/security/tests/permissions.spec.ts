@@ -1,7 +1,7 @@
+import { BuiltinPermissionID } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import * as permissions from "../permissions"
 import { BUILTIN_ROLE_IDS } from "../roles"
-import { BuiltinPermissionID } from "@budibase/types"
 
 describe("levelToNumber", () => {
   it("should return 0 for EXECUTE", () => {
@@ -87,7 +87,7 @@ describe("doesHaveBasePermission", () => {
   })
 
   it("should return false if base permission does not have the required level", () => {
-    const permType = permissions.PermissionType.APP
+    const permType = permissions.PermissionType.WORKSPACE
     const permLevel = permissions.PermissionLevel.READ
     const rolesHierarchy = [
       {
