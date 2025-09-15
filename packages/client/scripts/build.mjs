@@ -44,6 +44,7 @@ async function buildAll() {
   }
 
   console.log("Building new client...")
+  process.env.BUNDLE_VERSION = "new"
   await build({
     ...config,
     define: {
@@ -62,6 +63,7 @@ async function buildAll() {
   })
 
   console.log("Building old client...")
+  process.env.BUNDLE_VERSION = "old"
   await build({
     ...config,
     define: {
