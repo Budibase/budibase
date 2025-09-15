@@ -1,17 +1,24 @@
-import { get, writable, derived } from "svelte/store"
+import { Component, CustomComponent } from "@budibase/types"
 import Manifest from "manifest.json"
-import { findComponentById, findComponentPathById } from "../utils/components"
-import { devToolsStore } from "./devTools"
-import { screenStore } from "./screens"
-import { builderStore } from "./builder"
+import { derived, get, writable } from "svelte/store"
 import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
 import { ScreenslotID, ScreenslotType } from "../constants"
+import { findComponentById, findComponentPathById } from "../utils/components"
+import { builderStore } from "./builder"
+import { devToolsStore } from "./devTools"
+import { screenStore } from "./screens"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 
+interface ComponentStore {
+  customComponentManifest: Record<string, CustomComponent>
+  customComponentMap: Record<string, string[]>
+  mountedComponents: Record<string, Component>
+}
+
 const createComponentStore = () => {
-  const store = writable({
+  const store = writable<ComponentStore>({
     customComponentManifest: {},
     customComponentMap: {},
     mountedComponents: {},
@@ -37,8 +44,9 @@ const createComponentStore = () => {
 
       return {
         customComponentManifest: $store.customComponentManifest,
-        selectedComponentInstance:
-          $store.mountedComponents[selectedComponentId],
+        selectedComponentInstance: selectedComponentId
+          ? $store.mountedComponents[selectedComponentId]
+          : undefined,
         selectedComponent: component,
         selectedComponentDefinition: definition,
         selectedComponentPath: selectedPath?.map(component => component._id),
@@ -48,7 +56,7 @@ const createComponentStore = () => {
     }
   )
 
-  const registerInstance = (id, instance) => {
+  const registerInstance = (id: string, instance: Component) => {
     if (!id) {
       return
     }
@@ -70,7 +78,7 @@ const createComponentStore = () => {
     })
   }
 
-  const unregisterInstance = id => {
+  const unregisterInstance = (id: string) => {
     if (!id) {
       return
     }
@@ -92,16 +100,16 @@ const createComponentStore = () => {
     })
   }
 
-  const isComponentRegistered = id => {
+  const isComponentRegistered = (id: string) => {
     return get(store).mountedComponents[id] != null
   }
 
-  const getComponentById = id => {
+  const getComponentById = (id: string) => {
     const root = get(screenStore).activeScreen?.props
     return findComponentById(root, id)
   }
 
-  const getComponentDefinition = type => {
+  const getComponentDefinition = (type: string | undefined) => {
     if (!type) {
       return null
     }
@@ -122,7 +130,7 @@ const createComponentStore = () => {
     return customComponentManifest?.[type]?.schema?.schema
   }
 
-  const getComponentConstructor = type => {
+  const getComponentConstructor = (type: string) => {
     if (!type) {
       return null
     }
@@ -134,7 +142,7 @@ const createComponentStore = () => {
     if (type.startsWith(BudibasePrefix)) {
       const split = type.split("/")
       const name = split[split.length - 1]
-      return AppComponents[name]
+      return AppComponents[name as keyof typeof AppComponents]
     }
 
     // Handle custom components
@@ -142,11 +150,19 @@ const createComponentStore = () => {
     return customComponentManifest?.[type]?.Component
   }
 
-  const getComponentInstance = id => {
+  const getComponentInstance = (id: string) => {
     return derived(store, $store => $store.mountedComponents[id])
   }
 
-  const registerCustomComponent = ({ Component, schema, version }) => {
+  const registerCustomComponent = ({
+    Component,
+    schema,
+    version,
+  }: {
+    Component: Component
+    schema: CustomComponent["schema"]
+    version: string
+  }) => {
     if (!Component || !schema?.schema?.name || !version) {
       return
     }
@@ -155,6 +171,7 @@ const createComponentStore = () => {
       state.customComponentManifest[component] = {
         Component,
         schema,
+        version,
       }
       return state
     })
