@@ -1,4 +1,4 @@
-<script lang="ts" generics="O extends Record<string, string> | string">
+<script lang="ts" generics="O extends Record<string, any> | string">
   import { createEventDispatcher } from "svelte"
   import Picker from "../Form/Core/Picker.svelte"
   import Icon from "../Icon/Icon.svelte"
@@ -13,7 +13,7 @@
   export let validate: ((_value: O | undefined) => string) | null = null
   export let options: O[] = []
   export let footer: string | undefined = undefined
-  export let isOptionEnabled = () => true
+  export let isOptionEnabled = (_option: O) => true
   export let getOptionLabel = (option: O, _index?: number) =>
     extractProperty(option, "label")
   export let getOptionValue = (option: O, _index?: number) =>
