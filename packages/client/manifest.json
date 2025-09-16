@@ -8791,5 +8791,28 @@
         }
       ]
     }
+  },
+  "formblocktracker": {
+    "name": "Multi Step Form Block Tracker",
+    "icon": "dots-three-outline",
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
+    },
+    "styles": ["padding", "size", "background", "border", "shadow"],
+    "settings": [
+      {
+        "type": "formSelect",
+        "label": "Form",
+        "key": "form",
+        "placeholder": "Select a form to track"
+      }
+    ]
   }
 }
