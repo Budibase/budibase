@@ -9,7 +9,7 @@
   export let clickable: boolean = false
   export let validate: ((_value: O | undefined) => string | null) | null
   export let value: O | undefined
-  export let ref: HTMLDivElement
+  export let ref: HTMLDivElement | undefined = undefined
   export let autoHeight: boolean | undefined = undefined
   export let compact: boolean = false
 
