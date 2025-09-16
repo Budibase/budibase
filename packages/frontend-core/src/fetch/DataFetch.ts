@@ -1,7 +1,3 @@
-import { writable, derived, get, Writable, Readable } from "svelte/store"
-import cloneDeep from "lodash/fp/cloneDeep"
-import { QueryUtils } from "../utils"
-import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
   DataFetchOptions,
   FieldType,
@@ -11,13 +7,17 @@ import {
   SortType,
   TableSchema,
 } from "@budibase/types"
-import { APIClient } from "../api/types"
+import cloneDeep from "lodash/fp/cloneDeep"
+import { derived, get, Readable, writable, Writable } from "svelte/store"
 import { DataFetchType } from "."
+import { APIClient } from "../api/types"
+import { QueryUtils } from "../utils"
+import { convertJSONSchemaToTableSchema } from "../utils/json"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
-interface DataFetchStore<TDefinition, TQuery> {
-  rows: Row[]
+interface DataFetchStore<TDefinition, TQuery, TRow extends Row> {
+  rows: TRow[]
   info: any
   schema: TableSchema | null
   loading: boolean
@@ -35,8 +35,8 @@ interface DataFetchStore<TDefinition, TQuery> {
   definition?: TDefinition | null
 }
 
-interface DataFetchDerivedStore<TDefinition, TQuery>
-  extends DataFetchStore<TDefinition, TQuery> {
+interface DataFetchDerivedStore<TDefinition, TQuery, TRow extends Row>
+  extends DataFetchStore<TDefinition, TQuery, TRow> {
   hasNextPage: boolean
   hasPrevPage: boolean
   supportsSearch: boolean
@@ -63,6 +63,7 @@ export default abstract class BaseDataFetch<
     primaryDisplay?: string
   },
   TQuery extends {} = SearchFilters,
+  TRow extends Row = Row,
 > {
   API: APIClient
   features: {
@@ -80,8 +81,8 @@ export default abstract class BaseDataFetch<
     clientSideSorting: boolean
     clientSideLimiting: boolean
   }
-  store: Writable<DataFetchStore<TDefinition, TQuery>>
-  derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery>>
+  store: Writable<DataFetchStore<TDefinition, TQuery, TRow>>
+  derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery, TRow>>
 
   /**
    * Constructs a new DataFetch instance.
@@ -331,7 +332,7 @@ export default abstract class BaseDataFetch<
   }
 
   abstract getData(): Promise<{
-    rows: Row[]
+    rows: TRow[]
     info?: any
     hasNextPage?: boolean
     cursor?: any
@@ -492,7 +493,9 @@ export default abstract class BaseDataFetch<
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  private hasNextPage(state: DataFetchStore<TDefinition, TQuery>): boolean {
+  private hasNextPage(
+    state: DataFetchStore<TDefinition, TQuery, TRow>
+  ): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
