@@ -119,7 +119,14 @@ adminRoutes
     "/api/global/users/multi/invite/delete",
     controller.removeMultipleInvites
   )
-  .post("/api/global/users/invite/update/:code", controller.updateInvite)
+  .post(
+    "/api/global/users/invite/update/:code/:appId/:role",
+    controller.addWorkspaceIdToInvite
+  )
+  .delete(
+    "/api/global/users/invite/update/:code/:appId",
+    controller.removeWorkspaceIdFromInvite
+  )
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column

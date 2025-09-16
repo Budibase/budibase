@@ -157,13 +157,6 @@ export interface CheckInviteResponse {
 
 export type GetUserInvitesResponse = InviteWithCode[]
 
-export interface UpdateInviteRequest extends Omit<Invite, "email"> {
-  email?: string
-  builder?: {
-    apps: string[]
-  }
-  apps: string[]
-}
 export interface UpdateInviteResponse extends Invite {}
 
 export type LookupAccountHolderResponse = AccountMetadata | null

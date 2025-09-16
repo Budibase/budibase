@@ -1,5 +1,14 @@
-import * as userSdk from "../../../sdk/users"
-import env from "../../../environment"
+import {
+  cache,
+  context,
+  db,
+  events,
+  locks,
+  platform,
+  tenancy,
+  users,
+} from "@budibase/backend-core"
+import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
@@ -36,27 +45,17 @@ import {
   SearchUsersResponse,
   StrippedUser,
   UnsavedUser,
-  UpdateInviteRequest,
   UpdateInviteResponse,
   User,
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import {
-  users,
-  cache,
-  events,
-  platform,
-  tenancy,
-  db,
-  locks,
-  context,
-} from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
-import { isEmailConfigured } from "../../../utilities/email"
-import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
-import emailValidator from "email-validator"
 import crypto from "crypto"
+import emailValidator from "email-validator"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
+import { isEmailConfigured } from "../../../utilities/email"
+import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -505,44 +504,33 @@ export const getUserInvites = async (
   }
 }
 
-export const updateInvite = async (
-  ctx: UserCtx<UpdateInviteRequest, UpdateInviteResponse>
+export const addWorkspaceIdToInvite = async (
+  ctx: UserCtx<
+    void,
+    UpdateInviteResponse,
+    { code: string; appId: string; role: string }
+  >
 ) => {
-  const { code } = ctx.params
-  let updateBody = { ...ctx.request.body }
+  const { code, appId, role } = ctx.params
 
-  delete updateBody.email
+  const invite = await cache.invite.getCode(code)
+  invite.info.apps ??= {}
+  invite.info.apps[appId] = role
 
-  let invite
-  try {
-    invite = await cache.invite.getCode(code)
-  } catch (e) {
-    ctx.throw(400, "There was a problem with the invite")
-  }
+  await cache.invite.updateCode(code, invite)
+  ctx.body = { ...invite }
+}
 
-  let updated = {
-    ...invite,
-  }
+export const removeWorkspaceIdFromInvite = async (
+  ctx: UserCtx<void, UpdateInviteResponse, { code: string; appId: string }>
+) => {
+  const { code, appId } = ctx.params
 
-  if (!updateBody?.builder?.apps && updated.info?.builder?.apps) {
-    updated.info.builder.apps = []
-  } else if (updateBody?.builder) {
-    updated.info.builder = updateBody.builder
-  }
+  const invite = await cache.invite.getCode(code)
+  invite.info.apps ??= {}
+  delete invite.info.apps[appId]
 
-  if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
-    updated.info.apps = []
-  } else {
-    updated.info = {
-      ...invite.info,
-      apps: {
-        ...invite.info.apps,
-        ...updateBody.apps,
-      },
-    }
-  }
-
-  await cache.invite.updateCode(code, updated)
+  await cache.invite.updateCode(code, invite)
   ctx.body = { ...invite }
 }
 
