@@ -1,17 +1,18 @@
-<script>
+<script lang="ts">
+  import { Modal } from "@budibase/bbui"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { licensing } from "@/stores/portal"
-  import { Modal } from "@budibase/bbui"
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
   import ExportAppModal from "./ExportAppModal.svelte"
+  import type { EnrichedApp } from "@/types"
 
-  export let app
+  export let app: EnrichedApp
 
   let exportPublishedVersion = false
 
-  let deleteModal
-  let exportModal
-  let duplicateModal
+  let deleteModal: DeleteModal
+  let exportModal: Modal
+  let duplicateModal: Modal
 
   export const showDuplicateModal = () => {
     duplicateModal.show()
@@ -41,13 +42,13 @@
   }}
 />
 
-<Modal bind:this={exportModal} padding={false}>
-  <ExportAppModal appId={app.devId} published={exportPublishedVersion} />
+<Modal bind:this={exportModal}>
+  <ExportAppModal appId={app.devId || ""} published={exportPublishedVersion} />
 </Modal>
 
-<Modal bind:this={duplicateModal} padding={false}>
+<Modal bind:this={duplicateModal}>
   <DuplicateAppModal
-    appId={app?.devId}
+    appId={app.devId || ""}
     appName={app?.name}
     onDuplicateSuccess={async () => {
       await licensing.init()
