@@ -37,6 +37,7 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: true,
   [FieldType.JSON]: true,
+  [FieldType.LINK]: true,
 
   [FieldType.FORMULA]: false,
   [FieldType.AI]: false,
@@ -44,7 +45,6 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
   [FieldType.ARRAY]: false,
-  [FieldType.LINK]: false,
   [FieldType.BB_REFERENCE]: false,
   [FieldType.BB_REFERENCE_SINGLE]: false,
 }
