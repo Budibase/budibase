@@ -516,11 +516,10 @@
 
   const onUpdateUserInvite = async (invite: InviteWithCode, role: string) => {
     let updateBody: UpdateInviteRequest = {
-      info: {
-        apps: {
-          ...invite.info.apps,
-          [prodAppId]: role,
-        },
+      ...invite.info,
+      apps: {
+        ...invite.info.apps,
+        [prodAppId]: role,
       },
     }
     if (role === Constants.Roles.CREATOR) {

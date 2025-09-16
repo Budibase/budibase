@@ -162,7 +162,7 @@ export interface UpdateInviteRequest extends Omit<Invite, "email"> {
   builder?: {
     apps: string[]
   }
-  apps?: string[]
+  apps: string[]
 }
 export interface UpdateInviteResponse extends Invite {}
 
