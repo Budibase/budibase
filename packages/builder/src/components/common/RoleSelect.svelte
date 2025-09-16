@@ -40,7 +40,7 @@
     Constants.PlanType.PREMIUM_PLUS,
     Constants.PlanType.ENTERPRISE,
     Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
-    // @ts-expect-error
+    // @ts-expect-error this is not in the enum anymore, but it might be in some licences
     Constants.PlanType.ENTERPRISE_BASIC,
   ].includes(subType)
 

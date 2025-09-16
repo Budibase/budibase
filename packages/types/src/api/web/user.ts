@@ -80,7 +80,7 @@ export interface DeleteInviteUsersResponse {
 }
 
 export interface InviteUsersResponse {
-  successful: { email: string }[]
+  successful: { email: string; password?: string }[]
   unsuccessful: { email: string; reason: string }[]
   created?: boolean
 }

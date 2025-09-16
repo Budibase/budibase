@@ -42,6 +42,7 @@
   import { sdk } from "@budibase/shared-core"
   import type {
     GroupUser,
+    InviteUsersRequest,
     InviteUsersResponse,
     UpdateInviteRequest,
     User,
@@ -65,33 +66,6 @@
     group?: string
   }
 
-  interface UserInviteInfo {
-    builder: {
-      global?: boolean
-      creator?: boolean
-      apps?: string[]
-    }
-    admin?: {
-      global: boolean
-    }
-    apps?: Record<string, string>
-  }
-
-  interface InvitePayload {
-    email: string
-    userInfo: UserInviteInfo
-  }
-
-  interface SuccessfulInvite {
-    email: string
-    password?: string
-  }
-
-  interface ExtendedInviteUsersResponse
-    extends Omit<InviteUsersResponse, "successful"> {
-    successful: SuccessfulInvite[]
-  }
-
   let query: string | null = null
   let loaded = false
   let inviting = false
@@ -111,7 +85,7 @@
   let filteredUsers: ExtendedUser[] = []
   let filteredGroups: EnrichedUserGroup[] = []
   let selectedGroup: string | null = null
-  let userOnboardResponse: ExtendedInviteUsersResponse | null = null
+  let userOnboardResponse: InviteUsersResponse | null = null
   let userLimitReachedModal: Modal
 
   let inviteFailureResponse = ""
@@ -456,9 +430,7 @@
     }
   }
 
-  async function inviteUser(): Promise<
-    ExtendedInviteUsersResponse | undefined
-  > {
+  async function inviteUser(): Promise<InviteUsersResponse | undefined> {
     if (!validEmail) {
       notifications.error("Email is not valid")
       return
@@ -466,7 +438,7 @@
     const newUserEmail = email + ""
     inviting = true
 
-    const payload: InvitePayload[] = [
+    const payload: InviteUsersRequest = [
       {
         email: newUserEmail,
         userInfo: {
@@ -487,11 +459,9 @@
       payload[0].userInfo.apps = { [prodAppId]: creationAccessType }
     }
 
-    let userInviteResponse: ExtendedInviteUsersResponse | undefined
+    let userInviteResponse: InviteUsersResponse | undefined
     try {
-      userInviteResponse = (await users.onboard(
-        payload
-      )) as ExtendedInviteUsersResponse
+      userInviteResponse = await users.onboard(payload)
     } catch (error) {
       console.error(error instanceof Error ? error.message : "Unknown error")
       notifications.error("Error inviting user")
