@@ -1,15 +1,15 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "./app"
+import { Snippet, UpdateWorkspaceResponse } from "@budibase/types"
+import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { Snippet, UpdateAppResponse } from "@budibase/types"
+import { appStore } from "./app"
 
 export class SnippetStore extends BudiStore<Snippet[]> {
   constructor() {
     super([])
   }
 
-  syncMetadata = (metadata: UpdateAppResponse) => {
+  syncMetadata = (metadata: UpdateWorkspaceResponse) => {
     this.set(metadata?.snippets || [])
   }
 

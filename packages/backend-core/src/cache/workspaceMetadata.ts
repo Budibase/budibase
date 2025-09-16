@@ -20,7 +20,7 @@ async function populateFromDB(workspaceId: string) {
   return doWithDB(
     workspaceId,
     (db: Database) => {
-      return db.get<Workspace>(DocumentType.APP_METADATA)
+      return db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     },
     { skip_setup: true }
   )

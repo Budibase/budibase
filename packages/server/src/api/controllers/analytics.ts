@@ -25,7 +25,7 @@ export const ping = async (
   switch (body.source) {
     case PingSource.APP: {
       const db = context.getWorkspaceDB({ skip_setup: true })
-      const appInfo = await db.get<Workspace>(DocumentType.APP_METADATA)
+      const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
       const workspaceId = context.getWorkspaceId()
 
       if (isDevWorkspaceID(workspaceId)) {
