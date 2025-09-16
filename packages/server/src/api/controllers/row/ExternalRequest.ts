@@ -670,7 +670,6 @@ export class ExternalRequest<T extends Operation> {
           }
           break
         case FieldType.LINK: {
-          // Handle relationship field sorting
           const relatedTable = Object.values(this.tables).find(
             t => t._id === table.schema[sortColumn]?.tableId
           )
@@ -678,7 +677,6 @@ export class ExternalRequest<T extends Operation> {
             const sortByField =
               relatedTable.primaryDisplay || relatedTable.primary?.[0]
             if (sortByField) {
-              // Replace the sort key with the relationship.field format
               const newSortKey = `${sortColumn}.${sortByField}`
               sort[newSortKey] = {
                 ...sort[sortColumn],
@@ -686,7 +684,6 @@ export class ExternalRequest<T extends Operation> {
               }
               delete sort[sortColumn]
             } else {
-              // If we can't determine the sort field, remove the sort
               delete sort[sortColumn]
             }
           }
