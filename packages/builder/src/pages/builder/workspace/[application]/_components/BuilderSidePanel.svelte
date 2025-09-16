@@ -246,6 +246,7 @@
     const newRoles: UserRoles = {
       ...update.roles,
     }
+    delete newRoles[prodAppId]
     if (role) {
       newRoles[prodAppId] = role
     }
