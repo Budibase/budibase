@@ -1,17 +1,17 @@
-import TableFetch from "./TableFetch"
-import ViewFetch from "./ViewFetch"
-import ViewV2Fetch from "./ViewV2Fetch"
+import { DataFetchDatasource, Table, ViewV2Enriched } from "@budibase/types"
+import { APIClient } from "../api/types"
+import CustomFetch from "./CustomFetch"
+import FieldFetch from "./FieldFetch"
+import GroupUserFetch from "./GroupUserFetch"
+import JSONArrayFetch from "./JSONArrayFetch"
+import NestedProviderFetch from "./NestedProviderFetch"
+import QueryArrayFetch from "./QueryArrayFetch"
 import QueryFetch from "./QueryFetch"
 import RelationshipFetch from "./RelationshipFetch"
-import NestedProviderFetch from "./NestedProviderFetch"
-import FieldFetch from "./FieldFetch"
-import JSONArrayFetch from "./JSONArrayFetch"
+import TableFetch from "./TableFetch"
 import UserFetch from "./UserFetch"
-import GroupUserFetch from "./GroupUserFetch"
-import CustomFetch from "./CustomFetch"
-import QueryArrayFetch from "./QueryArrayFetch"
-import { APIClient } from "../api/types"
-import { DataFetchDatasource, Table, ViewV2Enriched } from "@budibase/types"
+import ViewFetch from "./ViewFetch"
+import ViewV2Fetch from "./ViewV2Fetch"
 
 export type DataFetchType = keyof typeof DataFetchMap
 
@@ -86,7 +86,7 @@ export const fetchData = <
 }: {
   API: APIClient
   datasource: T
-  options: any
+  options?: any
 }): Type extends keyof DataFetchClassMap
   ? DataFetchClassMap[Type]
   : TableFetch => {
