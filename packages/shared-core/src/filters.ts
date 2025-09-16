@@ -945,9 +945,29 @@ export function sort<T extends Record<string, any>>(
     return parseFloat(x)
   }
 
+  const getValueForSort = (doc: T): any => {
+    const value = doc[sort]
+
+    if (Array.isArray(value) && value.length > 0) {
+      const firstRelated = value[0]
+      if (typeof firstRelated === "object" && firstRelated !== null) {
+        return (
+          firstRelated.primaryDisplay ||
+          firstRelated.name ||
+          firstRelated.title ||
+          firstRelated[Object.keys(firstRelated)[0]] ||
+          ""
+        )
+      }
+      return firstRelated
+    }
+
+    return value
+  }
+
   return docs.slice().sort((a, b) => {
-    const colA = parse(a[sort])
-    const colB = parse(b[sort])
+    const colA = parse(getValueForSort(a))
+    const colB = parse(getValueForSort(b))
 
     const result = colB == null || colA > colB ? 1 : -1
     if (sortOrder.toLowerCase() === "descending") {
