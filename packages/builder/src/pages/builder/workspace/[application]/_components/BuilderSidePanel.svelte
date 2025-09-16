@@ -128,7 +128,7 @@
       if (!query && inviteInfo && prodAppId) {
         return Object.keys(inviteInfo).includes(prodAppId)
       }
-      return query && invite.email.includes(query)
+      return !query || invite.email.includes(query)
     })
     filteredInvites.sort(sortInviteRoles)
   }
