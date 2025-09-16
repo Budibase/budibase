@@ -33,10 +33,18 @@ describe("/plugins", () => {
     nock.cleanAll()
   })
 
-  const createPlugin = async (status?: number) => {
+  const createPlugin = async (
+    pluginType: "default" | "encoded" = "default",
+    status?: number
+  ) => {
+    const filename =
+      pluginType === "encoded"
+        ? "_.-encoded-plugin-1.0.0.tar.gz"
+        : "comment-box-1.0.2.tar.gz"
+
     return request
       .post(`/api/plugin/upload`)
-      .attach("file", "src/api/routes/tests/data/comment-box-1.0.2.tar.gz")
+      .attach("file", `src/api/routes/tests/data/${filename}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -63,7 +71,7 @@ describe("/plugins", () => {
       mockUploadDirectory.mockImplementationOnce(() => {
         throw new Error()
       })
-      let res = await createPlugin(400)
+      let res = await createPlugin(undefined, 400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
     })
@@ -96,23 +104,16 @@ describe("/plugins", () => {
     })
 
     it("should handle URL encoded plugin IDs with special characters", async () => {
-      // Test that the route properly decodes URL-encoded plugin IDs
-      // The route parameter should properly decode special symbols
-      const pluginIdWithSpecialChars = "@budibase/-my-plugin"
-      const encodedPluginId = encodeURIComponent(pluginIdWithSpecialChars)
+      await createPlugin("encoded")
+      const encodedPluginId = encodeURIComponent("plg__.-encoded-plugin")
 
-      // This will return 400 because the plugin doesn't exist
-      // testing that the route is being decoded
       const res = await request
         .delete(`/api/plugin/${encodedPluginId}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(400)
+        .expect(200)
 
-      // The route should properly handle the encoded URL and reach the controller
-      // couch error rather than route error means its worked.
-      expect(res.body).toBeDefined()
-      expect(res.body.message).toContain("Failed to delete plugin")
+      expect(res.body.message).toEqual("Plugin plg__.-encoded-plugin deleted.")
     })
 
     it("should handle an error deleting a plugin", async () => {
