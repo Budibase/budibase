@@ -44,6 +44,7 @@
     GroupUser,
     InviteUsersRequest,
     InviteUsersResponse,
+    InviteWithCode,
     UpdateInviteRequest,
     User,
     UserGroup,
@@ -75,13 +76,12 @@
   // Show all when false
   let filterByAppAccess = false
   let email: string | null
-  let error: any
+  let error: string | null = null
   let form: FancyForm
   let creationRoleType = Constants.BudibaseRoles.AppUser
   let creationAccessType = Constants.Roles.BASIC
 
-  let appInvites: any[] = []
-  let filteredInvites: any[] = []
+  let filteredInvites: InviteWithCode[] = []
   let filteredUsers: ExtendedUser[] = []
   let filteredGroups: EnrichedUserGroup[] = []
   let selectedGroup: string | null = null
@@ -101,10 +101,10 @@
   )
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   const showInvite = (
-    invites: string | any[],
-    users: string | any[],
-    groups: string | any[],
-    query: any
+    invites: InviteWithCode[],
+    users: ExtendedUser[],
+    groups: EnrichedUserGroup[],
+    query: string | null
   ) => {
     return !invites?.length && !users?.length && !groups?.length && query
   }
@@ -114,7 +114,7 @@
       return
     }
 
-    appInvites = await getInvites()
+    const appInvites = await getInvites()
 
     //On Focus behaviour
     if (!filterByAppAccess && !query) {
@@ -128,7 +128,7 @@
       if (!query && inviteInfo && prodAppId) {
         return Object.keys(inviteInfo).includes(prodAppId)
       }
-      return invite.email.includes(query)
+      return query && invite.email.includes(query)
     })
     filteredInvites.sort(sortInviteRoles)
   }
@@ -145,7 +145,7 @@
   })
 
   const searchUsers = async (
-    query: any,
+    query: string | null,
     sidePaneOpen: boolean,
     loaded: boolean
   ) => {
@@ -156,10 +156,13 @@
       console.error("Application id required")
       return
     }
+
     await usersFetch.update({
-      query: {
-        string: { email: query },
-      },
+      query: query
+        ? {
+            string: { email: query },
+          }
+        : undefined,
       limit: 50,
       paginate: query || !filterByAppAccess ? undefined : false,
     })
@@ -196,10 +199,7 @@
       .sort(sortRoles)
   }
 
-  const sortInviteRoles = (
-    a: { info: { apps: string | any[]; builder: { apps: string | any[] } } },
-    b: { info: { apps: string | any[]; builder: { apps: string | any[] } } }
-  ) => {
+  const sortInviteRoles = (a: InviteWithCode, b: InviteWithCode) => {
     const aAppsEmpty = !a.info?.apps?.length && !a.info?.builder?.apps?.length
     const bAppsEmpty = !b.info?.apps?.length && !b.info?.builder?.apps?.length
 
@@ -514,10 +514,7 @@
     query = ""
   }
 
-  const onUpdateUserInvite = async (
-    invite: { info: any; code: string },
-    role: string
-  ) => {
+  const onUpdateUserInvite = async (invite: InviteWithCode, role: string) => {
     let updateBody: UpdateInviteRequest = {
       info: {
         apps: {
@@ -543,13 +540,13 @@
     await filterInvites(query)
   }
 
-  const onUninviteAppUser = async (invite: any) => {
+  const onUninviteAppUser = async (invite: InviteWithCode) => {
     await uninviteAppUser(invite)
     await filterInvites(query)
   }
 
   // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async (invite: any) => {
+  const uninviteAppUser = async (invite: InviteWithCode) => {
     let updated = { ...invite }
     delete updated.info.apps[prodAppId]
 
@@ -590,13 +587,7 @@
     }
   }
 
-  const getInviteRoleValue = (invite: {
-    info: {
-      admin: { global: any }
-      builder: { global: any; apps: string | string[] }
-      apps: { [x: string]: any }
-    }
-  }) => {
+  const getInviteRoleValue = (invite: InviteWithCode) => {
     if (
       (invite.info?.admin?.global && invite.info?.builder?.global) ||
       invite.info?.builder?.apps?.includes(prodAppId)
