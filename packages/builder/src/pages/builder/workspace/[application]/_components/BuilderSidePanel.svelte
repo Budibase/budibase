@@ -1,50 +1,98 @@
-<script>
-  import {
-    Icon,
-    Divider,
-    Heading,
-    Layout,
-    Input,
-    clickOutside,
-    notifications,
-    CopyInput,
-    Modal,
-    FancyForm,
-    FancyInput,
-    Button,
-    FancySelect,
-  } from "@budibase/bbui"
-  import {
-    builderStore,
-    appStore,
-    roles,
-    deploymentStore,
-  } from "@/stores/builder"
-  import {
-    groups,
-    licensing,
-    appsStore,
-    users,
-    auth,
-    admin,
-  } from "@/stores/portal"
-  import {
-    fetchData,
-    Constants,
-    Utils,
-    RoleUtils,
-    emailValidator,
-  } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
+<script lang="ts">
   import { API } from "@/api"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import {
+    appStore,
+    builderStore,
+    deploymentStore,
+    roles,
+  } from "@/stores/builder"
+  import {
+    admin,
+    appsStore,
+    auth,
+    groups,
+    licensing,
+    users,
+  } from "@/stores/portal"
+  import {
+    Button,
+    CopyInput,
+    Divider,
+    FancyForm,
+    FancyInput,
+    FancySelect,
+    Heading,
+    Icon,
+    Input,
+    Layout,
+    Modal,
+    PopoverAlignment,
+    clickOutside,
+    notifications,
+  } from "@budibase/bbui"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    emailValidator,
+    fetchData,
+  } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
+  import type {
+    GroupUser,
+    InviteUsersResponse,
+    UpdateInviteRequest,
+    User,
+    UserGroup,
+    UserRoles,
+    WithRequired,
+  } from "@budibase/types"
   import { fly } from "svelte/transition"
+  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
-  let query = null
+  interface EnrichedUserGroup extends UserGroup {
+    role: string | undefined
+  }
+
+  interface ExtendedUser extends Omit<WithRequired<User, "_id">, "roles"> {
+    role?: string
+    isAdminOrGlobalBuilder?: boolean
+    isAppBuilder?: boolean
+    group?: string
+  }
+
+  interface UserInviteInfo {
+    builder: {
+      global?: boolean
+      creator?: boolean
+      apps?: string[]
+    }
+    admin?: {
+      global: boolean
+    }
+    apps?: Record<string, string>
+  }
+
+  interface InvitePayload {
+    email: string
+    userInfo: UserInviteInfo
+  }
+
+  interface SuccessfulInvite {
+    email: string
+    password?: string
+  }
+
+  interface ExtendedInviteUsersResponse
+    extends Omit<InviteUsersResponse, "successful"> {
+    successful: SuccessfulInvite[]
+  }
+
+  let query: string | null = null
   let loaded = false
   let inviting = false
   let searchFocus = false
@@ -52,21 +100,23 @@
   // Initially filter entities without app access
   // Show all when false
   let filterByAppAccess = false
-  let email
-  let error
-  let form
+  let email: string | null
+  let error: any
+  let form: FancyForm
   let creationRoleType = Constants.BudibaseRoles.AppUser
   let creationAccessType = Constants.Roles.BASIC
 
-  let appInvites = []
-  let filteredInvites = []
-  let filteredUsers = []
-  let filteredGroups = []
-  let selectedGroup
-  let userOnboardResponse = null
-  let userLimitReachedModal
+  let appInvites: any[] = []
+  let filteredInvites: any[] = []
+  let filteredUsers: ExtendedUser[] = []
+  let filteredGroups: EnrichedUserGroup[] = []
+  let selectedGroup: string | null = null
+  let userOnboardResponse: ExtendedInviteUsersResponse | null = null
+  let userLimitReachedModal: Modal
 
   let inviteFailureResponse = ""
+  $: query = query?.trim() ?? null
+
   $: validEmail = emailValidator(email) === true
   $: prodAppId = appsStore.getProdAppID($appStore.appId)
   $: promptInvite = showInvite(
@@ -76,11 +126,16 @@
     query
   )
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  const showInvite = (invites, users, groups, query) => {
+  const showInvite = (
+    invites: string | any[],
+    users: string | any[],
+    groups: string | any[],
+    query: any
+  ) => {
     return !invites?.length && !users?.length && !groups?.length && query
   }
 
-  const filterInvites = async query => {
+  const filterInvites = async (query: string | null) => {
     if (!prodAppId) {
       return
     }
@@ -115,7 +170,11 @@
     },
   })
 
-  const searchUsers = async (query, sidePaneOpen, loaded) => {
+  const searchUsers = async (
+    query: any,
+    sidePaneOpen: boolean,
+    loaded: boolean
+  ) => {
     if (!sidePaneOpen || !loaded) {
       return
     }
@@ -127,24 +186,26 @@
       query: {
         string: { email: query },
       },
-      appId: query || !filterByAppAccess ? null : prodAppId,
       limit: 50,
-      paginate: query || !filterByAppAccess ? null : false,
+      paginate: query || !filterByAppAccess ? undefined : false,
     })
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows
-      .filter(user => user.email !== $auth.user.email)
+      .filter(user => user.email !== $auth.user?.email)
       .map(user => {
-        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
-        const isAppBuilder = user.builder?.apps?.includes(prodAppId)
-        let role
+        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
+          user as User
+        )
+        const isAppBuilder =
+          "builder" in user && user.builder?.apps?.includes(prodAppId)
+        let role: string | undefined
         if (isAdminOrGlobalBuilder) {
           role = Constants.Roles.ADMIN
         } else if (isAppBuilder) {
           role = Constants.Roles.CREATOR
         } else {
-          const appRole = user.roles[prodAppId]
+          const appRole = "roles" in user && user.roles?.[prodAppId]
           if (appRole) {
             role = appRole
           }
@@ -160,14 +221,20 @@
       .sort(sortRoles)
   }
 
-  const sortInviteRoles = (a, b) => {
+  const sortInviteRoles = (
+    a: { info: { apps: string | any[]; builder: { apps: string | any[] } } },
+    b: { info: { apps: string | any[]; builder: { apps: string | any[] } } }
+  ) => {
     const aAppsEmpty = !a.info?.apps?.length && !a.info?.builder?.apps?.length
     const bAppsEmpty = !b.info?.apps?.length && !b.info?.builder?.apps?.length
 
     return aAppsEmpty && !bAppsEmpty ? 1 : !aAppsEmpty && bAppsEmpty ? -1 : 0
   }
 
-  const sortRoles = (a, b) => {
+  const sortRoles = (
+    a: { role?: string | undefined },
+    b: { role?: string | undefined }
+  ) => {
     const roleA = a.role
     const roleB = b.role
 
@@ -190,22 +257,22 @@
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
-  $: debouncedUpdateFetch(
-    query,
-    $builderStore.builderSidePanel,
-    loaded,
-    filterByAppAccess
-  )
+  $: debouncedUpdateFetch(query, $builderStore.builderSidePanel, loaded)
 
-  const updateAppUser = async (user, role) => {
+  const updateAppUser = async (userId: string, role: string | undefined) => {
     if (!prodAppId) {
       notifications.error("Application id must be specified")
       return
     }
-    const update = await users.get(user._id)
-    const newRoles = {
+    const update = await users.get(userId)
+    if (!update) {
+      throw `User ${userId} not found`
+    }
+    const newRoles: UserRoles = {
       ...update.roles,
-      [prodAppId]: role,
+    }
+    if (role) {
+      newRoles[prodAppId] = role
     }
     // make sure no undefined/null roles (during removal)
     for (let [appId, role] of Object.entries(newRoles)) {
@@ -220,7 +287,10 @@
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
-  const onUpdateUser = async (user, role) => {
+  const onUpdateUser = async (
+    user: ExtendedUser,
+    role?: string | undefined
+  ) => {
     if (!user) {
       notifications.error("A user must be specified")
       return
@@ -229,51 +299,53 @@
       if (user.role === role) {
         return
       }
-      if (user.isAppBuilder) {
-        await removeAppBuilder(user._id, prodAppId)
+      if (user.isAppBuilder && user._id) {
+        await removeAppBuilder(user._id)
       }
-      if (role === Constants.Roles.CREATOR) {
-        await removeAppBuilder(user._id, prodAppId)
+      if (role === Constants.Roles.CREATOR && user._id) {
+        await removeAppBuilder(user._id)
       }
-      await updateAppUser(user, role)
+      await updateAppUser(user._id, role)
     } catch (error) {
       console.error(error)
       notifications.error("User could not be updated")
     }
   }
 
-  const updateAppGroup = async (target, role) => {
+  const updateAppGroup = async (groupId: string, role: string) => {
     if (!prodAppId) {
       notifications.error("Application id must be specified")
       return
     }
 
     if (!role) {
-      await groups.removeApp(target._id, prodAppId)
+      await groups.removeApp(groupId, prodAppId)
     } else {
-      await groups.addApp(target._id, prodAppId, role)
+      await groups.addApp(groupId, prodAppId, role)
     }
 
     await usersFetch.refresh()
     await groups.init()
   }
 
-  const onUpdateGroup = async (group, role) => {
+  const onUpdateGroup = async (group: EnrichedUserGroup, role?: string) => {
     if (!group) {
       notifications.error("A group must be specified")
       return
     }
     try {
-      if (group?.builder?.apps.includes(prodAppId)) {
+      if (group?.builder?.apps?.includes(prodAppId) && group._id) {
         await removeGroupAppBuilder(group._id)
       }
-      await updateAppGroup(group, role)
+      if (group._id) {
+        await updateAppGroup(group._id, role || "")
+      }
     } catch {
       notifications.error("Group update failed")
     }
   }
 
-  const getAppGroups = (allGroups, appId) => {
+  const getAppGroups = (allGroups: UserGroup[], appId: string) => {
     if (!allGroups) {
       return []
     }
@@ -285,13 +357,13 @@
     })
   }
 
-  const searchGroups = (userGroups, query) => {
+  const searchGroups = (userGroups: UserGroup[], query: string | null) => {
     let filterGroups =
       query?.length || !filterByAppAccess
         ? userGroups
         : getAppGroups(userGroups, prodAppId)
     return filterGroups
-      .filter(group => {
+      .filter((group: { name: string }) => {
         if (!query?.length) {
           return true
         }
@@ -306,23 +378,23 @@
       .sort(sortRoles)
   }
 
-  const enrichGroupRole = group => {
+  const enrichGroupRole = (group: UserGroup): EnrichedUserGroup => {
     return {
       ...group,
       role: group?.builder?.apps.includes(prodAppId)
         ? Constants.Roles.CREATOR
         : group.roles?.[
-            groups.getGroupAppIds(group).find(x => x === prodAppId)
+            groups.getGroupAppIds(group).find(x => x === prodAppId)!
           ],
     }
   }
 
-  const getEnrichedGroups = groups => {
+  const getEnrichedGroups = (groups: UserGroup[]) => {
     return groups.map(enrichGroupRole)
   }
 
   // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
+  $: enrichedGroups = getEnrichedGroups($groups)
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
@@ -332,31 +404,42 @@
     inherited from their parent group. The users allow assigning of user
     specific roles for the app.
   */
-  const buildGroupUsers = (userGroups, filteredUsers) => {
+  const buildGroupUsers = (
+    userGroups: EnrichedUserGroup[],
+    filteredUsers: ExtendedUser[]
+  ): ExtendedUser[] => {
     if (query || !filterByAppAccess) {
       return []
     }
     // Must exclude users who have explicit privileges
-    const userByEmail = filteredUsers.reduce((acc, user) => {
-      if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
-        acc.push(user.email)
-      }
-      return acc
-    }, [])
-
-    const indexedUsers = userGroups.reduce((acc, group) => {
-      group.users.forEach(user => {
-        if (userByEmail.indexOf(user.email) == -1) {
-          acc[user._id] = {
-            _id: user._id,
-            email: user.email,
-            role: group.role,
-            group: group.name,
-          }
+    const userByEmail: string[] = filteredUsers.reduce(
+      (acc: string[], user) => {
+        if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
+          acc.push(user.email)
         }
-      })
-      return acc
-    }, {})
+        return acc
+      },
+      []
+    )
+
+    const indexedUsers: Record<string, ExtendedUser> = userGroups.reduce(
+      (acc, group) => {
+        group.users?.forEach((user: GroupUser) => {
+          if (userByEmail.indexOf(user.email) == -1) {
+            acc[user._id] = {
+              _id: user._id,
+              email: user.email,
+              role: group.role,
+              group: group.name,
+              tenantId: "", // Required by User interface
+              roles: {}, // Required by User interface
+            } as ExtendedUser
+          }
+        })
+        return acc
+      },
+      {} as Record<string, ExtendedUser>
+    )
     return Object.values(indexedUsers)
   }
 
@@ -365,12 +448,16 @@
       const invites = await users.getInvites()
       return invites
     } catch (error) {
-      notifications.error(error.message)
+      notifications.error(
+        error instanceof Error ? error.message : "Failed to get invites"
+      )
       return []
     }
   }
 
-  async function inviteUser() {
+  async function inviteUser(): Promise<
+    ExtendedInviteUsersResponse | undefined
+  > {
     if (!validEmail) {
       notifications.error("Email is not valid")
       return
@@ -378,7 +465,7 @@
     const newUserEmail = email + ""
     inviting = true
 
-    const payload = [
+    const payload: InvitePayload[] = [
       {
         email: newUserEmail,
         userInfo: {
@@ -399,11 +486,13 @@
       payload[0].userInfo.apps = { [prodAppId]: creationAccessType }
     }
 
-    let userInviteResponse
+    let userInviteResponse: ExtendedInviteUsersResponse | undefined
     try {
-      userInviteResponse = await users.onboard(payload)
+      userInviteResponse = (await users.onboard(
+        payload
+      )) as ExtendedInviteUsersResponse
     } catch (error) {
-      console.error(error.message)
+      console.error(error instanceof Error ? error.message : "Unknown error")
       notifications.error("Error inviting user")
     }
     inviting = false
@@ -422,7 +511,7 @@
 
   const onInviteUser = async () => {
     form.validate()
-    userOnboardResponse = await inviteUser()
+    userOnboardResponse = (await inviteUser()) || null
     const originalQuery = email + ""
     email = null
 
@@ -432,7 +521,7 @@
     if (newUser) {
       email = originalQuery
       notifications.success(
-        userOnboardResponse.created
+        userOnboardResponse?.created
           ? "User created successfully"
           : "User invite successful"
       )
@@ -443,7 +532,7 @@
       inviteFailureResponse =
         failedUser?.reason === "Unavailable"
           ? "Email already in use. Please use a different email."
-          : failedUser?.reason
+          : failedUser?.reason || "Unknown error"
 
       notifications.error(inviteFailureResponse)
     }
@@ -453,52 +542,68 @@
     query = ""
   }
 
-  const onUpdateUserInvite = async (invite, role) => {
-    let updateBody = {
-      apps: {
-        ...invite.apps,
-        [prodAppId]: role,
+  const onUpdateUserInvite = async (
+    invite: { info: any; code: string },
+    role: string
+  ) => {
+    let updateBody: UpdateInviteRequest = {
+      info: {
+        apps: {
+          ...invite.info.apps,
+          [prodAppId]: role,
+        },
       },
     }
     if (role === Constants.Roles.CREATOR) {
-      updateBody.builder = updateBody.builder || {}
-      updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
-      delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
-      invite.builder.apps = []
+      updateBody.info.builder = updateBody.info.builder || {}
+      updateBody.info.builder.apps = [
+        ...(updateBody.info.builder.apps ?? []),
+        prodAppId,
+      ]
+      delete updateBody.info?.apps?.[prodAppId]
+    } else if (
+      role !== Constants.Roles.CREATOR &&
+      invite?.info?.builder?.apps
+    ) {
+      updateBody.info.builder = { apps: [] }
     }
     await users.updateInvite(invite.code, updateBody)
     await filterInvites(query)
   }
 
-  const onUninviteAppUser = async invite => {
+  const onUninviteAppUser = async (invite: any) => {
     await uninviteAppUser(invite)
     await filterInvites(query)
   }
 
   // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async invite => {
+  const uninviteAppUser = async (invite: any) => {
     let updated = { ...invite }
     delete updated.info.apps[prodAppId]
 
-    return await users.updateInvite(updated.code, {
-      apps: updated.apps,
-    })
+    const updateBody: UpdateInviteRequest = {
+      info: {
+        apps: updated.info.apps,
+      },
+      apps: Object.keys(updated.info.apps || {}),
+    }
+
+    return await users.updateInvite(updated.code, updateBody)
   }
 
-  const addAppBuilder = async userId => {
+  const addAppBuilder = async (userId: string) => {
     await users.addAppBuilder(userId, prodAppId)
   }
 
-  const removeAppBuilder = async userId => {
+  const removeAppBuilder = async (userId: string) => {
     await users.removeAppBuilder(userId, prodAppId)
   }
 
-  const removeGroupAppBuilder = async groupId => {
+  const removeGroupAppBuilder = async (groupId: string) => {
     await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
-  const initSidePanel = async sidePaneOpen => {
+  const initSidePanel = async (sidePaneOpen: boolean) => {
     if (sidePaneOpen === true) {
       await groups.init()
     }
@@ -507,13 +612,19 @@
 
   $: initSidePanel($builderStore.builderSidePanel)
 
-  function handleKeyDown(evt) {
+  function handleKeyDown(evt: { key: string }) {
     if (evt.key === "Enter" && validEmail && !inviting) {
       onInviteUser()
     }
   }
 
-  const getInviteRoleValue = invite => {
+  const getInviteRoleValue = (invite: {
+    info: {
+      admin: { global: any }
+      builder: { global: any; apps: string | string[] }
+      apps: { [x: string]: any }
+    }
+  }) => {
     if (
       (invite.info?.admin?.global && invite.info?.builder?.global) ||
       invite.info?.builder?.apps?.includes(prodAppId)
@@ -523,7 +634,11 @@
     return invite.info.apps?.[prodAppId]
   }
 
-  const getRoleFooter = user => {
+  const getRoleFooter = (user: {
+    isAdminOrGlobalBuilder?: boolean
+    group?: string
+    role?: string
+  }): string | undefined => {
     if (user.group) {
       const role = $roles.find(role => role._id === user.role)
       return `This user has been given ${role?.name} access from the ${user.group} group`
@@ -531,17 +646,17 @@
     if (user.isAdminOrGlobalBuilder) {
       return "Tenant admins can edit all workspaces"
     }
-    return null
+    return undefined
   }
 
-  const parseRole = user => {
+  const parseRole = (user: ExtendedUser): string | undefined => {
     if (user.isAdminOrGlobalBuilder) {
       return Constants.Roles.CREATOR
     }
     return user.role
   }
 
-  const checkAppAccess = e => {
+  const checkAppAccess = (e: CustomEvent) => {
     // Ensure we don't get into an invalid combo of tenant role and app access
     if (
       e.detail === Constants.BudibaseRoles.AppUser &&
@@ -553,7 +668,7 @@
     }
   }
 
-  const itemCountText = (word, count) => {
+  const itemCountText = (word: string, count: number = 0) => {
     return `${count} ${word}${count !== 1 ? "s" : ""}`
   }
 </script>
@@ -600,10 +715,7 @@
           placeholder={"Add users and groups to your app"}
           autocomplete="off"
           disabled={inviting}
-          value={query}
-          on:input={e => {
-            query = e.target.value.trim()
-          }}
+          bind:value={query}
           on:focus={() => (searchFocus = true)}
           on:blur={() => (searchFocus = false)}
         />
@@ -686,11 +798,11 @@
                         onUninviteAppUser(invite)
                       }}
                       autoWidth
-                      align="right"
+                      align={PopoverAlignment.Right}
                       allowedRoles={user.isAdminOrGlobalBuilder
                         ? [Constants.Roles.CREATOR]
                         : null}
-                      labelPrefix="Can use as"
+                      labelPrefix={"Can use as"}
                     />
                   </div>
                 </div>
@@ -709,7 +821,7 @@
                   class="auth-entity group"
                   on:click={() => {
                     if (selectedGroup != group._id) {
-                      selectedGroup = group._id
+                      selectedGroup = group._id ?? null
                     } else {
                       selectedGroup = null
                     }
@@ -729,7 +841,7 @@
                     <RoleSelect
                       placeholder={false}
                       value={group.role}
-                      allowRemove={group.role}
+                      allowRemove={!!group.role}
                       allowPublic={false}
                       quiet={true}
                       allowCreator={group.role === Constants.Roles.CREATOR}
@@ -740,7 +852,7 @@
                         onUpdateGroup(group)
                       }}
                       autoWidth
-                      align="right"
+                      align={PopoverAlignment.Right}
                       labelPrefix="Can use as"
                     />
                   </div>
@@ -758,7 +870,7 @@
               {#each allUsers as user}
                 {@const userGroups = sdk.users.getUserAppGroups(
                   $appStore.appId,
-                  user,
+                  user._id,
                   $groups
                 )}
                 <div class="auth-entity">
@@ -784,7 +896,7 @@
                         ? "Controlled by group"
                         : false}
                       value={parseRole(user)}
-                      allowRemove={user.role && !user.group}
+                      allowRemove={!!user.role && !user.group}
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
@@ -800,7 +912,7 @@
                         onUpdateUser(user)
                       }}
                       autoWidth
-                      align="right"
+                      align={PopoverAlignment.Right}
                       allowedRoles={user.isAdminOrGlobalBuilder
                         ? [Constants.Roles.CREATOR]
                         : null}
@@ -841,7 +953,7 @@
             <FancyInput
               disabled={false}
               label="Email"
-              value={email}
+              value={email || ""}
               on:change={e => {
                 email = e.detail
               }}
@@ -872,7 +984,7 @@
                   Constants.BudibaseRoles.AppUser}
                 quiet={true}
                 autoWidth
-                align="right"
+                align={PopoverAlignment.Right}
                 fancySelect
                 allowedRoles={creationRoleType === Constants.BudibaseRoles.Admin
                   ? [Constants.Roles.CREATOR]

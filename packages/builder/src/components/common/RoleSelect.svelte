@@ -16,9 +16,9 @@
     tag?: string | null
   }
 
-  export let value: RoleOption | undefined = undefined
+  export let value: string | undefined = undefined
   export let error: string | undefined = undefined
-  export let placeholder: string = ""
+  export let placeholder: string | boolean = false
   export let autoWidth: boolean = false
   export let quiet: boolean = false
   export let allowPublic: boolean = true

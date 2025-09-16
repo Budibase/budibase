@@ -5,6 +5,7 @@ import {
   StrippedUser,
   User,
   UserDatasource,
+  WithRequired,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import BaseDataFetch, { DataFetchParams } from "./DataFetch"
@@ -26,7 +27,7 @@ export default class UserFetch extends BaseDataFetch<
   UserDatasource,
   UserDefinition,
   UserFetchQuery,
-  User | StrippedUser
+  WithRequired<User | StrippedUser, "_id">
 > {
   constructor(opts: DataFetchParams<UserDatasource, UserFetchQuery>) {
     super({
