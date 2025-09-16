@@ -1,22 +1,22 @@
-import {
-  ViewName,
-  generateMemoryViewID,
-  getMemoryViewParams,
-  SEPARATOR,
-} from "../../../db/utils"
-import env from "../../../environment"
 import { context } from "@budibase/backend-core"
-import viewBuilder from "./viewBuilder"
 import {
   Database,
   DBView,
-  DocumentType,
   DesignDocument,
+  DocumentType,
   InMemoryView,
 } from "@budibase/types"
+import {
+  generateMemoryViewID,
+  getMemoryViewParams,
+  SEPARATOR,
+  ViewName,
+} from "../../../db/utils"
+import env from "../../../environment"
+import viewBuilder from "./viewBuilder"
 
 export async function getView(viewName: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get<DesignDocument>("_design/database")
     return designDoc.views?.[viewName]
@@ -41,7 +41,7 @@ export async function getView(viewName: string) {
 }
 
 export async function getViews(): Promise<DBView[]> {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const response: DBView[] = []
   if (env.SELF_HOSTED) {
     const designDoc = await db.get<DesignDocument>("_design/database")
@@ -82,7 +82,7 @@ export async function saveView(
   viewName: string,
   viewTemplate: DBView
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get<DesignDocument>("_design/database")
     designDoc.views = {
@@ -120,7 +120,7 @@ export async function saveView(
 }
 
 export async function deleteView(viewName: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get<DesignDocument>("_design/database")
     const view = designDoc.views?.[viewName]

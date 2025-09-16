@@ -39,7 +39,7 @@ export const getDefault = (schema = {}) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
     .map(column => ({
-      label: column.name,
+      label: column.displayName || column.name,
       field: column.name,
       active: column.visible ?? true,
       order: column.visible ? (column.order ?? -1) : Number.MAX_SAFE_INTEGER,

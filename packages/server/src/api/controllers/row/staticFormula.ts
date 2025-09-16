@@ -1,15 +1,15 @@
+import { context } from "@budibase/backend-core"
+import { FieldType, FormulaType, Row, Table, ViewV2 } from "@budibase/types"
+import { cloneDeep, merge } from "lodash/fp"
+import isEqual from "lodash/isEqual"
+import * as linkRows from "../../../db/linkedRows"
 import { getRowParams } from "../../../db/utils"
+import sdk from "../../../sdk"
 import {
   outputProcessing,
   processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { Table, Row, FormulaType, FieldType, ViewV2 } from "@budibase/types"
-import * as linkRows from "../../../db/linkedRows"
-import isEqual from "lodash/isEqual"
-import { cloneDeep, merge } from "lodash/fp"
-import sdk from "../../../sdk"
 
 function mergeRows(row1: Row, row2: Row) {
   const merged = merge(row1, row2)
@@ -32,7 +32,7 @@ export async function updateRelatedFormula(
   table: Table,
   enrichedRows: Row[] | Row
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
     return
@@ -94,7 +94,7 @@ export async function updateRelatedFormula(
 }
 
 export async function updateAllFormulasInTable(table: Table) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
     await db.allDocs<Row>(
@@ -139,7 +139,7 @@ export async function finaliseRow(
   row: Row,
   opts?: { updateFormula: boolean; updateAIColumns: boolean }
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { updateFormula = true, updateAIColumns = true } = opts || {}
   const table = sdk.views.isView(source)
     ? await sdk.views.getTable(source.id)

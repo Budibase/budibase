@@ -1,9 +1,9 @@
+import { context, objectStore } from "@budibase/backend-core"
 import {
   decodeJSBinding,
-  isJSBinding,
   encodeJSBinding,
+  isJSBinding,
 } from "@budibase/string-templates"
-import sdk from "../sdk"
 import {
   Automation,
   AutomationActionStepId,
@@ -15,15 +15,15 @@ import {
   BranchStep,
   FieldSchema,
   FieldType,
+  LoopStorage,
   LoopV2Step,
   Row,
-  LoopStorage,
 } from "@budibase/types"
-import { objectStore, context } from "@budibase/backend-core"
-import * as uuid from "uuid"
+import { cloneDeep, isPlainObject } from "lodash"
 import path from "path"
-import { isPlainObject, cloneDeep } from "lodash"
+import * as uuid from "uuid"
 import env from "../environment"
+import sdk from "../sdk"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -175,7 +175,7 @@ export async function sendAutomationAttachmentsToStorage(
   return row
 }
 async function generateAttachmentRow(attachment: AutomationAttachment) {
-  const prodAppId = context.getProdAppId()
+  const prodAppId = context.getProdWorkspaceId()
 
   async function uploadToS3(
     extension: string,

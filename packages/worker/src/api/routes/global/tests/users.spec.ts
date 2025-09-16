@@ -1,8 +1,8 @@
-import { InviteUsersResponse, User, OIDCUser } from "@budibase/types"
+import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
 
-import { TestConfiguration, mocks, structures } from "../../../../tests"
-import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
+import { accounts as _accounts, events, tenancy } from "@budibase/backend-core"
 import * as userSdk from "../../../../sdk/users"
+import { TestConfiguration, mocks, structures } from "../../../../tests"
 
 jest.mock("nodemailer")
 const sendMailMock = mocks.email.mock()
@@ -23,6 +23,16 @@ describe("/api/global/users", () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  async function createBuilderUser() {
+    const saveResponse = await config.api.users.saveUser(
+      structures.users.builderUser(),
+      200
+    )
+    const { body: user } = await config.api.users.getUser(saveResponse.body._id)
+    await config.login(user)
+    return user
+  }
 
   describe("POST /api/global/users/invite", () => {
     it("should be able to generate an invitation", async () => {
@@ -71,6 +81,19 @@ describe("/api/global/users", () => {
       expect(sendMailMock).toHaveBeenCalledTimes(0)
       expect(code).toBeUndefined()
       expect(events.user.invited).toHaveBeenCalledTimes(0)
+    })
+
+    it("should not allow creator users to access single invite endpoint", async () => {
+      const user = await createBuilderUser()
+
+      const { res } = await config.withUser(user, () =>
+        config.api.users.sendUserInvite(
+          sendMailMock,
+          structures.users.newEmail(),
+          403
+        )
+      )
+      expect(res.body.message).toBe("Admin user only endpoint.")
     })
 
     it("should be able to create new user from invite", async () => {
@@ -136,6 +159,22 @@ describe("/api/global/users", () => {
       expect(body.unsuccessful[0].reason).toBe("Unavailable")
       expect(sendMailMock).toHaveBeenCalledTimes(0)
       expect(events.user.invited).toHaveBeenCalledTimes(0)
+    })
+
+    it("should not allow creator users to access multi-invite endpoint", async () => {
+      const user = await createBuilderUser()
+
+      const request = [
+        {
+          email: structures.users.newEmail(),
+          userInfo: { admin: { global: true } },
+        },
+      ]
+
+      const res = await config.withUser(user, () =>
+        config.api.users.sendMultiUserInvite(request, 403)
+      )
+      expect(res.body.message).toBe("Admin user only endpoint.")
     })
   })
 

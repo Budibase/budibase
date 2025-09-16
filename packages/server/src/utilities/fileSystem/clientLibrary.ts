@@ -1,10 +1,10 @@
-import semver from "semver"
+import { objectStore } from "@budibase/backend-core"
+import { sdk, utils } from "@budibase/shared-core"
+import fs from "fs"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
-import fs from "fs"
-import { objectStore } from "@budibase/backend-core"
-import { resolve } from "../centralPath"
 import env from "../../environment"
+import { resolve } from "../centralPath"
 import { TOP_LEVEL_PATH } from "./filesystem"
 
 export function devClientLibPath() {
@@ -18,13 +18,17 @@ export function devClientLibPath() {
  * was ever needed. Therefore we need to support old apps which may still have
  * the manifest at this location for the first update.
  *
- * The new paths for the in-use version are:
+ * The paths for the in-use version are:
  * {appId}/manifest.json
  * {appId}/budibase-client.js
+ * {appId}/_dependencies/...
+ * {appId}/... (and any other app files)
  *
  * The paths for the backups are:
- * {appId}/manifest.json.bak
- * {appId}/budibase-client.js.bak
+ * {appId}/.bak/manifest.json
+ * {appId}/.bak/budibase-client.js
+ * {appId}/.bak/_dependencies/...
+ * {appId}/.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
  * we pull both the manifest and client bundle from the server's dependencies
@@ -32,56 +36,38 @@ export function devClientLibPath() {
  */
 
 /**
- * Backs up the current client library version by copying both the manifest
- * and client bundle to .bak extensions in the object store. Only the one
- * previous version is stored as a backup, which can be reverted to.
+ * Backs up the current client library version by copying the entire app folder
+ * to a backup location in the object store. Only the one previous version is
+ * stored as a backup, which can be reverted to.
  * @param appId The app ID to backup
  * @returns {Promise<void>}
  */
 export async function backupClientLibrary(appId: string) {
-  // Copy existing manifest to tmp
-  let tmpManifestPath
+  appId = sdk.applications.getProdAppID(appId)
+  // First, remove any existing backup folder
   try {
-    // Try to load the manifest from the new file location
-    tmpManifestPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(appId, "manifest.json")
-    )
+    await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/.bak`)
   } catch (error) {
-    // Fallback to loading it from the old location for old apps
-    tmpManifestPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(
-        appId,
-        "node_modules",
-        "budibase",
-        "standard-components",
-        "package",
-        "manifest.json"
-      )
-    )
+    // Ignore errors if backup doesn't exist
   }
 
-  // Copy existing client lib to tmp
-  const tmpClientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js")
-  )
+  await forEachObject(appId, async fileKey => {
+    if (fileKey.includes("/.bak/") || fileKey.endsWith(".bak")) {
+      return
+    }
 
-  // Upload manifest and client library as backups
-  const manifestUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json.bak"),
-    path: tmpManifestPath,
-    type: "application/json",
+    const tmpPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      fileKey
+    )
+
+    const backupKey = fileKey.replace(appId, `${appId}/.bak`)
+    await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: backupKey,
+      path: tmpPath,
+    })
   })
-  const clientUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js.bak"),
-    path: tmpClientPath,
-    type: "application/javascript",
-  })
-  await Promise.all([manifestUpload, clientUpload])
 }
 
 /**
@@ -109,17 +95,11 @@ export async function updateClientLibrary(appId: string) {
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
     stream: fs.createReadStream(manifest),
-    extra: {
-      ContentType: "application/json",
-    },
   })
   const clientUpload = objectStore.streamUpload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
     stream: fs.createReadStream(client),
-    extra: {
-      ContentType: "application/javascript",
-    },
   })
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
@@ -131,57 +111,129 @@ export async function updateClientLibrary(appId: string) {
 
 /**
  * Reverts the version of the client library and manifest to the previously
- * used version for an app.
+ * used version for an app by restoring the entire backed up folder.
  * @param appId The app ID to revert
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  let manifestPath, clientPath
+  appId = sdk.applications.getProdAppID(appId)
 
-  // Copy backups manifest to tmp directory
-  manifestPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "manifest.json.bak")
-  )
+  let manifestContent
+  let hasBackup = false
+  const restoredFiles = new Set<string>()
 
-  // Copy backup client lib to tmp
-  clientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js.bak")
-  )
+  // First, restore all files from the backup folder
+  await forEachObject(`${appId}/.bak`, async filePath => {
+    hasBackup = true
 
-  const manifestSrc = fs.promises.readFile(manifestPath, "utf8")
+    // Download the backup file to temp
+    const tmpPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      filePath
+    )
 
-  // Upload backups as new versions
-  const manifestUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json"),
-    path: manifestPath,
-    type: "application/json",
+    // Restore to original location
+    const restoreKey = filePath.replace(`${appId}/.bak`, appId)
+    restoredFiles.add(restoreKey)
+
+    // Read manifest content if this is the manifest file
+    if (restoreKey.endsWith("manifest.json")) {
+      manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+    }
+
+    await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: restoreKey,
+      path: tmpPath,
+    })
   })
-  const clientUpload = objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js"),
-    path: clientPath,
-    type: "application/javascript",
-  })
-  await Promise.all([manifestSrc, manifestUpload, clientUpload])
 
-  return JSON.parse(await manifestSrc)
+  // After successful restore, clean up any extra files that weren't in backup
+  if (hasBackup) {
+    await forEachObject(appId, async filePath => {
+      if (
+        !filePath.includes("/.bak/") &&
+        !filePath.endsWith(".bak") &&
+        !restoredFiles.has(filePath)
+      ) {
+        await objectStore.deleteFile(ObjectStoreBuckets.APPS, filePath)
+      }
+    })
+  }
+
+  // If no backup folder found, try to find old .bak files
+  if (!hasBackup) {
+    await forEachObject(appId, async filePath => {
+      if (!filePath.endsWith(".bak")) {
+        return
+      }
+
+      hasBackup = true
+
+      // Restore .bak file to original location
+      const restoreKey = filePath.replace(".bak", "")
+
+      // For manifest file, we need to read the content to return it
+
+      if (restoreKey.endsWith("manifest.json")) {
+        const tmpPath = await objectStore.retrieveToTmp(
+          ObjectStoreBuckets.APPS,
+          filePath
+        )
+        manifestContent = await fs.promises.readFile(tmpPath, "utf8")
+      }
+
+      // For all other files, use streaming
+      const stream = await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        filePath
+      )
+
+      await objectStore.streamUpload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: restoreKey,
+        stream,
+      })
+    })
+  }
+
+  if (!hasBackup) {
+    throw new Error(`No backup found for app ${appId}`)
+  }
+
+  if (!manifestContent) {
+    throw new Error(`No manifest found in backup for app ${appId}`)
+  }
+
+  return JSON.parse(manifestContent)
 }
 
-export function shouldServeLocally(version: string) {
-  if (env.isProd() || !env.isDev()) {
-    return false
-  }
+const forEachObject = (
+  path: string,
+  task: (fileKey: string) => Promise<void>
+) =>
+  utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+      await task(file.Key)
+    },
+    5
+  )
 
+export function shouldServeLocally() {
   if (env.isDev()) {
+    if (env.DEV_USE_CLIENT_FROM_STORAGE) {
+      return false
+    }
     return true
   }
 
-  const parsedSemver = semver.parse(version)
-  if (parsedSemver?.build?.[0] === "local") {
+  if (env.isTest()) {
     return true
   }
+
   return false
 }

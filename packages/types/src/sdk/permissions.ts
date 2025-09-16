@@ -18,7 +18,7 @@ export enum BuiltinPermissionID {
 
 // these are the global types, that govern the underlying default behaviour
 export enum PermissionType {
-  APP = "app",
+  WORKSPACE = "app",
   TABLE = "table",
   USER = "user",
   AUTOMATION = "automation",

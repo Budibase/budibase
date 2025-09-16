@@ -1,7 +1,7 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
-import { join, resolve } from "path"
 import cloneDeep from "lodash/cloneDeep"
+import { join, resolve } from "path"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
@@ -55,6 +55,7 @@ const environment = {
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
+  DEV_USE_CLIENT_FROM_STORAGE: process.env.DEV_USE_CLIENT_FROM_STORAGE,
   // smtp
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,

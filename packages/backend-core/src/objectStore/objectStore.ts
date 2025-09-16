@@ -1,31 +1,31 @@
 const sanitize = require("sanitize-s3-objectkey")
 
 import {
+  GetObjectCommand,
   HeadObjectCommandOutput,
   PutObjectCommandInput,
   S3,
   S3ClientConfig,
-  GetObjectCommand,
   _Object as S3Object,
 } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import stream, { Readable } from "stream"
-import fetch from "node-fetch"
-import tar from "tar-fs"
-import zlib from "zlib"
-import { join } from "path"
-import fs, { PathLike, ReadStream } from "fs"
-import env from "../environment"
-import { bucketTTLConfig, budibaseTempDir } from "./utils"
-import { v4 } from "uuid"
-import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
-import fsp from "fs/promises"
-import { ReadableStream } from "stream/web"
+import { utils } from "@budibase/shared-core"
 import { NodeJsClient } from "@smithy/types"
 import tracer from "dd-trace"
+import fs, { PathLike, ReadStream } from "fs"
+import fsp from "fs/promises"
+import fetch from "node-fetch"
+import { join } from "path"
+import stream, { Readable } from "stream"
 import { pipeline } from "stream/promises"
-import { utils } from "@budibase/shared-core"
+import { ReadableStream } from "stream/web"
+import tar from "tar-fs"
+import { v4 } from "uuid"
+import zlib from "zlib"
+import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
+import env from "../environment"
+import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
 // use this as a temporary store of buckets that are being created
 const STATE = {
@@ -83,7 +83,7 @@ export function sanitizeKey(input: string): string {
 
 // simply handles the dev app to app conversion
 export function sanitizeBucket(input: string): string {
-  return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
+  return input.replace(new RegExp(WORKSPACE_DEV_PREFIX, "g"), WORKSPACE_PREFIX)
 }
 
 /**
@@ -155,9 +155,16 @@ export async function createBucketIfNotExists(
       return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        promises[bucketName] = client.createBucket({
-          Bucket: bucketName,
-        })
+        promises[bucketName] = client
+          .createBucket({
+            Bucket: bucketName,
+          })
+          .catch((err: any) => {
+            // bucket was created in the meantime by another process
+            if (err.Code !== "BucketAlreadyOwnedByYou") {
+              throw err
+            }
+          })
 
         await promises[bucketName]
         delete promises[bucketName]
@@ -262,19 +269,6 @@ export async function streamUpload({
     if (ttl && bucketCreated.created) {
       let ttlConfig = bucketTTLConfig(bucketName, ttl)
       await objectStore.putBucketLifecycleConfiguration(ttlConfig)
-    }
-
-    // Set content type for certain known extensions
-    if (filename?.endsWith(".js")) {
-      extra = {
-        ...extra,
-        ContentType: "application/javascript",
-      }
-    } else if (filename?.endsWith(".svg")) {
-      extra = {
-        ...extra,
-        ContentType: "image",
-      }
     }
 
     let contentType = type

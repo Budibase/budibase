@@ -8,7 +8,6 @@
     workspaceFavouriteStore,
     dataEnvironmentStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import {
     Icon,
@@ -16,6 +15,7 @@
     ActionMenu,
     MenuItem,
     notifications,
+    AbsTooltip,
   } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
@@ -49,6 +49,7 @@
   let deleteViewModal
 
   $: tableId = $params.tableId
+  $: isUsersTable = tableId === TableNames.USERS
   $: table = $tables.list.find(table => table._id === tableId)
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
@@ -70,6 +71,8 @@
 
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
   $: viewHidden = viewVisibiltyMap[activeId] === false
+  $: tableName =
+    table?._id === TableNames.USERS ? "App users" : table?.name || ""
 
   const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
     return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
@@ -123,39 +126,35 @@
     contextMenuStore.open(
       view.id,
       [
-        ...($featureFlags.WORKSPACES
-          ? [
-              {
-                icon: "star",
-                iconWeight: fav ? "fill" : "regular",
-                iconColour: fav
-                  ? "var(--spectrum-global-color-yellow-1000)"
-                  : undefined,
-                name: fav ? "Remove from favourites" : "Add to favourites",
-                keyBind: null,
-                visible: true,
-                disabled: false,
-                callback: async () => {
-                  try {
-                    if (fav?._id && fav?._rev) {
-                      await API.workspace.delete(fav._id, fav._rev)
-                      notifications.success("View removed to favourites")
-                    } else {
-                      await API.workspace.create({
-                        resourceId: view?.id,
-                        resourceType: WorkspaceResource.VIEW,
-                      })
-                      notifications.success("View added to favourites")
-                    }
-                    await workspaceFavouriteStore.sync()
-                  } catch (e) {
-                    notifications.error("Failed to update favourite")
-                    console.error("Failed to update favourite", e)
-                  }
-                },
-              },
-            ]
-          : []),
+        {
+          icon: "star",
+          iconWeight: fav ? "fill" : "regular",
+          iconColour: fav
+            ? "var(--spectrum-global-color-yellow-1000)"
+            : undefined,
+          name: fav ? "Remove from favourites" : "Add to favourites",
+          keyBind: null,
+          visible: true,
+          disabled: false,
+          callback: async () => {
+            try {
+              if (fav?._id && fav?._rev) {
+                await API.workspace.delete(fav._id, fav._rev)
+                notifications.success("View removed to favourites")
+              } else {
+                await API.workspace.create({
+                  resourceId: view?.id,
+                  resourceType: WorkspaceResource.VIEW,
+                })
+                notifications.success("View added to favourites")
+              }
+              await workspaceFavouriteStore.sync()
+            } catch (e) {
+              notifications.error("Failed to update favourite")
+              console.error("Failed to update favourite", e)
+            }
+          },
+        },
         {
           icon: "pencil",
           name: "Edit",
@@ -227,24 +226,32 @@
 </script>
 
 <div class="nav">
-  <a
-    href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
-  >
-    <IntegrationIcon
-      integrationType={datasource?.source}
-      schema={datasource?.schema}
-      size="24"
-    />
-  </a>
+  {#if !isUsersTable}
+    <a
+      href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
+    >
+      <IntegrationIcon
+        integrationType={datasource?.source}
+        schema={datasource?.schema}
+        size="24"
+      />
+    </a>
+  {:else}
+    <span class="user-icon">
+      <Icon name="users-three" />
+    </span>
+  {/if}
   <a
     href={$tableUrl(tableId)}
     class="nav-item"
     class:active={tableId === activeId}
     on:contextmenu={openTableContextMenu}
   >
-    <div class="nav-item__title">
-      {table?._id === TableNames.USERS ? "App users" : table?.name || ""}
-    </div>
+    <AbsTooltip text={tableName}>
+      <div class="nav-item__title">
+        {tableName}
+      </div>
+    </AbsTooltip>
     {#if tableSelectedBy}
       <UserAvatars size="XS" users={tableSelectedBy} />
     {/if}
@@ -300,9 +307,11 @@
           on:contextmenu={e => openViewContextMenu(e, view)}
           data-id={view.id}
         >
-          <div class="nav-item__title">
-            {view.name}
-          </div>
+          <AbsTooltip text={view.name}>
+            <div class="nav-item__title">
+              {view.name}
+            </div>
+          </AbsTooltip>
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
@@ -439,8 +448,12 @@
     overflow: hidden;
   }
 
-  /* OVerflow items */
+  /* Overflow items */
   .nav-overflow-item:not(.active) :global(> .spectrum-Menu-item > .icon) {
     visibility: hidden;
+  }
+
+  .nav .user-icon :global(i) {
+    font-size: 24px;
   }
 </style>

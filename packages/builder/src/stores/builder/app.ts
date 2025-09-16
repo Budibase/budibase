@@ -1,17 +1,17 @@
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
-  App,
-  AppFeatures,
-  AppIcon,
   AppScript,
   AutomationSettings,
   Plugin,
   PWAManifest,
-  UpdateAppRequest,
+  UpdateWorkspaceRequest,
+  Workspace,
+  WorkspaceFeatures,
+  WorkspaceIcon,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { initialise, navigationStore, workspaceAppStore } from "."
+import { BudiStore } from "../BudiStore"
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -38,7 +38,7 @@ interface AppMetaState {
   libraries: string[]
   clientFeatures: ClientFeatures
   typeSupportPresets: TypeSupportPresets
-  features: AppFeatures
+  features: WorkspaceFeatures
   clientLibPath: string
   hasLock: boolean
   appInstance: { _id: string } | null
@@ -50,7 +50,7 @@ interface AppMetaState {
   version?: string
   revertableVersion?: string
   upgradableVersion?: string
-  icon?: AppIcon
+  icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
 }
@@ -108,7 +108,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncApp(app: App) {
+  syncApp(app: Workspace) {
     this.update(state => ({
       ...state,
       name: app.name,
@@ -134,7 +134,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   }
 
   syncAppPackage(pkg: {
-    application: App
+    application: Workspace
     clientLibPath: string
     hasLock: boolean
   }) {
@@ -172,13 +172,13 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateAppRequest) {
+  async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
     this.syncApp(app)
   }
 
   // Returned from socket
-  syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }) {
+  syncMetadata(metadata: { name: string; url: string; icon?: WorkspaceIcon }) {
     const { name, url, icon } = metadata
     this.update(state => ({
       ...state,
