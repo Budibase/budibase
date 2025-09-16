@@ -33,7 +33,7 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const subType = $licensing.license?.plan.type ?? null
+  const subType = $licensing.license?.plan?.type ?? null
 
   $: isPremiumOrAbove = [
     Constants.PlanType.PREMIUM,
