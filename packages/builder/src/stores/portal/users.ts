@@ -1,20 +1,19 @@
 import { API } from "@/api"
-import { licensing } from "."
-import { sdk } from "@budibase/shared-core"
+import { UserInfo } from "@/types"
+import { notifications } from "@budibase/bbui"
 import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
 import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
   SearchUsersRequest,
   SearchUsersResponse,
-  UpdateInviteRequest,
+  UnsavedUser,
   User,
   UserIdentifier,
-  UnsavedUser,
 } from "@budibase/types"
+import { licensing } from "."
 import { BudiStore } from "../BudiStore"
-import { notifications } from "@budibase/bbui"
-import { UserInfo } from "@/types"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
@@ -107,8 +106,12 @@ class UserStore extends BudiStore<UserState> {
     return API.getUserInvites()
   }
 
-  async updateInvite(code: string, invite: UpdateInviteRequest) {
-    return API.updateUserInvite(code, invite)
+  async addWorkspaceIdToInvite(code: string, appId: string, role: string) {
+    return API.addWorkspaceIdToInvite(code, appId, role)
+  }
+
+  async removeWorkspaceIdFromInvite(code: string, appId: string) {
+    return API.removeWorkspaceIdFromInvite(code, appId)
   }
 
   async getUserCountByApp(appId: string) {
