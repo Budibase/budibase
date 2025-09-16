@@ -114,6 +114,90 @@ describe("/api/global/users", () => {
     })
   })
 
+  describe("POST /api/global/users/invite/update/:code/:appId/:role", () => {
+    it("should be able to add workspace id to invite", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      const res = await config.api.users.addWorkspaceIdToInvite(
+        code,
+        appId,
+        role
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBe(role)
+    })
+
+    it("should handle invalid invite code", async () => {
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      await config.api.users.addWorkspaceIdToInvite(
+        "invalid_code",
+        appId,
+        role,
+        400
+      )
+    })
+  })
+
+  describe("DELETE /api/global/users/invite/update/:code/:appId", () => {
+    it("should be able to remove workspace id from invite", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      // First add the workspace
+      await config.api.users.addWorkspaceIdToInvite(code, appId, role)
+
+      // Then remove it
+      const res = await config.api.users.removeWorkspaceIdFromInvite(
+        code,
+        appId
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBeUndefined()
+    })
+
+    it("should handle removing non-existent workspace id", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_nonexistent"
+
+      const res = await config.api.users.removeWorkspaceIdFromInvite(
+        code,
+        appId
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBeUndefined()
+    })
+
+    it("should handle invalid invite code", async () => {
+      const appId = "app_123456789"
+
+      await config.api.users.removeWorkspaceIdFromInvite(
+        "invalid_code",
+        appId,
+        400
+      )
+    })
+  })
+
   describe("POST /api/global/users/multi/invite", () => {
     it("should be able to generate an invitation", async () => {
       const newUserInvite = () => ({

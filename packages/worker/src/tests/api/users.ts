@@ -1,14 +1,14 @@
+import { generator } from "@budibase/backend-core/tests"
 import {
-  BulkUserResponse,
   BulkUserRequest,
-  InviteUsersRequest,
-  User,
+  BulkUserResponse,
   CreateAdminUserRequest,
-  SearchFilters,
+  InviteUsersRequest,
   InviteUsersResponse,
+  SearchFilters,
+  User,
 } from "@budibase/types"
 import structures from "../structures"
-import { generator } from "@budibase/backend-core/tests"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class UserAPI extends TestAPI {
@@ -225,6 +225,27 @@ export class UserAPI extends TestAPI {
       .put(`/api/global/users/tenant/owner`)
       .send({ newAccountEmail, originalEmail, tenantIds })
       .set(this.config.internalAPIHeaders())
+      .expect(status)
+  }
+
+  addWorkspaceIdToInvite = (
+    code: string,
+    appId: string,
+    role: string,
+    status = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/invite/update/${code}/${appId}/${role}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  removeWorkspaceIdFromInvite = (code: string, appId: string, status = 200) => {
+    return this.request
+      .delete(`/api/global/users/invite/update/${code}/${appId}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
       .expect(status)
   }
 }

@@ -513,12 +513,16 @@ export const addWorkspaceIdToInvite = async (
 ) => {
   const { code, appId, role } = ctx.params
 
-  const invite = await cache.invite.getCode(code)
-  invite.info.apps ??= {}
-  invite.info.apps[appId] = role
+  try {
+    const invite = await cache.invite.getCode(code)
+    invite.info.apps ??= {}
+    invite.info.apps[appId] = role
 
-  await cache.invite.updateCode(code, invite)
-  ctx.body = { ...invite }
+    await cache.invite.updateCode(code, invite)
+    ctx.body = { ...invite }
+  } catch (e) {
+    ctx.throw(400, "Invitation is not valid or has expired.")
+  }
 }
 
 export const removeWorkspaceIdFromInvite = async (
@@ -526,12 +530,16 @@ export const removeWorkspaceIdFromInvite = async (
 ) => {
   const { code, appId } = ctx.params
 
-  const invite = await cache.invite.getCode(code)
-  invite.info.apps ??= {}
-  delete invite.info.apps[appId]
+  try {
+    const invite = await cache.invite.getCode(code)
+    invite.info.apps ??= {}
+    delete invite.info.apps[appId]
 
-  await cache.invite.updateCode(code, invite)
-  ctx.body = { ...invite }
+    await cache.invite.updateCode(code, invite)
+    ctx.body = { ...invite }
+  } catch (e) {
+    ctx.throw(400, "Invitation is not valid or has expired.")
+  }
 }
 
 export const inviteAccept = async (
