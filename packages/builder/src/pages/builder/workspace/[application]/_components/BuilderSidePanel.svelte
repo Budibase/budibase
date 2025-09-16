@@ -213,6 +213,7 @@
 
         return {
           ...user,
+          _id: user._id!,
           role,
           isAdminOrGlobalBuilder,
           isAppBuilder,
