@@ -516,13 +516,12 @@
 
   const onUpdateUserInvite = async (invite: InviteWithCode, role: string) => {
     let updateBody: UpdateInviteRequest = {
-      ...invite.info,
       apps: {
-        ...invite.info.apps,
         [prodAppId]: role,
       },
     }
     if (role === Constants.Roles.CREATOR) {
+      updateBody.info ??= {}
       updateBody.info.builder = updateBody.info.builder || {}
       updateBody.info.builder.apps = [
         ...(updateBody.info.builder.apps ?? []),
@@ -533,6 +532,7 @@
       role !== Constants.Roles.CREATOR &&
       invite?.info?.builder?.apps
     ) {
+      updateBody.info ??= {}
       updateBody.info.builder = { apps: [] }
     }
     await users.updateInvite(invite.code, updateBody)
@@ -553,7 +553,7 @@
       info: {
         apps: updated.info.apps,
       },
-      apps: Object.keys(updated.info.apps || {}),
+      apps: {},
     }
 
     return await users.updateInvite(updated.code, updateBody)

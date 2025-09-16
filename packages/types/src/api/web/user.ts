@@ -5,10 +5,20 @@ import {
   User,
 } from "../../documents"
 import { SearchFilters } from "../../sdk"
+import { DeepPartial } from "../../shared"
 
 export interface Invite {
   email: string
-  info: any
+  info: {
+    tenantId: string
+    apps: any // TODO: type on refactor
+    builder: {
+      global?: boolean
+      creator?: boolean
+      apps: string[]
+    }
+    admin: { global: boolean }
+  }
 }
 
 export interface InviteWithCode extends Invite {
@@ -157,12 +167,13 @@ export interface CheckInviteResponse {
 
 export type GetUserInvitesResponse = InviteWithCode[]
 
-export interface UpdateInviteRequest extends Omit<Invite, "email"> {
+export interface UpdateInviteRequest extends Omit<Invite, "email" | "info"> {
   email?: string
   builder?: {
     apps: string[]
   }
-  apps: string[]
+  apps: any // TODO: type on refactor
+  info?: DeepPartial<Invite["info"]>
 }
 export interface UpdateInviteResponse extends Invite {}
 
