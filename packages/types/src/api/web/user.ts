@@ -5,20 +5,24 @@ import {
   User,
 } from "../../documents"
 import { SearchFilters } from "../../sdk"
-import { DeepPartial } from "../../shared"
+
+interface InviteInfo {
+  tenantId?: string
+  apps?: Record<string, string>
+  userGroups?: string[]
+  builder?: {
+    global?: boolean
+    creator?: boolean
+    apps?: string[]
+  }
+  admin?: {
+    global?: boolean
+  }
+}
 
 export interface Invite {
   email: string
-  info: {
-    tenantId: string
-    apps: any // TODO: type on refactor
-    builder: {
-      global?: boolean
-      creator?: boolean
-      apps: string[]
-    }
-    admin: { global: boolean }
-  }
+  info: InviteInfo
 }
 
 export interface InviteWithCode extends Invite {
@@ -71,7 +75,7 @@ export interface BulkUserResponse {
 
 export interface InviteUserRequest {
   email: string
-  userInfo: any
+  userInfo: InviteInfo
 }
 export interface InviteUserResponse {
   message: string
@@ -168,12 +172,7 @@ export interface CheckInviteResponse {
 export type GetUserInvitesResponse = InviteWithCode[]
 
 export interface UpdateInviteRequest extends Omit<Invite, "email" | "info"> {
-  email?: string
-  builder?: {
-    apps: string[]
-  }
-  apps: any // TODO: type on refactor
-  info?: DeepPartial<Invite["info"]>
+  apps: Record<string, string>
 }
 export interface UpdateInviteResponse extends Invite {}
 
