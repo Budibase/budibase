@@ -254,11 +254,13 @@
     <h2>Tracking: {selectedForm.label}</h2>
     <p>Type: {selectedForm.subtitle}</p>
     <p>ID: {selectedForm.value}</p>
+    <p>{getComponentDetails(selectedForm.)}</p>
   {:else if form}
     <h2>Form not found: {form}</h2>
     <p>Available forms: {$availableForms.length}</p>
     {#each $availableForms as availableForm}
       <p>- {availableForm.label} ({availableForm.value})</p>
+      <p>{JSON.stringify(availableForm)}</p>
     {/each}
   {:else}
     <p>No form selected</p>
