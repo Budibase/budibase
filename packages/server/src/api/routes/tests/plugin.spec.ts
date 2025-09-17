@@ -14,9 +14,9 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { events, objectStore } from "@budibase/backend-core"
-import * as setup from "./utilities"
-import nock from "nock"
 import { PluginSource } from "@budibase/types"
+import nock from "nock"
+import * as setup from "./utilities"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
@@ -27,8 +27,11 @@ describe("/plugins", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(() => {
     jest.clearAllMocks()
     nock.cleanAll()
   })
