@@ -73,13 +73,6 @@ export interface UserEndpoints {
     userId: string,
     rev: string
   ) => Promise<SaveUserResponse>
-
-  // Missing request or response types
-  addAppBuilder: (userId: string, appId: string) => Promise<{ message: string }>
-  removeAppBuilder: (
-    userId: string,
-    appId: string
-  ) => Promise<{ message: string }>
 }
 
 export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
@@ -284,28 +277,6 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
       url: `/api/global/users/count/${appId}`,
     })
     return res.userCount
-  },
-
-  /**
-   * Adds a per app builder to the selected app
-   * @param userId The id of the user to add as a builder
-   * @param appId the applications id
-   */
-  addAppBuilder: async (userId, appId) => {
-    return await API.post({
-      url: `/api/global/users/${userId}/app/${appId}/builder`,
-    })
-  },
-
-  /**
-   * Removes a per app builder to the selected app
-   * @param userId The id of the user to remove as a builder
-   * @param appId the applications id
-   */
-  removeAppBuilder: async (userId, appId) => {
-    return await API.delete({
-      url: `/api/global/users/${userId}/app/${appId}/builder`,
-    })
   },
 
   /**

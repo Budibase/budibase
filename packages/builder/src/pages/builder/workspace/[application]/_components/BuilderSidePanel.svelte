@@ -221,14 +221,6 @@
       if (user.role === role) {
         return
       }
-      if (user.isAppBuilder) {
-        await removeAppBuilder(user._id, prodAppId)
-        user = await users.get(user._id)
-      }
-      if (role === Constants.Roles.CREATOR) {
-        await removeAppBuilder(user._id, prodAppId)
-        user = await users.get(user._id)
-      }
       await updateAppUser(user, role)
     } catch (error) {
       console.error(error)
@@ -460,15 +452,6 @@
     } catch (err) {
       notifications.error("Error editing invite")
     }
-  }
-
-  const addAppBuilder = async userId => {
-    await users.addAppBuilder(userId, $appStore.appId)
-    await searchUsers(query, $builderStore.builderSidePanel, loaded)
-  }
-
-  const removeAppBuilder = async userId => {
-    await users.removeAppBuilder(userId, $appStore.appId)
   }
 
   const initSidePanel = async sidePaneOpen => {
@@ -763,11 +746,7 @@
                       quiet={true}
                       on:addcreator={() => {}}
                       on:change={e => {
-                        if (e.detail === Constants.Roles.CREATOR) {
-                          addAppBuilder(user._id)
-                        } else {
-                          onUpdateUser(user, e.detail)
-                        }
+                        onUpdateUser(user, e.detail)
                       }}
                       on:remove={() => {
                         onUpdateUser(user)

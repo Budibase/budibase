@@ -181,14 +181,6 @@ class UserStore extends BudiStore<UserState> {
     return res
   }
 
-  async addAppBuilder(userId: string, appId: string) {
-    return await API.addAppBuilder(userId, appId)
-  }
-
-  async removeAppBuilder(userId: string, appId: string) {
-    return await API.removeAppBuilder(userId, appId)
-  }
-
   async getAccountHolder() {
     return await API.getAccountHolder()
   }

@@ -9,6 +9,7 @@ import {
   tenancy,
   users,
 } from "@budibase/backend-core"
+import { features } from "@budibase/pro"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
@@ -627,28 +628,7 @@ export const addUserToWorkspace = async (
     SaveUserResponse,
     { userId: string; role: string }
   >
-) => {
-  const currentUserId = ctx.user?._id
-  const { role, userId } = ctx.params
-
-  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
-  if (!workspaceId) {
-    ctx.throw(400, "Workspace id not set")
-  }
-  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
-
-  const existingUser = await users.getById(userId)
-  existingUser._rev = ctx.request.body._rev
-  existingUser.roles[prodWorkspaceId] = role
-
-  const user = await userSdk.db.save(existingUser, { currentUserId })
-
-  ctx.body = {
-    _id: user._id!,
-    _rev: user._rev!,
-    email: user.email,
-  }
-}
+) => handleUserWorkspacePermission(ctx, ctx.params.userId, ctx.params.role)
 
 export const removeUserFromWorkspace = async (
   ctx: UserCtx<
@@ -656,9 +636,14 @@ export const removeUserFromWorkspace = async (
     SaveUserResponse,
     { userId: string }
   >
-) => {
+) => handleUserWorkspacePermission(ctx, ctx.params.userId, undefined)
+
+async function handleUserWorkspacePermission(
+  ctx: UserCtx<EditUserPermissionsResponse, SaveUserResponse>,
+  userId: string,
+  role: string | undefined
+) {
   const currentUserId = ctx.user?._id
-  const { userId } = ctx.params
 
   const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
   if (!workspaceId) {
@@ -668,7 +653,27 @@ export const removeUserFromWorkspace = async (
 
   const existingUser = await users.getById(userId)
   existingUser._rev = ctx.request.body._rev
-  delete existingUser.roles[prodWorkspaceId]
+  if (role) {
+    existingUser.roles[prodWorkspaceId] = role
+  } else {
+    delete existingUser.roles[prodWorkspaceId]
+  }
+
+  if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
+    throw new Error("Feature not enabled, please check license")
+  }
+
+  const appCreator = Object.entries(existingUser.roles)
+    .filter(([_appId, role]) => role === "CREATOR")
+    .map(([appId]) => appId)
+  if (!appCreator.length && existingUser.builder) {
+    delete existingUser.builder.creator
+    delete existingUser.builder.apps
+  } else if (appCreator.length) {
+    existingUser.builder ??= {}
+    existingUser.builder.creator = true
+    existingUser.builder.apps = appCreator
+  }
 
   const user = await userSdk.db.save(existingUser, { currentUserId })
 
