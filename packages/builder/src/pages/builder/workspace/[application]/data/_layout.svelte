@@ -11,6 +11,18 @@
 
   let searchValue
   let maxWidth = window.innerWidth / 3
+  let panelWidth = 260
+
+  // Load persisted panel width from localStorage
+  const loadPanelWidth = () => {
+    const saved = localStorage.getItem("datasource-panel-width")
+    if (saved) {
+      const width = parseInt(saved, 10)
+      if (width && width > 100 && width < window.innerWidth) {
+        panelWidth = width
+      }
+    }
+  }
 
   const updateMaxWidth = () => {
     maxWidth = window.innerWidth / 3
@@ -27,13 +39,20 @@
   setContext("data-layout", { registerGridDispatch })
 
   const [resizable, resizableHandle] = getHorizontalResizeActions(
-    260,
+    panelWidth,
     width => {
       if (width > maxWidth) {
         const element = document.querySelector(".panel-container")
         if (element) {
           element.style.width = `${maxWidth}px`
+          width = maxWidth
         }
+      }
+
+      // Save the width to localStorage
+      if (width) {
+        localStorage.setItem("datasource-panel-width", width.toString())
+        panelWidth = width
       }
     },
     () => {
@@ -45,6 +64,7 @@
   )
 
   onMount(() => {
+    loadPanelWidth()
     window.addEventListener("resize", updateMaxWidth)
   })
 
@@ -67,7 +87,7 @@
   <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
-      <div class="panel-container" use:resizable>
+      <div class="panel-container" style="width: {panelWidth}px;" use:resizable>
         <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
           <span class="panel-title-content" slot="panel-title-content">
             <NavHeader
