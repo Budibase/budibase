@@ -90,14 +90,7 @@ describe("security middlewares", () => {
       threw(ctx.throw, 403, "This request required a workspace id.")
     })
 
-    it("should allow global builder with workspace context", async () => {
-      const ctx = buildUserCtx(builderUser),
-        next = jest.fn()
-      await doInWorkspaceContext(ctx, appId, () => builderOnly(ctx, next))
-      passed(ctx.throw, next)
-    })
-
-    it("should allow app builder user", async () => {
+    it("should allow app builder user in correct workspace", async () => {
       const ctx = buildUserCtx(appBuilderUser),
         next = jest.fn()
 
@@ -105,7 +98,7 @@ describe("security middlewares", () => {
       passed(ctx.throw, next)
     })
 
-    it("should allow admin and builder user with workspace context", async () => {
+    it("should allow admin with builder permissions", async () => {
       const ctx = buildUserCtx(adminUser),
         next = jest.fn()
       await doInWorkspaceContext(ctx, appId, () => builderOnly(ctx, next))
@@ -184,7 +177,7 @@ describe("security middlewares", () => {
       threw(ctx.throw, 403, "Workspace builder user only endpoint.")
     })
 
-    it("should allow without app ID in worker", async () => {
+    it("should allow app builder without workspace in worker service", async () => {
       env._set("SERVICE_TYPE", ServiceType.WORKER)
       const ctx = buildUserCtx({
         ...basicUser,
@@ -195,6 +188,14 @@ describe("security middlewares", () => {
       const next = jest.fn()
       await builderOnly(ctx, next)
       passed(ctx.throw, next)
+    })
+
+    it("should deny basic user in worker service without builder permissions", async () => {
+      env._set("SERVICE_TYPE", ServiceType.WORKER)
+      const ctx = buildUserCtx(basicUser),
+        next = jest.fn()
+      await builderOnly(ctx, next)
+      threw(ctx.throw, 403, "Builder user only endpoint.")
     })
   })
 
@@ -207,28 +208,21 @@ describe("security middlewares", () => {
       threw(ctx.throw, 403, "This request required a workspace id.")
     })
 
-    it("should allow global builder with workspace context", async () => {
-      const ctx = buildUserCtx(builderUser),
-        next = jest.fn()
-      await doInWorkspaceContext(ctx, appId, () => builderOrAdmin(ctx, next))
-      passed(ctx.throw, next)
-    })
-
-    it("should allow builder and admin user", async () => {
+    it("should allow admin users (bypass all other checks)", async () => {
       const ctx = buildUserCtx(adminUser),
         next = jest.fn()
       await builderOrAdmin(ctx, next)
       passed(ctx.throw, next)
     })
 
-    it("should allow admin user", async () => {
+    it("should allow admin-only users (bypass all other checks)", async () => {
       const ctx = buildUserCtx(adminOnlyUser),
         next = jest.fn()
       await builderOrAdmin(ctx, next)
       passed(ctx.throw, next)
     })
 
-    it("should allow app builder user", async () => {
+    it("should allow app builder user in correct workspace", async () => {
       const ctx = buildUserCtx(appBuilderUser),
         next = jest.fn()
       await doInWorkspaceContext(ctx, appId, () => builderOrAdmin(ctx, next))
@@ -257,14 +251,6 @@ describe("security middlewares", () => {
 
       await doInWorkspaceContext(ctx, "app_b", () => builderOrAdmin(ctx, next))
       threw(ctx.throw, 403, "Workspace Admin/Builder user only endpoint.")
-    })
-
-    it("should allow admin access to any app", async () => {
-      const ctx = buildUserCtx(adminUser)
-      const next = jest.fn()
-
-      await doInWorkspaceContext(ctx, "app_b", () => builderOrAdmin(ctx, next))
-      passed(ctx.throw, next)
     })
 
     it("should allow global builder access to any app", async () => {
