@@ -197,6 +197,61 @@ describe("security middlewares", () => {
       await builderOnly(ctx, next)
       threw(ctx.throw, 403, "Builder user only endpoint.")
     })
+
+    it("should allow creator user with app-specific builder permissions", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId]
+        },
+        roles: {
+          [appId]: "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser),
+        next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () => builderOnly(ctx, next))
+      passed(ctx.throw, next)
+    })
+
+    it("should deny creator user without app-specific builder permissions for different app", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: ["app_different"]
+        },
+        roles: {
+          "app_different": "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser),
+        next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () => builderOnly(ctx, next))
+      threw(ctx.throw, 403, "Workspace builder user only endpoint.")
+    })
+
+    it("should allow creator user in worker service", async () => {
+      env._set("SERVICE_TYPE", ServiceType.WORKER)
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId]
+        },
+        roles: {
+          [appId]: "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser),
+        next = jest.fn()
+
+      await builderOnly(ctx, next)
+      passed(ctx.throw, next)
+    })
   })
 
   describe("builderOrAdmin middleware", () => {
@@ -284,6 +339,61 @@ describe("security middlewares", () => {
 
       await doInWorkspaceContext(ctx, appId, () => builderOrAdmin(ctx, next))
       threw(ctx.throw, 403, "Workspace Admin/Builder user only endpoint.")
+    })
+
+    it("should allow creator user with app-specific permissions", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId]
+        },
+        roles: {
+          [appId]: "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () => builderOrAdmin(ctx, next))
+      passed(ctx.throw, next)
+    })
+
+    it("should deny creator user without app-specific permissions for different app", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: ["app_different"]
+        },
+        roles: {
+          "app_different": "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () => builderOrAdmin(ctx, next))
+      threw(ctx.throw, 403, "Workspace Admin/Builder user only endpoint.")
+    })
+
+    it("should allow creator user in worker service without app context", async () => {
+      env._set("SERVICE_TYPE", ServiceType.WORKER)
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId]
+        },
+        roles: {
+          [appId]: "CREATOR"
+        }
+      }
+      const ctx = buildUserCtx(creatorUser)
+      const next = jest.fn()
+
+      await builderOrAdmin(ctx, next)
+      passed(ctx.throw, next)
     })
   })
 })
