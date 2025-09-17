@@ -223,9 +223,11 @@
       }
       if (user.isAppBuilder) {
         await removeAppBuilder(user._id, prodAppId)
+        user = await users.get(user._id)
       }
       if (role === Constants.Roles.CREATOR) {
         await removeAppBuilder(user._id, prodAppId)
+        user = await users.get(user._id)
       }
       await updateAppUser(user, role)
     } catch (error) {
@@ -465,6 +467,7 @@
 
   const addAppBuilder = async userId => {
     await users.addAppBuilder(userId, prodAppId)
+    await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
   const removeAppBuilder = async userId => {
