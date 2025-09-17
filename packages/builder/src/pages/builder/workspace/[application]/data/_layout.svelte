@@ -7,7 +7,7 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
-  import { onMount, onDestroy } from "svelte"
+  import { onMount, onDestroy, setContext } from "svelte"
 
   let searchValue
   let maxWidth = window.innerWidth / 3
@@ -15,6 +15,16 @@
   const updateMaxWidth = () => {
     maxWidth = window.innerWidth / 3
   }
+
+  let gridDispatch = null
+
+  // Function to be called by child components to register grid dispatch
+  const registerGridDispatch = (dispatch) => {
+    gridDispatch = dispatch
+  }
+
+  // Make registerGridDispatch available to child components
+  setContext("data-layout", { registerGridDispatch })
 
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     260,
@@ -24,6 +34,12 @@
         if (element) {
           element.style.width = `${maxWidth}px`
         }
+      }
+    },
+    () => {
+      // Callback for when resize starts - close any open popovers
+      if (gridDispatch) {
+        gridDispatch("close-edit-column", {})
       }
     }
   )
