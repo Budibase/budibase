@@ -1,6 +1,7 @@
 import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
 
 import { accounts as _accounts, events, tenancy } from "@budibase/backend-core"
+import { mocks as featureMocks } from "@budibase/backend-core/tests"
 import * as userSdk from "../../../../sdk/users"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 
@@ -20,8 +21,11 @@ describe("/api/global/users", () => {
     await config.afterAll()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
+    featureMocks.licenses.useCloudFree()
+    await mocks.licenses.setUsersQuota(1000)
+    await mocks.licenses.setCreatorsQuota(1000)
   })
 
   async function createBuilderUser() {
@@ -978,6 +982,135 @@ describe("/api/global/users", () => {
         expect(user.builder).toBeUndefined()
         expect(user.admin).toBeUndefined()
       }
+    })
+  })
+
+  describe("POST /api/global/users/:userId/permission/:role", () => {
+    it("should fail to assign CREATOR role when feature is not enabled", async () => {
+      const user = await config.createUser()
+      const workspaceId = "app_123456789"
+
+      const res = await config.withApp(workspaceId, () =>
+        config.api.users.addUserToWorkspace(
+          user._id!,
+          user._rev!,
+          "CREATOR",
+          400
+        )
+      )
+      expect(res.body.message).toBe("Feature not enabled, please check license")
+    })
+
+    it("should assign CREATOR role and set builder properties", async () => {
+      featureMocks.licenses.useAppBuilders()
+
+      const user = await config.createUser()
+      const workspaceId = "app_123456789"
+
+      await config.withApp(workspaceId, () =>
+        config.api.users.addUserToWorkspace(user._id!, user._rev!, "CREATOR")
+      )
+
+      const updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles[workspaceId]).toBe("CREATOR")
+      expect(updatedUser.builder?.creator).toBe(true)
+      expect(updatedUser.builder?.apps).toEqual([workspaceId])
+    })
+
+    it("should remove CREATOR role and clean up builder properties when no creator apps remain", async () => {
+      mocks.licenses.useAppBuilders()
+      const user = await config.createUser()
+      const workspaceId = "app_123456789"
+
+      // First assign CREATOR role
+      const res = await config.withApp(workspaceId, () =>
+        config.api.users.addUserToWorkspace(user._id!, user._rev!, "CREATOR")
+      )
+      user._rev = res.body._rev
+
+      // Then remove the user from workspace
+      await config.withApp(workspaceId, () =>
+        config.api.users.removeUserFromWorkspace(user._id!, user._rev!)
+      )
+
+      const updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles[workspaceId]).toBeUndefined()
+      expect(updatedUser.builder?.creator).toBeUndefined()
+      expect(updatedUser.builder?.apps).toBeUndefined()
+    })
+
+    it("should maintain builder properties when user has multiple CREATOR roles", async () => {
+      mocks.licenses.useAppBuilders()
+      const user = await config.createUser()
+      const workspaceId1 = "app_111111111"
+      const workspaceId2 = "app_222222222"
+
+      // Assign CREATOR role to two workspaces
+      let res = await config.withApp(workspaceId1, () =>
+        config.api.users.addUserToWorkspace(user._id!, user._rev!, "CREATOR")
+      )
+      user._rev = res.body._rev
+      res = await config.withApp(workspaceId2, () =>
+        config.api.users.addUserToWorkspace(user._id!, user._rev!, "CREATOR")
+      )
+      user._rev = res.body._rev
+
+      let updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles[workspaceId1]).toBe("CREATOR")
+      expect(updatedUser.roles[workspaceId2]).toBe("CREATOR")
+      expect(updatedUser.builder?.creator).toBe(true)
+      expect(updatedUser.builder?.apps).toEqual(
+        expect.arrayContaining([workspaceId1, workspaceId2])
+      )
+
+      // Remove from one workspace
+      await config.withApp(workspaceId1, () =>
+        config.api.users.removeUserFromWorkspace(user._id!, user._rev!)
+      )
+
+      updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles[workspaceId1]).toBeUndefined()
+      expect(updatedUser.roles[workspaceId2]).toBe("CREATOR")
+      expect(updatedUser.builder?.creator).toBe(true)
+      expect(updatedUser.builder?.apps).toEqual([workspaceId2])
+    })
+
+    it("should handle non-CREATOR role assignments without affecting builder properties", async () => {
+      const user = await config.createUser()
+      const workspaceId = "app_123456789"
+
+      const res = await config.withApp(workspaceId, () =>
+        config.api.users.addUserToWorkspace(user._id!, user._rev!, "BASIC")
+      )
+
+      expect(res.body._id).toBe(user._id)
+
+      const updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles[workspaceId]).toBe("BASIC")
+      expect(updatedUser.builder?.creator).toBeUndefined()
+      expect(updatedUser.builder?.apps).toBeUndefined()
+    })
+
+    it("should not allow non-admin users to modify workspace permissions", async () => {
+      const regularUser = await config.createUser()
+      const targetUser = await config.createUser()
+      const workspaceId = "app_123456789"
+
+      await config.login(regularUser)
+
+      const res = await config.withUser(regularUser, () =>
+        config.withApp(workspaceId, () =>
+          config.api.users.addUserToWorkspace(
+            targetUser._id!,
+            targetUser._rev!,
+            "CREATOR",
+            403
+          )
+        )
+      )
+      expect(res.body.message).toBe(
+        "Workspace Admin/Builder user only endpoint."
+      )
     })
   })
 

@@ -243,4 +243,27 @@ export class UserAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(status)
   }
+
+  addUserToWorkspace = (
+    userId: string,
+    _rev: string,
+    role: string,
+    status = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/${userId}/permission/${role}`)
+      .send({ _rev })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  removeUserFromWorkspace = (userId: string, _rev: string, status = 200) => {
+    return this.request
+      .delete(`/api/global/users/${userId}/permission`)
+      .send({ _rev })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
 }

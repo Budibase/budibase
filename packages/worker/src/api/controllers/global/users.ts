@@ -4,6 +4,7 @@ import {
   context,
   db,
   events,
+  HTTPError,
   locks,
   platform,
   tenancy,
@@ -643,6 +644,11 @@ async function handleUserWorkspacePermission(
   userId: string,
   role: string | undefined
 ) {
+  const { _rev } = ctx.request.body
+  if (!_rev) {
+    ctx.throw(400, "rev is required")
+  }
+
   const currentUserId = ctx.user?._id
 
   const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
@@ -660,7 +666,7 @@ async function handleUserWorkspacePermission(
   }
 
   if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
-    throw new Error("Feature not enabled, please check license")
+    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   const appCreator = Object.entries(existingUser.roles)
