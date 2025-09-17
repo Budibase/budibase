@@ -203,11 +203,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: [appId]
+          apps: [appId],
         },
         roles: {
-          [appId]: "CREATOR"
-        }
+          [appId]: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser),
         next = jest.fn()
@@ -221,11 +221,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: ["app_different"]
+          apps: ["app_different"],
         },
         roles: {
-          "app_different": "CREATOR"
-        }
+          app_different: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser),
         next = jest.fn()
@@ -240,11 +240,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: [appId]
+          apps: [appId],
         },
         roles: {
-          [appId]: "CREATOR"
-        }
+          [appId]: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser),
         next = jest.fn()
@@ -346,11 +346,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: [appId]
+          apps: [appId],
         },
         roles: {
-          [appId]: "CREATOR"
-        }
+          [appId]: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser)
       const next = jest.fn()
@@ -364,11 +364,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: ["app_different"]
+          apps: ["app_different"],
         },
         roles: {
-          "app_different": "CREATOR"
-        }
+          app_different: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser)
       const next = jest.fn()
@@ -383,11 +383,11 @@ describe("security middlewares", () => {
         ...basicUser,
         builder: {
           creator: true,
-          apps: [appId]
+          apps: [appId],
         },
         roles: {
-          [appId]: "CREATOR"
-        }
+          [appId]: "CREATOR",
+        },
       }
       const ctx = buildUserCtx(creatorUser)
       const next = jest.fn()
