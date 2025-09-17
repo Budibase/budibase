@@ -192,14 +192,14 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
     })
   },
 
-  addWorkspaceIdToInvite: async (code, appId, role) => {
+  addWorkspaceIdToInvite: async (code, role) => {
     return await API.post<void, UpdateInviteResponse>({
-      url: `/api/global/users/invite/update/${code}/${appId}/${role}`,
+      url: `/api/global/users/invite/${code}/${role}`,
     })
   },
-  removeWorkspaceIdFromInvite: async (code, appId) => {
+  removeWorkspaceIdFromInvite: async code => {
     return await API.delete<void, UpdateInviteResponse>({
-      url: `/api/global/users/invite/update/${code}/${appId}`,
+      url: `/api/global/users/invite/${code}`,
     })
   },
 

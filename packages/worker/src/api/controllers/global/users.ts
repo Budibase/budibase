@@ -1,4 +1,5 @@
 import {
+  utils as backendCoreUtils,
   cache,
   context,
   db,
@@ -505,20 +506,20 @@ export const getUserInvites = async (
 }
 
 export const addWorkspaceIdToInvite = async (
-  ctx: UserCtx<
-    void,
-    UpdateInviteResponse,
-    { code: string; appId: string; role: string }
-  >
+  ctx: UserCtx<void, UpdateInviteResponse, { code: string; role: string }>
 ) => {
-  const { code, appId, role } = ctx.params
+  const { code, role } = ctx.params
 
-  const prodAppId = db.getProdWorkspaceID(appId)
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
     const invite = await cache.invite.getCode(code)
     invite.info.apps ??= {}
-    invite.info.apps[prodAppId] = role
+    invite.info.apps[prodWorkspaceId] = role
 
     await cache.invite.updateCode(code, invite)
     ctx.body = { ...invite }
@@ -528,16 +529,20 @@ export const addWorkspaceIdToInvite = async (
 }
 
 export const removeWorkspaceIdFromInvite = async (
-  ctx: UserCtx<void, UpdateInviteResponse, { code: string; appId: string }>
+  ctx: UserCtx<void, UpdateInviteResponse, { code: string }>
 ) => {
-  const { code, appId } = ctx.params
+  const { code } = ctx.params
 
-  const prodAppId = db.getProdWorkspaceID(appId)
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
     const invite = await cache.invite.getCode(code)
     invite.info.apps ??= {}
-    delete invite.info.apps[prodAppId]
+    delete invite.info.apps[prodWorkspaceId]
 
     await cache.invite.updateCode(code, invite)
     ctx.body = { ...invite }

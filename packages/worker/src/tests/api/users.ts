@@ -228,22 +228,17 @@ export class UserAPI extends TestAPI {
       .expect(status)
   }
 
-  addWorkspaceIdToInvite = (
-    code: string,
-    appId: string,
-    role: string,
-    status = 200
-  ) => {
+  addWorkspaceIdToInvite = (code: string, role: string, status = 200) => {
     return this.request
-      .post(`/api/global/users/invite/update/${code}/${appId}/${role}`)
+      .post(`/api/global/users/invite/${code}/${role}`)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status)
   }
 
-  removeWorkspaceIdFromInvite = (code: string, appId: string, status = 200) => {
+  removeWorkspaceIdFromInvite = (code: string, status = 200) => {
     return this.request
-      .delete(`/api/global/users/invite/update/${code}/${appId}`)
+      .delete(`/api/global/users/invite/${code}`)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status)

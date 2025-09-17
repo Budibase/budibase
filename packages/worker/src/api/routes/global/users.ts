@@ -95,11 +95,11 @@ builderOrAdminRoutes
   .get("/api/global/users/invites", controller.getUserInvites)
   .get("/api/global/users/:id", controller.find)
   .post(
-    "/api/global/users/invite/update/:code/:appId/:role",
+    "/api/global/users/invite/:code/:role",
     controller.addWorkspaceIdToInvite
   )
   .delete(
-    "/api/global/users/invite/update/:code/:appId",
+    "/api/global/users/invite/:code",
     controller.removeWorkspaceIdFromInvite
   )
   .post(
