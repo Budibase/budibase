@@ -1,4 +1,5 @@
 import { UserCtx } from "@budibase/types"
+import env from "../environment"
 import { hasBuilderPermissions, isAdmin, isBuilder } from "../users"
 import { getAppIdFromCtx } from "../utils"
 
@@ -10,7 +11,10 @@ export async function builderOrAdmin(ctx: UserCtx, next: any) {
   const workspaceId = await getAppIdFromCtx(ctx)
   if (!workspaceId && !hasBuilderPermissions(ctx.user)) {
     ctx.throw(403, "Admin/Builder user only endpoint.")
-  } else if (!isBuilder(ctx.user, workspaceId)) {
+  } else if (
+    (workspaceId || env.isApps()) &&
+    !isBuilder(ctx.user, workspaceId)
+  ) {
     ctx.throw(403, "Admin/Builder user only endpoint.")
   }
 
