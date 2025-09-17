@@ -258,9 +258,6 @@
       return
     }
     try {
-      if (group?.builder?.apps.includes(prodAppId)) {
-        await removeGroupAppBuilder(group._id)
-      }
       await updateAppGroup(group, role)
     } catch {
       notifications.error("Group update failed")
@@ -472,10 +469,6 @@
 
   const removeAppBuilder = async userId => {
     await users.removeAppBuilder(userId, $appStore.appId)
-  }
-
-  const removeGroupAppBuilder = async groupId => {
-    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
