@@ -1,8 +1,7 @@
-import { writable, get } from "svelte/store"
-import { derivedMemo } from "@budibase/frontend-core"
-import { screenStore, isGridScreen, componentStore } from "@/stores"
 import { ScreenslotID } from "@/constants"
-import { ComponentDefinition } from "@budibase/types"
+import { componentStore, isGridScreen, screenStore } from "@/stores"
+import { derivedMemo } from "@budibase/frontend-core"
+import { get, writable } from "svelte/store"
 
 interface DNDSource {
   id?: string
@@ -74,18 +73,21 @@ const createDndStore = () => {
     }
 
     // Get size of new component so we can show a properly sized placeholder
-    const definition: ComponentDefinition =
-      componentStore.actions.getComponentDefinition(type)
-    const width = definition?.size?.width || 128
-    const height = definition?.size?.height || 64
+    const definition = componentStore.actions.getComponentDefinition(type)
+    const width =
+      (definition && "size" in definition && definition.size?.width) || 128
+    const height =
+      (definition && "size" in definition && definition.size?.height) || 64
 
     store.set({
       source: {
         bounds: { height, width },
         type,
         isNew: true,
-        name: `New ${definition?.name || "component"}`,
-        icon: definition?.icon || "selection",
+        name: `New ${(definition && "name" in definition && definition.name) || "component"}`,
+        icon:
+          (definition && "icon" in definition && definition.icon) ||
+          "selection",
       },
       target,
       drop,
