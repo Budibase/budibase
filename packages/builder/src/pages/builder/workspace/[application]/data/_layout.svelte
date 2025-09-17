@@ -31,7 +31,7 @@
   let gridDispatch = null
 
   // Function to be called by child components to register grid dispatch
-  const registerGridDispatch = (dispatch) => {
+  const registerGridDispatch = dispatch => {
     gridDispatch = dispatch
   }
 

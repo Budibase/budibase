@@ -42,7 +42,9 @@
   let generateButton: GridGenerateButton
   let grid: Grid
 
-  const dataLayoutContext = getContext("data-layout") as { registerGridDispatch?: (dispatch: (event: string, data: unknown) => void) => void }
+  const dataLayoutContext = getContext("data-layout") as {
+    registerGridDispatch?: Function
+  }
 
   // Register grid dispatch with data layout when grid is ready
   $: if (grid && dataLayoutContext?.registerGridDispatch) {
