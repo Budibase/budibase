@@ -202,21 +202,13 @@
       notifications.error("Application id must be specified")
       return
     }
-    const update = await users.get(user._id)
-    const newRoles = {
-      ...update.roles,
-      [prodAppId]: role,
+
+    if (role) {
+      await users.addUserToWorkspace(user._id, role, user._rev)
+    } else {
+      await users.removeUserFromWorkspace(user._id, user._rev)
     }
-    // make sure no undefined/null roles (during removal)
-    for (let [appId, role] of Object.entries(newRoles)) {
-      if (!role) {
-        delete newRoles[appId]
-      }
-    }
-    await users.save({
-      ...update,
-      roles: newRoles,
-    })
+
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 

@@ -27,6 +27,7 @@ import {
   DeleteInviteUsersRequest,
   DeleteInviteUsersResponse,
   DeleteUserResponse,
+  EditUserPermissionsResponse,
   ErrorCode,
   FetchUsersResponse,
   FindUserResponse,
@@ -617,5 +618,63 @@ export const inviteAccept = async (
     }
     console.warn("Error inviting user", err)
     ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+  }
+}
+
+export const addUserToWorkspace = async (
+  ctx: UserCtx<
+    EditUserPermissionsResponse,
+    SaveUserResponse,
+    { userId: string; role: string }
+  >
+) => {
+  const currentUserId = ctx.user?._id
+  const { role, userId } = ctx.params
+
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+
+  const existingUser = await users.getById(userId)
+  existingUser._rev = ctx.request.body._rev
+  existingUser.roles[prodWorkspaceId] = role
+
+  const user = await userSdk.db.save(existingUser, { currentUserId })
+
+  ctx.body = {
+    _id: user._id!,
+    _rev: user._rev!,
+    email: user.email,
+  }
+}
+
+export const removeUserFromWorkspace = async (
+  ctx: UserCtx<
+    EditUserPermissionsResponse,
+    SaveUserResponse,
+    { userId: string }
+  >
+) => {
+  const currentUserId = ctx.user?._id
+  const { userId } = ctx.params
+
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+
+  const existingUser = await users.getById(userId)
+  existingUser._rev = ctx.request.body._rev
+  delete existingUser.roles[prodWorkspaceId]
+
+  const user = await userSdk.db.save(existingUser, { currentUserId })
+
+  ctx.body = {
+    _id: user._id!,
+    _rev: user._rev!,
+    email: user.email,
   }
 }

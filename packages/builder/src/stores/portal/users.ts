@@ -106,12 +106,20 @@ class UserStore extends BudiStore<UserState> {
     return API.getUserInvites()
   }
 
-  async addWorkspaceIdToInvite(code: string, appId: string, role: string) {
-    return API.addWorkspaceIdToInvite(code, appId, role)
+  async addWorkspaceIdToInvite(code: string, role: string) {
+    return API.addWorkspaceIdToInvite(code, role)
   }
 
-  async removeWorkspaceIdFromInvite(code: string, appId: string) {
-    return API.removeWorkspaceIdFromInvite(code, appId)
+  async removeWorkspaceIdFromInvite(code: string) {
+    return API.removeWorkspaceIdFromInvite(code)
+  }
+
+  async addUserToWorkspace(userId: string, role: string, rev: string) {
+    return API.addUserToWorkspace(userId, role, rev)
+  }
+
+  async removeUserFromWorkspace(userId: string, rev: string) {
+    return API.removeUserFromWorkspace(userId, rev)
   }
 
   async getUserCountByApp(appId: string) {

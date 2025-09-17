@@ -12,6 +12,7 @@ import {
   DeleteInviteUsersRequest,
   DeleteInviteUsersResponse,
   DeleteUserResponse,
+  EditUserPermissionsResponse,
   FetchUsersResponse,
   FindUserResponse,
   GetUserInvitesResponse,
@@ -60,13 +61,18 @@ export interface UserEndpoints {
   ) => Promise<BulkUserCreated | undefined>
   addWorkspaceIdToInvite: (
     code: string,
-    appId: string,
     role: string
   ) => Promise<UpdateInviteResponse>
-  removeWorkspaceIdFromInvite: (
-    code: string,
-    appId: string
-  ) => Promise<UpdateInviteResponse>
+  removeWorkspaceIdFromInvite: (code: string) => Promise<UpdateInviteResponse>
+  addUserToWorkspace: (
+    userId: string,
+    role: string,
+    rev: string
+  ) => Promise<SaveUserResponse>
+  removeUserFromWorkspace: (
+    userId: string,
+    rev: string
+  ) => Promise<SaveUserResponse>
 
   // Missing request or response types
   addAppBuilder: (userId: string, appId: string) => Promise<{ message: string }>
@@ -200,6 +206,23 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
   removeWorkspaceIdFromInvite: async code => {
     return await API.delete<void, UpdateInviteResponse>({
       url: `/api/global/users/invite/${code}`,
+    })
+  },
+
+  addUserToWorkspace: async (userId, role, rev) => {
+    return await API.post<EditUserPermissionsResponse, SaveUserResponse>({
+      url: `/api/global/users/${userId}/permission/${role}`,
+      body: {
+        _rev: rev,
+      },
+    })
+  },
+  removeUserFromWorkspace: async (userId, rev) => {
+    return await API.delete<EditUserPermissionsResponse, SaveUserResponse>({
+      url: `/api/global/users/${userId}/permission`,
+      body: {
+        _rev: rev,
+      },
     })
   },
 

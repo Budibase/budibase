@@ -15,6 +15,10 @@ export interface InviteWithCode extends Invite {
   code: string
 }
 
+export interface EditUserPermissionsResponse {
+  _rev: string
+}
+
 export interface SaveUserResponse {
   _id: string
   _rev: string

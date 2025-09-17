@@ -107,6 +107,14 @@ builderOrAdminRoutes
     buildInviteMultipleValidation(),
     controller.onboardUsers
   )
+  .post(
+    "/api/global/users/:userId/permission/:role",
+    controller.addUserToWorkspace
+  )
+  .delete(
+    "/api/global/users/:userId/permission",
+    controller.removeUserFromWorkspace
+  )
 
 adminRoutes
   .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
