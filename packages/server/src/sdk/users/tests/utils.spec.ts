@@ -9,9 +9,13 @@ import { rawUserMetadata, syncGlobalUsers } from "../utils"
 describe("syncGlobalUsers", () => {
   const config = new TestConfiguration()
 
-  beforeEach(async () => {
-    tk.reset()
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
+    await config.newTenant()
+    tk.reset()
   })
 
   afterAll(config.end)
