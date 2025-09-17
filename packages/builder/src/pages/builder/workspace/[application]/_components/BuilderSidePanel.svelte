@@ -466,12 +466,12 @@
   }
 
   const addAppBuilder = async userId => {
-    await users.addAppBuilder(userId, prodAppId)
+    await users.addAppBuilder(userId, $appStore.appId)
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
   const removeAppBuilder = async userId => {
-    await users.removeAppBuilder(userId, prodAppId)
+    await users.removeAppBuilder(userId, $appStore.appId)
   }
 
   const removeGroupAppBuilder = async groupId => {
