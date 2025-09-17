@@ -102,14 +102,14 @@ builderOrAdminRoutes
     "/api/global/users/invite/update/:code/:appId",
     controller.removeWorkspaceIdFromInvite
   )
-
-adminRoutes
-  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
   .post(
     "/api/global/users/onboard",
     buildInviteMultipleValidation(),
     controller.onboardUsers
   )
+
+adminRoutes
+  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
   .post(
     "/api/global/users/multi/invite",
     buildInviteMultipleValidation(),
