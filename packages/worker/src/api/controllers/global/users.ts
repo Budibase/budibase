@@ -513,10 +513,12 @@ export const addWorkspaceIdToInvite = async (
 ) => {
   const { code, appId, role } = ctx.params
 
+  const prodAppId = db.getProdWorkspaceID(appId)
+
   try {
     const invite = await cache.invite.getCode(code)
     invite.info.apps ??= {}
-    invite.info.apps[appId] = role
+    invite.info.apps[prodAppId] = role
 
     await cache.invite.updateCode(code, invite)
     ctx.body = { ...invite }
@@ -530,10 +532,12 @@ export const removeWorkspaceIdFromInvite = async (
 ) => {
   const { code, appId } = ctx.params
 
+  const prodAppId = db.getProdWorkspaceID(appId)
+
   try {
     const invite = await cache.invite.getCode(code)
     invite.info.apps ??= {}
-    delete invite.info.apps[appId]
+    delete invite.info.apps[prodAppId]
 
     await cache.invite.updateCode(code, invite)
     ctx.body = { ...invite }

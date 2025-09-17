@@ -455,7 +455,7 @@
 
   const onUpdateUserInvite = async (invite, role) => {
     try {
-      await users.addWorkspaceIdToInvite(invite.code, prodAppId, role)
+      await users.addWorkspaceIdToInvite(invite.code, $appStore.appId, role)
       await filterInvites(query)
     } catch (err) {
       notifications.error("Error editing invite")
@@ -464,7 +464,7 @@
 
   const onUninviteAppUser = async invite => {
     try {
-      await users.removeWorkspaceIdFromInvite(invite.code, prodAppId)
+      await users.removeWorkspaceIdFromInvite(invite.code, $appStore.appId)
       await filterInvites(query)
     } catch (err) {
       notifications.error("Error editing invite")
