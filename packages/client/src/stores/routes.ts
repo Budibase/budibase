@@ -82,7 +82,12 @@ const createRouteStore = () => {
       return state
     })
   }
-  const navigate = (url: string, peek: boolean, externalNewTab: boolean) => {
+  const navigate = (
+    url: string,
+    peek: boolean,
+    externalNewTab: boolean,
+    options?: { fullscreenText?: string; closeText?: string }
+  ) => {
     if (get(builderStore).inBuilder) {
       return
     }
@@ -91,7 +96,7 @@ const createRouteStore = () => {
       const isPeeking = get(store).queryParams?.peek
       const external = !url.startsWith("/")
       if (peek && !isPeeking && !external) {
-        peekStore.actions.showPeek(url)
+        peekStore.actions.showPeek(url, options)
       } else if (external) {
         if (url.startsWith("www")) {
           url = `https://${url}`

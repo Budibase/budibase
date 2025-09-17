@@ -110,10 +110,10 @@
         icon="arrow-square-out"
         on:click={handleFullscreen}
       >
-        Full screen
+        {$peekStore.fullscreenText}
       </ActionButton>
       <ActionButton size="S" quiet icon="x" on:click={handleCancel}>
-        Close
+        {$peekStore.closeText}
       </ActionButton>
     </div>
     <ModalContent

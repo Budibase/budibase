@@ -50,6 +50,30 @@
     />
     <div />
     <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+    {#if parameters.peek}
+      <DrawerBindableInput
+        title="Full screen button text"
+        placeholder="Full screen"
+        value={parameters.fullscreenText}
+        on:change={value => {
+          parameters.fullscreenText = value.detail
+            ? value.detail.trim()
+            : value.detail
+        }}
+        {bindings}
+      />
+      <DrawerBindableInput
+        title="Close button text"
+        placeholder="Close"
+        value={parameters.closeText}
+        on:change={value => {
+          parameters.closeText = value.detail
+            ? value.detail.trim()
+            : value.detail
+        }}
+        {bindings}
+      />
+    {/if}
   {:else}
     <DrawerBindableInput
       title="Destination"
