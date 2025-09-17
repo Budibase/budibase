@@ -114,6 +114,220 @@ describe("/api/global/users", () => {
     })
   })
 
+  describe("POST /api/global/users/invite/update/:code/:appId/:role", () => {
+    it("should be able to add workspace id to invite", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      const res = await config.api.users.addWorkspaceIdToInvite(
+        code,
+        appId,
+        role
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBe(role)
+    })
+
+    it("should handle invalid invite code", async () => {
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      await config.api.users.addWorkspaceIdToInvite(
+        "invalid_code",
+        appId,
+        role,
+        400
+      )
+    })
+
+    it("should not allow builders to edit invites for apps they don't have access to", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+
+      // Create a builder user with access to another app
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: {
+          global: false,
+          apps: ["app_allowed_123"],
+        },
+        admin: { global: false },
+      })
+
+      await config.withUser(builderUser, () =>
+        config.api.users.addWorkspaceIdToInvite(
+          code,
+          "app_no_access",
+          "BASIC",
+          403
+        )
+      )
+    })
+
+    it("should allow builders to edit invites for apps they have access to", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+      const appId = "app_allowed_123"
+      const role = "BASIC"
+
+      // Create a builder user with access to the specific app
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: {
+          global: false,
+          apps: [appId], // Has access to this specific app
+        },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      const res = await config.withUser(builderUser, () =>
+        config.api.users.addWorkspaceIdToInvite(code, appId, role, 200)
+      )
+      expect(res.body.info.apps[appId]).toBe(role)
+    })
+
+    it("should allow global builders to edit invites for any app", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+      const appId = "app_any_123"
+      const role = "BASIC"
+
+      // Create a global builder user
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: {
+          global: true,
+        },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      const res = await config.withUser(builderUser, async () =>
+        config.api.users.addWorkspaceIdToInvite(code, appId, role, 200)
+      )
+      expect(res.body.info.apps[appId]).toBe(role)
+    })
+  })
+
+  describe("DELETE /api/global/users/invite/update/:code/:appId", () => {
+    it("should be able to remove workspace id from invite", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_123456789"
+      const role = "BASIC"
+
+      // First add the workspace
+      await config.api.users.addWorkspaceIdToInvite(code, appId, role)
+
+      // Then remove it
+      const res = await config.api.users.removeWorkspaceIdFromInvite(
+        code,
+        appId
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBeUndefined()
+    })
+
+    it("should handle removing non-existent workspace id", async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      const appId = "app_nonexistent"
+
+      const res = await config.api.users.removeWorkspaceIdFromInvite(
+        code,
+        appId
+      )
+
+      expect(res.body.info.apps).toBeDefined()
+      expect(res.body.info.apps[appId]).toBeUndefined()
+    })
+
+    it("should handle invalid invite code", async () => {
+      const appId = "app_123456789"
+
+      await config.api.users.removeWorkspaceIdFromInvite(
+        "invalid_code",
+        appId,
+        400
+      )
+    })
+
+    it("should not allow builders to delete invites for apps they don't have access to", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+      const appId = "app_no_access"
+      const role = "BASIC"
+
+      // First add the workspace as admin
+      await config.api.users.addWorkspaceIdToInvite(code, appId, role)
+
+      // Create a builder user with specific app access
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: {
+          global: false,
+          apps: ["app_allowed_123"], // Different app than the one being tested
+        },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      await config.withUser(builderUser, () =>
+        config.api.users.removeWorkspaceIdFromInvite(code, appId, 403)
+      )
+    })
+
+    it("should allow builders to delete invites for apps they have access to", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+      const appId = "app_allowed_456"
+      const role = "BASIC"
+
+      // First add the workspace as admin
+      await config.api.users.addWorkspaceIdToInvite(code, appId, role)
+
+      // Create a builder user with access to the specific app
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: {
+          global: false,
+          apps: [appId], // Has access to this specific app
+        },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      const res = await config.withUser(builderUser, () =>
+        config.api.users.removeWorkspaceIdFromInvite(code, appId, 200)
+      )
+      expect(res.body.info.apps[appId]).toBeUndefined()
+    })
+  })
+
   describe("POST /api/global/users/multi/invite", () => {
     it("should be able to generate an invitation", async () => {
       const newUserInvite = () => ({

@@ -102,6 +102,14 @@ builderOrAdminRoutes
   .get("/api/global/users/count/:appId", controller.countByApp)
   .get("/api/global/users/invites", controller.getUserInvites)
   .get("/api/global/users/:id", controller.find)
+  .post(
+    "/api/global/users/invite/update/:code/:appId/:role",
+    controller.addWorkspaceIdToInvite
+  )
+  .delete(
+    "/api/global/users/invite/update/:code/:appId",
+    controller.removeWorkspaceIdFromInvite
+  )
 
 adminRoutes
   .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
@@ -119,7 +127,6 @@ adminRoutes
     "/api/global/users/multi/invite/delete",
     controller.removeMultipleInvites
   )
-  .post("/api/global/users/invite/update/:code", controller.updateInvite)
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column

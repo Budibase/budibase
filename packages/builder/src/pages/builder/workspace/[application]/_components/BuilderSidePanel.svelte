@@ -1,46 +1,46 @@
 <script>
-  import {
-    Icon,
-    Divider,
-    Heading,
-    Layout,
-    Input,
-    clickOutside,
-    notifications,
-    CopyInput,
-    Modal,
-    FancyForm,
-    FancyInput,
-    Button,
-    FancySelect,
-  } from "@budibase/bbui"
-  import {
-    builderStore,
-    appStore,
-    roles,
-    deploymentStore,
-  } from "@/stores/builder"
-  import {
-    groups,
-    licensing,
-    appsStore,
-    users,
-    auth,
-    admin,
-  } from "@/stores/portal"
-  import {
-    fetchData,
-    Constants,
-    Utils,
-    RoleUtils,
-    emailValidator,
-  } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
   import { API } from "@/api"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import {
+    appStore,
+    builderStore,
+    deploymentStore,
+    roles,
+  } from "@/stores/builder"
+  import {
+    admin,
+    appsStore,
+    auth,
+    groups,
+    licensing,
+    users,
+  } from "@/stores/portal"
+  import {
+    Button,
+    CopyInput,
+    Divider,
+    FancyForm,
+    FancyInput,
+    FancySelect,
+    Heading,
+    Icon,
+    Input,
+    Layout,
+    Modal,
+    clickOutside,
+    notifications,
+  } from "@budibase/bbui"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    emailValidator,
+    fetchData,
+  } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
   import { fly } from "svelte/transition"
+  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
@@ -454,36 +454,21 @@
   }
 
   const onUpdateUserInvite = async (invite, role) => {
-    let updateBody = {
-      apps: {
-        ...invite.apps,
-        [prodAppId]: role,
-      },
+    try {
+      await users.addWorkspaceIdToInvite(invite.code, prodAppId, role)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
     }
-    if (role === Constants.Roles.CREATOR) {
-      updateBody.builder = updateBody.builder || {}
-      updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
-      delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
-      invite.builder.apps = []
-    }
-    await users.updateInvite(invite.code, updateBody)
-    await filterInvites(query)
   }
 
   const onUninviteAppUser = async invite => {
-    await uninviteAppUser(invite)
-    await filterInvites(query)
-  }
-
-  // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async invite => {
-    let updated = { ...invite }
-    delete updated.info.apps[prodAppId]
-
-    return await users.updateInvite(updated.code, {
-      apps: updated.apps,
-    })
+    try {
+      await users.removeWorkspaceIdFromInvite(invite.code, prodAppId)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
+    }
   }
 
   const addAppBuilder = async userId => {

@@ -22,7 +22,6 @@ import {
   SearchUsersRequest,
   SearchUsersResponse,
   UnsavedUser,
-  UpdateInviteRequest,
   UpdateInviteResponse,
   UpdateSelfMetadataRequest,
   UpdateSelfMetadataResponse,
@@ -59,9 +58,14 @@ export interface UserEndpoints {
     users: UnsavedUser[],
     groups: any[]
   ) => Promise<BulkUserCreated | undefined>
-  updateUserInvite: (
+  addWorkspaceIdToInvite: (
     code: string,
-    data: UpdateInviteRequest
+    appId: string,
+    role: string
+  ) => Promise<UpdateInviteResponse>
+  removeWorkspaceIdFromInvite: (
+    code: string,
+    appId: string
   ) => Promise<UpdateInviteResponse>
 
   // Missing request or response types
@@ -188,14 +192,14 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
     })
   },
 
-  /**
-   * Accepts a user invite as a body and will update the associated app roles.
-   * for an existing invite
-   */
-  updateUserInvite: async (code, data) => {
-    return await API.post<UpdateInviteRequest, UpdateInviteResponse>({
-      url: `/api/global/users/invite/update/${code}`,
-      body: data,
+  addWorkspaceIdToInvite: async (code, appId, role) => {
+    return await API.post<void, UpdateInviteResponse>({
+      url: `/api/global/users/invite/update/${code}/${appId}/${role}`,
+    })
+  },
+  removeWorkspaceIdFromInvite: async (code, appId) => {
+    return await API.delete<void, UpdateInviteResponse>({
+      url: `/api/global/users/invite/update/${code}/${appId}`,
     })
   },
 
