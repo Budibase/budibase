@@ -44,14 +44,6 @@ function buildInviteMultipleValidation() {
   ))
 }
 
-const createUserAdminOnly = (ctx: any, next: any) => {
-  if (!ctx.request.body._id) {
-    return auth.adminOnly(ctx, next)
-  } else {
-    return auth.builderOrAdmin(ctx, next)
-  }
-}
-
 function buildInviteAcceptValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
@@ -127,16 +119,11 @@ adminRoutes
     "/api/global/users/multi/invite/delete",
     controller.removeMultipleInvites
   )
+  .post("/api/global/users", users.buildUserSaveValidation(), controller.save)
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column
   .post("/api/global/users/search", controller.search)
-  .post(
-    "/api/global/users",
-    createUserAdminOnly,
-    users.buildUserSaveValidation(),
-    controller.save
-  )
   // non-global endpoints
   .get("/api/global/users/invite/:code", controller.checkInvite)
   .post(
