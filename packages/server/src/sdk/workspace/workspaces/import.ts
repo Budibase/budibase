@@ -31,7 +31,7 @@ async function getNewAppMetadata(
   appDb: Database
 ): Promise<Workspace> {
   // static doc denoting app information
-  const docId = DocumentType.APP_METADATA
+  const docId = DocumentType.WORKSPACE_METADATA
   try {
     const [tempMetadata, appMetadata] = await Promise.all([
       tempDb.get<Workspace>(docId),

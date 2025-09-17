@@ -1,12 +1,12 @@
 import { DeploymentDoc, DeploymentStatus } from "../../../documents"
 
-export interface PublishAppRequest {
+export interface PublishWorkspaceRequest {
   automationIds?: string[]
   workspaceAppIds?: string[]
   seedProductionTables?: boolean
 }
 
-export interface PublishAppResponse extends DeploymentDoc {}
+export interface PublishWorkspaceResponse extends DeploymentDoc {}
 
 export enum PublishResourceState {
   PUBLISHED = "published",

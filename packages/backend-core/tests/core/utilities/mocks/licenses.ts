@@ -72,7 +72,7 @@ const useFeature = (feature: Feature, extra?: Partial<UseLicenseOpts>) => {
 }
 
 export const useBackups = () => {
-  return useFeature(Feature.APP_BACKUPS)
+  return useFeature(Feature.WORKSPACE_BACKUPS)
 }
 
 export const useEnforceableSSO = () => {

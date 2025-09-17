@@ -73,7 +73,7 @@ export async function save(
       })
 
     // Update the app metadata
-    const application = await db.get<any>(DocumentType.APP_METADATA)
+    const application = await db.get<any>(DocumentType.WORKSPACE_METADATA)
     let usedPlugins = application.usedPlugins || []
 
     requiredPlugins.forEach((plugin: Plugin) => {

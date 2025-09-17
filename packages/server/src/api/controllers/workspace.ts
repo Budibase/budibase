@@ -16,33 +16,33 @@ import {
 import { groups, licensing, quotas } from "@budibase/pro"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import {
-  AddAppSampleDataResponse,
+  AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
   BBRequest,
-  CreateAppRequest,
-  CreateAppResponse,
+  CreateWorkspaceRequest,
+  CreateWorkspaceResponse,
   Database,
-  DeleteAppResponse,
-  DuplicateAppRequest,
-  DuplicateAppResponse,
+  DeleteWorkspaceResponse,
+  DuplicateWorkspaceRequest,
+  DuplicateWorkspaceResponse,
   ErrorCode,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
-  FetchAppsResponse,
   FetchPublishedAppsResponse,
+  FetchWorkspacesResponse,
   FieldType,
-  ImportToUpdateAppRequest,
-  ImportToUpdateAppResponse,
+  ImportToUpdateWorkspaceRequest,
+  ImportToUpdateWorkspaceResponse,
   Layout,
   PlanType,
   RevertAppClientResponse,
   Row,
   Screen,
-  SyncAppResponse,
-  UnpublishAppResponse,
+  SyncWorkspaceResponse,
+  UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
+  UpdateWorkspaceRequest,
+  UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -80,6 +80,8 @@ import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
+
+const DEFAULT_WORKSPACE_NAME = "Default workspace"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -183,13 +185,12 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createDefaultWorkspaceApp(): Promise<string> {
-  const appMetadata = await sdk.applications.metadata.get()
+async function createDefaultWorkspaceApp(name: string): Promise<string> {
   const workspaceApp = await sdk.workspaceApps.create({
-    name: appMetadata.name,
+    name: name,
     url: "/",
     navigation: {
-      ...defaultAppNavigator(appMetadata.name),
+      ...defaultAppNavigator(name),
       links: [],
     },
     disabled: true,
@@ -222,13 +223,13 @@ async function addSampleDataScreen() {
 }
 
 export const addSampleData = async (
-  ctx: UserCtx<void, AddAppSampleDataResponse>
+  ctx: UserCtx<void, AddWorkspaceSampleDataResponse>
 ) => {
   await addSampleDataDocs()
   ctx.body = { message: "Sample tables added." }
 }
 
-export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
+export async function fetch(ctx: UserCtx<void, FetchWorkspacesResponse>) {
   const apps = await sdk.applications.fetch(
     ctx.query.status as WorkspaceStatus,
     ctx.user
@@ -355,7 +356,7 @@ export async function fetchAppPackage(
 }
 
 async function performAppCreate(
-  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -410,13 +411,13 @@ async function performAppCreate(
     }
 
     let newApplication: Workspace = {
-      _id: DocumentType.APP_METADATA,
+      _id: DocumentType.WORKSPACE_METADATA,
       _rev: undefined,
       appId: workspaceId,
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: name,
+      name: isOnboarding ? DEFAULT_WORKSPACE_NAME : name,
       url: appUrl,
       template: templateKey,
       instance,
@@ -486,7 +487,7 @@ async function performAppCreate(
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
       try {
-        await createDefaultWorkspaceApp()
+        await createDefaultWorkspaceApp(name)
         await addSampleDataDocs()
         await addSampleDataScreen()
 
@@ -594,7 +595,7 @@ async function updateUserColumns(
 }
 
 async function creationEvents(
-  request: BBRequest<CreateAppRequest>,
+  request: BBRequest<CreateWorkspaceRequest>,
   app: Workspace
 ) {
   let creationFns: ((app: Workspace) => Promise<void>)[] = []
@@ -628,7 +629,7 @@ async function creationEvents(
 }
 
 async function appPostCreate(
-  ctx: UserCtx<CreateAppRequest, Workspace>,
+  ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
   app: Workspace
 ) {
   await creationEvents(ctx.request, app)
@@ -663,7 +664,7 @@ async function appPostCreate(
 }
 
 export async function create(
-  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
@@ -678,7 +679,7 @@ export async function find(ctx: UserCtx) {
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
-  ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
+  ctx: UserCtx<UpdateWorkspaceRequest, UpdateWorkspaceResponse>
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -843,14 +844,16 @@ async function postDestroyApp(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteWorkspaceResponse>) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)
   ctx.body = result
 }
 
-export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
+export async function unpublish(
+  ctx: UserCtx<void, UnpublishWorkspaceResponse>
+) {
   const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
@@ -868,7 +871,7 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
   ctx.body = { message: "App unpublished." }
 }
 
-export async function sync(ctx: UserCtx<void, SyncAppResponse>) {
+export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   const appId = ctx.params.appId
   try {
     ctx.body = await sdk.applications.syncApp(appId)
@@ -878,7 +881,7 @@ export async function sync(ctx: UserCtx<void, SyncAppResponse>) {
 }
 
 export async function importToApp(
-  ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
+  ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
   const { appId } = ctx.params
   const appExport = ctx.request.files?.appExport
@@ -906,7 +909,7 @@ export async function importToApp(
  * Performs an export of the app, then imports from the export dir path
  */
 export async function duplicateApp(
-  ctx: UserCtx<DuplicateAppRequest, DuplicateAppResponse>
+  ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
   const { name: appName, url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
@@ -929,7 +932,7 @@ export async function duplicateApp(
     tar: false,
   })
 
-  const createRequestBody: CreateAppRequest = {
+  const createRequestBody: CreateWorkspaceRequest = {
     name: appName,
     url: possibleUrl,
     useTemplate: "true",
@@ -949,7 +952,7 @@ export async function duplicateApp(
     request: {
       body: createRequestBody,
     },
-  } as UserCtx<CreateAppRequest, Workspace>
+  } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
   await create(createRequest)

@@ -41,9 +41,9 @@ export async function getAllDbs(opts = { efficient: false }) {
     await addDbs()
   } else {
     // get prod workspaces
-    await addDbs(getStartEndKeyURL(DocumentType.APP, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE, tenantId))
     // get dev workspaces
-    await addDbs(getStartEndKeyURL(DocumentType.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.WORKSPACE_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
@@ -91,7 +91,7 @@ export async function getAllWorkspaces({
 
     const split = dbName.split(SEPARATOR)
     // it is an workspace, check the tenantId
-    if (split[0] === DocumentType.APP) {
+    if (split[0] === DocumentType.WORKSPACE) {
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
 
