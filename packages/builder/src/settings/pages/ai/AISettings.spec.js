@@ -46,7 +46,7 @@ vi.mock("@/stores/portal", () => {
 })
 
 function setupEnv(hosting, features = {}, flags = {}) {
-  admin.set({ cloud: hosting === Hosting.Cloud })
+  admin.set({ cloud: hosting === Hosting.CLOUD })
   licensing.set({ ...defaultFeatures, ...features })
   featureFlags.set({ ...defaultFlags, ...flags })
 }
@@ -62,7 +62,7 @@ describe("AISettings", () => {
   }
 
   beforeEach(() => {
-    setupEnv(Hosting.Self)
+    setupEnv(Hosting.SELF)
   })
 
   afterEach(() => {
