@@ -2,6 +2,7 @@
   import {
     Body,
     Button,
+    ActionButton,
     Heading,
     Icon,
     Input,
@@ -84,6 +85,9 @@
   let panelView: "tools" | "toolConfig" = "tools"
   let toolConfig: Record<string, string> = {}
   let toolConfigChanged = false
+  const handlePlusClick = () => {
+    console.log("Textarea plus icon clicked")
+  }
 
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
@@ -485,78 +489,98 @@
           placeholder="Ask anything"
           disabled={loading}
         />
-      </div>
-    </div>
-  </div>
-
-  <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
-    <NavHeader
-      slot="panel-title-content"
-      title="Tools"
-      onAdd={toolSourceModal?.show}
-      searchable={false}
-      showAddIcon={panelView === "tools"}
-    >
-      {#if panelView === "tools"}
-        <Body size="S">Tools</Body>
-      {:else}
-        <div class="tool-config-header">
-          <Icon
-            name="BackAndroid"
-            size="XS"
-            hoverable
-            on:click={backToToolsList}
-          />
-          <svelte:component
-            this={Logos[selectedConfigToolSource.type]}
-            height="16"
-            width="16"
-          />
-          <Body size="S">
-            {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
-              ?.name}
+      {/each}
+      {#if !chatHistory.length}
+        <div class="empty-state">
+          <div class="icon-wrapper">
+            <Icon
+              name="Chat"
+              weight="fill"
+              size="XS"
+              color="var(--spectrum-global-color-gray-300)"
+            />
+            <Icon
+              name="Chat"
+              weight="fill"
+              size="M"
+              color="var(--spectrum-global-color-gray-500)"
+            />
+            <Icon
+              name="Chat"
+              weight="fill"
+              size="XL"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+            <Icon
+              name="Chat"
+              weight="fill"
+              size="M"
+              color="var(--spectrum-global-color-gray-500)"
+            />
+            <Icon
+              name="Chat"
+              weight="fill"
+              size="XS"
+              color="var(--spectrum-global-color-gray-300)"
+            />
+          </div>
+          <Body size="S" color="var(--spectrum-global-color-gray-800)">
+            No chat history yet.<br />
+            Start a new conversation!
           </Body>
         </div>
       {/if}
-      <div slot="right" style="display:contents;">
-        {#if panelView === "toolConfig"}
-          <Button
-            cta
-            size="S"
-            on:click={saveToolConfig}
-            disabled={!toolConfigChanged}>Save</Button
-          >
-        {/if}
-      </div>
-    </NavHeader>
-    {#if panelView === "tools"}
-      <Layout paddingX="L" paddingY="none" gap="S">
-        <InfoDisplay
-          body="Add tools to give your agent knowledge and allow it to take
-                action"
-        />
-        {#if toolSources.length > 0}
-          <div class="saved-tools-list">
-            {#each toolSources as toolSource}
-              {@const menuCallback = createToolMenuCallback(toolSource)}
-              <NavItem
-                text={ToolSources.find(ts => ts.type === toolSource.type)
-                  ?.name || ""}
-                on:click={() => openToolsConfig(toolSource)}
-                on:contextmenu={menuCallback}
-              >
-                <div class="tool-icon" slot="icon">
-                  <svelte:component
-                    this={Logos[toolSource.type]}
-                    height="16"
-                    width="16"
-                  />
-                </div>
-                <Icon on:click={menuCallback} hoverable name="MoreSmallList" />
-                <Icon size="S" name="ChevronRight" slot="right" />
-              </NavItem>
-            {/each}
+    </Panel>
+
+    <div class="chat-wrapper">
+      <div class="chat-area" bind:this={chatAreaElement}>
+        <Chatbox bind:chat {loading} />
+        <div class="textbox-wrapper">
+          <div class="textbox-container">
+            <div class="primary-container" id="primary">
+              <textarea
+                autofocus
+                bind:value={inputValue}
+                bind:this={textareaElement}
+                class="input spectrum-Textfield-input"
+                on:keydown={handleKeyDown}
+                placeholder="How can I help you today?"
+                disabled={loading}
+              />
+            </div>
+            <div class="leading-container" id="leading">
+              <ActionButton on:click={handlePlusClick} quiet icon="plus"
+              ></ActionButton>
+            </div>
+            <div class="footer-container" id="footer">
+              <ActionButton on:click={handlePlusClick} quiet icon="sparkle">
+                Agent
+              </ActionButton>
+              <Icon name="caret-down" size="XS" hoverable />
+            </div>
+            <div class="trailing-container" id="trailing">
+              <ActionButton on:click={handlePlusClick} quiet icon="microphone"
+              ></ActionButton>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
+      <NavHeader
+        slot="panel-title-content"
+        title="Tools"
+        onAdd={toolSourceModal?.show}
+        searchable={false}
+        showAddIcon={panelView === "tools"}
+      >
+        {#if panelView === "tools"}
+          <Body
+            size="M"
+            weight="500"
+            color="var(--spectrum-global-color-gray-900)">Tools</Body
+          >
         {:else}
           <div class="empty-state">
             <Body size="S">
@@ -566,17 +590,106 @@
             </Body>
           </div>
         {/if}
-      </Layout>
-    {:else if panelView === "toolConfig"}
-      <Layout paddingX="L" paddingY="L" gap="S">
-        {#if selectedConfigToolSource?.tools}
-          <div class="tools-list">
-            {#each selectedConfigToolSource.tools as tool}
-              <div class="tool-toggle-item">
-                <div class="tool-toggle-info">
-                  <div class="tool-toggle-name">{tool.name}</div>
-                  <div class="tool-toggle-description">
-                    {tool.description}
+        <div slot="right" style="display:contents;">
+          {#if panelView === "toolConfig"}
+            <Button
+              cta
+              size="S"
+              on:click={saveToolConfig}
+              disabled={!toolConfigChanged}>Save</Button
+            >
+          {/if}
+        </div>
+      </NavHeader>
+      {#if panelView === "tools"}
+        <Layout paddingX="none" paddingY="none" gap="S">
+          {#if toolSources.length > 0}
+            <div class="saved-tools-list">
+              {#each toolSources as toolSource}
+                {@const menuCallback = createToolMenuCallback(toolSource)}
+                <NavItem
+                  text={ToolSources.find(ts => ts.type === toolSource.type)
+                    ?.name || ""}
+                  on:click={() => openToolsConfig(toolSource)}
+                  on:contextmenu={menuCallback}
+                >
+                  <div class="tool-icon" slot="icon">
+                    <svelte:component
+                      this={Logos[toolSource.type]}
+                      height="16"
+                      width="16"
+                    />
+                  </div>
+                  <Icon
+                    on:click={menuCallback}
+                    hoverable
+                    name="MoreSmallList"
+                  />
+                  <Icon size="S" name="ChevronRight" slot="right" />
+                </NavItem>
+              {/each}
+            </div>
+          {:else}
+            <div class="empty-state">
+              <div class="icon-wrapper">
+                <Icon
+                  name="google-logo"
+                  weight="fill"
+                  size="XS"
+                  color="var(--spectrum-global-color-gray-300)"
+                />
+                <Icon
+                  name="github-logo"
+                  weight="fill"
+                  size="M"
+                  color="var(--spectrum-global-color-gray-500)"
+                />
+                <Icon
+                  name="webhooks-logo"
+                  weight="fill"
+                  size="XL"
+                  color="var(--spectrum-global-color-gray-700)"
+                />
+                <Icon
+                  name="slack-logo"
+                  weight="fill"
+                  size="M"
+                  color="var(--spectrum-global-color-gray-500)"
+                />
+                <Icon
+                  name="discord-logo"
+                  weight="fill"
+                  size="XS"
+                  color="var(--spectrum-global-color-gray-300)"
+                />
+              </div>
+              <Body size="S">
+                No tools connected yet.
+                <br />
+                Click "Add Tools" to get started!
+              </Body>
+            </div>
+          {/if}
+        </Layout>
+      {:else if panelView === "toolConfig"}
+        <Layout paddingX="L" paddingY="L" gap="S">
+          {#if selectedConfigToolSource?.tools}
+            <div class="tools-list">
+              {#each selectedConfigToolSource.tools as tool}
+                <div class="tool-toggle-item">
+                  <div class="tool-toggle-info">
+                    <div class="tool-toggle-name">{tool.name}</div>
+                    <div class="tool-toggle-description">
+                      {tool.description}
+                    </div>
+                  </div>
+                  <div class="tool-toggle-switch">
+                    <Toggle
+                      value={!selectedConfigToolSource.disabledTools?.includes(
+                        tool.name
+                      )}
+                      on:change={() => toggleTool(tool.name)}
+                    />
                   </div>
                 </div>
                 <div class="tool-toggle-switch">
@@ -842,35 +955,82 @@
     justify-content: center;
   }
 
-  .input-wrapper {
+  .textbox-wrapper {
     position: sticky;
     bottom: 0;
-    width: 600px;
     margin: 0 auto;
-    background: var(--background-alt);
-    padding-bottom: 32px;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 20px;
+    width: 725px;
   }
 
+  .textbox-container {
+    display: grid;
+    grid-template-areas:
+      "primary primary primary"
+      "leading footer trailing";
+    grid-template-columns: auto 1fr auto;
+    padding: 10px;
+    font-size: 15px;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: white;
+    border-radius: 24px;
+    box-shadow: var(--spectrum-global-color-gray-300) 0px 0px 0px 1px inset;
+  }
+
+  .primary-container {
+    grid-area: primary;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+  .leading-container {
+    grid-area: leading;
+    transform: none;
+    transform-origin: 50% 50% 0px;
+  }
+  .footer-container {
+    grid-area: footer;
+    min-width: fit-content;
+    display: flex;
+  }
+  .trailing-container {
+    grid-area: trailing;
+  }
   textarea {
+    grid-area: primary;
     width: 100%;
-    height: 100px;
     top: 0;
     resize: none;
-    padding: 20px;
     font-size: 16px;
-    background-color: var(--grey-3);
-    color: var(--grey-9);
-    border-radius: 16px;
-    border: none;
-    outline: none;
-    min-height: 100px;
-    margin-bottom: 8px;
+    background-color: transparent;
+    color: white;
+    cursor: text;
+    line-height: 24px;
+    overflow-wrap: break-word;
+    white-space-collapse: break-spaces;
+    box-sizing: content-box;
   }
 
   textarea::placeholder {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  textarea:focus {
+    caret-color: var(--spectrum-global-color-blue-500);
+  }
+
+  .textarea-plus-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-600);
+    cursor: pointer;
   }
 
   .config-form {
@@ -882,15 +1042,26 @@
   .empty-state {
     text-align: center;
     padding: var(--spacing-xl);
+    background-color: var(--spectrum-global-color-gray-75);
+    margin: 0 var(--spacing-l);
+    border-radius: 18px;
   }
   .empty-state :global(p) {
     color: var(--spectrum-global-color-gray-700);
+  }
+
+  .icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    margin-bottom: 8px;
   }
 
   .saved-tools-list {
     margin: 0 calc(-1 * var(--spacing-l));
     display: flex;
     flex-direction: column;
+    padding: 0 var(--spacing-l);
   }
   .tool-icon {
     display: grid;

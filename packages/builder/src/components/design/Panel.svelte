@@ -101,9 +101,11 @@
   }
   .panel.borderLeft {
     border-left: var(--border-light);
+    border-width: 0.5px;
   }
   .panel.borderRight {
     border-right: var(--border-light);
+    border-width: 0.5px;
   }
   .panel.wide {
     min-width: 310px;

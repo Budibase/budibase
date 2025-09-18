@@ -106,6 +106,10 @@
   .is-selected.disabled .spectrum-Icon {
     color: var(--spectrum-global-color-gray-500);
   }
+  .spectrum-ActionButton-label {
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
+  }
   .tooltip {
     position: absolute;
     pointer-events: none;
