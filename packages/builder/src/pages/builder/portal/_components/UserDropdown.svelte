@@ -61,11 +61,9 @@
   <MenuItem icon="key" on:click={() => apiKeyModal.show()}>
     View API key
   </MenuItem>
-  {#if isPortal}
-    <MenuItem icon="code" on:click={() => $goto("/builder/apps")}>
-      Close developer mode
-    </MenuItem>
-  {/if}
+  <MenuItem icon="code" on:click={() => $goto("/builder/apps")}>
+    Close developer mode
+  </MenuItem>
   <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>
 </ActionMenu>
 

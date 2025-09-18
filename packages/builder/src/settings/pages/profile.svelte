@@ -162,19 +162,6 @@
       </Layout>
     </div>
   </Layout>
-  <Divider noMargin />
-  <ButtonGroup>
-    <Button secondary quiet icon="code" on:click={$goto("./apps")}>
-      Close developer mode
-    </Button>
-    <Button
-      warning
-      quiet
-      icon="sign-out"
-      on:click={logout}
-      disabled={signingOut}>Sign out</Button
-    >
-  </ButtonGroup>
 </Layout>
 
 <Modal bind:this={updatePasswordModal}>
