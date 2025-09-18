@@ -148,7 +148,7 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
-    z-index: 1;
+    z-index: 2;
     position: relative;
   }
 
@@ -163,7 +163,7 @@
     background: var(--spectrum-global-color-gray-200);
     transition: background 130ms ease-out;
     min-width: 2px;
-    z-index: 2;
+    z-index: 1;
   }
   .divider:hover {
     background: var(--spectrum-global-color-gray-300);
