@@ -681,7 +681,10 @@ async function handleUserWorkspacePermission(
     existingUser.builder.apps = appCreator
   }
 
-  const user = await userSdk.db.save(existingUser, { currentUserId })
+  const user = await userSdk.db.save(existingUser, {
+    currentUserId,
+    hashPassword: false,
+  })
 
   ctx.body = {
     _id: user._id!,
