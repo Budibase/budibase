@@ -282,8 +282,8 @@
     <div class="select">
       <Multiselect
         autocomplete
-        placeholder="All apps"
-        label="Apps"
+        placeholder="All workspaces"
+        label="Workspaces"
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
         options={sortedApps}
