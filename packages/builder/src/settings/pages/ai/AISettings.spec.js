@@ -5,11 +5,7 @@ import { render, waitFor } from "@testing-library/svelte"
 import { admin, licensing, featureFlags } from "@/stores/portal"
 import { notifications } from "@budibase/bbui"
 import { API } from "@/api"
-
-const Hosting = {
-  Cloud: "cloud",
-  Self: "self",
-}
+import { Hosting } from "@budibase/types"
 
 const defaultFeatures = {
   budibaseAIEnabled: false,
