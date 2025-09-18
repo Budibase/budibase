@@ -43,5 +43,8 @@ export async function loadDependency(config: LibDependency): Promise<any> {
 }
 
 // Specific loaders
-export const loadCharts = () => loadDependency(libDependencies.charts)
+// eslint-disable-next-line no-undef
+export const loadCharts = __USE_DYNAMIC_LOADING__
+  ? () => loadDependency(libDependencies.charts)
+  : () => import("apexcharts")
 export const loadQRCode = () => loadDependency(libDependencies.qrcode)
