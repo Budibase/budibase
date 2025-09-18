@@ -2,6 +2,7 @@
   import { API } from "@/api"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import GroupIcon from "@/settings/pages/people/groups/_components/GroupIcon.svelte"
   import {
     appStore,
     builderStore,
@@ -40,7 +41,6 @@
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { fly } from "svelte/transition"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
