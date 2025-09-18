@@ -13,6 +13,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { RestAuthType } from "@budibase/types"
   import { onMount } from "svelte"
+  import { bb } from "@/stores/bb"
 
   type Config = { label: string; value: string }
 
@@ -40,7 +41,7 @@
   }
 
   function addOAuth2Configuration() {
-    $goto(`/builder/workspace/${$appStore.appId}/settings/oauth2`)
+    bb.settings("/general/oauth2")
   }
 
   function selectConfiguration(id: string, type?: RestAuthType) {

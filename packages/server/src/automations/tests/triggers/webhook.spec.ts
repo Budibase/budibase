@@ -35,8 +35,11 @@ describe("Webhook trigger test", () => {
     return { webhook, automation }
   }
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
     await config.api.automation.deleteAll()
     table = await config.createTable()
   })
