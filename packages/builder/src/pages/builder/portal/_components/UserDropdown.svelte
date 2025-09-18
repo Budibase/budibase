@@ -10,7 +10,6 @@
   import { API } from "@/api"
 
   export let align = "right"
-  export let isPortal = true
 
   let themeModal
   let profileModal

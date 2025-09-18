@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import { writable } from "svelte/store"
   import { API } from "@/api"
@@ -23,13 +22,11 @@
   import { type UpdateSelfRequest } from "@budibase/types"
   import { ThemeOptions } from "@budibase/shared-core"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
-  import { bb } from "@/stores/bb"
 
   const values = writable<UpdateSelfRequest>({})
   let updating = false
   let apiKey: string | undefined = undefined
   let updatePasswordModal: Modal
-  let signingOut = false
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: user = $auth.user
@@ -69,17 +66,6 @@
       notifications.success("New API key generated")
     } catch (err) {
       notifications.error("Unable to generate new API key")
-    }
-  }
-
-  const logout = async () => {
-    try {
-      signingOut = true
-      bb.hideSettings()
-      await auth.logout()
-    } catch (error) {
-      signingOut = false
-      // Swallow error and do nothing
     }
   }
 
