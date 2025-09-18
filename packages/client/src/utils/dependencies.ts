@@ -46,7 +46,7 @@ export async function loadDependency(config: LibDependency): Promise<any> {
 // eslint-disable-next-line no-undef
 export const loadCharts = __USE_DYNAMIC_LOADING__
   ? () => loadDependency(libDependencies.charts)
-  : () => import("apexcharts")
+  : async () => (await import("apexcharts")).default
 
 // eslint-disable-next-line no-undef
 export const loadQRCode = __USE_DYNAMIC_LOADING__
