@@ -213,6 +213,9 @@
   }
 
   const onUpdateUser = async (user, role) => {
+    if (user.isAdminOrGlobalBuilder) {
+      return
+    }
     if (!user) {
       notifications.error("A user must be specified")
       return
