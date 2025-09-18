@@ -217,10 +217,9 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
           title: "Backups",
         },
         {
-          section: "Data",
-          icon: "lock-simple",
-          path: "data",
-          routes: [{ path: "oauth2", comp: Pages.get("oauth2") }],
+          title: "OAuth2",
+          path: "oauth2",
+          comp: Pages.get("oauth2"),
         },
       ],
     },
