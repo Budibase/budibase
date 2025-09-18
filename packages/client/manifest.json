@@ -3792,12 +3792,22 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
         "defaultValue": false,
         "dependsOn": {
           "setting": "optionsType",
           "value": "select"
+        }
+      },
+      {
+        "type": "text",
+        "label": "Search placeholder",
+        "key": "searchPlaceholder",
+        "placeholder": "Search",
+        "dependsOn": {
+          "setting": "autocomplete",
+          "value": true
         }
       },
       {
@@ -3977,12 +3987,22 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
         "defaultValue": false,
         "dependsOn": {
           "setting": "optionsType",
           "value": "select"
+        }
+      },
+      {
+        "type": "text",
+        "label": "Search placeholder",
+        "key": "searchPlaceholder",
+        "placeholder": "Search",
+        "dependsOn": {
+          "setting": "autocomplete",
+          "value": true
         }
       },
       {
@@ -5307,6 +5327,16 @@
         "label": "Search",
         "key": "autocomplete",
         "defaultValue": true
+      },
+      {
+        "type": "text",
+        "label": "Search placeholder",
+        "key": "searchPlaceholder",
+        "placeholder": "Search",
+        "dependsOn": {
+          "setting": "autocomplete",
+          "value": true
+        }
       },
       {
         "type": "boolean",
@@ -8303,6 +8333,16 @@
         "defaultValue": true
       },
       {
+        "type": "text",
+        "label": "Search placeholder",
+        "key": "searchPlaceholder",
+        "placeholder": "Search",
+        "dependsOn": {
+          "setting": "autocomplete",
+          "value": true
+        }
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -8417,6 +8457,16 @@
         "label": "Search",
         "key": "autocomplete",
         "defaultValue": true
+      },
+      {
+        "type": "text",
+        "label": "Search placeholder",
+        "key": "searchPlaceholder",
+        "placeholder": "Search",
+        "dependsOn": {
+          "setting": "autocomplete",
+          "value": true
+        }
       },
       {
         "type": "boolean",

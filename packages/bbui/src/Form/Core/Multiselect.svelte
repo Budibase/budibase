@@ -16,6 +16,7 @@
   export let getOptionValue = (option: Option, _index?: number) => option
   export let readonly: boolean = false
   export let autocomplete: boolean = false
+  export let searchPlaceholder: string | undefined = "Search"
   export let sort: boolean = false
   export let autoWidth: boolean = false
   export let searchTerm: string | null = null
@@ -112,6 +113,7 @@
   {options}
   isPlaceholder={!arrayValue.length}
   {autocomplete}
+  {searchPlaceholder}
   bind:searchTerm
   bind:open
   {isOptionSelected}

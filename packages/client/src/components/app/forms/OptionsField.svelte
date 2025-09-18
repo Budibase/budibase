@@ -17,6 +17,7 @@
   export let valueColumn
   export let customOptions
   export let autocomplete = false
+  export let searchPlaceholder = "Search"
   export let direction = "vertical"
   export let onChange
   export let sort = true
@@ -73,6 +74,7 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
+        {searchPlaceholder}
         {sort}
       />
     {:else if optionsType === "radio"}

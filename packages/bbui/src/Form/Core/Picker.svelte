@@ -49,6 +49,7 @@
   export let quiet: boolean = false
   export let autoWidth: boolean | undefined = false
   export let autocomplete: boolean = false
+  export let searchPlaceholder: string | undefined = "Search"
   export let sort: boolean = false
   export let searchTerm: string | null = null
   export let customPopoverHeight: string | undefined = undefined
@@ -194,7 +195,7 @@
         value={searchTerm}
         on:change={event => (searchTerm = event.detail)}
         {disabled}
-        placeholder="Search"
+        placeholder={searchPlaceholder}
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>

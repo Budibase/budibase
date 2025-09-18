@@ -33,6 +33,7 @@
   export let quiet: boolean = false
   export let autoWidth: boolean = false
   export let autocomplete: boolean = false
+  export let searchPlaceholder: string | undefined = "Search"
   export let sort: boolean = false
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
   export let footer: string | undefined = undefined
@@ -116,6 +117,7 @@
   {isOptionEnabled}
   {tooltipMessage}
   {autocomplete}
+  {searchPlaceholder}
   {sort}
   {onOptionMouseenter}
   {onOptionMouseleave}

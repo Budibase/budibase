@@ -24,6 +24,7 @@
   export let valueColumn: string | undefined = undefined
   export let customOptions
   export let autocomplete: boolean = false
+  export let searchPlaceholder: string | undefined = "Search"
   export let onChange: UIFieldOnChange | undefined = undefined
   export let optionsType: "select" | "checkbox" = "select"
   export let direction: "horizontal" | "vertical" = "vertical"
@@ -94,6 +95,7 @@
         {placeholder}
         {options}
         {autocomplete}
+        {searchPlaceholder}
       />
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup

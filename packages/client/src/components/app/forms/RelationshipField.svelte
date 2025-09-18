@@ -32,6 +32,7 @@
   export let readonly: boolean = false
   export let validation: UIFieldValidationRule[] | undefined = undefined
   export let autocomplete: boolean = true
+  export let searchPlaceholder: string | undefined = "Search"
   export let defaultValue: ValueType | undefined = undefined
   export let onChange: (_props: { value: ValueType; label?: string }) => void
   export let filter: UISearchFilter | LegacyFilter[] | undefined = undefined
@@ -452,6 +453,7 @@
       {options}
       {placeholder}
       {autocomplete}
+      {searchPlaceholder}
       bind:searchTerm
       bind:open
       on:change={handleChange}
