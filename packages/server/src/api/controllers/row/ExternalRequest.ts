@@ -669,6 +669,26 @@ export class ExternalRequest<T extends Operation> {
             sort[sortColumn].type = SortType.NUMBER
           }
           break
+        case FieldType.LINK: {
+          const relatedTable = Object.values(this.tables).find(
+            t => t._id === table.schema[sortColumn]?.tableId
+          )
+          if (relatedTable && sort && sort[sortColumn]) {
+            const sortByField =
+              relatedTable.primaryDisplay || relatedTable.primary?.[0]
+            if (sortByField) {
+              const newSortKey = `${sortColumn}.${sortByField}`
+              sort[newSortKey] = {
+                ...sort[sortColumn],
+                type: SortType.STRING,
+              }
+              delete sort[sortColumn]
+            } else {
+              delete sort[sortColumn]
+            }
+          }
+          break
+        }
       }
     }
     filters = this.prepareFilters(id, filters || {}, table)

@@ -424,6 +424,30 @@ export async function search(
           type: SortType.NUMBER,
         },
       }
+    } else if (sortField && sortField.type === FieldType.LINK) {
+      // Handle relationship field sorting
+      const relatedTable = allTables.find(t => t._id === sortField.tableId)
+      if (relatedTable) {
+        const sortByField =
+          relatedTable.primaryDisplay || relatedTable.primary?.[0]
+        if (sortByField) {
+          // For relationship fields, we sort by the primary display field of the related table
+          request.sort = {
+            [`${mapToUserColumn(sortField.name)}.${sortByField}`]: {
+              direction: params.sortOrder || SortOrder.ASCENDING,
+              type: SortType.STRING,
+            },
+          }
+        } else {
+          throw new Error(
+            `Unable to determine sort field for relationship ${params.sort}`
+          )
+        }
+      } else {
+        throw new Error(
+          `Related table not found for relationship ${params.sort}`
+        )
+      }
     } else if (sortField) {
       const sortType =
         sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
