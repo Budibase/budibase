@@ -52,6 +52,7 @@ import { buildNavigationEndpoints } from "./navigation"
 import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 import { buildResourceEndpoints } from "./resource"
 import { buildDeploymentEndpoints } from "./deploy"
+import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 
 export type { APIClient } from "./types"
@@ -304,6 +305,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     oauth2: buildOAuth2Endpoints(API),
     navigation: buildNavigationEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
+    workspace: buildWorkspaceFavouriteEndpoints(API),
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
   }

@@ -46,6 +46,7 @@ export interface SettingsInnerConfig {
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
+  createdVersion?: string
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}
@@ -73,6 +74,7 @@ export interface OIDCStrategyConfiguration {
   clientID: string
   clientSecret: string
   callbackURL: string
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfigs {
@@ -94,6 +96,7 @@ export interface OIDCInnerConfig {
   uuid: string
   activated: boolean
   scopes: string[]
+  pkce?: PKCEMethod
 }
 
 export interface OIDCConfig extends Config<OIDCConfigs> {}
@@ -165,6 +168,11 @@ export const isAIConfig = (config: Config): config is AIConfig =>
 
 export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
   config.type === ConfigType.RECAPTCHA
+
+export enum PKCEMethod {
+  S256 = "S256",
+  PLAIN = "plain",
+}
 
 export enum ConfigType {
   SETTINGS = "settings",

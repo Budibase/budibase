@@ -111,26 +111,30 @@
       const loopMax = Number(inputs.iterations)
       const loopOutputs = blockResults?.outputs
 
-      let loopMessage = "There was an error"
+      if (!loopOutputs.success) {
+        let loopMessage = "There was an error"
 
-      // Not technically failed as it continues to run
-      if (loopOutputs?.status === AutomationStepStatus.MAX_ITERATIONS) {
-        loopMessage = `The maximum number of iterations (${loopMax}) has been reached.`
-      } else if (
-        loopOutputs?.status === AutomationStepStatus.FAILURE_CONDITION
-      ) {
-        loopMessage = `The failure condition for the loop was hit: ${inputs.failure}.
+        // Not technically failed as it continues to run
+        if (loopOutputs?.status === AutomationStepStatus.MAX_ITERATIONS) {
+          loopMessage = `The maximum number of iterations (${loopMax}) has been reached.`
+        } else if (
+          loopOutputs?.status === AutomationStepStatus.FAILURE_CONDITION
+        ) {
+          loopMessage = `The failure condition for the loop was hit: ${inputs.failure}.
           The loop was terminated`
-      } else if (loopOutputs?.status === AutomationStepStatus.INCORRECT_TYPE) {
-        loopMessage = `An 'Input Type' of '${inputs.option}' was configured which does
+        } else if (
+          loopOutputs?.status === AutomationStepStatus.INCORRECT_TYPE
+        ) {
+          loopMessage = `An 'Input Type' of '${inputs.option}' was configured which does
           not match the value supplied`
-      }
+        }
 
-      issues.push({
-        message: loopMessage,
-        type: BlockStatusType.ERROR,
-        source: BlockStatusSource.AUTOMATION_RESULTS,
-      })
+        issues.push({
+          message: loopMessage,
+          type: BlockStatusType.ERROR,
+          source: BlockStatusSource.AUTOMATION_RESULTS,
+        })
+      }
     }
 
     // Process filtered row issues
@@ -333,8 +337,9 @@
     padding: var(--spacing-l);
   }
   .viewer {
-    overflow-y: scroll;
-    flex: 1;
+    overflow: auto;
+    flex: 1 1 0px;
+    min-height: 0;
     padding-right: 0px;
   }
   .viewer .content {

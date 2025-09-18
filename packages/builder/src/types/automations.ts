@@ -1,20 +1,21 @@
 import {
+  type Automation,
   type AutomationStep,
   type AutomationStepInputs,
   type AutomationTrigger,
   type AutomationTriggerInputs,
   type BaseIOStructure,
-  type UISearchFilter,
-  type TestAutomationResponse,
-  type AppSelfResponse,
-  type Automation,
   type BlockDefinitions,
   type BlockRef,
+  type SelfResponse,
+  type TestAutomationResponse,
+  type UISearchFilter,
   AutomationActionStepId,
-  AutomationTriggerStepId,
   AutomationCustomIOType,
   AutomationIOType,
   AutomationLog,
+  AutomationTriggerStepId,
+  UIAutomation,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -128,13 +129,13 @@ export interface SchemaConfigProps {
   wrapped?: boolean
 }
 
-export interface AutomationState {
-  automations: Automation[]
+export interface AutomationStoreState<T extends Automation = Automation> {
+  automations: T[]
   testResults?: TestAutomationResponse
   showTestModal: boolean
   blockDefinitions: BlockDefinitions
   selectedAutomationId: string | null
-  appSelf?: AppSelfResponse
+  appSelf?: SelfResponse
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
@@ -144,7 +145,10 @@ export interface AutomationState {
   showLogDetailsPanel?: boolean
 }
 
-export interface DerivedAutomationState extends AutomationState {
+export interface DerivedAutomationStoreState
+  extends AutomationStoreState<UIAutomation> {}
+
+export interface SelectedAutomationState {
   data?: Automation
   blockRefs: Record<string, BlockRef>
 }

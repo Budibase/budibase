@@ -1,19 +1,19 @@
 <script lang="ts">
+  import { API } from "@/api"
+  import { appsStore, auth } from "@/stores/portal"
   import {
-    ModalContent,
     Input,
-    notifications,
     Layout,
+    ModalContent,
     keepOpen,
+    notifications,
   } from "@budibase/bbui"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import { writable, get } from "svelte/store"
   import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
-  import { appsStore, auth, featureFlags } from "@/stores/portal"
-  import { onMount } from "svelte"
-  import { API } from "@/api"
   import { sdk } from "@budibase/shared-core"
-  import type { CreateAppRequest } from "@budibase/types"
+  import type { CreateWorkspaceRequest } from "@budibase/types"
+  import { onMount } from "svelte"
+  import { get, writable } from "svelte/store"
 
   export let appId: string
   export let appName: string
@@ -37,9 +37,6 @@
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
   }
-
-  let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
 
   const resolveAppName = (name: string) => {
     return name ? name.trim() : null
@@ -68,7 +65,7 @@
   const duplicateApp = async () => {
     duplicating = true
 
-    const data: CreateAppRequest = {
+    const data: CreateWorkspaceRequest = {
       name: $values.name.trim(),
     }
 
@@ -93,8 +90,8 @@
 
   const setupValidation = async () => {
     const applications = get(appsStore).apps
-    appValidation.name(validation, { apps: applications }, appOrWorkspace)
-    appValidation.url(validation, { apps: applications }, appOrWorkspace)
+    appValidation.name(validation, { apps: applications })
+    appValidation.url(validation, { apps: applications })
 
     const { url } = $values
     validation.check({

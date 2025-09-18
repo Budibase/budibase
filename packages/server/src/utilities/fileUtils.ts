@@ -1,9 +1,9 @@
 import fs from "fs"
+import fetch from "node-fetch"
 import path from "path"
 import { pipeline } from "stream"
 import { promisify } from "util"
 import * as uuid from "uuid"
-import fetch from "node-fetch"
 
 import { context, objectStore } from "@budibase/backend-core"
 import { Upload } from "@budibase/types"
@@ -31,7 +31,7 @@ export async function uploadUrl(url: string): Promise<Upload | undefined> {
 
     const processedFileName = path.basename(destination)
 
-    const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+    const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
     const response = await objectStore.upload({
       bucket: ObjectStoreBuckets.APPS,
@@ -66,7 +66,7 @@ export async function uploadFile(file: {
   fs.writeFileSync(destination, file.content)
 
   const processedFileName = path.basename(destination)
-  const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+  const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
   const response = await objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,

@@ -1,16 +1,16 @@
-import fetch from "node-fetch"
-import env from "../../environment"
-import { checkSlashesInUrl } from "../../utilities"
-import { createRequest } from "../../utilities/workerRequests"
-import { clearLock as redisClearLock } from "../../utilities/redis"
 import { env as envCore, events } from "@budibase/backend-core"
 import {
   ClearDevLockResponse,
   Ctx,
   GetVersionResponse,
-  RevertAppResponse,
+  RevertWorkspaceResponse,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import env from "../../environment"
 import sdk from "../../sdk"
+import { checkSlashesInUrl } from "../../utilities"
+import { clearLock as redisClearLock } from "../../utilities/redis"
+import { createRequest } from "../../utilities/workerRequests"
 
 async function redirect(
   ctx: any,
@@ -80,7 +80,7 @@ export async function clearLock(ctx: Ctx<void, ClearDevLockResponse>) {
   }
 }
 
-export async function revert(ctx: Ctx<void, RevertAppResponse>) {
+export async function revert(ctx: Ctx<void, RevertWorkspaceResponse>) {
   const { appId } = ctx.params
 
   const result = await sdk.dev.revertDevChanges({

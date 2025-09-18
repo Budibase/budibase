@@ -90,6 +90,7 @@ export enum GridSocketEvent {
   DatasourceChange = "DatasourceChange",
   SelectDatasource = "SelectDatasource",
   SelectCell = "SelectCell",
+  WorkspaceAppChange = "WorkspaceAppChange",
 }
 
 export enum BuilderSocketEvent {
@@ -103,6 +104,7 @@ export enum BuilderSocketEvent {
   AppPublishChange = "AppPublishChange",
   AutomationChange = "AutomationChange",
   RoleChange = "RoleChange",
+  WorkspaceAppChange = "WorkspaceAppChange",
 }
 
 export const SocketSessionTTL = 60

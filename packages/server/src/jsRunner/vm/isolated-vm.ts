@@ -71,11 +71,11 @@ export class IsolatedVM implements VM {
     })
 
     this.addToContext({
-      helpersStripProtocol: new ivm.Callback((str: string) => {
+      helpersStripProtocol: (str: string) => {
         let parsed = url.parse(str) as any
         parsed.protocol = ""
         return parsed.format()
-      }),
+      },
     })
 
     const injectedRequire = `require=function req(val) {
@@ -222,7 +222,7 @@ export class IsolatedVM implements VM {
       x[funcName] = key
 
       this.addToContext({
-        [key]: new ivm.Callback((...params: any[]) => (func as any)(...params)),
+        [key]: (...params: any[]) => (func as any)(...params),
       })
     }
 

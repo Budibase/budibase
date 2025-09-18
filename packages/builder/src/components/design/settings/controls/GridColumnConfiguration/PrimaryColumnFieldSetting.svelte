@@ -1,14 +1,17 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Icon } from "@budibase/bbui"
-  import { setContext } from "svelte"
+  import { Icon, Toggle } from "@budibase/bbui"
+  import { setContext, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
   import { componentStore } from "@/stores/builder"
+  import { cloneDeep } from "lodash/fp"
 
   export let item
   export let anchor
   export let bindings
+
+  const dispatch = createEventDispatcher()
 
   let draggableStore = writable({
     selected: null,
@@ -39,6 +42,13 @@
     return componentStore.getDefinition(component)?.icon
   }
 
+  const onToggle = item => {
+    return e => {
+      item.active = e.detail
+      dispatch("change", { ...cloneDeep(item), active: e.detail })
+    }
+  }
+
   $: icon = getIcon(item)
 </script>
 
@@ -58,8 +68,16 @@
     </EditComponentPopover>
     <div class="field-label">{item.label || item.field}</div>
   </div>
-  <div title="The display column is always shown first" class="list-item-right">
-    <Icon name={"Info"} />
+  <div class="list-item-right">
+    <Toggle
+      on:click={e => {
+        e.stopPropagation()
+      }}
+      on:change={onToggle(item)}
+      text=""
+      value={item.active}
+      thin
+    />
   </div>
 </div>
 
@@ -76,9 +94,8 @@
     gap: var(--spacing-m);
     min-width: 0;
   }
-  .list-item-right :global(svg) {
-    color: var(--grey-5);
-    padding: 7px 5px 7px 0;
+  .list-item-right :global(div.spectrum-Switch) {
+    margin: 0px;
   }
   .list-item-body {
     justify-content: space-between;

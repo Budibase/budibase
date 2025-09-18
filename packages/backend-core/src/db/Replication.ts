@@ -1,11 +1,16 @@
+import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
-import { getPouchDB, closePouchDB } from "./couch"
-import { DocumentType, Document } from "@budibase/types"
+import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { closePouchDB, getPouchDB } from "./couch"
+
+const _PouchDB = PouchDB // Keep Prettier from removing import
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
   TO_DEV = "toDev",
 }
+
+type DocumentWithID = Omit<Document, "_id"> & { _id: string }
 
 class Replication {
   source: PouchDB.Database
@@ -16,13 +21,13 @@ class Replication {
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
     if (
-      source.startsWith(DocumentType.APP_DEV) &&
-      target.startsWith(DocumentType.APP)
+      source.startsWith(DocumentType.WORKSPACE_DEV) &&
+      target.startsWith(DocumentType.WORKSPACE)
     ) {
       this.direction = ReplicationDirection.TO_PRODUCTION
     } else if (
-      source.startsWith(DocumentType.APP) &&
-      target.startsWith(DocumentType.APP_DEV)
+      source.startsWith(DocumentType.WORKSPACE) &&
+      target.startsWith(DocumentType.WORKSPACE_DEV)
     ) {
       this.direction = ReplicationDirection.TO_DEV
     }
@@ -50,7 +55,10 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions = {}
+    opts: PouchDB.Replication.ReplicateOptions & {
+      isCreation?: boolean
+      tablesToSync?: string[] | "all"
+    } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
       return opts
@@ -61,21 +69,54 @@ class Replication {
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
+    const isCreation = opts.isCreation
+    let tablesToSync = opts.tablesToSync
+    delete opts.isCreation
+    delete opts.tablesToSync
+
+    let syncAllTables = false,
+      tableSyncList: string[] | undefined
+    if (typeof tablesToSync === "string" && tablesToSync === "all") {
+      syncAllTables = true
+    } else if (tablesToSync) {
+      tableSyncList = tablesToSync
+    }
+
+    const startsWithID = (_id: string, documentType: string) => {
+      return _id?.startsWith(documentType + SEPARATOR)
+    }
+
+    const isData = (_id: string) =>
+      startsWithID(_id, DocumentType.ROW) ||
+      startsWithID(_id, DocumentType.LINK)
+
     return {
       ...opts,
-      filter: (doc: Document, params: any) => {
+      filter: (doc: DocumentWithID, params: any) => {
+        if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
+          return false
+        }
         // don't sync design documents
-        if (toDev && doc._id?.startsWith("_design")) {
+        if (toDev && doc._id.startsWith("_design")) {
           return false
         }
         // always replicate deleted documents
         if (doc._deleted) {
           return true
         }
-        if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {
+        // always sync users from dev
+        if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
+          return true
+        }
+        if (isData(doc._id)) {
+          return (
+            !!tableSyncList?.find(id => doc._id.includes(id)) || syncAllTables
+          )
+        }
+        if (startsWithID(doc._id, DocumentType.AUTOMATION_LOG)) {
           return false
         }
-        if (doc._id === DocumentType.APP_METADATA) {
+        if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }
         return filter ? filter(doc, params) : true

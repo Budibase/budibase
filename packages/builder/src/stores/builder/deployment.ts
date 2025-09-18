@@ -9,15 +9,19 @@ import { appStore } from "./app"
 import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
+import { automationStore } from "./automations"
+import { workspaceAppStore } from "./workspaceApps"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
   isPublishing: boolean
+  publishCount: number
 }
 
 interface DerivedDeploymentState extends DeploymentState {
   isPublished: boolean
   lastPublished?: string
+  publishCount: number
 }
 
 class DeploymentStore extends DerivedBudiStore<
@@ -43,7 +47,7 @@ class DeploymentStore extends DerivedBudiStore<
           let lastPublished = undefined
           if (isPublished) {
             lastPublished = processStringSync(
-              "Your app was last published {{ duration time 'millisecond' }} ago",
+              `Your apps and automations were last published {{ duration time 'millisecond' }} ago`,
               {
                 time:
                   new Date().getTime() -
@@ -63,6 +67,7 @@ class DeploymentStore extends DerivedBudiStore<
       {
         deployments: [],
         isPublishing: false,
+        publishCount: 0,
       },
       makeDerivedStore
     )
@@ -84,23 +89,33 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp() {
+  async publishApp(opts?: { seedProductionTables: boolean }) {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId)
+      await API.publishAppChanges(get(appStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
       analytics.captureException(error)
       const message = error?.message ? ` - ${error.message}` : ""
       notifications.error(`Error publishing app${message}`)
     }
-    this.update(state => ({ ...state, isPublishing: false }))
+    this.update(state => {
+      return {
+        ...state,
+        isPublishing: false,
+        publishCount: state.publishCount + 1,
+      }
+    })
   }
 
   async completePublish() {
     try {
-      await appsStore.load()
-      await workspaceDeploymentStore.fetch()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       await this.load()
     } catch (err) {
       notifications.error("Error refreshing app")
@@ -113,8 +128,12 @@ class DeploymentStore extends DerivedBudiStore<
     }
     try {
       await API.unpublishApp(get(appStore).appId)
-      await workspaceDeploymentStore.fetch()
-      await appsStore.load()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       notifications.send("App unpublished", {
         type: "success",
         icon: "globe",

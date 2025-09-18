@@ -1,8 +1,7 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth, admin } from "@/stores/portal"
-import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "@/components/portal/licensing/constants"
+import { admin, auth } from "@/stores/portal"
+import { Constants } from "@budibase/frontend-core"
 import {
   License,
   MonthlyQuotaName,
@@ -10,6 +9,7 @@ import {
   QuotaUsage,
   StaticQuotaName,
 } from "@budibase/types"
+import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 
 const UNLIMITED = -1
@@ -41,6 +41,7 @@ interface LicensingState {
   syncAutomationsEnabled: boolean
   triggerAutomationRunEnabled: boolean
   recaptchaEnabled: boolean
+  pkceOidcEnabled: boolean
   pdfEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
@@ -90,6 +91,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       syncAutomationsEnabled: false,
       triggerAutomationRunEnabled: false,
       recaptchaEnabled: false,
+      pkceOidcEnabled: false,
       pdfEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
@@ -196,7 +198,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isEnterpriseTrial =
       planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
     const groupsEnabled = features.includes(Constants.Features.USER_GROUPS)
-    const backupsEnabled = features.includes(Constants.Features.APP_BACKUPS)
+    const backupsEnabled = features.includes(
+      Constants.Features.WORKSPACE_BACKUPS
+    )
     const scimEnabled = features.includes(Constants.Features.SCIM)
     const environmentVariablesEnabled = features.includes(
       Constants.Features.ENVIRONMENT_VARIABLES
@@ -219,6 +223,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
     const recaptchaEnabled = features.includes(Constants.Features.RECAPTCHA)
+    const pkceOidcEnabled = features.includes(Constants.Features.PKCE_OIDC)
     const pdfEnabled = features.includes(Constants.Features.PDF)
     this.update(state => {
       return {
@@ -243,6 +248,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         customAppScriptsEnabled,
         pdfEnabled,
         recaptchaEnabled,
+        pkceOidcEnabled,
       }
     })
   }
@@ -278,15 +284,15 @@ class LicensingStore extends BudiStore<LicensingState> {
     }, {})
 
     // Process static metrics
-    const staticMetrics = [StaticQuotaName.APPS, StaticQuotaName.ROWS].reduce(
-      (acc: StaticMetrics, key) => {
-        const limit = license.quotas.usage.static[key].value
-        const used = ((usage.usageQuota[key] || 0) / limit) * 100
-        acc[key] = limit > -1 ? Math.floor(used) : -1
-        return acc
-      },
-      {}
-    )
+    const staticMetrics = [
+      StaticQuotaName.WORKSPACES,
+      StaticQuotaName.ROWS,
+    ].reduce((acc: StaticMetrics, key) => {
+      const limit = license.quotas.usage.static[key].value
+      const used = ((usage.usageQuota[key] || 0) / limit) * 100
+      acc[key] = limit > -1 ? Math.floor(used) : -1
+      return acc
+    }, {})
 
     const getDaysBetween = (dateStart: Date, dateEnd: Date) => {
       return dateEnd > dateStart

@@ -1,13 +1,13 @@
-import * as controller from "../../controllers/global/users"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
-import { users } from "../validation"
+import * as controller from "../../controllers/global/users"
 import {
-  loggedInRoutes,
-  cloudRestrictedRoutes,
-  builderOrAdminRoutes,
   adminRoutes,
+  builderOrAdminRoutes,
+  cloudRestrictedRoutes,
+  loggedInRoutes,
 } from "../endpointGroups"
+import { users } from "../validation"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
@@ -100,6 +100,10 @@ adminRoutes
 builderOrAdminRoutes
   .get("/api/global/users", controller.fetch)
   .get("/api/global/users/count/:appId", controller.countByApp)
+  .get("/api/global/users/invites", controller.getUserInvites)
+  .get("/api/global/users/:id", controller.find)
+
+adminRoutes
   .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
   .post(
     "/api/global/users/onboard",
@@ -116,8 +120,6 @@ builderOrAdminRoutes
     controller.removeMultipleInvites
   )
   .post("/api/global/users/invite/update/:code", controller.updateInvite)
-  .get("/api/global/users/invites", controller.getUserInvites)
-  .get("/api/global/users/:id", controller.find)
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column

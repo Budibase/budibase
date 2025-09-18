@@ -18,14 +18,7 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import {
-    users,
-    auth,
-    groups,
-    appsStore,
-    licensing,
-    featureFlags,
-  } from "@/stores/portal"
+  import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
@@ -39,7 +32,6 @@
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
-  import { capitalise } from "@/helpers"
 
   export let userId
 
@@ -257,8 +249,6 @@
       notifications.error("Error getting user groups")
     }
   })
-
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -395,10 +385,10 @@
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
+      <Heading size="S">Workspaces</Heading>
       {#if privileged}
         <Banner showCloseButton={false}>
-          This user's role grants admin access to all {appsOrWorkspaces}
+          This user's role grants admin access to all workspaces
         </Banner>
       {:else}
         <Table
@@ -408,11 +398,11 @@
           allowEditRows={false}
           allowEditColumns={false}
           customRenderers={customAppTableRenderers}
-          on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
+          on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">
-              This user doesn't have access to any {appsOrWorkspaces}
+              This user doesn't have access to any workspace
             </Heading>
           </div>
         </Table>

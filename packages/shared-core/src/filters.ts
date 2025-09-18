@@ -1,11 +1,11 @@
 import {
   ArrayOperator,
   BasicOperator,
-  BBReferenceFieldSubType,
   Datasource,
   EmptyFilterOption,
   FieldConstraints,
   FieldType,
+  FieldSubType,
   FormulaType,
   isArraySearchOperator,
   isBasicSearchOperator,
@@ -25,12 +25,14 @@ import {
   Table,
   UILogicalOperator,
   UISearchFilter,
+  StringFieldSubType,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { processSearchFilters } from "./utils"
 import { deepGet, schema } from "./helpers"
-import { isPlainObject, isEmpty } from "lodash"
+import isPlainObject from "lodash/isPlainObject"
+import isEmpty from "lodash/isEmpty"
 import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
@@ -47,7 +49,7 @@ const SEARCH_OPERATORS = [
 export const getValidOperatorsForType = (
   fieldType: {
     type: FieldType
-    subtype?: BBReferenceFieldSubType
+    subtype?: FieldSubType
     formulaType?: FormulaType
     constraints?: FieldConstraints
   },
@@ -75,19 +77,30 @@ export const getValidOperatorsForType = (
     Op.In,
     Op.NotIn,
   ]
+  const arrayOps = [
+    Op.Contains,
+    Op.NotContains,
+    Op.ContainsAny,
+    Op.Empty,
+    Op.NotEmpty,
+  ]
   let ops: {
     value: string
     label: string
   }[] = []
-  const { type, formulaType } = fieldType
+  const { type, formulaType, subtype } = fieldType
   if (type === FieldType.STRING) {
-    ops = stringOps
+    if (subtype === StringFieldSubType.ARRAY) {
+      ops = arrayOps
+    } else {
+      ops = stringOps
+    }
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
     ops = numOps
   } else if (type === FieldType.OPTIONS) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In, Op.NotIn]
   } else if (type === FieldType.ARRAY) {
-    ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
+    ops = arrayOps
   } else if (type === FieldType.BOOLEAN) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === FieldType.LONGFORM) {
@@ -104,7 +117,7 @@ export const getValidOperatorsForType = (
   ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In, Op.NotIn]
   } else if (type === FieldType.BB_REFERENCE) {
-    ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
+    ops = arrayOps
   } else if (type === FieldType.BARCODEQR) {
     ops = stringOps
   }

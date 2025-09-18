@@ -1,16 +1,16 @@
 import {
-  DEFAULT_TENANT_ID,
-  getTenantId,
-  getTenantIDFromAppID,
-  isMultiTenant,
-  getPlatformURL,
-} from "../context"
-import {
   Ctx,
-  TenantResolutionStrategy,
   GetTenantIdOptions,
+  TenantResolutionStrategy,
 } from "@budibase/types"
 import { Header } from "../constants"
+import {
+  DEFAULT_TENANT_ID,
+  getPlatformURL,
+  getTenantId,
+  getTenantIDFromWorkspaceID,
+  isMultiTenant,
+} from "../context"
 
 export function addTenantToUrl(url: string) {
   const tenantId = getTenantId()
@@ -30,7 +30,7 @@ export const isUserInAppTenant = (appId: string, user?: any) => {
   } else {
     userTenantId = getTenantId()
   }
-  const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
+  const tenantId = getTenantIDFromWorkspaceID(appId) || DEFAULT_TENANT_ID
   return tenantId === userTenantId
 }
 

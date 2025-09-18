@@ -1,17 +1,17 @@
-import { ai } from "@budibase/pro"
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import {
-  ChatAgentRequest,
-  ChatAgentResponse,
-  DocumentType,
-  Tool,
-  UserCtx,
-  FetchAgentHistoryResponse,
   AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
+  ChatAgentRequest,
+  ChatAgentResponse,
   CreateToolSourceRequest,
+  DocumentType,
+  FetchAgentHistoryResponse,
   Message,
+  Tool,
+  UserCtx,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 
@@ -24,6 +24,13 @@ function addDebugInformation(messages: Message[]) {
       let toolDebugInfo = "\n\n**Tool Calls:**\n"
 
       for (const toolCall of message.tool_calls) {
+        if (toolCall.type !== "function" || !toolCall.function) {
+          console.warn(
+            `[OPENAI TOOL WARN] Unsupported tool call type: ${toolCall.type}`
+          )
+          continue
+        }
+
         let toolParams = "{}"
         try {
           // Try to parse and prettify the JSON arguments
@@ -56,7 +63,7 @@ export async function agentChat(
 ) {
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
@@ -128,7 +135,7 @@ export async function agentChat(
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   // Set SSE headers and status
   ctx.status = 200
@@ -255,7 +262,7 @@ export async function remove(ctx: UserCtx<void, void>) {
 export async function fetchHistory(
   ctx: UserCtx<void, FetchAgentHistoryResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const history = await db.allDocs<AgentChat>(
     docIds.getDocParams(DocumentType.AGENT_CHAT, undefined, {
       include_docs: true,
@@ -274,7 +281,7 @@ export async function fetchHistory(
 export async function fetchToolSources(
   ctx: UserCtx<void, AgentToolSourceWithTools[]>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
       include_docs: true,
@@ -299,7 +306,7 @@ export async function fetchToolSources(
 export async function createToolSource(
   ctx: UserCtx<CreateToolSourceRequest, { created: true }>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const toolSource = ctx.request.body
   toolSource._id = docIds.generateAgentToolSourceID()
 
@@ -319,7 +326,7 @@ export async function updateToolSource(
     throw new HTTPError("_id or _rev fields missing", 400)
   }
 
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.put(toolSource)
   toolSource._rev = response.rev
@@ -330,7 +337,7 @@ export async function updateToolSource(
 
 export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const toolSourceId = ctx.params.toolSourceId
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   try {
     const toolSource = await db.get<AgentToolSource>(toolSourceId)

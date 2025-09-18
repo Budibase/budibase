@@ -1,21 +1,22 @@
-import {
-  SqlQuery,
-  Table,
-  Datasource,
-  FieldType,
-  FieldSchema,
-} from "@budibase/types"
 import { context, objectStore, sql } from "@budibase/backend-core"
-import { v4 } from "uuid"
-import { parseStringPromise as xmlParser } from "xml2js"
-import { formatBytes } from "../../utilities"
-import env from "../../environment"
-import { InvalidColumns } from "../../constants"
 import { helpers, utils } from "@budibase/shared-core"
+import {
+  Datasource,
+  FieldSchema,
+  FieldType,
+  SqlQuery,
+  StringFieldSubType,
+  Table,
+} from "@budibase/types"
+import fs from "fs"
+import { cloneDeep, merge } from "lodash"
 import { pipeline } from "stream/promises"
 import tmp from "tmp"
-import fs from "fs"
-import { merge, cloneDeep } from "lodash"
+import { v4 } from "uuid"
+import { parseStringPromise as xmlParser } from "xml2js"
+import { InvalidColumns } from "../../constants"
+import env from "../../environment"
+import { formatBytes } from "../../utilities"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -73,7 +74,7 @@ const SQL_TIME_ONLY_TYPES = [
   "time with time zone",
 ]
 
-const SQL_STRING_TYPE_MAP: Record<string, PrimitiveTypes> = {
+const SQL_STRING_TYPE_MAP: Record<string, FieldType.STRING> = {
   varchar: FieldType.STRING,
   char: FieldType.STRING,
   nchar: FieldType.STRING,
@@ -83,15 +84,16 @@ const SQL_STRING_TYPE_MAP: Record<string, PrimitiveTypes> = {
   blob: FieldType.STRING,
   long: FieldType.STRING,
   text: FieldType.STRING,
+  array: FieldType.STRING,
 }
 
-const SQL_BOOLEAN_TYPE_MAP: Record<string, PrimitiveTypes> = {
+const SQL_BOOLEAN_TYPE_MAP: Record<string, FieldType.BOOLEAN> = {
   boolean: FieldType.BOOLEAN,
   bit: FieldType.BOOLEAN,
   tinyint: FieldType.BOOLEAN,
 }
 
-const SQL_OPTIONS_TYPE_MAP: Record<string, PrimitiveTypes> = {
+const SQL_OPTIONS_TYPE_MAP: Record<string, FieldType.OPTIONS> = {
   "user-defined": FieldType.OPTIONS,
 }
 
@@ -178,7 +180,7 @@ export function generateColumnDefinition(config: {
       name,
       constraints: {
         presence,
-        inclusion: options!,
+        inclusion: options ?? [],
       },
     }
   } else {
@@ -196,6 +198,12 @@ export function generateColumnDefinition(config: {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
+
+  // Set subtype for Postgres array types
+  if (schema.type === FieldType.STRING && lowerCaseType === "array") {
+    schema.subtype = StringFieldSubType.ARRAY
+  }
+
   return schema
 }
 
@@ -414,7 +422,7 @@ export async function handleFileResponse(
     : ""
 
   const processedFileName = `${v4()}.${fileExtension}`
-  const key = `${context.getProdAppId()}/${processedFileName}`
+  const key = `${context.getProdWorkspaceId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
   // put the response stream to disk temporarily as a buffer

@@ -32,6 +32,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -59,6 +60,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -102,7 +104,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -121,6 +123,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -164,7 +167,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -191,6 +194,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -234,7 +238,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -258,6 +262,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
     })
 
@@ -301,7 +306,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -309,6 +314,43 @@ describe("getColumns", () => {
         conditions: undefined,
         schema: ctx.schema,
       })
+    })
+  })
+
+  describe("displayName for viewV2 datasources", () => {
+    beforeEach(ctx => {
+      ctx.schemaWithDisplayNames = {
+        one: {
+          name: "one",
+          displayName: "First Column",
+          visible: true,
+          order: 0,
+          type: "foo",
+        },
+        two: {
+          name: "two",
+          displayName: "Second Column",
+          visible: true,
+          order: 1,
+          type: "foo",
+        },
+        three: { name: "three", visible: true, order: 2, type: "foo" }, // No displayName
+      }
+    })
+
+    it("uses displayName as label when datasource is viewV2", ctx => {
+      const columns = getColumns({
+        columns: undefined,
+        schema: ctx.schemaWithDisplayNames,
+        primaryDisplayColumnName: null,
+        onChange: ctx.onChange,
+        createComponent: ctx.createComponent,
+        datasource: { type: "viewV2" },
+      })
+
+      expect(columns.sortable[0].label).toBe("First Column")
+      expect(columns.sortable[1].label).toBe("Second Column")
+      expect(columns.sortable[2].label).toBe("three") // Falls back to name
     })
   })
 
@@ -320,6 +362,7 @@ describe("getColumns", () => {
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
         createComponent: ctx.createComponent,
+        datasource: null,
       })
 
       ctx.update = update
@@ -356,7 +399,7 @@ describe("getColumns", () => {
           {
             field: "four",
             label: "four",
-            active: true,
+            active: false,
           },
         ])
       })
@@ -386,7 +429,7 @@ describe("getColumns", () => {
           {
             _id: "two",
             _instanceName: "two",
-            active: false,
+            active: true,
             columnType: "foo",
             componentName: "@budibase/standard-components/labelfield",
             field: "two",
@@ -411,12 +454,12 @@ describe("getColumns", () => {
           {
             field: "two",
             label: "two",
-            active: false,
+            active: true,
           },
           {
             field: "four",
             label: "four",
-            active: true,
+            active: false,
           },
         ])
       })

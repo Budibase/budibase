@@ -1,47 +1,47 @@
-import * as internal from "./internal"
-import * as external from "./external"
-import {
-  isRows,
-  isSchema,
-  validate as validateSchema,
-} from "../../../utilities/schema"
-import {
-  isExternalTable,
-  isExternalTableID,
-  isSQL,
-} from "../../../integrations/utils"
 import { csv, events, HTTPError } from "@budibase/backend-core"
-import {
-  BulkImportRequest,
-  BulkImportResponse,
-  CsvToJsonRequest,
-  CsvToJsonResponse,
-  EventType,
-  FetchTablesResponse,
-  FieldType,
-  MigrateTableRequest,
-  MigrateTableResponse,
-  SaveTableRequest,
-  SaveTableResponse,
-  Table,
-  FindTableResponse,
-  TableSourceType,
-  UserCtx,
-  ValidateNewTableImportRequest,
-  ValidateTableImportRequest,
-  ValidateTableImportResponse,
-  DeleteTableResponse,
-} from "@budibase/types"
-import sdk from "../../../sdk"
-import { builderSocket } from "../../../websockets"
-import { cloneDeep } from "lodash"
 import {
   canBeDisplayColumn,
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import { processTable } from "../../../sdk/app/tables/getters"
+import {
+  BulkImportRequest,
+  BulkImportResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
+  DeleteTableResponse,
+  EventType,
+  FetchTablesResponse,
+  FieldType,
+  FindTableResponse,
+  MigrateTableRequest,
+  MigrateTableResponse,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  TableSourceType,
+  UserCtx,
+  ValidateNewTableImportRequest,
+  ValidateTableImportRequest,
+  ValidateTableImportResponse,
+} from "@budibase/types"
+import { cloneDeep } from "lodash"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
+import sdk from "../../../sdk"
+import { processTable } from "../../../sdk/workspace/tables/getters"
+import {
+  isRows,
+  isSchema,
+  validate as validateSchema,
+} from "../../../utilities/schema"
+import { builderSocket } from "../../../websockets"
+import * as external from "./external"
+import * as internal from "./internal"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -170,7 +170,7 @@ export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
   const tableId = ctx.params.tableId
   await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
-  await events.table.deleted(deletedTable)
+  await events.table.deleted(deletedTable, appId)
 
   ctx.eventEmitter?.emitTable(EventType.TABLE_DELETE, appId, deletedTable)
   ctx.table = deletedTable

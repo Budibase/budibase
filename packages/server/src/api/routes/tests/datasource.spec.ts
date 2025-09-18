@@ -1,29 +1,29 @@
-import * as setup from "./utilities"
-import { checkBuilderEndpoint, allowUndefined } from "./utilities/TestFunctions"
-import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { getCachedVariable } from "../../../threads/utils"
+import * as setup from "./utilities"
+import { allowUndefined, checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 import { generator } from "@budibase/backend-core/tests"
 import {
+  BBReferenceFieldSubType,
   Datasource,
   FieldSchema,
-  BBReferenceFieldSubType,
   FieldType,
+  JsonFieldSubType,
   RelationshipType,
   SourceName,
+  SupportedSqlTypes,
   Table,
   TableSchema,
-  SupportedSqlTypes,
-  JsonFieldSubType,
 } from "@budibase/types"
+import { Knex } from "knex"
+import nock from "nock"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import nock from "nock"
-import { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -77,7 +77,7 @@ describe("/datasources", () => {
 
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
-      nock("http://www.example.com/")
+      nock("http://www.example.com")
         .get("/")
         .reply(200, [{ value: "test" }])
         .get("/?test=test")
@@ -193,6 +193,7 @@ if (descriptions.length) {
           expect(ds).toEqual({
             config: expect.any(Object),
             plus: datasource.plus,
+            usesEnvironmentVariables: false,
             source: datasource.source,
             isSQL: true,
             type: "datasource_plus",
@@ -228,7 +229,7 @@ if (descriptions.length) {
         })
 
         it("should not overwrite database password with --secret-value--", async () => {
-          const password = await context.doInAppContext(
+          const password = await context.doInWorkspaceContext(
             config.getAppId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)
@@ -245,7 +246,7 @@ if (descriptions.length) {
             await config.api.datasource.get(datasource._id!)
           )
 
-          const newPassword = await context.doInAppContext(
+          const newPassword = await context.doInWorkspaceContext(
             config.getAppId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)
@@ -647,6 +648,9 @@ if (datasources.length) {
             // pg_dump 17 puts this config parameter into the dump but no DB < 17
             // can load it. We're using postgres 16 in tests at the time of writing.
             schema = schema.replace("SET transaction_timeout = 0;", "")
+            // Remove \restrict and \unrestrict commands that are not valid in older PostgreSQL versions
+            schema = schema.replace(/\\restrict\s+[^\n]+\n?/g, "")
+            schema = schema.replace(/\\unrestrict\s+[^\n]+\n?/g, "")
           }
           if (isPostgres && isLegacy) {
             // in older versions of Postgres, this is not a valid option - Postgres 9.5 does not support this.

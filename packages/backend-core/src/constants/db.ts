@@ -1,10 +1,16 @@
-import { prefixed, DocumentType } from "@budibase/types"
-
-export {
-  SEPARATOR,
-  UNICODE_MAX,
+import {
   DocumentType,
   InternalTable,
+  prefixed,
+  SEPARATOR,
+} from "@budibase/types"
+
+export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
+export {
+  DocumentType,
+  InternalTable,
+  SEPARATOR,
+  UNICODE_MAX,
 } from "@budibase/types"
 
 /**
@@ -17,7 +23,7 @@ export enum AutomationViewMode {
 }
 
 export enum ViewName {
-  USER_BY_APP = "by_app",
+  USER_BY_WORKSPACE = "by_app",
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   LINK = "by_link",
@@ -26,7 +32,7 @@ export enum ViewName {
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
   USER_BY_GROUP = "user_by_group",
-  APP_BACKUP_BY_TRIGGER = "by_trigger",
+  WORKSPACE_BACKUP_BY_TRIGGER = "by_trigger",
 }
 
 export const DeprecatedViews: Record<string, string[]> = {
@@ -67,9 +73,9 @@ export const StaticDatabases = {
   },
 }
 
-export const APP_PREFIX = prefixed(DocumentType.APP)
-export const APP_DEV = prefixed(DocumentType.APP_DEV)
-export const APP_DEV_PREFIX = APP_DEV
+export const WORKSPACE_PREFIX = prefixed(DocumentType.WORKSPACE)
+export const WORKSPACE_DEV = prefixed(DocumentType.WORKSPACE_DEV)
+export const WORKSPACE_DEV_PREFIX = WORKSPACE_DEV
 export const SQS_DATASOURCE_INTERNAL = "internal"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
 export const SQLITE_DESIGN_DOC_ID = "_design/sqlite"
@@ -77,7 +83,7 @@ export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
 export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
 export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
+export const USER_METADATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
 
 export const enum DesignDocuments {
   SQLITE = SQLITE_DESIGN_DOC_ID,

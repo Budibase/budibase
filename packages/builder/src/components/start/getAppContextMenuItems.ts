@@ -1,4 +1,3 @@
-import { featureFlag } from "@/helpers"
 import { MenuItem } from "@/types"
 
 const getAppContextMenuItems = ({
@@ -14,9 +13,6 @@ const getAppContextMenuItems = ({
   onExportProd: () => void
   onDelete: () => void
 }): MenuItem[] => {
-  const appOrWorkspace = featureFlag.isEnabled("WORKSPACE_APPS")
-    ? "workspace"
-    : "app"
   return [
     {
       icon: "copy",
@@ -28,7 +24,7 @@ const getAppContextMenuItems = ({
     },
     {
       icon: "export",
-      name: `Export latest edited ${appOrWorkspace}`,
+      name: `Export latest edited workspace`,
       keyBind: null,
       visible: true,
       disabled: false,
@@ -36,7 +32,7 @@ const getAppContextMenuItems = ({
     },
     {
       icon: "export",
-      name: `Export latest published ${appOrWorkspace}`,
+      name: `Export latest published workspace`,
       keyBind: null,
       visible: true,
       disabled: !app.deployed,

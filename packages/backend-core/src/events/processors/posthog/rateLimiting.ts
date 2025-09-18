@@ -1,6 +1,6 @@
 import { Event } from "@budibase/types"
-import { CacheKey, TTL } from "../../../cache/generic"
 import * as cache from "../../../cache/generic"
+import { CacheKey, TTL } from "../../../cache/generic"
 import * as context from "../../../context"
 
 type RateLimitedEvent =
@@ -76,7 +76,7 @@ export const limited = async (event: Event): Promise<boolean> => {
 const eventKey = (event: RateLimitedEvent) => {
   let key = `${CacheKey.EVENTS_RATE_LIMIT}:${event}`
   if (isPerApp(event)) {
-    key = key + ":" + context.getAppId()
+    key = key + ":" + context.getWorkspaceId()
   }
   return key
 }

@@ -3,6 +3,9 @@ import { helpers } from "@budibase/shared-core"
 // Util to check if a setting can be rendered for a certain instance, based on
 // the "dependsOn" metadata in the manifest
 export const shouldDisplaySetting = (instance, setting) => {
+  if (setting.nestedOnly && !setting.nested) {
+    return false
+  }
   let dependsOn = setting.dependsOn
   if (dependsOn && !Array.isArray(dependsOn)) {
     dependsOn = [dependsOn]

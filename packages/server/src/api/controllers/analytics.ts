@@ -3,11 +3,11 @@ import {
   AnalyticsEnabledResponse,
   AnalyticsPingRequest,
   AnalyticsPingResponse,
-  App,
   Ctx,
   PingSource,
+  Workspace,
 } from "@budibase/types"
-import { DocumentType, isDevAppID } from "../../db/utils"
+import { DocumentType, isDevWorkspaceID } from "../../db/utils"
 
 export const isEnabled = async (ctx: Ctx<void, AnalyticsEnabledResponse>) => {
   const enabled = await events.analytics.enabled()
@@ -24,11 +24,11 @@ export const ping = async (
   let pingType: PingSource | undefined
   switch (body.source) {
     case PingSource.APP: {
-      const db = context.getAppDB({ skip_setup: true })
-      const appInfo = await db.get<App>(DocumentType.APP_METADATA)
-      let appId = context.getAppId()
+      const db = context.getWorkspaceDB({ skip_setup: true })
+      const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
+      const workspaceId = context.getWorkspaceId()
 
-      if (isDevAppID(appId)) {
+      if (isDevWorkspaceID(workspaceId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {
         await events.serve.servedApp(appInfo, body.timezone, body.embedded)

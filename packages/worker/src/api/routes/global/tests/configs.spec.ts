@@ -1,9 +1,14 @@
 jest.mock("nodemailer")
-import { TestConfiguration, structures, mocks } from "../../../../tests"
+import { configs, events } from "@budibase/backend-core"
+import {
+  Config,
+  ConfigType,
+  GetPublicSettingsResponse,
+  PKCEMethod,
+} from "@budibase/types"
+import { TestConfiguration, mocks, structures } from "../../../../tests"
 
 mocks.email.mock()
-import { configs, events } from "@budibase/backend-core"
-import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
 
 const { google, smtp, settings, oidc } = structures.configs
 
@@ -13,6 +18,7 @@ describe("configs", () => {
   beforeEach(async () => {
     await config.beforeAll()
     jest.clearAllMocks()
+    mocks.licenses.usePkceOidc()
   })
 
   afterAll(async () => {
@@ -188,6 +194,24 @@ describe("configs", () => {
           expect(conf.config.configs[0].clientSecret).toEqual(
             "--secret-value--"
           )
+        })
+
+        it("should strip pkce field when null", async () => {
+          await saveConfig(oidc({ pkce: null as any }))
+
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getOIDCConfig()
+            expect(rawConf!).not.toHaveProperty("pkce")
+          })
+        })
+
+        it("should preserve pkce field when set to valid value", async () => {
+          await saveConfig(oidc({ pkce: PKCEMethod.S256 }))
+
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getOIDCConfig()
+            expect(rawConf!.pkce).toBe(PKCEMethod.S256)
+          })
         })
       })
     })

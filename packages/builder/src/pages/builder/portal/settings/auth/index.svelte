@@ -26,6 +26,7 @@
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { organisation, admin, licensing } from "@/stores/portal"
+  import { PKCEMethod } from "@budibase/types"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
 
@@ -36,6 +37,11 @@
   const HasSpacesRegex = /[\\"\s]/
 
   $: enforcedSSO = $organisation.isSSOEnforced
+
+  const pkceOptions = [
+    { label: "S256 (recommended)", value: PKCEMethod.S256 },
+    { label: "Plain", value: PKCEMethod.PLAIN },
+  ]
 
   $: OIDCConfigFields = {
     Oidc: [
@@ -362,6 +368,25 @@
         bind:this={fileinput}
       />
       <div class="form-row">
+        <div class="lock">
+          <Label size="L">PKCE Method</Label>
+          {#if !$licensing.pkceOidcEnabled}
+            <Icon name="lock" size="S" />
+          {/if}
+        </div>
+        {#if $licensing.pkceOidcEnabled}
+          <Select
+            placeholder="None"
+            bind:value={providers.oidc.config.configs[0].pkce}
+            options={pkceOptions}
+          />
+        {:else}
+          <Body size="XS">
+            PKCE support is only available on enterprise licenses.
+          </Body>
+        {/if}
+      </div>
+      <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle
           text=""
@@ -519,5 +544,9 @@
     display: flex;
     align-items: center;
     margin-left: 10px;
+  }
+  .lock {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>

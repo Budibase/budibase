@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { enrichSchemaWithRelColumns, search } from "@budibase/frontend-core"
+  import { search } from "@budibase/frontend-core"
   import { Toggle } from "@budibase/bbui"
   import {
     getSchemaForDatasource,
@@ -20,7 +20,7 @@
     type TableSchema,
     type Table,
   } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { findComponent } from "@/helpers/components"
   import { tables } from "@/stores/builder"
 
@@ -74,6 +74,7 @@
       }
       return entry
     })
+
     dispatch("change", updated)
   }
 
@@ -89,9 +90,7 @@
     const filtered = Object.values(schema || {}).filter(
       field => !("calculationType" in field)
     )
-    return search.getFields(tableList, filtered, {
-      allowLinks: true,
-    })
+    return search.getFields(tableList, filtered)
   }
 
   const getSchema = (screen: Screen, datasource: any) => {
@@ -119,10 +118,7 @@
       }
     )
 
-    const result = enrichSchemaWithRelColumns(
-      Object.fromEntries(filteredSchema)
-    )
-    return result
+    return Object.fromEntries(filteredSchema)
   }
 </script>
 

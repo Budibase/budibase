@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { featureFlags } from "@/stores/portal"
   import {
-    ModalContent,
-    keepOpen,
-    Toggle,
     Body,
     InlineAlert,
     Input,
+    keepOpen,
+    ModalContent,
     notifications,
+    Toggle,
   } from "@budibase/bbui"
   import { downloadFile } from "@budibase/frontend-core"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
+  import { sdk } from "@budibase/shared-core"
 
-  export let app
+  export let appId: string
   export let published
   let includeInternalTablesRows = true
   let encrypt = true
@@ -25,14 +25,12 @@
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
-
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {
     [Step.CONFIG]: {
       title: published
-        ? `Export published ${appOrWorkspace}`
-        : `Export latest ${appOrWorkspace}`,
+        ? `Export published workspace`
+        : `Export latest workspace`,
       confirmText: encrypt ? "Continue" : exportButtonText,
       onConfirm: async () => {
         if (!encrypt) {
@@ -59,7 +57,9 @@
   }
 
   const exportApp = async () => {
-    const id = published ? app.prodId : app.devId
+    const id = published
+      ? sdk.applications.getProdAppID(appId)
+      : sdk.applications.getDevAppID(appId)
     const url = `/api/backups/export?appId=${id}`
 
     try {
@@ -68,11 +68,11 @@
         encryptPassword: password,
       })
       if (!downloaded) {
-        notifications.error(`Error exporting the ${appOrWorkspace}.`)
+        notifications.error(`Error exporting the workspace.`)
       }
     } catch (error: any) {
       notifications.error(
-        error.message || `Error downloading the exported ${appOrWorkspace}`
+        error.message || `Error downloading the exported workspace`
       )
     }
   }

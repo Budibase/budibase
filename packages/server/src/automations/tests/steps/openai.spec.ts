@@ -90,9 +90,7 @@ describe("test the openai action", () => {
         .test({ fields: {} })
     )
 
-    expect(result.steps[0].outputs.response).toEqual(
-      "Error: 500 Internal Server Error"
-    )
+    expect(result.steps[0].outputs.response).toEqual("Error: No response found")
     expect(result.steps[0].outputs.success).toBeFalsy()
   })
 

@@ -1,21 +1,22 @@
-import appEndpoints from "./applications"
-import metricEndpoints from "./metrics"
-import queryEndpoints from "./queries"
-import tableEndpoints from "./tables"
-import rowEndpoints from "./rows"
-import userEndpoints from "./users"
-import viewEndpoints from "./views"
-import roleEndpoints from "./roles"
+import { CtxFn, middleware, redis } from "@budibase/backend-core"
+import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
+import { PermissionLevel, PermissionType } from "@budibase/types"
+import cors from "@koa/cors"
+import env from "../../../environment"
 import { authorizedMiddleware as authorized } from "../../../middleware/authorized"
 import { publicApiMiddleware as publicApi } from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
-import { PermissionLevel, PermissionType } from "@budibase/types"
+import appEndpoints_deprecated from "./applications"
+import metricEndpoints from "./metrics"
 import mapperMiddleware from "./middleware/mapper"
 import testErrorHandling from "./middleware/testErrorHandling"
-import env from "../../../environment"
-import { middleware, redis, CtxFn } from "@budibase/backend-core"
-import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
-import cors from "@koa/cors"
+import queryEndpoints from "./queries"
+import roleEndpoints from "./roles"
+import rowEndpoints from "./rows"
+import tableEndpoints from "./tables"
+import userEndpoints from "./users"
+import viewEndpoints from "./views"
+import workspaceEndpoints from "./workspaces"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
@@ -131,7 +132,7 @@ function applyRoutes(
     : paramResource(resource)
   const publicApiMiddleware = publicApi({
     requiresAppId:
-      permType !== PermissionType.APP && permType !== PermissionType.USER,
+      permType !== PermissionType.WORKSPACE && permType !== PermissionType.USER,
   })
   addMiddleware(endpoints.read, publicApiMiddleware)
   addMiddleware(endpoints.write, publicApiMiddleware)
@@ -154,7 +155,8 @@ function applyRoutes(
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
-applyRoutes(appEndpoints, PermissionType.APP, "appId")
+applyRoutes(workspaceEndpoints, PermissionType.WORKSPACE, "workspaceId")
+applyRoutes(appEndpoints_deprecated, PermissionType.WORKSPACE, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")

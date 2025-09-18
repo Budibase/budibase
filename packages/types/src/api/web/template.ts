@@ -1,5 +1,5 @@
 export enum TemplateType {
-  APP = "app",
+  WORKSPACE = "app",
 }
 
 export interface TemplateMetadata {
@@ -12,6 +12,7 @@ export interface TemplateMetadata {
   type: TemplateType
   key: string
   image: string
+  new: boolean
 }
 
 export type FetchTemplateResponse = TemplateMetadata[]

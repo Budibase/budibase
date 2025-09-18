@@ -3,7 +3,6 @@ import { admin } from "./admin"
 import { auth } from "./auth"
 import { licensing } from "./licensing"
 import { sdk } from "@budibase/shared-core"
-import { featureFlags } from "./featureFlags"
 
 interface MenuItem {
   title: string
@@ -12,8 +11,8 @@ interface MenuItem {
 }
 
 export const menu: Readable<MenuItem[]> = derived(
-  [admin, auth, featureFlags, licensing],
-  ([$admin, $auth, $featureFlags, $licensing]) => {
+  [admin, auth, licensing],
+  ([$admin, $auth, $licensing]) => {
     const user = $auth?.user
     const isAdmin = user != null && sdk.users.isAdmin(user)
     const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
@@ -34,8 +33,8 @@ export const menu: Readable<MenuItem[]> = derived(
     // Pages that all devs and admins can access
     let menu: MenuItem[] = [
       {
-        title: $featureFlags.WORKSPACE_APPS ? "Workspaces" : "Apps",
-        href: "/builder/portal/apps",
+        title: "Workspaces",
+        href: "/builder/portal/workspaces",
       },
     ]
     if (isGlobalBuilder) {

@@ -5,7 +5,7 @@ import { makePropSafe as safe } from "@budibase/string-templates"
 import getValidRoute from "../getValidRoute"
 import { Helpers } from "@budibase/bbui"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
-import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
+import { SourceOption } from "@/pages/builder/workspace/[application]/design/_components/NewScreen/utils"
 import { UIPermissions, Screen as ScreenDoc } from "@budibase/types"
 
 const getTableScreenTemplate = ({

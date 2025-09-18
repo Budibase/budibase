@@ -2,7 +2,7 @@ import { PlanType } from "./plan"
 
 export enum Feature {
   USER_GROUPS = "userGroups",
-  APP_BACKUPS = "appBackups",
+  WORKSPACE_BACKUPS = "appBackups",
   ENVIRONMENT_VARIABLES = "environmentVariables",
   AUDIT_LOGS = "auditLogs",
   ENFORCEABLE_SSO = "enforceableSSO",
@@ -22,6 +22,7 @@ export enum Feature {
   AI_CUSTOM_CONFIGS = "aiCustomConfigs",
   PWA = "pwa",
   RECAPTCHA = "recaptcha",
+  PKCE_OIDC = "pkceOidc",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

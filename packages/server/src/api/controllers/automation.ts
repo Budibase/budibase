@@ -1,45 +1,45 @@
-import * as triggers from "../../automations/triggers"
-import { sdk as coreSdk } from "@budibase/shared-core"
-import { DocumentType } from "../../db/utils"
-import { updateTestHistory } from "../../automations/utils"
-import { withTestFlag } from "../../utilities/redis"
 import {
-  context,
   cache,
-  events,
+  context,
   db as dbCore,
+  events,
   HTTPError,
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
+import { sdk as coreSdk } from "@budibase/shared-core"
 import {
-  App,
   Automation,
   AutomationActionStepId,
-  UserCtx,
-  DeleteAutomationResponse,
-  FetchAutomationResponse,
-  GetAutomationTriggerDefinitionsResponse,
-  GetAutomationStepDefinitionsResponse,
-  GetAutomationActionDefinitionsResponse,
-  FindAutomationResponse,
-  UpdateAutomationRequest,
-  UpdateAutomationResponse,
-  CreateAutomationRequest,
-  CreateAutomationResponse,
-  SearchAutomationLogsRequest,
-  SearchAutomationLogsResponse,
   ClearAutomationLogRequest,
   ClearAutomationLogResponse,
-  TriggerAutomationRequest,
-  TriggerAutomationResponse,
+  CreateAutomationRequest,
+  CreateAutomationResponse,
+  DeleteAutomationResponse,
+  FetchAutomationResponse,
+  FindAutomationResponse,
+  GetAutomationActionDefinitionsResponse,
+  GetAutomationStepDefinitionsResponse,
+  GetAutomationTriggerDefinitionsResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
+  Table,
   TestAutomationRequest,
   TestAutomationResponse,
-  Table,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
+  UpdateAutomationRequest,
+  UpdateAutomationResponse,
+  UserCtx,
+  Workspace,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
+import * as triggers from "../../automations/triggers"
+import { updateTestHistory } from "../../automations/utils"
+import { DocumentType } from "../../db/utils"
 import env from "../../environment"
+import sdk from "../../sdk"
+import { withTestFlag } from "../../utilities/redis"
+import { builderSocket } from "../../websockets"
 
 /*************************
  *                       *
@@ -59,7 +59,27 @@ export async function create(
     return
   }
 
-  const createdAutomation = await sdk.automations.create(automation)
+  let createdAutomation: Automation
+
+  if (coreSdk.automations.isRowAction(automation)) {
+    const rowAction = await sdk.rowActions.create(
+      automation.definition.trigger.inputs.tableId,
+      {
+        name: ctx.request.body.name,
+      }
+    )
+    automation.definition.trigger.inputs.rowActionId = rowAction.id
+
+    createdAutomation = await sdk.automations.get(rowAction.automationId)
+    createdAutomation = await sdk.automations.create({
+      ...automation,
+      _id: createdAutomation._id,
+      _rev: createdAutomation._rev,
+      createdAt: createdAutomation.createdAt,
+    })
+  } else {
+    createdAutomation = await sdk.automations.create(automation)
+  }
 
   ctx.body = {
     message: "Automation created successfully",
@@ -120,9 +140,9 @@ export async function clearLogError(
   ctx: UserCtx<ClearAutomationLogRequest, ClearAutomationLogResponse>
 ) {
   const { automationId, appId } = ctx.request.body
-  await context.doInAppContext(appId, async () => {
-    const db = context.getProdAppDB()
-    const metadata = await db.get<App>(DocumentType.APP_METADATA)
+  await context.doInWorkspaceContext(appId, async () => {
+    const db = context.getProdWorkspaceDB()
+    const metadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (
@@ -132,7 +152,7 @@ export async function clearLogError(
       delete metadata.automationErrors[automationId]
     }
     await db.put(metadata)
-    await cache.app.invalidateAppMetadata(metadata.appId, metadata)
+    await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)
     ctx.body = { message: `Error logs cleared.` }
   })
 }
@@ -167,7 +187,7 @@ export async function getDefinitionList(
 export async function trigger(
   ctx: UserCtx<TriggerAutomationRequest, TriggerAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
@@ -200,7 +220,7 @@ export async function trigger(
       }
     }
   } else {
-    if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
+    if (ctx.appId && !dbCore.isProdWorkspaceID(ctx.appId)) {
       ctx.throw(400, "Only apps in production support this endpoint")
     }
     await triggers.externalTrigger(automation, {
@@ -228,7 +248,7 @@ function prepareTestInput(input: TestAutomationRequest) {
 export async function test(
   ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const automation = await db.tryGet<Automation>(ctx.params.id)
   if (!automation) {
     ctx.throw(404, `Automation ${ctx.params.id} not found`)
@@ -251,7 +271,7 @@ export async function test(
     const input = prepareTestInput(body)
     const user = sdk.users.getUserContextBindings(ctx.user)
     return await triggers.externalTrigger(
-      automation,
+      { ...automation, disabled: false },
       { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
       { getResponses: true }
     )

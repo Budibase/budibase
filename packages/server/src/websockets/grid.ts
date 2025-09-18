@@ -1,21 +1,21 @@
-import { authorizedMiddleware as authorized } from "../middleware/authorized"
-import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
-import { BaseSocket } from "./websocket"
-import { auth, permissions, context } from "@budibase/backend-core"
-import http from "http"
-import Koa from "koa"
-import { getSourceId } from "../api/controllers/row/utils"
-import { Row, Table, View, ViewV2 } from "@budibase/types"
-import { Socket } from "socket.io"
+import { auth, context, permissions } from "@budibase/backend-core"
 import { GridSocketEvent } from "@budibase/shared-core"
-import { userAgent } from "koa-useragent"
-import { createContext, runMiddlewares } from "./middleware"
-import sdk from "../sdk"
 import {
+  decodeJSBinding,
   findHBSBlocks,
   isJSBinding,
-  decodeJSBinding,
 } from "@budibase/string-templates"
+import { Row, Table, View, ViewV2, WorkspaceApp } from "@budibase/types"
+import http from "http"
+import Koa from "koa"
+import { userAgent } from "koa-useragent"
+import { Socket } from "socket.io"
+import { getSourceId } from "../api/controllers/row/utils"
+import { authorizedMiddleware as authorized } from "../middleware/authorized"
+import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import sdk from "../sdk"
+import { createContext, runMiddlewares } from "./middleware"
+import { BaseSocket } from "./websocket"
 
 const { PermissionType, PermissionLevel } = permissions
 
@@ -53,7 +53,7 @@ export default class GridSocket extends BaseSocket {
       } else if (ds.type === "viewV2") {
         // If this is a view filtered by current user, don't sync changes
         try {
-          await context.doInAppContext(appId, async () => {
+          await context.doInWorkspaceContext(appId, async () => {
             const view = await sdk.views.get(ds.id)
             if (this.containsCurrentUserBinding(view)) {
               valid = false
@@ -133,6 +133,14 @@ export default class GridSocket extends BaseSocket {
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
       row: null,
+    })
+  }
+
+  emitWorkspaceAppUpdate(ctx: any, workspaceApp: WorkspaceApp) {
+    const room = `${ctx.appId}-${workspaceApp._id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.WorkspaceAppChange, {
+      id: workspaceApp._id,
+      workspaceApp,
     })
   }
 

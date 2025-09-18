@@ -1,9 +1,9 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { AdminStore } from "./admin"
-import { writable, get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
+import { get, writable } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { AdminStore } from "./admin"
+import { auth } from "./auth"
 
 vi.mock("./auth", () => {
   return { auth: vi.fn() }
@@ -74,6 +74,7 @@ describe("admin store", () => {
         disableAccountPortal: true,
         accountPortalUrl: "url",
         isDev: true,
+        serveDevClientFromStorage: false,
       })
 
       API.getSystemStatus.mockReturnValue("status")
@@ -109,7 +110,7 @@ describe("admin store", () => {
           cloud: true,
           disableAccountPortal: true,
           accountPortalUrl: "url",
-          isDev: true,
+          usingLocalComponentLibs: true,
         })
       })
     })
@@ -189,6 +190,62 @@ describe("admin store", () => {
           foo: "foo",
           loaded: true,
         })
+      })
+    })
+
+    describe("usingLocalComponentLibs calculation", () => {
+      it("should set usingLocalComponentLibs to true when isDev=true and serveDevClientFromStorage=false", async ctx => {
+        API.getEnvironment.mockReturnValue({
+          multiTenancy: false,
+          cloud: false,
+          disableAccountPortal: false,
+          accountPortalUrl: "",
+          isDev: true,
+          serveDevClientFromStorage: false,
+        })
+
+        await ctx.returnedStore.init()
+
+        expect(
+          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
+            .usingLocalComponentLibs
+        ).toBe(true)
+      })
+
+      it("should set usingLocalComponentLibs to false when isDev=false", async ctx => {
+        API.getEnvironment.mockReturnValue({
+          multiTenancy: false,
+          cloud: false,
+          disableAccountPortal: false,
+          accountPortalUrl: "",
+          isDev: false,
+          serveDevClientFromStorage: false,
+        })
+
+        await ctx.returnedStore.init()
+
+        expect(
+          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
+            .usingLocalComponentLibs
+        ).toBe(false)
+      })
+
+      it("should set usingLocalComponentLibs to false when isDev=true but serveDevClientFromStorage=true", async ctx => {
+        API.getEnvironment.mockReturnValue({
+          multiTenancy: false,
+          cloud: false,
+          disableAccountPortal: false,
+          accountPortalUrl: "",
+          isDev: true,
+          serveDevClientFromStorage: true,
+        })
+
+        await ctx.returnedStore.init()
+
+        expect(
+          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
+            .usingLocalComponentLibs
+        ).toBe(false)
       })
     })
   })

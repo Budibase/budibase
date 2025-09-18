@@ -3,9 +3,9 @@ import {
   EnrichedQueryJson,
   QueryJson,
 } from "@budibase/types"
-import { getIntegration, isDatasourcePlusConstructor } from "../index"
 import sdk from "../../sdk"
-import { enrichQueryJson } from "../../sdk/app/rows/utils"
+import { enrichQueryJson } from "../../sdk/workspace/rows/utils"
+import { getIntegration, isDatasourcePlusConstructor } from "../index"
 
 function isEnriched(
   json: QueryJson | EnrichedQueryJson

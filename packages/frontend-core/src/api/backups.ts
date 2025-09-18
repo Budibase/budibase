@@ -1,26 +1,34 @@
 import {
-  CreateAppBackupResponse,
-  ImportAppBackupResponse,
-  SearchAppBackupsRequest,
   ClearBackupErrorRequest,
   ClearBackupErrorResponse,
+  CreateWorkspaceBackupResponse,
+  DeleteWorkspaceBackupsResponse,
+  ImportWorkspaceBackupResponse,
+  SearchWorkspaceBackupsRequest,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface BackupEndpoints {
-  createManualBackup: (appId: string) => Promise<CreateAppBackupResponse>
+  createManualBackup: (appId: string) => Promise<CreateWorkspaceBackupResponse>
   restoreBackup: (
     appId: string,
     backupId: string,
     name?: string
-  ) => Promise<ImportAppBackupResponse>
+  ) => Promise<ImportWorkspaceBackupResponse>
 
   // Missing request or response types
-  searchBackups: (appId: string, opts: SearchAppBackupsRequest) => Promise<any>
+  searchBackups: (
+    appId: string,
+    opts: SearchWorkspaceBackupsRequest
+  ) => Promise<any>
   deleteBackup: (
     appId: string,
     backupId: string
   ) => Promise<{ message: string }>
+  deleteBackups: (
+    appId: string,
+    backupIds: string[]
+  ) => Promise<DeleteWorkspaceBackupsResponse>
   clearBackupErrors: (
     appId: string,
     backupId?: string
@@ -42,6 +50,12 @@ export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
   deleteBackup: async (appId, backupId) => {
     return await API.delete({
       url: `/api/apps/${appId}/backups/${backupId}`,
+    })
+  },
+  deleteBackups: async (appId, backupIds) => {
+    return await API.delete({
+      url: `/api/apps/${appId}/backups`,
+      body: { backupIds },
     })
   },
   restoreBackup: async (appId, backupId, name) => {

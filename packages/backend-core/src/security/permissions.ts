@@ -1,14 +1,14 @@
 import {
+  BuiltinPermissionID,
+  BuiltinPermissions,
+  Permission,
   PermissionLevel,
   PermissionType,
-  BuiltinPermissionID,
-  Permission,
-  BuiltinPermissions,
 } from "@budibase/types"
 import flatten from "lodash/flatten"
 import cloneDeep from "lodash/fp/cloneDeep"
 
-export { PermissionType, PermissionLevel } from "@budibase/types"
+export { PermissionLevel, PermissionType } from "@budibase/types"
 
 export type RoleHierarchy = {
   permissionId: string
@@ -77,7 +77,7 @@ export const BUILTIN_PERMISSIONS: BuiltinPermissions = {
     permissions: [
       new PermissionImpl(PermissionType.QUERY, PermissionLevel.READ),
       new PermissionImpl(PermissionType.TABLE, PermissionLevel.READ),
-      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.WORKSPACE, PermissionLevel.READ),
     ],
   },
   WRITE: {
@@ -88,7 +88,7 @@ export const BUILTIN_PERMISSIONS: BuiltinPermissions = {
       new PermissionImpl(PermissionType.TABLE, PermissionLevel.WRITE),
       new PermissionImpl(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.WORKSPACE, PermissionLevel.READ),
     ],
   },
   POWER: {
@@ -100,7 +100,7 @@ export const BUILTIN_PERMISSIONS: BuiltinPermissions = {
       new PermissionImpl(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new PermissionImpl(PermissionType.WEBHOOK, PermissionLevel.READ),
       new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.WORKSPACE, PermissionLevel.READ),
     ],
   },
   ADMIN: {
@@ -113,7 +113,7 @@ export const BUILTIN_PERMISSIONS: BuiltinPermissions = {
       new PermissionImpl(PermissionType.WEBHOOK, PermissionLevel.READ),
       new PermissionImpl(PermissionType.QUERY, PermissionLevel.ADMIN),
       new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.WORKSPACE, PermissionLevel.READ),
     ],
   },
 }

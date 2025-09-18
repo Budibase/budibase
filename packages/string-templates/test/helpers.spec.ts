@@ -553,7 +553,7 @@ describe("Test the decodeId helper", () => {
 
   it("Handles null gracefully", async () => {
     const output = await processString("{{ decodeId value }}", {
-      value: undefined,
+      value: null,
     })
     expect(output).toBe("")
   })

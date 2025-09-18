@@ -29,6 +29,7 @@ interface RowStore {
   inProgressChanges: Writable<Record<string, number>>
   hasNextPage: Writable<boolean>
   error: Writable<string | null>
+  definitionMissing: Writable<boolean>
 }
 
 interface RowDerivedStore {
@@ -87,6 +88,7 @@ export const createStores = (): RowStore => {
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
   const error = writable(null)
+  const definitionMissing = writable(false)
   const fetch = writable(null)
 
   // Mark loaded as true if we've ever stopped loading
@@ -109,6 +111,7 @@ export const createStores = (): RowStore => {
     inProgressChanges,
     hasNextPage,
     error,
+    definitionMissing,
   }
 }
 
@@ -192,6 +195,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     inProgressChanges,
     hasNextPage,
     error,
+    definitionMissing,
     notifications,
     fetch,
     hasBudibaseIdentifiers,
@@ -250,6 +254,14 @@ export const createActions = (context: StoreContext): RowActionStore => {
         let message = "An unknown error occurred"
         if ($fetch.error.status === 403) {
           message = "You don't have access to this data"
+        } else if (
+          ($fetch.error.status === 404 &&
+            $fetch.error.url &&
+            $fetch.error.url.includes("/api/tables/")) ||
+          $fetch.error.url.includes("/api/v2/views/")
+        ) {
+          definitionMissing.set(true)
+          message = $fetch.error.message
         } else if ($fetch.error.message) {
           message = $fetch.error.message
         }

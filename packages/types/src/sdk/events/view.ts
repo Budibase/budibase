@@ -12,7 +12,8 @@ export interface ViewUpdatedEvent extends BaseEvent {
 }
 
 export interface ViewDeletedEvent extends BaseEvent {
-  tableId: string
+  tableId?: string
+  id?: string
 }
 
 export interface ViewExportedEvent extends BaseEvent {

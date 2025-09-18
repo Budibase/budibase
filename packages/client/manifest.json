@@ -466,13 +466,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "TableSelectColumn",
+                "barIcon": "rows-plus-bottom",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "TableSelectRow",
+                "barIcon": "columns-plus-right",
                 "barTitle": "Row layout"
               }
             ],
@@ -635,7 +635,7 @@
       "hAlign": "center",
       "vAlign": "center"
     },
-    "styles": ["margin", "background", "font"],
+    "styles": ["padding", "background", "font"],
     "settings": [
       {
         "type": "text",
@@ -704,7 +704,12 @@
         "showInBar": true,
         "barIcon": "VisibilityOff",
         "barTitle": "Quiet variant",
-        "barSeparator": false
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "type",
+          "value": "cta",
+          "invert": true
+        }
       },
       {
         "type": "boolean",
@@ -750,6 +755,16 @@
         "type": "event",
         "label": "On click",
         "key": "onClick"
+      },
+      {
+        "type": "buttonConditions",
+        "label": "Conditions",
+        "key": "conditions",
+        "nestedOnly": true,
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
@@ -1810,7 +1825,8 @@
         "type": "text",
         "label": "Embed",
         "key": "embed",
-        "required": true
+        "required": true,
+        "allowHTML": true
       }
     ]
   },
@@ -3328,7 +3344,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3338,19 +3354,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3446,7 +3462,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3456,19 +3472,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3548,7 +3564,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3558,19 +3574,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3650,7 +3666,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3660,19 +3676,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -3872,7 +3888,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -3882,19 +3898,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4088,7 +4104,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4098,19 +4114,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4221,7 +4237,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4231,19 +4247,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4353,7 +4369,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4363,19 +4379,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4481,7 +4497,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4491,19 +4507,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4656,7 +4672,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -4666,19 +4682,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -4821,6 +4837,13 @@
         "type": "text",
         "label": "Help text",
         "key": "helpText"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Add signature",
+        "placeholder": "Add signature"
       },
       {
         "type": "boolean",
@@ -5030,7 +5053,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -5040,19 +5063,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -5156,7 +5179,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -5166,19 +5189,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -5304,7 +5327,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -5314,19 +5337,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -5399,7 +5422,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -5409,19 +5432,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -8298,7 +8321,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -8308,19 +8331,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]
@@ -8414,7 +8437,7 @@
       },
       {
         "type": "select",
-        "label": "Layout",
+        "label": "Columns",
         "key": "span",
         "defaultValue": 6,
         "hidden": true,
@@ -8424,19 +8447,19 @@
           {
             "label": "1 column",
             "value": 6,
-            "barIcon": "Stop",
+            "barIcon": "number-square-one",
             "barTitle": "1 column"
           },
           {
             "label": "2 columns",
             "value": 3,
-            "barIcon": "ColumnTwoA",
+            "barIcon": "number-square-two",
             "barTitle": "2 columns"
           },
           {
             "label": "3 columns",
             "value": 2,
-            "barIcon": "ViewColumn",
+            "barIcon": "number-square-three",
             "barTitle": "3 columns"
           }
         ]

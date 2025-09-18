@@ -6,14 +6,13 @@
     tables,
     builderStore,
     viewsV2,
-    workspaceAppStore,
   } from "@/stores/builder"
   import { TriggerStepID } from "@/constants/backend/automations"
   import { goto } from "@roxi/routify"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import MagicWand from "./magic-wand.svg"
   import { AutoScreenTypes } from "@/constants"
-  import CreateScreenModal from "@/pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
+  import CreateScreenModal from "@/pages/builder/workspace/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
   import { BlockDefinitionTypes } from "@budibase/types"
 
@@ -24,10 +23,6 @@
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
-
-  $: workspaceAppId = $workspaceAppStore.workspaceApps.find(
-    a => a.isDefault
-  )?._id!
 
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
@@ -72,10 +67,10 @@
         triggerBlock
       )
       builderStore.setPreviousTopNavPath(
-        "/builder/app/:application/data",
+        "/builder/workspace/:application/data",
         window.location.pathname
       )
-      $goto(`/builder/app/${response.appId}/automation/${response._id}`)
+      $goto(`/builder/workspace/${response.appId}/automation/${response._id}`)
       notifications.success(`Automation created successfully`)
     } catch (e) {
       console.error(e)
@@ -91,7 +86,7 @@
     } else {
       preSelected = $viewsV2.list.find(x => x.id === $datasource.id)
     }
-    createScreenModal.show(autoScreenType, preSelected)
+    createScreenModal.show(autoScreenType, undefined, preSelected)
   }
 </script>
 
@@ -171,7 +166,7 @@
   {/if}
 </DetailPopover>
 
-<CreateScreenModal bind:this={createScreenModal} {workspaceAppId} />
+<CreateScreenModal bind:this={createScreenModal} />
 
 <style>
   .center {

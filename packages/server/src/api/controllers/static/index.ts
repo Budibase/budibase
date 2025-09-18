@@ -1,16 +1,5 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  shouldServeLocally,
-  TOP_LEVEL_PATH,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
   configs,
@@ -18,14 +7,10 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
-  App,
   BudibaseAppProps,
   Ctx,
   DocumentType,
@@ -37,46 +22,29 @@ import {
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
-  ToggleBetaFeatureResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
-import { isAppFullyMigrated } from "../../../appMigrations"
+import fs from "fs"
+import fsp from "fs/promises"
+import * as uuid from "uuid"
+import { ObjectStoreBuckets } from "../../../constants"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  shouldServeLocally,
+} from "../../../utilities/fileSystem"
+import { isAppFullyMigrated } from "../../../workspaceMigrations"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
-import send from "koa-send"
-import { getThemeVariables } from "../../../constants/themes"
-import path from "path"
 import extract from "extract-zip"
+import send from "koa-send"
 import { tmpdir } from "os"
-
-export const toggleBetaUiFeature = async function (
-  ctx: Ctx<void, ToggleBetaFeatureResponse>
-) {
-  const cookieName = `beta:${ctx.params.feature}`
-
-  if (ctx.cookies.get(cookieName)) {
-    utils.clearCookie(ctx, cookieName)
-    ctx.body = {
-      message: `${ctx.params.feature} disabled`,
-    }
-    return
-  }
-
-  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
-
-  // // download it from S3
-  if (!fs.existsSync(builderPath)) {
-    fs.mkdirSync(builderPath)
-  }
-  await objectStore.downloadTarballDirect(
-    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
-    builderPath
-  )
-  utils.setCookie(ctx, {}, cookieName)
-
-  ctx.body = {
-    message: `${ctx.params.feature} enabled`,
-  }
-}
+import path from "path"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -115,7 +83,7 @@ export const uploadFile = async function (
       // filenames converted to UUIDs so they are unique
       const processedFileName = `${uuid.v4()}.${extension}`
 
-      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+      const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
@@ -170,7 +138,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
-    const appId = context.getProdAppId()
+    const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
@@ -213,7 +181,7 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: App,
+  app: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
@@ -228,12 +196,8 @@ const getAppScriptHTML = (
 }
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
-  if (ctx.url.includes("apple-touch-icon.png")) {
-    ctx.redirect("/builder/bblogo.png")
-    return
-  }
   // No app ID found, cannot serve - return message instead
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.body = "No content found - requires app ID"
     return
@@ -253,15 +217,17 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     appHbsPath = join(__dirname, "templates", "app.hbs")
   }
 
-  let db
   try {
-    db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+    context.getWorkspaceDB({ skip_setup: true })
+
+    const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
+
+    const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
-    const sideNav = appInfo.navigation.navigation === "Left"
+    const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
+    const themeVariables = getThemeVariables(appInfo.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     const addAppScripts =
@@ -276,9 +242,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
+      const appName = workspaceApp?.name || `${appInfo.name}`
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title: branding?.platformTitle || `${appInfo.name}`,
+        title: branding?.platformTitle || appName,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
@@ -287,8 +254,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle:
-          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
+        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
@@ -311,7 +277,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       let extraHead = ""
       const pwaEnabled = await pro.features.isPWAEnabled()
-      if (hasPWA && pwaEnabled) {
+      if (hasPWA && appInfo.pwa && pwaEnabled) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content=${
@@ -371,11 +337,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
-  const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const db = context.getWorkspaceDB({ skip_setup: true })
+  const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
   if (!env.isJest()) {
-    let appId = context.getAppId()
+    let appId = context.getWorkspaceId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
@@ -404,19 +370,13 @@ export const serveBuilderPreview = async function (
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
-
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
-  const appId = context.getAppId() || (ctx.request.query.appId as string)
+  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
@@ -495,14 +455,14 @@ export const getSignedUploadURL = async function (
 }
 
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.throw(404)
   }
 
   try {
-    const db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const db = context.getWorkspaceDB({ skip_setup: true })
+    const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)

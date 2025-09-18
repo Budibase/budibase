@@ -56,7 +56,7 @@
   ): { text: string; url: string }[] {
     return screens.map(({ url, _id }) => ({
       text: url,
-      url: `/builder/app/${$appStore.appId}/design/${_id}`,
+      url: `/builder/workspace/${$appStore.appId}/design/${_id}`,
     }))
   }
 
