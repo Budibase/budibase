@@ -1,7 +1,7 @@
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { Table } from "@budibase/types"
 import * as automation from "../index"
 import * as setup from "./utilities"
-import { Table } from "@budibase/types"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 
 function encodeJS(js: string): string {
   return `{{ js "${Buffer.from(js, "utf-8").toString("base64")}" }}`
@@ -11,9 +11,12 @@ describe("Execute Script Automations", () => {
   let config = setup.getConfig(),
     table: Table
 
+  beforeAll(async () => {
+    await config.init()
+  })
+
   beforeEach(async () => {
     await automation.init()
-    await config.init()
     table = await config.createTable()
     await config.createRow()
   })
