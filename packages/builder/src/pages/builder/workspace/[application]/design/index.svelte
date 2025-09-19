@@ -16,7 +16,7 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { admin } from "@/stores/portal"
+  import { admin, featureFlags } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -51,6 +51,8 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+
+  $: canDuplicate = $featureFlags.DUPLICATE_APP
 
   const filters: {
     label: string
@@ -114,6 +116,11 @@
     window.open(liveUrl, "_blank")
   }
 
+  const duplicateWorkSpaceApp = async (id: string) => {
+    await workspaceAppStore.duplicate(id)
+    await appStore.refresh()
+  }
+
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
     const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
     const pause = {
@@ -133,7 +140,7 @@
       },
     }
 
-    return [
+    const commands = [
       {
         icon: "pencil",
         name: "Edit",
@@ -146,6 +153,7 @@
         visible: !!liveUrl,
         callback: () => openLiveWorkspaceApp(liveUrl),
       },
+
       pause,
       {
         icon: "trash",
@@ -154,6 +162,21 @@
         callback: () => confirmDeleteDialog.show(),
       },
     ]
+
+    if (canDuplicate) {
+      return [
+        ...commands,
+
+        {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: () => duplicateWorkSpaceApp(workspaceApp._id as string),
+        },
+      ]
+    }
+
+    return commands
   }
 
   const openContextMenu = (e: MouseEvent, workspaceApp: UIWorkspaceApp) => {
