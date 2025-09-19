@@ -5,7 +5,8 @@ const getResizeActions = (
   mouseMoveEventProperty,
   elementProperty,
   initialValue,
-  setValue = () => {}
+  setValue = () => {},
+  onResizeStart = () => {}
 ) => {
   let element = null
 
@@ -67,8 +68,8 @@ const getResizeActions = (
         return
       }
 
-      // Prevent text selection during resize via builderStore
       builderStore.setResizingPanel(true)
+      onResizeStart()
 
       element.style.transition = `${cssProperty} 0ms` // temporarily override any height transitions
 
@@ -115,13 +116,15 @@ export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
 
 export const getHorizontalResizeActions = (
   initialValue,
-  setValue = () => {}
+  setValue = () => {},
+  onResizeStart = () => {}
 ) => {
   return getResizeActions(
     "width",
     "pageX",
     "clientWidth",
     initialValue,
-    setValue
+    setValue,
+    onResizeStart
   )
 }

@@ -29,6 +29,7 @@
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { getContext } from "svelte"
   import {
     DataEnvironmentMode,
     type Table,
@@ -39,6 +40,19 @@
   } from "@budibase/types"
 
   let generateButton: GridGenerateButton
+  let grid: Grid
+
+  const dataLayoutContext = getContext("data-layout") as {
+    registerGridDispatch?: Function
+  }
+
+  // Register grid dispatch with data layout when grid is ready
+  $: if (grid && dataLayoutContext?.registerGridDispatch) {
+    const gridContext = grid.getContext()
+    if (gridContext?.dispatch) {
+      dataLayoutContext.registerGridDispatch(gridContext.dispatch)
+    }
+  }
 
   $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -158,6 +172,7 @@
   <!-- re-render the grid if the data environment changes -->
   {#key $dataEnvironmentStore.mode}
     <Grid
+      bind:this={grid}
       API={$dataAPI}
       {darkMode}
       datasource={gridDatasource}
