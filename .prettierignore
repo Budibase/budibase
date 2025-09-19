@@ -11,7 +11,6 @@ packages/sdk/sdk
 packages/pro/coverage
 **/*.ivm.bundle.js
 !**/bson-polyfills.ivm.bundle.js
-charts/
 **/*.hbs
 packages/worker/src/constants/templates/tests/
 .github
