@@ -92,7 +92,9 @@
 
 <svelte:window on:keydown={handleKeydown} />
 {#if loaded}
-  <Layout gap="M" noPadding>
+  <div class="page-container">
+    <div class="content">
+      <Layout gap="M" noPadding>
     <img alt="logo" src={$organisation.logoUrl || Logo} />
     <Layout gap="XS" noPadding>
       <Heading size="M">Join {company}</Heading>
@@ -215,11 +217,25 @@
       >
         Create account
       </Button>
+      </div>
+      </Layout>
     </div>
-  </Layout>
+  </div>
 {/if}
 
 <style>
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
+  }
   img {
     width: 40px;
   }

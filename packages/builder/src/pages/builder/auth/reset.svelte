@@ -70,7 +70,9 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<Layout gap="S" noPadding>
+<div class="page-container">
+  <div class="content">
+    <Layout gap="S" noPadding>
   {#if loaded}
     <img alt="logo" src={$organisation.logoUrl || Logo} />
   {/if}
@@ -91,10 +93,24 @@
       {/if}
     </Button>
   </Layout>
-  <div />
-</Layout>
+    <div />
+    </Layout>
+  </div>
+</div>
 
 <style>
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
+  }
   img {
     width: 48px;
   }

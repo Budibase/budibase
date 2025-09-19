@@ -68,98 +68,110 @@
 
 <svelte:window on:keydown={handleKeydown} />
 {#if loaded}
-  <Layout gap="L" noPadding>
-    <Layout justifyItems="center" noPadding>
-      {#if loaded}
-        <img alt="logo" src={$organisation.logoUrl || Logo} />
-      {/if}
-      <Heading size="M" textAlign="center">
-        {$organisation.loginHeading || "Log in to Budibase"}
-      </Heading>
-    </Layout>
-    <Layout gap="S" noPadding>
-      {#if loaded && ($organisation.google || $organisation.oidc)}
-        <FancyForm>
-          <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} samePage />
-          <GoogleButton samePage />
-        </FancyForm>
-      {/if}
-      {#if !$organisation.isSSOEnforced}
-        <Divider />
-        <FancyForm bind:this={form}>
-          <FancyInput
-            label="Your work email"
-            value={formData.username}
-            on:change={e => {
-              formData = {
-                ...formData,
-                username: e.detail,
-              }
-            }}
-            validate={() => {
-              let fieldError = {
-                username: !formData.username
-                  ? "Please enter a valid email"
-                  : undefined,
-              }
-              errors = handleError({ ...errors, ...fieldError })
-            }}
-            error={errors.username}
-          />
-          <FancyInput
-            label="Password"
-            value={formData.password}
-            type="password"
-            on:change={e => {
-              formData = {
-                ...formData,
-                password: e.detail,
-              }
-            }}
-            validate={() => {
-              let fieldError = {
-                password: !formData.password
-                  ? "Please enter your password"
-                  : undefined,
-              }
-              errors = handleError({ ...errors, ...fieldError })
-            }}
-            error={errors.password}
-          />
-        </FancyForm>
-      {/if}
-    </Layout>
-    {#if !$organisation.isSSOEnforced}
-      <Layout gap="XS" noPadding justifyItems="center">
-        <Button
-          size="L"
-          cta
-          disabled={Object.keys(errors).length > 0}
-          on:click={login}
-        >
-          {$organisation.loginButton || `Log in to ${company}`}
-        </Button>
-      </Layout>
-      <Layout gap="XS" noPadding justifyItems="center">
-        <div class="user-actions">
-          <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-            Forgot password?
-          </ActionButton>
-        </div>
-      </Layout>
-    {/if}
+  <div class="page-container">
+    <div class="content">
+      <Layout gap="L" noPadding>
+        <Layout justifyItems="center" noPadding>
+          {#if loaded}
+            <img alt="logo" src={$organisation.logoUrl || Logo} />
+          {/if}
+          <Heading size="M" textAlign="center">
+            {$organisation.loginHeading || "Log in to Budibase"}
+          </Heading>
+        </Layout>
+        <Layout gap="S" noPadding>
+          {#if loaded && ($organisation.google || $organisation.oidc)}
+            <FancyForm>
+              <OIDCButton
+                oidcIcon={$oidc.logo}
+                oidcName={$oidc.name}
+                samePage
+              />
+              <GoogleButton samePage />
+            </FancyForm>
+          {/if}
+          {#if !$organisation.isSSOEnforced}
+            <Divider />
+            <FancyForm bind:this={form}>
+              <FancyInput
+                label="Your work email"
+                value={formData.username}
+                on:change={e => {
+                  formData = {
+                    ...formData,
+                    username: e.detail,
+                  }
+                }}
+                validate={() => {
+                  let fieldError = {
+                    username: !formData.username
+                      ? "Please enter a valid email"
+                      : undefined,
+                  }
+                  errors = handleError({ ...errors, ...fieldError })
+                }}
+                error={errors.username}
+              />
+              <FancyInput
+                label="Password"
+                value={formData.password}
+                type="password"
+                on:change={e => {
+                  formData = {
+                    ...formData,
+                    password: e.detail,
+                  }
+                }}
+                validate={() => {
+                  let fieldError = {
+                    password: !formData.password
+                      ? "Please enter your password"
+                      : undefined,
+                  }
+                  errors = handleError({ ...errors, ...fieldError })
+                }}
+                error={errors.password}
+              />
+            </FancyForm>
+          {/if}
+        </Layout>
+        {#if !$organisation.isSSOEnforced}
+          <Layout gap="XS" noPadding justifyItems="center">
+            <Button
+              size="L"
+              cta
+              disabled={Object.keys(errors).length > 0}
+              on:click={login}
+            >
+              {$organisation.loginButton || `Log in to ${company}`}
+            </Button>
+          </Layout>
+          <Layout gap="XS" noPadding justifyItems="center">
+            <div class="user-actions">
+              <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
+                Forgot password?
+              </ActionButton>
+            </div>
+          </Layout>
+        {/if}
 
-    {#if cloud}
-      <Body size="xs" textAlign="center">
-        By using Budibase Cloud
-        <br />
-        you are agreeing to our
-        <Link href="https://budibase.com/eula" target="_blank" secondary={true}>
-          License Agreement
-        </Link>
-      </Body>
-    {/if}
-  </Layout>
+        {#if cloud}
+          <Body size="xs" textAlign="center">
+            By using Budibase Cloud
+            <br />
+            you are agreeing to our
+            <Link
+              href="https://budibase.com/eula"
+              target="_blank"
+              secondary={true}
+            >
+              License Agreement
+            </Link>
+          </Body>
+        {/if}
+      </Layout>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -169,5 +181,17 @@
   }
   img {
     width: 48px;
+  }
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
   }
 </style>

@@ -45,7 +45,9 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<Layout gap="S" noPadding>
+<div class="page-container">
+  <div class="content">
+    <Layout gap="S" noPadding>
   <img alt="logo" src={$organisation.logoUrl || Logo} />
   <span class="heading-wrap">
     <Heading size="M">
@@ -93,9 +95,23 @@
       Reset password
     </Button>
   </div>
-</Layout>
+    </Layout>
+  </div>
+</div>
 
 <style>
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
+  }
   img {
     width: 46px;
   }
