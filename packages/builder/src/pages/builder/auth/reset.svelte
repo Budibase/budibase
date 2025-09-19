@@ -73,27 +73,27 @@
 <div class="page-container">
   <div class="content">
     <Layout gap="S" noPadding>
-  {#if loaded}
-    <img alt="logo" src={$organisation.logoUrl || Logo} />
-  {/if}
-  <Layout gap="S" noPadding>
-    <Heading size="M">Reset your password</Heading>
-    <Body size="M">Must contain at least 12 characters</Body>
-    <PasswordRepeatInput
-      bind:passwordForm={form}
-      bind:password
-      bind:error={passwordError}
-      minLength={$admin.passwordMinLength || 12}
-    />
-    <Button secondary cta on:click={reset}>
-      {#if loading}
-        <ProgressCircle overBackground={true} size="S" />
-      {:else}
-        Reset
+      {#if loaded}
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
       {/if}
-    </Button>
-  </Layout>
-    <div />
+      <Layout gap="S" noPadding>
+        <Heading size="M">Reset your password</Heading>
+        <Body size="M">Must contain at least 12 characters</Body>
+        <PasswordRepeatInput
+          bind:passwordForm={form}
+          bind:password
+          bind:error={passwordError}
+          minLength={$admin.passwordMinLength || 12}
+        />
+        <Button secondary cta on:click={reset}>
+          {#if loading}
+            <ProgressCircle overBackground={true} size="S" />
+          {:else}
+            Reset
+          {/if}
+        </Button>
+      </Layout>
+      <div />
     </Layout>
   </div>
 </div>
