@@ -81,7 +81,7 @@ export async function updateClientLibrary(appId: string) {
   let manifest, client, clientNew
   let dependencies = []
 
-  if (env.isDev()) {
+  if (!env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
     manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
@@ -221,7 +221,7 @@ export async function revertClientLibrary(appId: string) {
       }
 
       // For all other files, use streaming
-      const stream = await objectStore.getReadStream(
+      const { stream } = await objectStore.getReadStream(
         ObjectStoreBuckets.APPS,
         filePath
       )

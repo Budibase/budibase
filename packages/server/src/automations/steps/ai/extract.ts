@@ -1,13 +1,13 @@
+import { objectStore } from "@budibase/backend-core"
 import { ai, LLMPromptResponse } from "@budibase/pro"
-import * as automationUtils from "../../automationUtils"
 import {
   DocumentSourceType,
   ExtractFileDataStepInputs,
   ExtractFileDataStepOutputs,
 } from "@budibase/types"
-import { objectStore } from "@budibase/backend-core"
-import { Readable } from "stream"
 import fetch from "node-fetch"
+import { Readable } from "stream"
+import * as automationUtils from "../../automationUtils"
 
 async function processUrlFile(
   fileUrl: string,
@@ -29,7 +29,7 @@ async function processAttachmentFile(
   llm: ai.LLM
 ): Promise<string> {
   const bucket = objectStore.ObjectStoreBuckets.APPS
-  const stream = await objectStore.getReadStream(bucket, attachment.key!)
+  const { stream } = await objectStore.getReadStream(bucket, attachment.key!)
   const filename = attachment.name || "document"
   return await llm.uploadFile(stream, filename, attachment.extension)
 }

@@ -1,11 +1,9 @@
-import stream from "stream"
 import archiver from "archiver"
+import stream from "stream"
 
+import { context, events, objectStore } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { objectStore, context, events } from "@budibase/backend-core"
-import * as internal from "./internal"
-import * as external from "./external"
-import { isExternalTableID } from "../../../integrations/utils"
+import { dataFilters } from "@budibase/shared-core"
 import {
   Ctx,
   DeleteRow,
@@ -36,15 +34,17 @@ import {
   ValidateRowRequest,
   ValidateRowResponse,
 } from "@budibase/types"
-import * as utils from "./utils"
-import { gridSocket } from "../../../websockets"
-import { addRev } from "../public/utils"
-import { fixRow } from "../public/rows"
+import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../../sdk"
+import { apiFileReturn } from "../../../utilities/fileSystem"
+import { gridSocket } from "../../../websockets"
+import { fixRow } from "../public/rows"
+import { addRev } from "../public/utils"
 import * as exporters from "../view/exporters"
 import { Format } from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
-import { dataFilters } from "@budibase/shared-core"
+import * as external from "./external"
+import * as internal from "./internal"
+import * as utils from "./utils"
 
 export * as views from "./views"
 
@@ -435,10 +435,11 @@ export async function downloadAttachment(
     const attachment = attachments[0]
     ctx.attachment(attachment.name)
     if (attachment.key) {
-      ctx.body = await objectStore.getReadStream(
+      const { stream } = await objectStore.getReadStream(
         objectStore.ObjectStoreBuckets.APPS,
         attachment.key
       )
+      ctx.body = stream
     }
   } else {
     const passThrough = new stream.PassThrough()
@@ -449,7 +450,7 @@ export async function downloadAttachment(
       if (!attachment.key) {
         continue
       }
-      const attachmentStream = await objectStore.getReadStream(
+      const { stream: attachmentStream } = await objectStore.getReadStream(
         objectStore.ObjectStoreBuckets.APPS,
         attachment.key
       )
