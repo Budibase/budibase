@@ -9,6 +9,7 @@
   export let API: APIClient
   export let notifySuccess = notifications.success
   export let notifyError = notifications.error
+  export let labels: any = {}
 
   const dispatch = createEventDispatcher()
 
@@ -29,11 +30,27 @@
   }
 </script>
 
-<ModalContent title="My profile" confirmText="Save" onConfirm={updateInfo}>
+<ModalContent
+  title={labels?.title ?? "My profile"}
+  confirmText={labels?.saveText ?? "Save"}
+  cancelText={labels?.cancelText ?? "Cancel"}
+  onConfirm={updateInfo}
+>
   <Body size="S">
-    Personalise the platform by adding your first name and last name.
+    {labels?.body ??
+      "Personalise the platform by adding your first name and last name."}
   </Body>
-  <Input disabled value={user?.email || ""} label="Email" />
-  <Input bind:value={$values.firstName} label="First name" />
-  <Input bind:value={$values.lastName} label="Last name" />
+  <Input
+    disabled
+    value={user?.email || ""}
+    label={labels?.emailLabel ?? "Email"}
+  />
+  <Input
+    bind:value={$values.firstName}
+    label={labels?.firstNameLabel ?? "First name"}
+  />
+  <Input
+    bind:value={$values.lastName}
+    label={labels?.lastNameLabel ?? "Last name"}
+  />
 </ModalContent>

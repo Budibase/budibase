@@ -37,6 +37,7 @@ export interface Workspace extends Document {
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
   recaptchaEnabled?: boolean
+  menuLabelSettings?: MenuLabelSettings
 }
 
 export interface WorkspaceInstance {
@@ -118,4 +119,32 @@ export interface AppScript {
   location: "Head" | "Body"
   html?: string
   cspWhitelist?: string
+}
+
+export interface MenuLabelSettings {
+  userLabels?: {
+    profileText?: string
+    passwordText?: string
+    portalText?: string
+    logoutText?: string
+  }
+  profileModal?: {
+    title?: string
+    body?: string
+    emailLabel?: string
+    firstNameLabel?: string
+    lastNameLabel?: string
+    saveText?: string
+    cancelText?: string
+  }
+  passwordModal?: {
+    title?: string
+    body?: string
+    passwordLabel?: string
+    repeatLabel?: string
+    saveText?: string
+    cancelText?: string
+    minLengthText?: string
+    mismatchText?: string
+  }
 }

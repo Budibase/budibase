@@ -65,7 +65,8 @@
     </svelte:fragment>
 
     <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
-      My profile
+      {$appStore.application?.menuLabelsSettings?.userLabels?.profileText ??
+        "My profile"}
     </MenuItem>
     {#if !isSSO}
       <MenuItem
@@ -78,19 +79,22 @@
           }
         }}
       >
-        Update password
+        {$appStore.application?.menuLabelsSettings?.userLabels?.passwordText ??
+          "Update password"}
       </MenuItem>
     {/if}
 
     <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
-      Go to portal
+      {$appStore.application?.menuLabelsSettings?.userLabels?.portalText ??
+        "Go to portal"}
     </MenuItem>
     <MenuItem
       icon="sign-out"
       on:click={authStore.actions.logOut}
       disabled={embedded}
     >
-      Log out
+      {$appStore.application?.menuLabelsSettings?.userLabels?.logoutText ??
+        "Log out"}
     </MenuItem>
   </ActionMenu>
 
@@ -101,6 +105,7 @@
       on:save={() => authStore.actions.fetchUser()}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
+      labels={$appStore.application?.menuLabelsSettings?.profileModal}
     />
   </Modal>
   <Modal bind:this={changePasswordModal}>
@@ -110,6 +115,7 @@
       on:save={() => authStore.actions.logOut()}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
+      labels={$appStore.application?.menuLabelsSettings?.passwordModal}
     />
   </Modal>
 {/if}

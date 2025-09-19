@@ -2,6 +2,7 @@ import { API } from "@/api"
 import {
   AppScript,
   AutomationSettings,
+  MenuLabelSettings,
   Plugin,
   PWAManifest,
   UpdateWorkspaceRequest,
@@ -53,6 +54,7 @@ export interface AppMetaState {
   icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
+  menuLabelSettings?: MenuLabelSettings
 }
 
 export const INITIAL_APP_META_STATE: AppMetaState = {
@@ -97,6 +99,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
     screenshots: [],
   },
   scripts: [],
+  menuLabelSettings: [],
 }
 
 export class AppMetaStore extends BudiStore<AppMetaState> {
@@ -130,6 +133,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasAppPackage: true,
       pwa: app.pwa,
       scripts: app.scripts || [],
+      menuLabelsSettings: app.menuLabelsSettings,
     }))
   }
 

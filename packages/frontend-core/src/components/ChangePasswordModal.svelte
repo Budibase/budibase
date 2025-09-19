@@ -8,6 +8,7 @@
   export let passwordMinLength: string | undefined = undefined
   export let notifySuccess = notifications.success
   export let notifyError = notifications.error
+  export let labels: any = {}
 
   const dispatch = createEventDispatcher()
 
@@ -33,11 +34,17 @@
 
 <svelte:window on:keydown={handleKeydown} />
 <ModalContent
-  title="Update password"
-  confirmText="Update password"
+  title={labels?.title ?? "Update password"}
+  confirmText={labels?.saveText ?? "Update password"}
+  cancelText={labels?.cancelText ?? "Cancel"}
   onConfirm={updatePassword}
   disabled={!!error || !password}
 >
-  <Body size="S">Enter your new password below.</Body>
-  <PasswordRepeatInput bind:password bind:error minLength={passwordMinLength} />
+  <Body size="S">{labels?.body ?? "Enter your new password below."}</Body>
+  <PasswordRepeatInput
+    bind:password
+    bind:error
+    minLength={passwordMinLength}
+    {labels}
+  />
 </ModalContent>
