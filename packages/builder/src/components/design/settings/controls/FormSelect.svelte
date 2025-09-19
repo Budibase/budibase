@@ -2,10 +2,13 @@
   import { Select } from "@budibase/bbui"
   import { selectedScreen } from "@/stores/builder"
   import { getAvailableFormOptions } from "@/helpers/formBlockTracker"
+  import { createEventDispatcher } from "svelte"
 
   export let componentInstance = {}
   export let value = ""
   export let placeholder = "Select a form to track"
+
+  const dispatch = createEventDispatcher()
 
   $: options = getAvailableFormOptions($selectedScreen)
   $: boundValue = getValidValue(value, options)
@@ -26,7 +29,10 @@
 
   const onChange = (event) => {
     const newValue = event.detail
-    boundValue = getValidValue(newValue, options)
+    // Don't validate - just pass through the selected value
+    boundValue = newValue
+    // Dispatch the change event to update the component's value prop
+    dispatch("change", newValue)
   }
 </script>
 

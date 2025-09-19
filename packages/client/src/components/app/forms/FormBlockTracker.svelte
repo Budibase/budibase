@@ -83,22 +83,15 @@
       return null
     }
 
-    console.log("FormBlockTracker - Found component:", component)
-
-    // Basic component information
+    // Basic component information with form-specific analysis
     const details = {
       id: component._id,
       instanceName: component._instanceName,
       component: component._component,
-      styles: component._styles,
       children: component._children?.length || 0,
-      props: component,
-
-      // Form-specific analysis
       formAnalysis: analyzeFormComponent(component),
     }
 
-    console.log("DETAILS", details)
     return details
   }
 
@@ -108,37 +101,30 @@
       type: "unknown",
       stepCount: 0,
       steps: [],
-      fields: [],
-      buttons: [],
       dataSource: null,
       actionType: null,
     }
 
-    // Determine component type
+    // Determine component type and extract details
     if (component._component?.endsWith("/multistepformblock")) {
       analysis.type = "Multi Step Form Block"
 
-      // Multi Step Form Block specific analysis
       if (component.steps) {
         analysis.stepCount = component.steps.length
         analysis.steps = component.steps.map((step: any, index: number) => ({
           stepNumber: index + 1,
           title: step.title || `Step ${index + 1}`,
           description: step.desc,
-          fields: step.fields?.length || 0,
+          fieldCount: step.fields?.length || 0,
           fieldNames:
             step.fields?.map((field: any) => field.name || field.field) || [],
-          buttons: step.buttons || [],
         }))
       }
 
       analysis.dataSource = component.dataSource
       analysis.actionType = component.actionType
-      analysis.buttonPosition = component.buttonPosition
-      analysis.size = component.size
     } else if (component._component?.endsWith("/formblock")) {
       analysis.type = "Form Block"
-      // Regular form block analysis
       analysis.dataSource = component.dataSource
       analysis.actionType = component.actionType
     } else if (component._component?.endsWith("/form")) {
@@ -153,123 +139,188 @@
         analysis.steps = formSteps.map((step: any, index: number) => ({
           stepNumber: step.step || index + 1,
           stepId: step._id,
-          instanceName: step._instanceName,
-          children: step._children?.length || 0,
-          childComponents:
-            step._children?.map((child: any) => child._component) || [],
+          instanceName: step._instanceName || `Step ${index + 1}`,
+          childCount: step._children?.length || 0,
         }))
       }
 
-      // Find field components within the form
-      const allFields: any[] = []
-      findChildrenByType(component, "*field", allFields) // This might catch various field types
-      analysis.fields = allFields.map((field: any) => ({
-        id: field._id,
-        type: field._component,
-        instanceName: field._instanceName,
-        field: field.field,
-        label: field.label,
-      }))
-
       analysis.dataSource = component.dataSource
       analysis.actionType = component.actionType
-      analysis.size = component.size
-      analysis.disabled = component.disabled
-      analysis.readonly = component.readonly
     }
 
     return analysis
   }
 
-  // Provide context for potential builder integration
-  export const getAvailableFormOptions = () => {
-    const forms = getAvailableForms()
-    // console.log(
-    //   "1 FormBlockTracker - getAvailableFormOptions called, returning:",
-    //   forms.map(form => ({ label: form.label, value: form.value }))
-    // )
-    return forms.map(form => ({
-      label: form.label,
-      value: form.value,
-    }))
-  }
-
-  // Also try making it available as a global function on the window
-  $: if (typeof window !== "undefined" && $availableForms.length > 0) {
-    ;(window as any).budibaseFormBlockTrackerOptions = getAvailableFormOptions()
-  }
-
   // Create a derived store to find applicable forms for display
   const availableForms = derived([screenStore], ([$screenStore]) => {
-    const activeScreen = $screenStore.activeScreen
-
-    const forms = getAvailableForms()
-
-    return forms
+    return getAvailableForms()
   })
 
-  // Find the selected form details
-  $: selectedForm = (() => {
-    if (!form) {
-      // No form selected, use first available
-      return $availableForms[0] || null
-    }
-    // Look for specific form by ID
-    const found = $availableForms.find(f => f.value === form)
-    return found || null
-  })()
-
-  // Export options for the builder settings system
-  export const getSettingOptions = (key: string) => {
-    if (key === "form") {
-      const options = getAvailableFormOptions()
-      return options
-    }
-    return []
-  }
-
-  // Export form options directly for builder
-  export const formOptions = derived(availableForms, $availableForms => {
-    const options = $availableForms.map(form => ({
-      label: form.label,
-      value: form.value,
-    }))
-    return options
-  })
-
-  // Try to provide options through component instance
-  $: if ($component) {
-    const options = getAvailableFormOptions()
-    console.log("7 FormBlockTracker - Setting component options:", options)
-    // Try to set options on the component instance for builder access
-    if (typeof ($component as any).setOptions === "function") {
-      ;($component as any).setOptions("form", options)
-    }
-  }
+  // Get detailed information about the selected form directly from the form prop
+  $: selectedFormDetails = form ? getComponentDetails(form) : null
 </script>
 
 <div use:styleable={$component.styles}>
-  <p>Form {JSON.stringify(selectedForm)}</p>
-  {#if selectedForm}
-    <h2>Tracking: {selectedForm.label}</h2>
-    <p>Type: {selectedForm.subtitle}</p>
-    <p>ID: {selectedForm.value}</p>
-    <p>{getComponentDetails(selectedForm.)}</p>
+  {#if form && selectedFormDetails}
+    <div class="form-tracker">
+      <h3 class="form-title">{selectedFormDetails.instanceName || `Form ${form.slice(-4)}`}</h3>
+      <div class="form-info">
+        <div class="info-row">
+          <span class="label">Type:</span>
+          <span class="value">{selectedFormDetails.formAnalysis.type}</span>
+        </div>
+
+        {#if selectedFormDetails.formAnalysis.stepCount > 0}
+          <div class="info-row">
+            <span class="label">Steps:</span>
+            <span class="value">{selectedFormDetails.formAnalysis.stepCount}</span>
+          </div>
+
+          <div class="steps-list">
+            {#each selectedFormDetails.formAnalysis.steps as step}
+              <div class="step-item">
+                <span class="step-number">{step.stepNumber}.</span>
+                <div class="step-details">
+                  <div class="step-title">{step.title || step.instanceName}</div>
+                  {#if step.description}
+                    <div class="step-description">{step.description}</div>
+                  {/if}
+                  {#if step.fieldCount > 0}
+                    <div class="field-info">{step.fieldCount} fields</div>
+                  {:else if step.childCount > 0}
+                    <div class="field-info">{step.childCount} components</div>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
+        {#if selectedFormDetails.formAnalysis.dataSource}
+          <div class="info-row">
+            <span class="label">Data Source:</span>
+            <span class="value">{selectedFormDetails.formAnalysis.dataSource}</span>
+          </div>
+        {/if}
+
+        {#if selectedFormDetails.formAnalysis.actionType}
+          <div class="info-row">
+            <span class="label">Action:</span>
+            <span class="value">{selectedFormDetails.formAnalysis.actionType}</span>
+          </div>
+        {/if}
+      </div>
+    </div>
   {:else if form}
-    <h2>Form not found: {form}</h2>
-    <p>Available forms: {$availableForms.length}</p>
-    {#each $availableForms as availableForm}
-      <p>- {availableForm.label} ({availableForm.value})</p>
-      <p>{JSON.stringify(availableForm)}</p>
-    {/each}
+    <div class="form-tracker error">
+      <h3>Form not found</h3>
+      <p>Could not find form with ID: <code>{form}</code></p>
+    </div>
   {:else}
-    <p>No form selected</p>
-    <p>Available forms: {$availableForms.length}</p>
-    {#each $availableForms as availableForm}
-      <p>- {availableForm.label}</p>
-    {/each}
+    <div class="form-tracker placeholder">
+      <h3>No Form Selected</h3>
+      <p>Please select a form from the settings panel.</p>
+    </div>
   {/if}
 </div>
 
 <style>
+  .form-tracker {
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  .form-title {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .form-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .label {
+    font-weight: 500;
+    color: #666;
+    min-width: 80px;
+  }
+
+  .value {
+    color: #333;
+    font-family: monospace;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .steps-list {
+    margin-top: 12px;
+    padding-left: 8px;
+  }
+
+  .step-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+
+  .step-number {
+    font-weight: 600;
+    color: #666;
+    min-width: 20px;
+  }
+
+  .step-details {
+    flex: 1;
+  }
+
+  .step-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 2px;
+  }
+
+  .step-description {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 2px;
+  }
+
+  .field-info {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .form-tracker.error {
+    border-color: #ff6b6b;
+    background: #fff5f5;
+  }
+
+  .form-tracker.placeholder {
+    border-color: #ffa726;
+    background: #fff8e1;
+  }
+
+
+  code {
+    background: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+  }
 </style>
