@@ -43,7 +43,7 @@
   import { sdk } from "@budibase/shared-core"
   import type {
     GroupUser,
-    InviteUsersRequest,
+    InviteUserRequest,
     InviteUsersResponse,
     InviteWithCode,
     User,
@@ -416,30 +416,28 @@
     const newUserEmail = email + ""
     inviting = true
 
-    const payload: InviteUsersRequest = [
-      {
-        email: newUserEmail,
-        userInfo: {
-          builder: {
-            global: creationRoleType === Constants.BudibaseRoles.Admin,
-            creator: creationRoleType === Constants.BudibaseRoles.Creator,
-          },
-          admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+    const payload: InviteUserRequest = {
+      email: newUserEmail,
+      userInfo: {
+        builder: {
+          global: creationRoleType === Constants.BudibaseRoles.Admin,
+          creator: creationRoleType === Constants.BudibaseRoles.Creator,
         },
+        admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
       },
-    ]
+    }
 
     const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
     const isCreator = creationAccessType === Constants.Roles.CREATOR
     if (notCreatingAdmin && isCreator) {
-      payload[0].userInfo.builder.apps = [prodAppId]
+      payload.userInfo.builder!.apps = [prodAppId]
     } else if (notCreatingAdmin && !isCreator) {
-      payload[0].userInfo.apps = { [prodAppId]: creationAccessType }
+      payload.userInfo.apps = { [prodAppId]: creationAccessType }
     }
 
     let userInviteResponse: InviteUsersResponse | undefined
     try {
-      userInviteResponse = await users.onboard(payload)
+      userInviteResponse = await users.onboard([payload])
     } catch (error) {
       console.error(error instanceof Error ? error.message : "Unknown error")
       notifications.error("Error inviting user")
