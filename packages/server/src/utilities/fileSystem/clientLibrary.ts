@@ -221,7 +221,7 @@ export async function revertClientLibrary(appId: string) {
       }
 
       // For all other files, use streaming
-      const stream = await objectStore.getReadStream(
+      const { stream } = await objectStore.getReadStream(
         ObjectStoreBuckets.APPS,
         filePath
       )

@@ -252,8 +252,12 @@ describe("clientLibrary", () => {
         { Key: "app_123/budibase-client.js.bak" },
       ]
 
-      mockedObjectStore.getReadStream.mockReturnValueOnce("stream1" as any)
-      mockedObjectStore.getReadStream.mockReturnValueOnce("stream2" as any)
+      mockedObjectStore.getReadStream.mockReturnValueOnce({
+        stream: "stream1",
+      } as any)
+      mockedObjectStore.getReadStream.mockReturnValueOnce({
+        stream: "stream2",
+      } as any)
 
       mockedObjectStore.listAllObjects
         .mockReturnValueOnce([] as any) // No .bak folder
