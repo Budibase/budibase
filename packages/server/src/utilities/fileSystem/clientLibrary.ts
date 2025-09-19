@@ -100,12 +100,7 @@ export async function updateClientLibrary(appId: string) {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    clientNew = resolve(
-      TOP_LEVEL_PATH,
-      "client",
-      "dist",
-      "budibase-client.new.js"
-    )
+    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.new.js")
     for (const lib of Object.values(libDependencies)) {
       dependencies.push(resolve(TOP_LEVEL_PATH, "client", lib.outFile))
     }
@@ -226,7 +221,7 @@ export async function revertClientLibrary(appId: string) {
       }
 
       // For all other files, use streaming
-      const stream = await objectStore.getReadStream(
+      const { stream } = await objectStore.getReadStream(
         ObjectStoreBuckets.APPS,
         filePath
       )
