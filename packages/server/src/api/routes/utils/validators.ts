@@ -175,6 +175,7 @@ function searchFiltersValidator() {
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
     containsAny: Joi.object().optional(),
+    notIn: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
     onEmptyFilter: Joi.string()
       .optional()

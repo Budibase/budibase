@@ -80,6 +80,7 @@ export enum FilterType {
   EMPTY = "empty",
   NOT_EMPTY = "notEmpty",
   ONE_OF = "oneOf",
+  NOT_IN = "notIn",
 }
 
 export enum DatasourceFeature {
