@@ -29,6 +29,10 @@ export interface InviteWithCode extends Invite {
   code: string
 }
 
+export interface EditUserPermissionsResponse {
+  _rev: string
+}
+
 export interface SaveUserResponse {
   _id: string
   _rev: string
@@ -171,9 +175,6 @@ export interface CheckInviteResponse {
 
 export type GetUserInvitesResponse = InviteWithCode[]
 
-export interface UpdateInviteRequest extends Omit<Invite, "email" | "info"> {
-  apps: Record<string, string>
-}
 export interface UpdateInviteResponse extends Invite {}
 
 export type LookupAccountHolderResponse = AccountMetadata | null

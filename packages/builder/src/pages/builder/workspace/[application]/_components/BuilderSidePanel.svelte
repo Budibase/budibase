@@ -2,6 +2,7 @@
   import { API } from "@/api"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import GroupIcon from "@/settings/pages/people/groups/_components/GroupIcon.svelte"
   import {
     appStore,
     builderStore,
@@ -45,14 +46,11 @@
     InviteUsersRequest,
     InviteUsersResponse,
     InviteWithCode,
-    UpdateInviteRequest,
     User,
     UserGroup,
-    UserRoles,
     WithRequired,
   } from "@budibase/types"
   import { fly } from "svelte/transition"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
@@ -60,7 +58,8 @@
     role: string | undefined
   }
 
-  interface ExtendedUser extends Omit<WithRequired<User, "_id">, "roles"> {
+  interface ExtendedUser
+    extends Omit<WithRequired<User, "_id" | "_rev">, "roles"> {
     role?: string
     isAdminOrGlobalBuilder?: boolean
     isAppBuilder?: boolean
@@ -170,10 +169,9 @@
 
     filteredUsers = $usersFetch.rows
       .filter(user => user.email !== $auth.user?.email)
+      .map(user => user as User)
       .map(user => {
-        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
-          user as User
-        )
+        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
         const isAppBuilder =
           "builder" in user && user.builder?.apps?.includes(prodAppId)
         let role: string | undefined
@@ -191,6 +189,7 @@
         return {
           ...user,
           _id: user._id!,
+          _rev: user._rev!,
           role,
           isAdminOrGlobalBuilder,
           isAppBuilder,
@@ -234,39 +233,28 @@
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
   $: debouncedUpdateFetch(query, $builderStore.builderSidePanel, loaded)
 
-  const updateAppUser = async (userId: string, role: string | undefined) => {
+  const updateAppUser = async (
+    user: ExtendedUser,
+    role: string | undefined
+  ) => {
     if (!prodAppId) {
       notifications.error("Application id must be specified")
       return
     }
-    const update = await users.get(userId)
-    if (!update) {
-      throw `User ${userId} not found`
-    }
-    const newRoles: UserRoles = {
-      ...update.roles,
-    }
-    delete newRoles[prodAppId]
+
     if (role) {
-      newRoles[prodAppId] = role
+      await users.addUserToWorkspace(user._id, role, user._rev)
+    } else {
+      await users.removeUserFromWorkspace(user._id, user._rev)
     }
-    // make sure no undefined/null roles (during removal)
-    for (let [appId, role] of Object.entries(newRoles)) {
-      if (!role) {
-        delete newRoles[appId]
-      }
-    }
-    await users.save({
-      ...update,
-      roles: newRoles,
-    })
+
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
-  const onUpdateUser = async (
-    user: ExtendedUser,
-    role?: string | undefined
-  ) => {
+  const onUpdateUser = async (user: ExtendedUser, role?: string) => {
+    if (user.isAdminOrGlobalBuilder) {
+      return
+    }
     if (!user) {
       notifications.error("A user must be specified")
       return
@@ -275,20 +263,14 @@
       if (user.role === role) {
         return
       }
-      if (user.isAppBuilder && user._id) {
-        await removeAppBuilder(user._id)
-      }
-      if (role === Constants.Roles.CREATOR && user._id) {
-        await removeAppBuilder(user._id)
-      }
-      await updateAppUser(user._id, role)
+      await updateAppUser(user, role)
     } catch (error) {
       console.error(error)
       notifications.error("User could not be updated")
     }
   }
 
-  const updateAppGroup = async (groupId: string, role: string) => {
+  const updateAppGroup = async (groupId: string, role: string | undefined) => {
     if (!prodAppId) {
       notifications.error("Application id must be specified")
       return
@@ -310,12 +292,7 @@
       return
     }
     try {
-      if (group?.builder?.apps?.includes(prodAppId) && group._id) {
-        await removeGroupAppBuilder(group._id)
-      }
-      if (group._id) {
-        await updateAppGroup(group._id, role || "")
-      }
+      await updateAppGroup(group._id!, role)
     } catch {
       notifications.error("Group update failed")
     }
@@ -515,60 +492,21 @@
   }
 
   const onUpdateUserInvite = async (invite: InviteWithCode, role: string) => {
-    let updateBody: UpdateInviteRequest = {
-      apps: {
-        [prodAppId]: role,
-      },
+    try {
+      await users.addWorkspaceIdToInvite(invite.code, role)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
     }
-    if (role === Constants.Roles.CREATOR) {
-      updateBody.info ??= {}
-      updateBody.info.builder = updateBody.info.builder || {}
-      updateBody.info.builder.apps = [
-        ...(updateBody.info.builder.apps ?? []),
-        prodAppId,
-      ]
-      delete updateBody.info?.apps?.[prodAppId]
-    } else if (
-      role !== Constants.Roles.CREATOR &&
-      invite?.info?.builder?.apps
-    ) {
-      updateBody.info ??= {}
-      updateBody.info.builder = { apps: [] }
-    }
-    await users.updateInvite(invite.code, updateBody)
-    await filterInvites(query)
   }
 
   const onUninviteAppUser = async (invite: InviteWithCode) => {
-    await uninviteAppUser(invite)
-    await filterInvites(query)
-  }
-
-  // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async (invite: InviteWithCode) => {
-    let updated = { ...invite }
-    delete updated.info.apps[prodAppId]
-
-    const updateBody: UpdateInviteRequest = {
-      info: {
-        apps: updated.info.apps,
-      },
-      apps: {},
+    try {
+      await users.removeWorkspaceIdFromInvite(invite.code)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
     }
-
-    return await users.updateInvite(updated.code, updateBody)
-  }
-
-  const addAppBuilder = async (userId: string) => {
-    await users.addAppBuilder(userId, prodAppId)
-  }
-
-  const removeAppBuilder = async (userId: string) => {
-    await users.removeAppBuilder(userId, prodAppId)
-  }
-
-  const removeGroupAppBuilder = async (groupId: string) => {
-    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async (sidePaneOpen: boolean) => {
@@ -749,7 +687,7 @@
                       footer={getRoleFooter(user)}
                       placeholder={false}
                       value={getInviteRoleValue(invite)}
-                      allowRemove={invite.info.apps?.[prodAppId]}
+                      allowRemove={!!invite.info.apps?.[prodAppId]}
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
@@ -864,11 +802,7 @@
                       quiet={true}
                       on:addcreator={() => {}}
                       on:change={e => {
-                        if (e.detail === Constants.Roles.CREATOR) {
-                          addAppBuilder(user._id)
-                        } else {
-                          onUpdateUser(user, e.detail)
-                        }
+                        onUpdateUser(user, e.detail)
                       }}
                       on:remove={() => {
                         onUpdateUser(user)
