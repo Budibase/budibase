@@ -1,12 +1,10 @@
-export const cleanInput = ({
-  max,
-  pad,
-  fallback,
-}: {
+interface Input {
   max: number
   pad: number
   fallback: string
-}) => {
+}
+
+export const cleanInput = ({ max, pad, fallback }: Input) => {
   return (e: Event) => {
     const target = e.target as HTMLInputElement
     if (target.value) {

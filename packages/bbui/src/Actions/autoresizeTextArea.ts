@@ -4,7 +4,7 @@ function resize(e: Event) {
   target.style.height = +target.scrollHeight + "px"
 }
 
-export default function text_area_resize(el: HTMLTextAreaElement) {
+export default function (el: HTMLTextAreaElement) {
   resize({ target: el } as any)
   el.style.overflow = "hidden"
   el.addEventListener("input", resize)
