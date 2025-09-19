@@ -95,13 +95,14 @@
     query
   )
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
   const showInvite = (
     invites: InviteWithCode[],
     users: ExtendedUser[],
     groups: EnrichedUserGroup[],
     query: string | null
-  ) => {
-    return !invites?.length && !users?.length && !groups?.length && query
+  ): boolean => {
+    return !invites?.length && !users?.length && !groups?.length && !!query
   }
 
   const filterInvites = async (query: string | null) => {
@@ -197,10 +198,7 @@
     return aAppsEmpty && !bAppsEmpty ? 1 : !aAppsEmpty && bAppsEmpty ? -1 : 0
   }
 
-  const sortRoles = (
-    a: { role?: string | undefined },
-    b: { role?: string | undefined }
-  ) => {
+  const sortRoles = (a: { role?: string }, b: { role?: string }) => {
     const roleA = a.role
     const roleB = b.role
 
@@ -318,12 +316,8 @@
     }
   }
 
-  const getEnrichedGroups = (groups: UserGroup[]) => {
-    return groups.map(enrichGroupRole)
-  }
-
   // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups)
+  $: enrichedGroups = $groups.map(enrichGroupRole)
   $: filteredGroups = searchGroups(enrichedGroups, query)
 
   const getInvites = async () => {
