@@ -37,6 +37,7 @@ builderRoutes
     workspaceAppValidator(insertSchema),
     controller.create
   )
+  .post("/api/workspaceApp/:id/duplicate", controller.duplicate)
   .put(
     "/api/workspaceApp/:id",
     workspaceAppValidator(updateSchema),
