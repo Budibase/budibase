@@ -242,7 +242,7 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
-        { path: "modals", comp: Pages.get("modals"), title: "User Menu" },
+        { path: "modals", comp: Pages.get("modals"), title: "Menu labels" },
       ],
     },
   ].map((entry: Route) => ({

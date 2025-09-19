@@ -1,18 +1,31 @@
 <script>
-  import { Layout, Body, Heading, Divider, notifications } from "@budibase/bbui"
-  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
-  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import { getBindableProperties } from "@/dataBinding"
   import {
-    selectedScreen,
-    componentStore,
-    navigationStore as nav,
-  } from "@/stores/builder"
+    Layout,
+    Body,
+    Heading,
+    Divider,
+    notifications,
+    Input,
+    Label,
+    Button,
+  } from "@budibase/bbui"
+  import { navigationStore as nav } from "@/stores/builder"
 
-  $: bindings = getBindableProperties(
-    $selectedScreen,
-    $componentStore.selectedComponentId
-  )
+  // Ensure navigation settings exist
+  $: {
+    if (!$nav.UserMenuSettings) {
+      $nav.UserMenuSettings = {}
+    }
+    if (!$nav.UserMenuSettings.userMenu) {
+      $nav.UserMenuSettings.userMenu = {}
+    }
+    if (!$nav.UserMenuSettings.profileModal) {
+      $nav.UserMenuSettings.profileModal = {}
+    }
+    if (!$nav.UserMenuSettings.changePasswordModal) {
+      $nav.UserMenuSettings.changePasswordModal = {}
+    }
+  }
 
   const updateModalSetting = async (modalType, settingKey, value) => {
     try {
@@ -33,233 +46,290 @@
 
 <Layout noPadding>
   <div class="settings">
-    <Heading size="M">User Interface</Heading>
-    <Body>
+    <Body size="S">
       Customise the text and labels shown in user interface modals throughout
       your application.
     </Body>
 
-    <Divider />
+    <Divider noMargin />
 
     <div class="section">
-      <Heading size="S">User Menu</Heading>
-      <div class="controls">
-        <PropertyControl
-          label="Profile text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.userMenu?.profileText}
-          onChange={text => updateModalSetting("userMenu", "profileText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "My profile",
-          }}
-        />
-        <PropertyControl
-          label="Password text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.userMenu?.passwordText}
-          onChange={text =>
-            updateModalSetting("userMenu", "passwordText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Update password",
-          }}
-        />
-        <PropertyControl
-          label="Portal text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.userMenu?.portalText}
-          onChange={text => updateModalSetting("userMenu", "portalText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Go to portal",
-          }}
-        />
-        <PropertyControl
-          label="Logout text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.userMenu?.logoutText}
-          onChange={text => updateModalSetting("userMenu", "logoutText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Log out",
-          }}
+      <Heading size="S">Menu labels</Heading>
+      <Body size="S">
+        Customize the text shown in the user menu throughout your application.
+      </Body>
+    </div>
+
+    <div class="field">
+      <Label size="L">Profile</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.userMenu.profileText}
+          placeholder="My profile"
+          on:change={e =>
+            updateModalSetting("userMenu", "profileText", e.target.value)}
         />
       </div>
     </div>
 
-    <Divider />
-
-    <div class="section">
-      <Heading size="S">Profile Modal</Heading>
-      <div class="controls">
-        <PropertyControl
-          label="Modal title"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.title}
-          onChange={text => updateModalSetting("profileModal", "title", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "My profile",
-          }}
-        />
-        <PropertyControl
-          label="Body text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.body}
-          onChange={text => updateModalSetting("profileModal", "body", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder:
-              "Personalise the platform by adding your first name and last name.",
-          }}
-        />
-        <PropertyControl
-          label="Email label"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.emailLabel}
-          onChange={text =>
-            updateModalSetting("profileModal", "emailLabel", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Email",
-          }}
-        />
-        <PropertyControl
-          label="First name label"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.firstNameLabel}
-          onChange={text =>
-            updateModalSetting("profileModal", "firstNameLabel", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "First name",
-          }}
-        />
-        <PropertyControl
-          label="Last name label"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.lastNameLabel}
-          onChange={text =>
-            updateModalSetting("profileModal", "lastNameLabel", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Last name",
-          }}
-        />
-        <PropertyControl
-          label="Save button text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.profileModal?.saveText}
-          onChange={text =>
-            updateModalSetting("profileModal", "saveText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Save",
-          }}
+    <div class="field">
+      <Label size="L">Password</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.userMenu.passwordText}
+          placeholder="Update password"
+          on:change={e =>
+            updateModalSetting("userMenu", "passwordText", e.target.value)}
         />
       </div>
     </div>
 
-    <Divider />
+    <div class="field">
+      <Label size="L">Portal</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.userMenu.portalText}
+          placeholder="Go to portal"
+          on:change={e =>
+            updateModalSetting("userMenu", "portalText", e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Logout</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.userMenu.logoutText}
+          placeholder="Log out"
+          on:change={e =>
+            updateModalSetting("userMenu", "logoutText", e.target.value)}
+        />
+      </div>
+    </div>
+
+    <Divider noMargin />
 
     <div class="section">
-      <Heading size="S">Change Password Modal</Heading>
-      <div class="controls">
-        <PropertyControl
-          label="Modal title"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.title}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "title", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Update password",
-          }}
+      <Heading size="S">Profile modal</Heading>
+      <Body size="S">
+        Customize the text and labels shown in the user profile modal.
+      </Body>
+    </div>
+
+    <div class="field">
+      <Label size="L">Modal title</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.title}
+          placeholder="My profile"
+          on:change={e =>
+            updateModalSetting("profileModal", "title", e.target.value)}
         />
-        <PropertyControl
-          label="Body text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.body}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "body", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Enter your new password below.",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Subtitle</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.body}
+          placeholder="Personalise the platform by adding your first name and last name."
+          on:change={e =>
+            updateModalSetting("profileModal", "body", e.target.value)}
         />
-        <PropertyControl
-          label="Password label"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.passwordLabel}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "passwordLabel", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Password",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Email label</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.emailLabel}
+          placeholder="Email"
+          on:change={e =>
+            updateModalSetting("profileModal", "emailLabel", e.target.value)}
         />
-        <PropertyControl
-          label="Repeat password label"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.repeatLabel}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "repeatLabel", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Repeat password",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">First name label</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.firstNameLabel}
+          placeholder="First name"
+          on:change={e =>
+            updateModalSetting(
+              "profileModal",
+              "firstNameLabel",
+              e.target.value
+            )}
         />
-        <PropertyControl
-          label="Save button text"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.saveText}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "saveText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Update password",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Last name label</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.lastNameLabel}
+          placeholder="Last name"
+          on:change={e =>
+            updateModalSetting("profileModal", "lastNameLabel", e.target.value)}
         />
-        <PropertyControl
-          label="Minimum length message"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.minLengthText}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "minLengthText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder:
-              "Please enter at least {minLength} characters. We recommend using machine generated or random passwords.",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Save button</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.saveText}
+          placeholder="Save"
+          on:change={e =>
+            updateModalSetting("profileModal", "saveText", e.target.value)}
         />
-        <PropertyControl
-          label="Password mismatch message"
-          control={DrawerBindableInput}
-          value={$nav.UserMenuSettings?.changePasswordModal?.mismatchText}
-          onChange={text =>
-            updateModalSetting("changePasswordModal", "mismatchText", text)}
-          {bindings}
-          props={{
-            updateOnChange: false,
-            placeholder: "Passwords must match",
-          }}
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Cancel button</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.profileModal.cancelText}
+          placeholder="Cancel"
+          on:change={e =>
+            updateModalSetting("profileModal", "cancelText", e.target.value)}
+        />
+      </div>
+    </div>
+
+    <Divider noMargin />
+
+    <div class="section">
+      <Heading size="S">Password modal</Heading>
+      <Body size="S">
+        Customize the text and labels shown in the change password modal.
+      </Body>
+    </div>
+
+    <div class="field">
+      <Label size="L">Modal title</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.title}
+          placeholder="Update password"
+          on:change={e =>
+            updateModalSetting("changePasswordModal", "title", e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Subtitle</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.body}
+          placeholder="Enter your new password below."
+          on:change={e =>
+            updateModalSetting("changePasswordModal", "body", e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Password</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.passwordLabel}
+          placeholder="Password"
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "passwordLabel",
+              e.target.value
+            )}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Repeat password</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.repeatLabel}
+          placeholder="Repeat password"
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "repeatLabel",
+              e.target.value
+            )}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Update password</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.saveText}
+          placeholder="Update password"
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "saveText",
+              e.target.value
+            )}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Cancel</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.cancelText}
+          placeholder="Cancel"
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "cancelText",
+              e.target.value
+            )}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Error length</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.minLengthText}
+          placeholder="Please enter at least 12 characters. We recommend using machine generated or random passwords."
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "minLengthText",
+              e.target.value
+            )}
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <Label size="L">Error mismatch</Label>
+      <div>
+        <Input
+          bind:value={$nav.UserMenuSettings.changePasswordModal.mismatchText}
+          placeholder="Passwords must match"
+          on:change={e =>
+            updateModalSetting(
+              "changePasswordModal",
+              "mismatchText",
+              e.target.value
+            )}
         />
       </div>
     </div>
@@ -281,9 +351,14 @@
     gap: var(--spacing-m);
   }
 
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
+  .field {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-gap: var(--spacing-l);
+    align-items: center;
+  }
+
+  .field > div {
+    max-width: 300px;
   }
 </style>
