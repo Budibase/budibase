@@ -126,6 +126,25 @@
           Update version
         </Button>
       </div>
+    {:else if $admin.isDev}
+      <Body size="S">
+        <strong> Dev mode is enabled.</strong>
+        <br />
+        The workspace is currently using the latest version, but you can load your
+        local changes.
+      </Body>
+      <div class="buttons">
+        <Button
+          cta
+          on:click={versionModal.show}
+          disabled={!$isOnlyUser}
+          tooltip={$isOnlyUser
+            ? null
+            : "Unavailable - another user is editing this app"}
+        >
+          Publish local changes
+        </Button>
+      </div>
     {:else}
       <Body size="S">
         The workspace is currently using version
