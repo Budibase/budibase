@@ -37,7 +37,7 @@
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { API } from "@/api"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
+  import GroupIcon from "@/settings/pages/people/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
   import { fly } from "svelte/transition"
