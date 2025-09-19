@@ -42,7 +42,6 @@
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import type {
-    GroupUser,
     InviteUserRequest,
     InviteUsersResponse,
     InviteWithCode,
@@ -71,9 +70,6 @@
   let inviting = false
   let searchFocus = false
   let invitingFlow = false
-  // Initially filter entities without app access
-  // Show all when false
-  let filterByAppAccess = false
   let email: string | null
   let error: string | null = null
   let form: FancyForm
@@ -116,7 +112,7 @@
     const appInvites = await getInvites()
 
     //On Focus behaviour
-    if (!filterByAppAccess && !query) {
+    if (!query) {
       filteredInvites =
         appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
       filteredInvites.sort(sortInviteRoles)
@@ -131,11 +127,7 @@
     })
     filteredInvites.sort(sortInviteRoles)
   }
-  $: filterByAppAccess, prodAppId, filterInvites(query)
-  $: if (searchFocus === true) {
-    filterByAppAccess = false
-  }
-
+  $: prodAppId, filterInvites(query)
   const usersFetch = fetchData({
     API,
     datasource: {
@@ -163,7 +155,7 @@
           }
         : undefined,
       limit: 50,
-      paginate: query || !filterByAppAccess ? undefined : false,
+      paginate: undefined,
     })
     await usersFetch.refresh()
 
@@ -298,24 +290,8 @@
     }
   }
 
-  const getAppGroups = (allGroups: UserGroup[], appId: string) => {
-    if (!allGroups) {
-      return []
-    }
-    return allGroups.filter(group => {
-      if (!group.roles) {
-        return false
-      }
-      return groups.getGroupAppIds(group).includes(appId)
-    })
-  }
-
   const searchGroups = (userGroups: UserGroup[], query: string | null) => {
-    let filterGroups =
-      query?.length || !filterByAppAccess
-        ? userGroups
-        : getAppGroups(userGroups, prodAppId)
-    return filterGroups
+    return userGroups
       .filter((group: { name: string }) => {
         if (!query?.length) {
           return true
@@ -349,52 +325,6 @@
   // Adds the 'role' attribute and sets it to the current app.
   $: enrichedGroups = getEnrichedGroups($groups)
   $: filteredGroups = searchGroups(enrichedGroups, query)
-  $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
-  $: allUsers = [...filteredUsers, ...groupUsers]
-  /*
-    Create pseudo users from the "users" attribute on app groups.
-    These users will appear muted in the UI and show the ROLE
-    inherited from their parent group. The users allow assigning of user
-    specific roles for the app.
-  */
-  const buildGroupUsers = (
-    userGroups: EnrichedUserGroup[],
-    filteredUsers: ExtendedUser[]
-  ): ExtendedUser[] => {
-    if (query || !filterByAppAccess) {
-      return []
-    }
-    // Must exclude users who have explicit privileges
-    const userByEmail: string[] = filteredUsers.reduce(
-      (acc: string[], user) => {
-        if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
-          acc.push(user.email)
-        }
-        return acc
-      },
-      []
-    )
-
-    const indexedUsers: Record<string, ExtendedUser> = userGroups.reduce(
-      (acc, group) => {
-        group.users?.forEach((user: GroupUser) => {
-          if (userByEmail.indexOf(user.email) == -1) {
-            acc[user._id] = {
-              _id: user._id,
-              email: user.email,
-              role: group.role,
-              group: group.name,
-              tenantId: "", // Required by User interface
-              roles: {}, // Required by User interface
-            } as ExtendedUser
-          }
-        })
-        return acc
-      },
-      {} as Record<string, ExtendedUser>
-    )
-    return Object.values(indexedUsers)
-  }
 
   const getInvites = async () => {
     try {
@@ -621,7 +551,7 @@
 
       <span
         class="search-input-icon"
-        class:searching={query || !filterByAppAccess}
+        class:searching={query}
         on:click={() => {
           if (!query) {
             return
@@ -630,7 +560,7 @@
           userOnboardResponse = null
         }}
       >
-        <Icon name={!filterByAppAccess || query ? "x" : "magnifying-glass"} />
+        <Icon name={query ? "x" : "magnifying-glass"} />
       </span>
     </div>
 
@@ -765,7 +695,7 @@
                 <div class="auth-entity-title">Users</div>
                 <div class="auth-entity-access-title">Access</div>
               </div>
-              {#each allUsers as user}
+              {#each filteredUsers as user}
                 {@const userGroups = sdk.users.getUserAppGroups(
                   $appStore.appId,
                   user._id,
