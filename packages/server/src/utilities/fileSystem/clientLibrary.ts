@@ -81,7 +81,7 @@ export async function updateClientLibrary(appId: string) {
   let manifest, client, clientNew
   let dependencies = []
 
-  if (!env.isDev()) {
+  if (env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
     manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
