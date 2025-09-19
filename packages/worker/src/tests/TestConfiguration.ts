@@ -51,6 +51,7 @@ class TestConfiguration {
   apiKey?: string
   userPassword = "password123!"
   sessions: string[] = []
+  appId?: string
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
     // default to cloud hosting
@@ -233,6 +234,16 @@ class TestConfiguration {
     }
   }
 
+  async withApp<T>(appId: string, f: () => Promise<T>): Promise<T> {
+    const oldAppId = this.appId
+    this.appId = appId
+    try {
+      return await f()
+    } finally {
+      this.appId = oldAppId
+    }
+  }
+
   async login(user: User) {
     await this.createSession(user)
     return this.authHeaders(user)
@@ -245,11 +256,15 @@ class TestConfiguration {
       tenantId: user.tenantId,
     }
     const authCookie = jwt.sign(authToken, coreEnv.JWT_SECRET as Secret)
-    return {
+    const headers: Record<string, string> = {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
       [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
     }
+    if (this.appId) {
+      headers[constants.Header.APP_ID] = this.appId
+    }
+    return headers
   }
 
   defaultHeaders() {
