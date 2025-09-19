@@ -93,7 +93,7 @@
           <UpgradeButton />
         </div>
         <div class="desktop">
-          <ActionButton quiet on:click={() => bb.settings()} icon="sliders">
+          <ActionButton quiet on:click={() => bb.settings()} icon="gear">
             Settings
           </ActionButton>
         </div>

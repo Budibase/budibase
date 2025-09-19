@@ -10,7 +10,7 @@ import { importToRows } from "../utils"
 describe("utils", () => {
   const config = new TestConfiguration()
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

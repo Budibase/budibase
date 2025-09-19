@@ -16,13 +16,9 @@
   import ModalSideBar from "./ModalSideBar.svelte"
   import SideNavLink from "@/pages/builder/workspace/[application]/_components/SideNav/SideNavLink.svelte"
 
-  export const show = () => {
-    modal.show()
-  }
+  export const show = () => modal.show()
 
-  export const hide = () => {
-    modal.hide()
-  }
+  export const hide = () => modal.hide()
 
   let modal: Modal
   let scrolling = false

@@ -14,9 +14,9 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { events, objectStore } from "@budibase/backend-core"
-import * as setup from "./utilities"
-import nock from "nock"
 import { PluginSource } from "@budibase/types"
+import nock from "nock"
+import * as setup from "./utilities"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
@@ -27,16 +27,27 @@ describe("/plugins", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(() => {
     jest.clearAllMocks()
     nock.cleanAll()
   })
 
-  const createPlugin = async (status?: number) => {
+  const createPlugin = async (
+    pluginType: "default" | "encoded" = "default",
+    status?: number
+  ) => {
+    const filename =
+      pluginType === "encoded"
+        ? "_.-encoded-plugin-1.0.0.tar.gz"
+        : "comment-box-1.0.2.tar.gz"
+
     return request
       .post(`/api/plugin/upload`)
-      .attach("file", "src/api/routes/tests/data/comment-box-1.0.2.tar.gz")
+      .attach("file", `src/api/routes/tests/data/${filename}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -63,7 +74,7 @@ describe("/plugins", () => {
       mockUploadDirectory.mockImplementationOnce(() => {
         throw new Error()
       })
-      let res = await createPlugin(400)
+      let res = await createPlugin(undefined, 400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
     })
@@ -94,6 +105,20 @@ describe("/plugins", () => {
       expect(plugins.body.length).toEqual(0)
       expect(events.plugin.deleted).toHaveBeenCalledTimes(1)
     })
+
+    it("should handle URL encoded plugin IDs with special characters", async () => {
+      await createPlugin("encoded")
+      const encodedPluginId = encodeURIComponent("plg__.-encoded-plugin")
+
+      const res = await request
+        .delete(`/api/plugin/${encodedPluginId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.message).toEqual("Plugin plg__.-encoded-plugin deleted.")
+    })
+
     it("should handle an error deleting a plugin", async () => {
       mockDeleteFolder.mockImplementationOnce(() => {
         throw new Error()

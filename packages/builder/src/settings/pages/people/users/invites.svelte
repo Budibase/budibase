@@ -13,6 +13,7 @@
     type GetUserInvitesResponse,
   } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
+  import { routeActions } from "../.."
 
   type ParsedInvite = {
     _id: string
@@ -115,7 +116,7 @@
 
 <Layout noPadding>
   {#if selectedInvites.length > 0}
-    <div class="delete-btn">
+    <div use:routeActions class="delete-btn">
       <DeleteRowsButton
         item="user"
         on:updaterows
