@@ -15,8 +15,8 @@
     "./manifest.json": "./manifest.json"
   },
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch --mode=dev",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch --dev",
     "check:types": "yarn svelte-check"
   },
   "dependencies": {
@@ -66,7 +66,8 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/string-templates"
+              "@budibase/string-templates",
+              "@budibase/types"
             ],
             "target": "build"
           }

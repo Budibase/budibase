@@ -5,7 +5,7 @@
 
   export let value: any = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: "above" = "above"
+  export let labelPosition: "above" | "left" = "above"
   export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
