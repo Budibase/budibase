@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
   return {
+    define: {
+      "process.env.NODE_ENV": JSON.stringify(
+        isProduction ? "production" : "development"
+      ),
+    },
     server: {
       open: false,
     },
@@ -64,6 +69,10 @@ export default defineConfig(({ mode }) => {
         {
           find: "@budibase/bbui",
           replacement: path.resolve("../bbui/src"),
+        },
+        {
+          find: "@budibase/string-templates",
+          replacement: path.resolve("../string-templates/src"),
         },
         {
           find: "@",
