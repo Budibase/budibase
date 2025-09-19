@@ -4,7 +4,7 @@
   import { getAvailableFormOptions } from "@/helpers/formBlockTracker"
   import { createEventDispatcher } from "svelte"
 
-  export let componentInstance = {}
+  export const componentInstance = {}
   export let value = ""
   export let placeholder = "Select a form to track"
 
@@ -27,7 +27,7 @@
     return value
   }
 
-  const onChange = (event) => {
+  const onChange = event => {
     const newValue = event.detail
     // Don't validate - just pass through the selected value
     boundValue = newValue
@@ -36,9 +36,4 @@
   }
 </script>
 
-<Select
-  {placeholder}
-  value={boundValue}
-  on:change={onChange}
-  {options}
-/>
+<Select {placeholder} value={boundValue} on:change={onChange} {options} />

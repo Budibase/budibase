@@ -5,6 +5,7 @@
   import { derived, get } from "svelte/store"
 
   export let form
+  export let stepCustomization = {}
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -152,64 +153,111 @@
   }
 
   // Create a derived store to find applicable forms for display
-  const availableForms = derived([screenStore], ([$screenStore]) => {
+  const _availableForms = derived([screenStore], ([_$screenStore]) => {
     return getAvailableForms()
   })
 
   // Get detailed information about the selected form directly from the form prop
   $: selectedFormDetails = form ? getComponentDetails(form) : null
+
+  // Get step customizations or use defaults
+  $: getStepCustomization = stepIndex => {
+    const stepKey = `step${stepIndex + 1}`
+    const stepConfig = stepCustomization?.[stepKey]
+
+    return {
+      icon: stepConfig?.icon || "ri-checkbox-circle-line",
+      completedColor: stepConfig?.completedColor || "#22c55e",
+      currentColor: stepConfig?.currentColor || "#3b82f6",
+      incompleteColor: stepConfig?.incompleteColor || "#94a3b8",
+    }
+  }
 </script>
 
 <div use:styleable={$component.styles}>
   {#if form && selectedFormDetails}
     <div class="form-tracker">
-      <h3 class="form-title">{selectedFormDetails.instanceName || `Form ${form.slice(-4)}`}</h3>
-      <div class="form-info">
-        <div class="info-row">
-          <span class="label">Type:</span>
-          <span class="value">{selectedFormDetails.formAnalysis.type}</span>
-        </div>
+      <h3 class="form-title">
+        {selectedFormDetails.instanceName || `Form ${form.slice(-4)}`}
+      </h3>
 
-        {#if selectedFormDetails.formAnalysis.stepCount > 0}
-          <div class="info-row">
-            <span class="label">Steps:</span>
-            <span class="value">{selectedFormDetails.formAnalysis.stepCount}</span>
-          </div>
-
-          <div class="steps-list">
-            {#each selectedFormDetails.formAnalysis.steps as step}
-              <div class="step-item">
-                <span class="step-number">{step.stepNumber}.</span>
-                <div class="step-details">
-                  <div class="step-title">{step.title || step.instanceName}</div>
+      {#if selectedFormDetails.formAnalysis.stepCount > 0}
+        <div class="step-progress-tracker">
+          <div class="progress-line"></div>
+          <div class="steps-container">
+            {#each selectedFormDetails.formAnalysis.steps as step, index}
+              {@const customization = getStepCustomization(index)}
+              <div class="step-indicator">
+                <div class="step-icon-container">
+                  <i
+                    class="{customization.icon} ri-xl step-icon"
+                    style="color: {customization.incompleteColor};"
+                  ></i>
+                </div>
+                <div class="step-info">
+                  <div class="step-title">
+                    {step.title || step.instanceName}
+                  </div>
                   {#if step.description}
                     <div class="step-description">{step.description}</div>
-                  {/if}
-                  {#if step.fieldCount > 0}
-                    <div class="field-info">{step.fieldCount} fields</div>
-                  {:else if step.childCount > 0}
-                    <div class="field-info">{step.childCount} components</div>
                   {/if}
                 </div>
               </div>
             {/each}
           </div>
-        {/if}
+        </div>
 
-        {#if selectedFormDetails.formAnalysis.dataSource}
+        <div class="form-summary">
           <div class="info-row">
-            <span class="label">Data Source:</span>
-            <span class="value">{selectedFormDetails.formAnalysis.dataSource}</span>
+            <span class="label">Type:</span>
+            <span class="value">{selectedFormDetails.formAnalysis.type}</span>
           </div>
-        {/if}
 
-        {#if selectedFormDetails.formAnalysis.actionType}
           <div class="info-row">
-            <span class="label">Action:</span>
-            <span class="value">{selectedFormDetails.formAnalysis.actionType}</span>
+            <span class="label">Total Steps:</span>
+            <span class="value"
+              >{selectedFormDetails.formAnalysis.stepCount}</span
+            >
           </div>
-        {/if}
-      </div>
+
+          {#if selectedFormDetails.formAnalysis.dataSource}
+            <div class="info-row">
+              <span class="label">Data Source:</span>
+              <span class="value"
+                >{selectedFormDetails.formAnalysis.dataSource}</span
+              >
+            </div>
+          {/if}
+
+          {#if selectedFormDetails.formAnalysis.actionType}
+            <div class="info-row">
+              <span class="label">Action:</span>
+              <span class="value"
+                >{selectedFormDetails.formAnalysis.actionType}</span
+              >
+            </div>
+          {/if}
+        </div>
+      {:else}
+        <div class="no-steps">
+          <p>This form doesn't have multiple steps to track.</p>
+          <div class="form-info">
+            <div class="info-row">
+              <span class="label">Type:</span>
+              <span class="value">{selectedFormDetails.formAnalysis.type}</span>
+            </div>
+
+            {#if selectedFormDetails.formAnalysis.dataSource}
+              <div class="info-row">
+                <span class="label">Data Source:</span>
+                <span class="value"
+                  >{selectedFormDetails.formAnalysis.dataSource}</span
+                >
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
     </div>
   {:else if form}
     <div class="form-tracker error">
@@ -226,23 +274,95 @@
 
 <style>
   .form-tracker {
-    padding: 16px;
+    padding: 20px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: #fafafa;
   }
 
   .form-title {
-    margin: 0 0 12px 0;
+    margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 600;
     color: #333;
+    text-align: center;
   }
 
+  .step-progress-tracker {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .progress-line {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+  }
+
+  .steps-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+  }
+
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 120px;
+    text-align: center;
+  }
+
+  .step-icon-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 3;
+  }
+
+  .step-icon {
+    font-size: 24px;
+  }
+
+  .step-info {
+    text-align: center;
+  }
+
+  .step-title {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .step-description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+  }
+
+  .form-summary,
   .form-info {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
   }
 
   .info-row {
@@ -254,7 +374,7 @@
   .label {
     font-weight: 500;
     color: #666;
-    min-width: 80px;
+    min-width: 100px;
   }
 
   .value {
@@ -266,43 +386,15 @@
     font-size: 13px;
   }
 
-  .steps-list {
-    margin-top: 12px;
-    padding-left: 8px;
+  .no-steps {
+    text-align: center;
+    padding: 20px;
   }
 
-  .step-item {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: flex-start;
-  }
-
-  .step-number {
-    font-weight: 600;
+  .no-steps p {
     color: #666;
-    min-width: 20px;
-  }
-
-  .step-details {
-    flex: 1;
-  }
-
-  .step-title {
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 2px;
-  }
-
-  .step-description {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 2px;
-  }
-
-  .field-info {
-    font-size: 12px;
-    color: #888;
+    font-size: 16px;
+    margin: 0 0 16px 0;
   }
 
   .form-tracker.error {
@@ -315,12 +407,28 @@
     background: #fff8e1;
   }
 
-
   code {
     background: #f0f0f0;
     padding: 2px 4px;
     border-radius: 3px;
     font-family: monospace;
     font-size: 12px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .steps-container {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .progress-line {
+      display: none;
+    }
+
+    .step-indicator {
+      margin-bottom: 20px;
+    }
   }
 </style>

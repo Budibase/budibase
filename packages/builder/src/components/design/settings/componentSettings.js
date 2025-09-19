@@ -37,6 +37,7 @@ import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
 import FormSelect from "./controls/FormSelect.svelte"
+import FormStepCustomization from "./controls/FormStepCustomization.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -107,6 +108,7 @@ const componentMap = {
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
   formSelect: FormSelect,
+  formStepCustomization: FormStepCustomization,
 }
 
 export const getComponentForSetting = setting => {

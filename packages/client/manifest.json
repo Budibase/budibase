@@ -8812,6 +8812,12 @@
         "label": "Form",
         "key": "form",
         "placeholder": "Select a form to track"
+      },
+      {
+        "type": "formStepCustomization",
+        "label": "Step Customization",
+        "key": "stepCustomization",
+        "dependsOn": "form"
       }
     ]
   }
