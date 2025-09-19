@@ -2758,17 +2758,36 @@ if (descriptions.length) {
               //   })
               // })
               describe("notIn", () => {
+                let user1: User
+                let user2: User
+
+                beforeAll(async () => {
+                  user1 = await config.createUser({
+                    _id: `us_${utils.newid()}`,
+                  })
+                  user2 = await config.createUser({
+                    _id: `us_${utils.newid()}`,
+                  })
+
+                  tableOrViewId = await createTableOrView({
+                    user: {
+                      name: "user",
+                      type: FieldType.BB_REFERENCE_SINGLE,
+                      subtype: BBReferenceFieldSubType.USER,
+                    },
+                  })
+
+                  await createRows([
+                    { user: user1 },
+                    { user: user2 },
+                    { user: null },
+                  ])
+                })
+
                 it("successfully finds excluded row", async () => {
-                  const result = await expectSearch({
-                    query: { notIn: { user: [user1._id] } },
-                  }).toMatch({})
-
-                  expect(result.rows.length).toBeGreaterThanOrEqual(1)
-
-                  const userIds = result.rows
-                    .filter(row => row.user)
-                    .map(row => row.user._id)
-                  expect(userIds).not.toContain(user1._id)
+                  await expectQuery({
+                    equal: { user: user1._id },
+                  }).toContainExactly([{ user: { _id: user2._id } }]) // Do I also need to include the third row that is null?
                 })
 
                 it("excludes multiple values", async () => {
@@ -2798,7 +2817,7 @@ if (descriptions.length) {
                   expect(userIds).toContain(user1._id)
                 })
               })
-
+              // ---------------------------
               describe("empty", () => {
                 it("finds empty rows", async () => {
                   await expectQuery({ empty: { user: null } }).toContainExactly(

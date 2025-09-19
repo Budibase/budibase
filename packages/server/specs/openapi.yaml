@@ -2073,6 +2073,7 @@ components:
                             - notContains
                             - containsAny
                             - oneOf
+                            - notIn
                             - range
                         field:
                           type: string
@@ -2119,6 +2120,7 @@ components:
                                   - notContains
                                   - containsAny
                                   - oneOf
+                                  - notIn
                                   - range
                               field:
                                 type: string
@@ -2282,6 +2284,7 @@ components:
                                 - notContains
                                 - containsAny
                                 - oneOf
+                                - notIn
                                 - range
                             field:
                               type: string
@@ -2328,6 +2331,7 @@ components:
                                       - notContains
                                       - containsAny
                                       - oneOf
+                                      - notIn
                                       - range
                                   field:
                                     type: string
@@ -2498,6 +2502,7 @@ components:
                                   - notContains
                                   - containsAny
                                   - oneOf
+                                  - notIn
                                   - range
                               field:
                                 type: string
@@ -2544,6 +2549,7 @@ components:
                                         - notContains
                                         - containsAny
                                         - oneOf
+                                        - notIn
                                         - range
                                     field:
                                       type: string

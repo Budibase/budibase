@@ -2557,6 +2557,7 @@
                               "notContains",
                               "containsAny",
                               "oneOf",
+                              "notIn",
                               "range"
                             ]
                           },
@@ -2621,6 +2622,7 @@
                                     "notContains",
                                     "containsAny",
                                     "oneOf",
+                                    "notIn",
                                     "range"
                                   ]
                                 },
@@ -2839,6 +2841,7 @@
                                   "notContains",
                                   "containsAny",
                                   "oneOf",
+                                  "notIn",
                                   "range"
                                 ]
                               },
@@ -2903,6 +2906,7 @@
                                         "notContains",
                                         "containsAny",
                                         "oneOf",
+                                        "notIn",
                                         "range"
                                       ]
                                     },
@@ -3132,6 +3136,7 @@
                                     "notContains",
                                     "containsAny",
                                     "oneOf",
+                                    "notIn",
                                     "range"
                                   ]
                                 },
@@ -3196,6 +3201,7 @@
                                           "notContains",
                                           "containsAny",
                                           "oneOf",
+                                          "notIn",
                                           "range"
                                         ]
                                       },
