@@ -12,7 +12,7 @@
   import positionDropdown, {
     type UpdateHandler,
   } from "../Actions/position_dropdown"
-  import clickOutside from "../Actions/click_outside"
+  import clickOutside from "../Actions/clickOutside"
   import { fly } from "svelte/transition"
   import Context from "../context"
   import type { KeyboardEventHandler } from "svelte/elements"

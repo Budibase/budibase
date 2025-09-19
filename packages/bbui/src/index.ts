@@ -103,7 +103,7 @@ export { default as Heading } from "./Typography/Heading.svelte"
 
 // Actions
 export { default as autoResizeTextArea } from "./Actions/autoresizeTextArea"
-export { default as clickOutside } from "./Actions/click_outside"
+export { default as clickOutside } from "./Actions/clickOutside"
 export { default as positionDropdown } from "./Actions/position_dropdown"
 
 // Stores
