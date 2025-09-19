@@ -1,5 +1,17 @@
-import * as userSdk from "../../../sdk/users"
-import env from "../../../environment"
+import {
+  utils as backendCoreUtils,
+  cache,
+  context,
+  db,
+  events,
+  HTTPError,
+  locks,
+  platform,
+  tenancy,
+  users,
+} from "@budibase/backend-core"
+import { features } from "@budibase/pro"
+import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
@@ -17,6 +29,7 @@ import {
   DeleteInviteUsersRequest,
   DeleteInviteUsersResponse,
   DeleteUserResponse,
+  EditUserPermissionsResponse,
   ErrorCode,
   FetchUsersResponse,
   FindUserResponse,
@@ -36,27 +49,17 @@ import {
   SearchUsersResponse,
   StrippedUser,
   UnsavedUser,
-  UpdateInviteRequest,
   UpdateInviteResponse,
   User,
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import {
-  users,
-  cache,
-  events,
-  platform,
-  tenancy,
-  db,
-  locks,
-  context,
-} from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
-import { isEmailConfigured } from "../../../utilities/email"
-import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
-import emailValidator from "email-validator"
 import crypto from "crypto"
+import emailValidator from "email-validator"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
+import { isEmailConfigured } from "../../../utilities/email"
+import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -505,45 +508,50 @@ export const getUserInvites = async (
   }
 }
 
-export const updateInvite = async (
-  ctx: UserCtx<UpdateInviteRequest, UpdateInviteResponse>
+export const addWorkspaceIdToInvite = async (
+  ctx: UserCtx<void, UpdateInviteResponse, { code: string; role: string }>
+) => {
+  const { code, role } = ctx.params
+
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+
+  try {
+    const invite = await cache.invite.getCode(code)
+    invite.info.apps ??= {}
+    invite.info.apps[prodWorkspaceId] = role
+
+    await cache.invite.updateCode(code, invite)
+    ctx.body = { ...invite }
+  } catch (e) {
+    ctx.throw(400, "Invitation is not valid or has expired.")
+  }
+}
+
+export const removeWorkspaceIdFromInvite = async (
+  ctx: UserCtx<void, UpdateInviteResponse, { code: string }>
 ) => {
   const { code } = ctx.params
-  let updateBody = { ...ctx.request.body }
 
-  delete updateBody.email
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
-  let invite
   try {
-    invite = await cache.invite.getCode(code)
+    const invite = await cache.invite.getCode(code)
+    invite.info.apps ??= {}
+    delete invite.info.apps[prodWorkspaceId]
+
+    await cache.invite.updateCode(code, invite)
+    ctx.body = { ...invite }
   } catch (e) {
-    ctx.throw(400, "There was a problem with the invite")
+    ctx.throw(400, "Invitation is not valid or has expired.")
   }
-
-  let updated = {
-    ...invite,
-  }
-
-  if (!updateBody?.builder?.apps && updated.info?.builder?.apps) {
-    updated.info.builder.apps = []
-  } else if (updateBody?.builder) {
-    updated.info.builder = updateBody.builder
-  }
-
-  if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
-    updated.info.apps = []
-  } else {
-    updated.info = {
-      ...invite.info,
-      apps: {
-        ...invite.info.apps,
-        ...updateBody.apps,
-      },
-    }
-  }
-
-  await cache.invite.updateCode(code, updated)
-  ctx.body = { ...invite }
 }
 
 export const inviteAccept = async (
@@ -612,5 +620,75 @@ export const inviteAccept = async (
     }
     console.warn("Error inviting user", err)
     ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+  }
+}
+
+export const addUserToWorkspace = async (
+  ctx: UserCtx<
+    EditUserPermissionsResponse,
+    SaveUserResponse,
+    { userId: string; role: string }
+  >
+) => handleUserWorkspacePermission(ctx, ctx.params.userId, ctx.params.role)
+
+export const removeUserFromWorkspace = async (
+  ctx: UserCtx<
+    EditUserPermissionsResponse,
+    SaveUserResponse,
+    { userId: string }
+  >
+) => handleUserWorkspacePermission(ctx, ctx.params.userId, undefined)
+
+async function handleUserWorkspacePermission(
+  ctx: UserCtx<EditUserPermissionsResponse, SaveUserResponse>,
+  userId: string,
+  role: string | undefined
+) {
+  const { _rev } = ctx.request.body
+  if (!_rev) {
+    ctx.throw(400, "rev is required")
+  }
+
+  const currentUserId = ctx.user?._id
+
+  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
+
+  const existingUser = await users.getById(userId)
+  existingUser._rev = ctx.request.body._rev
+  if (role) {
+    existingUser.roles[prodWorkspaceId] = role
+  } else {
+    delete existingUser.roles[prodWorkspaceId]
+  }
+
+  if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
+    throw new HTTPError("Feature not enabled, please check license", 400)
+  }
+
+  const appCreator = Object.entries(existingUser.roles)
+    .filter(([_appId, role]) => role === "CREATOR")
+    .map(([appId]) => appId)
+  if (!appCreator.length && existingUser.builder) {
+    delete existingUser.builder.creator
+    delete existingUser.builder.apps
+  } else if (appCreator.length) {
+    existingUser.builder ??= {}
+    existingUser.builder.creator = true
+    existingUser.builder.apps = appCreator
+  }
+
+  const user = await userSdk.db.save(existingUser, {
+    currentUserId,
+    hashPassword: false,
+  })
+
+  ctx.body = {
+    _id: user._id!,
+    _rev: user._rev!,
+    email: user.email,
   }
 }

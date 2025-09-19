@@ -5,11 +5,7 @@ import { render, waitFor } from "@testing-library/svelte"
 import { admin, licensing, featureFlags } from "@/stores/portal"
 import { notifications } from "@budibase/bbui"
 import { API } from "@/api"
-
-const Hosting = {
-  Cloud: "cloud",
-  Self: "self",
-}
+import { Hosting } from "@budibase/types"
 
 const defaultFeatures = {
   budibaseAIEnabled: false,
@@ -50,7 +46,7 @@ vi.mock("@/stores/portal", () => {
 })
 
 function setupEnv(hosting, features = {}, flags = {}) {
-  admin.set({ cloud: hosting === Hosting.Cloud })
+  admin.set({ cloud: hosting === Hosting.CLOUD })
   licensing.set({ ...defaultFeatures, ...features })
   featureFlags.set({ ...defaultFlags, ...flags })
 }
@@ -66,7 +62,7 @@ describe("AISettings", () => {
   }
 
   beforeEach(() => {
-    setupEnv(Hosting.Self)
+    setupEnv(Hosting.SELF)
   })
 
   afterEach(() => {
