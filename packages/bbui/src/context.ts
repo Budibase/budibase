@@ -14,5 +14,12 @@ declare module "svelte" {
   }
 }
 
-export const Modal = "bbui-modal"
-export const PopoverRoot = "bbui-popover-root"
+interface Module {
+  Modal: "bbui-modal"
+  PopoverRoot: "bbui-popover-root"
+}
+
+export default {
+  Modal: "bbui-modal",
+  PopoverRoot: "bbui-popover-root",
+} as Module
