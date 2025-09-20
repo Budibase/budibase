@@ -1,9 +1,9 @@
 import { events, tenancy, users as usersCore } from "@budibase/backend-core"
 import {
+  EmailTemplatePurpose,
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
-  EmailTemplatePurpose,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 
@@ -42,7 +42,7 @@ export async function invite(
         userInfo = {}
       }
       userInfo.tenantId = tenantId
-      const opts: any = {
+      const opts = {
         subject: "{{ company }} platform invitation",
         info: userInfo,
       }

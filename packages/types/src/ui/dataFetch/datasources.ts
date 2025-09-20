@@ -1,4 +1,4 @@
-import { InternalTable, Row, TableSchema } from "../../documents"
+import { Row, TableSchema } from "../../documents"
 
 export type DataFetchDatasource =
   | TableDatasource
@@ -57,12 +57,10 @@ export interface RelationshipDatasource {
 
 export interface UserDatasource {
   type: "user"
-  tableId: InternalTable.USER_METADATA
 }
 
 export interface GroupUserDatasource {
   type: "groupUser"
-  tableId: InternalTable.USER_METADATA
 }
 
 export interface CustomDatasource {

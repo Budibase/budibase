@@ -1,40 +1,51 @@
-<script>
-  import { Select, FancySelect } from "@budibase/bbui"
+<script lang="ts">
+  import { capitalise } from "@/helpers"
   import { roles } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
-
+  import type { PopoverAlignment } from "@budibase/bbui"
+  import { FancySelect, Select } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
+  import type { UIRole } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
-  import { capitalise } from "@/helpers"
 
-  export let value = undefined
-  export let error = undefined
-  export let placeholder = null
-  export let autoWidth = false
-  export let quiet = false
-  export let allowPublic = true
-  export let allowRemove = false
-  export let disabled = false
-  export let align = undefined
-  export let footer = null
-  export let allowedRoles = null
-  export let allowCreator = false
-  export let fancySelect = false
-  export let labelPrefix = null
+  interface RoleOption {
+    _id: string
+    name: string
+    color?: string
+    enabled?: boolean
+    tag?: string | null
+  }
+
+  export let value: string | undefined = undefined
+  export let error: string | undefined = undefined
+  export let placeholder: string | boolean = false
+  export let autoWidth: boolean = false
+  export let quiet: boolean = false
+  export let allowPublic: boolean = true
+  export let allowRemove: boolean = false
+  export let disabled: boolean = false
+  export let align: PopoverAlignment | undefined = undefined
+  export let footer: string | undefined = undefined
+  export let allowedRoles: string[] | null = null
+  export let allowCreator: boolean = false
+  export let fancySelect: boolean = false
+  export let labelPrefix: string | null = null
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const subType = $licensing.license.plan.type ?? null
+  const subType = $licensing.license?.plan?.type ?? null
 
   $: isPremiumOrAbove = [
     Constants.PlanType.PREMIUM,
     Constants.PlanType.PREMIUM_PLUS,
     Constants.PlanType.ENTERPRISE,
     Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+    // @ts-expect-error this is not in the enum anymore, but it might be in some licences
     Constants.PlanType.ENTERPRISE_BASIC,
   ].includes(subType)
 
-  $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
+  $: enrichLabel = (label: string) =>
+    labelPrefix ? `${labelPrefix} ${label}` : label
   $: options = getOptions(
     $roles,
     allowPublic,
@@ -45,16 +56,16 @@
   )
 
   const getOptions = (
-    roles,
-    allowPublic,
-    allowRemove,
-    allowedRoles,
-    allowCreator,
-    enrichLabel
-  ) => {
+    roles: UIRole[],
+    allowPublic: boolean,
+    allowRemove: boolean,
+    allowedRoles: string[] | null,
+    allowCreator: boolean,
+    enrichLabel: (_label: string) => string
+  ): RoleOption[] => {
     // Use roles whitelist if specified
     if (allowedRoles?.length) {
-      let options = roles
+      let options: RoleOption[] = roles
         .filter(role => allowedRoles.includes(role._id))
         .map(role => ({
           color: role.uiMetadata.color,
@@ -72,7 +83,7 @@
     }
 
     // Allow all core roles
-    let options = roles.map(role => ({
+    let options = roles.map<RoleOption>(role => ({
       color: role.uiMetadata.color,
       name: enrichLabel(role.uiMetadata.displayName),
       _id: role._id,
@@ -103,7 +114,7 @@
     return options
   }
 
-  const getColor = role => {
+  const getColor = (role: RoleOption) => {
     // Creator and remove options have no colors
     if (role._id === Constants.Roles.CREATOR || role._id === RemoveID) {
       return null
@@ -111,7 +122,7 @@
     return role.color || "var(--spectrum-global-color-static-magenta-400)"
   }
 
-  const getIcon = role => {
+  const getIcon = (role: RoleOption) => {
     // Only remove option has an icon
     if (role._id === RemoveID) {
       return "Close"
@@ -119,7 +130,7 @@
     return null
   }
 
-  const onChange = e => {
+  const onChange = (e: CustomEvent) => {
     if (allowRemove && e.detail === RemoveID) {
       dispatch("remove")
     } else {
@@ -130,8 +141,6 @@
 
 {#if fancySelect}
   <FancySelect
-    {autoWidth}
-    {quiet}
     {disabled}
     {footer}
     bind:value
@@ -141,14 +150,12 @@
     getOptionLabel={role => role.name}
     getOptionValue={role => role._id}
     getOptionColour={getColor}
-    getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
         return isPremiumOrAbove
       }
       return true
     }}
-    {placeholder}
     {error}
   />
 {:else}
