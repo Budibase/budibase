@@ -76,7 +76,7 @@ import {
 } from "../../utilities/fileSystem"
 import { doesUserHaveLock } from "../../utilities/redis"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { removeWorkspaceFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
@@ -828,7 +828,7 @@ async function destroyWorkspace(ctx: UserCtx) {
 
   await deleteAppFiles(prodAppId)
 
-  await removeAppFromUserRoles(ctx, prodAppId)
+  await removeWorkspaceFromUserRoles(ctx, prodAppId)
   await invalidateWorkspaceCache(prodAppId)
   return result
 }
