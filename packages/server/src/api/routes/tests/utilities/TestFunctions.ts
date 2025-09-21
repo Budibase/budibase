@@ -25,9 +25,11 @@ function runRequest(appId: any, controlFunc: any, request?: any) {
   })
 }
 
-export const getAllTableRows = async (config: any) => {
-  const req = new Request(config.appId, { tableId: config.table._id })
-  await runRequest(config.appId, rowController.fetch, req)
+export const getAllTableRows = async (config: TestConfiguration) => {
+  const req = new Request(config.getDevWorkspaceId(), {
+    tableId: config.table!._id,
+  })
+  await runRequest(config.getDevWorkspaceId(), rowController.fetch, req)
   return req.body
 }
 
