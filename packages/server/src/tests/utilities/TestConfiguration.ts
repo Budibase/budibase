@@ -17,7 +17,6 @@ import * as pro from "@budibase/pro"
 import { init as dbInit } from "../../db"
 import env from "../../environment"
 import {
-  app as appController,
   automation as automationController,
   deploy as deployController,
   layout as layoutController,
@@ -25,6 +24,7 @@ import {
   role as roleController,
   view as viewController,
   webhook as webhookController,
+  workspace as workspaceController,
 } from "./controllers"
 import {
   basicAutomation,
@@ -645,7 +645,7 @@ export default class TestConfiguration {
     this.app = await context.doInTenant(
       this.tenantId!,
       async () =>
-        (await this._req(appController.create, {
+        (await this._req(workspaceController.create, {
           name,
           url,
         })) as Workspace
@@ -666,16 +666,16 @@ export default class TestConfiguration {
     })
   }
 
-  async createAppWithOnboarding(
-    appName: string,
+  async createWorkspaceWithOnboarding(
+    name: string,
     url?: string
   ): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
       async () =>
-        (await this._req(appController.create, {
-          name: appName,
+        (await this._req(workspaceController.create, {
+          name,
           url,
           isOnboarding: "true",
         })) as Workspace
@@ -710,7 +710,7 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(appController.unpublish, undefined, {
+    const response = await this._req(workspaceController.unpublish, undefined, {
       appId: this.appId,
     })
     this.prodAppId = undefined

@@ -35,7 +35,7 @@ describe("/screens", () => {
   beforeEach(async () => {
     await config.newTenant()
     // Replace the regular app with an onboarding app to get sample data
-    await config.createAppWithOnboarding("test-app-with-sample")
+    await config.createWorkspaceWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
