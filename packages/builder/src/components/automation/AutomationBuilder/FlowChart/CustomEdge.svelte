@@ -24,7 +24,6 @@
   export let targetPosition: Position
   export let target: string
 
-  // Edge data
   $: viewMode = data?.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection
@@ -122,6 +121,7 @@
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
     }
   }
+  $: console.log(blockRef)
 </script>
 
 {#if !hideEdge}
