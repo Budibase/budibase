@@ -634,7 +634,7 @@ async function creationEvents(
   }
 }
 
-async function appWorkspaceCreate(
+async function workspacePostCreate(
   ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
   app: Workspace
 ) {
@@ -673,7 +673,7 @@ export async function create(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const newApplication = await quotas.addApp(() => performWorkspaceCreate(ctx))
-  await appWorkspaceCreate(ctx, newApplication)
+  await workspacePostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
 }
