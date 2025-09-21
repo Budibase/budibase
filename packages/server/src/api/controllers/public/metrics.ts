@@ -1,6 +1,6 @@
+import { db as dbCore, users as userCore } from "@budibase/backend-core"
+import { licensing, quotas } from "@budibase/pro"
 import { Ctx } from "@budibase/types"
-import { users as userCore, db as dbCore } from "@budibase/backend-core"
-import { quotas, licensing } from "@budibase/pro"
 
 import os from "os"
 
@@ -13,9 +13,9 @@ export async function fetch(ctx: Ctx) {
 
   // *** APPS ***
   const allDatabases = await dbCore.getAllDbs()
-  const devAppIDs = await dbCore.getDevAppIDs()
-  const prodAppIDs = await dbCore.getProdAppIDs()
-  const allAppIds = await dbCore.getAllApps({ idsOnly: true })
+  const devWorkspaceIDs = await dbCore.getDevWorkspaceIDs()
+  const prodWorkspaceIDs = await dbCore.getProdWorkpaceIDs()
+  const allWorkspaceIds = await dbCore.getAllWorkspaces({ idsOnly: true })
 
   // *** USERS ***
   const usersObject = await userCore.getAllUserIds()
@@ -107,7 +107,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_app_count",
     "The number of apps created by a user",
     "gauge",
-    allAppIds.length
+    allWorkspaceIds.length
   )
 
   // **** budibase_tenant_production_app_count ****
@@ -115,7 +115,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_production_app_count",
     "The number of apps a user has published",
     "gauge",
-    prodAppIDs.length
+    prodWorkspaceIDs.length
   )
 
   // **** budibase_tenant_dev_app_count ****
@@ -123,7 +123,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_tenant_dev_app_count",
     "The number of apps a user has unpublished in development",
     "gauge",
-    devAppIDs.length
+    devWorkspaceIDs.length
   )
 
   // **** budibase_tenant_db_count ****

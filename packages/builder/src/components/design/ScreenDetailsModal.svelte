@@ -4,7 +4,6 @@
   import { get } from "svelte/store"
   import { screenStore, workspaceAppStore, appStore } from "@/stores/builder"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { featureFlags } from "@/stores/portal"
 
   export let onConfirm: (_data: { route: string }) => Promise<void>
   export let onCancel: (() => Promise<void>) | undefined = undefined
@@ -18,10 +17,7 @@
 
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
-  $: workspacePrefix =
-    $featureFlags.WORKSPACES && selectedWorkspaceApp
-      ? selectedWorkspaceApp.url
-      : ""
+  $: workspacePrefix = selectedWorkspaceApp ? selectedWorkspaceApp.url : ""
 
   $: liveUrl = buildLiveUrl($appStore, workspacePrefix, true)
 

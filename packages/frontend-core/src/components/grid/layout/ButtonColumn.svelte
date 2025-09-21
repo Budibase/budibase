@@ -21,6 +21,7 @@
     showHScrollbar,
     dispatch,
     config,
+    metadata,
   } = getContext("grid")
 
   let container
@@ -40,6 +41,29 @@
       return gridButtons.slice(0, 3)
     }
     return gridButtons
+  }
+
+  // Apply button conditions and return filtered/modified buttons for a specific row
+  const getButtonsForRow = (buttons, row) => {
+    if (!buttons || !row) return buttons
+
+    const rowMetadata = $metadata?.[row._id]?.button || {}
+
+    return buttons
+      .map((button, index) => {
+        const buttonMetadata = rowMetadata[index]
+        if (!buttonMetadata) return button
+
+        // Skip hidden buttons
+        if (buttonMetadata.hidden) return null
+
+        // Apply any setting updates
+        return {
+          ...button,
+          ...buttonMetadata,
+        }
+      })
+      .filter(button => button !== null)
   }
 
   const handleClick = async (button, row) => {
@@ -75,13 +99,14 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const rowFocused = $focusedRow?._id === row._id}
+        {@const rowButtons = getButtonsForRow(buttons, row)}
         <div
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         >
           <GridCell
-            width="auto"
+            width="100%"
             rowIdx={row.__idx}
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
@@ -92,17 +117,21 @@
               class:offset={$showVScrollbar && $showHScrollbar}
             >
               {#if $props.buttonsCollapsed}
-                <CollapsedButtonGroup
-                  buttons={makeCollapsedButtons(buttons, row)}
-                  text={$props.buttonsCollapsedText || "Action"}
-                  align="right"
-                  offset={5}
-                  size="S"
-                  animate={false}
-                  on:mouseenter={() => ($hoveredRowId = row._id)}
-                />
+                {#if rowButtons.length > 0}
+                  <CollapsedButtonGroup
+                    buttons={makeCollapsedButtons(rowButtons, row)}
+                    text={$props.buttonsCollapsedText || "Action"}
+                    align="right"
+                    offset={5}
+                    size="S"
+                    animate={false}
+                    on:mouseenter={() => ($hoveredRowId = row._id)}
+                  />
+                {:else}
+                  <div class="button-placeholder-collapsed" />
+                {/if}
               {:else}
-                {#each buttons as button}
+                {#each rowButtons as button}
                   <Button
                     newStyles
                     size="S"
@@ -119,6 +148,9 @@
                     {button.text || "Button"}
                   </Button>
                 {/each}
+                {#if rowButtons.length === 0}
+                  <div class="button-placeholder" />
+                {/if}
               {/if}
             </div>
           </GridCell>
@@ -178,6 +210,15 @@
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+  .button-placeholder {
+    min-width: 60px;
+    height: 32px;
+  }
+  .button-placeholder-collapsed {
+    min-width: 70px;
+    height: 32px;
+    visibility: hidden;
   }
   .blank :global(.cell:hover) {
     cursor: pointer;

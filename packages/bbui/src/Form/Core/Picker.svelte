@@ -152,7 +152,7 @@
       </span>
     {:else}
       <span class="option-extra icon field-icon">
-        <img src={fieldIcon} alt="icon" style="height: 15px; width: auto;" />
+        <img class="icon-dims" src={fieldIcon} alt="icon" />
       </span>
     {/if}
   {/if}
@@ -235,9 +235,9 @@
               <span class="option-extra icon">
                 {#if useOptionIconImage}
                   <img
+                    class="icon-dims"
                     src={getOptionIcon(option, idx)}
                     alt="icon"
-                    style="height: 15px; width: auto;"
                   />
                 {:else}
                   <Icon
@@ -301,6 +301,10 @@
 </Popover>
 
 <style>
+  .icon-dims {
+    height: 15px;
+    width: auto;
+  }
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;

@@ -16,27 +16,6 @@ servers:
           this should start with app_ (production) or app_dev (development).
 components:
   parameters:
-    tableId:
-      in: path
-      name: tableId
-      required: true
-      description: The ID of the table which this request is targeting.
-      schema:
-        type: string
-    viewId:
-      in: path
-      name: viewId
-      required: true
-      description: The ID of the view which this request is targeting.
-      schema:
-        type: string
-    rowId:
-      in: path
-      name: rowId
-      required: true
-      description: The ID of the row which this request is targeting.
-      schema:
-        type: string
     appId:
       in: header
       name: x-budibase-app-id
@@ -53,19 +32,25 @@ components:
       schema:
         default: "{{appId}}"
         type: string
-    workspaceId:
-      in: path
-      name: workspaceId
-      required: true
-      description: The ID of the workspace which this request is targeting.
-      schema:
-        default: "{{workspaceId}}"
-        type: string
     queryId:
       in: path
       name: queryId
       required: true
       description: The ID of the query which this request is targeting.
+      schema:
+        type: string
+    rowId:
+      in: path
+      name: rowId
+      required: true
+      description: The ID of the row which this request is targeting.
+      schema:
+        type: string
+    tableId:
+      in: path
+      name: tableId
+      required: true
+      description: The ID of the table which this request is targeting.
       schema:
         type: string
     userId:
@@ -74,6 +59,21 @@ components:
       required: true
       description: The ID of the user which this request is targeting.
       schema:
+        type: string
+    viewId:
+      in: path
+      name: viewId
+      required: true
+      description: The ID of the view which this request is targeting.
+      schema:
+        type: string
+    workspaceId:
+      in: path
+      name: workspaceId
+      required: true
+      description: The ID of the workspace which this request is targeting.
+      schema:
+        default: "{{workspaceId}}"
         type: string
   examples:
     application:

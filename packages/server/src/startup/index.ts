@@ -1,33 +1,33 @@
-import env from "../environment"
-import * as redis from "../utilities/redis"
-import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import {
+  cache,
+  env as coreEnv,
   events,
+  features,
   installation,
   logging,
   tenancy,
   users,
-  cache,
-  env as coreEnv,
-  features,
 } from "@budibase/backend-core"
-import { watch } from "../watch"
-import * as automations from "../automations"
-import * as fileSystem from "../utilities/fileSystem"
-import { default as eventEmitter, init as eventInit } from "../events"
-import * as bullboard from "../automations/bullboard"
-import * as appMigrations from "../appMigrations/queue"
 import * as pro from "@budibase/pro"
+import bson from "bson"
+import fs from "fs"
+import { Server } from "http"
+import Koa from "koa"
+import { AddressInfo } from "net"
 import * as api from "../api"
-import sdk from "../sdk"
-import { initialise as initialiseWebsockets } from "../websockets"
+import * as automations from "../automations"
+import * as bullboard from "../automations/bullboard"
+import env from "../environment"
+import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
 import * as jsRunner from "../jsRunner"
-import Koa from "koa"
-import { Server } from "http"
-import { AddressInfo } from "net"
-import fs from "fs"
-import bson from "bson"
+import sdk from "../sdk"
+import * as fileSystem from "../utilities/fileSystem"
+import * as redis from "../utilities/redis"
+import { generateApiKey, getChecklist } from "../utilities/workerRequests"
+import { watch } from "../watch"
+import { initialise as initialiseWebsockets } from "../websockets"
+import * as workspaceMigrations from "../workspaceMigrations/queue"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -129,7 +129,7 @@ export async function startup(
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
-    queuePromises.push(appMigrations.init())
+    queuePromises.push(workspaceMigrations.init())
   }
   queuePromises.push(initPro())
   queuePromises.push(sdk.dev.init())

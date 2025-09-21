@@ -1,4 +1,6 @@
-import dayjs from "dayjs"
+import { db as dbCore } from "@budibase/backend-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
+import { processObjectSync } from "@budibase/string-templates"
 import {
   Aggregation,
   AutoFieldSubType,
@@ -25,6 +27,12 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
+import dayjs from "dayjs"
+import { isEqual, omit } from "lodash"
+import { cloneDeep } from "lodash/fp"
+import { isRelationshipColumn } from "../../../db/utils"
+import env from "../../../environment"
+import { makeExternalQuery } from "../../../integrations/base/query"
 import {
   breakExternalTableId,
   breakRowIdField,
@@ -33,6 +41,11 @@ import {
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
+import sdk from "../../../sdk"
+import {
+  enrichQueryJson,
+  processRowCountResponse,
+} from "../../../sdk/workspace/rows/utils"
 import {
   buildExternalRelationships,
   buildSqlFieldList,
@@ -41,19 +54,6 @@ import {
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
-import {
-  enrichQueryJson,
-  processRowCountResponse,
-} from "../../../sdk/app/rows/utils"
-import { processObjectSync } from "@budibase/string-templates"
-import { cloneDeep } from "lodash/fp"
-import { db as dbCore } from "@budibase/backend-core"
-import sdk from "../../../sdk"
-import env from "../../../environment"
-import { makeExternalQuery } from "../../../integrations/base/query"
-import { dataFilters, helpers } from "@budibase/shared-core"
-import { isRelationshipColumn } from "../../../db/utils"
-import { isEqual, omit } from "lodash"
 
 interface ManyRelationship {
   tableId?: string

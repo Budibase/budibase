@@ -1,19 +1,19 @@
 import {
-  utils,
+  auth,
   constants,
+  context,
   roles,
   tenancy,
-  context,
   users,
-  auth,
+  utils,
 } from "@budibase/backend-core"
-import { generateUserMetadataID, isDevAppID } from "../db/utils"
-import { getCachedSelf } from "../utilities/global"
-import env from "../environment"
-import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
-import { UserCtx, ContextUser } from "@budibase/types"
+import { ContextUser, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
+import { generateUserMetadataID, isDevWorkspaceID } from "../db/utils"
+import env from "../environment"
+import { getCachedSelf } from "../utilities/global"
+import { isApiKey, isBrowser, isWebhookEndpoint } from "./utils"
 
 export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the appID from the request
@@ -30,7 +30,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   // deny access to application preview
   if (isBrowser(ctx) && !isApiKey(ctx)) {
     if (
-      isDevAppID(requestAppId) &&
+      isDevWorkspaceID(requestAppId) &&
       !isWebhookEndpoint(ctx) &&
       !users.isBuilder(ctx.user, requestAppId)
     ) {
@@ -52,11 +52,11 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
 
     // Allow builders to specify their role via a header
     const isBuilder = users.isBuilder(globalUser, appId)
-    const isDevApp = appId && isDevAppID(appId)
+    const isDev = appId && isDevWorkspaceID(appId)
     const roleHeader =
       ctx.request &&
       (ctx.request.headers[constants.Header.PREVIEW_ROLE] as string)
-    if (isBuilder && isDevApp && roleHeader) {
+    if (isBuilder && isDev && roleHeader) {
       roleId = roleHeader
       // Delete admin and builder flags so that the specified role is honoured
       ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
@@ -99,7 +99,7 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
     })
   }
 
-  return context.doInAppContext(appId, async () => {
+  return context.doInWorkspaceContext(appId, async () => {
     ctx.appId = appId
     if (roleId) {
       ctx.roleId = roleId

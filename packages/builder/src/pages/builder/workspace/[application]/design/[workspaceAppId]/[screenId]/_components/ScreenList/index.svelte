@@ -1,9 +1,7 @@
 <script lang="ts">
   import NavHeader from "@/components/common/NavHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
-  import { sortedScreens } from "@/stores/builder"
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
-  import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
   import { type Screen } from "@budibase/types"
   import NewScreenModal from "../../../../_components/NewScreen/index.svelte"
@@ -17,9 +15,7 @@
   let scrolling = false
   let newScreenModal: NewScreenModal
 
-  $: allScreens = $featureFlags.WORKSPACES
-    ? $workspaceAppStore.selectedWorkspaceApp?.screens || []
-    : $sortedScreens
+  $: allScreens = $workspaceAppStore.selectedWorkspaceApp?.screens || []
   $: filteredScreens = getFilteredScreens(allScreens, searchValue)
 
   $: workspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id || ""

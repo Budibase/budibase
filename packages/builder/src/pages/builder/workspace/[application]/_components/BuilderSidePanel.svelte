@@ -1,45 +1,45 @@
 <script>
-  import {
-    Icon,
-    Divider,
-    Heading,
-    Layout,
-    Input,
-    clickOutside,
-    notifications,
-    CopyInput,
-    Modal,
-    FancyForm,
-    FancyInput,
-    Button,
-    FancySelect,
-  } from "@budibase/bbui"
-  import {
-    builderStore,
-    appStore,
-    roles,
-    deploymentStore,
-  } from "@/stores/builder"
-  import {
-    groups,
-    licensing,
-    appsStore,
-    users,
-    auth,
-    admin,
-  } from "@/stores/portal"
-  import {
-    fetchData,
-    Constants,
-    Utils,
-    RoleUtils,
-    emailValidator,
-  } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
   import { API } from "@/api"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import GroupIcon from "@/settings/pages/people/groups/_components/GroupIcon.svelte"
+  import {
+    appStore,
+    builderStore,
+    deploymentStore,
+    roles,
+  } from "@/stores/builder"
+  import {
+    admin,
+    appsStore,
+    auth,
+    groups,
+    licensing,
+    users,
+  } from "@/stores/portal"
+  import {
+    Button,
+    CopyInput,
+    Divider,
+    FancyForm,
+    FancyInput,
+    FancySelect,
+    Heading,
+    Icon,
+    Input,
+    Layout,
+    Modal,
+    clickOutside,
+    notifications,
+  } from "@budibase/bbui"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    emailValidator,
+    fetchData,
+  } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
@@ -202,25 +202,20 @@
       notifications.error("Application id must be specified")
       return
     }
-    const update = await users.get(user._id)
-    const newRoles = {
-      ...update.roles,
-      [prodAppId]: role,
+
+    if (role) {
+      await users.addUserToWorkspace(user._id, role, user._rev)
+    } else {
+      await users.removeUserFromWorkspace(user._id, user._rev)
     }
-    // make sure no undefined/null roles (during removal)
-    for (let [appId, role] of Object.entries(newRoles)) {
-      if (!role) {
-        delete newRoles[appId]
-      }
-    }
-    await users.save({
-      ...update,
-      roles: newRoles,
-    })
+
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
   const onUpdateUser = async (user, role) => {
+    if (user.isAdminOrGlobalBuilder) {
+      return
+    }
     if (!user) {
       notifications.error("A user must be specified")
       return
@@ -228,12 +223,6 @@
     try {
       if (user.role === role) {
         return
-      }
-      if (user.isAppBuilder) {
-        await removeAppBuilder(user._id, prodAppId)
-      }
-      if (role === Constants.Roles.CREATOR) {
-        await removeAppBuilder(user._id, prodAppId)
       }
       await updateAppUser(user, role)
     } catch (error) {
@@ -264,9 +253,6 @@
       return
     }
     try {
-      if (group?.builder?.apps.includes(prodAppId)) {
-        await removeGroupAppBuilder(group._id)
-      }
       await updateAppGroup(group, role)
     } catch {
       notifications.error("Group update failed")
@@ -454,48 +440,21 @@
   }
 
   const onUpdateUserInvite = async (invite, role) => {
-    let updateBody = {
-      apps: {
-        ...invite.apps,
-        [prodAppId]: role,
-      },
+    try {
+      await users.addWorkspaceIdToInvite(invite.code, role)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
     }
-    if (role === Constants.Roles.CREATOR) {
-      updateBody.builder = updateBody.builder || {}
-      updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
-      delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
-      invite.builder.apps = []
-    }
-    await users.updateInvite(invite.code, updateBody)
-    await filterInvites(query)
   }
 
   const onUninviteAppUser = async invite => {
-    await uninviteAppUser(invite)
-    await filterInvites(query)
-  }
-
-  // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async invite => {
-    let updated = { ...invite }
-    delete updated.info.apps[prodAppId]
-
-    return await users.updateInvite(updated.code, {
-      apps: updated.apps,
-    })
-  }
-
-  const addAppBuilder = async userId => {
-    await users.addAppBuilder(userId, prodAppId)
-  }
-
-  const removeAppBuilder = async userId => {
-    await users.removeAppBuilder(userId, prodAppId)
-  }
-
-  const removeGroupAppBuilder = async groupId => {
-    await groups.removeGroupAppBuilder(groupId, prodAppId)
+    try {
+      await users.removeWorkspaceIdFromInvite(invite.code)
+      await filterInvites(query)
+    } catch (err) {
+      notifications.error("Error editing invite")
+    }
   }
 
   const initSidePanel = async sidePaneOpen => {
@@ -790,11 +749,7 @@
                       quiet={true}
                       on:addcreator={() => {}}
                       on:change={e => {
-                        if (e.detail === Constants.Roles.CREATOR) {
-                          addAppBuilder(user._id)
-                        } else {
-                          onUpdateUser(user, e.detail)
-                        }
+                        onUpdateUser(user, e.detail)
                       }}
                       on:remove={() => {
                         onUpdateUser(user)

@@ -1,7 +1,7 @@
 import { events } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
-import { structures, TestConfiguration, mocks } from "../../../../tests"
 import { User, UserGroup } from "@budibase/types"
+import { mocks, structures, TestConfiguration } from "../../../../tests"
 
 mocks.licenses.useGroups()
 
@@ -443,6 +443,94 @@ describe("/api/global/groups", () => {
 
       await config.api.groups.bulkAddUsers("invalid_group_id", csvContent, {
         expect: 404,
+      })
+    })
+  })
+
+  describe("creator role functionality", () => {
+    let group: UserGroup
+
+    beforeEach(async () => {
+      mocks.licenses.useAppBuilders()
+      const groupResponse = await config.api.groups.saveGroup(
+        structures.groups.UserGroup()
+      )
+      group = groupResponse.body
+    })
+
+    describe("updateGroupApps with CREATOR role", () => {
+      it("should successfully update group with CREATOR role", async () => {
+        const appId = "app_test123"
+
+        // This should succeed without throwing an error
+        await config.api.groups.updateGroupApps(group._id!, {
+          add: [{ appId, roleId: "CREATOR" }],
+          remove: [],
+        })
+
+        const updatedGroup = await config.api.groups.find(group._id!)
+        expect(updatedGroup.body._id).toBe(group._id)
+        expect(updatedGroup.body.builder.apps).toEqual([appId])
+      })
+
+      it("should fail to assign CREATOR role when feature is not enabled", async () => {
+        mocks.licenses.useCloudFree() // Disable app builders feature
+        const appId = "app_test123"
+
+        await config.api.groups.updateGroupApps(
+          group._id!,
+          {
+            add: [{ appId, roleId: "CREATOR" }],
+            remove: [],
+          },
+          { expect: 400 }
+        )
+      })
+
+      it("should handle multiple CREATOR apps update operation", async () => {
+        const appId1 = "app_test111"
+        const appId2 = "app_test222"
+        const appId3 = "app_test333"
+
+        // This should succeed without throwing an error
+        await config.api.groups.updateGroupApps(group._id!, {
+          add: [
+            { appId: appId1, roleId: "CREATOR" },
+            { appId: appId2, roleId: "CREATOR" },
+            { appId: appId3, roleId: "BASIC" }, // Not a creator role
+          ],
+          remove: [],
+        })
+
+        // Verify the operation completed successfully
+        const updatedGroup = await config.api.groups.find(group._id!)
+        expect(updatedGroup.body._id).toBe(group._id)
+        expect(updatedGroup.body.builder.apps).toEqual([appId1, appId2])
+      })
+
+      it("should handle removing apps from CREATOR group", async () => {
+        const appId1 = "app_test111"
+        const appId2 = "app_test222"
+
+        // First add CREATOR roles
+        await config.api.groups.updateGroupApps(group._id!, {
+          add: [
+            { appId: appId1, roleId: "CREATOR" },
+            { appId: appId2, roleId: "CREATOR" },
+          ],
+          remove: [],
+        })
+
+        // Then remove one app - this should succeed
+        await config.api.groups.updateGroupApps(group._id!, {
+          add: [],
+          remove: [{ appId: appId1 }],
+        })
+
+        // Verify the operation completed successfully
+        const updatedGroup = await config.api.groups.find(group._id!)
+        expect(updatedGroup.body._id).toBe(group._id)
+        expect(updatedGroup.body.builder.apps).toEqual([])
       })
     })
   })

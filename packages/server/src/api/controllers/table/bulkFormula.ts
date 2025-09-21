@@ -1,10 +1,5 @@
-import { clearColumns } from "./utils"
-import { doesContainStrings } from "@budibase/string-templates"
-import { cloneDeep } from "lodash/fp"
-import isEqual from "lodash/isEqual"
-import uniq from "lodash/uniq"
-import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
+import { doesContainStrings } from "@budibase/string-templates"
 import {
   FieldSchema,
   FieldType,
@@ -12,8 +7,13 @@ import {
   FormulaType,
   Table,
 } from "@budibase/types"
-import sdk from "../../../sdk"
+import { cloneDeep } from "lodash/fp"
+import isEqual from "lodash/isEqual"
+import uniq from "lodash/uniq"
 import { isRelationshipColumn } from "../../../db/utils"
+import sdk from "../../../sdk"
+import { updateAllFormulasInTable } from "../row/staticFormula"
+import { clearColumns } from "./utils"
 
 function isStaticFormula(
   column: FieldSchema
@@ -117,7 +117,7 @@ async function updateRelatedFormulaLinksOnTables(
   { deletion }: { deletion?: boolean } = {}
 ) {
   const tableId: string = table._id!
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   // start by retrieving all tables, remove the current table from the list
   const tables = (await sdk.tables.getAllInternalTables()).filter(
     tbl => tbl._id !== tableId

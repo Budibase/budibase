@@ -1,15 +1,15 @@
-import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
-import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
 import {
-  FieldType,
   DatabaseQueryOpts,
+  FieldType,
   LinkDocument,
   LinkDocumentValue,
   Table,
   TableSchema,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
+import { createLinkView } from "../views/staticViews"
 
 export { createLinkView } from "../views/staticViews"
 
@@ -53,7 +53,7 @@ export async function getLinkDocuments(args: {
   includeDocs?: boolean
 }): Promise<LinkDocumentValue[] | LinkDocument[]> {
   const { tableId, rowId, fieldName, includeDocs } = args
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   let params: DatabaseQueryOpts
   if (rowId) {
     params = { key: [tableId, rowId] }

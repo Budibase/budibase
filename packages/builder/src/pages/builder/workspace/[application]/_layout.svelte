@@ -1,13 +1,12 @@
-<script lang="ts">
-  import { featureFlags } from "@/stores/portal"
-  import NewLayout from "./_flagged/layout.new.svelte"
-  import OldLayout from "./_flagged/layout.old.svelte"
+<script>
+  import WorkspaceLayout from "./_layout.workspace.svelte"
 
-  export let application: string
-
-  $: layout = $featureFlags.WORKSPACES ? NewLayout : OldLayout
+  export let application
 </script>
 
-<svelte:component this={layout} {application}>
-  <slot />
-</svelte:component>
+<!-- Needs to agressively re-render if the appId has changed -->
+{#key application}
+  <WorkspaceLayout {application}>
+    <slot />
+  </WorkspaceLayout>
+{/key}

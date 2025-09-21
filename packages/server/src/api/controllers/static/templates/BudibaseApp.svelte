@@ -143,8 +143,10 @@
       window.MIGRATING_APP = true
     </script>
   {/if}
-  <script type="application/javascript" src={props.clientLibPath}>
-  </script>
+  <script
+    type="application/javascript"
+    src={`/api/assets/client?${props.clientCacheKey}`}
+  ></script>
   <!-- Custom components need inserted after the core client library -->
   <!-- But before loadBudibase is called -->
   {#if props.usedPlugins?.length}

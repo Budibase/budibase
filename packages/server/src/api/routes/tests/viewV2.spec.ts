@@ -1,3 +1,6 @@
+import { context, db, events, roles, setEnv } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
   ArrayOperator,
@@ -9,6 +12,7 @@ import {
   EmptyFilterOption,
   FieldSchema,
   FieldType,
+  FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
   JsonTypes,
@@ -35,15 +39,11 @@ import {
   ViewV2,
   ViewV2Schema,
   ViewV2Type,
-  FormulaType,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
-import { quotas } from "@budibase/pro"
-import { context, db, events, roles, setEnv } from "@budibase/backend-core"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -1970,8 +1970,8 @@ if (descriptions.length) {
             const rawView = table.views![res.name] as ViewV2
             delete rawView.queryUI
 
-            await context.doInAppContext(config.getAppId(), async () => {
-              const db = context.getAppDB()
+            await context.doInWorkspaceContext(config.getAppId(), async () => {
+              const db = context.getWorkspaceDB()
 
               if (!rawDatasource) {
                 await db.put(table)

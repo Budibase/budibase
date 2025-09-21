@@ -643,6 +643,40 @@ describe("REST Integration", () => {
       })
       expect(data).toEqual({ foo: "bar" })
     })
+
+    it("should remove empty query parameters", async () => {
+      nock("https://example.com")
+        .get("/api?param2=value&param3=another")
+        .reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "param1=&param2=value&param3=another",
+      })
+      expect(data).toEqual({ success: true })
+    })
+
+    it("should handle query string with only empty parameters", async () => {
+      nock("https://example.com").get("/api").reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "param1=&param2=",
+      })
+      expect(data).toEqual({ success: true })
+    })
+
+    it("should handle mixed empty and valid parameters", async () => {
+      nock("https://example.com")
+        .get("/api?valid=test&another=123")
+        .reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "empty1=&valid=test&empty2=&another=123&empty3=",
+      })
+      expect(data).toEqual({ success: true })
+    })
   })
 
   describe("Configuration options", () => {

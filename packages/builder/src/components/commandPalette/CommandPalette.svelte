@@ -118,10 +118,6 @@
         name: "Automations",
         url: "/builder/workspace/:application/automation",
       },
-      {
-        name: "Settings",
-        url: "/builder/workspace/:application/settings",
-      },
     ]
     return routes.map(route => ({
       type: "Navigate",

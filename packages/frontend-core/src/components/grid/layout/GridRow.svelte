@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import DataCell from "../cells/DataCell.svelte"
+  import GridCell from "../cells/GridCell.svelte"
   import { getCellID } from "../lib/utils"
 
   export let row
@@ -22,6 +23,8 @@
     isSelectingCells,
     selectedCellMap,
     selectedCellCount,
+    props,
+    buttonColumnWidth,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -29,6 +32,8 @@
     $hoveredRowId === row._id && (!$selectedCellCount || !$isSelectingCells)
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
+  $: hasButtons = $props?.buttons?.length > 0
+  $: needsButtonSpacer = hasButtons && $buttonColumnWidth > 0
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -60,6 +65,14 @@
       isSelectingCells={$isSelectingCells}
     />
   {/each}
+  {#if needsButtonSpacer}
+    <GridCell
+      width={$buttonColumnWidth}
+      selected={rowSelected}
+      highlighted={rowHovered || rowFocused}
+      rowIdx={row.__idx}
+    />
+  {/if}
 </div>
 
 <style>

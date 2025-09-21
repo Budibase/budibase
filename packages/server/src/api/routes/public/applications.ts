@@ -1,6 +1,6 @@
-import controller from "../../controllers/public/applications"
 import { Endpoint } from "@budibase/backend-core"
-import { nameValidator, applicationValidator } from "../utils/validators"
+import controller from "../../controllers/public/workspaces"
+import { applicationValidator, nameValidator } from "../utils/validators"
 
 const read = [],
   write = []

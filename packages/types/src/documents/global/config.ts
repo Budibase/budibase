@@ -28,7 +28,6 @@ export interface SettingsBrandingConfig {
   faviconUrl?: string
   faviconUrlEtag?: string
   emailBrandingEnabled?: boolean
-  testimonialsEnabled?: boolean
   platformTitle?: string
   loginHeading?: string
   loginButton?: string

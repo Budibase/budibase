@@ -1,34 +1,22 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  shouldServeLocally,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
   BadRequestError,
   configs,
   context,
+  features,
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
-  App,
   BudibaseAppProps,
   Ctx,
   DocumentType,
   Feature,
+  FeatureFlag,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
@@ -37,14 +25,27 @@ import {
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
-import { isAppFullyMigrated } from "../../../appMigrations"
-
-import send from "koa-send"
-import { getThemeVariables } from "../../../constants/themes"
-import path from "path"
 import extract from "extract-zip"
+import fs from "fs"
+import fsp from "fs/promises"
+import send from "koa-send"
 import { tmpdir } from "os"
+import path from "path"
+import * as uuid from "uuid"
+import { ObjectStoreBuckets } from "../../../constants"
+import { getThemeVariables } from "../../../constants/themes"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  shouldServeLocally,
+} from "../../../utilities/fileSystem"
+import { isAppFullyMigrated } from "../../../workspaceMigrations"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -83,7 +84,7 @@ export const uploadFile = async function (
       // filenames converted to UUIDs so they are unique
       const processedFileName = `${uuid.v4()}.${extension}`
 
-      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+      const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
 
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
@@ -138,7 +139,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
-    const appId = context.getProdAppId()
+    const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
       if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
@@ -181,7 +182,7 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: App,
+  app: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
@@ -197,7 +198,7 @@ const getAppScriptHTML = (
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   // No app ID found, cannot serve - return message instead
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.body = "No content found - requires app ID"
     return
@@ -218,7 +219,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   }
 
   try {
-    context.getAppDB({ skip_setup: true })
+    context.getWorkspaceDB({ skip_setup: true })
 
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
@@ -255,7 +256,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
-        clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+        clientCacheKey: await objectStore.getClientCacheKey(
+          appId!,
+          appInfo.version
+        ),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
@@ -337,11 +341,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
-  const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  const db = context.getWorkspaceDB({ skip_setup: true })
+  const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
   if (!env.isJest()) {
-    let appId = context.getAppId()
+    let appId = context.getWorkspaceId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
@@ -350,7 +354,10 @@ export const serveBuilderPreview = async function (
       ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
       false
     let props: any = {
-      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+      clientLibPath: await objectStore.clientLibraryUrl(
+        appId!,
+        appInfo.version
+      ),
       nonce,
     }
 
@@ -367,34 +374,58 @@ export const serveBuilderPreview = async function (
   }
 }
 
+function serveLocalFile(ctx: Ctx, fileName: string) {
+  const tsPath = join(require.resolve("@budibase/client"), "..")
+  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  return send(ctx, fileName, {
+    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
+  })
+}
+
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const version = ctx.request.query.version
+  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
 
-  if (Array.isArray(version)) {
-    ctx.throw(400)
-  }
-
-  const appId = context.getAppId() || (ctx.request.query.appId as string)
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally(version || "")
+  const serveLocally = shouldServeLocally()
   if (!serveLocally) {
-    ctx.body = await objectStore.getReadStream(
+    const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      objectStore.clientLibraryPath(appId!)
+      await objectStore.clientLibraryPath(appId!)
     )
+    ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
   } else {
-    // incase running from TS directly
-    const tsPath = join(require.resolve("@budibase/client"), "..")
-    return send(ctx, "budibase-client.js", {
-      root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-    })
+    if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+      return serveLocalFile(ctx, "budibase-client.js")
+    } else {
+      return serveLocalFile(ctx, "budibase-client.new.js")
+    }
+  }
+}
+
+export const serve3rdPartyFile = async function (ctx: Ctx) {
+  const { file } = ctx.params
+
+  const appId = context.getWorkspaceId()
+
+  const serveLocally = shouldServeLocally()
+  if (!serveLocally) {
+    const { stream, contentType } = await objectStore.getReadStream(
+      ObjectStoreBuckets.APPS,
+      objectStore.client3rdPartyLibrary(appId!, file)
+    )
+
+    if (contentType) {
+      ctx.set("Content-Type", contentType)
+    }
+    ctx.body = stream
+  } else {
+    return serveLocalFile(ctx, file)
   }
 }
 
@@ -461,14 +492,14 @@ export const getSignedUploadURL = async function (
 }
 
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   if (!appId) {
     ctx.throw(404)
   }
 
   try {
-    const db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+    const db = context.getWorkspaceDB({ skip_setup: true })
+    const appInfo = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
     if (!appInfo.pwa) {
       ctx.throw(404)
