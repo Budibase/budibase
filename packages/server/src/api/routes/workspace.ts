@@ -18,7 +18,7 @@ builderRoutes
   .post("/api/applications/:appId/publish", deploymentController.publishApp)
   .post("/api/applications/:appId/unpublish", controller.unpublish)
   .delete("/api/applications/:appId", skipMigrationRedirect, controller.destroy)
-  .post("/api/applications/:appId/duplicate", controller.duplicateApp)
+  .post("/api/applications/:appId/duplicate", controller.duplicateWorkspace)
   .post("/api/applications/:appId/import", controller.importToApp)
 
 creatorRoutes.post(
