@@ -593,7 +593,7 @@ export default class TestConfiguration {
     this.user = await this.globalUser()
     this.userMetadataId = generateUserMetadataID(this.user._id!)
 
-    return this.createApp(appName)
+    return this.createWorkspace(appName)
   }
 
   async createDefaultWorkspaceApp(
@@ -640,19 +640,19 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string, url?: string): Promise<Workspace> {
+  async createWorkspace(name: string, url?: string): Promise<Workspace> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
       async () =>
         (await this._req(appController.create, {
-          name: appName,
+          name,
           url,
         })) as Workspace
     )
     this.appId = this.app.appId
 
-    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(name)
     this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInWorkspaceContext(this.app.appId!, async () => {
