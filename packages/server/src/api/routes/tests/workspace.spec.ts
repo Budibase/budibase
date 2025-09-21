@@ -1136,7 +1136,7 @@ describe("/applications", () => {
 
   describe("POST /api/applications/:appId/duplicate", () => {
     it("should duplicate an existing app", async () => {
-      const resp = await config.api.workspace.duplicateApp(
+      const resp = await config.api.workspace.duplicateWorkspace(
         app.appId,
         {
           name: "to-dupe copy",
@@ -1154,7 +1154,7 @@ describe("/applications", () => {
     })
 
     it("should reject an unknown app id with a 404", async () => {
-      await config.api.workspace.duplicateApp(
+      await config.api.workspace.duplicateWorkspace(
         structures.db.id(),
         {
           name: "to-dupe 123",
@@ -1167,7 +1167,7 @@ describe("/applications", () => {
     })
 
     it("should reject with a known name", async () => {
-      await config.api.workspace.duplicateApp(
+      await config.api.workspace.duplicateWorkspace(
         app.appId,
         {
           name: app.name,
@@ -1179,7 +1179,7 @@ describe("/applications", () => {
     })
 
     it("should reject with a known url", async () => {
-      await config.api.workspace.duplicateApp(
+      await config.api.workspace.duplicateWorkspace(
         app.appId,
         {
           name: "this is fine",

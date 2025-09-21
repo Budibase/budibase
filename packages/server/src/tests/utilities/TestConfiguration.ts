@@ -642,7 +642,7 @@ export default class TestConfiguration {
     return apiKey
   }
 
-  // APP
+  // WORKSPACE
   async createWorkspace(name: string, url?: string): Promise<Workspace> {
     this.devWorkspaceId = undefined
     this.devWorkspace = await context.doInTenant(

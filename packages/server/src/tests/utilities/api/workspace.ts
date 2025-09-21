@@ -95,16 +95,16 @@ export class WorkspaceAPI extends TestAPI {
     })
   }
 
-  duplicateApp = async (
-    appId: string,
+  duplicateWorkspace = async (
+    workspaceId: string,
     fields: object,
     expectations?: Expectations
   ): Promise<DuplicateWorkspaceResponse> => {
     let headers = {
       ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
+      [constants.Header.APP_ID]: workspaceId,
     }
-    return this._post(`/api/applications/${appId}/duplicate`, {
+    return this._post(`/api/applications/${workspaceId}/duplicate`, {
       headers,
       fields,
       expectations,
