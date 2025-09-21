@@ -32,8 +32,10 @@ describe("migrations", () => {
     const config = setup.getConfig()
     await config.init()
 
-    await config.doInContext(config.getAppId(), async () => {
-      const migrationVersion = await getAppMigrationVersion(config.getAppId())
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const migrationVersion = await getAppMigrationVersion(
+        config.getDevWorkspaceId()
+      )
 
       expect(migrationVersion).toEqual("20231211101320_test")
     })
@@ -43,7 +45,7 @@ describe("migrations", () => {
     const config = setup.getConfig()
     await config.init()
 
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
 
     await config.api.workspace.get(appId, {
       headersNotPresent: [Header.MIGRATING_APP],
@@ -54,7 +56,7 @@ describe("migrations", () => {
     const config = setup.getConfig()
     await config.init()
 
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
 
     migrations.MIGRATIONS.push({
       id: "20231211105812_new-test",
@@ -107,7 +109,7 @@ describe("migrations", () => {
     it("should trigger migration when there are future migrations based on the current version", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
 
       // Set app to first migration
       await config.doInContext(appId, async () => {
@@ -131,7 +133,7 @@ describe("migrations", () => {
     it("should not trigger migration when current version is latest", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
 
       // Set app to latest migration
       await config.doInContext(appId, async () => {
@@ -155,7 +157,7 @@ describe("migrations", () => {
     it("should trigger migration when current version not found in array", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
 
       // Set app to non-existent migration
       await config.doInContext(appId, async () => {
@@ -186,7 +188,7 @@ describe("migrations", () => {
 
     const config = setup.getConfig()
     await config.init()
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
 
     const mockNext = jest.fn()
     const ctx = { response: { set: jest.fn() } } as any

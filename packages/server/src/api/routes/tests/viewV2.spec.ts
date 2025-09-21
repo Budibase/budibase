@@ -1423,7 +1423,7 @@ if (descriptions.length) {
               const tableToUpdate = await config.api.table.get(table._id!)
               ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible =
                 false
-              await db.getDB(config.appId!).put(tableToUpdate)
+              await db.getDB(config.devWorkspaceId!).put(tableToUpdate)
 
               view = await config.api.viewV2.get(view.id)
               await config.api.viewV2.update(
@@ -1818,7 +1818,7 @@ if (descriptions.length) {
 
             expect(events.view.deleted).toHaveBeenCalledWith(
               expect.objectContaining({ name: first.name, id: first.id }),
-              config.appId
+              config.devWorkspaceId
             )
           })
         })
@@ -1970,23 +1970,26 @@ if (descriptions.length) {
             const rawView = table.views![res.name] as ViewV2
             delete rawView.queryUI
 
-            await context.doInWorkspaceContext(config.getAppId(), async () => {
-              const db = context.getWorkspaceDB()
+            await context.doInWorkspaceContext(
+              config.getDevWorkspaceId(),
+              async () => {
+                const db = context.getWorkspaceDB()
 
-              if (!rawDatasource) {
-                await db.put(table)
-              } else {
-                const ds = await config.api.datasource.get(datasource!._id!)
-                ds.entities![table.name] = table
-                const updatedDs = {
-                  ...rawDatasource,
-                  _id: ds._id,
-                  _rev: ds._rev,
-                  entities: ds.entities,
+                if (!rawDatasource) {
+                  await db.put(table)
+                } else {
+                  const ds = await config.api.datasource.get(datasource!._id!)
+                  ds.entities![table.name] = table
+                  const updatedDs = {
+                    ...rawDatasource,
+                    _id: ds._id,
+                    _rev: ds._rev,
+                    entities: ds.entities,
+                  }
+                  await db.put(updatedDs)
                 }
-                await db.put(updatedDs)
               }
-            })
+            )
 
             const view = await getDelegate(res)
             const expected: UISearchFilter = {

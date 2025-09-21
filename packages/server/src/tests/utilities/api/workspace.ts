@@ -48,7 +48,7 @@ export class WorkspaceAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<PublishWorkspaceResponse> => {
     if (!appId) {
-      appId = this.config.getAppId()
+      appId = this.config.getDevWorkspaceId()
     }
     return await this._post<PublishWorkspaceResponse>(
       `/api/applications/${appId}/publish`,

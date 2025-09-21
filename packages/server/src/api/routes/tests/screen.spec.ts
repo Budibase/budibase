@@ -110,7 +110,7 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.withProdApp(() =>
-          config.api.workspace.getDefinition(config.getProdAppId())
+          config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
 
         // Filter out sample screen
@@ -146,7 +146,7 @@ describe("/screens", () => {
         },
         async () => {
           const res = await config.api.workspace.getDefinition(
-            config.getAppId()
+            config.getDevWorkspaceId()
           )
 
           // Filter out sample screen

@@ -196,7 +196,7 @@ if (descriptions.length) {
         allTables,
         opts
       ) => {
-        return context.doInWorkspaceContext(config.getAppId(), () =>
+        return context.doInWorkspaceContext(config.getDevWorkspaceId(), () =>
           buildSqlFieldList(table, allTables, opts)
         )
       }
