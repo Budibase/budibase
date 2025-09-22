@@ -34,7 +34,6 @@
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.11.6",
     "leaflet": "^1.9.4",
-    "@phosphor-icons/web": "^2.1.2",
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",

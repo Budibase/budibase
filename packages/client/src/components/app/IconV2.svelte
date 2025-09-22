@@ -1,12 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
-  import "@phosphor-icons/web/regular"
-  import "@phosphor-icons/web/light"
-  import "@phosphor-icons/web/bold"
-  import "@phosphor-icons/web/thin"
-  import "@phosphor-icons/web/fill"
-  import "@phosphor-icons/web/duotone"
+  import { loadPhosphorIconWeight } from "../../utils/phosphorIconLoader.js"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -16,6 +11,10 @@
   export let weight = "regular"
   export let color
   export let onClick
+
+  $: if (weight && icon) {
+    loadPhosphorIconWeight(weight)
+  }
 
   $: styles = {
     ...$component.styles,

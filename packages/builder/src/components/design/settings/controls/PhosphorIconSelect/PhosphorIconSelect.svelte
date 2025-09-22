@@ -1,12 +1,6 @@
 <script>
   import { Popover, ActionButton, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import "@phosphor-icons/web/regular"
-  import "@phosphor-icons/web/light"
-  import "@phosphor-icons/web/bold"
-  import "@phosphor-icons/web/thin"
-  import "@phosphor-icons/web/fill"
-  import "@phosphor-icons/web/duotone"
   import phosphorIconsData from "./phosphorIcons.json"
 
   const dispatch = createEventDispatcher()
@@ -22,6 +16,39 @@
 
   let buttonAnchor, dropdown
   let loading = false
+  let loadedWeights = new Set()
+  let isLoadingWeight = false
+
+  // Load phosphor icon weights dynamically when dropdown is opened
+  async function loadRegularWeight() {
+    if (loadedWeights.has("regular") || isLoadingWeight) return
+
+    isLoadingWeight = true
+    try {
+      // Load from CDN instead of bundled package
+      const link = document.createElement("link")
+      link.rel = "stylesheet"
+      link.href = "https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
+
+      await new Promise((resolve, reject) => {
+        link.onload = resolve
+        link.onerror = reject
+        document.head.appendChild(link)
+      })
+
+      loadedWeights.add("regular")
+    } catch (error) {
+      console.error("Failed to load phosphor regular icons", error)
+    } finally {
+      isLoadingWeight = false
+    }
+  }
+
+  // Load regular weight when dropdown opens
+  async function onDropdownShow() {
+    await loadRegularWeight()
+    dropdown.show()
+  }
 
   // Reactive search - automatically filter icons when searchTerm changes
   $: filteredIcons = searchTerm
@@ -63,7 +90,7 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <ActionButton fullWidth on:click={dropdown.show}>
+  <ActionButton fullWidth on:click={onDropdownShow}>
     {#if value}
       <i class="ph ph-{value}" style="margin-right: 8px;" />
     {/if}
