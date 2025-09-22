@@ -1,12 +1,49 @@
-import { context, events } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
-import { DocumentType, Workspace } from "@budibase/types"
+import { context, db, events, objectStore } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { DocumentType, libDependencies, Workspace } from "@budibase/types"
+import fs from "fs"
+import { tmpdir } from "os"
+import { join } from "path"
+import tar from "tar"
 import tk from "timekeeper"
 import sdk from "../../../sdk"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 mocks.licenses.useBackups()
+
+async function checkExportContent(buffer: any, isEncrypted: boolean) {
+  const exportId = `export-${generator.guid()}`
+  const tmpPath = join(tmpdir(), ".budibase")
+  const fileName = join(tmpPath, `${exportId}.enc.tar.gz`)
+  fs.writeFileSync(fileName, buffer)
+
+  const extractedPath = join(tmpPath, exportId)
+  fs.mkdirSync(extractedPath)
+  await tar.extract({
+    cwd: extractedPath,
+    file: fileName,
+  })
+
+  const exportedFiles = fs.readdirSync(extractedPath)
+  expect(exportedFiles).toHaveLength(5)
+  expect(exportedFiles).toEqual([
+    "_dependencies",
+    ...[
+      "budibase-client.js",
+      "budibase-client.new.js",
+      "db.txt",
+      "manifest.json",
+    ].map(x => `${x}${isEncrypted ? ".enc" : ""}`),
+  ])
+
+  const dependenciesFiles = fs.readdirSync(join(extractedPath, "_dependencies"))
+  expect(dependenciesFiles).toEqual(
+    Object.values(libDependencies).map(
+      x => `${x.outFile}${isEncrypted ? ".enc" : ""}`
+    )
+  )
+}
 
 describe("/backups", () => {
   let config = setup.getConfig()
@@ -28,6 +65,8 @@ describe("/backups", () => {
       )
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, false)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -69,6 +108,47 @@ describe("/backups", () => {
       )
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, true)
+    })
+
+    it("should be able to reimport a workspace with encryption", async () => {
+      tk.freeze(mocks.date.MOCK_DATE)
+
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        { excludeRows: false, encryptPassword: "abcde" },
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.enc.tar.gz"`,
+          },
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      const fileName = join(
+        tmpdir(),
+        ".budibase",
+        `export-${generator.guid()}.enc.tar.gz`
+      )
+      fs.writeFileSync(fileName, body as any)
+
+      const importedWorkspace = await config.api.workspace.create({
+        name: "Import",
+        fileToImport: fileName,
+        encryptionPassword: "abcffregde",
+      })
+
+      const prodAppId = db.getProdWorkspaceID(importedWorkspace.appId)
+      const appPath = `${prodAppId}/`
+      const directory = await objectStore.retrieveDirectory(
+        objectStore.ObjectStoreBuckets.APPS,
+        appPath
+      )
+      console.error(directory)
     })
   })
 

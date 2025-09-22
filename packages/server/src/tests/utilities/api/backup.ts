@@ -1,7 +1,6 @@
 import {
   CreateWorkspaceBackupResponse,
   ExportWorkspaceDumpRequest,
-  ExportWorkspaceDumpResponse,
   ImportWorkspaceBackupResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
@@ -19,14 +18,11 @@ export class BackupAPI extends TestAPI {
         "Content-Type": "application/gzip",
       },
     }
-    return await this._post<ExportWorkspaceDumpResponse>(
-      `/api/backups/export`,
-      {
-        query: { appId },
-        expectations: exp,
-        body: opts,
-      }
-    )
+    return await this._post<Buffer>(`/api/backups/export`, {
+      query: { appId },
+      expectations: exp,
+      body: opts,
+    })
   }
 
   createBackup = async (appId: string, expectations?: Expectations) => {
