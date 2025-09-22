@@ -6,7 +6,8 @@ export interface BudibaseAppProps {
   metaImage: string
   metaTitle: string
   metaDescription: string
-  clientLibPath?: string
+  clientCacheKey?: string
+  app?: string
   usedPlugins: Plugin[]
   appMigrating?: boolean
   showSkeletonLoader?: boolean

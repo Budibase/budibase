@@ -1,6 +1,6 @@
-import { roles, events, db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, events, roles } from "@budibase/backend-core"
+import { BuiltinPermissionID, PermissionLevel } from "@budibase/types"
 import * as setup from "./utilities"
-import { PermissionLevel, BuiltinPermissionID } from "@budibase/types"
 
 const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -68,11 +68,6 @@ describe("/roles", () => {
   })
 
   describe("update", () => {
-    beforeEach(async () => {
-      // Recreate the app
-      await config.init()
-    })
-
     it("updates a role", async () => {
       const role = basicRole()
       let res = await config.api.roles.save(role, {
@@ -207,7 +202,7 @@ describe("/roles", () => {
   describe("fetch", () => {
     beforeAll(async () => {
       // Recreate the app
-      await config.init()
+      await config.newTenant()
     })
 
     it("should list custom roles, plus 2 default roles", async () => {
@@ -294,7 +289,7 @@ describe("/roles", () => {
   describe("accessible", () => {
     beforeAll(async () => {
       // new app, reset roles
-      await config.init()
+      await config.newTenant()
       // create one custom role
       await config.createRole()
     })
@@ -354,7 +349,7 @@ describe("/roles", () => {
       const role = await config.api.roles.save(basicRole())
       // have to forcefully delete the inherits from DB - technically can't
       // happen anymore - but good test case
-      await dbCore.getDB(config.appId!).put({
+      await dbCore.getDB(config.devWorkspaceId!).put({
         ...role,
         _id: dbCore.prefixRoleID(role._id!),
         inherits: [],

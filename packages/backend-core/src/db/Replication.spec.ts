@@ -24,8 +24,8 @@ describe("Replication", () => {
   describe("appReplicateOpts", () => {
     it("should skip migrations document when not a creation", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({})
@@ -41,8 +41,8 @@ describe("Replication", () => {
 
     it("should skip migrations document when isCreation is set to false", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: false })
@@ -58,8 +58,8 @@ describe("Replication", () => {
 
     it("should include migrations document on creation", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -75,8 +75,8 @@ describe("Replication", () => {
 
     it("should always replicate deleted documents", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: false })
@@ -91,8 +91,8 @@ describe("Replication", () => {
 
     it("should filter out automation logs", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -107,14 +107,14 @@ describe("Replication", () => {
 
     it("should filter out app metadata", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
 
       const appMetadataDoc = {
-        _id: DocumentType.APP_METADATA,
+        _id: DocumentType.WORKSPACE_METADATA,
         type: "app_metadata",
       }
 
@@ -123,8 +123,8 @@ describe("Replication", () => {
 
     it("should filter out design documents when replicating to dev", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP}_source`,
-        target: `${DocumentType.APP_DEV}_target`,
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -139,8 +139,8 @@ describe("Replication", () => {
 
     it("should include design documents when replicating to production", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({ isCreation: true })
@@ -157,8 +157,8 @@ describe("Replication", () => {
       const customFilter = jest.fn().mockReturnValue(false)
 
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const opts = replication.appReplicateOpts({
@@ -179,8 +179,8 @@ describe("Replication", () => {
 
     it("should return opts unchanged when filter is string", () => {
       const replication = new Replication({
-        source: `${DocumentType.APP_DEV}_source`,
-        target: `${DocumentType.APP}_target`,
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
       })
 
       const inputOpts = {

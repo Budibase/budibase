@@ -1,12 +1,12 @@
+import { constants } from "@budibase/backend-core"
 import {
-  Query,
   ExecuteQueryRequest,
   ExecuteV2QueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  Query,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import { constants } from "@budibase/backend-core"
 
 export class QueryAPI extends TestAPI {
   save = async (body: Query, expectations?: Expectations): Promise<Query> => {
@@ -51,7 +51,7 @@ export class QueryAPI extends TestAPI {
     return await this._get<Query>(`/api/queries/${queryId}`, {
       expectations,
       headers: {
-        [constants.Header.APP_ID]: this.config.getProdAppId(),
+        [constants.Header.APP_ID]: this.config.getProdWorkspaceId(),
       },
     })
   }

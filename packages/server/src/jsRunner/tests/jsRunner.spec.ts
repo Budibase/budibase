@@ -1,5 +1,5 @@
+import { encodeJSBinding, processStringSync } from "@budibase/string-templates"
 import { validate as isValidUUID } from "uuid"
-import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
 import { runJsHelpersTests } from "@budibase/string-templates/test/utils"
 
@@ -24,7 +24,7 @@ describe("jsRunner (using isolated-vm)", () => {
   })
 
   const processJS = (js: string, context?: object) => {
-    return config.doInContext(config.getAppId(), async () =>
+    return config.doInContext(config.getDevWorkspaceId(), async () =>
       processStringSync(encodeJSBinding(js), context || {})
     )
   }
@@ -76,7 +76,8 @@ describe("jsRunner (using isolated-vm)", () => {
 
   describe("helpers", () => {
     runJsHelpersTests({
-      funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
+      funcWrap: (func: any) =>
+        config.doInContext(config.getDevWorkspaceId(), func),
       testsToSkip: ["random", "uuid"],
     })
 

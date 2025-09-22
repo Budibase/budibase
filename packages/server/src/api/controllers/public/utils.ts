@@ -12,7 +12,7 @@ export async function addRev(
   }
   let id = body._id
   if (body._id.startsWith(WORKSPACE_PREFIX)) {
-    id = DocumentType.APP_METADATA
+    id = DocumentType.WORKSPACE_METADATA
   }
   const db = context.getWorkspaceDB()
   const dbDoc = await db.get<any>(id)

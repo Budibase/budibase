@@ -72,7 +72,7 @@ const useFeature = (feature: Feature, extra?: Partial<UseLicenseOpts>) => {
 }
 
 export const useBackups = () => {
-  return useFeature(Feature.APP_BACKUPS)
+  return useFeature(Feature.WORKSPACE_BACKUPS)
 }
 
 export const useEnforceableSSO = () => {
@@ -132,5 +132,17 @@ export const useAICustomConfigs = () => {
 export const setAutomationLogsQuota = (value: number) => {
   const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.automationLogRetentionDays.value = value
+  return useLicense(license)
+}
+
+export const setUsersQuota = async (value: number) => {
+  const license = await getCachedLicense()
+  license.quotas.usage.static.users.value = value
+  return useLicense(license)
+}
+
+export const setCreatorsQuota = async (value: number) => {
+  const license = await getCachedLicense()
+  license.quotas.usage.static.creators.value = value
   return useLicense(license)
 }

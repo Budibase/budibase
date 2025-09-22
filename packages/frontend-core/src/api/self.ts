@@ -1,8 +1,8 @@
 import {
-  AppSelfResponse,
   FetchAPIKeyResponse,
   GenerateAPIKeyResponse,
   GetGlobalSelfResponse,
+  SelfResponse,
   UpdateSelfRequest,
   UpdateSelfResponse,
 } from "@budibase/types"
@@ -13,7 +13,7 @@ export interface SelfEndpoints {
   generateAPIKey: () => Promise<string | undefined>
   fetchDeveloperInfo: () => Promise<FetchAPIKeyResponse>
   fetchBuilderSelf: () => Promise<GetGlobalSelfResponse>
-  fetchSelf: () => Promise<AppSelfResponse | null>
+  fetchSelf: () => Promise<SelfResponse | null>
 }
 
 export const buildSelfEndpoints = (API: BaseAPIClient): SelfEndpoints => ({

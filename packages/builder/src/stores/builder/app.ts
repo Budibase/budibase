@@ -4,7 +4,7 @@ import {
   AutomationSettings,
   Plugin,
   PWAManifest,
-  UpdateAppRequest,
+  UpdateWorkspaceRequest,
   Workspace,
   WorkspaceFeatures,
   WorkspaceIcon,
@@ -31,7 +31,7 @@ interface TypeSupportPresets {
   [key: string]: any
 }
 
-interface AppMetaState {
+export interface AppMetaState {
   appId: string
   name: string
   url: string
@@ -172,7 +172,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateAppRequest) {
+  async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
     this.syncApp(app)
   }

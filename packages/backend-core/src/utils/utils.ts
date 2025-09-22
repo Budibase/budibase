@@ -13,7 +13,7 @@ import { getAllWorkspaces } from "../db"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 
-const APP_PREFIX = DocumentType.APP + SEPARATOR
+const APP_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREFIX = "/builder"

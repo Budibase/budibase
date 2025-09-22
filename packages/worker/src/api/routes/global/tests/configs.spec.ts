@@ -366,7 +366,6 @@ describe("configs", () => {
           oidc: false,
           oidcCallbackUrl: `http://localhost:10000/api/global/auth/${config.tenantId}/oidc/callback`,
           platformUrl: "http://localhost:10000",
-          testimonialsEnabled: true,
         },
       }
       delete body._rev

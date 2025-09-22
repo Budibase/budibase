@@ -60,7 +60,7 @@ const toSpectrumIcon = (name: string) => {
 }
 
 const buildSectionHeader = (
-  type: string,
+  type: string | null,
   sectionName: string,
   icon: string,
   rank: number
@@ -393,8 +393,7 @@ export const bindingsToCompletions = (
     const { icon, rank } = categoryMeta[catKey] || {}
 
     const bindingSectionHeader = buildSectionHeader(
-      // @ts-expect-error something wrong with this - logically this should be dictionary
-      bindingByCategory.type,
+      null,
       catKey,
       icon || "",
       typeof rank == "number" ? rank : 1

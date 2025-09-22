@@ -30,7 +30,7 @@
   } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import type { PublishedAppData } from "@budibase/types"
+  import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import Spaceman from "assets/bb-space-man.svg"
@@ -43,7 +43,7 @@
   $: userApps = $clientAppsStore.apps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  function getUrl(app: EnrichedApp | PublishedAppData) {
+  function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
     if (app.url) {
       return `/app${app.url}`
     } else {
