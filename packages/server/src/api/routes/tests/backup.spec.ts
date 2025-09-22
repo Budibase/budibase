@@ -17,13 +17,14 @@ describe("/backups", () => {
 
   beforeEach(async () => {
     tk.reset()
+    jest.clearAllMocks()
     await config.init()
   })
 
   describe("/api/backups/export", () => {
     it("should be able to export app", async () => {
       const body = await config.api.backup.exportBasicBackup(
-        config.getDevWorkspaceId()!
+        config.getDevWorkspaceId()
       )
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
@@ -40,7 +41,7 @@ describe("/backups", () => {
     it("should infer the app name from the app", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
-      await config.api.backup.exportBasicBackup(config.getDevWorkspaceId()!, {
+      await config.api.backup.exportBasicBackup(config.getDevWorkspaceId(), {
         headers: {
           "content-disposition": `attachment; filename="${
             config.getDevWorkspace().name
@@ -52,7 +53,7 @@ describe("/backups", () => {
 
   describe("/api/backups/import", () => {
     it("should be able to import an app", async () => {
-      const appId = config.getDevWorkspaceId()!
+      const appId = config.getDevWorkspaceId()
       const automation = await config.createAutomation()
       await config.createAutomationLog(automation, appId)
       await config.createScreen()
@@ -68,7 +69,7 @@ describe("/backups", () => {
       await config.createAutomation()
       await config.createScreen()
       let res = await sdk.backups.calculateBackupStats(
-        config.getDevWorkspaceId()!
+        config.getDevWorkspaceId()
       )
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
@@ -78,7 +79,7 @@ describe("/backups", () => {
 
   describe("backup error tracking", () => {
     it("should track backup failures in app metadata", async () => {
-      const appId = config.getDevWorkspaceId()!
+      const appId = config.getDevWorkspaceId()
 
       // First manually add a backup error to simulate a failure
       await context.doInWorkspaceContext(appId, async () => {
@@ -105,7 +106,7 @@ describe("/backups", () => {
     })
 
     it("should be able to clear backup errors from app metadata", async () => {
-      const appId = config.getDevWorkspaceId()!
+      const appId = config.getDevWorkspaceId()
 
       // First set up backup errors in app metadata
       await context.doInWorkspaceContext(appId, async () => {
