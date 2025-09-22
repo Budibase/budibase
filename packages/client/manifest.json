@@ -1554,10 +1554,9 @@
     ]
   },
   "iconphosphor": {
-    "name": "Phosphor Icon",
-    "description": "A Phosphor icon component with improved functionality",
-    "icon": "shapes",
-    "illegalChildren": ["section"],
+    "name": "Icon",
+    "description": "A basic component for displaying icons",
+    "icon": "phosphor-logo",
     "size": {
       "width": 64,
       "height": 64
