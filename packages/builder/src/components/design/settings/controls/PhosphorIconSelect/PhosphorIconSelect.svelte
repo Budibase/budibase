@@ -89,14 +89,20 @@
         <div class="pager">
           <i
             on:click={() => pageClick(false)}
+            on:keypress={e => e.key === "Enter" && pageClick(false)}
             class="page-btn ri-arrow-left-line ri-sm"
             class:disabled={currentPage === 1}
+            role="button"
+            tabindex="0"
           />
           <span>{pagerText}</span>
           <i
             on:click={() => pageClick(true)}
+            on:keypress={e => e.key === "Enter" && pageClick(true)}
             class="page-btn ri-arrow-right-line ri-sm"
             class:disabled={currentPage === totalPages}
+            role="button"
+            tabindex="0"
           />
         </div>
       </div>

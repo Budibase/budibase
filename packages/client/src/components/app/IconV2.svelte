@@ -17,7 +17,6 @@
   export let color
   export let onClick
 
-
   $: styles = {
     ...$component.styles,
     normal: {
@@ -27,23 +26,24 @@
     },
   }
 
-  $: iconClass = icon ? (() => {
-    // Handle both prefixed (ph-star) and clean (star) icon names
-    const iconName = icon.replace(/^ph-/, "")
-    if (weight === "regular") {
-      return `ph ph-${iconName}`
-    } else {
-      return `ph-${weight} ph-${iconName}`
-    }
-  })() : ""
-
+  $: iconClass = icon
+    ? (() => {
+        // Handle both prefixed (ph-star) and clean (star) icon names
+        const iconName = icon.replace(/^ph-/, "")
+        if (weight === "regular") {
+          return `ph ph-${iconName}`
+        } else {
+          return `ph-${weight} ph-${iconName}`
+        }
+      })()
+    : ""
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if icon}
   <i
-    class="{iconClass}"
+    class={iconClass}
     use:styleable={styles}
     on:click={onClick}
     class:hoverable={onClick != null}
