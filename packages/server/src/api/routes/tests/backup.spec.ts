@@ -72,7 +72,7 @@ describe("/backups", () => {
     })
   })
 
-  describe("/api/backups/import", () => {
+  describe("/api/apps/{appId}/backups/{backupId}/import", () => {
     it("should be able to import a workspace", async () => {
       const workspaceId = config.getDevWorkspaceId()
       const automation = await config.createAutomation()
