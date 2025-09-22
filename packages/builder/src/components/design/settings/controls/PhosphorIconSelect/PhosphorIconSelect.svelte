@@ -63,7 +63,7 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <ActionButton on:click={dropdown.show}>
+  <ActionButton fullWidth on:click={dropdown.show}>
     {#if value}
       <i class="ph ph-{value}" style="margin-right: 8px;" />
     {/if}
