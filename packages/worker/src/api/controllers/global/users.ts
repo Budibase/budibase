@@ -416,7 +416,7 @@ export const onboardUsers = async (
   }
 
   let createdPasswords: Record<string, string> = {}
-  const users: User[] = ctx.request.body.map(invite => {
+  const users = ctx.request.body.map<User>(invite => {
     const password = generatePassword(12)
     createdPasswords[invite.email] = password
 
@@ -424,8 +424,8 @@ export const onboardUsers = async (
       email: invite.email,
       password,
       forceResetPassword: true,
-      roles: invite.userInfo.apps,
-      admin: invite.userInfo.admin,
+      roles: invite.userInfo.apps || {},
+      admin: { global: !!invite.userInfo.admin },
       builder: invite.userInfo.builder,
       tenantId: tenancy.getTenantId(),
     }
