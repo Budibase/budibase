@@ -1,8 +1,9 @@
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+
 import { constants, context, events, roles } from "@budibase/backend-core"
 import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
 import EventEmitter from "events"
 import { init } from "../../../../events"
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { rawUserMetadata } from "../../../users/utils"
 
 const config = new TestConfiguration()
