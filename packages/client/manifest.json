@@ -1606,6 +1606,10 @@
           {
             "value": "fill",
             "label": "Fill"
+          },
+          {
+            "value": "duotone",
+            "label": "Duotone"
           }
         ]
       },

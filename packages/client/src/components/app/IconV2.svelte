@@ -1,7 +1,12 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
-  import "phosphor-icons/src/css/icons.css"
+  import "@phosphor-icons/web/regular"
+  import "@phosphor-icons/web/light"
+  import "@phosphor-icons/web/bold"
+  import "@phosphor-icons/web/thin"
+  import "@phosphor-icons/web/fill"
+  import "@phosphor-icons/web/duotone"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -26,9 +31,9 @@
     // Handle both prefixed (ph-star) and clean (star) icon names
     const iconName = icon.replace(/^ph-/, "")
     if (weight === "regular") {
-      return `ph-${iconName}`
+      return `ph ph-${iconName}`
     } else {
-      return `ph-${iconName}-${weight}`
+      return `ph-${weight} ph-${iconName}`
     }
   })() : ""
 
