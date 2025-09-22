@@ -12,7 +12,6 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import env from "../../../environment"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { createTempFolder, streamFile } from "../../../utilities/fileSystem"
 import {
@@ -121,24 +120,22 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     let tmpPath = createTempFolder(uuid())
     span.addTags({ prodAppId, tmpPath })
 
-    if (!env.isTest()) {
-      // write just the static files
-      if (config?.excludeRows) {
-        for (const path of STATIC_APP_FILES) {
-          const contents = await objectStore.retrieve(
-            ObjectStoreBuckets.APPS,
-            join(appPath, path)
-          )
-          await fsp.writeFile(join(tmpPath, path), contents)
-        }
-      }
-      // get all the files
-      else {
-        tmpPath = await objectStore.retrieveDirectory(
+    // write just the static files
+    if (config?.excludeRows) {
+      for (const path of STATIC_APP_FILES) {
+        const contents = await objectStore.retrieve(
           ObjectStoreBuckets.APPS,
-          appPath
+          join(appPath, path)
         )
+        await fsp.writeFile(join(tmpPath, path), contents)
       }
+    }
+    // get all the files
+    else {
+      tmpPath = await objectStore.retrieveDirectory(
+        ObjectStoreBuckets.APPS,
+        appPath
+      )
     }
 
     const downloadedPath = join(tmpPath, appPath)
@@ -163,7 +160,9 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       const processDirectory = async (dirPath: string, relativePath = "") => {
         for (let file of await fsp.readdir(dirPath)) {
           const fullPath = join(dirPath, file)
-          const relativeFilePath = relativePath ? join(relativePath, file) : file
+          const relativeFilePath = relativePath
+            ? join(relativePath, file)
+            : file
 
           // skip the attachments - too big to encrypt
           if (file !== ATTACHMENT_DIRECTORY) {
