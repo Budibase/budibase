@@ -198,7 +198,6 @@
       emailBrandingEnabled: $organisation.emailBrandingEnabled,
       loginHeading: $organisation.loginHeading,
       loginButton: $organisation.loginButton,
-      testimonialsEnabled: $organisation.testimonialsEnabled,
       metaDescription: $organisation.metaDescription,
       metaImageUrl: $organisation.metaImageUrl,
       metaTitle: $organisation.metaTitle,
@@ -330,18 +329,6 @@
                 config = clone
               }}
               value={config.loginButton || ""}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
-          <div>
-            <Toggle
-              text={"Remove customer testimonials"}
-              on:change={e => {
-                let clone = { ...config }
-                clone.testimonialsEnabled = !e.detail
-                config = clone
-              }}
-              value={!config.testimonialsEnabled}
               disabled={!brandingEnabled || saving}
             />
           </div>

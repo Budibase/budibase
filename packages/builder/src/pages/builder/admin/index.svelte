@@ -12,7 +12,6 @@
   import { API } from "@/api"
   import { admin, auth } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
   let form
@@ -52,110 +51,126 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<TestimonialPage>
-  <Layout gap="M" noPadding>
-    <Layout justifyItems="center" noPadding>
-      <img alt="logo" src={Logo} />
-      <Heading size="M">Create an admin user</Heading>
-      <Body>The admin user has access to everything in Budibase.</Body>
-    </Layout>
-    <Layout gap="S" noPadding>
-      <FancyForm bind:this={form}>
-        <FancyInput
-          label="Email"
-          value={formData.email}
-          on:change={e => {
-            formData = {
-              ...formData,
-              email: e.detail,
-            }
-          }}
-          validate={() => {
-            let fieldError = {
-              email: !formData.email ? "Please enter a valid email" : undefined,
-            }
-            errors = handleError({ ...errors, ...fieldError })
-          }}
-          disabled={submitted}
-          error={errors.email}
-        />
-        <FancyInput
-          label="Password"
-          value={formData.password}
-          type="password"
-          on:change={e => {
-            formData = {
-              ...formData,
-              password: e.detail,
-            }
-          }}
-          validate={() => {
-            let fieldError = {}
+<div class="page-container">
+  <div class="content">
+    <Layout gap="M" noPadding>
+      <Layout justifyItems="center" noPadding>
+        <img alt="logo" src={Logo} />
+        <Heading size="M">Create an admin user</Heading>
+        <Body>The admin user has access to everything in Budibase.</Body>
+      </Layout>
+      <Layout gap="S" noPadding>
+        <FancyForm bind:this={form}>
+          <FancyInput
+            label="Email"
+            value={formData.email}
+            on:change={e => {
+              formData = {
+                ...formData,
+                email: e.detail,
+              }
+            }}
+            validate={() => {
+              let fieldError = {
+                email: !formData.email
+                  ? "Please enter a valid email"
+                  : undefined,
+              }
+              errors = handleError({ ...errors, ...fieldError })
+            }}
+            disabled={submitted}
+            error={errors.email}
+          />
+          <FancyInput
+            label="Password"
+            value={formData.password}
+            type="password"
+            on:change={e => {
+              formData = {
+                ...formData,
+                password: e.detail,
+              }
+            }}
+            validate={() => {
+              let fieldError = {}
 
-            if (!formData.password) {
-              fieldError["password"] = "Please enter a password"
-            } else if (formData.password.length < passwordMinLength) {
-              fieldError["password"] =
-                `Password must be at least ${passwordMinLength} characters`
-            } else {
-              fieldError["password"] = undefined
-            }
+              if (!formData.password) {
+                fieldError["password"] = "Please enter a password"
+              } else if (formData.password.length < passwordMinLength) {
+                fieldError["password"] =
+                  `Password must be at least ${passwordMinLength} characters`
+              } else {
+                fieldError["password"] = undefined
+              }
 
-            fieldError["confirmationPassword"] =
-              !passwordsMatch(
-                formData.password,
-                formData.confirmationPassword
-              ) && formData.confirmationPassword
-                ? "Passwords must match"
-                : undefined
-
-            errors = handleError({ ...errors, ...fieldError })
-          }}
-          error={errors.password}
-          disabled={submitted}
-        />
-        <FancyInput
-          label="Repeat Password"
-          value={formData.confirmationPassword}
-          type="password"
-          on:change={e => {
-            formData = {
-              ...formData,
-              confirmationPassword: e.detail,
-            }
-          }}
-          validate={() => {
-            let fieldError = {
-              confirmationPassword:
+              fieldError["confirmationPassword"] =
                 !passwordsMatch(
                   formData.password,
                   formData.confirmationPassword
-                ) && formData.password
+                ) && formData.confirmationPassword
                   ? "Passwords must match"
-                  : undefined,
-            }
-            errors = handleError({ ...errors, ...fieldError })
-          }}
-          error={errors.confirmationPassword}
-          disabled={submitted}
-        />
-      </FancyForm>
+                  : undefined
+
+              errors = handleError({ ...errors, ...fieldError })
+            }}
+            error={errors.password}
+            disabled={submitted}
+          />
+          <FancyInput
+            label="Repeat Password"
+            value={formData.confirmationPassword}
+            type="password"
+            on:change={e => {
+              formData = {
+                ...formData,
+                confirmationPassword: e.detail,
+              }
+            }}
+            validate={() => {
+              let fieldError = {
+                confirmationPassword:
+                  !passwordsMatch(
+                    formData.password,
+                    formData.confirmationPassword
+                  ) && formData.password
+                    ? "Passwords must match"
+                    : undefined,
+              }
+              errors = handleError({ ...errors, ...fieldError })
+            }}
+            error={errors.confirmationPassword}
+            disabled={submitted}
+          />
+        </FancyForm>
+      </Layout>
+      <Layout gap="XS" noPadding justifyItems="center">
+        <Button
+          cta
+          size="L"
+          disabled={Object.keys(errors).length > 0 || submitted}
+          on:click={save}
+        >
+          Create super admin user
+        </Button>
+      </Layout>
     </Layout>
-    <Layout gap="XS" noPadding justifyItems="center">
-      <Button
-        cta
-        size="L"
-        disabled={Object.keys(errors).length > 0 || submitted}
-        on:click={save}
-      >
-        Create super admin user
-      </Button>
-    </Layout>
-  </Layout>
-</TestimonialPage>
+  </div>
+</div>
 
 <style>
   img {
     width: 48px;
+  }
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
   }
 </style>

@@ -230,7 +230,7 @@ if (descriptions.length) {
 
         it("should not overwrite database password with --secret-value--", async () => {
           const password = await context.doInWorkspaceContext(
-            config.getAppId(),
+            config.getDevWorkspaceId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)
               return ds.config!.password
@@ -247,7 +247,7 @@ if (descriptions.length) {
           )
 
           const newPassword = await context.doInWorkspaceContext(
-            config.getAppId(),
+            config.getDevWorkspaceId(),
             async () => {
               const ds = await sdk.datasources.get(datasource._id!)
               return ds.config!.password

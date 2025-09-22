@@ -221,7 +221,7 @@ class StepBuilder<
       },
       disabled: opts?.disabled,
       type: "automation",
-      appId: this.config.getAppId(),
+      appId: this.config.getDevWorkspaceId(),
     }
   }
 
@@ -278,7 +278,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
   async trigger(
     request: TriggerAutomationRequest
   ): Promise<TriggerAutomationResponse> {
-    if (!this.config.prodAppId) {
+    if (!this.config.prodWorkspaceId) {
       throw new Error(
         "Automations can only be triggered in a production workspace context, call config.api.workspace.publish()"
       )
@@ -298,7 +298,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
           throw new Error(
             `Automation with ID ${
               this.automation._id
-            } not found in app ${this.config.getAppId()}. You may have forgotten to call config.api.workspace.publish().`,
+            } not found in app ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
             { cause: e }
           )
         } else {
