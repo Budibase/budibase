@@ -40,14 +40,35 @@ describe("/backups", () => {
 
     it("should infer the app name from the app", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
+      await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        undefined,
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
+          },
+        }
+      )
+    })
 
-      await config.api.backup.exportBasicBackup(config.getDevWorkspaceId(), {
-        headers: {
-          "content-disposition": `attachment; filename="${
-            config.getDevWorkspace().name
-          }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
-        },
-      })
+    it("should be able to export a workspace with encryption", async () => {
+      tk.freeze(mocks.date.MOCK_DATE)
+
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        { excludeRows: false, encryptPassword: "abcde" },
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.enc.tar.gz"`,
+          },
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
     })
   })
 
