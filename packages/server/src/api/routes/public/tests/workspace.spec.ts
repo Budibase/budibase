@@ -30,10 +30,14 @@ afterAll(setup.afterAll)
 
 describe("check export/import", () => {
   async function runExport() {
-    return await makeRequest("post", `/workspaces/${config.appId}/export`, {
-      encryptionPassword: PASSWORD,
-      excludeRows: true,
-    })
+    return await makeRequest(
+      "post",
+      `/workspaces/${config.devWorkspaceId}/export`,
+      {
+        encryptionPassword: PASSWORD,
+        excludeRows: true,
+      }
+    )
   }
 
   async function runImport() {
@@ -47,7 +51,7 @@ describe("check export/import", () => {
     )
     return await makeRequestFormData(
       "post",
-      `/workspaces/${config.appId}/import`,
+      `/workspaces/${config.devWorkspaceId}/import`,
       {
         encryptionPassword: PASSWORD,
         appExport: { path: pathToExport },

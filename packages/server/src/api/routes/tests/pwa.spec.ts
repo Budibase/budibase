@@ -14,7 +14,7 @@ describe("PWA Manifest", () => {
     await config.init()
   })
   it("should serve a valid manifest.json with properly configured PWA", async () => {
-    await context.doInWorkspaceContext(config.getAppId(), async () => {
+    await context.doInWorkspaceContext(config.getDevWorkspaceId(), async () => {
       const appDb = context.getWorkspaceDB()
       let appDoc = await appDb.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
@@ -27,17 +27,17 @@ describe("PWA Manifest", () => {
         display: "standalone",
         icons: [
           {
-            src: `${config.appId}/pwa/icon-small.png`,
+            src: `${config.devWorkspaceId}/pwa/icon-small.png`,
             sizes: "144x144",
             type: "image/png",
           },
           {
-            src: `${config.appId}/pwa/icon-large.png`,
+            src: `${config.devWorkspaceId}/pwa/icon-large.png`,
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: `${config.appId}/pwa/icon-screenshot.png`,
+            src: `${config.devWorkspaceId}/pwa/icon-screenshot.png`,
             sizes: "1240x600",
             type: "image/png",
           },
@@ -47,14 +47,14 @@ describe("PWA Manifest", () => {
       // Upload fake icons to minio
       await objectStore.upload({
         bucket: "apps",
-        filename: `${config.appId}/pwa/icon-small.png`,
+        filename: `${config.devWorkspaceId}/pwa/icon-small.png`,
         body: Buffer.from("fake-image-data"),
         type: "image/png",
       })
 
       await objectStore.upload({
         bucket: "apps",
-        filename: `${config.appId}/pwa/icon-large.png`,
+        filename: `${config.devWorkspaceId}/pwa/icon-large.png`,
         body: Buffer.from("fake-image-data"),
         type: "image/png",
       })
@@ -65,7 +65,7 @@ describe("PWA Manifest", () => {
       })
 
       const res = await request
-        .get(`/api/apps/${config.appId}/manifest.json`)
+        .get(`/api/apps/${config.devWorkspaceId}/manifest.json`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

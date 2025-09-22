@@ -116,7 +116,6 @@ export enum AutoFieldDefaultNames {
   AUTO_ID = "Auto ID",
 }
 
-export const OBJ_STORE_DIRECTORY = "/prod-budi-app-assets"
 export enum BaseQueryVerbs {
   CREATE = "create",
   READ = "read",

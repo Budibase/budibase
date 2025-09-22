@@ -1,9 +1,10 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { events, context, roles, constants } from "@budibase/backend-core"
+
+import { constants, context, events, roles } from "@budibase/backend-core"
+import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
+import EventEmitter from "events"
 import { init } from "../../../../events"
 import { rawUserMetadata } from "../../../users/utils"
-import EventEmitter from "events"
-import { UserGroup, UserMetadata, UserRoles, User } from "@budibase/types"
 
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User
@@ -46,7 +47,7 @@ async function createUser(email: string, roles: UserRoles, builder?: boolean) {
     builder: { global: builder || false },
     admin: { global: false },
   })
-  await context.doInContext(config.appId!, async () => {
+  await context.doInContext(config.devWorkspaceId!, async () => {
     await events.user.created(user)
   })
   return user
@@ -60,7 +61,7 @@ async function removeUserRole(user: User) {
     builder: { global: false },
     admin: { global: false },
   })
-  await context.doInContext(config.appId!, async () => {
+  await context.doInContext(config.devWorkspaceId!, async () => {
     await events.user.updated(final)
   })
 }
@@ -78,19 +79,19 @@ async function createGroupAndUser(email: string) {
 
 async function removeUserFromGroup() {
   await config.removeUserFromGroup(group._id!, groupUser._id!)
-  return context.doInContext(config.appId!, async () => {
+  return context.doInContext(config.devWorkspaceId!, async () => {
     await events.user.updated(groupUser)
   })
 }
 
 async function getUserMetadata(): Promise<UserMetadata[]> {
-  return context.doInContext(config.appId!, async () => {
+  return context.doInContext(config.devWorkspaceId!, async () => {
     return await rawUserMetadata()
   })
 }
 
 function buildRoles() {
-  return { [config.prodAppId!]: ROLE_ID }
+  return { [config.prodWorkspaceId!]: ROLE_ID }
 }
 
 describe("app user/group sync", () => {

@@ -7,7 +7,7 @@ describe("/metrics", () => {
   afterAll(setup.afterAll)
 
   // For some reason this cannot be a beforeAll or the test "should be able to update the user" fail
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

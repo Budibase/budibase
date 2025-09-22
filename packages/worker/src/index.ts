@@ -3,31 +3,31 @@ if (process.env.DD_APM_ENABLED) {
 }
 
 // need to load environment first
-import env from "./environment"
-import Application, { Middleware } from "koa"
-import { bootstrap } from "global-agent"
-import * as db from "./db"
-import { sdk as proSdk } from "@budibase/pro"
 import {
   auth,
-  logging,
+  cache,
+  env as coreEnv,
   events,
+  features,
+  logging,
   middleware,
   queue,
-  env as coreEnv,
-  timers,
   redis,
-  cache,
-  features,
+  timers,
 } from "@budibase/backend-core"
+import { sdk as proSdk } from "@budibase/pro"
+import { bootstrap } from "global-agent"
+import http from "http"
+import gracefulShutdown from "http-graceful-shutdown"
+import Application, { Middleware } from "koa"
+import koaBody from "koa-body"
 import RedisStore from "koa-redis"
+import api from "./api"
 import { loadTemplateConfig } from "./constants/templates"
+import * as db from "./db"
+import env from "./environment"
 
 db.init()
-import koaBody from "koa-body"
-import http from "http"
-import api from "./api"
-import gracefulShutdown from "http-graceful-shutdown"
 
 const koaSession = require("koa-session")
 
@@ -52,7 +52,12 @@ app.proxy = true
 
 // set up top level koa middleware
 app.use(handleScimBody)
-app.use(koaBody({ multipart: true }))
+app.use(
+  koaBody({
+    multipart: true,
+    parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+  })
+)
 
 let store: any
 

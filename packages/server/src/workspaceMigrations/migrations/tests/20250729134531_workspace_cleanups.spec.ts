@@ -28,8 +28,8 @@ async function createWorkspaceApp(isDefault = false) {
 }
 
 describe.each([
-  ["dev", () => config.getAppId()],
-  ["prod", () => config.getProdAppId()],
+  ["dev", () => config.getDevWorkspaceId()],
+  ["prod", () => config.getProdWorkspaceId()],
 ])("Workspace cleanups migration (%s)", (_, getAppId) => {
   let defaultWorkspaceApp: WorkspaceApp
 
@@ -39,7 +39,10 @@ describe.each([
 
   beforeEach(async () => {
     await config.newTenant()
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+    for (const appId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
       await config.doInContext(appId, async () => {
         await updateAppMigrationMetadata({
           appId,
@@ -65,7 +68,7 @@ describe.each([
 
   it("does nothing when only one default workspace app exists", async () => {
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
@@ -83,7 +86,7 @@ describe.each([
     })
 
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
@@ -101,7 +104,7 @@ describe.each([
     })
 
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
@@ -144,7 +147,7 @@ describe.each([
     })
 
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
@@ -172,7 +175,7 @@ describe.each([
     })
 
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
@@ -211,7 +214,7 @@ describe.each([
     )
 
     await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(

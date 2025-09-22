@@ -646,7 +646,7 @@ describe("/rowsActions", () => {
 
     async function getAutomationLogs() {
       const { data: automationLogs } = await config.doInContext(
-        config.getProdAppId(),
+        config.getProdWorkspaceId(),
         async () =>
           automations.logs.logSearch({ startDate: new Date().toISOString() })
       )
@@ -777,7 +777,7 @@ describe("/rowsActions", () => {
         return config.createUser({
           admin: { global: false },
           builder: {},
-          roles: { [config.getProdAppId()]: role },
+          roles: { [config.getProdWorkspaceId()]: role },
         })
       }
 
@@ -994,7 +994,7 @@ if (descriptions.length) {
 
       async function getTable(): Promise<Table> {
         if (isInternal) {
-          await config.api.workspace.addSampleData(config.getAppId())
+          await config.api.workspace.addSampleData(config.getDevWorkspaceId())
           const tables = await config.api.table.fetch()
           return tables.find(t => t.sourceId === DEFAULT_BB_DATASOURCE_ID)!
         } else {
@@ -1008,7 +1008,7 @@ if (descriptions.length) {
       it("should delete all the row actions (and automations) for its tables when a datasource is deleted", async () => {
         async function getRowActionsFromDb(tableId: string) {
           return await context.doInWorkspaceContext(
-            config.getAppId(),
+            config.getDevWorkspaceId(),
             async () => {
               const db = context.getWorkspaceDB()
               const tableDoc = await db.tryGet<TableRowActions>(
