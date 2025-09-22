@@ -163,7 +163,7 @@ if (descriptions.length) {
             expect(events.query.deleted).toHaveBeenCalledWith(
               datasource,
               query,
-              config.appId
+              config.devWorkspaceId
             )
           })
         })

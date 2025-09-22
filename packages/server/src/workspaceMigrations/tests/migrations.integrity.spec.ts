@@ -13,7 +13,10 @@ describe("migration integrity", () => {
     await config.init()
 
     async function setCurrentVersion(currentMigrationId: string) {
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      for (const appId of [
+        config.getDevWorkspaceId(),
+        config.getProdWorkspaceId(),
+      ]) {
         await config.doInContext(appId, async () => {
           await updateAppMigrationMetadata({
             appId,
@@ -32,7 +35,7 @@ describe("migration integrity", () => {
       }
     }
 
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
     await config.doInContext(appId, async () => {
       await setCurrentVersion("")
       const devDb = context.getWorkspaceDB()

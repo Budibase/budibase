@@ -1,5 +1,5 @@
-import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
+import * as setup from "./utilities"
 
 describe("/dev", () => {
   let request = setup.getRequest()
@@ -15,7 +15,7 @@ describe("/dev", () => {
   describe("revert", () => {
     it("should revert the application", async () => {
       await request
-        .post(`/api/dev/${config.getAppId()}/revert`)
+        .post(`/api/dev/${config.getDevWorkspaceId()}/revert`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
