@@ -160,18 +160,28 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     })
 
     if (config?.encryptPassword) {
-      for (let file of await fsp.readdir(tmpPath)) {
-        const path = join(tmpPath, file)
+      const processDirectory = async (dirPath: string, relativePath = "") => {
+        for (let file of await fsp.readdir(dirPath)) {
+          const fullPath = join(dirPath, file)
+          const relativeFilePath = relativePath ? join(relativePath, file) : file
 
-        // skip the attachments - too big to encrypt
-        if (file !== ATTACHMENT_DIRECTORY) {
-          await encryption.encryptFile(
-            { dir: tmpPath, filename: file },
-            config.encryptPassword
-          )
-          await fsp.rm(path)
+          // skip the attachments - too big to encrypt
+          if (file !== ATTACHMENT_DIRECTORY) {
+            const stats = await fsp.lstat(fullPath)
+            if (stats.isFile()) {
+              await encryption.encryptFile(
+                { dir: dirPath, filename: file },
+                config.encryptPassword!
+              )
+              await fsp.rm(fullPath)
+            } else if (stats.isDirectory()) {
+              await processDirectory(fullPath, relativeFilePath)
+            }
+          }
         }
       }
+
+      await processDirectory(tmpPath)
     }
 
     // if tar requested, return where the tarball is
