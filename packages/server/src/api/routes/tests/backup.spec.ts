@@ -1,4 +1,4 @@
-import { context, db, events, objectStore } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, libDependencies, Workspace } from "@budibase/types"
 import fs from "fs"
@@ -11,39 +11,6 @@ import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 mocks.licenses.useBackups()
-
-async function checkExportContent(buffer: any, isEncrypted: boolean) {
-  const exportId = `export-${generator.guid()}`
-  const tmpPath = join(tmpdir(), ".budibase")
-  const fileName = join(tmpPath, `${exportId}.enc.tar.gz`)
-  fs.writeFileSync(fileName, buffer)
-
-  const extractedPath = join(tmpPath, exportId)
-  fs.mkdirSync(extractedPath)
-  await tar.extract({
-    cwd: extractedPath,
-    file: fileName,
-  })
-
-  const exportedFiles = fs.readdirSync(extractedPath)
-  expect(exportedFiles).toHaveLength(5)
-  expect(exportedFiles).toEqual([
-    "_dependencies",
-    ...[
-      "budibase-client.js",
-      "budibase-client.new.js",
-      "db.txt",
-      "manifest.json",
-    ].map(x => `${x}${isEncrypted ? ".enc" : ""}`),
-  ])
-
-  const dependenciesFiles = fs.readdirSync(join(extractedPath, "_dependencies"))
-  expect(dependenciesFiles).toEqual(
-    Object.values(libDependencies).map(
-      x => `${x.outFile}${isEncrypted ? ".enc" : ""}`
-    )
-  )
-}
 
 describe("/backups", () => {
   let config = setup.getConfig()
@@ -59,6 +26,73 @@ describe("/backups", () => {
   })
 
   describe("/api/backups/export", () => {
+    async function checkExportContent(
+      buffer: any,
+      opts: { includeRows: boolean; isEncrypted: boolean }
+    ) {
+      const exportId = `export-${generator.guid()}`
+      const tmpPath = join(tmpdir(), ".budibase")
+      const fileName = join(tmpPath, `${exportId}.enc.tar.gz`)
+      fs.writeFileSync(fileName, buffer)
+
+      const extractedPath = join(tmpPath, exportId)
+      fs.mkdirSync(extractedPath)
+      await tar.extract({
+        cwd: extractedPath,
+        file: fileName,
+      })
+
+      const exportedFiles = fs.readdirSync(extractedPath)
+      expect(exportedFiles).toHaveLength(5 + (opts.includeRows ? 1 : 0))
+      expect(exportedFiles).toEqual([
+        "_dependencies",
+        ...(opts.includeRows ? ["attachments"] : []),
+        ...[
+          "budibase-client.js",
+          "budibase-client.new.js",
+          "db.txt",
+          "manifest.json",
+        ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`),
+      ])
+
+      const dependenciesFiles = fs.readdirSync(
+        join(extractedPath, "_dependencies")
+      )
+      expect(dependenciesFiles).toEqual(
+        Object.values(libDependencies).map(
+          x => `${x.outFile}${opts.isEncrypted ? ".enc" : ""}`
+        )
+      )
+
+      if (opts.includeRows) {
+        const attachmentFiles = fs.readdirSync(
+          join(extractedPath, "attachments")
+        )
+        expect(attachmentFiles).toHaveLength(3)
+      }
+    }
+
+    beforeEach(async () => {
+      const table = await config.api.table.save(
+        setup.structures.basicTableWithAttachmentField()
+      )
+      const [attachment1, attachment2, attachment3] = await Promise.all(
+        Array.from({ length: 3 }).map(async (_, i) => {
+          const [result] = await config.api.attachment.upload(
+            table._id!,
+            `${i}.txt`,
+            Buffer.from(generator.paragraph())
+          )
+          return result
+        })
+      )
+
+      await config.api.row.save(table._id!, {
+        single_file_attachment: attachment1,
+        file_attachment: [attachment2, attachment3],
+      })
+    })
+
     it("should be able to export a workspace", async () => {
       const body = await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId()
@@ -66,7 +100,7 @@ describe("/backups", () => {
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
-      await checkExportContent(body, false)
+      await checkExportContent(body, { includeRows: true, isEncrypted: false })
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -109,15 +143,15 @@ describe("/backups", () => {
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
-      await checkExportContent(body, true)
+      await checkExportContent(body, { isEncrypted: true, includeRows: true })
     })
 
-    it("should be able to reimport a workspace with encryption", async () => {
+    it("should be able to export a workspace with encryption excluding", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
       const body = await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId(),
-        { excludeRows: false, encryptPassword: "abcde" },
+        { excludeRows: true, encryptPassword: "abcde" },
         {
           headers: {
             "content-disposition": `attachment; filename="${
@@ -129,26 +163,7 @@ describe("/backups", () => {
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
-      const fileName = join(
-        tmpdir(),
-        ".budibase",
-        `export-${generator.guid()}.enc.tar.gz`
-      )
-      fs.writeFileSync(fileName, body as any)
-
-      const importedWorkspace = await config.api.workspace.create({
-        name: "Import",
-        fileToImport: fileName,
-        encryptionPassword: "abcffregde",
-      })
-
-      const prodAppId = db.getProdWorkspaceID(importedWorkspace.appId)
-      const appPath = `${prodAppId}/`
-      const directory = await objectStore.retrieveDirectory(
-        objectStore.ObjectStoreBuckets.APPS,
-        appPath
-      )
-      console.error(directory)
+      await checkExportContent(body, { isEncrypted: true, includeRows: false })
     })
   })
 

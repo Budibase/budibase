@@ -114,9 +114,9 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     const prodAppId = dbCore.getProdWorkspaceID(appId)
     const appPath = `${prodAppId}/`
 
-    const toExclude = [/^\..+/]
+    const toExclude = [/\/\..+/]
     if (config?.excludeRows) {
-      toExclude.push(/^attachments\/.*/)
+      toExclude.push(/\/attachments\/.*/)
     }
 
     const tmpPath = await objectStore.retrieveDirectory(
