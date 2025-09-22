@@ -52,25 +52,28 @@ describe("oauth2 utils", () => {
     )
   )("generateToken (in %s, grant type %s)", (method, grantType) => {
     it("successfully generates tokens", async () => {
-      const response = await config.doInContext(config.appId, async () => {
-        const oauthConfig = await sdk.oauth2.create({
-          name: generator.guid(),
-          url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
-          clientId: "my-client",
-          clientSecret: "my-secret",
-          method,
-          grantType,
-        })
+      const response = await config.doInContext(
+        config.devWorkspaceId,
+        async () => {
+          const oauthConfig = await sdk.oauth2.create({
+            name: generator.guid(),
+            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+            clientId: "my-client",
+            clientSecret: "my-secret",
+            method,
+            grantType,
+          })
 
-        const response = await getToken(oauthConfig._id)
-        return response
-      })
+          const response = await getToken(oauthConfig._id)
+          return response
+        }
+      )
 
       expect(response).toEqual(expect.stringMatching(/^Bearer .+/))
     })
 
     it("uses cached value if available", async () => {
-      const oauthConfig = await config.doInContext(config.appId, () =>
+      const oauthConfig = await config.doInContext(config.devWorkspaceId, () =>
         sdk.oauth2.create({
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
@@ -81,10 +84,10 @@ describe("oauth2 utils", () => {
         })
       )
 
-      const firstToken = await config.doInContext(config.appId, () =>
+      const firstToken = await config.doInContext(config.devWorkspaceId, () =>
         getToken(oauthConfig._id)
       )
-      const secondToken = await config.doInContext(config.appId, () =>
+      const secondToken = await config.doInContext(config.devWorkspaceId, () =>
         getToken(oauthConfig._id)
       )
 
@@ -92,7 +95,7 @@ describe("oauth2 utils", () => {
     })
 
     it("refetches value if cache expired", async () => {
-      const oauthConfig = await config.doInContext(config.appId, () =>
+      const oauthConfig = await config.doInContext(config.devWorkspaceId, () =>
         sdk.oauth2.create({
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
@@ -103,13 +106,13 @@ describe("oauth2 utils", () => {
         })
       )
 
-      const firstToken = await config.doInContext(config.appId, () =>
+      const firstToken = await config.doInContext(config.devWorkspaceId, () =>
         getToken(oauthConfig._id)
       )
-      await config.doInContext(config.appId, () =>
+      await config.doInContext(config.devWorkspaceId, () =>
         sdk.oauth2.cleanStoredToken(oauthConfig._id)
       )
-      const secondToken = await config.doInContext(config.appId, () =>
+      const secondToken = await config.doInContext(config.devWorkspaceId, () =>
         getToken(oauthConfig._id)
       )
 
@@ -118,7 +121,7 @@ describe("oauth2 utils", () => {
 
     it("handles wrong urls", async () => {
       await expect(
-        config.doInContext(config.appId, async () => {
+        config.doInContext(config.devWorkspaceId, async () => {
           const oauthConfig = await sdk.oauth2.create({
             name: generator.guid(),
             url: `${keycloakUrl}/realms/wrong/protocol/openid-connect/token`,
@@ -135,7 +138,7 @@ describe("oauth2 utils", () => {
 
     it("handles wrong client ids", async () => {
       await expect(
-        config.doInContext(config.appId, async () => {
+        config.doInContext(config.devWorkspaceId, async () => {
           const oauthConfig = await sdk.oauth2.create({
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
@@ -154,7 +157,7 @@ describe("oauth2 utils", () => {
 
     it("handles wrong secrets", async () => {
       await expect(
-        config.doInContext(config.appId, async () => {
+        config.doInContext(config.devWorkspaceId, async () => {
           const oauthConfig = await sdk.oauth2.create({
             name: generator.guid(),
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
@@ -177,23 +180,27 @@ describe("oauth2 utils", () => {
       })
 
       it("tracks usages on generation", async () => {
-        const oauthConfig = await config.doInContext(config.appId, () =>
-          sdk.oauth2.create({
-            name: generator.guid(),
-            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
-            clientId: "my-client",
-            clientSecret: "my-secret",
-            method,
-            grantType,
-          })
+        const oauthConfig = await config.doInContext(
+          config.devWorkspaceId,
+          () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+              grantType,
+            })
         )
 
-        await config.doInContext(config.appId, () => getToken(oauthConfig._id))
+        await config.doInContext(config.devWorkspaceId, () =>
+          getToken(oauthConfig._id)
+        )
         await testUtils.queue.processMessages(
           cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
-        const usageLog = await config.doInContext(config.appId, () =>
+        const usageLog = await config.doInContext(config.devWorkspaceId, () =>
           sdk.oauth2.getLastUsages([oauthConfig._id])
         )
 
@@ -201,25 +208,29 @@ describe("oauth2 utils", () => {
       })
 
       it("does not track on failed usages", async () => {
-        const oauthConfig = await config.doInContext(config.appId, () =>
-          sdk.oauth2.create({
-            name: generator.guid(),
-            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
-            clientId: "wrong-client",
-            clientSecret: "my-secret",
-            method,
-            grantType,
-          })
+        const oauthConfig = await config.doInContext(
+          config.devWorkspaceId,
+          () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "wrong-client",
+              clientSecret: "my-secret",
+              method,
+              grantType,
+            })
         )
 
         await expect(
-          config.doInContext(config.appId, () => getToken(oauthConfig._id))
+          config.doInContext(config.devWorkspaceId, () =>
+            getToken(oauthConfig._id)
+          )
         ).rejects.toThrow()
         await testUtils.queue.processMessages(
           cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
-        const usageLog = await config.doInContext(config.appId, () =>
+        const usageLog = await config.doInContext(config.devWorkspaceId, () =>
           sdk.oauth2.getLastUsages([oauthConfig._id])
         )
 
@@ -227,30 +238,34 @@ describe("oauth2 utils", () => {
       })
 
       it("tracks usages between prod and dev, keeping always the latest", async () => {
-        const oauthConfig = await config.doInContext(config.appId, () =>
-          sdk.oauth2.create({
-            name: generator.guid(),
-            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
-            clientId: "my-client",
-            clientSecret: "my-secret",
-            method,
-            grantType,
-          })
+        const oauthConfig = await config.doInContext(
+          config.devWorkspaceId,
+          () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+              grantType,
+            })
         )
 
-        await config.doInContext(config.appId, () => getToken(oauthConfig._id))
+        await config.doInContext(config.devWorkspaceId, () =>
+          getToken(oauthConfig._id)
+        )
 
         await config.publish()
 
         tk.travel(Date.now() + 100)
-        await config.doInContext(config.prodAppId, () =>
+        await config.doInContext(config.prodWorkspaceId, () =>
           getToken(oauthConfig._id)
         )
         await testUtils.queue.processMessages(
           cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
-        for (const appId of [config.appId, config.prodAppId]) {
+        for (const appId of [config.devWorkspaceId, config.prodWorkspaceId]) {
           const usageLog = await config.doInContext(appId, () =>
             sdk.oauth2.getLastUsages([oauthConfig._id])
           )

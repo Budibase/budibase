@@ -1,8 +1,8 @@
+import { mocks } from "@budibase/backend-core/tests"
 import { Webhook } from "@budibase/types"
+import { setEnv } from "../../../environment"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { mocks } from "@budibase/backend-core/tests"
-import { setEnv } from "../../../environment"
 
 const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
 
@@ -104,7 +104,9 @@ describe("/webhooks", () => {
 
     it("should allow building a schema", async () => {
       const res = await request
-        .post(`/api/webhooks/schema/${config.getAppId()}/${webhook._id}`)
+        .post(
+          `/api/webhooks/schema/${config.getDevWorkspaceId()}/${webhook._id}`
+        )
         .send({
           a: 1,
         })
@@ -134,7 +136,7 @@ describe("/webhooks", () => {
       await config.publish()
 
       const res = await request
-        .post(`/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`)
+        .post(`/api/webhooks/trigger/${config.prodWorkspaceId}/${webhook._id}`)
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
@@ -153,7 +155,9 @@ describe("/webhooks", () => {
     await config.publish()
 
     const res = await request
-      .post(`/api/webhooks/trigger/${config.prodAppId}/${syncWebhook._id}`)
+      .post(
+        `/api/webhooks/trigger/${config.prodWorkspaceId}/${syncWebhook._id}`
+      )
       .expect("Content-Type", /json/)
       .expect(200)
     expect(res.body.success).toEqual(true)

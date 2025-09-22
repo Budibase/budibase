@@ -21,7 +21,7 @@ describe("syncGlobalUsers", () => {
   afterAll(config.end)
 
   it("the default user is synced", async () => {
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       await syncGlobalUsers()
 
       const metadata = await rawUserMetadata()
@@ -40,7 +40,7 @@ describe("syncGlobalUsers", () => {
       admin: { global: false },
       builder: { global: true },
     })
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       let metadata = await rawUserMetadata()
       expect(metadata).not.toContainEqual(
         expect.objectContaining({
@@ -75,14 +75,14 @@ describe("syncGlobalUsers", () => {
       admin: { global: false },
       builder: { global: false },
       roles: {
-        [config.getProdAppId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
     const user2 = await config.createUser({
       admin: { global: false },
       builder: { global: false },
     })
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       let metadata = await rawUserMetadata()
       expect(metadata).not.toContainEqual(
         expect.objectContaining({
@@ -129,10 +129,10 @@ describe("syncGlobalUsers", () => {
       admin: { global: false },
       builder: { global: false },
       roles: {
-        [config.getProdAppId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       tk.freeze(new Date(Date.now() + 1000))
       const updatedTime = new Date()
 
@@ -163,7 +163,7 @@ describe("syncGlobalUsers", () => {
       admin: { global: false },
       builder: { global: false },
     })
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       await syncGlobalUsers()
 
       const metadata = await rawUserMetadata()
@@ -188,13 +188,16 @@ describe("syncGlobalUsers", () => {
       })
       await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
 
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(1)
 
         await proSdk.groups.updateGroupApps(group.id, {
           appsToAdd: [
-            { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
+            {
+              appId: config.prodWorkspaceId!,
+              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+            },
           ],
         })
         await syncGlobalUsers()
@@ -229,17 +232,20 @@ describe("syncGlobalUsers", () => {
       })
       await proSdk.groups.updateGroupApps(group.id, {
         appsToAdd: [
-          { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
+          {
+            appId: config.prodWorkspaceId!,
+            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
         ],
       })
       await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
 
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(3)
 
         await proSdk.groups.updateGroupApps(group.id, {
-          appsToRemove: [{ appId: config.prodAppId! }],
+          appsToRemove: [{ appId: config.prodWorkspaceId! }],
         })
         await syncGlobalUsers()
 

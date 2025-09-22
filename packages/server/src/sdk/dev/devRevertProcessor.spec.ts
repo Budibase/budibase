@@ -27,7 +27,7 @@ describe("devRevertProcessor", () => {
 
     const processor = devRevertProcessor()
     const testData: DevRevertQueueData = {
-      appId: config.getAppId(),
+      appId: config.getDevWorkspaceId(),
       userId: generator.guid(),
     }
 
@@ -48,7 +48,7 @@ describe("devRevertProcessor", () => {
 
       const processor = devRevertProcessor()
       const testData: DevRevertQueueData = {
-        appId: config.getAppId(),
+        appId: config.getDevWorkspaceId(),
         userId: generator.guid(),
       }
 
@@ -64,7 +64,7 @@ describe("devRevertProcessor", () => {
       await config.api.table.save(basicTable())
 
       async function verifyDevAppExists() {
-        expect(await db.dbExists(config.getAppId())).toBe(true)
+        expect(await db.dbExists(config.getDevWorkspaceId())).toBe(true)
       }
 
       let exceptionThrown = false
@@ -79,7 +79,7 @@ describe("devRevertProcessor", () => {
       const processor = devRevertProcessor()
 
       const testData: DevRevertQueueData = {
-        appId: config.getAppId(),
+        appId: config.getDevWorkspaceId(),
         userId: generator.guid(),
       }
 
@@ -95,10 +95,10 @@ describe("devRevertProcessor", () => {
       expect(revertAppSpy).toHaveBeenCalledTimes(2)
       await verifyDevAppExists()
 
-      const devDocs = await db.getDB(config.getAppId()).allDocs({
+      const devDocs = await db.getDB(config.getDevWorkspaceId()).allDocs({
         include_docs: true,
       })
-      const prodDocs = await db.getDB(config.getProdAppId()).allDocs({
+      const prodDocs = await db.getDB(config.getProdWorkspaceId()).allDocs({
         include_docs: true,
       })
       expect(devDocs.total_rows).toEqual(prodDocs.total_rows)
