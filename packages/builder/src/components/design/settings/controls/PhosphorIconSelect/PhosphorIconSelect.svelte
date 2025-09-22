@@ -28,7 +28,8 @@
       // Load from CDN instead of bundled package
       const link = document.createElement("link")
       link.rel = "stylesheet"
-      link.href = "https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
+      link.href =
+        "https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
 
       await new Promise((resolve, reject) => {
         link.onload = resolve
