@@ -83,7 +83,7 @@
     dropdown.hide()
   }
 
-  $: displayValue = value || "Pick phosphor icon"
+  $: displayValue = value || "Pick icon"
   $: totalPages = Math.max(1, Math.ceil(filteredIcons.length / maxIconsPerPage))
   $: pageEndIdx = maxIconsPerPage * currentPage
   $: pagedIcons = filteredIcons.slice(pageEndIdx - maxIconsPerPage, pageEndIdx)
