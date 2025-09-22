@@ -14,7 +14,7 @@ describe("/applications/:appId/import", () => {
   })
 
   it("should be able to perform import", async () => {
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
     await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)

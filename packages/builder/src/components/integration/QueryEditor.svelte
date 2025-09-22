@@ -20,7 +20,6 @@
   export let mode
   export let editorHeight = 500
   export let editorWidth = 640
-  // export let parameters = []
 
   let width
   let height
