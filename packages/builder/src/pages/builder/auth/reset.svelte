@@ -10,7 +10,7 @@
   import { goto, params } from "@roxi/routify"
   import { auth, organisation, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage, PasswordRepeatInput } from "@budibase/frontend-core"
+  import { PasswordRepeatInput } from "@budibase/frontend-core"
   import { onMount } from "svelte"
 
   const resetCode = $params["?code"]
@@ -70,33 +70,47 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<TestimonialPage enabled={$organisation.testimonialsEnabled}>
-  <Layout gap="S" noPadding>
-    {#if loaded}
-      <img alt="logo" src={$organisation.logoUrl || Logo} />
-    {/if}
+<div class="page-container">
+  <div class="content">
     <Layout gap="S" noPadding>
-      <Heading size="M">Reset your password</Heading>
-      <Body size="M">Must contain at least 12 characters</Body>
-      <PasswordRepeatInput
-        bind:passwordForm={form}
-        bind:password
-        bind:error={passwordError}
-        minLength={$admin.passwordMinLength || 12}
-      />
-      <Button secondary cta on:click={reset}>
-        {#if loading}
-          <ProgressCircle overBackground={true} size="S" />
-        {:else}
-          Reset
-        {/if}
-      </Button>
+      {#if loaded}
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
+      {/if}
+      <Layout gap="S" noPadding>
+        <Heading size="M">Reset your password</Heading>
+        <Body size="M">Must contain at least 12 characters</Body>
+        <PasswordRepeatInput
+          bind:passwordForm={form}
+          bind:password
+          bind:error={passwordError}
+          minLength={$admin.passwordMinLength || 12}
+        />
+        <Button secondary cta on:click={reset}>
+          {#if loading}
+            <ProgressCircle overBackground={true} size="S" />
+          {:else}
+            Reset
+          {/if}
+        </Button>
+      </Layout>
+      <div />
     </Layout>
-    <div />
-  </Layout>
-</TestimonialPage>
+  </div>
+</div>
 
 <style>
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
+  }
   img {
     width: 48px;
   }
