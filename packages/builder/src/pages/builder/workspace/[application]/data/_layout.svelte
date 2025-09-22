@@ -134,10 +134,11 @@
   }
   .panel-container {
     display: flex;
-    min-width: 260px;
+    min-width: 262px;
     width: 260px;
     max-width: 33.33vw;
     height: 100%;
+    overflow: visible;
   }
   .content {
     padding: 28px 40px 40px 40px;
@@ -164,6 +165,7 @@
     transition: background 130ms ease-out;
     min-width: 2px;
     z-index: 1;
+    flex-shrink: 0;
   }
   .divider:hover {
     background: var(--spectrum-global-color-gray-300);
