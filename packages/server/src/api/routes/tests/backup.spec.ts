@@ -22,7 +22,7 @@ describe("/backups", () => {
   })
 
   describe("/api/backups/export", () => {
-    it("should be able to export app", async () => {
+    it("should be able to export a workspace", async () => {
       const body = await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId()
       )
@@ -38,7 +38,7 @@ describe("/backups", () => {
       })
     })
 
-    it("should infer the app name from the app", async () => {
+    it("should infer the export name from the workspace", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
       await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId(),
@@ -73,15 +73,18 @@ describe("/backups", () => {
   })
 
   describe("/api/backups/import", () => {
-    it("should be able to import an app", async () => {
-      const appId = config.getDevWorkspaceId()
+    it("should be able to import a workspace", async () => {
+      const workspaceId = config.getDevWorkspaceId()
       const automation = await config.createAutomation()
-      await config.createAutomationLog(automation, appId)
+      await config.createAutomationLog(automation, workspaceId)
       await config.createScreen()
-      const exportRes = await config.api.backup.createBackup(appId)
+      const exportRes = await config.api.backup.createBackup(workspaceId)
       expect(exportRes.backupId).toBeDefined()
-      await config.api.backup.waitForBackupToComplete(appId, exportRes.backupId)
-      await config.api.backup.importBackup(appId, exportRes.backupId)
+      await config.api.backup.waitForBackupToComplete(
+        workspaceId,
+        exportRes.backupId
+      )
+      await config.api.backup.importBackup(workspaceId, exportRes.backupId)
     })
   })
 
@@ -99,11 +102,11 @@ describe("/backups", () => {
   })
 
   describe("backup error tracking", () => {
-    it("should track backup failures in app metadata", async () => {
-      const appId = config.getDevWorkspaceId()
+    it("should track backup failures in workspace metadata", async () => {
+      const workspaceId = config.getDevWorkspaceId()
 
       // First manually add a backup error to simulate a failure
-      await context.doInWorkspaceContext(appId, async () => {
+      await context.doInWorkspaceContext(workspaceId, async () => {
         const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(
           DocumentType.WORKSPACE_METADATA
@@ -126,11 +129,11 @@ describe("/backups", () => {
       })
     })
 
-    it("should be able to clear backup errors from app metadata", async () => {
-      const appId = config.getDevWorkspaceId()
+    it("should be able to clear backup errors from workspace metadata", async () => {
+      const workspaceId = config.getDevWorkspaceId()
 
-      // First set up backup errors in app metadata
-      await context.doInWorkspaceContext(appId, async () => {
+      // First set up backup errors in workspace metadata
+      await context.doInWorkspaceContext(workspaceId, async () => {
         const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(
           DocumentType.WORKSPACE_METADATA
@@ -144,13 +147,13 @@ describe("/backups", () => {
 
       // This test should fail initially since we haven't implemented the clear endpoint yet
       const response = await config.api.backup.clearBackupErrors(
-        appId,
+        workspaceId,
         "backup-123"
       )
       expect(response.message).toEqual("Backup errors cleared.")
 
-      // Verify the specific error was removed from app metadata
-      await context.doInWorkspaceContext(appId, async () => {
+      // Verify the specific error was removed from workspace metadata
+      await context.doInWorkspaceContext(workspaceId, async () => {
         const db = context.getProdWorkspaceDB()
         const metadata = await db.get<Workspace>(
           DocumentType.WORKSPACE_METADATA
