@@ -720,7 +720,7 @@
         "key": "disabled"
       },
       {
-        "type": "icon",
+        "type": "phosphorIcon",
         "label": "Icon",
         "key": "icon"
       },
@@ -1467,11 +1467,11 @@
     },
     "settings": [
       {
-        "type": "icon",
+        "type": "phosphorIcon",
         "label": "Icon",
         "key": "icon",
         "required": true,
-        "defaultValue": "ri-star-fill"
+        "defaultValue": "star"
       },
       {
         "type": "select",
