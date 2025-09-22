@@ -341,6 +341,36 @@ jobs:
             echo "yarn.lock file is unchanged."
           fi
 
+  check-openapi-specs:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+      - run: yarn --frozen-lockfile
+
+      - name: Generate OpenAPI specs
+        run: yarn build:specs
+
+      - name: Check for uncommitted changes
+        run: |
+          if [[ -n $(git status --porcelain packages/server) ]]; then
+            echo "OpenAPI specs are not up to date. Please run 'yarn build:specs' and commit the changes."
+            git status --porcelain packages/server
+            git diff packages/server
+            exit 1
+          else
+            echo "OpenAPI specs are up to date."
+          fi
+
   check-client-build-size:
     runs-on: ubuntu-24.04
     steps:

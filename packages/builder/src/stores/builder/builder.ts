@@ -1,9 +1,9 @@
-import { get } from "svelte/store"
-import { createBuilderWebsocket } from "./websocket.js"
-import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
+import { Workspace } from "@budibase/types"
+import { Socket } from "socket.io-client"
+import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore.js"
-import { App } from "@budibase/types"
+import { createBuilderWebsocket } from "./websocket.js"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
@@ -14,6 +14,7 @@ interface BuilderState {
   propertyFocus: string | null
   builderSidePanel: boolean
   hoveredComponentId: string | null
+  isResizingPanel: boolean
   websocket?: Socket
 }
 
@@ -23,6 +24,7 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   propertyFocus: null,
   builderSidePanel: false,
   hoveredComponentId: null,
+  isResizingPanel: false,
 }
 
 export class BuilderStore extends BudiStore<BuilderState> {
@@ -40,9 +42,10 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
     this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
     this.selectResource = this.selectResource.bind(this)
+    this.setResizingPanel = this.setResizingPanel.bind(this)
   }
 
-  init(app: App) {
+  init(app: Workspace) {
     if (!app?.appId) {
       console.error("BuilderStore: No appId supplied for websocket")
       return
@@ -105,6 +108,13 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.websocket?.emit(BuilderSocketEvent.SelectResource, {
       resourceId: id,
     })
+  }
+
+  setResizingPanel(isResizing: boolean) {
+    this.update(state => ({
+      ...state,
+      isResizingPanel: isResizing,
+    }))
   }
 }
 

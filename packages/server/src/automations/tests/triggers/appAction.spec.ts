@@ -1,7 +1,7 @@
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { Automation, AutomationIOType, AutomationStatus } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
-import { Automation, AutomationIOType, AutomationStatus } from "@budibase/types"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("app action trigger", () => {
   const config = new TestConfiguration()
@@ -19,7 +19,7 @@ describe("app action trigger", () => {
       .save()
       .then(({ automation }) => automation)
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
   })
 
   afterAll(() => {
@@ -59,7 +59,7 @@ describe("app action trigger", () => {
       })
       .save()
 
-    await config.api.application.publish()
+    await config.api.workspace.publish()
 
     const jobs = await captureAutomationResults(automation, async () => {
       await config.withProdApp(async () => {

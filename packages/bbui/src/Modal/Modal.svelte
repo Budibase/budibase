@@ -15,6 +15,7 @@
   import Portal from "svelte-portal"
   import Context from "../context"
   import { ModalCancelFrom } from "../constants"
+  import { generate } from "shortid"
 
   export let fixed: boolean = false
   export let inline: boolean = false
@@ -23,7 +24,9 @@
   export let zIndex: number = 1001
 
   // Ensure any popovers inside this modal are rendered inside this modal
-  setContext(Context.PopoverRoot, ".spectrum-Modal")
+  // Unique ids are required to ensure nested modals are parented correctly
+  const uniqueId = generate()
+  setContext(Context.PopoverRoot, `.spectrum-Modal-${uniqueId}`)
 
   const dispatch = createEventDispatcher<{
     show: void
@@ -108,7 +111,11 @@
 
 {#if inline}
   {#if visible}
-    <div use:focusModal bind:this={modal} class="spectrum-Modal inline is-open">
+    <div
+      use:focusModal
+      bind:this={modal}
+      class={`spectrum-Modal spectrum-Modal-${uniqueId} inline is-open`}
+    >
       <slot />
     </div>
   {/if}
@@ -146,7 +153,7 @@
               <div
                 use:focusModal
                 bind:this={modal}
-                class="spectrum-Modal is-open"
+                class={`spectrum-Modal spectrum-Modal-${uniqueId} is-open`}
                 in:fly={{ y: 30, duration: 200 }}
                 out:fly|local={{ y: 30, duration: 200 }}
               >
@@ -172,12 +179,12 @@
   }
   .background {
     background: var(--modal-background, rgba(0, 0, 0, 0.75));
+    opacity: 0.65;
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
     width: 100vw;
-    opacity: 0.65;
     pointer-events: none;
   }
 

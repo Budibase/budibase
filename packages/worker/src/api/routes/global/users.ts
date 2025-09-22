@@ -1,13 +1,13 @@
-import * as controller from "../../controllers/global/users"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
-import { users } from "../validation"
+import * as controller from "../../controllers/global/users"
 import {
-  loggedInRoutes,
-  cloudRestrictedRoutes,
-  builderOrAdminRoutes,
   adminRoutes,
+  builderOrAdminRoutes,
+  cloudRestrictedRoutes,
+  loggedInRoutes,
 } from "../endpointGroups"
+import { users } from "../validation"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
@@ -42,14 +42,6 @@ function buildInviteMultipleValidation() {
       userInfo: Joi.object().optional(),
     })
   ))
-}
-
-const createUserAdminOnly = (ctx: any, next: any) => {
-  if (!ctx.request.body._id) {
-    return auth.adminOnly(ctx, next)
-  } else {
-    return auth.builderOrAdmin(ctx, next)
-  }
 }
 
 function buildInviteAcceptValidation() {
@@ -100,12 +92,32 @@ adminRoutes
 builderOrAdminRoutes
   .get("/api/global/users", controller.fetch)
   .get("/api/global/users/count/:appId", controller.countByApp)
-  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
+  .get("/api/global/users/invites", controller.getUserInvites)
+  .get("/api/global/users/:id", controller.find)
+  .post(
+    "/api/global/users/invite/:code/:role",
+    controller.addWorkspaceIdToInvite
+  )
+  .delete(
+    "/api/global/users/invite/:code",
+    controller.removeWorkspaceIdFromInvite
+  )
   .post(
     "/api/global/users/onboard",
     buildInviteMultipleValidation(),
     controller.onboardUsers
   )
+  .post(
+    "/api/global/users/:userId/permission/:role",
+    controller.addUserToWorkspace
+  )
+  .delete(
+    "/api/global/users/:userId/permission",
+    controller.removeUserFromWorkspace
+  )
+
+adminRoutes
+  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
   .post(
     "/api/global/users/multi/invite",
     buildInviteMultipleValidation(),
@@ -115,19 +127,11 @@ builderOrAdminRoutes
     "/api/global/users/multi/invite/delete",
     controller.removeMultipleInvites
   )
-  .post("/api/global/users/invite/update/:code", controller.updateInvite)
-  .get("/api/global/users/invites", controller.getUserInvites)
-  .get("/api/global/users/:id", controller.find)
+  .post("/api/global/users", users.buildUserSaveValidation(), controller.save)
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column
   .post("/api/global/users/search", controller.search)
-  .post(
-    "/api/global/users",
-    createUserAdminOnly,
-    users.buildUserSaveValidation(),
-    controller.save
-  )
   // non-global endpoints
   .get("/api/global/users/invite/:code", controller.checkInvite)
   .post(

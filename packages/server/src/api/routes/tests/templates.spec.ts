@@ -1,18 +1,21 @@
-import * as setup from "./utilities"
-import path from "path"
-import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { getAppMigrationVersion } from "../../../appMigrations"
-import * as appMigrations from "../../../appMigrations/migrations"
+import nock from "nock"
+import path from "path"
+import { getAppMigrationVersion } from "../../../workspaceMigrations"
+import * as workspaceMigrations from "../../../workspaceMigrations/migrations"
+import * as setup from "./utilities"
 
-jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
-  MIGRATIONS: [
-    { id: `202506011400_test`, func: jest.fn() },
-    { id: `202506021500_test`, func: jest.fn() },
-  ],
-}))
+jest.mock<typeof workspaceMigrations>(
+  "../../../workspaceMigrations/migrations",
+  () => ({
+    MIGRATIONS: [
+      { id: `202506011400_test`, func: jest.fn() },
+      { id: `202506021500_test`, func: jest.fn() },
+    ],
+  })
+)
 
-interface App {
+interface Workspace {
   background: string
   icon: string
   category: string
@@ -26,7 +29,7 @@ interface App {
 
 interface Manifest {
   templates: {
-    app: { [key: string]: App }
+    app: { [key: string]: Workspace }
   }
 }
 
@@ -96,7 +99,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",
@@ -128,7 +131,7 @@ describe("/templates", () => {
       const name = generator.guid().replaceAll("-", "")
       const url = `/${name}`
 
-      const app = await config.api.application.create({
+      const app = await config.api.workspace.create({
         name,
         url,
         useTemplate: "true",
@@ -141,8 +144,8 @@ describe("/templates", () => {
 
         expect(migrationVersion).toBe("202506021500_test")
 
-        expect(appMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
-        expect(appMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
+        expect(workspaceMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
       })
     })
   })

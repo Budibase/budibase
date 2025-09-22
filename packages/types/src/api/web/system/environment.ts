@@ -8,4 +8,5 @@ export interface GetEnvironmentResponse {
   isDev: boolean
   maintenance: { type: string }[]
   passwordMinLength?: string
+  serveDevClientFromStorage: boolean
 }

@@ -1,16 +1,16 @@
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
 import {
-  Screen,
-  Role,
   BuiltinPermissionID,
+  Role,
+  Screen,
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
-import { structures } from "@budibase/backend-core/tests"
+import { basicDatasourcePlus } from "../../../tests/utilities/structures"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 const {
   basicScreen,
@@ -35,7 +35,7 @@ describe("/screens", () => {
   beforeEach(async () => {
     await config.newTenant()
     // Replace the regular app with an onboarding app to get sample data
-    await config.createAppWithOnboarding("test-app-with-sample")
+    await config.createWorkspaceWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -110,7 +110,7 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.withProdApp(() =>
-          config.api.application.getDefinition(config.getProdAppId())
+          config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
 
         // Filter out sample screen
@@ -145,8 +145,8 @@ describe("/screens", () => {
           "x-budibase-role": role1._id!,
         },
         async () => {
-          const res = await config.api.application.getDefinition(
-            config.getAppId()
+          const res = await config.api.workspace.getDefinition(
+            config.getDevWorkspaceId()
           )
 
           // Filter out sample screen
@@ -269,7 +269,6 @@ describe("/screens", () => {
 
   describe("usage", () => {
     beforeEach(async () => {
-      await config.init()
       await config.api.screen.save(basicScreen())
     })
 

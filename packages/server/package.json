@@ -9,9 +9,9 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "prebuild": "rimraf dist/",
+    "prebuild": "rimraf dist/ client/",
     "build": "node ./scripts/build.js",
-    "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
+    "postbuild": "copyfiles -f ../client/dist/*.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
@@ -25,7 +25,7 @@
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
-    "run:docker": "node dist/index.js",
+    "run:docker": "node --enable-source-maps dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
@@ -116,7 +116,6 @@
     "pouchdb-all-dbs": "1.1.1",
     "pouchdb-find": "9.0.0",
     "redis": "4",
-    "semver": "^7.5.4",
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
     "snowflake-sdk": "^1.15.0",
@@ -191,6 +190,7 @@
       },
       "build": {
         "inputs": [
+          "default",
           "{projectRoot}/src",
           "{projectRoot}/builder",
           "{projectRoot}/client",

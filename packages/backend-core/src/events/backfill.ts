@@ -1,28 +1,28 @@
 import {
-  Event,
-  BackfillMetadata,
-  CachedEvent,
-  SSOCreatedEvent,
   AutomationCreatedEvent,
   AutomationStepCreatedEvent,
+  BackfillMetadata,
+  CachedEvent,
   DatasourceCreatedEvent,
+  Event,
   LayoutCreatedEvent,
   QueryCreatedEvent,
+  RoleAssignedEvent,
   RoleCreatedEvent,
   ScreenCreatedEvent,
+  SSOCreatedEvent,
   TableCreatedEvent,
-  ViewCreatedEvent,
-  ViewCalculationCreatedEvent,
-  ViewFilterCreatedEvent,
-  AppPublishedEvent,
   UserCreatedEvent,
-  RoleAssignedEvent,
   UserPermissionAssignedEvent,
-  AppCreatedEvent,
+  ViewCalculationCreatedEvent,
+  ViewCreatedEvent,
+  ViewFilterCreatedEvent,
+  WorkspaceCreatedEvent,
+  WorkspacePublishedEvent,
 } from "@budibase/types"
-import * as context from "../context"
-import { CacheKey } from "../cache/generic"
 import * as cache from "../cache/generic"
+import { CacheKey } from "../cache/generic"
+import * as context from "../context"
 
 // LIFECYCLE
 
@@ -131,10 +131,10 @@ const CUSTOM_PROPERTY_SUFFIX: any = {
   [Event.VIEW_FILTER_CREATED]: (properties: ViewFilterCreatedEvent) => {
     return properties.tableId // best uniqueness
   },
-  [Event.APP_CREATED]: (properties: AppCreatedEvent) => {
+  [Event.WORKSPACE_CREATED]: (properties: WorkspaceCreatedEvent) => {
     return properties.appId // best uniqueness
   },
-  [Event.APP_PUBLISHED]: (properties: AppPublishedEvent) => {
+  [Event.WORKSPACE_PUBLISHED]: (properties: WorkspacePublishedEvent) => {
     return properties.appId // best uniqueness
   },
   // GLOBAL EVENTS

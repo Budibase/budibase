@@ -1,7 +1,7 @@
 import { context } from "@budibase/backend-core"
-import { isExternalTableID } from "../../../integrations/utils"
-import { APP_PREFIX, DocumentType } from "../../../db/utils"
 import { Row } from "@budibase/types"
+import { DocumentType, WORKSPACE_PREFIX } from "../../../db/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 
 export async function addRev(
   body: { _id?: string; _rev?: string },
@@ -11,10 +11,10 @@ export async function addRev(
     return body
   }
   let id = body._id
-  if (body._id.startsWith(APP_PREFIX)) {
-    id = DocumentType.APP_METADATA
+  if (body._id.startsWith(WORKSPACE_PREFIX)) {
+    id = DocumentType.WORKSPACE_METADATA
   }
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const dbDoc = await db.get<any>(id)
   body._rev = dbDoc._rev
   // update ID in case it is an app ID

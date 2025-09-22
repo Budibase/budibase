@@ -1,5 +1,5 @@
-import { TestConfiguration } from "../../../../tests"
 import { withEnv } from "../../../../environment"
+import { TestConfiguration } from "../../../../tests"
 
 jest.unmock("node-fetch")
 
@@ -29,6 +29,7 @@ describe("/api/system/environment", () => {
         baseUrl: "http://localhost:10000",
         offlineMode: false,
         maintenance: [],
+        serveDevClientFromStorage: false,
       })
     })
 
@@ -43,6 +44,7 @@ describe("/api/system/environment", () => {
           baseUrl: "http://localhost:10000",
           offlineMode: false,
           maintenance: [],
+          serveDevClientFromStorage: false,
         })
       })
     })

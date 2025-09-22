@@ -80,7 +80,11 @@
 
 <Modal on:hide={store.cancel} bind:this={modal}>
   {#if $store.stage === "googleAuth"}
-    <GoogleAuthPrompt />
+    <GoogleAuthPrompt
+      on:close={() => {
+        modal.hide()
+      }}
+    />
   {:else if $store.stage === "editConfig"}
     <DatasourceConfigEditor
       integration={$store.integration}

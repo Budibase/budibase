@@ -1,11 +1,10 @@
+import { context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
+import { DocumentType, Workspace } from "@budibase/types"
 import tk from "timekeeper"
-import * as setup from "./utilities"
-import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { context } from "@budibase/backend-core"
-import { DocumentType, App } from "@budibase/types"
 
 mocks.licenses.useBackups()
 
@@ -23,7 +22,9 @@ describe("/backups", () => {
 
   describe("/api/backups/export", () => {
     it("should be able to export app", async () => {
-      const body = await config.api.backup.exportBasicBackup(config.getAppId()!)
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId()!
+      )
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
     })
@@ -32,17 +33,17 @@ describe("/backups", () => {
       await checkBuilderEndpoint({
         config,
         method: "POST",
-        url: `/api/backups/export?appId=${config.getAppId()}`,
+        url: `/api/backups/export?appId=${config.getDevWorkspaceId()}`,
       })
     })
 
     it("should infer the app name from the app", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
-      await config.api.backup.exportBasicBackup(config.getAppId()!, {
+      await config.api.backup.exportBasicBackup(config.getDevWorkspaceId()!, {
         headers: {
           "content-disposition": `attachment; filename="${
-            config.getApp().name
+            config.getDevWorkspace().name
           }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
         },
       })
@@ -51,7 +52,7 @@ describe("/backups", () => {
 
   describe("/api/backups/import", () => {
     it("should be able to import an app", async () => {
-      const appId = config.getAppId()!
+      const appId = config.getDevWorkspaceId()!
       const automation = await config.createAutomation()
       await config.createAutomationLog(automation, appId)
       await config.createScreen()
@@ -66,7 +67,9 @@ describe("/backups", () => {
     it("should be able to calculate the backup statistics", async () => {
       await config.createAutomation()
       await config.createScreen()
-      let res = await sdk.backups.calculateBackupStats(config.getAppId()!)
+      let res = await sdk.backups.calculateBackupStats(
+        config.getDevWorkspaceId()!
+      )
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
       expect(res.screens).toEqual(1)
@@ -75,12 +78,14 @@ describe("/backups", () => {
 
   describe("backup error tracking", () => {
     it("should track backup failures in app metadata", async () => {
-      const appId = config.getAppId()!
+      const appId = config.getDevWorkspaceId()!
 
       // First manually add a backup error to simulate a failure
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
 
         // Add backup error manually to test the structure
         metadata.backupErrors = {
@@ -89,7 +94,9 @@ describe("/backups", () => {
         await db.put(metadata)
 
         // Now verify the structure
-        const updatedMetadata = await db.get<App>(DocumentType.APP_METADATA)
+        const updatedMetadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         expect(updatedMetadata.backupErrors).toBeDefined()
         expect(updatedMetadata.backupErrors).toEqual({
           "backup-123": ["Backup export failed: Test error"],
@@ -98,12 +105,14 @@ describe("/backups", () => {
     })
 
     it("should be able to clear backup errors from app metadata", async () => {
-      const appId = config.getAppId()!
+      const appId = config.getDevWorkspaceId()!
 
       // First set up backup errors in app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         metadata.backupErrors = {
           "backup-123": ["Backup export failed: Test error"],
           "backup-456": ["Another backup error"],
@@ -119,9 +128,11 @@ describe("/backups", () => {
       expect(response.message).toEqual("Backup errors cleared.")
 
       // Verify the specific error was removed from app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      await context.doInWorkspaceContext(appId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         expect(metadata.backupErrors).toEqual({
           "backup-456": ["Another backup error"],
         })

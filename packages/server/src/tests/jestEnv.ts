@@ -26,6 +26,7 @@ process.env.MINIO_URL = "http://localhost"
 process.env.MINIO_ACCESS_KEY = "budibase"
 process.env.MINIO_SECRET_KEY = "budibase"
 process.env.SYNC_MIGRATION_CHECKS_MS = "10"
+process.env.SKIP_WORKSPACE_MIGRATIONS = "1"
 
 let agent: MockAgent | null = null
 

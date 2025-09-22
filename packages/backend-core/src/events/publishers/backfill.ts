@@ -1,18 +1,18 @@
-import { publishEvent } from "../events"
 import {
   Event,
-  AppBackfillSucceededEvent,
-  AppBackfillFailedEvent,
-  TenantBackfillSucceededEvent,
-  TenantBackfillFailedEvent,
-  InstallationBackfillSucceededEvent,
   InstallationBackfillFailedEvent,
+  InstallationBackfillSucceededEvent,
+  TenantBackfillFailedEvent,
+  TenantBackfillSucceededEvent,
+  WorkspaceBackfillFailedEvent,
+  WorkspaceBackfillSucceededEvent,
 } from "@budibase/types"
 import env from "../../environment"
+import { publishEvent } from "../events"
 
 const shouldSkip = !env.SELF_HOSTED && !env.isDev()
 
-async function appSucceeded(properties: AppBackfillSucceededEvent) {
+async function appSucceeded(properties: WorkspaceBackfillSucceededEvent) {
   if (shouldSkip) {
     return
   }
@@ -23,7 +23,7 @@ async function appFailed(error: any) {
   if (shouldSkip) {
     return
   }
-  const properties: AppBackfillFailedEvent = {
+  const properties: WorkspaceBackfillFailedEvent = {
     error: JSON.stringify(error, Object.getOwnPropertyNames(error)),
   }
   await publishEvent(Event.APP_BACKFILL_FAILED, properties)

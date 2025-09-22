@@ -1,19 +1,19 @@
-import Router from "@koa/router"
 import {
   auth,
-  middleware,
-  env as envCore,
   env as coreEnv,
+  env as envCore,
+  middleware,
 } from "@budibase/backend-core"
-import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
-import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
-import zlib from "zlib"
-import { mainRoutes, staticRoutes, publicRoutes, assetRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
-import { apiEnabled, automationsEnabled } from "../features"
-import { appMigrations as migrations } from "../middleware/appMigrations"
+import Router from "@koa/router"
+import zlib from "zlib"
 import { automationQueue } from "../automations"
+import { apiEnabled, automationsEnabled } from "../features"
+import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
+import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import { workspaceMigrations as migrations } from "../middleware/workspaceMigrations"
 import { getState } from "../startup"
+import { assetRoutes, mainRoutes, publicRoutes, staticRoutes } from "./routes"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")

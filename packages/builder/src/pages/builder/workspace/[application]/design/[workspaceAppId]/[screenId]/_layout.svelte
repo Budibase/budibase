@@ -6,6 +6,7 @@
     screenStore,
     selectedScreen,
     workspaceAppStore,
+    builderStore,
   } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
@@ -39,7 +40,7 @@
 </script>
 
 {#if $selectedScreen}
-  <div class="design">
+  <div class="design" class:resizing-panel={$builderStore.isResizingPanel}>
     <TopBar
       breadcrumbs={[
         { text: "Apps", url: "../../" },
@@ -70,5 +71,11 @@
     align-items: stretch;
     flex: 1 1 auto;
     height: 0;
+  }
+  .design.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>

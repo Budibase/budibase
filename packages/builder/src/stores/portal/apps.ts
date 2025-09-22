@@ -1,10 +1,10 @@
-import { derived } from "svelte/store"
-import { AppStatus } from "@/constants"
 import { API } from "@/api"
-import { auth } from "./auth"
-import { BudiStore } from "../BudiStore"
-import { App, UpdateAppRequest } from "@budibase/types"
+import { AppStatus } from "@/constants"
 import { EnrichedApp, StoreApp } from "@/types"
+import { UpdateWorkspaceRequest, Workspace } from "@budibase/types"
+import { derived } from "svelte/store"
+import { BudiStore } from "../BudiStore"
+import { auth } from "./auth"
 
 interface PortalAppsStore {
   apps: StoreApp[]
@@ -99,7 +99,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
         }
 
         // Extract certain properties from the dev app to override the prod app
-        let devProps: Pick<App, "updatedBy" | "updatedAt"> = {}
+        let devProps: Pick<Workspace, "updatedBy" | "updatedAt"> = {}
         if (appMap[id]) {
           devProps = {
             updatedBy: appMap[id].updatedBy,
@@ -137,7 +137,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     }
   }
 
-  async save(appId: string, value: UpdateAppRequest) {
+  async save(appId: string, value: UpdateWorkspaceRequest) {
     await API.saveAppMetadata(appId, value)
     this.update(state => {
       const updatedAppIndex = state.apps.findIndex(

@@ -1,8 +1,8 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth, admin } from "@/stores/portal"
-import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "@/components/portal/licensing/constants"
+import { admin, auth } from "@/stores/portal"
+import { Constants } from "@budibase/frontend-core"
+import { bb } from "@/stores/bb"
 import {
   License,
   MonthlyQuotaName,
@@ -10,6 +10,7 @@ import {
   QuotaUsage,
   StaticQuotaName,
 } from "@budibase/types"
+import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 
 const UNLIMITED = -1
@@ -20,8 +21,6 @@ type StaticMetrics = { [key in StaticQuotaName]?: number }
 type UsageMetrics = MonthlyMetrics & StaticMetrics
 
 interface LicensingState {
-  goToUpgradePage: () => void
-  goToPricingPage: () => void
   // the top level license
   license?: License
   isFreePlan: boolean
@@ -69,9 +68,6 @@ interface LicensingState {
 class LicensingStore extends BudiStore<LicensingState> {
   constructor() {
     super({
-      // navigation
-      goToUpgradePage: () => {},
-      goToPricingPage: () => {},
       // the top level license
       license: undefined,
       isFreePlan: true,
@@ -114,6 +110,9 @@ class LicensingStore extends BudiStore<LicensingState> {
       // AI Limits
       aiCreditsExceeded: false,
     })
+
+    this.goToUpgradePage = this.goToUpgradePage.bind(this)
+    this.goToPricingPage = this.goToPricingPage.bind(this)
   }
 
   usersLimitReached(userCount: number, userLimit = get(this.store).userLimit) {
@@ -160,32 +159,22 @@ class LicensingStore extends BudiStore<LicensingState> {
   }
 
   async init() {
-    this.setNavigation()
     this.setLicense()
     await this.setQuotaUsage()
   }
 
-  setNavigation() {
-    const adminStore = get(admin)
+  goToUpgradePage() {
     const authStore = get(auth)
-
-    const upgradeUrl = authStore?.user?.accountPortalAccess
-      ? `${adminStore.accountPortalUrl}/portal/upgrade`
-      : "/builder/portal/account/upgrade"
-
-    const goToUpgradePage = () => {
-      window.location.href = upgradeUrl
+    const adminStore = get(admin)
+    if (authStore?.user?.accountPortalAccess) {
+      window.location.href = `${adminStore.accountPortalUrl}/portal/upgrade`
+    } else {
+      bb.settings("/upgrade")
     }
-    const goToPricingPage = () => {
-      window.open("https://budibase.com/pricing/", "_blank")
-    }
-    this.update(state => {
-      return {
-        ...state,
-        goToUpgradePage,
-        goToPricingPage,
-      }
-    })
+  }
+
+  goToPricingPage() {
+    window.open("https://budibase.com/pricing/", "_blank")
   }
 
   setLicense() {
@@ -198,7 +187,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isEnterpriseTrial =
       planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
     const groupsEnabled = features.includes(Constants.Features.USER_GROUPS)
-    const backupsEnabled = features.includes(Constants.Features.APP_BACKUPS)
+    const backupsEnabled = features.includes(
+      Constants.Features.WORKSPACE_BACKUPS
+    )
     const scimEnabled = features.includes(Constants.Features.SCIM)
     const environmentVariablesEnabled = features.includes(
       Constants.Features.ENVIRONMENT_VARIABLES
@@ -282,15 +273,15 @@ class LicensingStore extends BudiStore<LicensingState> {
     }, {})
 
     // Process static metrics
-    const staticMetrics = [StaticQuotaName.APPS, StaticQuotaName.ROWS].reduce(
-      (acc: StaticMetrics, key) => {
-        const limit = license.quotas.usage.static[key].value
-        const used = ((usage.usageQuota[key] || 0) / limit) * 100
-        acc[key] = limit > -1 ? Math.floor(used) : -1
-        return acc
-      },
-      {}
-    )
+    const staticMetrics = [
+      StaticQuotaName.WORKSPACES,
+      StaticQuotaName.ROWS,
+    ].reduce((acc: StaticMetrics, key) => {
+      const limit = license.quotas.usage.static[key].value
+      const used = ((usage.usageQuota[key] || 0) / limit) * 100
+      acc[key] = limit > -1 ? Math.floor(used) : -1
+      return acc
+    }, {})
 
     const getDaysBetween = (dateStart: Date, dateEnd: Date) => {
       return dateEnd > dateStart
