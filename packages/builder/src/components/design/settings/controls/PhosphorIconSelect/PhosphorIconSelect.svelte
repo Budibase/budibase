@@ -1,26 +1,31 @@
-<script>
+<script lang="ts">
   import { Popover, ActionButton, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import phosphorIconsData from "./phosphorIcons.json"
 
-  const dispatch = createEventDispatcher()
+  interface PhosphorIconSelectEvents {
+    change: string
+  }
 
-  export let value = ""
-  export let maxIconsPerPage = 72
+  const dispatch = createEventDispatcher<PhosphorIconSelectEvents>()
+
+  export let value: string = ""
+  export let maxIconsPerPage: number = 72
 
   // Get phosphor icons from external JSON file
-  const phosphorIcons = phosphorIconsData
+  const phosphorIcons: string[] = phosphorIconsData
 
-  let searchTerm = ""
-  let currentPage = 1
+  let searchTerm: string = ""
+  let currentPage: number = 1
 
-  let buttonAnchor, dropdown
-  let loading = false
-  let loadedWeights = new Set()
-  let isLoadingWeight = false
+  let buttonAnchor: HTMLDivElement
+  let dropdown: Popover
+  let loading: boolean = false
+  let loadedWeights: Set<string> = new Set()
+  let isLoadingWeight: boolean = false
 
   // Load phosphor icon weights dynamically when dropdown is opened
-  async function loadRegularWeight() {
+  async function loadRegularWeight(): Promise<void> {
     if (loadedWeights.has("regular") || isLoadingWeight) return
 
     isLoadingWeight = true
@@ -31,9 +36,9 @@
       link.href =
         "https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
 
-      await new Promise((resolve, reject) => {
-        link.onload = resolve
-        link.onerror = reject
+      await new Promise<void>((resolve, reject) => {
+        link.onload = () => resolve()
+        link.onerror = () => reject()
         document.head.appendChild(link)
       })
 
@@ -46,14 +51,14 @@
   }
 
   // Load regular weight when dropdown opens
-  async function onDropdownShow() {
+  async function onDropdownShow(): Promise<void> {
     await loadRegularWeight()
     dropdown.show()
   }
 
   // Reactive search - automatically filter icons when searchTerm changes
   $: filteredIcons = searchTerm
-    ? phosphorIcons.filter(icon =>
+    ? phosphorIcons.filter((icon: string) =>
         icon.toLowerCase().includes(searchTerm.toLowerCase().trim())
       )
     : phosphorIcons
@@ -63,13 +68,16 @@
     currentPage = 1
   }
 
-  function pageClick(next) {
-    if ((next && currentPage >= totalPages) || (!next && currentPage <= 1)) {
+  function pageClick(direction: "next" | "back"): void {
+    if (
+      (direction === "next" && currentPage >= totalPages) ||
+      (direction === "back" && currentPage <= 1)
+    ) {
       return
     }
 
     loading = true
-    if (next) {
+    if (direction === "next") {
       currentPage++
     } else {
       currentPage--
@@ -77,7 +85,7 @@
     loading = false
   }
 
-  const select = icon => {
+  const select = (icon: string): void => {
     value = icon
     dispatch("change", icon)
     dropdown.hide()
@@ -102,11 +110,7 @@
 <Popover bind:this={dropdown} anchor={buttonAnchor} resizable={false}>
   <div class="container">
     <div class="search-input">
-      <Input
-        bind:value={searchTerm}
-        thin
-        placeholder="Search phosphor icons..."
-      />
+      <Input bind:value={searchTerm} placeholder={"Search phosphor icons..."} />
       {#if value}
         <Button primary on:click={() => select("")}>Clear</Button>
       {/if}
@@ -116,8 +120,8 @@
       <div class="page-area">
         <div class="pager">
           <i
-            on:click={() => pageClick(false)}
-            on:keypress={e => e.key === "Enter" && pageClick(false)}
+            on:click={() => pageClick("back")}
+            on:keypress={e => e.key === "Enter" && pageClick("back")}
             class="page-btn ri-arrow-left-line ri-sm"
             class:disabled={currentPage === 1}
             role="button"
@@ -125,8 +129,8 @@
           />
           <span>{pagerText}</span>
           <i
-            on:click={() => pageClick(true)}
-            on:keypress={e => e.key === "Enter" && pageClick(true)}
+            on:click={() => pageClick("next")}
+            on:keypress={e => e.key === "Enter" && pageClick("next")}
             class="page-btn ri-arrow-right-line ri-sm"
             class:disabled={currentPage === totalPages}
             role="button"
