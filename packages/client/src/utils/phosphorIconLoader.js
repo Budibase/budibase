@@ -1,6 +1,5 @@
 // Custom phosphor icon loader that loads icons on demand from CDN
 const loadedWeights = new Set()
-const iconCache = new Map()
 
 export async function loadPhosphorIconWeight(weight = "regular") {
   if (loadedWeights.has(weight)) return
