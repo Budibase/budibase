@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { API } from "@/api"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import Panel from "@/components/design/Panel.svelte"
+  import { agentsStore } from "@/stores/portal"
   import {
     Body,
     Button,
@@ -12,23 +16,18 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
-  import { agentsStore } from "@/stores/portal"
-  import Chatbox from "./Chatbox.svelte"
   import type {
     AgentChat,
     AgentToolSourceWithTools,
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
-  import { onDestroy, onMount } from "svelte"
-  import { type ComponentType } from "svelte"
-  import Panel from "@/components/design/Panel.svelte"
-  import { API } from "@/api"
-  import BudibaseLogo from "./logos/Budibase.svelte"
-  import GithubLogo from "./logos/Github.svelte"
-  import ConfluenceLogo from "./logos/Confluence.svelte"
+  import { onDestroy, onMount, type ComponentType } from "svelte"
+  import Chatbox from "./Chatbox.svelte"
   import BambooHRLogo from "./logos/BambooHR.svelte"
-  import TopBar from "@/components/common/TopBar.svelte"
+  import BudibaseLogo from "./logos/Budibase.svelte"
+  import ConfluenceLogo from "./logos/Confluence.svelte"
+  import GithubLogo from "./logos/Github.svelte"
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
@@ -89,11 +88,12 @@
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
 
-  import { tick } from "svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { contextMenuStore } from "@/stores/builder"
+  import { params } from "@roxi/routify"
+  import { tick } from "svelte"
 
   $: if (chat.messages.length) {
     scrollToBottom()
@@ -141,6 +141,7 @@
     try {
       await API.agentChatStream(
         updatedChat,
+        $params.application,
         chunk => {
           if (chunk.type === "content") {
             // Accumulate streaming content
