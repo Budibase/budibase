@@ -1,8 +1,8 @@
 import crypto from "crypto"
 import fs from "fs"
+import { join } from "path"
 import zlib from "zlib"
 import env from "../environment"
-import { join } from "path"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
@@ -135,7 +135,7 @@ export async function decryptFile(
   secret: string
 ) {
   if (fs.lstatSync(inputPath).isDirectory()) {
-    throw new Error("Unable to encrypt directory")
+    throw new Error("Unable to decrypt directory")
   }
   const { salt, iv } = await getSaltAndIV(inputPath)
   const inputFile = fs.createReadStream(inputPath, {
