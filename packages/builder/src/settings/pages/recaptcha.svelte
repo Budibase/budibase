@@ -3,7 +3,6 @@
     Body,
     Button,
     Divider,
-    Heading,
     Input,
     Label,
     Layout,
