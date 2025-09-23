@@ -416,7 +416,7 @@ async function performWorkspaceCreate(
       await updateUserColumns(workspaceId, db, ctx.user._id!)
     }
 
-    let newApplication: Workspace = {
+    let newWorkspace: Workspace = {
       _id: DocumentType.WORKSPACE_METADATA,
       _rev: undefined,
       appId: workspaceId,
@@ -447,7 +447,7 @@ async function performWorkspaceCreate(
     }
 
     if (!isImport) {
-      newApplication.creationVersion = envCore.VERSION
+      newWorkspace.creationVersion = envCore.VERSION
     }
 
     const existing = await sdk.applications.metadata.tryGet()
@@ -466,27 +466,27 @@ async function performWorkspaceCreate(
       keys.forEach(key => {
         if (existing[key]) {
           // @ts-ignore
-          newApplication[key] = existing[key]
+          newWorkspace[key] = existing[key]
         }
       })
 
       // Keep existing feature flags
       if (!existing.features?.componentValidation) {
-        newApplication.features!.componentValidation = false
+        newWorkspace.features!.componentValidation = false
       }
       if (!existing.features?.disableUserMetadata) {
-        newApplication.features!.disableUserMetadata = false
+        newWorkspace.features!.disableUserMetadata = false
       }
 
       // Migrate navigation settings and screens if required
       const navigation = await migrateAppNavigation()
       if (navigation) {
-        newApplication.navigation = navigation
+        newWorkspace.navigation = navigation
       }
     }
 
-    const response = await db.put(newApplication, { force: true })
-    newApplication._rev = response.rev
+    const response = await db.put(newWorkspace, { force: true })
+    newWorkspace._rev = response.rev
 
     if (!isImport) {
       await uploadAppFiles(workspaceId)
@@ -500,7 +500,7 @@ async function performWorkspaceCreate(
         await addSampleDataScreen()
 
         // Fetch the latest version of the workspace after these changes
-        newApplication = await sdk.applications.metadata.get()
+        newWorkspace = await sdk.applications.metadata.get()
       } catch (err) {
         ctx.throw(400, "App created, but failed to add sample data")
       }
@@ -522,11 +522,8 @@ async function performWorkspaceCreate(
 
     await disableAllAppsAndAutomations()
 
-    await cache.workspace.invalidateWorkspaceMetadata(
-      workspaceId,
-      newApplication
-    )
-    return newApplication
+    await cache.workspace.invalidateWorkspaceMetadata(workspaceId, newWorkspace)
+    return newWorkspace
   })
 }
 
@@ -706,7 +703,7 @@ export async function update(
     ctx.request.body.url = url
   }
 
-  const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  const app = await updateWorkspacePackage(ctx.request.body, ctx.params.appId)
   await events.app.updated(app)
   ctx.body = app
   builderSocket?.emitAppMetadataUpdate(ctx, {
@@ -746,7 +743,7 @@ export async function updateClient(
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateWorkspacePackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)
   ctx.body = app
 }
@@ -777,7 +774,7 @@ export async function revertClient(
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateWorkspacePackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
   ctx.body = app
 }
@@ -985,7 +982,7 @@ export async function duplicateWorkspace(
   }
 }
 
-export async function updateAppPackage(
+export async function updateWorkspacePackage(
   appPackage: Partial<Workspace>,
   appId: string
 ) {
