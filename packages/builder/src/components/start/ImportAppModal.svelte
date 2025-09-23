@@ -10,10 +10,11 @@
     notifications,
     Toggle,
   } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
   import type { ImportToUpdateWorkspaceRequest } from "@budibase/types"
 
   export let app: {
-    _id: string
+    appId: string
     name: string
   }
 
@@ -28,7 +29,7 @@
       if (encrypted) {
         body.encryptionPassword = password.trim()
       }
-      const appId = app._id
+      const appId = sdk.applications.getDevAppID(app.appId)
       await API.updateAppFromExport(appId, body, file)
       const pkg = await API.fetchAppPackage(appId)
       await initialise(pkg)
