@@ -31,6 +31,7 @@ import PWAPage from "@/settings/pages/pwa.svelte"
 import EmbedPage from "@/settings/pages/embed.svelte"
 import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
+import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
 const componentMap: Record<string, ComponentType> = {
   profile: ProfilePage,
@@ -61,6 +62,7 @@ const componentMap: Record<string, ComponentType> = {
   embed: EmbedPage,
   scripts: ScriptsPage,
   oauth2: OAuth2Page,
+  recaptcha: Recaptcha,
 }
 
 export const Pages = {
