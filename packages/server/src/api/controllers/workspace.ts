@@ -76,7 +76,7 @@ import {
 } from "../../utilities/fileSystem"
 import { doesUserHaveLock } from "../../utilities/redis"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { removeWorkspaceFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
@@ -101,7 +101,7 @@ function getUserRoleId(ctx: UserCtx) {
     : ctx.user.role._id
 }
 
-function checkAppUrl(
+function checkWorkspaceUrl(
   ctx: UserCtx,
   apps: Workspace[],
   url: string,
@@ -115,7 +115,7 @@ function checkAppUrl(
   }
 }
 
-function checkAppName(
+function checkWorkspaceName(
   ctx: UserCtx,
   apps: Workspace[],
   name: string,
@@ -361,7 +361,7 @@ export async function fetchAppPackage(
   }
 }
 
-async function performAppCreate(
+async function performWorkspaceCreate(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
@@ -384,9 +384,9 @@ async function performAppCreate(
     useTemplate = body.useTemplate
   }
 
-  checkAppName(ctx, workspaces, name)
+  checkWorkspaceName(ctx, workspaces, name)
   const appUrl = sdk.applications.getAppUrl({ name, url })
-  checkAppUrl(ctx, workspaces, appUrl)
+  checkWorkspaceUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
     useTemplate,
@@ -634,7 +634,7 @@ async function creationEvents(
   }
 }
 
-async function appPostCreate(
+async function workspacePostCreate(
   ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
   app: Workspace
 ) {
@@ -655,7 +655,7 @@ async function appPostCreate(
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
           ctx.params.appId = app.appId
-          await destroyApp(ctx)
+          await destroyWorkspace(ctx)
         }
         throw err
       }
@@ -672,8 +672,8 @@ async function appPostCreate(
 export async function create(
   ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
 ) {
-  const newApplication = await quotas.addApp(() => performAppCreate(ctx))
-  await appPostCreate(ctx, newApplication)
+  const newApplication = await quotas.addApp(() => performWorkspaceCreate(ctx))
+  await workspacePostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
 }
@@ -694,11 +694,11 @@ export async function update(
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
   if (name) {
-    checkAppName(ctx, workspaces, name, ctx.params.appId)
+    checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
   }
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   if (url) {
-    checkAppUrl(ctx, workspaces, url, ctx.params.appId)
+    checkWorkspaceUrl(ctx, workspaces, url, ctx.params.appId)
     ctx.request.body.url = url
   }
 
@@ -778,7 +778,7 @@ export async function revertClient(
   ctx.body = app
 }
 
-async function unpublishApp(ctx: UserCtx) {
+async function unpublishWorkspace(ctx: UserCtx) {
   let appId = ctx.params.appId
   appId = dbCore.getProdWorkspaceID(appId)
 
@@ -796,7 +796,7 @@ async function unpublishApp(ctx: UserCtx) {
   return result
 }
 
-async function invalidateAppCache(appId: string) {
+async function invalidateWorkspaceCache(appId: string) {
   await cache.workspace.invalidateWorkspaceMetadata(
     dbCore.getDevWorkspaceID(appId)
   )
@@ -805,7 +805,7 @@ async function invalidateAppCache(appId: string) {
   )
 }
 
-async function destroyApp(ctx: UserCtx) {
+async function destroyWorkspace(ctx: UserCtx) {
   const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const devAppId = dbCore.getDevWorkspaceID(ctx.params.appId)
 
@@ -817,7 +817,7 @@ async function destroyApp(ctx: UserCtx) {
     await sdk.applications.syncApp(devAppId, {
       automationOnly: true,
     })
-    await unpublishApp(ctx)
+    await unpublishWorkspace(ctx)
   }
 
   const db = dbCore.getDB(devAppId)
@@ -828,21 +828,21 @@ async function destroyApp(ctx: UserCtx) {
 
   await deleteAppFiles(prodAppId)
 
-  await removeAppFromUserRoles(ctx, prodAppId)
-  await invalidateAppCache(prodAppId)
+  await removeWorkspaceFromUserRoles(ctx, prodAppId)
+  await invalidateWorkspaceCache(prodAppId)
   return result
 }
 
-async function preDestroyApp(ctx: UserCtx) {
+async function preDestroyWorkspace(ctx: UserCtx) {
   // invalidate the cache immediately in-case they are leading to
   // zombie appearing apps
   const appId = ctx.params.appId
-  await invalidateAppCache(appId)
+  await invalidateWorkspaceCache(appId)
   const { rows } = await getUniqueRows([appId])
   ctx.rowCount = rows.length
 }
 
-async function postDestroyApp(ctx: UserCtx) {
+async function postDestroyWorkspace(ctx: UserCtx) {
   const rowCount = ctx.rowCount
   await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
@@ -851,9 +851,9 @@ async function postDestroyApp(ctx: UserCtx) {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteWorkspaceResponse>) {
-  await preDestroyApp(ctx)
-  const result = await destroyApp(ctx)
-  await postDestroyApp(ctx)
+  await preDestroyWorkspace(ctx)
+  const result = await destroyWorkspace(ctx)
+  await postDestroyWorkspace(ctx)
   ctx.body = result
 }
 
@@ -869,9 +869,9 @@ export async function unpublish(
   }
 
   await workspaceMigrations.doInMigrationLock(prodAppId, async () => {
-    await preDestroyApp(ctx)
-    await unpublishApp(ctx)
-    await postDestroyApp(ctx)
+    await preDestroyWorkspace(ctx)
+    await unpublishWorkspace(ctx)
+    await postDestroyWorkspace(ctx)
   })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "App unpublished." }
@@ -914,7 +914,7 @@ export async function importToApp(
  * Create a copy of the latest dev application.
  * Performs an export of the app, then imports from the export dir path
  */
-export async function duplicateApp(
+export async function duplicateWorkspace(
   ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
   const { name: appName, url: possibleUrl } = ctx.request.body
@@ -929,9 +929,9 @@ export async function duplicateApp(
     dev: true,
   })
 
-  checkAppName(ctx, workspaces, appName)
+  checkWorkspaceName(ctx, workspaces, appName)
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
-  checkAppUrl(ctx, workspaces, url)
+  checkWorkspaceUrl(ctx, workspaces, url)
 
   const tmpPath = await sdk.backups.exportApp(sourceAppId, {
     excludeRows: false,

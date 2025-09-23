@@ -1,9 +1,9 @@
-import jestOpenAPI from "jest-openapi"
-import { spec } from "../../../../specs/generate"
-import TestConfiguration from "../TestConfiguration"
-import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
+import jestOpenAPI from "jest-openapi"
+import request, { Response, SuperTest, Test } from "supertest"
+import { spec } from "../../../../specs/generate"
 import { getServer } from "../../../app"
+import TestConfiguration from "../TestConfiguration"
 
 jestOpenAPI(spec() as any)
 
@@ -256,7 +256,7 @@ export abstract class PublicAPI extends TestAPI {
       Accept: "application/json",
       Host: this.config.tenantHost(),
       "x-budibase-api-key": apiKey,
-      "x-budibase-app-id": this.config.getAppId(),
+      "x-budibase-app-id": this.config.getDevWorkspaceId(),
       ...extras,
     }
 

@@ -32,14 +32,19 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   async function runMigrations(migrations: AppMigration[]) {
-    const fromAppId = fromProd ? config.getProdAppId() : config.getAppId()
+    const fromAppId = fromProd
+      ? config.getProdWorkspaceId()
+      : config.getDevWorkspaceId()
     await config.doInContext(fromAppId, () =>
       processMigrations(fromAppId, migrations)
     )
   }
 
   async function expectMigrationVersion(expectedVersion: string) {
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+    for (const appId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
       expect(
         await config.doInContext(appId, () => getAppMigrationVersion(appId))
       ).toBe(expectedVersion)
@@ -83,15 +88,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await expectMigrationVersion(testMigrations[2].id)
 
     expect(executionOrder).toEqual([
-      `${config.getProdAppId()}-migration-1`,
+      `${config.getProdWorkspaceId()}-migration-1`,
       "sync-1",
-      `${config.getAppId()}-migration-1`,
-      `${config.getProdAppId()}-migration-2`,
+      `${config.getDevWorkspaceId()}-migration-1`,
+      `${config.getProdWorkspaceId()}-migration-2`,
       "sync-2",
-      `${config.getAppId()}-migration-2`,
-      `${config.getProdAppId()}-migration-3`,
+      `${config.getDevWorkspaceId()}-migration-2`,
+      `${config.getProdWorkspaceId()}-migration-3`,
       "sync-3",
-      `${config.getAppId()}-migration-3`,
+      `${config.getDevWorkspaceId()}-migration-3`,
     ])
   })
 
@@ -110,11 +115,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await runMigrations(testMigrations)
 
     expect(Object.keys(migrationCallPerApp)).toEqual([
-      config.getProdAppId(),
-      config.getAppId(),
+      config.getProdWorkspaceId(),
+      config.getDevWorkspaceId(),
     ])
-    expect(migrationCallPerApp[config.getAppId()]).toBe(3)
-    expect(migrationCallPerApp[config.getProdAppId()]).toBe(3)
+    expect(migrationCallPerApp[config.getDevWorkspaceId()]).toBe(3)
+    expect(migrationCallPerApp[config.getProdWorkspaceId()]).toBe(3)
   })
 
   it("no context can be initialised within a migration", async () => {
@@ -123,7 +128,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         id: generateMigrationId(),
         func: async () => {
           await context.doInWorkspaceMigrationContext(
-            config.getAppId(),
+            config.getDevWorkspaceId(),
             () => {}
           )
         },
@@ -165,12 +170,12 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
-        `${config.getProdAppId()} - 3`,
-        `${config.getAppId()} - 3`,
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
+        `${config.getProdWorkspaceId()} - 3`,
+        `${config.getDevWorkspaceId()} - 3`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
       ])
     })
 
@@ -199,7 +204,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      for (const appId of [
+        config.getDevWorkspaceId(),
+        config.getProdWorkspaceId(),
+      ]) {
         await config.doInContext(appId, async () => {
           await updateAppMigrationMetadata({
             appId,
@@ -211,10 +219,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
-        `${config.getProdAppId()} - 3`,
-        `${config.getAppId()} - 3`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
+        `${config.getProdWorkspaceId()} - 3`,
+        `${config.getDevWorkspaceId()} - 3`,
       ])
     })
 
@@ -230,7 +238,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
       await config.doInContext(appId, async () => {
         // Set a version that doesn't exist in the migrations array
         await updateAppMigrationMetadata({
@@ -243,10 +251,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       // Should run all migrations
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
       ])
     })
 
@@ -292,8 +300,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       // Should only run the first migration, then stop at the disabled one
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
       ])
     })
 
@@ -309,7 +317,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       )
       testMigrations[0].disabled = true
 
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
 
       await config.doInContext(appId, () =>
         processMigrations(appId, testMigrations)
@@ -345,7 +353,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      for (const appId of [
+        config.getDevWorkspaceId(),
+        config.getProdWorkspaceId(),
+      ]) {
         await config.doInContext(appId, async () => {
           await updateAppMigrationMetadata({
             appId,
@@ -358,7 +369,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       expect(spySyncApp).toHaveBeenCalledTimes(2)
-      expect(spySyncApp).toHaveBeenCalledWith(config.getAppId())
+      expect(spySyncApp).toHaveBeenCalledWith(config.getDevWorkspaceId())
     })
 
     it("should update migration metadata for both prod and dev workspaces", async () => {
@@ -392,7 +403,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         spySyncApp.mockClear()
         await config.unpublish()
 
-        const devAppId = config.getAppId()
+        const devAppId = config.getDevWorkspaceId()
 
         await config.doInContext(devAppId, () =>
           processMigrations(devAppId, testMigrations)
@@ -425,7 +436,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           })
         )
 
-        const appId = config.getAppId()
+        const appId = config.getDevWorkspaceId()
         await config.doInContext(appId, async () => {
           await updateAppMigrationMetadata({
             appId,
@@ -438,8 +449,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         await runMigrations(testMigrations)
 
         expect(executionOrder).toEqual([
-          `migration 2 - ${config.getAppId()}`,
-          `migration 3 - ${config.getAppId()}`,
+          `migration 2 - ${config.getDevWorkspaceId()}`,
+          `migration 3 - ${config.getDevWorkspaceId()}`,
         ])
         expect(mockSyncApp).not.toHaveBeenCalled()
       })
@@ -454,11 +465,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
             .fn()
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getProdAppId())
+              expect(db.name).toBe(config.getProdWorkspaceId())
             })
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getAppId())
+              expect(db.name).toBe(config.getDevWorkspaceId())
               throw new Error("Migration failed")
             }),
         },
@@ -486,11 +497,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
             .fn()
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getProdAppId())
+              expect(db.name).toBe(config.getProdWorkspaceId())
             })
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getAppId())
+              expect(db.name).toBe(config.getDevWorkspaceId())
               throw new Error("Migration failed")
             }),
         },
@@ -532,7 +543,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
             const db = context.getWorkspaceDB()
             attemptCount[db.name] ??= 0
             attemptCount[db.name]++
-            if (db.name === config.getAppId() && attemptCount[db.name] === 1) {
+            if (
+              db.name === config.getDevWorkspaceId() &&
+              attemptCount[db.name] === 1
+            ) {
               executionOrder.push(
                 `${db.name}-migration-2-attempt-${attemptCount[db.name]}-error`
               )
@@ -566,15 +580,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       )
 
       expect(migration1Runs).toEqual([
-        `${config.getProdAppId()}-migration-1`,
-        `${config.getAppId()}-migration-1`,
+        `${config.getProdWorkspaceId()}-migration-1`,
+        `${config.getDevWorkspaceId()}-migration-1`,
       ])
 
       expect(migration2Runs).toEqual([
-        `${config.getProdAppId()}-migration-2-attempt-1-success`,
-        `${config.getAppId()}-migration-2-attempt-1-error`,
-        `${config.getProdAppId()}-migration-2-attempt-2-success`,
-        `${config.getAppId()}-migration-2-attempt-2-success`,
+        `${config.getProdWorkspaceId()}-migration-2-attempt-1-success`,
+        `${config.getDevWorkspaceId()}-migration-2-attempt-1-error`,
+        `${config.getProdWorkspaceId()}-migration-2-attempt-2-success`,
+        `${config.getDevWorkspaceId()}-migration-2-attempt-2-success`,
       ])
     })
   })
@@ -592,8 +606,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(prodAppId, async () => {
         await updateAppMigrationMetadata({
@@ -637,8 +651,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(devAppId, async () => {
         await updateAppMigrationMetadata({
@@ -682,8 +696,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         })
       )
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       // Set dev app to already be on the latest migration, prod app needs both
       await config.doInContext(devAppId, async () => {
@@ -729,14 +743,18 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           SYNC_MIGRATION_CHECKS_MS: 1000,
         },
         () =>
-          config.withApp(fromProd ? config.getProdApp() : config.getApp(), () =>
-            config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
+          config.withApp(
+            fromProd ? config.getProdWorkspace() : config.getDevWorkspace(),
+            () =>
+              config.api.user.fetch({
+                headersNotPresent: [Header.MIGRATING_APP],
+              })
           )
       )
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()}-via-middleware`,
-        `${config.getAppId()}-via-middleware`,
+        `${config.getProdWorkspaceId()}-via-middleware`,
+        `${config.getDevWorkspaceId()}-via-middleware`,
       ])
     })
   })

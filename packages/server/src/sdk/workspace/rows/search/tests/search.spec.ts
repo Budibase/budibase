@@ -85,7 +85,7 @@ if (descriptions.length) {
       })
 
       it("querying by fields will always return data attribute columns", async () => {
-        await config.doInContext(config.appId, async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
           const { rows } = await search({
             tableId: table._id!,
             query: {},
@@ -105,7 +105,7 @@ if (descriptions.length) {
 
       !isInternal &&
         it("will decode _id in oneOf query", async () => {
-          await config.doInContext(config.appId, async () => {
+          await config.doInContext(config.devWorkspaceId, async () => {
             const result = await search({
               tableId: table._id!,
               query: {
@@ -123,7 +123,7 @@ if (descriptions.length) {
         })
 
       it("does not allow accessing hidden fields", async () => {
-        await config.doInContext(config.appId, async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
           await config.api.table.save({
             ...table,
             schema: {
@@ -154,7 +154,7 @@ if (descriptions.length) {
       })
 
       it("does not allow accessing hidden fields even if requested", async () => {
-        await config.doInContext(config.appId, async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
           await config.api.table.save({
             ...table,
             schema: {
@@ -186,7 +186,7 @@ if (descriptions.length) {
       })
 
       it("should return results when querying valid fields", async () => {
-        await config.doInContext(config.appId, async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
           const { rows } = await search({
             tableId: table._id!,
             query: {
@@ -212,7 +212,7 @@ if (descriptions.length) {
       })
 
       it("should throw 400 when querying fields not in the restricted field list", async () => {
-        await config.doInContext(config.appId, async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
           await expect(
             search({
               tableId: table._id!,

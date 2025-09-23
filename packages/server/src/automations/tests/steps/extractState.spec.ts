@@ -17,17 +17,20 @@ describe("Extract state Automations", () => {
     })
     await config.init()
 
-    config.app = await config.api.workspace.update(config.getAppId(), {
-      snippets: [
-        {
-          name: "tester",
-          code: `return function (test) {
+    config.devWorkspace = await config.api.workspace.update(
+      config.getDevWorkspaceId(),
+      {
+        snippets: [
+          {
+            name: "tester",
+            code: `return function (test) {
               return "snippet_" + (test || "no_value")
             }
           `,
-        },
-      ],
-    })
+          },
+        ],
+      }
+    )
 
     // Init env var
     await config.doInTenant(async () => {
@@ -157,7 +160,7 @@ describe("Extract state Automations", () => {
     })
     // You can navigate the elements you build in state in regular steps.
     expect(results.steps[3].outputs.message).toBe(
-      `App ${config.app?.appId} - true`
+      `App ${config.devWorkspace?.appId} - true`
     )
   })
 
