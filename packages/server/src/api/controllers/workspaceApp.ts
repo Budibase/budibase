@@ -41,10 +41,9 @@ const duplicateScreens = async (originalAppId: string, newAppId: string) => {
   const screens = await sdk.screens.fetch()
 
   const appScreens = screens.filter(s => s.workspaceAppId === originalAppId)
-
   const newScreens = []
   for (let i = 0; i < appScreens.length; i++) {
-    const screen = screens[i]
+    const screen = appScreens[i]
     const createdScreen = await sdk.screens.create({
       ...{
         layoutId: screen.layoutId,
