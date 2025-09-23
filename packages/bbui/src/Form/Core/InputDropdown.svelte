@@ -1,10 +1,10 @@
 <script>
   import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { fly } from "svelte/transition"
+  import "@spectrum-css/popover/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
+  import { fly } from "svelte/transition"
+  import clickOutside from "../../Actions/clickOutside"
   import Icon from "../../Icon/Icon.svelte"
 
   export let inputValue
