@@ -290,10 +290,10 @@ describe("/applications", () => {
       )
     })
 
-    it("creates app from import", async () => {
+    it("creates app from a old import", async () => {
       const newApp = await config.api.workspace.createFromImport({
         name: generateAppName(),
-        fileToImport: path.join(__dirname, "data", "export.enc.tar.gz"),
+        fileToImport: path.join(__dirname, "data", "old-export.enc.tar.gz"),
         encryptionPassword: "testtest",
       })
       expect(newApp._id).toBeDefined()
