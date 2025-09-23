@@ -161,7 +161,7 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createRoutingView()
   await createAllSearchIndex()
 
-  if (template && template.useTemplate) {
+  if (template?.useTemplate || template.file) {
     const opts = {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
@@ -519,7 +519,9 @@ async function performWorkspaceCreate(
     const response = await db.put(newApplication, { force: true })
     newApplication._rev = response.rev
 
-    await uploadAppFiles(workspaceId)
+    if (!isImport) {
+      await uploadAppFiles(workspaceId)
+    }
 
     // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
     if (isOnboarding) {
@@ -655,6 +657,8 @@ async function creationEvents(
     else {
       console.error("Could not determine template creation event")
     }
+  } else if (request.files?.fileToImport) {
+    creationFns.push(a => events.app.fileImported(a))
   }
 
   creationFns.push(a => events.app.created(a))

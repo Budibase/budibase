@@ -165,7 +165,7 @@ export abstract class TestAPI {
     return resp
   }
 
-  protected async getHeaders(
+  async getHeaders(
     opts?: RequestOpts,
     extras?: Record<string, string | string[]>
   ): Promise<Record<string, string | string[]>> {
@@ -246,7 +246,7 @@ export abstract class TestAPI {
 export abstract class PublicAPI extends TestAPI {
   prefix = "/api/public/v1"
 
-  protected async getHeaders(
+  async getHeaders(
     opts?: RequestOpts,
     extras?: Record<string, string | string[]>
   ): Promise<Record<string, string | string[]>> {
