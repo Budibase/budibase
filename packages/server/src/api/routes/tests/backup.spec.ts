@@ -1,9 +1,9 @@
 import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { DocumentType, libDependencies, Workspace } from "@budibase/types"
+import { DocumentType, Workspace } from "@budibase/types"
 import fs from "fs"
 import { tmpdir } from "os"
-import { join } from "path"
+import path, { join } from "path"
 import tar from "tar"
 import tk from "timekeeper"
 import sdk from "../../../sdk"
@@ -26,6 +26,8 @@ describe("/backups", () => {
   })
 
   describe("/api/backups/export", () => {
+    let attachmentFileNames: string[] = []
+
     async function checkExportContent(
       buffer: any,
       opts: { includeRows: boolean; isEncrypted: boolean }
@@ -35,41 +37,30 @@ describe("/backups", () => {
       const fileName = join(tmpPath, `${exportId}.enc.tar.gz`)
       fs.writeFileSync(fileName, buffer)
 
-      const extractedPath = join(tmpPath, exportId)
-      fs.mkdirSync(extractedPath)
-      await tar.extract({
-        cwd: extractedPath,
+      const exportedFiles: string[] = []
+
+      await tar.list({
         file: fileName,
+        onentry: entry => {
+          if (entry.type !== "Directory") {
+            exportedFiles.push(entry.path)
+          }
+        },
       })
 
-      const exportedFiles = fs.readdirSync(extractedPath)
-      expect(exportedFiles).toHaveLength(5 + (opts.includeRows ? 1 : 0))
-      expect(exportedFiles).toEqual([
-        "_dependencies",
-        ...(opts.includeRows ? ["attachments"] : []),
-        ...[
-          "budibase-client.js",
-          "budibase-client.new.js",
-          "db.txt",
-          "manifest.json",
-        ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`),
-      ])
+      const expectedFiles = [
+        "budibase-client.js",
+        "budibase-client.new.js",
+        "db.txt",
+        "manifest.json",
+        "_dependencies/apexcharts.js",
+        "_dependencies/html5-qrcode.js",
+        ...(opts.includeRows
+          ? attachmentFileNames.sort().map(f => `attachments/${f}`)
+          : []),
+      ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`)
 
-      const dependenciesFiles = fs.readdirSync(
-        join(extractedPath, "_dependencies")
-      )
-      expect(dependenciesFiles).toEqual(
-        Object.values(libDependencies).map(
-          x => `${x.outFile}${opts.isEncrypted ? ".enc" : ""}`
-        )
-      )
-
-      if (opts.includeRows) {
-        const attachmentFiles = fs.readdirSync(
-          join(extractedPath, "attachments")
-        )
-        expect(attachmentFiles).toHaveLength(3)
-      }
+      expect(exportedFiles).toEqual(expectedFiles)
     }
 
     beforeEach(async () => {
@@ -86,6 +77,12 @@ describe("/backups", () => {
           return result
         })
       )
+
+      attachmentFileNames = [
+        path.basename(attachment1.key),
+        path.basename(attachment2.key),
+        path.basename(attachment3.key),
+      ]
 
       await config.api.row.save(table._id!, {
         single_file_attachment: attachment1,
