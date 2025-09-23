@@ -63,7 +63,7 @@ async function syncDevApp(devAppId: string): Promise<void> {
       appId: devAppId,
     })
     await context.doInWorkspaceMigrationContext(devAppId, async () => {
-      await sdk.applications.syncApp(devAppId)
+      await sdk.workspaces.syncApp(devAppId)
       console.log(`App synchronized for dev "${devAppId}"`)
     })
   })
@@ -94,7 +94,7 @@ export async function processMigrations(
         doInMigrationLock(appId, async () => {
           const devWorkspaceId = db.getDevWorkspaceID(appId)
           const prodAppId = db.getProdWorkspaceID(appId)
-          const isPublished = await sdk.applications.isAppPublished(prodAppId)
+          const isPublished = await sdk.workspaces.isAppPublished(prodAppId)
           const appIdToMigrate = isPublished ? prodAppId : devWorkspaceId
 
           console.log(`Starting app migration for "${appIdToMigrate}"`)

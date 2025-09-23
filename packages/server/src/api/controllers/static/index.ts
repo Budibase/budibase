@@ -223,7 +223,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
-    const appInfo = await sdk.applications.metadata.get()
+    const appInfo = await sdk.workspaces.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
