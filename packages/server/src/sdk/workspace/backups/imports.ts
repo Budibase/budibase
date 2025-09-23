@@ -217,6 +217,7 @@ export async function importApp(
     {
       const promises = []
       const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+
       for (let filename of contents) {
         const path = join(tmpPath, filename)
         if (excludedFiles.includes(filename)) {
@@ -238,6 +239,7 @@ export async function importApp(
         }
       }
       await Promise.all(promises)
+      const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
 
       const filesToDelete: string[] = []
       await utils.parallelForeach(
@@ -248,7 +250,7 @@ export async function importApp(
         async file => {
           if (
             file.Key &&
-            !contents.includes(
+            !uploadedFiles.includes(
               file.Key.replace(new RegExp(`^${prodAppId}/`), "")
             )
           ) {
@@ -257,10 +259,13 @@ export async function importApp(
         },
         5
       )
-      await objectStore.deleteFiles(
-        objectStore.ObjectStoreBuckets.APPS,
-        filesToDelete
-      )
+
+      if (filesToDelete.length) {
+        await objectStore.deleteFiles(
+          objectStore.ObjectStoreBuckets.APPS,
+          filesToDelete
+        )
+      }
     }
     dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
   } else {

@@ -1,6 +1,7 @@
 const sanitize = require("sanitize-s3-objectkey")
 
 import {
+  _Object,
   GetObjectCommand,
   HeadObjectCommandOutput,
   PutObjectCommandInput,
@@ -25,6 +26,7 @@ import { v4 } from "uuid"
 import zlib from "zlib"
 import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
 import env from "../environment"
+import * as objectStore from "../objectStore"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
 // use this as a temporary store of buckets that are being created
@@ -372,6 +374,22 @@ export async function* listAllObjects(
     isTruncated = !!response.IsTruncated
     token = response.NextContinuationToken
   } while (isTruncated && token)
+}
+
+export async function getAllFiles(bucketName: string, path: string) {
+  const objects: Record<string, _Object> = {}
+  await utils.parallelForeach(
+    objectStore.listAllObjects(bucketName, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+
+      objects[file.Key] = file
+    },
+    5
+  )
+  return objects
 }
 
 /**
