@@ -1,9 +1,9 @@
 import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
-import fs from "fs"
-import { tmpdir } from "os"
-import path, { join } from "path"
+import path from "path"
+import { Readable } from "stream"
+import { pipeline } from "stream/promises"
 import tar from "tar"
 import tk from "timekeeper"
 import sdk from "../../../sdk"
@@ -29,24 +29,20 @@ describe("/backups", () => {
     let attachmentFileNames: string[] = []
 
     async function checkExportContent(
-      buffer: any,
+      buffer: Buffer,
       opts: { includeRows: boolean; isEncrypted: boolean }
     ) {
-      const exportId = `export-${generator.guid()}`
-      const tmpPath = join(tmpdir(), ".budibase")
-      const fileName = join(tmpPath, `${exportId}.enc.tar.gz`)
-      fs.writeFileSync(fileName, buffer)
-
       const exportedFiles: string[] = []
-
-      await tar.list({
-        file: fileName,
-        onentry: entry => {
-          if (entry.type !== "Directory") {
-            exportedFiles.push(entry.path)
-          }
-        },
-      })
+      await pipeline(
+        Readable.from(buffer),
+        tar.list({
+          onentry: entry => {
+            if (entry.type !== "Directory") {
+              exportedFiles.push(entry.path)
+            }
+          },
+        })
+      )
 
       const expectedFiles = [
         "budibase-client.js",
