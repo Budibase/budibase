@@ -349,7 +349,7 @@ describe("/roles", () => {
       const role = await config.api.roles.save(basicRole())
       // have to forcefully delete the inherits from DB - technically can't
       // happen anymore - but good test case
-      await dbCore.getDB(config.appId!).put({
+      await dbCore.getDB(config.devWorkspaceId!).put({
         ...role,
         _id: dbCore.prefixRoleID(role._id!),
         inherits: [],

@@ -28,20 +28,20 @@ describe("/static", () => {
       delete headers[constants.Header.APP_ID]
 
       const res = await request
-        .get(`/app${config.getProdApp().url}`)
+        .get(`/app${config.getProdWorkspace().url}`)
         .set(headers)
         .expect(200)
 
-      expect(res.body.appId).toBe(config.prodAppId)
+      expect(res.body.appId).toBe(config.prodWorkspaceId)
     })
 
     it("should serve the app preview by id", async () => {
       const res = await request
-        .get(`/${config.appId}`)
+        .get(`/${config.devWorkspaceId}`)
         .set(config.defaultHeaders())
         .expect(200)
 
-      expect(res.body.appId).toBe(config.appId)
+      expect(res.body.appId).toBe(config.devWorkspaceId)
     })
   })
 
@@ -138,11 +138,11 @@ describe("/static", () => {
     it("should serve the builder preview", async () => {
       const headers = config.defaultHeaders()
       const res = await request
-        .get(`/app/${config.getAppId()}/preview`)
+        .get(`/app/${config.getDevWorkspaceId()}/preview`)
         .set(headers)
         .expect(200)
 
-      expect(res.body.appId).toBe(config.appId)
+      expect(res.body.appId).toBe(config.devWorkspaceId)
       expect(res.body.builderPreview).toBe(true)
     })
   })

@@ -145,14 +145,23 @@ export async function untarFile(file: { path: string }) {
 
 async function decryptFiles(path: string, password: string) {
   try {
-    for (let file of await fsp.readdir(path)) {
-      const inputPath = join(path, file)
-      if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
-        const outputPath = inputPath.replace(/\.enc$/, "")
-        await encryption.decryptFile(inputPath, outputPath, password)
-        await fsp.rm(inputPath)
+    const processDirectory = async (dirPath: string) => {
+      for (let file of await fsp.readdir(dirPath)) {
+        const inputPath = join(dirPath, file)
+        if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
+          const stats = await fsp.lstat(inputPath)
+          if (stats.isFile() && inputPath.endsWith(".enc")) {
+            const outputPath = inputPath.replace(/\.enc$/, "")
+            await encryption.decryptFile(inputPath, outputPath, password)
+            await fsp.rm(inputPath)
+          } else if (stats.isDirectory()) {
+            await processDirectory(inputPath)
+          }
+        }
       }
     }
+
+    await processDirectory(path)
   } catch (err: any) {
     if (err.message === "incorrect header check") {
       throw new Error("File cannot be imported")

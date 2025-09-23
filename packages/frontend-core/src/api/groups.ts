@@ -19,8 +19,6 @@ export interface GroupEndpoints {
   removeUsersFromGroup: (groupId: string, userIds: string[]) => Promise<void>
   addAppsToGroup: (groupId: string, appArray: object[]) => Promise<void>
   removeAppsFromGroup: (groupId: string, appArray: object[]) => Promise<void>
-  addGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
-  removeGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
   bulkAddUsersFromCsv: (
     groupId: string,
     csvContent: string
@@ -170,28 +168,6 @@ export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
         GroupOperation.REMOVE,
         appArray
       )
-    },
-
-    /**
-     * Add app builder to group
-     * @param groupId The group to update
-     * @param appId The app id where the builder will be added
-     */
-    addGroupAppBuilder: async (groupId, appId) => {
-      return await API.post({
-        url: `/api/global/groups/${groupId}/app/${appId}/builder`,
-      })
-    },
-
-    /**
-     * Remove app builder from group
-     * @param groupId The group to update
-     * @param appId The app id where the builder will be removed
-     */
-    removeGroupAppBuilder: async (groupId, appId) => {
-      return await API.delete({
-        url: `/api/global/groups/${groupId}/app/${appId}/builder`,
-      })
     },
 
     /**

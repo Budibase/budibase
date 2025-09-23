@@ -8,8 +8,9 @@
     Body,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appStore, initialise } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
+  import { appStore } from "@/stores/builder/app"
+  import { appsStore } from "@/stores/portal/apps"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"

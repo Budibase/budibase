@@ -14,11 +14,11 @@ describe("/applications/:appId/import", () => {
   })
 
   it("should be able to perform import", async () => {
-    const appId = config.getAppId()
+    const appId = config.getDevWorkspaceId()
     await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
-      .attach("appExport", path.join(__dirname, "assets", "export.tar.gz"))
+      .attach("appExport", path.join(__dirname, "data", "export.tar.gz"))
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)

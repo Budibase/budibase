@@ -1,16 +1,16 @@
+import { generator, structures } from "@budibase/backend-core/tests"
 import {
-  FieldType,
   BBReferenceFieldSubType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   RowAttachment,
   Table,
   TableSourceType,
 } from "@budibase/types"
 import { outputProcessing } from ".."
-import { generator, structures } from "@budibase/backend-core/tests"
 
-import * as bbReferenceProcessor from "../bbReferenceProcessor"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processInputBBReference: jest.fn(),
@@ -40,7 +40,7 @@ describe("rowProcessor - outputProcessing", () => {
     bbReferenceProcessor.processOutputBBReferences as jest.Mock
 
   it("fetches single user references given a populated field", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",
@@ -90,7 +90,7 @@ describe("rowProcessor - outputProcessing", () => {
   })
 
   it("fetches users references given a populated field", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",
@@ -140,7 +140,7 @@ describe("rowProcessor - outputProcessing", () => {
   })
 
   it("should handle attachment list correctly", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",
@@ -186,7 +186,7 @@ describe("rowProcessor - outputProcessing", () => {
   })
 
   it("should handle single attachment correctly", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",
@@ -230,7 +230,7 @@ describe("rowProcessor - outputProcessing", () => {
   })
 
   it("process output even when the field is not empty", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",
@@ -273,7 +273,7 @@ describe("rowProcessor - outputProcessing", () => {
   })
 
   it("does not fetch bb references when not in the schema", async () => {
-    await config.doInContext(config.getAppId(), async () => {
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
       const table: Table = {
         _id: generator.guid(),
         name: "TestTable",

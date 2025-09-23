@@ -20,7 +20,7 @@ describe("/component", () => {
         },
         async () => {
           const res = await request
-            .get(`/api/${config.getAppId()}/components/definitions`)
+            .get(`/api/${config.getDevWorkspaceId()}/components/definitions`)
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
             .expect(200)
@@ -40,7 +40,7 @@ describe("/component", () => {
           // init again to make an app with a real component lib
           await config.init()
           const res = await request
-            .get(`/api/${config.getAppId()}/components/definitions`)
+            .get(`/api/${config.getDevWorkspaceId()}/components/definitions`)
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
             .expect(200)
@@ -55,7 +55,7 @@ describe("/component", () => {
       await checkBuilderEndpoint({
         config,
         method: "GET",
-        url: `/api/${config.getAppId()}/components/definitions`,
+        url: `/api/${config.getDevWorkspaceId()}/components/definitions`,
       })
     })
   })

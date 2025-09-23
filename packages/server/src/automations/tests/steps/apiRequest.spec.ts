@@ -25,17 +25,20 @@ describe("API REST request", () => {
 
     await config.init()
     // No snippet/js support in queries. Snippet support in auto
-    config.app = await config.api.workspace.update(config.getAppId(), {
-      snippets: [
-        {
-          name: "tester",
-          code: `return function (test) {
+    config.devWorkspace = await config.api.workspace.update(
+      config.getDevWorkspaceId(),
+      {
+        snippets: [
+          {
+            name: "tester",
+            code: `return function (test) {
               return "snippet_" + (test || "no_value")
             }
           `,
-        },
-      ],
-    })
+          },
+        ],
+      }
+    )
 
     // Init env vars
     await config.doInTenant(async () => {

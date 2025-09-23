@@ -90,7 +90,7 @@ export async function unpublish(ctx: UserCtx, next: Next) {
 
 export async function publish(ctx: UserCtx, next: Next) {
   await context.doInWorkspaceContext(ctx.params.appId, async () => {
-    await deployController.publishApp(ctx)
+    await deployController.publishWorkspace(ctx)
     await next()
   })
 }

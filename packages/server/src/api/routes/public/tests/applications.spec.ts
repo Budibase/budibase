@@ -1,3 +1,6 @@
+import { mocks } from "@budibase/backend-core/tests"
+import { User } from "@budibase/types"
+import { join } from "path"
 import * as setup from "../../tests/utilities"
 import {
   generateMakeRequest,
@@ -5,9 +8,6 @@ import {
   MakeRequestResponse,
   MakeRequestWithFormDataResponse,
 } from "./utils"
-import { User } from "@budibase/types"
-import { join } from "path"
-import { mocks } from "@budibase/backend-core/tests"
 
 const PASSWORD = "testtest"
 const NO_LICENSE_MSG = "Endpoint unavailable, license required."
@@ -30,10 +30,14 @@ afterAll(setup.afterAll)
 
 describe("check export/import", () => {
   async function runExport() {
-    return await makeRequest("post", `/applications/${config.appId}/export`, {
-      encryptionPassword: PASSWORD,
-      excludeRows: true,
-    })
+    return await makeRequest(
+      "post",
+      `/applications/${config.devWorkspaceId}/export`,
+      {
+        encryptionPassword: PASSWORD,
+        excludeRows: true,
+      }
+    )
   }
 
   async function runImport() {
@@ -42,12 +46,12 @@ describe("check export/import", () => {
       "..",
       "..",
       "tests",
-      "assets",
+      "data",
       "export.tar.gz"
     )
     return await makeRequestFormData(
       "post",
-      `/applications/${config.appId}/import`,
+      `/applications/${config.devWorkspaceId}/import`,
       {
         encryptionPassword: PASSWORD,
         appExport: { path: pathToExport },

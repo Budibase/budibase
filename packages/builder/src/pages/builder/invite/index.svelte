@@ -11,7 +11,6 @@
   import { goto, params } from "@roxi/routify"
   import { users, organisation, auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
 
@@ -93,136 +92,151 @@
 
 <svelte:window on:keydown={handleKeydown} />
 {#if loaded}
-  <TestimonialPage>
-    <Layout gap="M" noPadding>
-      <img alt="logo" src={$organisation.logoUrl || Logo} />
-      <Layout gap="XS" noPadding>
-        <Heading size="M">Join {company}</Heading>
-        <Body size="M">Create your account to access your budibase apps!</Body>
-      </Layout>
+  <div class="page-container">
+    <div class="content">
+      <Layout gap="M" noPadding>
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
+        <Layout gap="XS" noPadding>
+          <Heading size="M">Join {company}</Heading>
+          <Body size="M">Create your account to access your budibase apps!</Body
+          >
+        </Layout>
 
-      <Layout gap="S" noPadding>
-        <FancyForm bind:this={form}>
-          <FancyInput
-            label="Email"
-            value={formData.email}
-            disabled={true}
-            error={errors.email}
-          />
-          <FancyInput
-            label="First name"
-            value={formData.firstName}
-            on:change={e => {
-              formData = {
-                ...formData,
-                firstName: e.detail,
-              }
-            }}
-            validate={() => {
-              let fieldError = {
-                firstName: !formData.firstName
-                  ? "Please enter your first name"
-                  : undefined,
-              }
-
-              errors = handleError({ ...errors, ...fieldError })
-            }}
-            error={errors.firstName}
-            disabled={onboarding}
-          />
-          <FancyInput
-            label="Last name (optional)"
-            value={formData.lastName}
-            on:change={e => {
-              formData = {
-                ...formData,
-                lastName: e.detail,
-              }
-            }}
-            disabled={onboarding}
-          />
-          {#if !$organisation.isSSOEnforced}
+        <Layout gap="S" noPadding>
+          <FancyForm bind:this={form}>
             <FancyInput
-              label="Password"
-              value={formData.password}
-              type="password"
-              on:change={e => {
-                formData = {
-                  ...formData,
-                  password: e.detail,
-                }
-              }}
-              validateOn="blur"
-              validate={() => {
-                let fieldError = {}
-
-                function validatePassword() {
-                  if (!formData.password) {
-                    return "Please enter a password"
-                  } else if (formData.password.length < passwordMinLength) {
-                    return `Please enter at least ${passwordMinLength} characters`
-                  }
-                  return undefined
-                }
-                fieldError["password"] = validatePassword()
-
-                fieldError["confirmationPassword"] =
-                  !passwordsMatch(
-                    formData.password,
-                    formData.confirmationPassword
-                  ) && formData.confirmationPassword
-                    ? "Passwords must match"
-                    : undefined
-
-                errors = handleError({ ...errors, ...fieldError })
-              }}
-              error={errors.password}
-              disabled={onboarding}
+              label="Email"
+              value={formData.email}
+              disabled={true}
+              error={errors.email}
             />
             <FancyInput
-              label="Repeat password"
-              value={formData.confirmationPassword}
-              type="password"
+              label="First name"
+              value={formData.firstName}
               on:change={e => {
                 formData = {
                   ...formData,
-                  confirmationPassword: e.detail,
+                  firstName: e.detail,
                 }
               }}
               validate={() => {
                 let fieldError = {
-                  confirmationPassword:
-                    !passwordsMatch(
-                      formData.password,
-                      formData.confirmationPassword
-                    ) && formData.password
-                      ? "Passwords must match"
-                      : undefined,
+                  firstName: !formData.firstName
+                    ? "Please enter your first name"
+                    : undefined,
                 }
 
                 errors = handleError({ ...errors, ...fieldError })
               }}
-              error={errors.confirmationPassword}
+              error={errors.firstName}
               disabled={onboarding}
             />
-          {/if}
-        </FancyForm>
+            <FancyInput
+              label="Last name (optional)"
+              value={formData.lastName}
+              on:change={e => {
+                formData = {
+                  ...formData,
+                  lastName: e.detail,
+                }
+              }}
+              disabled={onboarding}
+            />
+            {#if !$organisation.isSSOEnforced}
+              <FancyInput
+                label="Password"
+                value={formData.password}
+                type="password"
+                on:change={e => {
+                  formData = {
+                    ...formData,
+                    password: e.detail,
+                  }
+                }}
+                validateOn="blur"
+                validate={() => {
+                  let fieldError = {}
+
+                  function validatePassword() {
+                    if (!formData.password) {
+                      return "Please enter a password"
+                    } else if (formData.password.length < passwordMinLength) {
+                      return `Please enter at least ${passwordMinLength} characters`
+                    }
+                    return undefined
+                  }
+                  fieldError["password"] = validatePassword()
+
+                  fieldError["confirmationPassword"] =
+                    !passwordsMatch(
+                      formData.password,
+                      formData.confirmationPassword
+                    ) && formData.confirmationPassword
+                      ? "Passwords must match"
+                      : undefined
+
+                  errors = handleError({ ...errors, ...fieldError })
+                }}
+                error={errors.password}
+                disabled={onboarding}
+              />
+              <FancyInput
+                label="Repeat password"
+                value={formData.confirmationPassword}
+                type="password"
+                on:change={e => {
+                  formData = {
+                    ...formData,
+                    confirmationPassword: e.detail,
+                  }
+                }}
+                validate={() => {
+                  let fieldError = {
+                    confirmationPassword:
+                      !passwordsMatch(
+                        formData.password,
+                        formData.confirmationPassword
+                      ) && formData.password
+                        ? "Passwords must match"
+                        : undefined,
+                  }
+
+                  errors = handleError({ ...errors, ...fieldError })
+                }}
+                error={errors.confirmationPassword}
+                disabled={onboarding}
+              />
+            {/if}
+          </FancyForm>
+        </Layout>
+        <div>
+          <Button
+            size="L"
+            disabled={Object.keys(errors).length > 0 || onboarding}
+            cta
+            on:click={acceptInvite}
+          >
+            Create account
+          </Button>
+        </div>
       </Layout>
-      <div>
-        <Button
-          size="L"
-          disabled={Object.keys(errors).length > 0 || onboarding}
-          cta
-          on:click={acceptInvite}
-        >
-          Create account
-        </Button>
-      </div>
-    </Layout>
-  </TestimonialPage>
+    </div>
+  </div>
 {/if}
 
 <style>
+  .page-container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .content {
+    width: 100%;
+    max-width: 400px;
+    min-height: 480px;
+  }
   img {
     width: 40px;
   }

@@ -5,6 +5,7 @@
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "skipLibCheck": true,

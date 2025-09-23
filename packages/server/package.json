@@ -9,9 +9,9 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "prebuild": "rimraf dist/",
+    "prebuild": "rimraf dist/ client/",
     "build": "node ./scripts/build.js",
-    "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
+    "postbuild": "copyfiles -f ../client/dist/*.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",

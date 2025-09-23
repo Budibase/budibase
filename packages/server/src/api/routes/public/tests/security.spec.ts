@@ -1,7 +1,7 @@
-import * as setup from "../../tests/utilities"
 import { roles } from "@budibase/backend-core"
-import { basicTable } from "../../../../tests/utilities/structures"
 import { Table, User } from "@budibase/types"
+import { basicTable } from "../../../../tests/utilities/structures"
+import * as setup from "../../tests/utilities"
 import { PublicAPIRequest } from "./Request"
 
 describe("check public API security", () => {
@@ -17,7 +17,7 @@ describe("check public API security", () => {
     appUser = await config.globalUser({
       builder: { global: false },
       roles: {
-        [config.getProdAppId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
     builderRequest = await PublicAPIRequest.init(config, builderUser)
