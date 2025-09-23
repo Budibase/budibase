@@ -893,7 +893,7 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
 export async function importToWorkspace(
   ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
-  const { appId } = ctx.params
+  const { appId: workspaceId } = ctx.params
   const workspaceExport = ctx.request.files?.appExport
   const password = ctx.request.body.encryptionPassword
   if (!workspaceExport) {
@@ -907,14 +907,18 @@ export async function importToWorkspace(
     path: workspaceExport.path!,
   }
   try {
-    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+    await sdk.applications.updateWithExport(
+      workspaceId,
+      fileAttributes,
+      password
+    )
   } catch (err: any) {
     ctx.throw(
       500,
       `Unable to perform update, please retry - ${err?.message || err}`
     )
   }
-  ctx.body = { message: "app updated" }
+  ctx.body = { message: "workspace updated" }
 }
 
 /**
