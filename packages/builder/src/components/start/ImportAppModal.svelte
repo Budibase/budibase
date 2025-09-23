@@ -39,6 +39,11 @@
       notifications.error(`Failed to update workspace - ${err.message || err}`)
     }
   }
+
+  async function onFileChange(e: CustomEvent) {
+    file = e.detail?.[0]
+    encrypted = file?.name?.endsWith(".enc.tar.gz")
+  }
 </script>
 
 <ModalContent
@@ -56,10 +61,7 @@
     <Dropzone
       gallery={false}
       label={"Workspace export"}
-      on:change={e => {
-        file = e.detail?.[0]
-        encrypted = file?.name?.endsWith(".enc.tar.gz")
-      }}
+      on:change={onFileChange}
     />
     <Toggle text="Encrypted" bind:value={encrypted} />
     {#if encrypted}
