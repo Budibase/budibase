@@ -1,6 +1,6 @@
 <script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
-  import clickOutside from "../Actions/click_outside"
+  import clickOutside from "../Actions/clickOutside"
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"

@@ -1,5 +1,5 @@
 <script context="module">
-  import { writable, get } from "svelte/store"
+  import { get, writable } from "svelte/store"
 
   // Observe this class name if possible in order to know how to size the
   // drawer. If this doesn't exist we'll use a fixed size.
@@ -57,12 +57,12 @@
 </script>
 
 <script>
+  import { generate } from "shortid"
+  import { createEventDispatcher, onDestroy, setContext } from "svelte"
+  import Portal from "svelte-portal"
+  import ActionButton from "../ActionButton/ActionButton.svelte"
   import Button from "../Button/Button.svelte"
   import Icon from "../Icon/Icon.svelte"
-  import ActionButton from "../ActionButton/ActionButton.svelte"
-  import Portal from "svelte-portal"
-  import { setContext, createEventDispatcher, onDestroy } from "svelte"
-  import { generate } from "shortid"
 
   export let title = ""
   export let forceModal = false
@@ -172,7 +172,7 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <!-- This class is unstyled, but needed by click_outside -->
+    <!-- This class is unstyled, but needed by clickOutside -->
     <div class="drawer-wrapper">
       <div
         class="underlay"
