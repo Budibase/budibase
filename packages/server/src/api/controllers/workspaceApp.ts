@@ -37,7 +37,7 @@ export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
   }
 }
 
-const _createScreens = async (originalAppId: string, newAppId: string) => {
+const duplicateScreens = async (originalAppId: string, newAppId: string) => {
   const screens = await sdk.screens.fetch()
 
   const appScreens = screens.filter(s => s.workspaceAppId === originalAppId)
@@ -66,7 +66,7 @@ const _createScreens = async (originalAppId: string, newAppId: string) => {
   return newScreens
 }
 
-const _createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
+const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
   const otherApps = await sdk.workspaceApps.fetch()
 
   const name = helpers.duplicateName(
@@ -98,8 +98,11 @@ export async function duplicate(
     ctx.throw(404)
   }
 
-  const duplicatedApp = await _createDuplicatedApp(workspaceApp)
-  await _createScreens(workspaceApp._id as string, duplicatedApp._id as string)
+  const duplicatedApp = await createDuplicatedApp(workspaceApp)
+  await duplicateScreens(
+    workspaceApp._id as string,
+    duplicatedApp._id as string
+  )
 
   ctx.message = `App ${workspaceApp.name} duplicated successfully.`
   ctx.body = { workspaceApp: toWorkspaceAppResponse(duplicatedApp) }
