@@ -153,10 +153,8 @@ export async function updateWithExport(
         password,
       },
     }
-    // get a temporary version of the import
-    // don't need obj store, the existing workspace already has everything we need
+
     await backups.importApp(devId, tempDb, template, {
-      importObjStoreContents: false,
       updateAttachmentColumns: true,
     })
     const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
