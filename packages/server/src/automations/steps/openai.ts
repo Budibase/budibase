@@ -1,9 +1,9 @@
-import { OpenAI } from "openai"
-
 import { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import { ai } from "@budibase/pro"
+import { createOpenAI } from "@ai-sdk/openai"
+import { generateText } from "ai"
 
 /**
  * Maintains backward compatibility with automation steps created before the introduction
@@ -11,12 +11,12 @@ import { ai } from "@budibase/pro"
  * @param inputs - automation inputs from the OpenAI automation step.
  */
 async function legacyOpenAIPrompt(inputs: OpenAIStepInputs) {
-  const openai = new OpenAI({
+  const openai = createOpenAI({
     apiKey: env.OPENAI_API_KEY,
   })
 
-  const completion = await openai.chat.completions.create({
-    model: inputs.model,
+  const response = await generateText({
+    model: openai.chat(inputs.model),
     messages: [
       {
         role: "user",
@@ -24,7 +24,7 @@ async function legacyOpenAIPrompt(inputs: OpenAIStepInputs) {
       },
     ],
   })
-  return completion?.choices[0]?.message?.content
+  return response.text
 }
 
 export async function run({
