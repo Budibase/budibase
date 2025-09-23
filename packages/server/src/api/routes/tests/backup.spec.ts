@@ -55,10 +55,12 @@ describe("/backups", () => {
         "manifest.json",
         "_dependencies/apexcharts.js",
         "_dependencies/html5-qrcode.js",
-        ...(opts.includeRows
-          ? attachmentFileNames.sort().map(f => `attachments/${f}`)
-          : []),
       ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`)
+      if (opts.includeRows) {
+        expectedFiles.push(
+          ...attachmentFileNames.sort().map(f => `attachments/${f}`)
+        )
+      }
 
       expect(exportedFiles).toEqual(expectedFiles)
     }
