@@ -109,6 +109,7 @@
         loading = false
       }
     } else {
+      // TODO: this type should be inferred correctly, but it needs a much bigger refactor around all the usages and dynamic types
       dispatch("change", Array.from(fileList) as Value[])
     }
   }
