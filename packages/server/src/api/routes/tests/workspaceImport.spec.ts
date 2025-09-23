@@ -1,4 +1,5 @@
 import path from "path"
+import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
 
 const PASSWORD = "testtest"
@@ -33,5 +34,12 @@ describe("/applications/:appId/import", () => {
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")
     expect(screens[1].routing.route).toBe("/blank")
+
+    const fileEtags = await getAppObjectStorageEtags(appId)
+    expect(fileEtags).toEqual({
+      // These etags match the ones from the export file
+      "budibase-client.js": "a0ab956601262aae131122b3f65102da-2",
+      "manifest.json": "8eecdd3935062de5298d8d115453e124",
+    })
   })
 })
