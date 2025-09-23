@@ -3,19 +3,20 @@
     Body,
     Button,
     Divider,
-    Heading,
     Input,
     Label,
     Layout,
     notifications,
   } from "@budibase/bbui"
-  import { auth } from "@/stores/portal"
+  import { auth, licensing } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
   import { ConfigType, type RecaptchaConfig } from "@budibase/types"
   import { API } from "@/api"
   import { writable, get } from "svelte/store"
   import { onMount } from "svelte"
+  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import { routeActions } from "."
 
   let loading = false
 
@@ -32,6 +33,7 @@
   })
 
   $: configComplete = $values.siteKey && $values.secretKey
+  $: recaptchaEnabled = $licensing.recaptchaEnabled
 
   async function saveConfig() {
     const config = get(values)
@@ -74,35 +76,55 @@
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <Heading size="M">Recaptcha</Heading>
-    <Body>Configuration for app level Recaptcha protection</Body>
+<LockedFeature
+  planType={"Enterprise"}
+  enabled={recaptchaEnabled}
+  title={"Recaptcha"}
+  description={"Configuration for app level Recaptcha protection"}
+  upgradeButtonClick={async () => {
+    licensing.goToUpgradePage()
+  }}
+  showContentWhenDisabled
+>
+  <Layout noPadding>
+    {#if recaptchaEnabled}
+      <Layout gap="XS" noPadding>
+        <Body size="S">Configuration for app level Recaptcha protection</Body>
+      </Layout>
+      <Divider noMargin />
+    {/if}
+    <div class="fields">
+      <div class="field">
+        <Label size="L">Site key</Label>
+        <Input bind:value={$values.siteKey} disabled={!recaptchaEnabled} />
+      </div>
+      <div class="field">
+        <Label size="L">Secret key</Label>
+        <Input
+          type="password"
+          bind:value={$values.secretKey}
+          disabled={!recaptchaEnabled}
+        />
+      </div>
+    </div>
+    {#if recaptchaEnabled}
+      <div use:routeActions>
+        <Button
+          disabled={loading || !configComplete}
+          on:click={() => saveConfig()}
+          cta
+        >
+          Save
+        </Button>
+      </div>
+    {/if}
   </Layout>
-  <Divider />
-  <div class="fields">
-    <div class="field">
-      <Label size="L">Site key</Label>
-      <Input bind:value={$values.siteKey} />
-    </div>
-    <div class="field">
-      <Label size="L">Secret key</Label>
-      <Input type="password" bind:value={$values.secretKey} />
-    </div>
-  </div>
-  <div>
-    <Button
-      disabled={loading || !configComplete}
-      on:click={() => saveConfig()}
-      cta>Save</Button
-    >
-  </div>
-</Layout>
+</LockedFeature>
 
 <style>
   .fields {
     display: grid;
-    grid-gap: var(--spacing-m);
+    grid-gap: var(--spacing-s);
   }
   .field {
     display: grid;
