@@ -6,8 +6,6 @@
     notifications,
     Modal,
     Toggle,
-    Body,
-    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -21,7 +19,6 @@
     type AutomationStep,
     type LayoutDirection,
   } from "@budibase/types"
-  import { sdk } from "@budibase/shared-core"
   import {
     automationStore,
     automationHistoryStore,

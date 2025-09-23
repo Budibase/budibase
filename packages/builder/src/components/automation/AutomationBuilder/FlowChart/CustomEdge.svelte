@@ -121,7 +121,6 @@
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
     }
   }
-  $: console.log(blockRef)
 </script>
 
 {#if !hideEdge}
