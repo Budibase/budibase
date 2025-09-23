@@ -316,6 +316,35 @@ describe("/applications", () => {
         "manifest.json": "8eecdd3935062de5298d8d115453e124",
       })
     })
+
+    it("creates app from a new import", async () => {
+      const newApp = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: path.join(__dirname, "data", "export.tar.gz"),
+      })
+      expect(newApp._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+
+      // Check resources from import file in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.workspace.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(6)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(3)
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(newApp.appId)
+      expect(fileEtags).toEqual({
+        // These etags match the ones from the export file
+        "_dependencies/apexcharts.js": "f69025c0acbca8d05cddf60fb085b2d9",
+        "_dependencies/html5-qrcode.js": "ed3116b4b46ee666b7c3f8f857ccbcd4",
+        "budibase-client.js": "b27f5d2981b4a44da59028dac62c5ea9-2",
+        "budibase-client.new.js": "c010656cbf120c24f42a41a29b86d4bb-2",
+        "manifest.json": "23c83411010b942309cf3ed7cf74bc3e",
+      })
+    })
   })
 
   describe("fetch", () => {
