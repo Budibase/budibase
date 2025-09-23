@@ -407,8 +407,6 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
             normal: {
               "background-color": "white",
               "border-radius": "1rem",
-              "box-shadow":
-                "0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
               padding: "2.5rem 3.5rem 3.5rem",
               width: "690px",
               display: "flex",
@@ -416,6 +414,9 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               gap: "1.5rem",
               "min-height": "900px",
               height: "fit-content",
+              "border-width": "1px",
+              "border-color": "#E1E1E1",
+              "border-style": "solid",
             },
             hover: {},
             active: {},
@@ -449,7 +450,7 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               },
               size: "24px",
               _instanceName: "Welcome Title",
-              text: "# Welcome to Budibase, the open source workflow toolkit.",
+              text: "# Welcome to Budibase, the open source app builder.",
             },
             {
               _id: "c09edf7de69be44ce8f0215c3f62e43a8",
@@ -1072,6 +1073,19 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               ],
             },
           ],
+        },
+        {
+          _id: "6018da5d262a4f1975c0398c51ae4cab470c",
+          _component: "@budibase/standard-components/embed",
+          _styles: {
+            normal: {},
+            hover: {},
+            active: {},
+            selected: {},
+          },
+          _instanceName: "Onboarding Background Embed",
+          embed:
+            "<style>\n  .main-wrapper {\n    background-color: rgb(240 238 230 / 1)\n  }\n  .grid {\n    background-color: rgb(240 238 230 / 1) !important\n  }\n</style>",
         },
       ],
       _instanceName: "Onboarding Welcome",
