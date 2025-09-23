@@ -1,4 +1,5 @@
 import {
+  DuplicateWorkspaceResponse,
   FetchWorkspaceAppResponse,
   FindWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
@@ -14,7 +15,7 @@ export interface WorkspaceAppEndpoints {
   create: (
     workspaceApp: InsertWorkspaceAppRequest
   ) => Promise<InsertWorkspaceAppResponse>
-  duplicate: (id: string) => Promise<InsertWorkspaceAppResponse>
+  duplicate: (id: string) => Promise<DuplicateWorkspaceResponse>
   update: (
     workspaceApp: UpdateWorkspaceAppRequest
   ) => Promise<UpdateWorkspaceAppResponse>

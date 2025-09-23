@@ -55,9 +55,7 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     isDefault: false,
   }
 
-  const duplicatedApp = await sdk.workspaceApps.create(duplicatedAppData)
-
-  return duplicatedApp
+  return sdk.workspaceApps.create(duplicatedAppData)
 }
 
 const slugify = (text: string) => text.toLowerCase().replaceAll(" ", "-")

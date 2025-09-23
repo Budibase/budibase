@@ -22,6 +22,10 @@ export interface InsertWorkspaceAppResponse {
   workspaceApp: WorkspaceAppResponse
 }
 
+export interface DuplicateWorkspaceResponse {
+  workspaceApp: WorkspaceAppResponse
+}
+
 export interface UpdateWorkspaceAppRequest {
   _id: string
   _rev: string
