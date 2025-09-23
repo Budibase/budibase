@@ -32,19 +32,17 @@
       await admin.init()
       await auth.setInitInfo({})
 
-      const homeScreen = pkg.screens.find(
-        screen => screen.routing?.homeScreen
-      )
+      const homeScreen = pkg.screens.find(screen => screen.routing?.homeScreen)
 
-      const targetRoute = homeScreen?.workspaceAppId && homeScreen?._id
-        ? `/builder/workspace/${createdApp.instance._id}/design/${homeScreen.workspaceAppId}/${homeScreen._id}`
-        : `/builder/workspace/${createdApp.instance._id}`
+      const targetRoute =
+        homeScreen?.workspaceAppId && homeScreen?._id
+          ? `/builder/workspace/${createdApp.instance._id}/design/${homeScreen.workspaceAppId}/${homeScreen._id}`
+          : `/builder/workspace/${createdApp.instance._id}`
 
       $goto(targetRoute)
     } catch (e: any) {
       loading = false
-      const message =
-        e?.message || "There was a problem creating your app"
+      const message = e?.message || "There was a problem creating your app"
       error = message
       notifications.error(message)
     }

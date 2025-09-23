@@ -7,7 +7,6 @@ import {
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -45,13 +44,6 @@ describe("/screens", () => {
   }
 
   describe("fetch", () => {
-    it("should create the sample data screen", async () => {
-      const screens = await config.api.screen.list()
-      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
-        true
-      )
-    })
-
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
       expect(screens.length).toEqual(2)
@@ -112,11 +104,7 @@ describe("/screens", () => {
         const res = await config.withProdApp(() =>
           config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
-
-        // Filter out sample screen
-        const screens = res.screens.filter(
-          s => s.name !== SAMPLE_DATA_SCREEN_NAME
-        )
+        const screens = res.screens
 
         expect(screens.length).toEqual(screenIds.length)
         expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -148,11 +136,7 @@ describe("/screens", () => {
           const res = await config.api.workspace.getDefinition(
             config.getDevWorkspaceId()
           )
-
-          // Filter out sample screen
-          const screens = res.screens.filter(
-            s => s.name !== SAMPLE_DATA_SCREEN_NAME
-          )
+          const screens = res.screens
 
           const screenIds = [screen._id!, screen1._id!]
           expect(screens.length).toEqual(screenIds.length)

@@ -50,10 +50,7 @@ import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import {
-  createSampleDataTableScreen,
-  createOnboardingWelcomeScreen,
-} from "../../constants/screens"
+import { createOnboardingWelcomeScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
@@ -186,43 +183,6 @@ async function addSampleDataDocs() {
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
   }
-}
-
-async function createDefaultWorkspaceApp(name: string): Promise<string> {
-  const workspaceApp = await sdk.workspaceApps.create({
-    name: name,
-    url: "/",
-    navigation: {
-      ...defaultAppNavigator(name),
-      links: [],
-    },
-    disabled: true,
-    isDefault: true,
-  })
-
-  return workspaceApp._id!
-}
-
-async function addSampleDataScreen() {
-  const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
-  const workspaceApp = workspaceApps.find(wa => wa.isDefault)
-
-  if (!workspaceApp) {
-    throw new Error("Default workspace app not found")
-  }
-
-  workspaceApp.navigation.links = workspaceApp.navigation.links || []
-  workspaceApp.navigation.links.push({
-    text: "Inventory",
-    url: "/inventory",
-    type: "link",
-    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-  })
-
-  await sdk.workspaceApps.update(workspaceApp)
-
-  const screen = createSampleDataTableScreen(workspaceApp._id!)
-  await sdk.screens.create(screen)
 }
 
 async function createOnboardingDefaultWorkspaceApp(
