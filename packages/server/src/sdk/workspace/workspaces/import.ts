@@ -102,7 +102,11 @@ async function removeImportableDocuments(db: Database) {
   )
 
   // add deletion key
-  return documentRefs.map(ref => ({ _deleted: true, ...ref }))
+  const uniqueMap = new Map<string, Document>()
+  documentRefs.forEach(doc => {
+    uniqueMap.set(doc._id!, doc)
+  })
+  return Array.from(uniqueMap.values()).map(ref => ({ _deleted: true, ...ref }))
 }
 
 async function getImportableDocuments(db: Database) {
