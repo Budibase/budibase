@@ -1,24 +1,24 @@
-import semver from "semver"
+import { RoleColor, helpers } from "@budibase/shared-core"
 import {
-  prefixRoleID,
-  getRoleParams,
+  BuiltinPermissionID,
+  Database,
+  PermissionLevel,
+  Role as RoleDoc,
+  RoleUIMetadata,
+  Screen,
+  Workspace,
+} from "@budibase/types"
+import { uniqBy } from "lodash"
+import cloneDeep from "lodash/fp/cloneDeep"
+import semver from "semver"
+import { getWorkspaceDB } from "../context"
+import {
   DocumentType,
   SEPARATOR,
   doWithDB,
+  getRoleParams,
+  prefixRoleID,
 } from "../db"
-import { getAppDB } from "../context"
-import {
-  Screen,
-  Role as RoleDoc,
-  RoleUIMetadata,
-  Database,
-  App,
-  BuiltinPermissionID,
-  PermissionLevel,
-} from "@budibase/types"
-import cloneDeep from "lodash/fp/cloneDeep"
-import { RoleColor, helpers } from "@budibase/shared-core"
-import { uniqBy } from "lodash"
 import { default as env } from "../environment"
 
 export const BUILTIN_ROLE_IDS = {
@@ -371,7 +371,7 @@ export async function getRole(
   roleId: string,
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc | undefined> {
-  const db = getAppDB()
+  const db = getWorkspaceDB()
   const roleList = []
   if (!isBuiltin(roleId)) {
     const role = await db.tryGet<RoleDoc>(getDBRoleID(roleId))
@@ -383,7 +383,7 @@ export async function getRole(
 }
 
 export async function saveRoles(roles: RoleDoc[]) {
-  const db = getAppDB()
+  const db = getWorkspaceDB()
   await db.bulkDocs(
     roles
       .filter(role => role._id)
@@ -472,7 +472,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
   } else {
     let appDB
     try {
-      appDB = getAppDB()
+      appDB = getWorkspaceDB()
     } catch (error) {
       // We don't have any apps, so we'll just use the built-in roles
     }
@@ -548,7 +548,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 }
 
 async function shouldIncludePowerRole(db: Database) {
-  const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+  const app = await db.tryGet<Workspace>(DocumentType.WORKSPACE_METADATA)
   const creationVersion = app?.creationVersion
   if (!creationVersion || !semver.valid(creationVersion)) {
     // Old apps don't have creationVersion, so we should include it for backward compatibility

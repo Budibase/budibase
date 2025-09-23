@@ -1,13 +1,10 @@
-import { budibaseTempDir } from "../budibaseDir"
+import { context, objectStore } from "@budibase/backend-core"
 import fs from "fs"
 import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
+import { budibaseTempDir } from "../budibaseDir"
 import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
-import env from "../../environment"
-import { objectStore, context } from "@budibase/backend-core"
 import { TOP_LEVEL_PATH } from "./filesystem"
-import { DocumentType } from "../../db/utils"
-import { App } from "@budibase/types"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -33,29 +30,24 @@ export const deleteAppFiles = async (appId: string) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 export const getComponentLibraryManifest = async (library: string) => {
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   const filename = "manifest.json"
 
-  if (env.USE_LOCAL_COMPONENT_LIBS) {
-    const db = context.getAppDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
-
-    if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
-      const paths = [
-        join(TOP_LEVEL_PATH, "packages/client", filename),
-        join(process.cwd(), "client", filename),
-      ]
-      for (let path of paths) {
-        if (fs.existsSync(path)) {
-          // always load from new so that updates are refreshed
-          delete require.cache[require.resolve(path)]
-          return require(path)
-        }
+  if (shouldServeLocally()) {
+    const paths = [
+      join(TOP_LEVEL_PATH, "packages/client", filename),
+      join(process.cwd(), "client", filename),
+    ]
+    for (let path of paths) {
+      if (fs.existsSync(path)) {
+        // always load from new so that updates are refreshed
+        delete require.cache[require.resolve(path)]
+        return require(path)
       }
-      throw new Error(
-        `Unable to find ${filename} in development environment (may need to build).`
-      )
     }
+    throw new Error(
+      `Unable to find ${filename} in development environment (may need to build).`
+    )
   }
 
   if (!appId) {

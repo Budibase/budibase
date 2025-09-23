@@ -24,7 +24,6 @@
   export let targetPosition: Position
   export let target: string
 
-  // Edge data
   $: viewMode = data?.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection

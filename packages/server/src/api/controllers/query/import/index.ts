@@ -1,11 +1,11 @@
-import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
+import { queryValidation } from "../validation"
 import { ImportInfo, ImportSource } from "./sources/base"
+import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
-import { Curl } from "./sources/curl"
 // @ts-ignore
-import { events, context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 
 interface ImportResult {
@@ -58,7 +58,7 @@ export class RestImporter {
       })
 
     // persist queries
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors

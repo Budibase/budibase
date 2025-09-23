@@ -1,7 +1,7 @@
-import { Table, Webhook, WebhookActionType } from "@budibase/types"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { mocks } from "@budibase/backend-core/tests"
+import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 mocks.licenses.useSyncAutomations()
 
@@ -28,15 +28,22 @@ describe("Webhook trigger test", () => {
       },
       bodySchema: {},
     })
-    await config.api.webhook.buildSchema(config.getAppId(), webhook._id!, {
-      parameter: "string",
-    })
+    await config.api.webhook.buildSchema(
+      config.getDevWorkspaceId(),
+      webhook._id!,
+      {
+        parameter: "string",
+      }
+    )
     await config.publish()
     return { webhook, automation }
   }
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
     await config.api.automation.deleteAll()
     table = await config.createTable()
   })
@@ -47,12 +54,10 @@ describe("Webhook trigger test", () => {
 
   it("should run the webhook automation - checking for parameters", async () => {
     const { webhook } = await createWebhookAutomation()
-    const res = await config.api.webhook.trigger(
-      config.getProdAppId(),
-      webhook._id!,
-      {
+    const res = await config.withProdApp(() =>
+      config.api.webhook.trigger(config.getProdWorkspaceId(), webhook._id!, {
         parameter: "testing",
-      }
+      })
     )
     expect(typeof res).toBe("object")
     const collectedInfo = res as Record<string, any>

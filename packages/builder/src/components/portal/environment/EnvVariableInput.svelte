@@ -20,7 +20,7 @@
 
   async function handleUpgradePanel() {
     await environment.upgradePanelOpened()
-    $licensing.goToUpgradePage()
+    licensing.goToUpgradePage()
   }
 
   async function saveVariable(data: CreateEnvironmentVariableRequest) {

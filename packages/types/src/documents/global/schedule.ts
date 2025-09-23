@@ -1,7 +1,7 @@
 import { Document } from "../document"
 
 export enum ScheduleType {
-  APP_BACKUP = "app_backup",
+  WORKSPACE_BACKUP = "app_backup",
 }
 
 export enum ScheduleRepeatPeriod {
@@ -18,15 +18,15 @@ export interface Schedule extends Document {
   metadata: ScheduleMetadata
 }
 
-export type ScheduleMetadata = AppBackupScheduleMetadata
+export type ScheduleMetadata = WorkspaceBackupScheduleMetadata
 
 export const isAppBackupMetadata = (
   type: ScheduleType,
   metadata: ScheduleMetadata
-): metadata is AppBackupScheduleMetadata => {
-  return type === ScheduleType.APP_BACKUP
+): metadata is WorkspaceBackupScheduleMetadata => {
+  return type === ScheduleType.WORKSPACE_BACKUP
 }
 
-export interface AppBackupScheduleMetadata {
+export interface WorkspaceBackupScheduleMetadata {
   apps: string[]
 }

@@ -2,6 +2,10 @@
   import { ModalContent, Body, Layout, Link } from "@budibase/bbui"
   import { organisation } from "@/stores/portal"
   import GoogleButton from "./GoogleButton.svelte"
+  import { bb } from "@/stores/bb"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 </script>
@@ -26,6 +30,13 @@
       >Google authentication is not enabled, please complete Google SSO
       configuration.</Body
     >
-    <Link href="/builder/portal/settings/auth">Configure Google SSO</Link>
+    <Link
+      on:click={() => {
+        dispatch("close")
+        bb.settings("/auth")
+      }}
+    >
+      Configure Google SSO
+    </Link>
   {/if}
 </ModalContent>

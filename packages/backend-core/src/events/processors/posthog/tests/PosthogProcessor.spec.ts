@@ -1,10 +1,10 @@
-import { testEnv } from "../../../../../tests/extra"
-import PosthogProcessor from "../PosthogProcessor"
-import { Event, IdentityType, Hosting } from "@budibase/types"
+import { Event, Hosting, IdentityType } from "@budibase/types"
 import tk from "timekeeper"
+import { testEnv } from "../../../../../tests/extra"
 import * as cache from "../../../../cache/generic"
 import { CacheKey } from "../../../../cache/generic"
 import * as context from "../../../../context"
+import PosthogProcessor from "../PosthogProcessor"
 
 const newIdentity = () => {
   return {
@@ -38,7 +38,11 @@ describe("PosthogProcessor", () => {
       const identity = newIdentity()
       const properties = {}
 
-      await processor.processEvent(Event.APP_CREATED, identity, properties)
+      await processor.processEvent(
+        Event.WORKSPACE_CREATED,
+        identity,
+        properties
+      )
       expect(spy).toHaveBeenCalledTimes(1)
     })
 
@@ -123,7 +127,7 @@ describe("PosthogProcessor", () => {
         const properties = {}
 
         const runAppEvents = async (appId: string) => {
-          await context.doInAppContext(appId, async () => {
+          await context.doInWorkspaceContext(appId, async () => {
             tk.freeze(new Date(2022, 0, 1, 14, 0))
             await processor.processEvent(Event.SERVED_APP, identity, properties)
             await processor.processEvent(

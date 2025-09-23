@@ -1,13 +1,13 @@
+import { SocketSession, Workspace } from "@budibase/types"
 import { builderSocket } from "../../websockets"
-import { App, SocketSession } from "@budibase/types"
 
-export const enrichApps = async (apps: App[]) => {
+export const enrichApps = async (apps: Workspace[]) => {
   // Sessions can only exist for dev app IDs
   const devAppIds = apps
     .filter(app => app.status === "development")
     .map(app => app.appId)
 
-  // Get all sessions for all apps and enrich app list
+  // Get all sessions for all workspaces and enrich workspace list
   const sessions = await builderSocket?.getRoomSessions(devAppIds)
   if (sessions?.length) {
     let appSessionMap: Record<string, SocketSession[]> = {}

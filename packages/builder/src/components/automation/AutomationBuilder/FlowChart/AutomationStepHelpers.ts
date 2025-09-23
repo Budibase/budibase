@@ -453,7 +453,7 @@ export const renderBranches = (
         branchIdx: bIdx,
         branchesCount: branches.length,
         direction: deps.direction,
-        pathTo: deps.blockRefs?.[(sourceBlock as any)?.id]?.pathTo,
+        pathTo: deps.blockRefs?.[sourceBlock?.id]?.pathTo,
       },
     })
 

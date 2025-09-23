@@ -1,16 +1,16 @@
+import { Feature, Workspace } from "@budibase/types"
 import crypto from "crypto"
+import { licenses, users } from "../../../tests/core/utilities/structures"
+import { workspace } from "../../cache"
 import { contentSecurityPolicy } from "../contentSecurityPolicy"
-import { app } from "../../cache"
-import { Feature, App } from "@budibase/types"
-import { users, licenses } from "../../../tests/core/utilities/structures"
 
 jest.mock("crypto", () => ({
   randomBytes: jest.fn(),
   randomUUID: jest.fn(),
 }))
 jest.mock("../../cache", () => ({
-  app: {
-    getAppMetadata: jest.fn(),
+  workspace: {
+    getWorkspaceMetadata: jest.fn(),
   },
 }))
 
@@ -77,12 +77,12 @@ describe("contentSecurityPolicy middleware", () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation()
     const error = new Error("Test error")
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(() => {
+    workspace.getWorkspaceMetadata.mockImplementation(() => {
       throw error
     })
     await contentSecurityPolicy(ctx, next)
 
-    expect(app.getAppMetadata).toHaveBeenCalledWith(fakeAppId)
+    expect(workspace.getWorkspaceMetadata).toHaveBeenCalledWith(fakeAppId)
     expect(consoleSpy).toHaveBeenCalledWith(
       `Error occurred in Content-Security-Policy middleware: ${error}`
     )
@@ -102,7 +102,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): App {
+    workspace.getWorkspaceMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",
@@ -129,7 +129,7 @@ describe("contentSecurityPolicy middleware", () => {
 
     const cspHeader = ctx.set.mock.calls[0][1]
     expect(cspHeader).toContain(`default-src 'self' ${domain};`)
-    expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
+    expect(workspace.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
 
@@ -146,7 +146,7 @@ describe("contentSecurityPolicy middleware", () => {
     })
 
     // @ts-ignore
-    app.getAppMetadata.mockImplementation(function (): App {
+    workspace.getWorkspaceMetadata.mockImplementation(function (): Workspace {
       return {
         appId,
         type: "foo",
@@ -174,7 +174,7 @@ describe("contentSecurityPolicy middleware", () => {
     const cspHeader = ctx.set.mock.calls[0][1]
     expect(cspHeader).toContain(`default-src 'self' ${validDomain};`)
     expect(cspHeader).not.toContain(invalidDomain)
-    expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
+    expect(workspace.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
 })

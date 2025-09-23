@@ -1,9 +1,9 @@
-import { devRevertProcessor } from "./devRevertProcessor"
-import { DevRevertQueueData } from "@budibase/types"
+import { db } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
+import { DevRevertQueueData } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
-import { db } from "@budibase/backend-core"
+import { devRevertProcessor } from "./devRevertProcessor"
 
 describe("devRevertProcessor", () => {
   const config = new TestConfiguration()
@@ -27,7 +27,7 @@ describe("devRevertProcessor", () => {
 
     const processor = devRevertProcessor()
     const testData: DevRevertQueueData = {
-      appId: config.getAppId(),
+      appId: config.getDevWorkspaceId(),
       userId: generator.guid(),
     }
 
@@ -43,12 +43,12 @@ describe("devRevertProcessor", () => {
   })
 
   describe("unhappy paths", () => {
-    it("should throw error when app is not deployed and not retry", async () => {
+    it("should throw error when workspace is not deployed and not retry", async () => {
       await config.unpublish()
 
       const processor = devRevertProcessor()
       const testData: DevRevertQueueData = {
-        appId: config.getAppId(),
+        appId: config.getDevWorkspaceId(),
         userId: generator.guid(),
       }
 
@@ -64,7 +64,7 @@ describe("devRevertProcessor", () => {
       await config.api.table.save(basicTable())
 
       async function verifyDevAppExists() {
-        expect(await db.dbExists(config.getAppId())).toBe(true)
+        expect(await db.dbExists(config.getDevWorkspaceId())).toBe(true)
       }
 
       let exceptionThrown = false
@@ -79,7 +79,7 @@ describe("devRevertProcessor", () => {
       const processor = devRevertProcessor()
 
       const testData: DevRevertQueueData = {
-        appId: config.getAppId(),
+        appId: config.getDevWorkspaceId(),
         userId: generator.guid(),
       }
 
@@ -95,10 +95,10 @@ describe("devRevertProcessor", () => {
       expect(revertAppSpy).toHaveBeenCalledTimes(2)
       await verifyDevAppExists()
 
-      const devDocs = await db.getDB(config.getAppId()).allDocs({
+      const devDocs = await db.getDB(config.getDevWorkspaceId()).allDocs({
         include_docs: true,
       })
-      const prodDocs = await db.getDB(config.getProdAppId()).allDocs({
+      const prodDocs = await db.getDB(config.getProdWorkspaceId()).allDocs({
         include_docs: true,
       })
       expect(devDocs.total_rows).toEqual(prodDocs.total_rows)

@@ -6,11 +6,11 @@
     screenStore,
     selectedScreen,
     workspaceAppStore,
+    builderStore,
   } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { featureFlags } from "@/stores/portal"
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
@@ -27,11 +27,7 @@
         return `../${workspaceAppScreens[0]._id}`
       }
 
-      if ($featureFlags.WORKSPACES) {
-        return "../new"
-      }
-
-      return "../../../design"
+      return "../new"
     },
     routify,
     update: screenStore.select,
@@ -44,16 +40,14 @@
 </script>
 
 {#if $selectedScreen}
-  <div class="design">
-    {#if $featureFlags.WORKSPACES}
-      <TopBar
-        breadcrumbs={[
-          { text: "Apps", url: "../../" },
-          { text: $workspaceAppStore.selectedWorkspaceApp?.name },
-        ]}
-        icon="browser"
-      ></TopBar>
-    {/if}
+  <div class="design" class:resizing-panel={$builderStore.isResizingPanel}>
+    <TopBar
+      breadcrumbs={[
+        { text: "Apps", url: "../../" },
+        { text: $workspaceAppStore.selectedWorkspaceApp?.name },
+      ]}
+      icon="browser"
+    ></TopBar>
     <div class="content">
       <LeftPanel />
       <AppPanel />
@@ -77,5 +71,11 @@
     align-items: stretch;
     flex: 1 1 auto;
     height: 0;
+  }
+  .design.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>

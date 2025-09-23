@@ -19,7 +19,7 @@ describe("test the server log action", () => {
       .serverLog({ text: "Hello World" })
       .test({ fields: {} })
     expect(result.steps[0].outputs.message).toEqual(
-      `App ${config.getAppId()} - Hello World`
+      `App ${config.getDevWorkspaceId()} - Hello World`
     )
     expect(result.steps[0].outputs.success).toEqual(true)
   })
