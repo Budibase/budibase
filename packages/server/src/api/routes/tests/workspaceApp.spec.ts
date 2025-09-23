@@ -47,6 +47,32 @@ describe("/workspaceApp", () => {
 
   describe("/duplicate", () => {
     it("should duplicate the app", async () => {
+      const { workspaceApp: firstApp } = await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "First App",
+          url: "/first",
+        })
+      )
+
+      await context.doInWorkspaceContext(
+        testConfig.getDevWorkspaceId(),
+        async () => {
+          await sdk.screens.create({
+            layoutId: "screen.layoutId",
+            showNavigation: true,
+            width: "100",
+            routing: { route: "first", roleId: "assistant_to_the_manager" },
+            workspaceAppId: firstApp._id,
+            props: {
+              _instanceName: "Æthelstan",
+              _styles: {},
+              _component: "mc_guffin_9001",
+            },
+            name: "screen in first app",
+          })
+        }
+      )
+
       const { workspaceApp: originalApp } = await api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "App to dupe",
@@ -68,7 +94,7 @@ describe("/workspaceApp", () => {
               _styles: {},
               _component: "mc_guffin_9001",
             },
-            name: "screen.name",
+            name: "screen in second app",
           })
         }
       )
@@ -79,12 +105,14 @@ describe("/workspaceApp", () => {
       )
 
       // check basics
-
       const dupeScreens = await getAppScrens(duplicatedApp._id)
       expect(duplicatedApp).toBeDefined()
       expect(duplicatedApp.name).not.toBe(originalApp.name)
       expect(duplicatedApp.navigation.title).toBe(originalApp.navigation.title)
       expect(dupeScreens.length).toBe(originalScreens.length)
+
+      const [screen] = dupeScreens
+      expect(screen.routing.route).toBe("66")
 
       // ensure original isnt messed with
       const originalScreensAfterDupe = await getAppScrens(originalApp._id)
