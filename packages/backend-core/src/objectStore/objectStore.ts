@@ -427,7 +427,11 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
   })
 }
 
-export async function retrieveDirectory(bucketName: string, path: string) {
+export async function retrieveDirectory(
+  bucketName: string,
+  path: string,
+  toExclude?: RegExp[]
+) {
   return await tracer.trace("retrieveDirectory", async span => {
     span.addTags({ bucketName, path })
 
@@ -438,6 +442,11 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     await utils.parallelForeach(
       listAllObjects(bucketName, path),
       async object => {
+        const { Key } = object
+        if (!Key || toExclude?.some(x => x.test(Key))) {
+          return
+        }
+
         numObjects++
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!
