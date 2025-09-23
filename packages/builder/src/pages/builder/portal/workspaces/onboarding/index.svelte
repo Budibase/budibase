@@ -6,6 +6,10 @@
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
   import { initialise } from "@/stores/builder"
+  import {
+    buildBuilderWorkspaceDesignRoute,
+    buildBuilderWorkspaceRoute,
+  } from "@/helpers/routes"
 
   const DEFAULT_ONBOARDING_NAME = "My first app"
   const DEFAULT_ONBOARDING_URL = "my-first-app"
@@ -36,8 +40,14 @@
 
       const targetRoute =
         homeScreen?.workspaceAppId && homeScreen?._id
-          ? `/builder/workspace/${createdApp.instance._id}/design/${homeScreen.workspaceAppId}/${homeScreen._id}`
-          : `/builder/workspace/${createdApp.instance._id}`
+          ? buildBuilderWorkspaceDesignRoute({
+              applicationId: createdApp.instance._id,
+              workspaceAppId: homeScreen.workspaceAppId,
+              screenId: homeScreen._id,
+            })
+          : buildBuilderWorkspaceRoute({
+              applicationId: createdApp.instance._id,
+            })
 
       $goto(targetRoute)
     } catch (e: any) {
