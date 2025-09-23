@@ -52,7 +52,8 @@ export interface AppEndpoints {
   ) => Promise<DuplicateWorkspaceResponse>
   updateAppFromExport: (
     appId: string,
-    body: ImportToUpdateWorkspaceRequest
+    body: ImportToUpdateWorkspaceRequest,
+    appExport: File
   ) => Promise<ImportToUpdateWorkspaceResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
   getApps: () => Promise<FetchWorkspacesResponse>
@@ -175,11 +176,16 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * converted to development ID.
    * @param body a FormData body with a file and password.
    */
-  updateAppFromExport: async (appId, body) => {
+  updateAppFromExport: async (appId, body, appExport) => {
     const devId = sdk.applications.getDevAppID(appId)
+    const formData = new FormData()
+    formData.append("appExport", appExport)
+    for (const [key, field] of Object.entries(body)) {
+      formData.append(key, field)
+    }
     return await API.post({
       url: `/api/applications/${devId}/import`,
-      body,
+      body: formData,
       json: false,
     })
   },
