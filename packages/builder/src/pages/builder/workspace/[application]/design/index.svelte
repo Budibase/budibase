@@ -95,7 +95,11 @@
   $: canDuplicate = $featureFlags.DUPLICATE_APP
 
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
-    await workspaceAppStore.duplicate(workspaceAppId)
+    try {
+      await workspaceAppStore.duplicate(workspaceAppId)
+    } catch (e) {
+      notifications.error("Failed to duplicate app")
+    }
     await appStore.refresh()
   }
 
