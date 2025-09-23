@@ -116,7 +116,7 @@
     window.open(liveUrl, "_blank")
   }
 
-  const duplicateWorkSpaceApp = async (id: string) => {
+  const duplicateWorkspaceApp = async (id: string) => {
     await workspaceAppStore.duplicate(id)
     await appStore.refresh()
   }
@@ -164,16 +164,12 @@
     ]
 
     if (canDuplicate) {
-      return [
-        ...commands,
-
-        {
-          icon: "copy",
-          name: "Duplicate",
-          visible: true,
-          callback: () => duplicateWorkSpaceApp(workspaceApp._id as string),
-        },
-      ]
+      commands.push({
+        icon: "copy",
+        name: "Duplicate",
+        visible: true,
+        callback: () => duplicateWorkspaceApp(workspaceApp._id as string),
+      })
     }
 
     return commands
