@@ -1,3 +1,1 @@
-import PhosphorIconSelect from "./PhosphorIconSelect.svelte"
-
-export default PhosphorIconSelect
+export { default as PhosphorIconSelect } from "./PhosphorIconSelect.svelte"

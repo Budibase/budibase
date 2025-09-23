@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Popover, ActionButton, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import phosphorIconsData from "./phosphorIcons.json"
+  import phosphorIcons from "./phosphorIcons"
 
   interface PhosphorIconSelectEvents {
     change: string
@@ -11,9 +11,6 @@
 
   export let value: string = ""
   export let maxIconsPerPage: number = 72
-
-  // Get phosphor icons from external JSON file
-  const phosphorIcons: string[] = phosphorIconsData
 
   let searchTerm: string = ""
   let currentPage: number = 1

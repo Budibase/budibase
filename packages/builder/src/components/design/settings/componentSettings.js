@@ -8,7 +8,7 @@ import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor
 import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
 import { IconSelect } from "./controls/IconSelect"
-import PhosphorIconSelect from "./controls/PhosphorIconSelect"
+import { PhosphorIconSelect } from "./controls/PhosphorIconSelect"
 import FieldSelect from "./controls/FieldSelect.svelte"
 import SortableFieldSelect from "./controls/SortableFieldSelect.svelte"
 import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
