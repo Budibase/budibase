@@ -18,6 +18,7 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { WorkspaceStatus } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
+import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import {
   basicQuery,
   basicScreen,
@@ -287,6 +288,33 @@ describe("/applications", () => {
         { name: "made up", url: app!.url! },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
+    })
+
+    it("creates app from import", async () => {
+      const newApp = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: path.join(__dirname, "data", "export.enc.tar.gz"),
+        encryptionPassword: "testtest",
+      })
+      expect(newApp._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+
+      // Check resources from import file in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.workspace.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(2)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(7)
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(newApp.appId)
+      expect(fileEtags).toEqual({
+        // These etags match the ones from the export file
+        "budibase-client.js": "a0ab956601262aae131122b3f65102da-2",
+        "manifest.json": "8eecdd3935062de5298d8d115453e124",
+      })
     })
   })
 
