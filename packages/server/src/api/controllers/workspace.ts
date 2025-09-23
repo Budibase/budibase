@@ -735,7 +735,7 @@ export async function updateClient(
 
   // Update versions in app package
   const updatedToVersion = envCore.VERSION
-  const appPackageUpdates = {
+  const workspacePackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
     features: {
@@ -743,9 +743,16 @@ export async function updateClient(
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateWorkspacePackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionUpdated(app, currentVersion, updatedToVersion)
-  ctx.body = app
+  const updatedWorkspace = await updateWorkspacePackage(
+    workspacePackageUpdates,
+    ctx.params.appId
+  )
+  await events.app.versionUpdated(
+    updatedWorkspace,
+    currentVersion,
+    updatedToVersion
+  )
+  ctx.body = updatedWorkspace
 }
 
 export async function revertClient(
@@ -766,7 +773,7 @@ export async function revertClient(
   // Update versions in app package
   const currentVersion = application.version
   const revertedToVersion = application.revertableVersion
-  const appPackageUpdates = {
+  const workspacePackageUpdates = {
     version: revertedToVersion,
     revertableVersion: undefined,
     features: {
@@ -774,9 +781,16 @@ export async function revertClient(
       skeletonLoader: manifest?.features?.skeletonLoader ?? false,
     },
   }
-  const app = await updateWorkspacePackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionReverted(app, currentVersion, revertedToVersion)
-  ctx.body = app
+  const updatedWorkspace = await updateWorkspacePackage(
+    workspacePackageUpdates,
+    ctx.params.appId
+  )
+  await events.app.versionReverted(
+    updatedWorkspace,
+    currentVersion,
+    revertedToVersion
+  )
+  ctx.body = updatedWorkspace
 }
 
 async function unpublishWorkspace(ctx: UserCtx) {
@@ -797,12 +811,12 @@ async function unpublishWorkspace(ctx: UserCtx) {
   return result
 }
 
-async function invalidateWorkspaceCache(appId: string) {
+async function invalidateWorkspaceCache(workspaceId: string) {
   await cache.workspace.invalidateWorkspaceMetadata(
-    dbCore.getDevWorkspaceID(appId)
+    dbCore.getDevWorkspaceID(workspaceId)
   )
   await cache.workspace.invalidateWorkspaceMetadata(
-    dbCore.getProdWorkspaceID(appId)
+    dbCore.getProdWorkspaceID(workspaceId)
   )
 }
 
@@ -861,21 +875,21 @@ export async function destroy(ctx: UserCtx<void, DeleteWorkspaceResponse>) {
 export async function unpublish(
   ctx: UserCtx<void, UnpublishWorkspaceResponse>
 ) {
-  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
-  const dbExists = await dbCore.dbExists(prodAppId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.params.appId)
+  const dbExists = await dbCore.dbExists(prodWorkspaceId)
 
   // check app has been published
   if (!dbExists) {
-    return ctx.throw(400, "App has not been published.")
+    return ctx.throw(400, "Workspace has not been published.")
   }
 
-  await workspaceMigrations.doInMigrationLock(prodAppId, async () => {
+  await workspaceMigrations.doInMigrationLock(prodWorkspaceId, async () => {
     await preDestroyWorkspace(ctx)
     await unpublishWorkspace(ctx)
     await postDestroyWorkspace(ctx)
   })
   builderSocket?.emitAppUnpublish(ctx)
-  ctx.body = { message: "App unpublished." }
+  ctx.body = { message: "Workspace unpublished." }
 }
 
 export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
@@ -983,38 +997,42 @@ export async function duplicateWorkspace(
 }
 
 export async function updateWorkspacePackage(
-  appPackage: Partial<Workspace>,
-  appId: string
+  workspacePackage: Partial<Workspace>,
+  workspaceId: string
 ) {
-  return context.doInWorkspaceContext(appId, async () => {
+  return context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     const application = await sdk.applications.metadata.get()
 
-    const newAppPackage: Workspace = { ...application, ...appPackage }
-    if (appPackage._rev !== application._rev) {
-      newAppPackage._rev = application._rev
+    const newWorkspacePackage: Workspace = {
+      ...application,
+      ...workspacePackage,
+    }
+    if (workspacePackage._rev !== application._rev) {
+      newWorkspacePackage._rev = application._rev
     }
 
     // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
-    if (appPackage.pwa && application.pwa) {
-      if (appPackage.pwa.icons) {
-        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
-          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
-          application?.pwa?.icons?.[i]
-            ? { ...icon, src: application?.pwa?.icons?.[i].src }
-            : icon
+    if (workspacePackage.pwa && application.pwa) {
+      if (workspacePackage.pwa.icons) {
+        workspacePackage.pwa.icons = workspacePackage.pwa.icons.map(
+          (icon, i) =>
+            icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+            application?.pwa?.icons?.[i]
+              ? { ...icon, src: application?.pwa?.icons?.[i].src }
+              : icon
         )
       }
     }
 
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
-    delete newAppPackage.lockedBy
+    delete newWorkspacePackage.lockedBy
 
-    await db.put(newAppPackage)
+    await db.put(newWorkspacePackage)
     // remove any cached metadata, so that it will be updated
-    await cache.workspace.invalidateWorkspaceMetadata(appId)
-    return newAppPackage
+    await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
+    return newWorkspacePackage
   })
 }
 
