@@ -18,7 +18,7 @@ describe("utils", () => {
 
   describe("importToRows", () => {
     it("consecutive row have consecutive auto ids", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const table = await config.createTable({
           name: "table",
           type: "table",
@@ -65,7 +65,7 @@ describe("utils", () => {
     })
 
     it("can import data without a specific user performing the action", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const table = await config.createTable({
           name: "table",
           type: "table",
@@ -99,7 +99,7 @@ describe("utils", () => {
     })
 
     it("Imports write as expected with AI columns", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const table = await config.createTable({
           name: "table",
           type: "table",
@@ -159,7 +159,7 @@ describe("utils", () => {
     })
 
     it("coerces strings into arrays for array fields", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const table = await config.createTable({
           name: "table",
           type: "table",

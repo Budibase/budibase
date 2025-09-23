@@ -1,5 +1,5 @@
+import { constants, events } from "@budibase/backend-core"
 import * as setup from "./utilities"
-import { events, constants } from "@budibase/backend-core"
 
 describe("/static", () => {
   let request = setup.getRequest()
@@ -40,7 +40,7 @@ describe("/static", () => {
 
       expect(events.serve.servedAppPreview).toHaveBeenCalledTimes(1)
       expect(events.serve.servedAppPreview).toHaveBeenCalledWith(
-        config.getApp(),
+        config.getDevWorkspace(),
         timezone
       )
       expect(events.serve.servedApp).not.toHaveBeenCalled()
@@ -48,7 +48,7 @@ describe("/static", () => {
 
     it("should ping from app", async () => {
       const headers = config.defaultHeaders()
-      headers[constants.Header.APP_ID] = config.prodAppId
+      headers[constants.Header.APP_ID] = config.prodWorkspaceId
 
       await request
         .post("/api/bbtel/ping")
@@ -58,7 +58,7 @@ describe("/static", () => {
 
       expect(events.serve.servedApp).toHaveBeenCalledTimes(1)
       expect(events.serve.servedApp).toHaveBeenCalledWith(
-        config.getProdApp(),
+        config.getProdWorkspace(),
         timezone,
         undefined
       )
@@ -67,7 +67,7 @@ describe("/static", () => {
 
     it("should ping from an embedded app", async () => {
       const headers = config.defaultHeaders()
-      headers[constants.Header.APP_ID] = config.prodAppId
+      headers[constants.Header.APP_ID] = config.prodWorkspaceId
 
       await request
         .post("/api/bbtel/ping")
@@ -77,7 +77,7 @@ describe("/static", () => {
 
       expect(events.serve.servedApp).toHaveBeenCalledTimes(1)
       expect(events.serve.servedApp).toHaveBeenCalledWith(
-        config.getProdApp(),
+        config.getProdWorkspace(),
         timezone,
         true
       )

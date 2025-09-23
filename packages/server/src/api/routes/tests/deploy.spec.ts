@@ -22,7 +22,7 @@ describe("/api/deploy", () => {
 
   describe("GET /api/deploy/status", () => {
     it("returns empty state when unpublished", async () => {
-      await config.api.workspace.unpublish(config.appId!)
+      await config.api.workspace.unpublish(config.devWorkspaceId!)
       const res = await config.api.deploy.publishStatus()
       for (const automation of Object.values(res.automations)) {
         expect(automation.published).toBe(false)
@@ -81,7 +81,7 @@ describe("/api/deploy", () => {
         })
       )
 
-      await config.api.workspace.publish(config.app!.appId)
+      await config.api.workspace.publish(config.devWorkspace!.appId)
 
       const res = await config.api.deploy.publishStatus()
 
@@ -127,7 +127,7 @@ describe("/api/deploy", () => {
           })
         )
 
-      await config.api.workspace.publish(config.app!.appId)
+      await config.api.workspace.publish(config.devWorkspace!.appId)
 
       const { automation: unpublishedAutomation } =
         await createAutomationBuilder(config)
@@ -190,7 +190,7 @@ describe("/api/deploy", () => {
         })
       )
 
-      await config.api.workspace.publish(config.app!.appId)
+      await config.api.workspace.publish(config.devWorkspace!.appId)
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
@@ -217,7 +217,7 @@ describe("/api/deploy", () => {
         .serverLog({ text: "Test automation" })
         .save()
 
-      await config.api.workspace.publish(config.app!.appId)
+      await config.api.workspace.publish(config.devWorkspace!.appId)
 
       // Delete automation from development
       await config.api.automation.delete(automation)
@@ -279,8 +279,8 @@ describe("/api/deploy", () => {
     }
 
     async function publishProdApp() {
-      await config.api.workspace.publish(config.getAppId())
-      await config.api.workspace.sync(config.getAppId())
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+      await config.api.workspace.sync(config.getDevWorkspaceId())
     }
 
     it("should define the disable value for all workspace apps when publishing for the first time", async () => {
@@ -373,7 +373,7 @@ describe("/api/deploy", () => {
       await publishProdApp()
 
       // Remove disabled flag, simulating old apps
-      const db = dbCore.getDB(config.getAppId())
+      const db = dbCore.getDB(config.getDevWorkspaceId())
       await db.put({
         ...(await config.api.workspaceApp.find(initialApp._id)),
         disabled: undefined,
@@ -405,7 +405,7 @@ describe("/api/deploy", () => {
       await publishProdApp()
 
       // Remove disabled flag, simulating old automations
-      const db = dbCore.getDB(config.getAppId())
+      const db = dbCore.getDB(config.getDevWorkspaceId())
       await db.put({
         ...(await config.api.automation.get(initialAutomation._id!)),
         disabled: undefined,

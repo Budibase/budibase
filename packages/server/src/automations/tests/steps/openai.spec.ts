@@ -1,10 +1,10 @@
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
+import nock from "nock"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
-import nock from "nock"
-import { quotas } from "@budibase/pro"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the openai action", () => {
   const config = new TestConfiguration()
@@ -30,11 +30,13 @@ describe("test the openai action", () => {
   })
 
   const getAIUsage = async () => {
-    const { total } = await config.doInContext(config.getProdAppId(), () =>
-      quotas.getCurrentUsageValues(
-        QuotaUsageType.MONTHLY,
-        MonthlyQuotaName.BUDIBASE_AI_CREDITS
-      )
+    const { total } = await config.doInContext(
+      config.getProdWorkspaceId(),
+      () =>
+        quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          MonthlyQuotaName.BUDIBASE_AI_CREDITS
+        )
     )
     return total
   }

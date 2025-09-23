@@ -165,7 +165,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-export const publishApp = async function (
+export const publishWorkspace = async function (
   ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
   if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
