@@ -486,6 +486,7 @@ async function performWorkspaceCreate(
     // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
     if (isOnboarding) {
       try {
+        await addSampleDataDocs()
         await createOnboardingDefaultWorkspaceApp(name)
         await addOnboardingWelcomeScreen()
 
