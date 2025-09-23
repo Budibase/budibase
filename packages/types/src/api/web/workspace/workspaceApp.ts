@@ -22,7 +22,7 @@ export interface InsertWorkspaceAppResponse {
   workspaceApp: WorkspaceAppResponse
 }
 
-export interface DuplicateWorkspaceResponse {
+export interface DuplicateWorkspaceAppResponse {
   workspaceApp: WorkspaceAppResponse
 }
 
