@@ -1,23 +1,23 @@
-import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
+import Router from "@koa/router"
 import { endpointGroupList } from "./endpointGroups"
 
 // import to register the routes with the endpoint groups
 import "./global/auth"
-import "./global/users"
 import "./global/configs"
-import "./global/templates"
 import "./global/email"
-import "./global/roles"
 import "./global/events"
-import "./system/environment"
-import "./system/tenants"
-import "./system/status"
-import "./global/self"
 import "./global/license"
+import "./global/roles"
+import "./global/self"
+import "./global/templates"
+import "./global/users"
 import "./system/accounts"
-import "./system/restore"
+import "./system/environment"
 import "./system/logs"
+import "./system/restore"
+import "./system/status"
+import "./system/tenants"
 
 const endpointGroupsRouter = new Router()
 for (let endpoint of endpointGroupList.listAllEndpoints()) {
@@ -26,7 +26,6 @@ for (let endpoint of endpointGroupList.listAllEndpoints()) {
 
 export const routes: Router[] = [
   endpointGroupsRouter,
-  pro.users,
   pro.groups,
   pro.auditLogs,
   pro.scim,

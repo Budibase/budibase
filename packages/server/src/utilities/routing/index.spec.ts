@@ -1,10 +1,10 @@
 import { getRoutingInfo as sut } from "./index"
 
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { structures } from "@budibase/backend-core/tests"
-import { basicScreen } from "../../tests/utilities/structures"
-import { DesignDocument, Screen, WorkspaceApp } from "@budibase/types"
 import { db, ViewName } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
+import { DesignDocument, Screen, WorkspaceApp } from "@budibase/types"
+import { basicScreen } from "../../tests/utilities/structures"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 describe("getRoutingInfo", () => {
   const config = new TestConfiguration()
@@ -41,13 +41,13 @@ describe("getRoutingInfo", () => {
   }
 
   async function getRoutingInfo(path: string) {
-    return await config.doInContext(config.getAppId(), () =>
-      sut(`/${config.getAppId()}${path}`)
+    return await config.doInContext(config.getDevWorkspaceId(), () =>
+      sut(`/${config.getDevWorkspaceId()}${path}`)
     )
   }
 
   it("should return empty array when no workspace apps match", async () => {
-    const result = await config.doInContext(config.getAppId(), () =>
+    const result = await config.doInContext(config.getDevWorkspaceId(), () =>
       getRoutingInfo("/unmatched")
     )
 
@@ -61,7 +61,7 @@ describe("getRoutingInfo", () => {
     const app1Screens = await createScreens(workspaceAppId1._id, 3)
     const _app2Screens = await createScreens(workspaceAppId2._id, 2)
 
-    const result = await config.doInContext(config.getAppId(), () =>
+    const result = await config.doInContext(config.getDevWorkspaceId(), () =>
       getRoutingInfo("/app1")
     )
 
@@ -88,12 +88,12 @@ describe("getRoutingInfo", () => {
 
     // Force screens without workspaceAppId
     const unmappedScreens = await createScreens(workspaceAppId2._id, 2)
-    const appDb = db.getDB(config.getAppId())
+    const appDb = db.getDB(config.getDevWorkspaceId())
     await appDb.bulkDocs(
       unmappedScreens.map(s => ({ ...s, workspaceAppId: null as any }))
     )
 
-    const result = await config.doInContext(config.getAppId(), () =>
+    const result = await config.doInContext(config.getDevWorkspaceId(), () =>
       getRoutingInfo(defaultWorkspaceApp.url)
     )
 
@@ -119,12 +119,12 @@ describe("getRoutingInfo", () => {
 
     // Force screens without workspaceAppId
     const unmappedScreens = await createScreens(defaultWorkspaceApp._id!, 2)
-    const appDb = db.getDB(config.getAppId())
+    const appDb = db.getDB(config.getDevWorkspaceId())
     await appDb.bulkDocs(
       unmappedScreens.map(s => ({ ...s, workspaceAppId: null as any }))
     )
 
-    const result = await config.doInContext(config.getAppId(), () =>
+    const result = await config.doInContext(config.getDevWorkspaceId(), () =>
       getRoutingInfo(workspaceAppId2.url)
     )
 
@@ -143,12 +143,12 @@ describe("getRoutingInfo", () => {
   it("should create routing view and retry when view is missing", async () => {
     await createScreens(defaultWorkspaceApp._id!, 1)
 
-    const appDb = db.getDB(config.getAppId())
+    const appDb = db.getDB(config.getDevWorkspaceId())
     const designDoc = await appDb.get<DesignDocument>("_design/database")
     delete designDoc.views?.[ViewName.ROUTING]
     await appDb.put(designDoc)
 
-    const result = await config.doInContext(config.getAppId(), () =>
+    const result = await config.doInContext(config.getDevWorkspaceId(), () =>
       getRoutingInfo(defaultWorkspaceApp.url)
     )
 

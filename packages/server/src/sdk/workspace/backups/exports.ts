@@ -12,14 +12,9 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import env from "../../../environment"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { createTempFolder, streamFile } from "../../../utilities/fileSystem"
-import {
-  ATTACHMENT_DIRECTORY,
-  DB_EXPORT_FILE,
-  STATIC_APP_FILES,
-} from "./constants"
+import { streamFile } from "../../../utilities/fileSystem"
+import { ATTACHMENT_DIRECTORY, DB_EXPORT_FILE } from "./constants"
 
 const MemoryStream = require("memorystream")
 
@@ -118,28 +113,19 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 
     const prodAppId = dbCore.getProdWorkspaceID(appId)
     const appPath = `${prodAppId}/`
-    let tmpPath = createTempFolder(uuid())
-    span.addTags({ prodAppId, tmpPath })
 
-    if (!env.isTest()) {
-      // write just the static files
-      if (config?.excludeRows) {
-        for (const path of STATIC_APP_FILES) {
-          const contents = await objectStore.retrieve(
-            ObjectStoreBuckets.APPS,
-            join(appPath, path)
-          )
-          await fsp.writeFile(join(tmpPath, path), contents)
-        }
-      }
-      // get all the files
-      else {
-        tmpPath = await objectStore.retrieveDirectory(
-          ObjectStoreBuckets.APPS,
-          appPath
-        )
-      }
+    const toExclude = [/\/\..+/]
+    if (config?.excludeRows) {
+      toExclude.push(/\/attachments\/.*/)
     }
+
+    const tmpPath = await objectStore.retrieveDirectory(
+      ObjectStoreBuckets.APPS,
+      appPath,
+      toExclude
+    )
+
+    span.addTags({ prodAppId, tmpPath })
 
     const downloadedPath = join(tmpPath, appPath)
     if (fs.existsSync(downloadedPath)) {
@@ -160,18 +146,30 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     })
 
     if (config?.encryptPassword) {
-      for (let file of await fsp.readdir(tmpPath)) {
-        const path = join(tmpPath, file)
+      const processDirectory = async (dirPath: string, relativePath = "") => {
+        for (let file of await fsp.readdir(dirPath)) {
+          const fullPath = join(dirPath, file)
+          const relativeFilePath = relativePath
+            ? join(relativePath, file)
+            : file
 
-        // skip the attachments - too big to encrypt
-        if (file !== ATTACHMENT_DIRECTORY) {
-          await encryption.encryptFile(
-            { dir: tmpPath, filename: file },
-            config.encryptPassword
-          )
-          await fsp.rm(path)
+          // skip the attachments - too big to encrypt
+          if (file !== ATTACHMENT_DIRECTORY) {
+            const stats = await fsp.lstat(fullPath)
+            if (stats.isFile()) {
+              await encryption.encryptFile(
+                { dir: dirPath, filename: file },
+                config.encryptPassword!
+              )
+              await fsp.rm(fullPath)
+            } else if (stats.isDirectory()) {
+              await processDirectory(fullPath, relativeFilePath)
+            }
+          }
         }
       }
+
+      await processDirectory(tmpPath)
     }
 
     // if tar requested, return where the tarball is

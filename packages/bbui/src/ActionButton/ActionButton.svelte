@@ -85,6 +85,15 @@
   }
   .fullWidth {
     width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .fullWidth .spectrum-ActionButton-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    text-align: left;
   }
   .active,
   .active :global(i) {
