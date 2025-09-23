@@ -168,8 +168,9 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
 
   const onDocMouseUp = () => {
     const current = get(view)
-    if (current.dragging) {
-      if (current.droptarget) {
+    const hasMoveStep = Boolean(current.moveStep)
+    if (current.dragging || hasMoveStep) {
+      if (current.dragging && current.droptarget) {
         try {
           const sel = deps.getSelectedAutomation()
           const sourceBlock = sel.blockRefs?.[current.moveStep?.id as string]
