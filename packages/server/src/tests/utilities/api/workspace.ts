@@ -5,6 +5,7 @@ import {
   PublishWorkspaceResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
+  WithRequired,
   Workspace,
   type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
@@ -26,6 +27,23 @@ export class WorkspaceAPI extends TestAPI {
       files,
       expectations,
     })
+  }
+  createFromImport = async (
+    app: Omit<
+      WithRequired<CreateWorkspaceRequest, "fileToImport">,
+      "file" | "useTemplate"
+    >,
+    expectations?: Expectations
+  ): Promise<Workspace> => {
+    const res = this.request
+      .post("/api/applications")
+      .attach("fileToImport", app.fileToImport)
+      .set(await this.getHeaders())
+    // .send(app)
+    for (const [key, value] of Object.entries(app)) {
+      res.field(key, value)
+    }
+    return this._checkResponse(await res, expectations).body
   }
 
   delete = async (
