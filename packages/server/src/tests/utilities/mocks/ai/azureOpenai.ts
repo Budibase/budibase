@@ -68,7 +68,7 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
     : null
 
   const interceptor = pool.intercept({
-    path: /\/chat\/completions/,
+    path: /\/deployments\/.*?\/chat\/completions/,
     method: "POST",
   })
   interceptor.defaultReplyHeaders?.({
