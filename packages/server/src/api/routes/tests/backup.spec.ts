@@ -88,7 +88,7 @@ describe("/backups", () => {
       })
     })
 
-    it("should be able to export a workspace", async () => {
+    it("should be able to export a workspace with rows", async () => {
       const body = await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId()
       )
@@ -96,6 +96,19 @@ describe("/backups", () => {
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
       await checkExportContent(body, { includeRows: true, isEncrypted: false })
+    })
+
+    it("should be able to export a workspace without rows", async () => {
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        {
+          excludeRows: true,
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, { includeRows: false, isEncrypted: false })
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -121,7 +134,7 @@ describe("/backups", () => {
       )
     })
 
-    it("should be able to export a workspace with encryption", async () => {
+    it("should be able to export a workspace with encryption and rows", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
       const body = await config.api.backup.exportBasicBackup(
@@ -141,7 +154,7 @@ describe("/backups", () => {
       await checkExportContent(body, { isEncrypted: true, includeRows: true })
     })
 
-    it("should be able to export a workspace with encryption excluding", async () => {
+    it("should be able to export a workspace with encryption excluding rows", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
       const body = await config.api.backup.exportBasicBackup(
