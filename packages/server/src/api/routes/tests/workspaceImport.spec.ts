@@ -18,7 +18,10 @@ describe("/applications/:appId/import", () => {
     await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
-      .attach("appExport", path.join(__dirname, "data", "export.tar.gz"))
+      .attach(
+        "appExport",
+        path.join(__dirname, "data", "old-export.enc.tar.gz")
+      )
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
