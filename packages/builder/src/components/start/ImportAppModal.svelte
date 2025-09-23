@@ -1,37 +1,40 @@
-<script>
-  import {
-    ModalContent,
-    Toggle,
-    Input,
-    Layout,
-    Dropzone,
-    notifications,
-    Body,
-  } from "@budibase/bbui"
+<script lang="ts">
   import { API } from "@/api"
   import { initialise } from "@/stores/builder"
+  import {
+    Body,
+    Dropzone,
+    Input,
+    Layout,
+    ModalContent,
+    notifications,
+    Toggle,
+  } from "@budibase/bbui"
+  import type { ImportToUpdateWorkspaceRequest } from "@budibase/types"
 
-  export let app
+  export let app: {
+    _id: string
+    name: string
+  }
 
+  let encrypted: boolean = false
+  let password: string
+  let file: File
   $: disabled = (encrypted && !password) || !file
-  let encrypted = false,
-    password
-  let file
 
   async function updateApp() {
     try {
-      let data = new FormData()
-      data.append("appExport", file)
+      const body: ImportToUpdateWorkspaceRequest = {}
       if (encrypted) {
-        data.append("encryptionPassword", password.trim())
+        body.encryptionPassword = password.trim()
       }
-      const appId = app.devId
-      await API.updateAppFromExport(appId, data)
+      const appId = app._id
+      await API.updateAppFromExport(appId, body, file)
       const pkg = await API.fetchAppPackage(appId)
       await initialise(pkg)
 
       notifications.success("Workspace updated successfully")
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(`Failed to update workspace - ${err.message || err}`)
     }
   }
