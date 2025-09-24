@@ -1,6 +1,9 @@
 import { context, DesignDocuments } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
-import { getAppMigrationVersion, updateAppMigrationMetadata } from ".."
+import {
+  getWorkspaceMigrationVerions,
+  updateWorkspaceMigrationMetadata,
+} from ".."
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 import { processMigrations } from "../migrationsProcessor"
@@ -13,13 +16,13 @@ describe("migration integrity", () => {
     await config.init()
 
     async function setCurrentVersion(currentMigrationId: string) {
-      for (const appId of [
+      for (const workspaceId of [
         config.getDevWorkspaceId(),
         config.getProdWorkspaceId(),
       ]) {
-        await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+        await config.doInContext(workspaceId, async () => {
+          await updateWorkspaceMigrationMetadata({
+            workspaceId,
             version: currentMigrationId,
           })
         })
@@ -35,8 +38,8 @@ describe("migration integrity", () => {
       }
     }
 
-    const appId = config.getDevWorkspaceId()
-    await config.doInContext(appId, async () => {
+    const workspaceId = config.getDevWorkspaceId()
+    await config.doInContext(workspaceId, async () => {
       await setCurrentVersion("")
       const devDb = context.getWorkspaceDB()
       const prodDb = context.getProdWorkspaceDB()
@@ -45,19 +48,25 @@ describe("migration integrity", () => {
         const latestMigration =
           migrationsToApply[migrationsToApply.length - 1].id
 
-        const currentVersion = await getAppMigrationVersion(appId)
+        const currentVersion = await getWorkspaceMigrationVerions(workspaceId)
 
-        await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        await processMigrations(workspaceId, migrationsToApply)
+        expect(await getWorkspaceMigrationVerions(workspaceId)).toBe(
+          latestMigration
+        )
 
         const afterMigrationDevDocs = await getDocs(devDb)
         const afterMigrationProdDocs = await getDocs(prodDb)
 
         await setCurrentVersion(currentVersion)
-        expect(await getAppMigrationVersion(appId)).not.toBe(latestMigration)
+        expect(await getWorkspaceMigrationVerions(workspaceId)).not.toBe(
+          latestMigration
+        )
 
-        await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        await processMigrations(workspaceId, migrationsToApply)
+        expect(await getWorkspaceMigrationVerions(workspaceId)).toBe(
+          latestMigration
+        )
 
         const afterRerunDevDocs = await getDocs(devDb)
         const afterRerunProdDocs = await getDocs(prodDb)
