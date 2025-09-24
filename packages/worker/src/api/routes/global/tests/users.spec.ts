@@ -195,7 +195,7 @@ describe("/api/global/users", () => {
       expect(res.body.info.apps[appId]).toBe(role)
     })
 
-    it("should allow global builders to edit invites for any app", async () => {
+    it("should not allow builders to edit invites for any app", async () => {
       const { code } = await config.api.users.sendUserInvite(
         sendMailMock,
         structures.users.newEmail()
@@ -213,12 +213,11 @@ describe("/api/global/users", () => {
       })
 
       await config.login(builderUser)
-      const res = await config.withUser(builderUser, async () =>
+      await config.withUser(builderUser, async () =>
         config.withApp(appId, () =>
-          config.api.users.addWorkspaceIdToInvite(code, role, 200)
+          config.api.users.addWorkspaceIdToInvite(code, role, 403)
         )
       )
-      expect(res.body.info.apps[appId]).toBe(role)
     })
   })
 
