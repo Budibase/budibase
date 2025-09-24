@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, setContext, tick } from "svelte"
+  import { onMount, onDestroy, setContext } from "svelte"
   import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
@@ -80,45 +80,13 @@
   let changingStatus = false
 
   let initialViewportApplied = false
-  let isApplyingViewport = false
   let preserveViewport = false
   let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  const { getViewport, setViewport, getNodesBounds } = useSvelteFlow()
-
-  const fitViewportTop = async () => {
-    if (isApplyingViewport) return
-    isApplyingViewport = true
-    try {
-      await tick()
-      const currentNodes = get(nodes)
-      if (!currentNodes?.length || !paneEl) return
-
-      const bounds = getNodesBounds(currentNodes)
-      const rect = paneEl.getBoundingClientRect()
-
-      const padding = 40
-      const widthWithPadding = bounds.width + padding * 2
-
-      let zoom = rect.width / (widthWithPadding || rect.width)
-      if (zoom > 1) zoom = 0.8
-      if (zoom < 0.01) zoom = 0.01 // Allow much smaller zoom for large graphs
-
-      const x = rect.width / 2 - (bounds.x + bounds.width / 2) * zoom
-      const y =
-        layoutDirection === "LR"
-          ? rect.height / 2 - (bounds.y + bounds.height / 2) * zoom
-          : padding - bounds.y * zoom
-
-      setViewport({ x, y, zoom })
-      initialViewportApplied = true
-    } finally {
-      isApplyingViewport = false
-    }
-  }
+  const { getViewport, setViewport, fitView } = useSvelteFlow()
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -278,7 +246,7 @@
   }
 
   // When nodes are available and we haven't applied our custom viewport yet, align the top
-  $: $nodes?.length && !initialViewportApplied && fitViewportTop()
+  $: $nodes?.length && !initialViewportApplied && fitView({ maxZoom: 1 })
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
@@ -314,6 +282,7 @@
         ...automation,
         layoutDirection,
       })
+      fitView()
     } catch (error) {
       notifications.error("Unable to save layout direction")
     }

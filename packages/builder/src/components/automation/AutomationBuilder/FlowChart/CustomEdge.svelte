@@ -4,6 +4,7 @@
     EdgeLabelRenderer,
     BaseEdge,
     getStraightPath,
+    useSvelteFlow,
     type Position,
   } from "@xyflow/svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
@@ -31,6 +32,7 @@
   $: automation = $selectedAutomation?.data
 
   const view: any = getContext("draggableView")
+  const flow = useSvelteFlow()
 
   $: basePath = getSmoothStepPath({
     sourceX,
@@ -120,6 +122,7 @@
     if (targetRef && automation) {
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
     }
+    flow.fitView()
   }
 </script>
 
