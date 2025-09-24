@@ -47,6 +47,9 @@ describe("/workspaceApp", () => {
 
   describe("/duplicate", () => {
     it("should duplicate the app", async () => {
+      // there was a bug where the first app could have its screens copied
+      // ensuring theres more than two apps in the workspace was part of fixing this bug
+      // even though no direct assertions are being made against data created for this app.
       const { workspaceApp: firstApp } = await api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "First App",
@@ -116,7 +119,9 @@ describe("/workspaceApp", () => {
 
       // ensure original isnt messed with
       const originalScreensAfterDupe = await getAppScrens(originalApp._id)
-      expect(originalScreens.length).toBe(originalScreensAfterDupe.length)
+      expect(JSON.stringify(originalScreens)).toBe(
+        JSON.stringify(originalScreensAfterDupe)
+      )
     })
   })
 })
