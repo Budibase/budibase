@@ -515,8 +515,8 @@ async function performWorkspaceCreate(
         await processMigrations(workspaceId)
       } else if (!isImport) {
         // Initialise the app migration version as the latest one
-        await workspaceMigrations.updateAppMigrationMetadata({
-          appId: workspaceId,
+        await workspaceMigrations.updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: latestMigrationId,
           skipHistory: true,
         })

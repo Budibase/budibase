@@ -1,6 +1,6 @@
 import { context, Header } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
-import { AppMigration } from ".."
+import { WorkspaceMigration } from ".."
 import * as setup from "../../api/routes/tests/utilities"
 import { setEnv, withEnv } from "../../environment"
 import sdk from "../../sdk"
@@ -8,8 +8,8 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { MIGRATIONS } from "../migrations"
 import { processMigrations } from "../migrationsProcessor"
 import {
-  getAppMigrationVersion,
-  updateAppMigrationMetadata,
+  getWorkspaceMigrationVerions,
+  updateWorkspaceMigrationMetadata,
 } from "../workspaceMigrationMetadata"
 
 function generateMigrationId() {
@@ -31,7 +31,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await config.newTenant()
   })
 
-  async function runMigrations(migrations: AppMigration[]) {
+  async function runMigrations(migrations: WorkspaceMigration[]) {
     const fromAppId = fromProd
       ? config.getProdWorkspaceId()
       : config.getDevWorkspaceId()
@@ -46,13 +46,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       config.getProdWorkspaceId(),
     ]) {
       expect(
-        await config.doInContext(appId, () => getAppMigrationVersion(appId))
+        await config.doInContext(appId, () =>
+          getWorkspaceMigrationVerions(appId)
+        )
       ).toBe(expectedVersion)
     }
   }
 
   it("running migrations will update the latest applied migration", async () => {
-    const testMigrations: AppMigration[] = [
+    const testMigrations: WorkspaceMigration[] = [
       { id: generateMigrationId(), func: async () => {} },
       { id: generateMigrationId(), func: async () => {} },
       { id: generateMigrationId(), func: async () => {} },
@@ -73,7 +75,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       return undefined as any
     })
 
-    const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+    const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
       (_, i) => ({
         id: generateMigrationId(),
         func: async () => {
@@ -103,14 +105,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   it("runs all the migrations in doInAppMigrationContext", async () => {
     let migrationCallPerApp: Record<string, number> = {}
 
-    const testMigrations = Array.from({ length: 3 }).map<AppMigration>(_ => ({
-      id: generateMigrationId(),
-      func: async () => {
-        expect(context.getCurrentContext()?.isMigrating).toBe(true)
-        migrationCallPerApp[context.getWorkspaceId()!] ??= 0
-        migrationCallPerApp[context.getWorkspaceId()!]++
-      },
-    }))
+    const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
+      _ => ({
+        id: generateMigrationId(),
+        func: async () => {
+          expect(context.getCurrentContext()?.isMigrating).toBe(true)
+          migrationCallPerApp[context.getWorkspaceId()!] ??= 0
+          migrationCallPerApp[context.getWorkspaceId()!]++
+        },
+      })
+    )
 
     await runMigrations(testMigrations)
 
@@ -123,7 +127,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   it("no context can be initialised within a migration", async () => {
-    const testMigrations: AppMigration[] = [
+    const testMigrations: WorkspaceMigration[] = [
       {
         id: generateMigrationId(),
         func: async () => {
@@ -143,7 +147,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("array index-based migration processing", () => {
     it("should run migrations in correct order based on array position", async () => {
       const executionOrder: string[] = []
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: `migration_a`,
           func: async () => {
@@ -181,7 +185,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     it("should skip migrations that come before current version in array", async () => {
       const executionOrder: string[] = []
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
@@ -209,8 +213,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         config.getProdWorkspaceId(),
       ]) {
         await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+          await updateWorkspaceMigrationMetadata({
+            workspaceId: appId,
             version: testMigrations[0].id,
           })
         })
@@ -228,7 +232,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     it("should handle when current version is not found in migrations array", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -241,8 +245,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       const appId = config.getDevWorkspaceId()
       await config.doInContext(appId, async () => {
         // Set a version that doesn't exist in the migrations array
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "nonexistent_version",
         })
       })
@@ -260,7 +264,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     it("should not run any migrations when current version is the last in array", async () => {
       const executionOrder: number[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -285,7 +289,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("disabled migrations", () => {
     it("should stop processing when encountering a disabled migration", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -307,7 +311,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     it("should not run any migrations if the first pending migration is disabled", async () => {
       const executionOrder: number[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -336,7 +340,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
 
     it("should sync dev workspace after migrating published workspace", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
@@ -358,8 +362,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         config.getProdWorkspaceId(),
       ]) {
         await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+          await updateWorkspaceMigrationMetadata({
+            workspaceId: appId,
             version: testMigrations[0].id,
           })
         })
@@ -373,7 +377,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
 
     it("should update migration metadata for both prod and dev workspaces", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {},
@@ -390,7 +394,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     !fromProd &&
       it("should migrate dev workspace when workspace is not published", async () => {
         const executionOrder: string[] = []
-        const testMigrations: AppMigration[] = [
+        const testMigrations: WorkspaceMigration[] = [
           {
             id: generateMigrationId(),
             func: async () => {
@@ -426,20 +430,20 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       it("should sync only dev workspace", async () => {
         const executionOrder: string[] = []
-        const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
-          (_, i) => ({
-            id: generateMigrationId(),
-            func: async () => {
-              const db = context.getWorkspaceDB()
-              executionOrder.push(`migration ${i + 1} - ${db.name}`)
-            },
-          })
-        )
+        const testMigrations = Array.from({
+          length: 3,
+        }).map<WorkspaceMigration>((_, i) => ({
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getWorkspaceDB()
+            executionOrder.push(`migration ${i + 1} - ${db.name}`)
+          },
+        }))
 
         const appId = config.getDevWorkspaceId()
         await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+          await updateWorkspaceMigrationMetadata({
+            workspaceId: appId,
             version: testMigrations[0].id,
           })
         })
@@ -458,7 +462,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
   describe("resilience and recovery", () => {
     it("should not update migration version if migration function fails", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: jest
@@ -490,7 +494,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
 
     it("should recover if migration function runs on prod but fails in dev", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: jest
@@ -529,7 +533,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       const migration1Id = generateMigrationId()
       const migration2Id = generateMigrationId()
 
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: migration1Id,
           func: async () => {
@@ -596,7 +600,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("out-of-sync migration handling", () => {
     it("should handle dev migration version ahead of prod", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -610,15 +614,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(prodAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: prodAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: prodAppId,
           version: testMigrations[0].id,
         })
       })
 
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[1].id,
         })
       })
@@ -634,14 +638,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should end up on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[2].id)
       }
     })
 
     it("should handle prod migration version ahead of dev", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 4 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 4 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -655,15 +661,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[0].id,
         })
       })
 
       await config.doInContext(prodAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: prodAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: prodAppId,
           version: testMigrations[2].id,
         })
       })
@@ -680,14 +686,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should end up on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[testMigrations.length - 1].id)
       }
     })
 
     it("should only run migrations needed by each workspace individually", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -701,8 +709,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       // Set dev app to already be on the latest migration, prod app needs both
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[1].id,
         })
       })
@@ -718,7 +726,9 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should be on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[1].id)
       }
     })
