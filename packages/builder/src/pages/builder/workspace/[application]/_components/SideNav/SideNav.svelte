@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Context, Icon, Body, Link, Divider } from "@budibase/bbui"
+  import {
+    Context,
+    Icon,
+    Body,
+    Link,
+    Divider,
+    TooltipPosition,
+    TooltipType,
+  } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
@@ -28,6 +36,7 @@
     type UIWorkspaceApp,
     type ViewV2,
     type WorkspaceFavourite,
+    PublishResourceState,
     WorkspaceResource,
   } from "@budibase/types"
   import { derived, type Readable } from "svelte/store"
@@ -39,6 +48,7 @@
   interface UIFavouriteResource {
     name: string
     icon: string
+    workspaceApp?: UIWorkspaceApp
   }
   interface AllResourceStores {
     automations: UIAutomation[]
@@ -127,12 +137,23 @@
           }
 
           if (id && item.name) {
-            lookup[id] = {
+            const resource: UIFavouriteResource = {
               name: item.name,
               icon: isRestQuery
                 ? "globe"
                 : ResourceIcons[favourite?.resourceType],
             }
+
+            const isWorkspaceAppFavourite =
+              favourite?.resourceType === WorkspaceResource.WORKSPACE_APP
+            const hasPublishStatus =
+              isWorkspaceAppFavourite && "publishStatus" in item
+
+            if (hasPublishStatus) {
+              resource.workspaceApp = item as UIWorkspaceApp
+            }
+
+            lookup[id] = resource
           }
         })
 
@@ -174,6 +195,39 @@
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
+  }
+
+  const sanitiseSegment = (segment?: string) => {
+    if (!segment) {
+      return ""
+    }
+    return segment.startsWith("/") ? segment : `/${segment}`
+  }
+
+  const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp) => {
+    const baseUrl = sanitiseSegment($appStore.url)
+    if (!workspaceApp || !baseUrl) {
+      return null
+    }
+
+    const workspaceAppUrl = sanitiseSegment(workspaceApp.url)
+    const combined = `${baseUrl}${workspaceAppUrl}`.replace(/\/$/, "")
+    if (!combined) {
+      return null
+    }
+
+    return `/app${combined}`
+  }
+
+  const openLiveWorkspaceApp = (liveUrl?: string | null) => {
+    if (!liveUrl) {
+      console.error("Could not resolve live workspace app URL")
+      return
+    }
+    if (typeof window === "undefined") {
+      return
+    }
+    window.open(liveUrl, "_blank", "noopener")
   }
 
   const unPin = () => {
@@ -320,7 +374,18 @@
                   name: favourite.resourceId,
                   icon: undefined,
                 }}
-                <div class="link" title={lookup?.name}>
+                {@const workspaceApp = lookup?.workspaceApp}
+                {@const showLiveLink =
+                  favourite.resourceType === WorkspaceResource.WORKSPACE_APP &&
+                  workspaceApp &&
+                  workspaceApp.publishStatus?.state ===
+                    PublishResourceState.PUBLISHED &&
+                  !workspaceApp.disabled}
+                {@const liveUrl =
+                  showLiveLink && workspaceApp
+                    ? buildLiveWorkspaceAppUrl(workspaceApp)
+                    : null}
+                <div class="link">
                   <SideNavLink
                     icon={lookup?.icon}
                     text={lookup?.name}
@@ -332,7 +397,30 @@
                     }}
                   >
                     <div slot="actions">
-                      <FavouriteResourceButton {favourite} />
+                      <div class="action-buttons">
+                        {#if liveUrl}
+                          <button
+                            type="button"
+                            class="live-app-link"
+                            aria-label="Open live app"
+                            on:click|stopPropagation|preventDefault={() =>
+                              openLiveWorkspaceApp(liveUrl)
+                            }
+                          >
+                          <Icon
+                            name="globe-simple"
+                            size="S"
+                            hoverable
+                            color="#fff"
+                            hoverColor="#fff"
+                            tooltip="Open live app"
+                            tooltipType={TooltipType.Info}
+                            tooltipPosition={TooltipPosition.Top}
+                            />
+                          </button>
+                        {/if}
+                        <FavouriteResourceButton {favourite} />
+                      </div>
                     </div>
                   </SideNavLink>
                 </div>
@@ -530,6 +618,21 @@
     padding: 12px;
     gap: 8px;
     transition: all 130ms ease-out;
+  }
+
+  .live-app-link {
+    border: none;
+    background: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   @container (max-width: 239px) {
