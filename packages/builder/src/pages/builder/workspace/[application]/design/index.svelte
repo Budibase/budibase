@@ -92,7 +92,45 @@
     }
   }
 
+  const sanitiseSegment = (segment?: string) => {
+    if (!segment) {
+      return ""
+    }
+    return segment.startsWith("/") ? segment : `/${segment}`
+  }
+
+  const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
+    if (
+      !workspaceApp ||
+      workspaceApp.publishStatus?.state !== PublishResourceState.PUBLISHED ||
+      workspaceApp.disabled
+    ) {
+      return null
+    }
+
+    const baseUrl = sanitiseSegment($appStore.url)
+    if (!baseUrl) {
+      return null
+    }
+
+    const workspaceAppUrl = sanitiseSegment(workspaceApp.url)
+    const combined = `${baseUrl}${workspaceAppUrl}`.replace(/\/$/, "")
+    if (!combined) {
+      return null
+    }
+
+    return `/app${combined}`
+  }
+
+  const openLiveWorkspaceApp = (liveUrl: string | null) => {
+    if (!liveUrl || typeof window === "undefined") {
+      return
+    }
+    window.open(liveUrl, "_blank", "noopener")
+  }
+
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
+    const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
@@ -116,6 +154,12 @@
         name: "Edit",
         visible: true,
         callback: () => workspaceAppModal.show(),
+      },
+      {
+        icon: "globe-simple",
+        name: "Open live app",
+        visible: !!liveUrl,
+        callback: () => openLiveWorkspaceApp(liveUrl),
       },
       pause,
       {
