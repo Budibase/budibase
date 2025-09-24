@@ -202,7 +202,7 @@ export const publishWorkspace = async function (
       const devId = dbCore.getDevWorkspaceID(appId)
       const prodId = dbCore.getProdWorkspaceID(appId)
 
-      if (!(await sdk.workspaces.isAppPublished(prodId))) {
+      if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -222,7 +222,7 @@ export const publishWorkspace = async function (
         }
       }
 
-      const isPublished = await sdk.workspaces.isAppPublished(prodId)
+      const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {

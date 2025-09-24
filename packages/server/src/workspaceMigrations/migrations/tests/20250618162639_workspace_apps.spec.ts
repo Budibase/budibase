@@ -1,12 +1,12 @@
 import { structures } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import sdk from "../../../sdk"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250618162639_workspace_apps"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20250618162639_workspace_apps",
     func: migration,
@@ -31,8 +31,8 @@ describe.each([
       config.getProdWorkspaceId(),
     ]) {
       await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "",
         })
 

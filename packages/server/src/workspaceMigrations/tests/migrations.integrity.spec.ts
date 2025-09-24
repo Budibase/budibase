@@ -1,6 +1,9 @@
 import { context, DesignDocuments } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
-import { getAppMigrationVersion, updateAppMigrationMetadata } from ".."
+import {
+  getWorkspaceMigrationVerions,
+  updateWorkspaceMigrationMetadata,
+} from ".."
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 import { processMigrations } from "../migrationsProcessor"
@@ -18,8 +21,8 @@ describe("migration integrity", () => {
         config.getProdWorkspaceId(),
       ]) {
         await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+          await updateWorkspaceMigrationMetadata({
+            workspaceId: appId,
             version: currentMigrationId,
           })
         })
@@ -45,19 +48,21 @@ describe("migration integrity", () => {
         const latestMigration =
           migrationsToApply[migrationsToApply.length - 1].id
 
-        const currentVersion = await getAppMigrationVersion(appId)
+        const currentVersion = await getWorkspaceMigrationVerions(appId)
 
         await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        expect(await getWorkspaceMigrationVerions(appId)).toBe(latestMigration)
 
         const afterMigrationDevDocs = await getDocs(devDb)
         const afterMigrationProdDocs = await getDocs(prodDb)
 
         await setCurrentVersion(currentVersion)
-        expect(await getAppMigrationVersion(appId)).not.toBe(latestMigration)
+        expect(await getWorkspaceMigrationVerions(appId)).not.toBe(
+          latestMigration
+        )
 
         await processMigrations(appId, migrationsToApply)
-        expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
+        expect(await getWorkspaceMigrationVerions(appId)).toBe(latestMigration)
 
         const afterRerunDevDocs = await getDocs(devDb)
         const afterRerunProdDocs = await getDocs(prodDb)

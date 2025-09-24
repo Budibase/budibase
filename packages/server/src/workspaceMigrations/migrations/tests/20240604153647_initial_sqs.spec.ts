@@ -5,7 +5,7 @@ import {
   SQLiteDefinition,
   SQLiteType,
 } from "@budibase/types"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import {
   generateJunctionTableID,
@@ -17,7 +17,7 @@ import { basicTable } from "../../../tests/utilities/structures"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20240604153647_initial_sqs",
     func: migration,
@@ -85,8 +85,8 @@ describe.each([
       config.getProdWorkspaceId(),
     ]) {
       await config.doInTenant(async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: appId,
           version: "",
         })
       })
