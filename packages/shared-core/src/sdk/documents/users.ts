@@ -16,7 +16,7 @@ export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
   }
-  if (!appId && user.builder?.global) {
+  if (user.builder?.global) {
     return true
   } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
     return true
@@ -42,6 +42,25 @@ export function isAdmin(user?: UserAdminInfo): boolean {
     return false
   }
   return hasAdminPermissions(user)
+}
+
+export function isAdminOrWorkspaceBuilder(
+  user: UserBuilderInfo & UserAdminInfo,
+  appId: string
+): boolean {
+  if (!user) {
+    return false
+  }
+
+  if (isAdmin(user)) {
+    return true
+  }
+
+  if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+    return true
+  }
+
+  return false
 }
 
 export function isAdminOrBuilder(
