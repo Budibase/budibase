@@ -40,7 +40,10 @@ class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
         )
       })
 
-      const backgroundColor = getThemeBackgroundColor(theme, DefaultBuilderTheme)
+      const backgroundColor = getThemeBackgroundColor(
+        theme,
+        DefaultBuilderTheme
+      )
       document.documentElement.style.backgroundColor = backgroundColor
       document.documentElement.style.colorScheme = isDarkTheme(theme)
         ? "dark"

@@ -9,7 +9,10 @@ import {
   utils,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
-import { InvalidFileExtensions, getThemeBackgroundColor } from "@budibase/shared-core"
+import {
+  InvalidFileExtensions,
+  getThemeBackgroundColor,
+} from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
 import {
   BudibaseAppProps,
