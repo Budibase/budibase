@@ -1134,9 +1134,8 @@ describe("/applications", () => {
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
-      const prodAppId = app.appId.replace("_dev", "")
       nock("http://localhost:10000")
-        .delete(`/api/global/roles/${prodAppId}`)
+        .delete(`/api/global/roles/${app.appId}`)
         .reply(200, {})
 
       await config.api.workspace.delete(app.appId)
@@ -1168,9 +1167,8 @@ describe("/applications", () => {
         func: migrationMock,
       })
 
-      const prodAppId = app.appId.replace("_dev", "")
       nock("http://localhost:10000")
-        .delete(`/api/global/roles/${prodAppId}`)
+        .delete(`/api/global/roles/${app.appId}`)
         .reply(200, {})
 
       expect(migrationMock).not.toHaveBeenCalled()
