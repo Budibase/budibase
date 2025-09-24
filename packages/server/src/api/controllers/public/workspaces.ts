@@ -97,7 +97,7 @@ export async function publish(ctx: UserCtx, next: Next) {
 
 // get licensed endpoints from pro
 export const importToApp = proSdk.publicApi.applications.buildImportFn(
-  controller.importToApp
+  controller.importToWorkspace
 )
 export const exportApp = proSdk.publicApi.applications.buildExportFn(
   backupController.exportAppDump
