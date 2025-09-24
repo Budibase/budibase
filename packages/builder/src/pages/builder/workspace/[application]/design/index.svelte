@@ -124,6 +124,12 @@
         visible: true,
         callback: () => confirmDeleteDialog.show(),
       },
+      {
+        icon: "export",
+        name: "Copy to another workspace",
+        visible: true,
+        callback: () => confirmDeleteDialog.show(),
+      },
     ]
   }
 
