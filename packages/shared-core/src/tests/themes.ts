@@ -34,13 +34,19 @@ describe("theme validity checking", () => {
 
 describe("theme helpers", () => {
   it("returns background colors for known themes", () => {
-    expect(getThemeBackgroundColor(Theme.DARKEST)).toStrictEqual("rgb(30, 30, 30)")
+    expect(getThemeBackgroundColor(Theme.DARKEST)).toStrictEqual(
+      "rgb(30, 30, 30)"
+    )
     expect(getThemeBackgroundColor(Theme.NORD)).toStrictEqual("#3b4252")
   })
 
   it("falls back to defaults when theme is invalid", () => {
-    expect(getThemeBackgroundColor(undefined, Theme.NORD)).toStrictEqual("#3b4252")
-    expect(getThemeBackgroundColor("invalid" as Theme)).toStrictEqual("rgb(255, 255, 255)")
+    expect(getThemeBackgroundColor(undefined, Theme.NORD)).toStrictEqual(
+      "#3b4252"
+    )
+    expect(getThemeBackgroundColor("invalid" as Theme)).toStrictEqual(
+      "rgb(255, 255, 255)"
+    )
   })
 
   it("detects dark themes", () => {
