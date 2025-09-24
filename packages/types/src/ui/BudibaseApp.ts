@@ -18,4 +18,5 @@ export interface BudibaseAppProps {
   headAppScripts?: string
   bodyAppScripts?: string
   recaptchaKey?: string
+  backgroundColor?: string
 }

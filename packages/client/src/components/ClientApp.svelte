@@ -9,7 +9,11 @@
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
-  import { getThemeClassNames } from "@budibase/shared-core"
+  import {
+    getThemeBackgroundColor,
+    getThemeClassNames,
+    isDarkTheme,
+  } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -105,6 +109,19 @@
       }
     }
   }
+
+  const applyGlobalThemeBackground = theme => {
+    const backgroundColor = getThemeBackgroundColor(theme)
+    document.documentElement.style.backgroundColor = backgroundColor
+    document.documentElement.style.colorScheme = isDarkTheme(theme)
+      ? "dark"
+      : "light"
+    if (document.body) {
+      document.body.style.backgroundColor = backgroundColor
+    }
+  }
+
+  $: applyGlobalThemeBackground($themeStore.theme)
 
   let fontsLoaded = false
 

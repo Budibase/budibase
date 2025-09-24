@@ -1,5 +1,25 @@
-import { ThemeOptions, ThemeClassPrefix } from "./constants/themes"
+import {
+  ThemeOptions,
+  ThemeClassPrefix,
+  DefaultAppTheme,
+} from "./constants/themes"
 import { Theme } from "@budibase/types"
+
+const themeBackgroundColors: Record<Theme, string> = {
+  [Theme.LIGHTEST]: "rgb(255, 255, 255)",
+  [Theme.LIGHT]: "rgb(255, 255, 255)",
+  [Theme.DARK]: "rgb(50, 50, 50)",
+  [Theme.DARKEST]: "rgb(30, 30, 30)",
+  [Theme.NORD]: "#3b4252",
+  [Theme.MIDNIGHT]: "hsl(220, 10%, 17%)",
+}
+
+const darkThemes = new Set<Theme>([
+  Theme.DARK,
+  Theme.DARKEST,
+  Theme.NORD,
+  Theme.MIDNIGHT,
+])
 
 // Gets the CSS class names for the specified theme
 export const getThemeClassNames = (theme?: Theme): string => {
@@ -41,4 +61,17 @@ export const ensureValidTheme = (
     }
   }
   return theme
+}
+
+export const getThemeBackgroundColor = (
+  theme?: Theme,
+  fallback: Theme = DefaultAppTheme
+): string => {
+  const validTheme = ensureValidTheme(theme, fallback)
+  return themeBackgroundColors[validTheme] ?? themeBackgroundColors[fallback]
+}
+
+export const isDarkTheme = (theme?: Theme): boolean => {
+  const validTheme = ensureValidTheme(theme, DefaultAppTheme)
+  return darkThemes.has(validTheme)
 }
