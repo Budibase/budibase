@@ -404,18 +404,17 @@
                             class="live-app-link"
                             aria-label="Open live app"
                             on:click|stopPropagation|preventDefault={() =>
-                              openLiveWorkspaceApp(liveUrl)
-                            }
+                              openLiveWorkspaceApp(liveUrl)}
                           >
-                          <Icon
-                            name="globe-simple"
-                            size="S"
-                            hoverable
-                            color="#fff"
-                            hoverColor="#fff"
-                            tooltip="Open live app"
-                            tooltipType={TooltipType.Info}
-                            tooltipPosition={TooltipPosition.Top}
+                            <Icon
+                              name="globe-simple"
+                              size="S"
+                              hoverable
+                              color="#fff"
+                              hoverColor="#fff"
+                              tooltip="Open live app"
+                              tooltipType={TooltipType.Info}
+                              tooltipPosition={TooltipPosition.Top}
                             />
                           </button>
                         {/if}
