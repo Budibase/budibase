@@ -15,7 +15,6 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
       _styles: {
         normal: {
           "min-height": "100vh",
-          display: "flex",
           "align-items": "center",
           "justify-content": "center",
           padding: "4rem",
@@ -43,8 +42,6 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               display: "flex",
               "flex-direction": "column",
               gap: "1.5rem",
-              "min-height": "900px",
-              height: "fit-content",
               "border-width": "1px",
               "border-color": "#E1E1E1",
               "border-style": "solid",
@@ -81,7 +78,7 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               },
               size: "24px",
               _instanceName: "Welcome Title",
-              text: "# Welcome to Budibase, the open source app builder.",
+              text: "# Welcome to Budibase",
             },
             {
               _id: "c09edf7de69be44ce8f0215c3f62e43a8",
@@ -138,9 +135,7 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
                       _component: "@budibase/standard-components/textv2",
                       _styles: {
                         normal: {
-                          "font-size": "1.1rem",
                           color: "#4b5563",
-                          "line-height": "1.5",
                         },
                         hover: {},
                         active: {},
@@ -252,20 +247,53 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
               ],
             },
             {
-              _id: "c09edf7de69be44ce8f0215c3f62e43b1",
-              _component: "@budibase/standard-components/textv2",
+              _id: "c09edf7de69be44ce8f0215c3f62e43b1group",
+              _component: "@budibase/standard-components/container",
+              layout: "flex",
+              direction: "column",
               _styles: {
                 normal: {
-                  "font-size": "1.25rem",
-                  "font-weight": "600",
-                  color: "#111827",
+                  display: "flex",
+                  "flex-direction": "column",
+                  gap: "0.5rem",
                 },
                 hover: {},
                 active: {},
+                selected: {},
               },
-              size: "18px",
-              _instanceName: "Important Docs Title",
-              text: "### Important docs to help you get started",
+              _instanceName: "Important Docs Header",
+              _children: [
+                {
+                  _id: "c09edf7de69be44ce8f0215c3f62e43b1",
+                  _component: "@budibase/standard-components/textv2",
+                  _styles: {
+                    normal: {
+                      "font-size": "1.25rem",
+                      "font-weight": "600",
+                      color: "#111827",
+                    },
+                    hover: {},
+                    active: {},
+                  },
+                  size: "18px",
+                  _instanceName: "Important Docs Title",
+                  text: "### Important docs to help you get started",
+                },
+                {
+                  _id: "c09edf7de69be44ce8f0215c3f62e43b1a",
+                  _component: "@budibase/standard-components/textv2",
+                  _styles: {
+                    normal: {
+                      color: "#589bf9ff",
+                    },
+                    hover: {},
+                    active: {},
+                  },
+                  size: "18px",
+                  _instanceName: "Important Docs Instruction",
+                  text: "To open the links below, click the preview button above.",
+                },
+              ],
             },
             {
               _id: "c09edf7de69be44ce8f0215c3f62e43b2",
@@ -716,11 +744,11 @@ export function createOnboardingWelcomeScreen(workspaceAppId: string): Screen {
           },
           _instanceName: "Onboarding Background Embed",
           embed:
-            "<style>\n  .main-wrapper {\n    background-color: rgb(240 238 230 / 1)\n  }\n  .grid {\n    background-color: rgb(240 238 230 / 1) !important\n  }\n</style>",
+            "<style>\n  .main-wrapper {\n    background-color: rgb(240 238 230 / 1)\n  }\n  .screenslot-dom > .component > .flex-container {\n    background-color: rgb(240 238 230 / 1) !important\n  }\n .grid {\n    background-color: rgb(240 238 230 / 1) !important\n  }\n</style>",
         },
       ],
       _instanceName: "Onboarding Welcome",
-      layout: "grid",
+      layout: "flex",
       direction: "column",
       hAlign: "stretch",
       vAlign: "top",
