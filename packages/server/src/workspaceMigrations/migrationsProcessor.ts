@@ -65,7 +65,7 @@ async function syncDevApp(devWorkspaceId: string): Promise<void> {
       appId: devWorkspaceId,
     })
     await context.doInWorkspaceMigrationContext(devWorkspaceId, async () => {
-      await sdk.workspaces.syncApp(devWorkspaceId)
+      await sdk.workspaces.syncWorkspace(devWorkspaceId)
       console.log(`Workspace synchronized for dev "${devWorkspaceId}"`)
     })
   })

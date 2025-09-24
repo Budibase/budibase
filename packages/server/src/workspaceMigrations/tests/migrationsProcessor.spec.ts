@@ -69,7 +69,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     const executionOrder: string[] = []
     let syncCallCount = 0
 
-    jest.spyOn(sdk.workspaces, "syncApp").mockImplementation(async () => {
+    jest.spyOn(sdk.workspaces, "syncWorkspace").mockImplementation(async () => {
       syncCallCount++
       executionOrder.push(`sync-${syncCallCount}`)
       return undefined as any
@@ -333,10 +333,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   describe("published workspace handling", () => {
-    let spySyncApp: jest.SpyInstance
+    let spySyncWorkspace: jest.SpyInstance
 
     beforeEach(() => {
-      spySyncApp = jest.spyOn(sdk.workspaces, "syncApp")
+      spySyncWorkspace = jest.spyOn(sdk.workspaces, "syncWorkspace")
     })
 
     it("should sync dev workspace after migrating published workspace", async () => {
@@ -368,12 +368,12 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           })
         })
       }
-      spySyncApp.mockClear()
+      spySyncWorkspace.mockClear()
 
       await runMigrations(testMigrations)
 
-      expect(spySyncApp).toHaveBeenCalledTimes(2)
-      expect(spySyncApp).toHaveBeenCalledWith(config.getDevWorkspaceId())
+      expect(spySyncWorkspace).toHaveBeenCalledTimes(2)
+      expect(spySyncWorkspace).toHaveBeenCalledWith(config.getDevWorkspaceId())
     })
 
     it("should update migration metadata for both prod and dev workspaces", async () => {
@@ -404,7 +404,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         ]
 
-        spySyncApp.mockClear()
+        spySyncWorkspace.mockClear()
         await config.unpublish()
 
         const devAppId = config.getDevWorkspaceId()
@@ -415,16 +415,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
         expect(executionOrder).toHaveLength(1)
         expect(executionOrder[0]).toBe(devAppId)
-        expect(spySyncApp).not.toHaveBeenCalled()
+        expect(spySyncWorkspace).not.toHaveBeenCalled()
       })
   })
 
   !fromProd &&
     describe("non-published workspace handling", () => {
-      let mockSyncApp: jest.SpyInstance
+      let mockSyncWorkspace: jest.SpyInstance
 
       beforeEach(async () => {
-        mockSyncApp = jest.spyOn(sdk.workspaces, "syncApp")
+        mockSyncWorkspace = jest.spyOn(sdk.workspaces, "syncWorkspace")
         await config.unpublish()
       })
 
@@ -448,7 +448,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           })
         })
 
-        mockSyncApp.mockClear()
+        mockSyncWorkspace.mockClear()
 
         await runMigrations(testMigrations)
 
@@ -456,7 +456,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           `migration 2 - ${config.getDevWorkspaceId()}`,
           `migration 3 - ${config.getDevWorkspaceId()}`,
         ])
-        expect(mockSyncApp).not.toHaveBeenCalled()
+        expect(mockSyncWorkspace).not.toHaveBeenCalled()
       })
     })
 
@@ -735,7 +735,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   describe("via middleware", () => {
-    it("should properly handle syncApp context when triggered via API", async () => {
+    it("should properly handle syncWorkspace context when triggered via API", async () => {
       await expectMigrationVersion(MIGRATIONS[MIGRATIONS.length - 1].id)
 
       const executionOrder: string[] = []
