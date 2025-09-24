@@ -224,9 +224,6 @@
       console.error("Could not resolve live workspace app URL")
       return
     }
-    if (typeof window === "undefined") {
-      return
-    }
     window.open(liveUrl, "_blank", "noopener")
   }
 
