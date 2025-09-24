@@ -16,13 +16,13 @@ describe("migration integrity", () => {
     await config.init()
 
     async function setCurrentVersion(currentMigrationId: string) {
-      for (const appId of [
+      for (const workspaceId of [
         config.getDevWorkspaceId(),
         config.getProdWorkspaceId(),
       ]) {
-        await config.doInContext(appId, async () => {
+        await config.doInContext(workspaceId, async () => {
           await updateWorkspaceMigrationMetadata({
-            workspaceId: appId,
+            workspaceId,
             version: currentMigrationId,
           })
         })
@@ -38,8 +38,8 @@ describe("migration integrity", () => {
       }
     }
 
-    const appId = config.getDevWorkspaceId()
-    await config.doInContext(appId, async () => {
+    const workspaceId = config.getDevWorkspaceId()
+    await config.doInContext(workspaceId, async () => {
       await setCurrentVersion("")
       const devDb = context.getWorkspaceDB()
       const prodDb = context.getProdWorkspaceDB()
@@ -48,21 +48,25 @@ describe("migration integrity", () => {
         const latestMigration =
           migrationsToApply[migrationsToApply.length - 1].id
 
-        const currentVersion = await getWorkspaceMigrationVerions(appId)
+        const currentVersion = await getWorkspaceMigrationVerions(workspaceId)
 
-        await processMigrations(appId, migrationsToApply)
-        expect(await getWorkspaceMigrationVerions(appId)).toBe(latestMigration)
+        await processMigrations(workspaceId, migrationsToApply)
+        expect(await getWorkspaceMigrationVerions(workspaceId)).toBe(
+          latestMigration
+        )
 
         const afterMigrationDevDocs = await getDocs(devDb)
         const afterMigrationProdDocs = await getDocs(prodDb)
 
         await setCurrentVersion(currentVersion)
-        expect(await getWorkspaceMigrationVerions(appId)).not.toBe(
+        expect(await getWorkspaceMigrationVerions(workspaceId)).not.toBe(
           latestMigration
         )
 
-        await processMigrations(appId, migrationsToApply)
-        expect(await getWorkspaceMigrationVerions(appId)).toBe(latestMigration)
+        await processMigrations(workspaceId, migrationsToApply)
+        expect(await getWorkspaceMigrationVerions(workspaceId)).toBe(
+          latestMigration
+        )
 
         const afterRerunDevDocs = await getDocs(devDb)
         const afterRerunProdDocs = await getDocs(prodDb)

@@ -19,20 +19,20 @@ const config = setup.getConfig()
 describe.each([
   ["dev", () => config.getDevWorkspaceId()],
   ["prod", () => config.getProdWorkspaceId()],
-])("Workspace apps (%s)", (_, getAppId) => {
+])("Workspace apps (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(async () => {
     tk.reset()
-    for (const appId of [
+    for (const workspaceId of [
       config.getDevWorkspaceId(),
       config.getProdWorkspaceId(),
     ]) {
-      await config.doInContext(appId, async () => {
+      await config.doInContext(workspaceId, async () => {
         await updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+          workspaceId,
           version: "",
         })
 
@@ -49,7 +49,7 @@ describe.each([
   })
 
   it("migration will never create multiple workspace apps", async () => {
-    await config.doInContext(getAppId(), () =>
+    await config.doInContext(getWorkspaceId(), () =>
       processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
