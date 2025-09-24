@@ -12,6 +12,7 @@ import {
 import { getProdAppID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
+// TODO: check its usages, as appId checks are not actually checked for global builders
 export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
