@@ -195,7 +195,7 @@
   <div class="row">
     <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
-  <Divider />
+  <Divider noMargin />
   <Layout noPadding gap="XS">
     <div class="row">
       <Heading size="S">Recaptcha</Heading>
