@@ -20,7 +20,13 @@ describe("buildBuilderWorkspaceRoute", () => {
   it("ignores empty segments and trims slashes", () => {
     const route = buildBuilderWorkspaceRoute({
       applicationId: "app_123",
-      segments: ["/design/", null, undefined, "workspaceApp_456/", "screen_789"],
+      segments: [
+        "/design/",
+        null,
+        undefined,
+        "workspaceApp_456/",
+        "screen_789",
+      ],
     })
     expect(route).toBe(
       "/builder/workspace/app_123/design/workspaceApp_456/screen_789"
