@@ -1,6 +1,7 @@
 const sanitize = require("sanitize-s3-objectkey")
 
 import {
+  _Object,
   GetObjectCommand,
   HeadObjectCommandOutput,
   PutObjectCommandInput,
@@ -372,6 +373,22 @@ export async function* listAllObjects(
     isTruncated = !!response.IsTruncated
     token = response.NextContinuationToken
   } while (isTruncated && token)
+}
+
+export async function getAllFiles(bucketName: string, path: string) {
+  const objects: Record<string, _Object> = {}
+  await utils.parallelForeach(
+    listAllObjects(bucketName, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+
+      objects[file.Key] = file
+    },
+    5
+  )
+  return objects
 }
 
 /**

@@ -1,30 +1,30 @@
-<script lang="ts">
+<script lang="ts" generics="Value extends UIFile|File">
+  import type { UIFile } from "@budibase/types"
   import "@spectrum-css/dropzone/dist/index-vars.css"
-  import "@spectrum-css/typography/dist/index-vars.css"
   import "@spectrum-css/illustratedmessage/dist/index-vars.css"
+  import "@spectrum-css/typography/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
   import { uuid } from "../../helpers"
   import Icon from "../../Icon/Icon.svelte"
   import Link from "../../Link/Link.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
   import Tag from "../../Tags/Tag.svelte"
   import Tags from "../../Tags/Tags.svelte"
-  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
-  import type { UIFile } from "@budibase/types"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
 
-  export let value: UIFile[] | File[] = []
+  export let value: Value[] = []
   export let id: string | null = null
   export let disabled: boolean = false
   export let compact: boolean = false
   export let fileSizeLimit: number = BYTES_IN_MB * 20
-  export let processFiles: ((_files: FileList) => Promise<UIFile[]>) | null =
+  export let processFiles: ((_files: FileList) => Promise<Value[]>) | null =
     null
   export let deleteAttachments: ((_keys: string[]) => Promise<void>) | null =
     null
   export let handleFileTooLarge:
-    | ((_limit: number, _currentFiles: UIFile[] | File[]) => void)
+    | ((_limit: number, _currentFiles: Value[]) => void)
     | null = null
   export let handleTooManyFiles: ((_maximum: number) => void) | null = null
   export let gallery: boolean = true
@@ -35,7 +35,7 @@
   export let clickText: string | null = null
   export let addText: string | null = null
 
-  const dispatch = createEventDispatcher<{ change: UIFile[] | File[] }>()
+  const dispatch = createEventDispatcher<{ change: Value[] }>()
   const imageExtensions = [
     "png",
     "tiff",
@@ -102,21 +102,22 @@
       loading = true
       try {
         const processedFiles = await processFiles(fileList)
-        const newValue = [...(value as UIFile[]), ...processedFiles]
+        const newValue = [...value, ...processedFiles]
         dispatch("change", newValue)
         selectedImageIdx = newValue.length - 1
       } finally {
         loading = false
       }
     } else {
-      dispatch("change", Array.from(fileList))
+      // TODO: this type should be inferred correctly, but it needs a much bigger refactor around all the usages and dynamic types
+      dispatch("change", Array.from(fileList) as Value[])
     }
   }
 
   async function removeFile() {
     dispatch(
       "change",
-      value.filter((_x, idx) => idx !== selectedImageIdx) as UIFile[] | File[]
+      value.filter((_x, idx) => idx !== selectedImageIdx)
     )
     if (deleteAttachments) {
       await deleteAttachments(

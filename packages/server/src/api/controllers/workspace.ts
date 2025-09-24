@@ -881,28 +881,35 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
-export async function importToApp(
+export async function importToWorkspace(
   ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
-  const { appId } = ctx.params
-  const appExport = ctx.request.files?.appExport
+  const { appId: workspaceId } = ctx.params
+  const workspaceExport = ctx.request.files?.appExport
   const password = ctx.request.body.encryptionPassword
-  if (!appExport) {
-    ctx.throw(400, "Must supply app export to import")
+  if (!workspaceExport) {
+    ctx.throw(400, "Must supply export file to import")
   }
-  if (Array.isArray(appExport)) {
+  if (Array.isArray(workspaceExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
-  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  const fileAttributes = {
+    type: workspaceExport.type!,
+    path: workspaceExport.path!,
+  }
   try {
-    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+    await sdk.applications.updateWithExport(
+      workspaceId,
+      fileAttributes,
+      password
+    )
   } catch (err: any) {
     ctx.throw(
       500,
       `Unable to perform update, please retry - ${err?.message || err}`
     )
   }
-  ctx.body = { message: "app updated" }
+  ctx.body = { message: "workspace updated" }
 }
 
 /**
