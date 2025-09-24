@@ -14,7 +14,7 @@
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
+  import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -125,13 +125,13 @@
   }
 
   const setupValidation = async () => {
-    appValidation.name(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
+    workspaceValidation.name(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
     })
-    appValidation.url(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
+    workspaceValidation.url(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
     })
   }
 
