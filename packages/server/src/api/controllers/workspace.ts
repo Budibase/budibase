@@ -824,30 +824,30 @@ async function invalidateWorkspaceCache(workspaceId: string) {
 }
 
 async function destroyWorkspace(ctx: UserCtx) {
-  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.appId)
-  const devAppId = dbCore.getDevWorkspaceID(ctx.params.appId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.params.appId)
+  const devWorkspaceId = dbCore.getDevWorkspaceID(ctx.params.appId)
 
   const app = await sdk.workspaces.metadata.get()
 
   // check if we need to unpublish first
-  if (await dbCore.dbExists(prodAppId)) {
+  if (await dbCore.dbExists(prodWorkspaceId)) {
     // app is deployed, run through unpublish flow
-    await sdk.workspaces.syncApp(devAppId, {
+    await sdk.workspaces.syncWorkspace(devWorkspaceId, {
       automationOnly: true,
     })
     await unpublishWorkspace(ctx)
   }
 
-  const db = dbCore.getDB(devAppId)
+  const db = dbCore.getDB(devWorkspaceId)
   // standard app deletion flow
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  await deleteAppFiles(prodAppId)
+  await deleteAppFiles(prodWorkspaceId)
 
-  await removeWorkspaceFromUserRoles(ctx, prodAppId)
-  await invalidateWorkspaceCache(prodAppId)
+  await removeWorkspaceFromUserRoles(ctx, prodWorkspaceId)
+  await invalidateWorkspaceCache(prodWorkspaceId)
   return result
 }
 
@@ -898,7 +898,7 @@ export async function unpublish(
 export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   const appId = ctx.params.appId
   try {
-    ctx.body = await sdk.workspaces.syncApp(appId)
+    ctx.body = await sdk.workspaces.syncWorkspace(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err.message)
   }
