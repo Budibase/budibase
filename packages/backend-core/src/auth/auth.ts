@@ -1,19 +1,6 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 
-import { getGlobalDB } from "../context"
-import { Cookie } from "../constants"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
-import {
-  authenticated,
-  csrf,
-  google,
-  local,
-  oidc,
-  tenancy,
-} from "../middleware"
-import * as userCache from "../cache/user"
-import { invalidateUser } from "../cache/user"
 import {
   ConfigType,
   GoogleInnerConfig,
@@ -22,24 +9,38 @@ import {
   SessionCookie,
   SSOProviderType,
 } from "@budibase/types"
-import * as events from "../events"
+import * as userCache from "../cache/user"
+import { invalidateUser } from "../cache/user"
 import * as configs from "../configs"
-import { clearCookie, getCookie } from "../utils"
+import { Cookie } from "../constants"
+import { getGlobalDB } from "../context"
+import * as events from "../events"
+import {
+  authenticated,
+  csrf,
+  google,
+  local,
+  oidc,
+  tenancy,
+} from "../middleware"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
+import { getSessionsForUser, invalidateSessions } from "../security/sessions"
+import { clearCookie, getCookie } from "../utils"
 
 const refresh = require("passport-oauth2-refresh")
 
 export {
+  adminOnly,
   auditLog,
   authError,
-  internalApi,
-  ssoCallbackUrl,
-  adminOnly,
   builderOnly,
   builderOrAdmin,
-  joiValidator,
   google,
+  internalApi,
+  joiValidator,
   oidc,
+  ssoCallbackUrl,
+  workspaceBuilderOrAdmin,
 } from "../middleware"
 export const buildAuthMiddleware = authenticated
 export const buildTenancyMiddleware = tenancy
