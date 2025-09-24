@@ -12,7 +12,7 @@ import {
   RowValue,
   Workspace,
 } from "@budibase/types"
-import { getAppMigrationCacheKey } from "../../../workspaceMigrations"
+import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
 
@@ -149,6 +149,7 @@ export async function updateWithExport(
   const tempName = `temp_${devId}`
   const tempDb = dbCore.getDB(tempName)
   const workspaceDb = dbCore.getDB(devId)
+
   try {
     const template = {
       file: {
@@ -174,7 +175,7 @@ export async function updateWithExport(
       throw new HTTPError("Error importing documents", 500)
     }
 
-    await cache.destroy(getAppMigrationCacheKey(devId))
+    await cache.destroy(getWorkspaceMigrationCacheKey(devId))
     await processMigrations(devId)
   } finally {
     await tempDb.destroy()
