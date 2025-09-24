@@ -9,7 +9,7 @@
     notifications,
   } from "@budibase/bbui"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
+  import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import { sdk } from "@budibase/shared-core"
   import type { CreateWorkspaceRequest } from "@budibase/types"
   import { onMount } from "svelte"
@@ -90,8 +90,8 @@
 
   const setupValidation = async () => {
     const applications = get(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
+    workspaceValidation.name(validation, { workspaces: applications })
+    workspaceValidation.url(validation, { workspaces: applications })
 
     const { url } = $values
     validation.check({
