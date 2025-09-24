@@ -114,7 +114,7 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
+  await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
   })
 }
@@ -202,7 +202,7 @@ export const publishWorkspace = async function (
       const devId = dbCore.getDevWorkspaceID(appId)
       const prodId = dbCore.getProdWorkspaceID(appId)
 
-      if (!(await sdk.applications.isAppPublished(prodId))) {
+      if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -222,7 +222,7 @@ export const publishWorkspace = async function (
         }
       }
 
-      const isPublished = await sdk.applications.isAppPublished(prodId)
+      const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
@@ -250,7 +250,7 @@ export const publishWorkspace = async function (
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
       const db = context.getProdWorkspaceDB()
-      const appDoc = await sdk.applications.metadata.tryGet({
+      const appDoc = await sdk.workspaces.metadata.tryGet({
         production: false,
       })
       if (!appDoc) {
@@ -258,7 +258,7 @@ export const publishWorkspace = async function (
           "Unable to publish - cannot retrieve development app metadata"
         )
       }
-      const prodAppDoc = await sdk.applications.metadata.tryGet({
+      const prodAppDoc = await sdk.workspaces.metadata.tryGet({
         production: true,
       })
       if (prodAppDoc) {
