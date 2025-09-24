@@ -723,7 +723,14 @@ const automationActions = (store: AutomationStore) => ({
           children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
-              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended, loopContext)
+              treeTraverse(
+                bBlock,
+                pathToCurrentNode,
+                sIdx,
+                bIdx,
+                ended,
+                loopContext
+              )
             }
           )
         })
@@ -737,7 +744,14 @@ const automationActions = (store: AutomationStore) => ({
         children.forEach((child, cIdx) => {
           const isChildTerminating = cIdx === children.length - 1
           // For the child we continue with the current path, injecting loop context
-          treeTraverse(child, pathToCurrentNode, cIdx, null, isChildTerminating, block.id)
+          treeTraverse(
+            child,
+            pathToCurrentNode,
+            cIdx,
+            null,
+            isChildTerminating,
+            block.id
+          )
         })
       }
 
@@ -1285,7 +1299,11 @@ const automationActions = (store: AutomationStore) => ({
    * Append a new block inside a Loop V2 subflow's children array.
    * The loop is identified by its block id.
    */
-  addBlockToLoopChildren: async (loopId: string, block: AutomationStep) => {
+  addBlockToLoopChildren: async (
+    loopId: string,
+    block: AutomationStep,
+    insertIndex?: number
+  ) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
@@ -1306,20 +1324,22 @@ const automationActions = (store: AutomationStore) => ({
     ]
 
     let cache: any
-    loopRef.pathTo.forEach((path: BlockPath, idx: number, array: BlockPath[]) => {
-      const { stepIdx, branchIdx } = path as any
-      const final = idx === array.length - 1
+    loopRef.pathTo.forEach(
+      (path: BlockPath, idx: number, array: BlockPath[]) => {
+        const { stepIdx, branchIdx } = path as any
+        const final = idx === array.length - 1
 
-      if (!cache) {
-        cache = steps[stepIdx]
-        return
+        if (!cache) {
+          cache = steps[stepIdx]
+          return
+        }
+        if (Number.isInteger(branchIdx)) {
+          const branchId = cache.inputs.branches[branchIdx].id
+          const children = cache.inputs.children[branchId]
+          cache = final ? children[stepIdx] : children[stepIdx]
+        }
       }
-      if (Number.isInteger(branchIdx)) {
-        const branchId = cache.inputs.branches[branchIdx].id
-        const children = cache.inputs.children[branchId]
-        cache = final ? children[stepIdx] : children[stepIdx]
-      }
-    })
+    )
 
     const loopNode = cache?.stepId
       ? cache
@@ -1331,7 +1351,14 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     const children = (loopNode.inputs?.children || []) as AutomationStep[]
-    children.push(block)
+    const targetIndex = Math.max(
+      0,
+      Math.min(
+        typeof insertIndex === "number" ? insertIndex : children.length,
+        children.length
+      )
+    )
+    children.splice(targetIndex, 0, block)
     loopNode.inputs = {
       ...(loopNode.inputs || {}),
       children,

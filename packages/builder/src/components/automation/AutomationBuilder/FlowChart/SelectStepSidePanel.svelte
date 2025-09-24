@@ -48,7 +48,13 @@
   ]
 
   // If adding inside a Loop V2 subflow, disallow Branch, Collect and any Loop steps
-  $: insideLoopV2 = Boolean(block?.loopV2Children)
+  $: blockRef = $selectedAutomation.blockRefs?.[block.id]
+  $: insideLoopV2 = Boolean(block?.loopV2Children || blockRef?.loopV2Child)
+  $: loopStepId = block?.loopStepId || block?.id
+  $: loopChildInsertIndex =
+    typeof block?.loopChildInsertIndex === "number"
+      ? block.loopChildInsertIndex
+      : undefined
   $: actions = actions.filter(([k]) =>
     insideLoopV2
       ? ![
@@ -60,7 +66,6 @@
       : true
   )
 
-  $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
   $: pathSteps =
     block.id && $selectedAutomation?.data
@@ -225,8 +230,12 @@
         action.stepId,
         action
       )
-      if (insideLoopV2) {
-        await automationStore.actions.addBlockToLoopChildren(block.id, newBlock)
+      if (insideLoopV2 && loopStepId) {
+        await automationStore.actions.addBlockToLoopChildren(
+          loopStepId,
+          newBlock,
+          loopChildInsertIndex
+        )
       } else {
         await automationStore.actions.addBlockToAutomation(
           newBlock,

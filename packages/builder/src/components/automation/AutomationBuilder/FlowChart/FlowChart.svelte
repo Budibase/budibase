@@ -50,7 +50,6 @@
     BackgroundVariant,
     MiniMap,
     useSvelteFlow,
-    Position,
     type Node as FlowNode,
     type Edge as FlowEdge,
     type NodeTypes,
@@ -458,6 +457,11 @@
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .root :global(.svelte-flow__edgelabel-renderer) {
+    z-index: 4;
+    pointer-events: none;
   }
 
   .root :global(.block) {

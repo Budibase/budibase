@@ -20,6 +20,7 @@ import {
   Branch,
   BranchStep,
   LayoutDirection,
+  LoopV2Step,
 } from "@budibase/types"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
@@ -226,6 +227,29 @@ const DEFAULT_NODE_WIDTH = 320
 const DEFAULT_STEP_HEIGHT = 100
 const DEFAULT_BRANCH_HEIGHT = 180
 
+const buildLoopEdgeData = (
+  loopStep: AutomationStep,
+  deps: GraphBuildDeps,
+  insertIndex: number,
+  pathTo?: any[]
+) => {
+  const loopRef = deps.blockRefs?.[loopStep.id]
+  return {
+    block: {
+      id: loopStep.id,
+      loopV2Children: true,
+      loopStepId: loopStep.id,
+      loopChildInsertIndex: insertIndex,
+      pathTo: loopRef?.pathTo,
+    },
+    viewMode: deps.viewMode,
+    direction: deps.direction,
+    pathTo,
+    loopStepId: loopStep.id,
+    loopChildInsertIndex: insertIndex,
+  }
+}
+
 export const dagreLayoutAutomation = (
   graph: { nodes: any[]; edges: any[] },
   opts?: DagreLayoutOptions
@@ -243,27 +267,29 @@ export const dagreLayoutAutomation = (
   graph.nodes.forEach(n => (nodeById[n.id] = n))
 
   // Add nodes with estimated sizes for layout, ignore subflow children
-  graph.nodes.filter(n => !n.parentNode && !n.parentId).forEach(node => {
-    let width = DEFAULT_NODE_WIDTH
-    let height = DEFAULT_STEP_HEIGHT
-    if (node.type === "branch-node") {
-      height = DEFAULT_BRANCH_HEIGHT
-    } else if (node.type === "anchor-node") {
-      width = DEFAULT_NODE_WIDTH
-      height = 1
-    } else if (node.type === "loop-subflow-node") {
-      // Use the container dimensions passed in data for more accurate layout
-      const w = node?.data?.containerWidth
-      const h = node?.data?.containerHeight
-      if (typeof w === "number" && w > 0) {
-        width = w
+  graph.nodes
+    .filter(n => !n.parentNode && !n.parentId)
+    .forEach(node => {
+      let width = DEFAULT_NODE_WIDTH
+      let height = DEFAULT_STEP_HEIGHT
+      if (node.type === "branch-node") {
+        height = DEFAULT_BRANCH_HEIGHT
+      } else if (node.type === "anchor-node") {
+        width = DEFAULT_NODE_WIDTH
+        height = 1
+      } else if (node.type === "loop-subflow-node") {
+        // Use the container dimensions passed in data for more accurate layout
+        const w = node?.data?.containerWidth
+        const h = node?.data?.containerHeight
+        if (typeof w === "number" && w > 0) {
+          width = w
+        }
+        if (typeof h === "number" && h > 0) {
+          height = h
+        }
       }
-      if (typeof h === "number" && h > 0) {
-        height = h
-      }
-    }
-    dagreGraph.setNode(node.id, { width, height })
-  })
+      dagreGraph.setNode(node.id, { width, height })
+    })
 
   // Add edges (ignore edges that involve subflow children)
   graph.edges
@@ -282,24 +308,26 @@ export const dagreLayoutAutomation = (
 
   // Apply computed positions with sensible default handle positions based on orientation
   // First pass: place all nodes from dagre output
-  graph.nodes.filter(n => !n.parentNode && !n.parentId).forEach(node => {
-    const dims = dagreGraph.node(node.id)
-    if (!dims) return
-    const width = dims.width
-    const height = dims.height
-    // Default handle positions based on rank direction
-    if (rankdir === "LR") {
-      node.targetPosition = Position.Left
-      node.sourcePosition = Position.Right
-    } else {
-      node.targetPosition = Position.Top
-      node.sourcePosition = Position.Bottom
-    }
-    node.position = {
-      x: Math.round(dims.x - width / 2),
-      y: Math.round(dims.y - height / 2),
-    }
-  })
+  graph.nodes
+    .filter(n => !n.parentNode && !n.parentId)
+    .forEach(node => {
+      const dims = dagreGraph.node(node.id)
+      if (!dims) return
+      const width = dims.width
+      const height = dims.height
+      // Default handle positions based on rank direction
+      if (rankdir === "LR") {
+        node.targetPosition = Position.Left
+        node.sourcePosition = Position.Right
+      } else {
+        node.targetPosition = Position.Top
+        node.sourcePosition = Position.Bottom
+      }
+      node.position = {
+        x: Math.round(dims.x - width / 2),
+        y: Math.round(dims.y - height / 2),
+      }
+    })
 
   return graph
 }
@@ -342,7 +370,7 @@ export const renderChain = (
     if (isLoopV2) {
       // Render Loop V2 as a subflow container with internal children
       const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
-      const { containerHeight } = renderLoopV2Container(step, pos.x, pos.y, deps)
+      renderLoopV2Container(step, pos.x, pos.y, deps)
 
       // External chain edge into the container
       deps.newEdges.push({
@@ -520,23 +548,20 @@ export const renderBranches = (
   return clusterBottomY
 }
 
-// Helper to render a Loop V2 container and its internal children steps
 export const renderLoopV2Container = (
-  loopStep: AutomationStep,
+  loopStep: LoopV2Step,
   x: number,
   y: number,
   deps: GraphBuildDeps
 ) => {
   const baseId = loopStep.id
-  const children: AutomationStep[] =
-    (((loopStep as any).inputs?.children) || []) as any
-
+  const children: AutomationStep[] = loopStep.inputs?.children || []
   // Compute container dimensions based on children count
   const childHeight = 120
   const paddingTop = 90
   const paddingBottom = 90
   const internalSpacing = 48
-  const containerWidth = 360
+  const containerWidth = 400
   const childrenStackHeight =
     children.length > 0
       ? children.length * childHeight + (children.length - 1) * internalSpacing
@@ -557,6 +582,9 @@ export const renderLoopV2Container = (
       containerHeight,
       containerWidth,
     },
+    selectable: false,
+    draggable: false,
+    style: `background-color: rgba(255, 0, 0, 0.2); width: ${containerWidth}px; height: ${containerHeight}px;`,
     position: { x, y },
   })
 
@@ -575,21 +603,49 @@ export const renderLoopV2Container = (
         direction: deps.direction,
       },
       parentId: baseId,
-      extent: "parent" as any,
+      extent: "parent",
       position: { x: baseX, y: innerY },
     })
 
     if (cIdx > 0) {
       const prevChild = children[cIdx - 1]
+      const prevRef = deps.blockRefs?.[prevChild.id]
       deps.newEdges.push({
-        id: `edge-${prevChild.id}-${child.id}`,
+        id: `loop-edge-${prevChild.id}-${child.id}`,
+        type: "add-item",
         source: prevChild.id,
         target: child.id,
+        zIndex: 1001,
+        data: buildLoopEdgeData(loopStep, deps, cIdx, prevRef?.pathTo),
       })
     }
 
     innerY += childHeight + internalSpacing
   })
+
+  if (children.length > 0) {
+    const lastChild = children[children.length - 1]
+    const lastRef = deps.blockRefs?.[lastChild.id]
+    const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
+    deps.newNodes.push({
+      id: exitAnchorId,
+      type: "anchor-node",
+      data: { viewMode: deps.viewMode, direction: deps.direction },
+      parentId: baseId,
+      extent: "parent",
+      zIndex: 1001,
+      position: { x: baseX, y: innerY },
+    })
+
+    deps.newEdges.push({
+      id: `loop-edge-${lastChild.id}-${exitAnchorId}`,
+      type: "add-item",
+      source: lastChild.id,
+      target: exitAnchorId,
+      zIndex: 1001,
+      data: buildLoopEdgeData(loopStep, deps, children.length, lastRef?.pathTo),
+    })
+  }
 
   return { containerWidth, containerHeight }
 }
@@ -626,14 +682,14 @@ export const buildTopLevelGraph = (
     }
 
     if (!isTrigger && !isBranchStep) {
-      const prevId = (blocks as any)[idx - 1].id
+      const prevId = blocks[idx - 1].id
       deps.newEdges.push({
         id: `edge-${prevId}-${baseId}`,
         type: "add-item",
         source: prevId,
         target: baseId,
         data: {
-          block: (blocks as any)[idx - 1],
+          block: blocks[idx - 1],
           viewMode: deps.viewMode,
           direction: deps.direction,
           pathTo: deps.blockRefs?.[prevId]?.pathTo,
@@ -669,8 +725,8 @@ export const buildTopLevelGraph = (
     }
 
     if (isBranchStep) {
-      const sourceForBranches = !isTrigger ? (blocks as any)[idx - 1].id : baseId
-      const sourceBlock = !isTrigger ? (blocks as any)[idx - 1] : block
+      const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
+      const sourceBlock = !isTrigger ? blocks[idx - 1] : block
       renderBranches(
         block,
         sourceForBranches,

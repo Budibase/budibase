@@ -24,13 +24,13 @@
   export let targetPosition: Position
   export let target: string
 
+  const view: any = getContext("draggableView")
+
   $: viewMode = data?.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
-
-  const view: any = getContext("draggableView")
 
   $: basePath = getSmoothStepPath({
     sourceX,
@@ -77,10 +77,16 @@
   $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
 
   $: showEdgeActions =
-    viewMode === ViewMode.EDITOR && !isBranchTarget && !$view?.dragging && !isSubflowEdge
+    viewMode === ViewMode.EDITOR &&
+    !isBranchTarget &&
+    !$view?.dragging &&
+    !isSubflowEdge
 
   $: showEdgeDrop =
-    viewMode === ViewMode.EDITOR && !isBranchTarget && $view?.dragging && !isSubflowEdge
+    viewMode === ViewMode.EDITOR &&
+    !isBranchTarget &&
+    $view?.dragging &&
+    !isSubflowEdge
 
   $: showPreBranchActions =
     viewMode === ViewMode.EDITOR &&
@@ -93,6 +99,8 @@
     isBranchTarget &&
     isPrimaryBranchEdge &&
     $view?.dragging
+
+  $: isLoopEdge = !!(data?.loopStepId || data?.loopChildInsertIndex)
 
   // For TB we keep it vertically centered under the source;
   // for LR we center horizontally and align to the source Y.
@@ -185,7 +193,6 @@
 <style>
   .add-item-label {
     position: absolute;
-    z-index: 123;
     color: white;
     pointer-events: all;
     cursor: default;
