@@ -10,12 +10,12 @@ export async function builderOrAdmin(ctx: UserCtx, next: any) {
 
   const workspaceId = await getAppIdFromCtx(ctx)
 
-  if (!workspaceId && !env.isWorker()) {
+  if (workspaceId && !isBuilder(ctx.user, workspaceId)) {
+    ctx.throw(403, "Workspace Admin/Builder user only endpoint.")
+  } else if (!workspaceId && !env.isWorker()) {
     ctx.throw(403, "This request required a workspace id.")
   } else if (!workspaceId && !hasBuilderPermissions(ctx.user)) {
     ctx.throw(403, "Admin/Builder user only endpoint.")
-  } else if (workspaceId && !isBuilder(ctx.user, workspaceId)) {
-    ctx.throw(403, "Workspace Admin/Builder user only endpoint.")
   }
 
   return next()

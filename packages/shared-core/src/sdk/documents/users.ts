@@ -1,12 +1,12 @@
 import {
   ContextUser,
   DocumentType,
+  InternalTable,
   SEPARATOR,
   User,
-  InternalTable,
-  UserGroup,
-  UserBuilderInfo,
   UserAdminInfo,
+  UserBuilderInfo,
+  UserGroup,
   UserRoleInfo,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
@@ -16,7 +16,7 @@ export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
   }
-  if (user.builder?.global) {
+  if (!appId && user.builder?.global) {
     return true
   } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
     return true
