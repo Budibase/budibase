@@ -9,12 +9,14 @@ import {
   LLMStreamChunk,
 } from "@budibase/types"
 
+import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
   agentChat: (chat: AgentChat) => Promise<ChatAgentResponse>
   agentChatStream: (
     chat: AgentChat,
+    workspaceId: string,
     onChunk: (chunk: LLMStreamChunk) => void,
     onError?: (error: Error) => void
   ) => Promise<void>
@@ -39,7 +41,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  agentChatStream: async (chat, onChunk, onError) => {
+  agentChatStream: async (chat, workspaceId, onChunk, onError) => {
     const body: ChatAgentRequest = chat
 
     try {
@@ -49,6 +51,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          [Header.APP_ID]: workspaceId,
         },
         body: JSON.stringify(body),
         credentials: "same-origin",
