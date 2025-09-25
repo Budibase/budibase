@@ -1,6 +1,12 @@
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
-import { ResourceType, Screen, Table, WorkspaceApp } from "@budibase/types"
+import {
+  InsertWorkspaceAppRequest,
+  ResourceType,
+  Screen,
+  Table,
+  WorkspaceApp,
+} from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
@@ -89,27 +95,51 @@ describe("/api/resources/usage", () => {
   })
 
   describe("duplicateResourceToWorkspace", () => {
-    let basicApp: { info: WorkspaceApp; screens: Screen[] }
-    let appWithTableUsages: { info: WorkspaceApp; screens: Screen[] }
+    interface WorkspaceAppInfo {
+      app: WorkspaceApp
+      screens: Screen[]
+    }
+
+    let basicApp: WorkspaceAppInfo
+    let appWithTableUsages: WorkspaceAppInfo
     let internalTables: Table[] = []
+
+    async function createInternalTable(data: Partial<Table> = {}) {
+      internalTables.push(
+        await config.api.table.save(basicTable(undefined, data))
+      )
+    }
+
+    async function createApp(
+      app: InsertWorkspaceAppRequest,
+      screens: Screen[]
+    ): Promise<WorkspaceAppInfo> {
+      const { workspaceApp: createdApp } =
+        await config.api.workspaceApp.create(app)
+      const createdScreens: Screen[] = []
+      for (const screen of screens) {
+        screen.workspaceAppId = createdApp._id!
+        createdScreens.push(
+          await config.api.screen.save({
+            ...screen,
+            workspaceAppId: createdApp._id,
+          })
+        )
+      }
+
+      return {
+        app: createdApp,
+        screens: createdScreens,
+      }
+    }
 
     beforeAll(async () => {
       await config.createWorkspace()
-      internalTables.push(
-        await config.api.table.save(
-          basicTable(undefined, { name: "Internal table 1" })
-        )
-      )
-      internalTables.push(
-        await config.api.table.save(
-          basicTable(undefined, { name: "Internal table 2" })
-        )
-      )
-      internalTables.push(
-        await config.api.table.save(
-          basicTable(undefined, { name: "Internal table 3" })
-        )
-      )
+
+      await createInternalTable({ name: "Internal table 1" })
+
+      await createInternalTable({ name: "Internal table 2" })
+      await createInternalTable({ name: "Internal table 3" })
 
       const datasource1 = await config.createDatasource()
       await config.api.query.save(basicQuery(datasource1._id))
@@ -118,46 +148,32 @@ describe("/api/resources/usage", () => {
       const datasource2 = await config.createDatasource()
       await config.api.query.save(basicQuery(datasource2._id))
 
-      basicApp = {
-        info: (
-          await config.api.workspaceApp.create({
-            name: "My first app",
-            url: "/my-first-app",
-          })
-        ).workspaceApp,
-        screens: [],
-      }
+      basicApp = await createApp(
+        {
+          name: "My first app",
+          url: "/my-first-app",
+        },
+        [basicScreen()]
+      )
 
-      {
-        const screen = basicScreen()
-        screen.workspaceAppId = basicApp.info._id!
-        basicApp.screens.push(await config.api.screen.save(screen))
-      }
-
-      appWithTableUsages = {
-        info: (
-          await config.api.workspaceApp.create({
-            name: "App with tables",
-            url: "/app-with-tables",
-          })
-        ).workspaceApp,
-        screens: [],
-      }
-      {
-        const screen = basicScreen()
-        screen.props._children?.push({
-          _id: "child-props",
-          _instanceName: "child",
-          _styles: {},
-          _component: "@budibase/standard-components/dataprovider",
-          datasource: {
-            tableId: internalTables[0]._id,
-            type: "table",
-          },
-        })
-        screen.workspaceAppId = appWithTableUsages.info._id!
-        appWithTableUsages.screens.push(await config.api.screen.save(screen))
-      }
+      const screenWithDataProvider = basicScreen()
+      screenWithDataProvider.props._children?.push({
+        _id: "child-props",
+        _instanceName: "child",
+        _styles: {},
+        _component: "@budibase/standard-components/dataprovider",
+        datasource: {
+          tableId: internalTables[0]._id,
+          type: "table",
+        },
+      })
+      appWithTableUsages = await createApp(
+        {
+          name: "App with tables",
+          url: "/app-with-tables",
+        },
+        [screenWithDataProvider]
+      )
     })
 
     it("copies the resource and dependencies into the destination workspace for basic apps", async () => {
@@ -167,13 +183,13 @@ describe("/api/resources/usage", () => {
 
       tk.freeze(new Date())
       const response = await config.api.resource.duplicateResourceToWorkspace({
-        resourceId: basicApp.info._id!,
+        resourceId: basicApp.app._id!,
         toWorkspace: newWorkspace.appId,
       })
 
       expect(response.body).toEqual({
         resources: {
-          workspace_app: [basicApp.info._id],
+          workspace_app: [basicApp.app._id],
         },
       })
 
@@ -184,7 +200,7 @@ describe("/api/resources/usage", () => {
             await config.api.workspaceApp.fetch()
           expect(resultingWorkspaceApps).toEqual([
             expect.objectContaining({
-              ...basicApp.info,
+              ...basicApp.app,
               _rev: expect.stringMatching(/^1-\w+/),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -212,13 +228,13 @@ describe("/api/resources/usage", () => {
 
       tk.freeze(new Date())
       const response = await config.api.resource.duplicateResourceToWorkspace({
-        resourceId: appWithTableUsages.info._id!,
+        resourceId: appWithTableUsages.app._id!,
         toWorkspace: newWorkspace.appId,
       })
 
       expect(response.body).toEqual({
         resources: {
-          workspace_app: [appWithTableUsages.info._id],
+          workspace_app: [appWithTableUsages.app._id],
 
           table: [internalTables[0]._id],
         },
@@ -231,7 +247,7 @@ describe("/api/resources/usage", () => {
             await config.api.workspaceApp.fetch()
           expect(resultingWorkspaceApps).toContainEqual(
             expect.objectContaining({
-              ...appWithTableUsages.info,
+              ...appWithTableUsages.app,
               _rev: expect.stringMatching(/^1-\w+/),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -292,7 +308,7 @@ describe("/api/resources/usage", () => {
     it("throws when destination workspace already exists", async () => {
       const response = await config.api.resource.duplicateResourceToWorkspace(
         {
-          resourceId: basicApp.info._id!,
+          resourceId: basicApp.app._id!,
           toWorkspace: "app_unexisting",
         },
         {
