@@ -205,7 +205,7 @@ describe("/api/resources/usage", () => {
       )
     })
 
-    it.only("copies the resource and dependencies into the destination workspace for apps with table usages", async () => {
+    it("copies the resource and dependencies into the destination workspace for apps with table usages", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
       })
@@ -251,12 +251,12 @@ describe("/api/resources/usage", () => {
 
           const tables = await config.api.table.fetch()
           expect(tables).toHaveLength(2)
-          expect(tables).toContain(
+          expect(tables).toContainEqual(
             expect.objectContaining({
               _id: "ta_users",
             })
           )
-          expect(tables).toContain(
+          expect(tables).toContainEqual(
             expect.objectContaining({
               ...internalTables[0],
               _rev: expect.stringMatching(/^1-\w+/),
