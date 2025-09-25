@@ -1,7 +1,13 @@
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { ResourceType, Table } from "@budibase/types"
+import { Header } from "@budibase/shared-core"
+import { ResourceType, Table, WorkspaceApp } from "@budibase/types"
+import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { basicTable, basicScreen } from "../../../tests/utilities/structures"
+import {
+  basicQuery,
+  basicScreen,
+  basicTable,
+} from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
@@ -13,6 +19,10 @@ describe("/api/resources/usage", () => {
   })
 
   afterAll(config.end)
+
+  beforeEach(() => {
+    tk.reset()
+  })
 
   describe("resource usage analysis", () => {
     it("should check screens for datasource usage", async () => {
@@ -71,6 +81,71 @@ describe("/api/resources/usage", () => {
         },
         {
           status: 400,
+        }
+      )
+    })
+  })
+
+  describe("duplicateResourceToWorkspace", () => {
+    let basicWorkspaceApp: WorkspaceApp
+
+    beforeAll(async () => {
+      await config.createWorkspace()
+      await config.api.table.save(
+        basicTable(undefined, { name: "Internal table 1" })
+      )
+      await config.api.table.save(
+        basicTable(undefined, { name: "Internal table 2" })
+      )
+      await config.api.table.save(
+        basicTable(undefined, { name: "Internal table 3" })
+      )
+
+      const datasource1 = await config.createDatasource()
+      await config.api.query.save(basicQuery(datasource1._id))
+      await config.api.query.save(basicQuery(datasource1._id))
+
+      const datasource2 = await config.createDatasource()
+      await config.api.query.save(basicQuery(datasource2._id))
+
+      basicWorkspaceApp = (
+        await config.api.workspaceApp.create({
+          name: "My first app",
+          url: "/my-first-app",
+        })
+      ).workspaceApp
+    })
+
+    it("copies the resource and dependencies into the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: "Destination",
+      })
+
+      tk.freeze(new Date())
+      const response = await config.api.resource.duplicateResourceToWorkspace({
+        resourceId: basicWorkspaceApp._id!,
+        toWorkspace: newWorkspace.appId,
+      })
+
+      expect(response.body).toEqual({
+        resources: {
+          workspace_app: [basicWorkspaceApp._id],
+        },
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const { workspaceApps: resultingWorkspaceApps } =
+            await config.api.workspaceApp.fetch()
+          expect(resultingWorkspaceApps).toContainEqual(
+            expect.objectContaining({
+              ...basicWorkspaceApp,
+              _rev: expect.stringMatching(/^1-\w+/),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+          )
         }
       )
     })

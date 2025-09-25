@@ -5,6 +5,7 @@ import {
   NotImplementedError,
 } from "@budibase/backend-core"
 import {
+  AnyDocument,
   ResourceType,
   Screen,
   Table,
@@ -212,7 +213,16 @@ export async function duplicateResourceToWorkspace(
     resourceId,
     ...requiredResources.map(r => r.id),
   ])
-  await destinationDb.bulkDocs(docsToCopy)
+
+  await destinationDb.bulkDocs(
+    docsToCopy.map<AnyDocument>(d => {
+      delete d._rev
+      delete d.createdAt
+      delete d.updatedAt
+      return d
+    })
+  )
+
   return {
     [resourceType]: [resourceId],
     ...requiredResources.reduce<Partial<Record<ResourceType, string[]>>>(
