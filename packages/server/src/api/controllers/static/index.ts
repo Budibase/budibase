@@ -9,10 +9,7 @@ import {
   utils,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
-import {
-  InvalidFileExtensions,
-  getThemeBackgroundColor,
-} from "@budibase/shared-core"
+import { InvalidFileExtensions } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
 import {
   BudibaseAppProps,
@@ -248,8 +245,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        */
       const appName = workspaceApp?.name || `${appInfo.name}`
       const nonce = ctx.state.nonce || ""
-      const backgroundColor = getThemeBackgroundColor(appInfo.theme)
-
       let props: BudibaseAppProps = {
         title: branding?.platformTitle || appName,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
@@ -273,7 +268,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
-        backgroundColor,
       }
 
       // Add custom app scripts if enabled
@@ -325,7 +319,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
-        backgroundColor,
         appId,
         embedded: bbHeaderEmbed,
         nonce: ctx.state.nonce,

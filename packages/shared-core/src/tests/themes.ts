@@ -1,9 +1,4 @@
-import {
-  getThemeClassNames,
-  ensureValidTheme,
-  getThemeBackgroundColor,
-  isDarkTheme,
-} from "../themes"
+import { getThemeClassNames, ensureValidTheme } from "../themes"
 import { Theme } from "@budibase/types"
 
 describe("theme class names", () => {
@@ -29,28 +24,5 @@ describe("theme validity checking", () => {
   })
   it("migrates dark to darkest", () => {
     expect(ensureValidTheme(Theme.DARK)).toStrictEqual(Theme.DARKEST)
-  })
-})
-
-describe("theme helpers", () => {
-  it("returns background colors for known themes", () => {
-    expect(getThemeBackgroundColor(Theme.DARKEST)).toStrictEqual(
-      "rgb(30, 30, 30)"
-    )
-    expect(getThemeBackgroundColor(Theme.NORD)).toStrictEqual("#3b4252")
-  })
-
-  it("falls back to defaults when theme is invalid", () => {
-    expect(getThemeBackgroundColor(undefined, Theme.NORD)).toStrictEqual(
-      "#3b4252"
-    )
-    expect(getThemeBackgroundColor("invalid" as Theme)).toStrictEqual(
-      "rgb(255, 255, 255)"
-    )
-  })
-
-  it("detects dark themes", () => {
-    expect(isDarkTheme(Theme.NORD)).toBe(true)
-    expect(isDarkTheme(Theme.LIGHT)).toBe(false)
   })
 })

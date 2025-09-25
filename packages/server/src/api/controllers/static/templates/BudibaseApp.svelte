@@ -4,9 +4,6 @@
   /** @type {BudibaseAppProps} this receives all the props in one structure, following
    * the type from @budibase/types */
   export let props
-
-  $: backgroundColor = props?.backgroundColor || "rgb(255, 255, 255)"
-  $: bodyStyle = `background-color: var(--spectrum-alias-background-color-primary, ${backgroundColor});`
 </script>
 
 <svelte:head>
@@ -115,7 +112,7 @@
   {@html props.headAppScripts || ""}
 </svelte:head>
 
-<body id="app" style={bodyStyle}>
+<body id="app">
   {#if props.showSkeletonLoader}
     <ClientAppSkeleton
       hideDevTools={props.hideDevTools}
