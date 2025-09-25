@@ -105,9 +105,8 @@ describe("/api/resources/usage", () => {
     let internalTables: Table[] = []
 
     async function createInternalTable(data: Partial<Table> = {}) {
-      internalTables.push(
-        await config.api.table.save(basicTable(undefined, data))
-      )
+      const table = await config.api.table.save(basicTable(undefined, data))
+      internalTables.push(await config.api.table.get(table._id!))
     }
 
     async function createApp(
@@ -137,7 +136,6 @@ describe("/api/resources/usage", () => {
       await config.createWorkspace()
 
       await createInternalTable({ name: "Internal table 1" })
-
       await createInternalTable({ name: "Internal table 2" })
       await createInternalTable({ name: "Internal table 3" })
 
@@ -176,6 +174,51 @@ describe("/api/resources/usage", () => {
       )
     })
 
+    async function validateApp(
+      appId: string,
+      expectedApp: WorkspaceApp,
+      expected: { screens?: Screen[]; tables?: Table[] }
+    ) {
+      await config.withHeaders({ [Header.APP_ID]: appId }, async () => {
+        const { workspaceApps: resultingWorkspaceApps } =
+          await config.api.workspaceApp.fetch()
+        expect(resultingWorkspaceApps).toContainEqual(
+          expect.objectContaining({
+            ...expectedApp,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+        )
+
+        const screens = await config.api.screen.list()
+        expect(screens).toEqual(
+          (expected.screens || []).map(s => ({
+            ...s,
+            pluginAdded: undefined,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }))
+        )
+
+        const tables = await config.api.table.fetch()
+        expect(tables.sort((a, b) => a._id!.localeCompare(b._id!))).toEqual(
+          [
+            expect.objectContaining({
+              _id: "ta_users",
+            }),
+            ...(expected.tables || []).map(t => ({
+              ...t,
+              _rev: expect.stringMatching(/^1-\w+/),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })),
+          ].sort((a, b) => a._id!.localeCompare(b._id!))
+        )
+      })
+    }
+
     it("copies the resource and dependencies into the destination workspace for basic apps", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
@@ -193,32 +236,15 @@ describe("/api/resources/usage", () => {
         },
       })
 
-      await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
-        async () => {
-          const { workspaceApps: resultingWorkspaceApps } =
-            await config.api.workspaceApp.fetch()
-          expect(resultingWorkspaceApps).toEqual([
-            expect.objectContaining({
-              ...basicApp.app,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }),
-          ])
-
-          const screens = await config.api.screen.list()
-          expect(screens).toEqual(
-            basicApp.screens.map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }))
-          )
-        }
-      )
+      await validateApp(newWorkspace.appId, basicApp.app, {
+        screens: basicApp.screens.map(s => ({
+          ...s,
+          pluginAdded: undefined,
+          _rev: expect.stringMatching(/^1-\w+/),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+      })
     })
 
     it("copies the resource and dependencies into the destination workspace for apps with table usages", async () => {
@@ -240,48 +266,16 @@ describe("/api/resources/usage", () => {
         },
       })
 
-      await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
-        async () => {
-          const { workspaceApps: resultingWorkspaceApps } =
-            await config.api.workspaceApp.fetch()
-          expect(resultingWorkspaceApps).toContainEqual(
-            expect.objectContaining({
-              ...appWithTableUsages.app,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-          )
-
-          const screens = await config.api.screen.list()
-          expect(screens).toEqual(
-            appWithTableUsages.screens.map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }))
-          )
-
-          const tables = await config.api.table.fetch()
-          expect(tables).toHaveLength(2)
-          expect(tables).toContainEqual(
-            expect.objectContaining({
-              _id: "ta_users",
-            })
-          )
-          expect(tables).toContainEqual(
-            expect.objectContaining({
-              ...internalTables[0],
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-          )
-        }
-      )
+      await validateApp(newWorkspace.appId, appWithTableUsages.app, {
+        screens: appWithTableUsages.screens.map(s => ({
+          ...s,
+          pluginAdded: undefined,
+          _rev: expect.stringMatching(/^1-\w+/),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        tables: [internalTables[0]],
+      })
     })
 
     it("rejects non workspace app document types", async () => {
