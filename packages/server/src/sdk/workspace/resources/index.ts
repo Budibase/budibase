@@ -1,26 +1,33 @@
-import sdk from "../.."
 import {
+  context,
+  db,
+  HTTPError,
+  NotImplementedError,
+} from "@budibase/backend-core"
+import {
+  DocumentType,
   ResourceType,
   Screen,
   Table,
   TableRowActions,
   UsedResource,
 } from "@budibase/types"
+import sdk from "../.."
 
 export async function searchForUsages(
-  toSearchFor: Exclude<ResourceType, ResourceType.AUTOMATION>[],
   {
     automationIds,
     workspaceAppIds,
   }: {
     automationIds?: string[]
     workspaceAppIds?: string[]
-  }
+  },
+  exclude: ResourceType[] = []
 ) {
-  const shouldSearchTables = toSearchFor.includes(ResourceType.TABLE)
-  const shouldSearchDatasources = toSearchFor.includes(ResourceType.DATASOURCE)
-  const shouldSearchQueries = toSearchFor.includes(ResourceType.QUERY)
-  const shouldSearchRowActions = toSearchFor.includes(ResourceType.ROW_ACTION)
+  const shouldSearchTables = !exclude.includes(ResourceType.TABLE)
+  const shouldSearchDatasources = !exclude.includes(ResourceType.DATASOURCE)
+  const shouldSearchQueries = !exclude.includes(ResourceType.QUERY)
+  const shouldSearchRowActions = !exclude.includes(ResourceType.ROW_ACTION)
 
   const resources: UsedResource[] = []
   const baseSearchTargets: { id: string; name: string; type: ResourceType }[] =
@@ -177,4 +184,34 @@ export async function searchForUsages(
   }
 
   return resources
+}
+
+export async function duplicateResourceToWorkspace(
+  resourceId: string,
+  resourceType: DocumentType.WORKSPACE_APP,
+  toWorkspace: string
+) {
+  if (resourceType !== DocumentType.WORKSPACE_APP) {
+    throw new NotImplementedError(
+      `Duplicating ${resourceType} is not supported`
+    )
+  }
+  const requiredResources = await searchForUsages({
+    workspaceAppIds: [resourceId],
+  })
+
+  const sourceDb = context.getWorkspaceDB()
+
+  const destinationDb = db.getDB(db.getDevWorkspaceID(toWorkspace), {
+    skip_setup: true,
+  })
+  if (await destinationDb.exists()) {
+    throw new HTTPError("Destination workspace does not exist", 400)
+  }
+
+  const docsToCopy = await sourceDb.getMultiple([
+    resourceId,
+    ...requiredResources.map(r => r.id),
+  ])
+  await destinationDb.bulkDocs(docsToCopy)
 }
