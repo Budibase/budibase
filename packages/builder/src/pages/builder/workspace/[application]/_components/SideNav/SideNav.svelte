@@ -7,6 +7,7 @@
     Divider,
     TooltipPosition,
     TooltipType,
+    notifications,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
@@ -39,9 +40,10 @@
     PublishResourceState,
     WorkspaceResource,
   } from "@budibase/types"
-  import { derived, type Readable } from "svelte/store"
+  import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
   import { bb } from "@/stores/bb"
+  import { buildLiveUrl } from "@/helpers/urls"
 
   type ResourceLinkFn = (_id: string) => string
 
@@ -79,9 +81,8 @@
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
 
-  let allResourceStores: Readable<AllResourceStores> | null = null
-  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
-    null
+  let allResourceStores: Readable<AllResourceStores> | undefined
+  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | undefined
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
@@ -113,49 +114,67 @@
       })
     )
 
+  type ResourceItem = AllResourceStores[keyof AllResourceStores][number]
+
+  const getResourceId = (item: ResourceItem) => {
+    if ("_id" in item && typeof item._id === "string") {
+      return item._id
+    }
+    if ("id" in item && typeof item.id === "string") {
+      return item.id
+    }
+  }
+
+  const hasName = (
+    item: ResourceItem
+  ): item is ResourceItem & { name: string } =>
+    "name" in item && typeof item.name === "string"
+
+  const isQueryResource = (item: ResourceItem): item is Query =>
+    "datasourceId" in item && typeof item.datasourceId === "string"
+
   const generateResourceLookup = (
     allResourceStores: Readable<AllResourceStores>
   ) => {
     return derivedMemo(allResourceStores, stores => {
       const lookup: Record<string, UIFavouriteResource> = {}
+      const favourites = get(favouriteLookup)
+      const datasourceMap = get(datasourceLookup)
 
-      Object.values(stores)
-        .flat()
-        .forEach(item => {
-          const id = (item as any)._id ?? (item as any).id
-          const favourite = $favouriteLookup[id]
-
-          // The only exception for the icons is the REST query icon
-          let isRestQuery = false
-          if (
-            "datasourceId" in item &&
-            favourite?.resourceType === WorkspaceResource.QUERY
-          ) {
-            const dataSource = $datasourceLookup[item.datasourceId]
-            isRestQuery =
-              dataSource && dataSource.source === IntegrationTypes.REST
+      for (const key of Object.keys(stores) as Array<keyof AllResourceStores>) {
+        const resources = stores[key] as ResourceItem[]
+        for (const resource of resources) {
+          const id = getResourceId(resource)
+          if (!id) {
+            continue
           }
 
-          if (id && item.name) {
-            const resource: UIFavouriteResource = {
-              name: item.name,
-              icon: isRestQuery
-                ? "globe"
-                : ResourceIcons[favourite?.resourceType],
-            }
-
-            const isWorkspaceAppFavourite =
-              favourite?.resourceType === WorkspaceResource.WORKSPACE_APP
-            const hasPublishStatus =
-              isWorkspaceAppFavourite && "publishStatus" in item
-
-            if (hasPublishStatus) {
-              resource.workspaceApp = item as UIWorkspaceApp
-            }
-
-            lookup[id] = resource
+          const favourite = favourites[id]
+          if (!favourite || !hasName(resource)) {
+            continue
           }
-        })
+
+          const isRestQuery =
+            favourite.resourceType === WorkspaceResource.QUERY &&
+            isQueryResource(resource) &&
+            datasourceMap[resource.datasourceId]?.source ===
+              IntegrationTypes.REST
+
+          const entry: UIFavouriteResource = {
+            name: resource.name,
+            icon: isRestQuery ? "globe" : ResourceIcons[favourite.resourceType],
+          }
+
+          if (favourite.resourceType === WorkspaceResource.WORKSPACE_APP) {
+            const workspaceApp = stores.apps.find(app => app._id === id)
+            if (workspaceApp) {
+              entry.workspaceApp = workspaceApp
+            }
+          }
+
+          lookup[id] = entry
+        }
+      }
 
       return lookup
     })
@@ -163,8 +182,9 @@
 
   // None of this needs to be done if the side bar is closed
   const initFavourites = () => {
-    allResourceStores = initResourceStores()
-    resourceLookup = generateResourceLookup(allResourceStores)
+    const stores = initResourceStores()
+    allResourceStores = stores
+    resourceLookup = generateResourceLookup(stores)
   }
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
@@ -181,7 +201,7 @@
           (app: UIWorkspaceApp) => app._id === id
         )
         if (!wsa) {
-          console.error("Could not resolve the workspace app URL")
+          notifications.error("Could not resolve the workspace app URL")
           return ""
         }
         return `${appPrefix}/design/${wsa.screens[0]?._id}`
@@ -197,34 +217,22 @@
     return link[favourite.resourceType]?.(favourite.resourceId)
   }
 
-  const sanitiseSegment = (segment?: string) => {
-    if (!segment) {
-      return ""
-    }
-    return segment.startsWith("/") ? segment : `/${segment}`
-  }
-
   const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp) => {
-    const baseUrl = sanitiseSegment($appStore.url)
-    if (!workspaceApp || !baseUrl) {
+    if (!workspaceApp) {
       return null
     }
 
-    const workspaceAppUrl = sanitiseSegment(workspaceApp.url)
-    const combined = `${baseUrl}${workspaceAppUrl}`.replace(/\/$/, "")
-    if (!combined) {
-      return null
-    }
+    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
 
-    return `/app${combined}`
+    return liveUrl || null
   }
 
   const openLiveWorkspaceApp = (liveUrl?: string | null) => {
     if (!liveUrl) {
-      console.error("Could not resolve live workspace app URL")
+      notifications.error("Could not resolve live workspace app URL")
       return
     }
-    window.open(liveUrl, "_blank", "noopener")
+    window.open(liveUrl, "_blank")
   }
 
   const unPin = () => {
@@ -367,10 +375,13 @@
           {:else}
             <div class="favourite-links">
               {#each favourites as favourite}
-                {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
-                  name: favourite.resourceId,
-                  icon: undefined,
-                }}
+                {@const lookup =
+                  $resourceLookup?.[favourite.resourceId] ?? {
+                    name: favourite.resourceId,
+                    icon:
+                      ResourceIcons[favourite.resourceType] ??
+                      ResourceIcons[WorkspaceResource.TABLE],
+                  }}
                 {@const workspaceApp = lookup?.workspaceApp}
                 {@const showLiveLink =
                   favourite.resourceType === WorkspaceResource.WORKSPACE_APP &&

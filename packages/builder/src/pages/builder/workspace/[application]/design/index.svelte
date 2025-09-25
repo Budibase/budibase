@@ -6,6 +6,7 @@
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
+  import { buildLiveUrl } from "@/helpers/urls"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
@@ -92,13 +93,6 @@
     }
   }
 
-  const sanitiseSegment = (segment?: string) => {
-    if (!segment) {
-      return ""
-    }
-    return segment.startsWith("/") ? segment : `/${segment}`
-  }
-
   const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
     if (
       !workspaceApp ||
@@ -108,25 +102,16 @@
       return null
     }
 
-    const baseUrl = sanitiseSegment($appStore.url)
-    if (!baseUrl) {
-      return null
-    }
+    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
 
-    const workspaceAppUrl = sanitiseSegment(workspaceApp.url)
-    const combined = `${baseUrl}${workspaceAppUrl}`.replace(/\/$/, "")
-    if (!combined) {
-      return null
-    }
-
-    return `/app${combined}`
+    return liveUrl || null
   }
 
   const openLiveWorkspaceApp = (liveUrl: string | null) => {
     if (!liveUrl || typeof window === "undefined") {
       return
     }
-    window.open(liveUrl, "_blank", "noopener")
+    window.open(liveUrl, "_blank")
   }
 
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
