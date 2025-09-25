@@ -110,8 +110,8 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
   }
 }
 
-export async function syncApp(
-  appId: string,
+export async function syncWorkspace(
+  workspaceId: string,
   opts?: { automationOnly?: boolean }
 ): Promise<{ message: string }> {
   if (env.DISABLE_AUTO_PROD_APP_SYNC) {
@@ -121,12 +121,12 @@ export async function syncApp(
     }
   }
 
-  if (dbCore.isProdWorkspaceID(appId)) {
+  if (dbCore.isProdWorkspaceID(workspaceId)) {
     throw new Error("This action cannot be performed for production apps")
   }
 
   // replicate prod to dev
-  const prodAppId = dbCore.getProdWorkspaceID(appId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
 
   // specific case, want to make sure setup is skipped
   const prodDb = context.getProdWorkspaceDB({ skip_setup: true })
@@ -135,8 +135,8 @@ export async function syncApp(
   let error
   if (exists) {
     const replication = new dbCore.Replication({
-      source: prodAppId,
-      target: appId,
+      source: prodWorkspaceId,
+      target: workspaceId,
     })
     try {
       const replOpts = replication.appReplicateOpts()

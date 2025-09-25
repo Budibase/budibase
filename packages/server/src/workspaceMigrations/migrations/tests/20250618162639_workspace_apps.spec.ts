@@ -1,12 +1,12 @@
 import { structures } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import sdk from "../../../sdk"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250618162639_workspace_apps"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20250618162639_workspace_apps",
     func: migration,
@@ -19,20 +19,20 @@ const config = setup.getConfig()
 describe.each([
   ["dev", () => config.getDevWorkspaceId()],
   ["prod", () => config.getProdWorkspaceId()],
-])("Workspace apps (%s)", (_, getAppId) => {
+])("Workspace apps (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(async () => {
     tk.reset()
-    for (const appId of [
+    for (const workspaceId of [
       config.getDevWorkspaceId(),
       config.getProdWorkspaceId(),
     ]) {
-      await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+      await config.doInContext(workspaceId, async () => {
+        await updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: "",
         })
 
@@ -49,7 +49,7 @@ describe.each([
   })
 
   it("migration will never create multiple workspace apps", async () => {
-    await config.doInContext(getAppId(), () =>
+    await config.doInContext(getWorkspaceId(), () =>
       processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 

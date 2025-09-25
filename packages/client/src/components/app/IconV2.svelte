@@ -7,47 +7,49 @@
   const component = getContext("component")
 
   export let icon
-  export let size
+  export let size = 24
+  export let weight = "regular"
   export let color
   export let onClick
 
-  // Backwards compatibility: detect if icon is old RemixIcon format or new Phosphor format
-  $: isLegacyIcon = icon && (icon.startsWith("ri-") || icon.includes("remix"))
-  $: isPhosphorIcon = icon && !isLegacyIcon
-
-  // Load Phosphor icon weight for new icons
-  $: if (isPhosphorIcon) {
-    loadPhosphorIconWeight("regular")
+  $: if (weight && icon) {
+    loadPhosphorIconWeight(weight)
   }
-
-  // Generate appropriate icon class
-  $: iconClass = isPhosphorIcon
-    ? (() => {
-        const iconName = icon.replace(/^ph-/, "")
-        return `ph ph-${iconName}`
-      })()
-    : icon
 
   $: styles = {
     ...$component.styles,
     normal: {
       ...$component.styles.normal,
       color: color || "var(--spectrum-global-color-gray-900)",
+      "font-size": `${size}px`,
     },
   }
+
+  $: iconClass = icon
+    ? (() => {
+        // Handle both prefixed (ph-star) and clean (star) icon names
+        const iconName = icon.replace(/^ph-/, "")
+        if (weight === "regular") {
+          return `ph ph-${iconName}`
+        } else {
+          return `ph-${weight} ph-${iconName}`
+        }
+      })()
+    : ""
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if icon}
   <i
+    class={iconClass}
     use:styleable={styles}
-    class="{iconClass} {size}"
     on:click={onClick}
     class:hoverable={onClick != null}
+    style="width: {size}px; height: {size}px; display: inline-flex; align-items: center; justify-content: center;"
   />
 {:else if $builderStore.inBuilder}
-  <div use:styleable={styles}>
+  <div use:styleable={styles} style="width: {size}px; height: {size}px;">
     <Placeholder />
   </div>
 {/if}

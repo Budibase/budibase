@@ -12,6 +12,7 @@ import {
 import { getProdAppID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
+// TODO: check its usages, as appId checks are not actually checked for global builders
 export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
@@ -42,6 +43,25 @@ export function isAdmin(user?: UserAdminInfo): boolean {
     return false
   }
   return hasAdminPermissions(user)
+}
+
+export function isAdminOrWorkspaceBuilder(
+  user: UserBuilderInfo & UserAdminInfo,
+  appId: string
+): boolean {
+  if (!user) {
+    return false
+  }
+
+  if (isAdmin(user)) {
+    return true
+  }
+
+  if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+    return true
+  }
+
+  return false
 }
 
 export function isAdminOrBuilder(
