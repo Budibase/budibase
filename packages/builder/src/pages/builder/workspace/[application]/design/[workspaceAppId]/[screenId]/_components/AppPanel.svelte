@@ -58,18 +58,6 @@
     <div class="header">
       <div class="header-left">
         <div class="workspace-info">
-          <div class="workspace-info-toggle">
-            <PublishStatusBadge
-              status={selectedWorkspaceApp.publishStatus.state}
-              loading={changingStatus}
-            />
-            <Toggle
-              noPadding
-              on:change={handleToggleChange}
-              value={toggleValue}
-              disabled={changingStatus}
-            />
-          </div>
           {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
             <div class="workspace-url">
               <AbsTooltip text="Open live app">
@@ -111,6 +99,18 @@
         </ActionButton>
         <div class="divider-container">
           <Divider size="S" vertical />
+        </div>
+        <div class="workspace-info-toggle">
+          <PublishStatusBadge
+            status={selectedWorkspaceApp.publishStatus.state}
+            loading={changingStatus}
+          />
+          <Toggle
+            noPadding
+            on:change={handleToggleChange}
+            value={toggleValue}
+            disabled={changingStatus}
+          />
         </div>
       </div>
     </div>
