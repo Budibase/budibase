@@ -2,9 +2,7 @@ import { derived, Writable } from "svelte/store"
 import {
   DefaultBuilderTheme,
   ensureValidTheme,
-  getThemeBackgroundColor,
   getThemeClassNames,
-  isDarkTheme,
   ThemeOptions,
   ThemeClassPrefix,
 } from "@budibase/shared-core"
@@ -30,6 +28,7 @@ class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
       },
     })
 
+    // Update theme class when store changes
     this.subscribe(({ theme }) => {
       const classNames = getThemeClassNames(theme).split(" ")
       ThemeOptions.forEach(option => {
@@ -39,33 +38,6 @@ class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
           classNames.includes(className)
         )
       })
-
-      const backgroundColor = getThemeBackgroundColor(
-        theme,
-        DefaultBuilderTheme
-      )
-      document.documentElement.style.backgroundColor = backgroundColor
-      document.documentElement.style.colorScheme = isDarkTheme(theme)
-        ? "dark"
-        : "light"
-
-      const applyBodyBackground = () => {
-        if (document.body) {
-          document.body.style.backgroundColor = backgroundColor
-          return true
-        }
-        return false
-      }
-
-      if (!applyBodyBackground()) {
-        document.addEventListener(
-          "DOMContentLoaded",
-          () => {
-            applyBodyBackground()
-          },
-          { once: true }
-        )
-      }
     })
   }
 }
