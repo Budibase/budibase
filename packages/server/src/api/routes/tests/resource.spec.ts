@@ -1,5 +1,7 @@
+import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import { ResourceType, Table, WorkspaceApp } from "@budibase/types"
+import _ from "lodash"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import {
@@ -88,17 +90,24 @@ describe("/api/resources/usage", () => {
 
   describe("duplicateResourceToWorkspace", () => {
     let basicWorkspaceApp: WorkspaceApp
+    let internalTables: Table[] = []
 
     beforeAll(async () => {
       await config.createWorkspace()
-      await config.api.table.save(
-        basicTable(undefined, { name: "Internal table 1" })
+      internalTables.push(
+        await config.api.table.save(
+          basicTable(undefined, { name: "Internal table 1" })
+        )
       )
-      await config.api.table.save(
-        basicTable(undefined, { name: "Internal table 2" })
+      internalTables.push(
+        await config.api.table.save(
+          basicTable(undefined, { name: "Internal table 2" })
+        )
       )
-      await config.api.table.save(
-        basicTable(undefined, { name: "Internal table 3" })
+      internalTables.push(
+        await config.api.table.save(
+          basicTable(undefined, { name: "Internal table 3" })
+        )
       )
 
       const datasource1 = await config.createDatasource()
@@ -118,7 +127,7 @@ describe("/api/resources/usage", () => {
 
     it("copies the resource and dependencies into the destination workspace", async () => {
       const newWorkspace = await config.api.workspace.create({
-        name: "Destination",
+        name: `Destination ${generator.natural()}`,
       })
 
       tk.freeze(new Date())
@@ -148,6 +157,47 @@ describe("/api/resources/usage", () => {
           )
         }
       )
+    })
+
+    it("rejects non workspace app document types", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const response = await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resourceId: _.sample(internalTables)?._id!,
+          toWorkspace: newWorkspace.appId,
+        },
+        {
+          status: 400,
+        }
+      )
+      expect(response.body).toEqual({
+        message: '"ta" cannot be duplicated',
+        status: 400,
+        stack: expect.anything(),
+      })
+    })
+
+    it("throws when destination workspace already exists", async () => {
+      const response = await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resourceId: basicWorkspaceApp._id!,
+          toWorkspace: "app_unexisting",
+        },
+        {
+          status: 400,
+        }
+      )
+      expect(response.body).toEqual({
+        message: "Destination workspace does not exist",
+        error: {
+          code: "http",
+        },
+        status: 400,
+        stack: expect.anything(),
+      })
     })
   })
 })
