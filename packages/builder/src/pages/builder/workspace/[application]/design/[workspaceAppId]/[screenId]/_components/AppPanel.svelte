@@ -63,12 +63,13 @@
               <button
                 class="live-app-btn"
                 type="button"
+                aria-label="View live app"
                 on:click={() => {
                   window.open(liveUrl, "_blank")
                 }}
               >
                 <Icon name="globe-simple" size="S" />
-                <span>View live app</span>
+                <span class="live-app-btn__label">View live app</span>
               </button>
             </div>
           {/if}
@@ -191,10 +192,15 @@
     background: transparent;
     cursor: pointer;
     font-weight: 500;
+    margin-right: var(--spacing-s);
     transition:
       background 130ms ease-out,
       border 130ms ease-out,
       color 130ms ease-out;
+  }
+
+  .live-app-btn__label {
+    white-space: nowrap;
   }
 
   .live-app-btn:hover,
