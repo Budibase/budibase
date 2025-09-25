@@ -31,7 +31,7 @@
         <Banner
           type={BANNER_TYPES.INFO}
           extraLinkText={"Please select a plan."}
-          extraLinkAction={$licensing.goToUpgradePage}
+          extraLinkAction={licensing.goToUpgradePage}
           showCloseButton={false}
         >
           Your free trial will end {daysUntilCancel()}

@@ -1,27 +1,29 @@
-<script>
+<script lang="ts">
+  import type { UIEvent } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
+  import { fade } from "svelte/transition"
   import FancyField from "./FancyField.svelte"
   import FancyFieldLabel from "./FancyFieldLabel.svelte"
-  import { fade } from "svelte/transition"
 
-  export let label
-  export let value
-  export let type = "text"
-  export let disabled = false
-  export let error = null
-  export let validate = null
-  export let suffix = null
-  export let validateOn = "change"
+  export let label: string
+  export let value: string
+  export let type: string = "text"
+  export let disabled: boolean = false
+  export let error: string | null = null
+  export let validate: ((_value: string | undefined) => string | null) | null =
+    null
+  export let suffix: string | null = null
+  export let validateOn: "change" | "blur" = "change"
 
   const dispatch = createEventDispatcher()
 
-  let ref
+  let ref: HTMLInputElement
   let focused = false
   let autofilled = false
 
   $: placeholder = !autofilled && !focused && !value
 
-  const onChange = e => {
+  const onChange = (e: UIEvent) => {
     const newValue = e.target.value
     dispatch("change", newValue)
     value = newValue
@@ -30,7 +32,7 @@
     }
   }
 
-  const onBlur = e => {
+  const onBlur = (e: UIEvent) => {
     focused = false
     const newValue = e.target.value
     dispatch("blur", newValue)

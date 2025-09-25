@@ -1,6 +1,6 @@
+import { GroupUserDatasource } from "@budibase/types"
 import { get } from "svelte/store"
 import BaseDataFetch, { DataFetchParams } from "./DataFetch"
-import { GroupUserDatasource, InternalTable } from "@budibase/types"
 
 interface GroupUserQuery {
   groupId: string
@@ -22,7 +22,6 @@ export default class GroupUserFetch extends BaseDataFetch<
       ...opts,
       datasource: {
         type: "groupUser",
-        tableId: InternalTable.USER_METADATA,
       },
     })
   }
