@@ -15,4 +15,9 @@ export const libDependencies: Record<string, LibDependency> = {
     outFile: "html5-qrcode.js",
     globalProperty: "_qrcode",
   },
+  html2pdf: {
+    sourceFile: "html2pdf.ts",
+    outFile: "html2pdf.js",
+    globalProperty: "_html2pdf",
+  },
 }

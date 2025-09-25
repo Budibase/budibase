@@ -1,5 +1,4 @@
-// @ts-ignore
-import html2pdf from "html2pdf.js"
+import { loadHtml2pdf } from "@/utils/dependencies"
 
 export const pxToPt = (px: number) => (px / 4) * 3
 export const ptToPx = (pt: number) => (pt / 3) * 4
@@ -23,6 +22,8 @@ export async function htmlToPdf(el: HTMLElement, opts: PDFOptions = {}) {
     footer: true,
     ...opts,
   }
+
+  const html2pdf = await loadHtml2pdf()
 
   return new Promise(resolve => {
     // Sanity check title

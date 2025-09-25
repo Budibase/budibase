@@ -52,3 +52,9 @@ export const loadCharts = __USE_DYNAMIC_LOADING__
 export const loadQRCode = __USE_DYNAMIC_LOADING__
   ? () => loadDependency(libDependencies.qrcode)
   : async () => (await import("html5-qrcode")).Html5Qrcode
+
+// eslint-disable-next-line no-undef
+export const loadHtml2pdf = __USE_DYNAMIC_LOADING__
+  ? () => loadDependency(libDependencies.html2pdf)
+  : // @ts-expect-error
+    async () => (await import("html2pdf.js")).default
