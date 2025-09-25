@@ -13,7 +13,7 @@
   export let validate: ((_value: string | undefined) => string | null) | null =
     null
   export let suffix: string | null = null
-  export let validateOn: string = "change"
+  export let validateOn: "change" | "blur" = "change"
 
   const dispatch = createEventDispatcher()
 

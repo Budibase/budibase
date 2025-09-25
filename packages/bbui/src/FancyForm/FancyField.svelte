@@ -1,4 +1,4 @@
-<script lang="ts" generics="O">
+<script lang="ts" generics="V">
   import { getContext, onMount } from "svelte"
   import Icon from "../Icon/Icon.svelte"
   import ErrorMessage from "./ErrorMessage.svelte"
@@ -7,8 +7,8 @@
   export let error: string | null = null
   export let focused: boolean = false
   export let clickable: boolean = false
-  export let validate: ((_value: O | undefined) => string | null) | null
-  export let value: O | undefined
+  export let validate: ((_value: V | undefined) => string | null) | null
+  export let value: V | undefined
   export let ref: HTMLDivElement | undefined = undefined
   export let autoHeight: boolean | undefined = undefined
   export let compact: boolean = false
