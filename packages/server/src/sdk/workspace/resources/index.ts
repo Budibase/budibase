@@ -57,16 +57,12 @@ export async function searchForUsages(
     )
   }
 
-  let internalTableFound = false
   const searchForResource = (json: string) => {
     for (const search of baseSearchTargets) {
       if (
         json.includes(search.id) &&
         !resources.find(resource => resource.id === search.id)
       ) {
-        if (search.type === ResourceType.TABLE) {
-          internalTableFound = true
-        }
         resources.push({
           ...search,
         })
@@ -106,19 +102,6 @@ export async function searchForUsages(
     for (const automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(json)
-    }
-  }
-
-  // If internal table found and we're searching for tables, add all internal tables
-  if (internalTableFound && tables.length) {
-    for (const table of tables) {
-      if (!resources.find(resource => resource.id === table._id)) {
-        resources.push({
-          id: table._id!,
-          name: table.name,
-          type: ResourceType.TABLE,
-        })
-      }
     }
   }
 
