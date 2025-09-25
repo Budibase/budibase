@@ -1,6 +1,6 @@
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
-import { ResourceType, Table, WorkspaceApp } from "@budibase/types"
+import { ResourceType, Screen, Table, WorkspaceApp } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
@@ -89,7 +89,7 @@ describe("/api/resources/usage", () => {
   })
 
   describe("duplicateResourceToWorkspace", () => {
-    let basicWorkspaceApp: WorkspaceApp
+    let basicApp: { info: WorkspaceApp; screens: Screen[] }
     let internalTables: Table[] = []
 
     beforeAll(async () => {
@@ -117,28 +117,37 @@ describe("/api/resources/usage", () => {
       const datasource2 = await config.createDatasource()
       await config.api.query.save(basicQuery(datasource2._id))
 
-      basicWorkspaceApp = (
-        await config.api.workspaceApp.create({
-          name: "My first app",
-          url: "/my-first-app",
-        })
-      ).workspaceApp
+      basicApp = {
+        info: (
+          await config.api.workspaceApp.create({
+            name: "My first app",
+            url: "/my-first-app",
+          })
+        ).workspaceApp,
+        screens: [],
+      }
+
+      {
+        const screen = basicScreen()
+        screen.workspaceAppId = basicApp.info._id!
+        basicApp.screens.push(await config.api.screen.save(screen))
+      }
     })
 
-    it("copies the resource and dependencies into the destination workspace", async () => {
+    it("copies the resource and dependencies into the destination workspace for basic apps", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
       })
 
       tk.freeze(new Date())
       const response = await config.api.resource.duplicateResourceToWorkspace({
-        resourceId: basicWorkspaceApp._id!,
+        resourceId: basicApp.info._id!,
         toWorkspace: newWorkspace.appId,
       })
 
       expect(response.body).toEqual({
         resources: {
-          workspace_app: [basicWorkspaceApp._id],
+          workspace_app: [basicApp.info._id],
         },
       })
 
@@ -147,13 +156,24 @@ describe("/api/resources/usage", () => {
         async () => {
           const { workspaceApps: resultingWorkspaceApps } =
             await config.api.workspaceApp.fetch()
-          expect(resultingWorkspaceApps).toContainEqual(
+          expect(resultingWorkspaceApps).toEqual([
             expect.objectContaining({
-              ...basicWorkspaceApp,
+              ...basicApp.info,
               _rev: expect.stringMatching(/^1-\w+/),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-            })
+            }),
+          ])
+
+          const screens = await config.api.screen.list()
+          expect(screens).toEqual(
+            basicApp.screens.map(s => ({
+              ...s,
+              pluginAdded: undefined,
+              _rev: expect.stringMatching(/^1-\w+/),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }))
           )
         }
       )
@@ -183,7 +203,7 @@ describe("/api/resources/usage", () => {
     it("throws when destination workspace already exists", async () => {
       const response = await config.api.resource.duplicateResourceToWorkspace(
         {
-          resourceId: basicWorkspaceApp._id!,
+          resourceId: basicApp.info._id!,
           toWorkspace: "app_unexisting",
         },
         {

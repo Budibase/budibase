@@ -214,6 +214,12 @@ export async function duplicateResourceToWorkspace(
     ...requiredResources.map(r => r.id),
   ])
 
+  const screens = await sdk.screens.fetch()
+  const appScreens = screens.filter(
+    screen => screen.workspaceAppId === resourceId
+  )
+  docsToCopy.push(...appScreens)
+
   await destinationDb.bulkDocs(
     docsToCopy.map<AnyDocument>(d => {
       delete d._rev
