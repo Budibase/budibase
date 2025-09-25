@@ -12,6 +12,10 @@ declare module "svelte" {
       type: string
     }>
   }
+  export function getContext(key: "fancy-form"): {
+    registerField: (id: string, api: { validate: () => boolean }) => void
+    unregisterField: (id: string) => void
+  }
 }
 
 interface Module {
