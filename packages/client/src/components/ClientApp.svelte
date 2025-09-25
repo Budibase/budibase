@@ -395,6 +395,7 @@
   /* Preview styles */
   #clip-root.preview {
     padding: 6px;
+    background-color: transparent;
   }
   #clip-root.tablet-preview {
     width: calc(1024px + 12px);
