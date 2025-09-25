@@ -1,6 +1,9 @@
 import { getDocumentType } from "@budibase/shared-core"
 import {
   DocumentType,
+  DuplicateResourceToWorkspaceRequest,
+  DuplicateResourceToWorkspaceResponse,
+  ResourceType,
   ResourceUsageRequest,
   ResourceUsageResponse,
   UserCtx,
@@ -24,9 +27,16 @@ export async function searchForResourceUsage(
   }
 }
 
-export async function duplicateResourceToWorkspace(ctx: UserCtx<any, any>) {
-  const { id, toWorkspace } = ctx.request.body
-  const documentType = getDocumentType(ctx.request.body.id)
+export async function duplicateResourceToWorkspace(
+  ctx: UserCtx<
+    DuplicateResourceToWorkspaceRequest,
+    DuplicateResourceToWorkspaceResponse,
+    { id: string }
+  >
+) {
+  const { toWorkspace } = ctx.request.body
+  const { id } = ctx.params
+  const documentType = getDocumentType(id)
   if (!documentType) {
     ctx.throw("Document type could not be inferred from the id", 400)
   }
@@ -34,9 +44,11 @@ export async function duplicateResourceToWorkspace(ctx: UserCtx<any, any>) {
     ctx.throw(`"${documentType}" cannot be duplicated`, 400)
   }
 
-  await sdk.resources.duplicateResourceToWorkspace(
-    id,
-    documentType,
-    toWorkspace
-  )
+  ctx.body = {
+    resources: await sdk.resources.duplicateResourceToWorkspace(
+      id,
+      ResourceType.WORKSPACE_APP,
+      toWorkspace
+    ),
+  }
 }

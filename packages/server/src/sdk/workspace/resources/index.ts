@@ -5,7 +5,6 @@ import {
   NotImplementedError,
 } from "@budibase/backend-core"
 import {
-  DocumentType,
   ResourceType,
   Screen,
   Table,
@@ -188,10 +187,10 @@ export async function searchForUsages(
 
 export async function duplicateResourceToWorkspace(
   resourceId: string,
-  resourceType: DocumentType.WORKSPACE_APP,
+  resourceType: ResourceType.WORKSPACE_APP,
   toWorkspace: string
-) {
-  if (resourceType !== DocumentType.WORKSPACE_APP) {
+): Promise<Partial<Record<ResourceType, string[]>>> {
+  if (resourceType !== ResourceType.WORKSPACE_APP) {
     throw new NotImplementedError(
       `Duplicating ${resourceType} is not supported`
     )
@@ -205,7 +204,7 @@ export async function duplicateResourceToWorkspace(
   const destinationDb = db.getDB(db.getDevWorkspaceID(toWorkspace), {
     skip_setup: true,
   })
-  if (await destinationDb.exists()) {
+  if (!(await destinationDb.exists())) {
     throw new HTTPError("Destination workspace does not exist", 400)
   }
 
@@ -214,4 +213,15 @@ export async function duplicateResourceToWorkspace(
     ...requiredResources.map(r => r.id),
   ])
   await destinationDb.bulkDocs(docsToCopy)
+  return {
+    [resourceType]: [resourceId],
+    ...requiredResources.reduce<Partial<Record<ResourceType, string[]>>>(
+      (acc, r) => {
+        acc[r.type] ??= []
+        acc[r.type]!.push(r.id)
+        return acc
+      },
+      {}
+    ),
+  }
 }
