@@ -1,6 +1,7 @@
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
+  Datasource,
   InsertWorkspaceAppRequest,
   ResourceType,
   Screen,
@@ -177,7 +178,11 @@ describe("/api/resources/usage", () => {
     async function validateApp(
       appId: string,
       expectedApp: WorkspaceApp,
-      expected: { screens?: Screen[]; tables?: Table[] }
+      expected: {
+        screens?: Screen[]
+        tables?: Table[]
+        datasource: Datasource[]
+      }
     ) {
       await config.withHeaders({ [Header.APP_ID]: appId }, async () => {
         const { workspaceApps: resultingWorkspaceApps } =
@@ -216,6 +221,17 @@ describe("/api/resources/usage", () => {
             })),
           ].sort((a, b) => a._id!.localeCompare(b._id!))
         )
+
+        const datasources = await config.api.datasource.fetch()
+        expect(datasources).toEqual([
+          expect.objectContaining({ _id: "bb_internal" }),
+          ...(expected.datasource || []).map(d => ({
+            ...d,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })),
+        ])
       })
     }
 
