@@ -837,8 +837,9 @@ async function destroyWorkspace(ctx: UserCtx) {
 
   await deleteAppFiles(prodWorkspaceId)
 
-  await removeWorkspaceFromUserRoles(ctx, prodWorkspaceId)
+  await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)
   await invalidateWorkspaceCache(prodWorkspaceId)
+
   return result
 }
 
