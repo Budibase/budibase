@@ -64,11 +64,11 @@
                 class="live-app-btn"
                 type="button"
                 on:click={() => {
-                  window.open(liveUrl, "_blank", "noopener,noreferrer")
+                  window.open(liveUrl, "_blank")
                 }}
               >
                 <Icon name="globe-simple" size="S" />
-                <span>Open live app</span>
+                <span>View live app</span>
               </button>
             </div>
           {/if}
