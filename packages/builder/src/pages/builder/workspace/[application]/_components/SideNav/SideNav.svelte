@@ -81,7 +81,6 @@
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
 
-  let allResourceStores: Readable<AllResourceStores> | undefined
   let resourceLookup: Readable<Record<string, UIFavouriteResource>> | undefined
 
   $: appId = $appStore.appId
@@ -183,7 +182,6 @@
   // None of this needs to be done if the side bar is closed
   const initFavourites = () => {
     const stores = initResourceStores()
-    allResourceStores = stores
     resourceLookup = generateResourceLookup(stores)
   }
 
@@ -375,13 +373,12 @@
           {:else}
             <div class="favourite-links">
               {#each favourites as favourite}
-                {@const lookup =
-                  $resourceLookup?.[favourite.resourceId] ?? {
-                    name: favourite.resourceId,
-                    icon:
-                      ResourceIcons[favourite.resourceType] ??
-                      ResourceIcons[WorkspaceResource.TABLE],
-                  }}
+                {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
+                  name: favourite.resourceId,
+                  icon:
+                    ResourceIcons[favourite.resourceType] ??
+                    ResourceIcons[WorkspaceResource.TABLE],
+                }}
                 {@const workspaceApp = lookup?.workspaceApp}
                 {@const showLiveLink =
                   favourite.resourceType === WorkspaceResource.WORKSPACE_APP &&
