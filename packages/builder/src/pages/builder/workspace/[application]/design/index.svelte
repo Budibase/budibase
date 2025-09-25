@@ -142,7 +142,7 @@
       },
       {
         icon: "globe-simple",
-        name: "Open live app",
+        name: "View live app",
         visible: !!liveUrl,
         callback: () => openLiveWorkspaceApp(liveUrl),
       },

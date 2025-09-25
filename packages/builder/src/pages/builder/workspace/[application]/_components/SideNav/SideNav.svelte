@@ -407,7 +407,7 @@
                           <button
                             type="button"
                             class="live-app-link"
-                            aria-label="Open live app"
+                            aria-label="View live app"
                             on:click|stopPropagation|preventDefault={() =>
                               openLiveWorkspaceApp(liveUrl)}
                           >
@@ -417,7 +417,7 @@
                               hoverable
                               color="#fff"
                               hoverColor="#fff"
-                              tooltip="Open live app"
+                              tooltip="View live app"
                               tooltipType={TooltipType.Info}
                               tooltipPosition={TooltipPosition.Top}
                             />
