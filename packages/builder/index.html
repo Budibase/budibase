@@ -49,35 +49,6 @@
             : fallback
         }
 
-        const getThemeClassNames = value => {
-          const theme = ensureTheme(value)
-          const base = ThemeOptions.find(option => option.id === theme)?.base
-          const classes = [`${ThemeClassPrefix}${theme}`]
-          if (base) {
-            classes.unshift(`${ThemeClassPrefix}${base}`)
-          }
-          return classes
-        }
-
-        const applyTheme = theme => {
-          const normalized = ensureTheme(theme)
-          const existing = document.documentElement.className
-          const preserved = existing
-            .split(/\s+/)
-            .filter(
-              name =>
-                name &&
-                name !== "spectrum" &&
-                name !== "spectrum--medium" &&
-                !name.startsWith(ThemeClassPrefix)
-            )
-          const classes = new Set(preserved)
-          classes.add("spectrum")
-          classes.add("spectrum--medium")
-          getThemeClassNames(normalized).forEach(name => classes.add(name))
-          document.documentElement.className = Array.from(classes).join(" ")
-        }
-
         const setBackground = theme => {
           const normalized = ensureTheme(theme)
           const color =
@@ -115,7 +86,6 @@
         }
 
         const theme = ensureTheme(getStoredTheme())
-        applyTheme(theme)
         setBackground(theme)
       })()
     </script>
