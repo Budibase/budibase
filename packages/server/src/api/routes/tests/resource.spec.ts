@@ -1,8 +1,10 @@
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
+  Automation,
   Datasource,
   InsertWorkspaceAppRequest,
+  Query,
   ResourceType,
   Screen,
   Table,
@@ -181,7 +183,9 @@ describe("/api/resources/usage", () => {
       expected: {
         screens?: Screen[]
         tables?: Table[]
-        datasource: Datasource[]
+        datasource?: Datasource[]
+        queries?: Query[]
+        automations?: Automation[]
       }
     ) {
       await config.withHeaders({ [Header.APP_ID]: appId }, async () => {
@@ -232,6 +236,26 @@ describe("/api/resources/usage", () => {
             updatedAt: new Date().toISOString(),
           })),
         ])
+
+        const queries = await config.api.query.fetch()
+        expect(queries).toEqual(
+          (expected.queries || []).map(q => ({
+            ...q,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }))
+        )
+
+        const { automations } = await config.api.automation.fetch()
+        expect(automations).toEqual(
+          (expected.automations || []).map(a => ({
+            ...a,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }))
+        )
       })
     }
 
