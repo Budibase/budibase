@@ -1,12 +1,13 @@
-import { get } from "svelte/store"
-import BaseDataFetch, { DataFetchParams } from "./DataFetch"
 import { utils } from "@budibase/shared-core"
 import {
-  InternalTable,
   SearchFilters,
   SearchUsersRequest,
+  StrippedUser,
+  User,
   UserDatasource,
 } from "@budibase/types"
+import { get } from "svelte/store"
+import BaseDataFetch, { DataFetchParams } from "./DataFetch"
 
 interface UserFetchQuery {
   appId?: string
@@ -24,14 +25,14 @@ interface UserDefinition {
 export default class UserFetch extends BaseDataFetch<
   UserDatasource,
   UserDefinition,
-  UserFetchQuery
+  UserFetchQuery,
+  User | StrippedUser
 > {
   constructor(opts: DataFetchParams<UserDatasource, UserFetchQuery>) {
     super({
       ...opts,
       datasource: {
         type: "user",
-        tableId: InternalTable.USER_METADATA,
       },
     })
   }
