@@ -31,6 +31,7 @@
   }
 
   let usedResource: UsedResource[] = []
+  let existingResourcesInDestination: Set<string>
   $: API.resource
     .searchForUsage({
       workspaceAppIds: resource.type === "app" ? [resource.id] : undefined,
@@ -39,6 +40,17 @@
     .then(res => {
       usedResource = res.resources
     })
+
+  $: toWorkspaceId &&
+    API.resource
+      .previewDuplicateResourceToWorkspace(resource.id, {
+        toWorkspace: toWorkspaceId,
+      })
+      .then(res => {
+        existingResourcesInDestination = new Set(
+          Object.entries(res.body.existing).flatMap(([_key, value]) => value)
+        )
+      })
 
   $: usedResourceByType = usedResource?.reduce<
     Partial<Record<ResourceType, UsedResource[]>>
@@ -95,7 +107,14 @@
               {getFriendlyName(type)}
             </div>
             {#each resources as resource}
-              <div>- {resource.name}</div>
+              <div>
+                - {resource.name}
+                {#if existingResourcesInDestination?.has(resource.id)}
+                  - existing ✅
+                {:else if existingResourcesInDestination}
+                  - to be copied ↩️
+                {/if}
+              </div>
             {/each}
           </div>
         {/each}
