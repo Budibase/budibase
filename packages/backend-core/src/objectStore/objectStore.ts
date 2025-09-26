@@ -1,6 +1,7 @@
 const sanitize = require("sanitize-s3-objectkey")
 
 import {
+  _Object,
   GetObjectCommand,
   HeadObjectCommandOutput,
   PutObjectCommandInput,
@@ -374,6 +375,22 @@ export async function* listAllObjects(
   } while (isTruncated && token)
 }
 
+export async function getAllFiles(bucketName: string, path: string) {
+  const objects: Record<string, _Object> = {}
+  await utils.parallelForeach(
+    listAllObjects(bucketName, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+
+      objects[file.Key] = file
+    },
+    5
+  )
+  return objects
+}
+
 /**
  * Generate a presigned url with a default TTL of 1 hour
  */
@@ -427,7 +444,11 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
   })
 }
 
-export async function retrieveDirectory(bucketName: string, path: string) {
+export async function retrieveDirectory(
+  bucketName: string,
+  path: string,
+  toExclude?: RegExp[]
+) {
   return await tracer.trace("retrieveDirectory", async span => {
     span.addTags({ bucketName, path })
 
@@ -438,6 +459,11 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     await utils.parallelForeach(
       listAllObjects(bucketName, path),
       async object => {
+        const { Key } = object
+        if (!Key || toExclude?.some(x => x.test(Key))) {
+          return
+        }
+
         numObjects++
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!

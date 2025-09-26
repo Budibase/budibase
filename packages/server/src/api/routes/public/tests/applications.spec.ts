@@ -46,8 +46,8 @@ describe("check export/import", () => {
       "..",
       "..",
       "tests",
-      "assets",
-      "export.tar.gz"
+      "data",
+      "old-export.enc.tar.gz"
     )
     return await makeRequestFormData(
       "post",

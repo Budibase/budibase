@@ -69,7 +69,7 @@ describe("compare", () => {
 
     it("should allow deleting an application", async () => {
       nock(environment.WORKER_URL!)
-        .delete(`/api/global/roles/${config.getProdWorkspaceId()}`)
+        .delete(`/api/global/roles/${config.getDevWorkspaceId()}`)
         .reply(200, {})
 
       const res = await makeRequest(

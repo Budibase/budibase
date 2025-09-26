@@ -5,7 +5,7 @@ import {
   SQLiteDefinition,
   SQLiteType,
 } from "@budibase/types"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import {
   generateJunctionTableID,
@@ -17,7 +17,7 @@ import { basicTable } from "../../../tests/utilities/structures"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20240604153647_initial_sqs",
     func: migration,
@@ -69,7 +69,7 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 describe.each([
   ["dev", () => config.getDevWorkspaceId()],
   ["prod", () => config.getProdWorkspaceId()],
-])("SQS migration (%s)", (_, getAppId) => {
+])("SQS migration (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
     const table = await config.api.table.save(basicTable())
@@ -80,13 +80,13 @@ describe.each([
   })
 
   beforeEach(async () => {
-    for (const appId of [
+    for (const workspaceId of [
       config.getDevWorkspaceId(),
       config.getProdWorkspaceId(),
     ]) {
       await config.doInTenant(async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: "",
         })
       })
@@ -100,7 +100,7 @@ describe.each([
     const doc = await db.get(SQLITE_DESIGN_DOC_ID)
     await db.remove({ _id: doc._id, _rev: doc._rev })
 
-    await config.doInContext(getAppId(), () =>
+    await config.doInContext(getWorkspaceId(), () =>
       processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
     const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)

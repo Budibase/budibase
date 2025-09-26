@@ -5,7 +5,7 @@ import sdk from "../../sdk"
 const migration = async () => {
   const screens = await sdk.screens.fetch()
 
-  const application = await sdk.applications.metadata.get()
+  const application = await sdk.workspaces.metadata.get()
   const allWorkspaceApps = await sdk.workspaceApps.fetch(
     context.getWorkspaceDB()
   )
