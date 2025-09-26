@@ -101,20 +101,23 @@ if (descriptions.length) {
         datasource = ds.datasource
         client = ds.client
 
-        config.app = await config.api.workspace.update(config.getAppId(), {
-          snippets: [
-            {
-              name: "WeeksAgo",
-              code: `
+        config.devWorkspace = await config.api.workspace.update(
+          config.getDevWorkspaceId(),
+          {
+            snippets: [
+              {
+                name: "WeeksAgo",
+                code: `
               return function (weeks) {
                 const currentTime = new Date(${Date.now()});
                 currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));
                 return currentTime.toISOString();
               }
             `,
-            },
-          ],
-        })
+              },
+            ],
+          }
+        )
       })
 
       async function createTableWithSchema(schema?: TableSchema) {
@@ -3328,7 +3331,9 @@ if (descriptions.length) {
             isInternal &&
               describe("sample data", () => {
                 beforeAll(async () => {
-                  await config.api.workspace.addSampleData(config.appId!)
+                  await config.api.workspace.addSampleData(
+                    config.devWorkspaceId!
+                  )
                   tableOrViewId = DEFAULT_EMPLOYEE_TABLE_SCHEMA._id!
                   rows = await config.api.row.fetch(tableOrViewId)
                 })
@@ -3509,7 +3514,7 @@ if (descriptions.length) {
                     },
                   })
                   await context.doInWorkspaceContext(
-                    config.getAppId(),
+                    config.getDevWorkspaceId(),
                     async () => {
                       const db = context.getWorkspaceDB()
                       const tableDoc = await db.get<Table>(tableOrViewId)

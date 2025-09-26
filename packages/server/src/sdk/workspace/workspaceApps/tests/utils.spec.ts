@@ -1,6 +1,6 @@
 import { structures } from "@budibase/backend-core/tests"
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { WorkspaceApp } from "@budibase/types"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { getMatchedWorkspaceApp } from "../utils"
 
 describe("workspaceApps utils", () => {
@@ -29,9 +29,9 @@ describe("workspaceApps utils", () => {
     "getMatchedWorkspaceApp (url closing char: %s)",
     closingChar => {
       it("should be able to get the base workspaceApp", async () => {
-        await config.doInContext(config.getAppId(), async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
           const result = await getMatchedWorkspaceApp(
-            `/${config.getAppId()}${closingChar}`
+            `/${config.getDevWorkspaceId()}${closingChar}`
           )
           expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[0]._id)
@@ -39,9 +39,9 @@ describe("workspaceApps utils", () => {
       })
 
       it("should be able to get the a workspaceApp by its path", async () => {
-        await config.doInContext(config.getAppId(), async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
           const result = await getMatchedWorkspaceApp(
-            `/${config.getAppId()}/app${closingChar}`
+            `/${config.getDevWorkspaceId()}/app${closingChar}`
           )
           expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[1]._id)
@@ -49,9 +49,9 @@ describe("workspaceApps utils", () => {
       })
 
       it("should be able to get the a workspaceApp by its path for overlapping urls", async () => {
-        await config.doInContext(config.getAppId(), async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
           const result = await getMatchedWorkspaceApp(
-            `/${config.getAppId()}/app2${closingChar}`
+            `/${config.getDevWorkspaceId()}/app2${closingChar}`
           )
           expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[2]._id)
@@ -59,9 +59,9 @@ describe("workspaceApps utils", () => {
       })
 
       it("should return undefined for partial matching paths", async () => {
-        await config.doInContext(config.getAppId(), async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
           const result = await getMatchedWorkspaceApp(
-            `/${config.getAppId()}/app22${closingChar}`
+            `/${config.getDevWorkspaceId()}/app22${closingChar}`
           )
           expect(result).toBeUndefined()
         })

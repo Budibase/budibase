@@ -256,6 +256,37 @@
   const customDrawer = ["string", "number", "barcodeqr", "bigint"]
 </script>
 
+{#if table && schemaFields}
+  <div class="add-fields-btn" class:empty={Object.is(editableFields, {})}>
+    <PropField {componentWidth} {fullWidth}>
+      <div class="prop-control-wrap" bind:this={popoverAnchor}>
+        <ActionGroup>
+          <ActionButton
+            on:click={() => {
+              customPopover.show()
+            }}
+            disabled={!schemaFields}
+          >
+            Edit fields
+          </ActionButton>
+          {#if schemaFields.length}
+            <ActionButton
+              on:click={() => {
+                dispatch("change", {
+                  meta: { fields: {} },
+                  row: {},
+                })
+              }}
+            >
+              Clear
+            </ActionButton>
+          {/if}
+        </ActionGroup>
+      </div>
+    </PropField>
+  </div>
+{/if}
+
 {#each schemaFields || [] as [field, schema]}
   {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
     <PropField
@@ -315,37 +346,6 @@
     </PropField>
   {/if}
 {/each}
-
-{#if table && schemaFields}
-  <div class="add-fields-btn" class:empty={Object.is(editableFields, {})}>
-    <PropField {componentWidth} {fullWidth}>
-      <div class="prop-control-wrap" bind:this={popoverAnchor}>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => {
-              customPopover.show()
-            }}
-            disabled={!schemaFields}
-          >
-            Edit fields
-          </ActionButton>
-          {#if schemaFields.length}
-            <ActionButton
-              on:click={() => {
-                dispatch("change", {
-                  meta: { fields: {} },
-                  row: {},
-                })
-              }}
-            >
-              Clear
-            </ActionButton>
-          {/if}
-        </ActionGroup>
-      </div>
-    </PropField>
-  </div>
-{/if}
 
 <Popover
   align="left"

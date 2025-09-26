@@ -1,5 +1,5 @@
 <script>
-  import { Layout } from "@budibase/bbui"
+  import { Layout, ActionButton } from "@budibase/bbui"
   import { SideNav, SideNavItem } from "@/components/portal/page"
   import { createEventDispatcher } from "svelte"
   import { isActive } from "@roxi/routify"
@@ -7,6 +7,7 @@
   import { fade } from "svelte/transition"
   import Logo from "./Logo.svelte"
   import { menu } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
 
   export let visible = false
 
@@ -56,6 +57,11 @@
         {/if}
       {/each}
     </SideNav>
+    <div>
+      <ActionButton quiet on:click={() => bb.settings()} icon="sliders">
+        Settings
+      </ActionButton>
+    </div>
     <div>
       <UpgradeButton on:click={close} />
     </div>

@@ -1,7 +1,7 @@
 import { generator } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
-import { getAppMigrationVersion } from "../../../workspaceMigrations"
+import { getWorkspaceMigrationVerions } from "../../../workspaceMigrations"
 import * as workspaceMigrations from "../../../workspaceMigrations/migrations"
 import * as setup from "./utilities"
 
@@ -140,7 +140,7 @@ describe("/templates", () => {
       })
 
       await config.withApp(app, async () => {
-        const migrationVersion = await getAppMigrationVersion(app.appId)
+        const migrationVersion = await getWorkspaceMigrationVerions(app.appId)
 
         expect(migrationVersion).toBe("202506021500_test")
 

@@ -8,12 +8,13 @@
     Body,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appStore, initialise } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
+  import { appStore } from "@/stores/builder/app"
+  import { appsStore } from "@/stores/portal/apps"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
+  import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -124,13 +125,13 @@
   }
 
   const setupValidation = async () => {
-    appValidation.name(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
+    workspaceValidation.name(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
     })
-    appValidation.url(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
+    workspaceValidation.url(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
     })
   }
 

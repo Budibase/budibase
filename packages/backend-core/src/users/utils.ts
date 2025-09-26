@@ -1,10 +1,10 @@
+import { sdk } from "@budibase/shared-core"
 import { ContextUser, User, UserGroup, UserIdentifier } from "@budibase/types"
 import * as accountSdk from "../accounts"
-import env from "../environment"
-import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
-import { EmailUnavailableError } from "../errors"
-import { sdk } from "@budibase/shared-core"
 import * as context from "../context"
+import env from "../environment"
+import { EmailUnavailableError } from "../errors"
+import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
 
 // extract from shared-core to make easily accessible from backend-core
 export const isBuilder = sdk.users.isBuilder
@@ -14,6 +14,7 @@ export const isAdminOrBuilder = sdk.users.isAdminOrBuilder
 export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
+export const isAdminOrWorkspaceBuilder = sdk.users.isAdminOrWorkspaceBuilder
 
 export async function creatorsInList(
   users: (User | ContextUser)[],

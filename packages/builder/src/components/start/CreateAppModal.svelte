@@ -13,7 +13,7 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
+  import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import TemplateCard from "@/components/common/TemplateCard.svelte"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
@@ -106,9 +106,9 @@
 
   const setupValidation = async () => {
     const applications = svelteGet(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
-    appValidation.file(validation, { template })
+    workspaceValidation.name(validation, { workspaces: applications })
+    workspaceValidation.url(validation, { workspaces: applications })
+    workspaceValidation.file(validation, { template })
 
     encryptionValidation.addValidatorType("encryptionPassword", "text", true)
 

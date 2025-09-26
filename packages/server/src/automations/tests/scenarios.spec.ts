@@ -1,27 +1,30 @@
-import * as automation from "../index"
+import { generator } from "@budibase/backend-core/tests"
 import {
-  LoopStepType,
-  FieldType,
-  Table,
   Datasource,
+  FieldType,
   FilterCondition,
+  LoopStepType,
+  Table,
 } from "@budibase/types"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { Knex } from "knex"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../integrations/tests/utils"
-import { Knex } from "knex"
-import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
+import * as automation from "../index"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 
 describe("Automation Scenarios", () => {
   const config = new TestConfiguration()
 
+  beforeAll(async () => {
+    await config.init()
+  })
+
   beforeEach(async () => {
     await automation.init()
-    await config.init()
   })
 
   afterAll(() => {

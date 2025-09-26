@@ -1,11 +1,11 @@
+import { objectStore } from "@budibase/backend-core"
+import { FilterCondition, Row, Table } from "@budibase/types"
 import {
   basicTable,
   basicTableWithAttachmentField,
 } from "../../../tests/utilities/structures"
-import { objectStore } from "@budibase/backend-core"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { FilterCondition, Row, Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 async function uploadTestFile(filename: string) {
   let bucket = "testbucket"
@@ -25,8 +25,11 @@ describe("test the create row action", () => {
   let table: Table
   let row: Row
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
     table = await config.api.table.save(basicTable())
     row = {
       tableId: table._id,

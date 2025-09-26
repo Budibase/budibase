@@ -3,15 +3,15 @@
 </script>
 
 <script lang="ts" generics="O">
-  import type { ChangeEventHandler } from "svelte/elements"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
+  import "@spectrum-css/popover/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Popover from "../../Popover/Popover.svelte"
+  import type { ChangeEventHandler } from "svelte/elements"
+  import clickOutside from "../../Actions/clickOutside"
   import { PopoverAlignment } from "../../constants"
   import Icon from "../../Icon/Icon.svelte"
+  import Popover from "../../Popover/Popover.svelte"
 
   export let value: string | undefined = undefined
   export let id: string | undefined = undefined
