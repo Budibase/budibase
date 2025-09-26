@@ -203,14 +203,31 @@ export async function duplicateResourceToWorkspace(
   )
   docsToCopy.push(...appScreens)
 
-  await destinationDb.bulkDocs(
-    docsToCopy.map<AnyDocument>(d => {
-      delete d._rev
-      delete d.createdAt
-      delete d.updatedAt
-      return d
-    })
+  const docsToCopyMap = new Map(docsToCopy.map(d => [d._id, d]))
+  const existingDocuments = await destinationDb.getMultiple<AnyDocument>(
+    Array.from(docsToCopyMap.keys()),
+    {
+      allowMissing: true,
+      excludeDocs: true,
+    }
   )
+  const existingIds = new Set(existingDocuments.map(doc => doc._id))
+
+  const documentsToPersist = Array.from(docsToCopyMap)
+    .filter(([id]) => !existingIds.has(id))
+    .map<AnyDocument>(([_id, doc]) => doc)
+
+  if (documentsToPersist.length) {
+    await destinationDb.bulkDocs(
+      documentsToPersist.map<AnyDocument>(doc => {
+        const sanitizedDoc = { ...doc }
+        delete sanitizedDoc._rev
+        delete sanitizedDoc.createdAt
+        delete sanitizedDoc.updatedAt
+        return sanitizedDoc
+      })
+    )
+  }
 
   return {
     [resourceType]: [resourceId],

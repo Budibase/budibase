@@ -1,13 +1,18 @@
 import { context } from "@budibase/backend-core"
-import { Database, Screen, WithoutDocMetadata } from "@budibase/types"
+import {
+  Database,
+  Screen,
+  WithDocMetadata,
+  WithoutDocMetadata,
+} from "@budibase/types"
 import sdk from "../.."
 import { generateScreenID, getScreenParams } from "../../../db/utils"
 
 export async function fetch(
   db: Database = context.getWorkspaceDB()
-): Promise<Screen[]> {
+): Promise<WithDocMetadata<Screen>[]> {
   const screens = (
-    await db.allDocs<Screen>(
+    await db.allDocs<WithDocMetadata<Screen>>(
       getScreenParams(null, {
         include_docs: true,
       })
