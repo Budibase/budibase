@@ -6,3 +6,7 @@ builderRoutes.post(
   "/api/resources/:id/duplicate",
   controller.duplicateResourceToWorkspace
 )
+builderRoutes.post(
+  "/api/resources/:id/duplicate/preview",
+  controller.previewDuplicateResourceToWorkspace
+)

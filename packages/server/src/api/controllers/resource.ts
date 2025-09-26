@@ -3,6 +3,7 @@ import {
   DocumentType,
   DuplicateResourceToWorkspaceRequest,
   DuplicateResourceToWorkspaceResponse,
+  DuplicateResourcePreviewResponse,
   ResourceType,
   ResourceUsageRequest,
   ResourceUsageResponse,
@@ -51,4 +52,28 @@ export async function duplicateResourceToWorkspace(
       toWorkspace
     ),
   }
+}
+
+export async function previewDuplicateResourceToWorkspace(
+  ctx: UserCtx<
+    DuplicateResourceToWorkspaceRequest,
+    DuplicateResourcePreviewResponse,
+    { id: string }
+  >
+) {
+  const { toWorkspace } = ctx.request.body
+  const { id } = ctx.params
+  const documentType = getDocumentType(id)
+  if (!documentType) {
+    ctx.throw("Document type could not be inferred from the id", 400)
+  }
+  if (documentType !== DocumentType.WORKSPACE_APP) {
+    ctx.throw(`"${documentType}" cannot be duplicated`, 400)
+  }
+
+  ctx.body = await sdk.resources.previewDuplicateResourceToWorkspace(
+    id,
+    ResourceType.WORKSPACE_APP,
+    toWorkspace
+  )
 }

@@ -6,6 +6,7 @@ import {
 } from "@budibase/backend-core"
 import {
   AnyDocument,
+  DuplicateResourcePreviewResponse,
   ResourceType,
   Screen,
   Table,
@@ -169,16 +170,17 @@ export async function searchForUsages(
   return resources
 }
 
-export async function duplicateResourceToWorkspace(
+interface WorkspaceAppDuplicationPreparation {
+  requiredResources: UsedResource[]
+  docsToCopyMap: Map<string, AnyDocument>
+  existingIds: Set<string>
+  destinationDb: ReturnType<typeof db.getDB>
+}
+
+async function prepareWorkspaceAppDuplication(
   resourceId: string,
-  resourceType: ResourceType.WORKSPACE_APP,
   toWorkspace: string
-): Promise<Partial<Record<ResourceType, string[]>>> {
-  if (resourceType !== ResourceType.WORKSPACE_APP) {
-    throw new NotImplementedError(
-      `Duplicating ${resourceType} is not supported`
-    )
-  }
+): Promise<WorkspaceAppDuplicationPreparation> {
   const requiredResources = await searchForUsages({
     workspaceAppIds: [resourceId],
   })
@@ -203,19 +205,49 @@ export async function duplicateResourceToWorkspace(
   )
   docsToCopy.push(...appScreens)
 
-  const docsToCopyMap = new Map(docsToCopy.map(d => [d._id, d]))
+  const docsToCopyMap = new Map(
+    docsToCopy
+      .filter(doc => !!doc._id)
+      .map(doc => [doc._id!, doc])
+  )
+
   const existingDocuments = await destinationDb.getMultiple<AnyDocument>(
     Array.from(docsToCopyMap.keys()),
     {
       allowMissing: true,
-      excludeDocs: true,
     }
   )
-  const existingIds = new Set(existingDocuments.map(doc => doc._id))
+  const existingIds = new Set(
+    existingDocuments
+      .map(doc => doc._id ?? (doc as { id?: string }).id)
+      .filter((id): id is string => !!id)
+  )
 
-  const documentsToPersist = Array.from(docsToCopyMap)
-    .filter(([id]) => !existingIds.has(id))
-    .map<AnyDocument>(([_id, doc]) => doc)
+  return {
+    requiredResources,
+    docsToCopyMap,
+    existingIds,
+    destinationDb,
+  }
+}
+
+export async function duplicateResourceToWorkspace(
+  resourceId: string,
+  resourceType: ResourceType.WORKSPACE_APP,
+  toWorkspace: string
+): Promise<Partial<Record<ResourceType, string[]>>> {
+  if (resourceType !== ResourceType.WORKSPACE_APP) {
+    throw new NotImplementedError(
+      `Duplicating ${resourceType} is not supported`
+    )
+  }
+
+  const { requiredResources, docsToCopyMap, existingIds, destinationDb } =
+    await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
+
+  const documentsToPersist = Array.from(docsToCopyMap.values()).filter(
+    doc => doc._id && !existingIds.has(doc._id)
+  )
 
   if (documentsToPersist.length) {
     await destinationDb.bulkDocs(
@@ -239,5 +271,63 @@ export async function duplicateResourceToWorkspace(
       },
       {}
     ),
+  }
+}
+
+export async function previewDuplicateResourceToWorkspace(
+  resourceId: string,
+  resourceType: ResourceType.WORKSPACE_APP,
+  toWorkspace: string
+): Promise<DuplicateResourcePreviewResponse> {
+  if (resourceType !== ResourceType.WORKSPACE_APP) {
+    throw new NotImplementedError(
+      `Duplicating ${resourceType} is not supported`
+    )
+  }
+
+  const { requiredResources, existingIds } =
+    await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
+
+  const ensureEntry = (
+    map: Partial<Record<ResourceType, string[]>>,
+    type: ResourceType,
+    id: string
+  ) => {
+    map[type] ??= []
+    const entries = map[type]!
+    if (!entries.includes(id)) {
+      entries.push(id)
+    }
+  }
+
+  const resources: UsedResource[] = [
+    {
+      id: resourceId,
+      type: resourceType,
+      name: undefined,
+    },
+    ...requiredResources,
+  ]
+
+  const toCopy: Partial<Record<ResourceType, string[]>> = {}
+  const existing: Partial<Record<ResourceType, string[]>> = {}
+
+  for (const resource of resources) {
+    const target = existingIds.has(resource.id) ? existing : toCopy
+    ensureEntry(target, resource.type, resource.id)
+  }
+
+  const sortResourceMap = (
+    map: Partial<Record<ResourceType, string[]>>
+  ) => {
+    for (const ids of Object.values(map)) {
+      ids.sort((a, b) => a.localeCompare(b))
+    }
+    return map
+  }
+
+  return {
+    toCopy: sortResourceMap(toCopy),
+    existing: sortResourceMap(existing),
   }
 }
