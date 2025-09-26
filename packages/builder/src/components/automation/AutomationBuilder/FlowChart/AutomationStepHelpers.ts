@@ -21,6 +21,7 @@ import {
   BranchStep,
   LayoutDirection,
 } from "@budibase/types"
+import { Modal } from "@budibase/bbui"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
 type BranchChild = { id: string; [key: string]: any }
@@ -209,7 +210,7 @@ export interface GraphBuildDeps {
   ySpacing: number
   blockRefs: Record<string, any>
   viewMode: ViewMode
-  testDataModal?: any
+  testDataModal?: Modal
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
   direction?: LayoutDirection
@@ -227,7 +228,7 @@ const DEFAULT_STEP_HEIGHT = 100
 const DEFAULT_BRANCH_HEIGHT = 180
 
 export const dagreLayoutAutomation = (
-  graph: { nodes: any[]; edges: any[] },
+  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
   const rankdir = opts?.rankdir || "TB"
@@ -240,12 +241,11 @@ export const dagreLayoutAutomation = (
 
   // Add nodes with estimated sizes for layout
   graph.nodes.forEach(node => {
-    let width = DEFAULT_NODE_WIDTH
+    const width = DEFAULT_NODE_WIDTH
     let height = DEFAULT_STEP_HEIGHT
     if (node.type === "branch-node") {
       height = DEFAULT_BRANCH_HEIGHT
     } else if (node.type === "anchor-node") {
-      width = DEFAULT_NODE_WIDTH
       height = 1
     }
     dagreGraph.setNode(node.id, { width, height })
@@ -258,13 +258,9 @@ export const dagreLayoutAutomation = (
 
   dagre.layout(dagreGraph)
 
-  // Apply computed positions with sensible default handle positions based on orientation
-  // First pass: place all nodes from dagre output
   graph.nodes.forEach(node => {
     const dims = dagreGraph.node(node.id)
     if (!dims) return
-    const width = dims.width
-    const height = dims.height
     // Default handle positions based on rank direction
     if (rankdir === "LR") {
       node.targetPosition = Position.Left
@@ -274,8 +270,8 @@ export const dagreLayoutAutomation = (
       node.sourcePosition = Position.Bottom
     }
     node.position = {
-      x: Math.round(dims.x - width / 2),
-      y: Math.round(dims.y - height / 2),
+      x: Math.round(dims.x - dims.width / 2),
+      y: Math.round(dims.y - dims.height / 2),
     }
   })
 
@@ -338,8 +334,7 @@ export const renderChain = (
         viewMode: deps.viewMode,
         direction: deps.direction,
         pathTo:
-          (lastNodeBlock as any)?.pathTo ||
-          deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
+          lastNodeBlock?.pathTo || deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
       },
     })
 

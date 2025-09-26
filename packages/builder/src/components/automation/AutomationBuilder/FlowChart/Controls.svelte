@@ -2,13 +2,15 @@
   import { ActionButton, Switcher, Button } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
+  import type { HistoryStore } from "@/stores/builder/history"
+  import type { Automation } from "@budibase/types"
 
-  export let historyStore: any
+  export let historyStore: HistoryStore<Automation>
   export let layoutDirection: "TB" | "LR" = "TB"
   export let onChangeDirection: (_dir: "TB" | "LR") => void
 
   const flow = useSvelteFlow()
-  const ZoomDuration = 150
+  const ZoomDurationMs = 150
 
   const setDirection = (dir: "TB" | "LR") => {
     if (dir !== layoutDirection) {
@@ -22,12 +24,12 @@
     <ActionButton
       icon="plus"
       quiet
-      on:click={() => flow.zoomIn({ duration: ZoomDuration })}
+      on:click={() => flow.zoomIn({ duration: ZoomDurationMs })}
     />
     <ActionButton
       icon="minus"
       quiet
-      on:click={() => flow.zoomOut({ duration: ZoomDuration })}
+      on:click={() => flow.zoomOut({ duration: ZoomDurationMs })}
     />
   </div>
 

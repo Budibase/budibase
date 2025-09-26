@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import type { Automation, BlockPath, BlockRef } from "@budibase/types"
 
 export interface DragViewMoveStep {
   id: string
@@ -11,7 +12,7 @@ export interface DragViewMoveStep {
 
 export interface DragViewDropzone {
   dims: DOMRect
-  path: any
+  path?: BlockPath[]
 }
 
 export interface DragView {
@@ -21,21 +22,25 @@ export interface DragView {
   scale: number
   dropzones: Record<string, DragViewDropzone>
   droptarget: string | null
-  focusEle?: any
+  focusEle?: HTMLElement
+}
+
+type Viewport = { x: number; y: number; zoom: number }
+
+export interface DnDSelectedAutomation {
+  blockRefs?: Record<string, BlockRef>
+  data?: Automation
 }
 
 export interface FlowChartDnDDeps {
-  getViewport: () => { x: number; y: number; zoom: number } | undefined
-  setViewport: (vp: { x: number; y: number; zoom: number }) => void
+  getViewport: () => Viewport | undefined
+  setViewport: (vp: Viewport) => void
   moveBlock: (
-    sourcePath: any,
-    destPath: any,
-    automationData: any
+    sourcePath: BlockPath[],
+    destPath: BlockPath[],
+    automationData: Automation
   ) => Promise<void> | void
-  getSelectedAutomation: () => {
-    blockRefs?: Record<string, { pathTo: any }>
-    data?: any
-  }
+  getSelectedAutomation: () => DnDSelectedAutomation
 }
 
 export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
@@ -53,7 +58,7 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
 
   let paneEl: HTMLDivElement | null = null
   let paneRect: DOMRect | null = null
-  let scrollInterval: any
+  let scrollInterval: NodeJS.Timeout | undefined
   let scrollZones: {
     top: boolean
     bottom: boolean

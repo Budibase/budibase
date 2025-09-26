@@ -18,6 +18,7 @@
     type UIAutomation,
     type AutomationStep,
     type LayoutDirection,
+    type AutomationTrigger,
   } from "@budibase/types"
   import {
     automationStore,
@@ -123,7 +124,7 @@
   $: viewMode = ViewMode.EDITOR
 
   const updateGraph = async (
-    blocks: any,
+    blocks: (AutomationStep | AutomationTrigger)[],
     currentViewMode: any,
     direction: LayoutDirection
   ) => {
@@ -154,29 +155,41 @@
     }
 
     // Build linear chain of top-level steps first
-    blocks.forEach((block: AutomationStep, idx: number) => {
+    blocks.forEach((block: AutomationStep | AutomationTrigger, idx: number) => {
       const isTrigger = idx === 0
       const baseId = block.id
       const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
-
       const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
 
-      if (!isBranchStep) {
-        newNodes.push({
-          id: baseId,
-          type: "step-node",
-          data: {
-            testDataModal,
-            block,
-            isTopLevel: true,
-            viewMode: currentViewMode,
-            direction,
-          },
-          position: pos,
-        })
+      // Branch fan-out
+      if (isBranchStep) {
+        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
+        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
+        renderBranches(
+          block,
+          sourceForBranches,
+          sourceBlock,
+          pos.x,
+          pos.y + ySpacing,
+          deps
+        )
+        return
       }
 
-      if (!isTrigger && !isBranchStep) {
+      newNodes.push({
+        id: baseId,
+        type: "step-node",
+        data: {
+          testDataModal,
+          block,
+          isTopLevel: true,
+          viewMode: currentViewMode,
+          direction,
+        },
+        position: pos,
+      })
+
+      if (!isTrigger) {
         const prevId = blocks[idx - 1].id
         newEdges.push({
           id: `edge-${prevId}-${baseId}`,
@@ -193,7 +206,7 @@
       }
 
       // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
-      if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
+      if (blocks.length === 1 || idx === blocks.length - 1) {
         const terminalId = `anchor-${baseId}`
         const terminalPos = ensurePosition(terminalId, {
           x: pos.x,
@@ -218,20 +231,6 @@
             pathTo: blockRefs?.[baseId]?.pathTo,
           },
         })
-      }
-
-      // Branch fan-out
-      if (isBranchStep) {
-        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-        renderBranches(
-          block,
-          sourceForBranches,
-          sourceBlock,
-          pos.x,
-          pos.y + ySpacing,
-          deps
-        )
       }
     })
 
@@ -415,10 +414,10 @@
         {nodeTypes}
         {edges}
         {edgeTypes}
-        colorMode="dark"
+        colorMode="system"
         nodesDraggable={false}
-        minZoom={0.01}
-        maxZoom={4}
+        minZoom={0.4}
+        maxZoom={1}
       >
         <FlowControls
           historyStore={automationHistoryStore}

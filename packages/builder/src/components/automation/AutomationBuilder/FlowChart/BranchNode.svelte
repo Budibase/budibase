@@ -24,6 +24,7 @@
   import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash/fp"
   import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import type {
     Automation,
@@ -32,6 +33,7 @@
     Branch,
     EnrichedBinding,
   } from "@budibase/types"
+  import { DragView } from "./FlowChartDnD"
 
   export let branchIdx
   export let step
@@ -41,7 +43,7 @@
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
 
-  const view: any = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
   const memoContext = memo({})
   const memoEnvVariables = memo($environment.variables)
 

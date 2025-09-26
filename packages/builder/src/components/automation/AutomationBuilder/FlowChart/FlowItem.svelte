@@ -6,6 +6,7 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
@@ -16,6 +17,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
+  import { DragView } from "./FlowChartDnD"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -30,7 +32,7 @@
   export let onStepSelect: (
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
-  const view: any = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
   const pos: any = getContext("viewPos")
   const contentPos: any = getContext("contentPos")
 
@@ -83,8 +85,8 @@
 
   function move(
     block: HTMLElement | null,
-    dragPos: { x: number; y: number } | undefined,
-    dragging: boolean,
+    dragPos: { x: number; y: number } | null,
+    dragging: boolean | null,
     scrollX: number,
     scrollY: number
   ) {

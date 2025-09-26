@@ -7,14 +7,16 @@
     useSvelteFlow,
     type Position,
   } from "@xyflow/svelte"
-  import { selectedAutomation, automationStore } from "@/stores/builder"
-  import FlowItemActions from "./FlowItemActions.svelte"
-  import DragZone from "./DragZone.svelte"
+  import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import { ActionButton } from "@budibase/bbui"
+  import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
   import { ViewMode } from "@/types/automations"
-  import { type LayoutDirection } from "@budibase/types"
-  import { getContext } from "svelte"
+  import { selectedAutomation, automationStore } from "@/stores/builder"
+  import DragZone from "./DragZone.svelte"
+  import FlowItemActions from "./FlowItemActions.svelte"
+  import type { DragView } from "./FlowChartDnD"
 
   export let data: any = undefined
   export let sourceX: number
@@ -31,7 +33,7 @@
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
 
-  const view: any = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
 
   $: basePath = getSmoothStepPath({
