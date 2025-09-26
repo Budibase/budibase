@@ -41,7 +41,11 @@
       --spectrum-global-font-line-height-small: 1.4 !important;
     }
   </style>
-  <script src='{{ clientLibPath }}'></script>
+  <script
+    id="budibase-client-script"
+    type="module"
+    src='{{ clientLibPath }}'
+  ></script>
   <script nonce="{{ nonce }}">
     function receiveMessage(event) {
       if (!event.data) {
@@ -104,15 +108,24 @@
       window['##BUDIBASE_COMPONENT_ERRORS##'] = componentErrors
 
       // Initialise app
-      try {
-        if (window.loadBudibase) {
-          window.loadBudibase()
-          document.documentElement.classList.add("loaded")
-        } else {
-          throw "The client library couldn't be loaded"
+      const bootBudibase = () => {
+        try {
+          if (window.loadBudibase) {
+            window.loadBudibase()
+            document.documentElement.classList.add("loaded")
+          } else {
+            throw "The client library couldn't be loaded"
+          }
+        } catch (error) {
+          window.parent.postMessage({ type: "error", error })
         }
-      } catch (error) {
-        window.parent.postMessage({ type: "error", error })
+      }
+
+      const clientScript = document.getElementById("budibase-client-script")
+      if (window.loadBudibase) {
+        bootBudibase()
+      } else if (clientScript) {
+        clientScript.addEventListener("load", bootBudibase)
       }
     }
 
