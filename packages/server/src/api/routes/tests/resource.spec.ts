@@ -107,6 +107,7 @@ describe("/api/resources/usage", () => {
     let basicApp: WorkspaceAppInfo
     let appWithTableUsages: WorkspaceAppInfo
     let appSharingTableDependency: WorkspaceAppInfo
+    let appWithRepeatedDependencyUsage: WorkspaceAppInfo
     let internalTables: Table[] = []
 
     async function createInternalTable(data: Partial<Table> = {}) {
@@ -196,6 +197,50 @@ describe("/api/resources/usage", () => {
           url: "/app-sharing-table",
         },
         [secondScreenWithDataProvider]
+      )
+
+      const screenWithRepeatedDependency = basicScreen()
+      screenWithRepeatedDependency.props._children?.push(
+        {
+          _id: "child-props-one",
+          _instanceName: "child",
+          _styles: {},
+          _component: "@budibase/standard-components/dataprovider",
+          datasource: {
+            tableId: internalTables[1]._id,
+            type: "table",
+          },
+        },
+        {
+          _id: "child-props-two",
+          _instanceName: "child",
+          _styles: {},
+          _component: "@budibase/standard-components/dataprovider",
+          datasource: {
+            tableId: internalTables[1]._id,
+            type: "table",
+          },
+        }
+      )
+
+      const secondScreenWithRepeatedDependency = basicScreen()
+      secondScreenWithRepeatedDependency.props._children?.push({
+        _id: "child-props-three",
+        _instanceName: "child",
+        _styles: {},
+        _component: "@budibase/standard-components/dataprovider",
+        datasource: {
+          tableId: internalTables[1]._id,
+          type: "table",
+        },
+      })
+
+      appWithRepeatedDependencyUsage = await createApp(
+        {
+          name: "App with repeated dependency",
+          url: "/app-repeated-dependency",
+        },
+        [screenWithRepeatedDependency, secondScreenWithRepeatedDependency]
       )
     })
 
@@ -401,6 +446,41 @@ describe("/api/resources/usage", () => {
             updatedAt: new Date().toISOString(),
           })),
           tables: [internalTables[0]],
+        }
+      )
+    })
+
+    it("duplicates apps that reference the same dependency multiple times", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      tk.freeze(new Date())
+      const duplication =
+        await config.api.resource.duplicateResourceToWorkspace({
+          resourceId: appWithRepeatedDependencyUsage.app._id!,
+          toWorkspace: newWorkspace.appId,
+        })
+
+      expect(duplication.body).toEqual({
+        resources: {
+          workspace_app: [appWithRepeatedDependencyUsage.app._id],
+          table: [internalTables[1]._id],
+        },
+      })
+
+      await validateWorkspace(
+        newWorkspace.appId,
+        appWithRepeatedDependencyUsage.app,
+        {
+          screens: appWithRepeatedDependencyUsage.screens.map(s => ({
+            ...s,
+            pluginAdded: undefined,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })),
+          tables: [internalTables[1]],
         }
       )
     })
