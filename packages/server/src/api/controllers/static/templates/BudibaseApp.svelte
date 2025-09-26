@@ -144,7 +144,8 @@
     </script>
   {/if}
   <script
-    type="application/javascript"
+    id="budibase-client-script"
+    type="module"
     src={`/api/assets/client?${props.clientCacheKey}`}
   ></script>
   <!-- Custom components need inserted after the core client library -->
@@ -155,11 +156,29 @@
     {/each}
   {/if}
   <script type="application/javascript" nonce={props.nonce}>
-    if (window.loadBudibase) {
-      window.loadBudibase()
-    } else {
+    const clientScript = document.getElementById("budibase-client-script")
+    function showLoadError() {
       console.error("Failed to load the Budibase client")
-      document.getElementById("error").style.display = "flex"
+      const errorPanel = document.getElementById("error")
+      if (errorPanel) {
+        errorPanel.style.display = "flex"
+      }
+    }
+    function bootBudibase() {
+      if (window.loadBudibase) {
+        window.loadBudibase()
+      } else {
+        showLoadError()
+      }
+    }
+    if (window.loadBudibase) {
+      bootBudibase()
+    }
+    if (clientScript) {
+      clientScript.addEventListener("load", bootBudibase)
+      clientScript.addEventListener("error", showLoadError)
+    } else {
+      bootBudibase()
     }
   </script>
 
