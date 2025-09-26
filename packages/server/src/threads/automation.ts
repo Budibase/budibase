@@ -397,6 +397,8 @@ class Orchestrator {
         ctx.stepsById[step.id] = result.outputs
         ctx.stepsByName[step.name || step.id] = result.outputs
 
+        ctx.previous = result.outputs
+
         ctx._stepIndex ||= 0
         ctx.steps[ctx._stepIndex] = result.outputs
         ctx._stepIndex++
