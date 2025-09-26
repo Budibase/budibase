@@ -112,6 +112,16 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     return createdWorkspaceApp
   }
 
+  async duplicate(workspaceAppId: string) {
+    const { workspaceApp: createdWorkspaceApp } =
+      await API.workspaceApp.duplicate(workspaceAppId)
+    this.store.update(state => ({
+      ...state,
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
+    }))
+    return createdWorkspaceApp
+  }
+
   async edit(workspaceApp: WorkspaceApp) {
     const safeWorkspaceApp: RequiredKeys<UpdateWorkspaceAppRequest> = {
       _id: workspaceApp._id!,

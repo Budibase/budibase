@@ -1,4 +1,5 @@
 import {
+  DuplicateWorkspaceAppResponse,
   FetchWorkspaceAppResponse,
   FindWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
@@ -14,6 +15,7 @@ export interface WorkspaceAppEndpoints {
   create: (
     workspaceApp: InsertWorkspaceAppRequest
   ) => Promise<InsertWorkspaceAppResponse>
+  duplicate: (id: string) => Promise<DuplicateWorkspaceAppResponse>
   update: (
     workspaceApp: UpdateWorkspaceAppRequest
   ) => Promise<UpdateWorkspaceAppResponse>
@@ -37,6 +39,11 @@ export const buildWorkspaceAppEndpoints = (
     return await API.post({
       url: "/api/workspaceApp",
       body: workspaceApp,
+    })
+  },
+  duplicate: async id => {
+    return await API.post({
+      url: `/api/workspaceApp/${id}/duplicate`,
     })
   },
   update: async workspaceApp => {

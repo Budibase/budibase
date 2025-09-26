@@ -1,6 +1,7 @@
 import { context, docIds, events, HTTPError } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
+import { helpers } from "@budibase/shared-core"
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -9,6 +10,55 @@ async function guardName(name: string, id?: string) {
     throw new HTTPError(`App with name '${name}' is already taken.`, 400)
   }
 }
+
+const duplicateScreens = async (originalAppId: string, newAppId: string) => {
+  const screens = await sdk.screens.fetch()
+
+  const appScreens = screens.filter(s => s.workspaceAppId === originalAppId)
+  const newScreens = []
+  for (let i = 0; i < appScreens.length; i++) {
+    const screen = appScreens[i]
+    const createdScreen = await sdk.screens.create({
+      ...{
+        layoutId: screen.layoutId,
+        showNavigation: screen.showNavigation,
+        width: screen.width,
+        routing: screen.routing,
+        props: screen.props,
+        name: screen.name,
+        pluginAdded: screen.pluginAdded,
+        onLoad: screen.onLoad,
+        variant: screen.variant,
+      },
+      workspaceAppId: newAppId,
+    })
+
+    newScreens.push(createdScreen)
+  }
+
+  return newScreens
+}
+
+const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
+  const otherApps = await sdk.workspaceApps.fetch()
+
+  const name = helpers.duplicateName(
+    workspaceApp.name,
+    otherApps.map(a => a.name)
+  )
+
+  const duplicatedAppData = {
+    name,
+    url: `/${slugify(name)}`,
+    disabled: true,
+    navigation: workspaceApp.navigation,
+    isDefault: false,
+  }
+
+  return sdk.workspaceApps.create(duplicatedAppData)
+}
+
+const slugify = (text: string) => text.toLowerCase().replaceAll(" ", "-")
 
 export async function fetch(
   db = context.getWorkspaceDB()
@@ -45,6 +95,14 @@ export async function create(
     { returnDoc: true }
   )
   return response.doc
+}
+
+export async function duplicate(
+  appToDuplicate: WorkspaceApp
+): Promise<WorkspaceApp> {
+  const duplicated = await createDuplicatedApp(appToDuplicate)
+  await duplicateScreens(appToDuplicate._id as string, duplicated._id as string)
+  return duplicated
 }
 
 export async function update(
