@@ -6,6 +6,7 @@
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
+  import { buildLiveUrl } from "@/helpers/urls"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
@@ -92,7 +93,29 @@
     }
   }
 
+  const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
+    if (
+      !workspaceApp ||
+      workspaceApp.publishStatus?.state !== PublishResourceState.PUBLISHED ||
+      workspaceApp.disabled
+    ) {
+      return null
+    }
+
+    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+
+    return liveUrl || null
+  }
+
+  const openLiveWorkspaceApp = (liveUrl: string | null) => {
+    if (!liveUrl || typeof window === "undefined") {
+      return
+    }
+    window.open(liveUrl, "_blank")
+  }
+
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
+    const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
@@ -116,6 +139,12 @@
         name: "Edit",
         visible: true,
         callback: () => workspaceAppModal.show(),
+      },
+      {
+        icon: "globe-simple",
+        name: "View live app",
+        visible: !!liveUrl,
+        callback: () => openLiveWorkspaceApp(liveUrl),
       },
       pause,
       {

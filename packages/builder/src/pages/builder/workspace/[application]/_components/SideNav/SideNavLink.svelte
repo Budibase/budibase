@@ -54,9 +54,15 @@
 <style>
   .actions {
     display: none;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link:hover .actions {
-    display: block;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link {
     display: flex;
