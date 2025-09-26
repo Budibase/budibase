@@ -18,7 +18,7 @@ export function getAppUrl(opts?: { name?: string; url?: string }) {
   return url as string
 }
 
-export async function isAppPublished(
+export async function isWorkspacePublished(
   prodworkspaceId: string
 ): Promise<boolean> {
   if (db.isDevWorkspaceID(prodworkspaceId)) {

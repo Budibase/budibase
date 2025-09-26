@@ -144,11 +144,14 @@ describe("/api/global/roles", () => {
   })
 
   describe("DELETE /api/global/roles/:appId", () => {
-    async function createBuilderUser() {
-      const saveResponse = await config.api.users.saveUser(
-        structures.users.builderUser(),
-        200
-      )
+    async function createBuilderUser(forWorkspaces: string[] = []) {
+      const builderUser = structures.users.builderUser()
+      builderUser.builder.apps = [
+        ...(builderUser.builder.apps || []),
+        ...forWorkspaces,
+      ]
+
+      const saveResponse = await config.api.users.saveUser(builderUser, 200)
       const { body: user } = await config.api.users.getUser(
         saveResponse.body._id
       )
@@ -168,13 +171,24 @@ describe("/api/global/roles", () => {
       expect(res.body.message).toEqual("App role removed from all users")
     })
 
-    it("should not allow creator users to remove app roles", async () => {
+    it("should allow creator users to remove app roles for workspaces they owe", async () => {
+      const builderUser = await createBuilderUser([workspaceId])
+
+      const res = await config.withUser(builderUser, () =>
+        config.api.roles.remove(workspaceId, { status: 200 })
+      )
+      expect(res.body).toEqual({ message: "App role removed from all users" })
+    })
+
+    it("should not allow creator users to remove app roles for workspaces they don't owe", async () => {
       const builderUser = await createBuilderUser()
 
       const res = await config.withUser(builderUser, () =>
         config.api.roles.remove(workspaceId, { status: 403 })
       )
-      expect(res.body.message).toBe("Admin user only endpoint.")
+      expect(res.body.message).toBe(
+        "Workspace Admin/Builder user only endpoint."
+      )
     })
   })
 })

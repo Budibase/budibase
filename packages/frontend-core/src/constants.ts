@@ -2,13 +2,13 @@
  * Operator options for lucene queries
  */
 export {
+  DEFAULT_BB_DATASOURCE_ID,
   OperatorOptions,
   SqlNumberTypeRangeMap,
-  DEFAULT_BB_DATASOURCE_ID,
 } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
-import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
+import { BBReferenceFieldSubType, FieldType } from "@budibase/types"
 
 export const BannedSearchTypes = [
   FieldType.LINK,

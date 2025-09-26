@@ -1,4 +1,5 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 import {
   Automation,
   AutomationTriggerStepId,
@@ -183,9 +184,8 @@ export async function importApp(
   db: Database,
   template: TemplateType,
   opts: {
-    importObjStoreContents: boolean
     updateAttachmentColumns: boolean
-  } = { importObjStoreContents: true, updateAttachmentColumns: true }
+  } = { updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdWorkspaceID(appId)
   let dbStream: fs.ReadStream
@@ -214,9 +214,10 @@ export async function importApp(
       )
     }
     // have to handle object import
-    if (contents.length && opts.importObjStoreContents) {
-      let promises = []
-      let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+    {
+      const promises = []
+      const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+
       for (let filename of contents) {
         const path = join(tmpPath, filename)
         if (excludedFiles.includes(filename)) {
@@ -238,6 +239,33 @@ export async function importApp(
         }
       }
       await Promise.all(promises)
+      const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
+
+      const filesToDelete: string[] = []
+      await utils.parallelForeach(
+        objectStore.listAllObjects(
+          objectStore.ObjectStoreBuckets.APPS,
+          prodAppId
+        ),
+        async file => {
+          if (
+            file.Key &&
+            !uploadedFiles.includes(
+              file.Key.replace(new RegExp(`^${prodAppId}/`), "")
+            )
+          ) {
+            filesToDelete.push(file.Key)
+          }
+        },
+        5
+      )
+
+      if (filesToDelete.length) {
+        await objectStore.deleteFiles(
+          objectStore.ObjectStoreBuckets.APPS,
+          filesToDelete
+        )
+      }
     }
     dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
   } else {
