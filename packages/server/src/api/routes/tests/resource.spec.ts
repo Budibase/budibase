@@ -1,6 +1,7 @@
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
+  AnyDocument,
   Automation,
   Datasource,
   InsertWorkspaceAppRequest,
@@ -105,6 +106,7 @@ describe("/api/resources/usage", () => {
 
     let basicApp: WorkspaceAppInfo
     let appWithTableUsages: WorkspaceAppInfo
+    let appSharingTableDependency: WorkspaceAppInfo
     let internalTables: Table[] = []
 
     async function createInternalTable(data: Partial<Table> = {}) {
@@ -175,9 +177,29 @@ describe("/api/resources/usage", () => {
         },
         [screenWithDataProvider]
       )
+
+      const secondScreenWithDataProvider = basicScreen()
+      secondScreenWithDataProvider.props._children?.push({
+        _id: "child-props",
+        _instanceName: "child",
+        _styles: {},
+        _component: "@budibase/standard-components/dataprovider",
+        datasource: {
+          tableId: internalTables[0]._id,
+          type: "table",
+        },
+      })
+
+      appSharingTableDependency = await createApp(
+        {
+          name: "App sharing table",
+          url: "/app-sharing-table",
+        },
+        [secondScreenWithDataProvider]
+      )
     })
 
-    async function validateApp(
+    async function validateWorkspace(
       appId: string,
       expectedApp: WorkspaceApp,
       expected: {
@@ -188,6 +210,9 @@ describe("/api/resources/usage", () => {
         automations?: Automation[]
       }
     ) {
+      const sortById = (a: AnyDocument, b: AnyDocument) =>
+        a._id!.localeCompare(b._id!)
+
       await config.withHeaders({ [Header.APP_ID]: appId }, async () => {
         const { workspaceApps: resultingWorkspaceApps } =
           await config.api.workspaceApp.fetch()
@@ -201,8 +226,8 @@ describe("/api/resources/usage", () => {
         )
 
         const screens = await config.api.screen.list()
-        expect(screens).toEqual(
-          (expected.screens || []).map(s => ({
+        expect(screens.sort(sortById)).toEqual(
+          (expected.screens || []).sort(sortById).map(s => ({
             ...s,
             pluginAdded: undefined,
             _rev: expect.stringMatching(/^1-\w+/),
@@ -212,7 +237,7 @@ describe("/api/resources/usage", () => {
         )
 
         const tables = await config.api.table.fetch()
-        expect(tables.sort((a, b) => a._id!.localeCompare(b._id!))).toEqual(
+        expect(tables.sort(sortById)).toEqual(
           [
             expect.objectContaining({
               _id: "ta_users",
@@ -223,7 +248,7 @@ describe("/api/resources/usage", () => {
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             })),
-          ].sort((a, b) => a._id!.localeCompare(b._id!))
+          ].sort(sortById)
         )
 
         const datasources = await config.api.datasource.fetch()
@@ -276,7 +301,7 @@ describe("/api/resources/usage", () => {
         },
       })
 
-      await validateApp(newWorkspace.appId, basicApp.app, {
+      await validateWorkspace(newWorkspace.appId, basicApp.app, {
         screens: basicApp.screens.map(s => ({
           ...s,
           pluginAdded: undefined,
@@ -306,7 +331,7 @@ describe("/api/resources/usage", () => {
         },
       })
 
-      await validateApp(newWorkspace.appId, appWithTableUsages.app, {
+      await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
         screens: appWithTableUsages.screens.map(s => ({
           ...s,
           pluginAdded: undefined,
@@ -316,6 +341,68 @@ describe("/api/resources/usage", () => {
         })),
         tables: [internalTables[0]],
       })
+    })
+
+    it("does not duplicate shared dependencies when copying multiple apps", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      tk.freeze(new Date())
+      const firstDuplication =
+        await config.api.resource.duplicateResourceToWorkspace({
+          resourceId: appWithTableUsages.app._id!,
+          toWorkspace: newWorkspace.appId,
+        })
+
+      expect(firstDuplication.body).toEqual({
+        resources: {
+          workspace_app: [appWithTableUsages.app._id],
+          table: [internalTables[0]._id],
+        },
+      })
+
+      await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
+        screens: appWithTableUsages.screens.map(s => ({
+          ...s,
+          pluginAdded: undefined,
+          _rev: expect.stringMatching(/^1-\w+/),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        tables: [internalTables[0]],
+      })
+
+      const secondDuplication =
+        await config.api.resource.duplicateResourceToWorkspace({
+          resourceId: appSharingTableDependency.app._id!,
+          toWorkspace: newWorkspace.appId,
+        })
+
+      expect(secondDuplication.body).toEqual({
+        resources: {
+          workspace_app: [appSharingTableDependency.app._id],
+          table: [internalTables[0]._id],
+        },
+      })
+
+      await validateWorkspace(
+        newWorkspace.appId,
+        appSharingTableDependency.app,
+        {
+          screens: [
+            ...appWithTableUsages.screens,
+            ...appSharingTableDependency.screens,
+          ].map(s => ({
+            ...s,
+            pluginAdded: undefined,
+            _rev: expect.stringMatching(/^1-\w+/),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })),
+          tables: [internalTables[0]],
+        }
+      )
     })
 
     it("rejects non workspace app document types", async () => {
