@@ -35,11 +35,15 @@ export interface DnDSelectedAutomation {
 export interface FlowChartDnDDeps {
   getViewport: () => Viewport | undefined
   setViewport: (vp: Viewport) => void
-  moveBlock: (
-    sourcePath: BlockPath[],
-    destPath: BlockPath[],
+  moveBlock: ({
+    sourcePath,
+    destPath,
+    automationData,
+  }: {
+    sourcePath: BlockPath[]
+    destPath: BlockPath[]
     automationData: Automation
-  ) => Promise<void> | void
+  }) => Promise<void> | void
   getSelectedAutomation: () => DnDSelectedAutomation
 }
 
@@ -183,7 +187,7 @@ export const createFlowChartDnD = (deps: FlowChartDnDDeps) => {
           const drop = current.dropzones[current.droptarget]
           const destPath = drop?.path
           if (sourcePath && destPath && sel.data) {
-            deps.moveBlock(sourcePath, destPath, sel.data)
+            deps.moveBlock({ sourcePath, destPath, automationData: sel.data })
           }
         } catch (e) {
           console.error("Drag drop move failed", e)

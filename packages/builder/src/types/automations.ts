@@ -143,6 +143,7 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedLogStepData?: any
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean
+  viewMode: ViewMode
 }
 
 export interface DerivedAutomationStoreState

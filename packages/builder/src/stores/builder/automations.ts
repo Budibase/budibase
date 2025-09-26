@@ -28,6 +28,7 @@ import {
   FilterableRowTriggers,
   RowTriggers,
   SelectedAutomationState,
+  ViewMode,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
@@ -101,6 +102,7 @@ const initialAutomationState: AutomationStoreState = {
     ACTION: {},
   },
   selectedAutomationId: null,
+  viewMode: ViewMode.EDITOR,
 }
 
 const getFinalDefinitions = (
@@ -125,6 +127,12 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
+  setViewMode: (mode: ViewMode) => {
+    store.update(state => ({
+      ...state,
+      viewMode: mode,
+    }))
+  },
   /**
    * @param {Automation} auto
    * @param {BlockRef} blockRef

@@ -17,7 +17,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import { DragView } from "./FlowChartDnD"
+  import { type DragView } from "./FlowChartDnD"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -42,6 +42,7 @@
   let blockDims: DOMRect | undefined
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
+  $: viewMode = $automationStore.viewMode
 
   $: triggerInfo = sdk.automations.isRowAction(
     $selectedAutomation?.data as any

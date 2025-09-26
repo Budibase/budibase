@@ -33,7 +33,7 @@
     Branch,
     EnrichedBinding,
   } from "@budibase/types"
-  import { DragView } from "./FlowChartDnD"
+  import { type DragView } from "./FlowChartDnD"
 
   export let branchIdx
   export let step
@@ -106,6 +106,7 @@
     return logSteps.find((logStep: any) => logStep.id === currentStep.id)
   }
   $: logData = $automationStore.selectedLog
+  $: viewMode = $automationStore.viewMode
   $: logStepData = getLogStepData(logData, step) as
     | AutomationStepResult
     | AutomationTriggerResult

@@ -93,7 +93,7 @@
   const dnd = createFlowChartDnD({
     getViewport,
     setViewport,
-    moveBlock: (sourcePath, destPath, automationData) =>
+    moveBlock: ({ sourcePath, destPath, automationData }) =>
       automationStore.actions.moveBlock(sourcePath, destPath, automationData),
     getSelectedAutomation: () => get(selectedAutomation),
   })
@@ -121,11 +121,11 @@
     .filter(x => x.stepId !== ActionStepID.LOOP)
     .map((block, idx) => ({ ...block, __top: idx }))
 
-  $: viewMode = ViewMode.EDITOR
+  $: viewMode = $automationStore.viewMode
 
   const updateGraph = async (
     blocks: (AutomationStep | AutomationTrigger)[],
-    currentViewMode: any,
+    currentViewMode: ViewMode,
     direction: LayoutDirection
   ) => {
     if (!preserveViewport) {
@@ -147,7 +147,6 @@
       xSpacing,
       ySpacing,
       blockRefs,
-      viewMode: currentViewMode,
       testDataModal,
       newNodes,
       newEdges,
@@ -183,7 +182,6 @@
           testDataModal,
           block,
           isTopLevel: true,
-          viewMode: currentViewMode,
           direction,
         },
         position: pos,
@@ -198,7 +196,6 @@
           target: baseId,
           data: {
             block: blocks[idx - 1],
-            viewMode: currentViewMode,
             direction,
             pathTo: blockRefs?.[prevId]?.pathTo,
           },
@@ -215,7 +212,7 @@
         newNodes.push({
           id: terminalId,
           type: "anchor-node",
-          data: { viewMode: currentViewMode, direction },
+          data: { direction },
           position: terminalPos,
         })
 
@@ -226,7 +223,6 @@
           target: terminalId,
           data: {
             block,
-            viewMode: currentViewMode,
             direction,
             pathTo: blockRefs?.[baseId]?.pathTo,
           },
@@ -290,11 +286,11 @@
   const toggleLogsPanel = () => {
     if ($automationStore.showLogsPanel) {
       automationStore.actions.closeLogsPanel()
-      viewMode = ViewMode.EDITOR
+      automationStore.actions.setViewMode(ViewMode.EDITOR)
     } else {
       automationStore.actions.openLogsPanel()
       automationStore.actions.closeLogPanel()
-      viewMode = ViewMode.LOGS
+      automationStore.actions.setViewMode(ViewMode.LOGS)
       // Clear editor selection when switching to logs mode
       automationStore.actions.selectNode(undefined)
     }

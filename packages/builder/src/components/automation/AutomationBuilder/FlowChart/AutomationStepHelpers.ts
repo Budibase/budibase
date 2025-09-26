@@ -209,7 +209,6 @@ export interface GraphBuildDeps {
   xSpacing: number
   ySpacing: number
   blockRefs: Record<string, any>
-  viewMode: ViewMode
   testDataModal?: Modal
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
@@ -319,7 +318,6 @@ export const renderChain = (
       data: {
         testDataModal: deps.testDataModal,
         block: step,
-        viewMode: deps.viewMode,
         direction: deps.direction,
       },
       position: pos,
@@ -331,7 +329,6 @@ export const renderChain = (
       target: step.id,
       data: {
         block: lastNodeBlock,
-        viewMode: deps.viewMode,
         direction: deps.direction,
         pathTo:
           lastNodeBlock?.pathTo || deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
@@ -378,7 +375,6 @@ export const renderBranches = (
         block: branchStep,
         branch,
         branchIdx: bIdx,
-        viewMode: deps.viewMode,
         direction: deps.direction,
       },
       position: branchPos,
@@ -391,7 +387,6 @@ export const renderBranches = (
       target: branchNodeId,
       data: {
         block: sourceBlock,
-        viewMode: deps.viewMode,
         isBranchEdge: true,
         isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
         branchStepId: baseId,
@@ -440,7 +435,7 @@ export const renderBranches = (
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { viewMode: deps.viewMode, direction: deps.direction },
+        data: { direction: deps.direction },
         position: terminalPos,
       })
       deps.newEdges.push({
@@ -450,7 +445,6 @@ export const renderBranches = (
         target: terminalId,
         data: {
           block: lastNodeBlock,
-          viewMode: deps.viewMode,
           direction: deps.direction,
           pathTo:
             (lastNodeBlock as any)?.pathTo ||

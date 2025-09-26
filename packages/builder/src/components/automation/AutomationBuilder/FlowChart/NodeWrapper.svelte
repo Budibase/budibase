@@ -13,7 +13,7 @@
 
   // Extract block and other data
   $: block = data.block
-  $: viewMode = data?.viewMode
+  $: viewMode = $automationStore.viewMode
   $: direction = (data?.direction || "TB") as "TB" | "LR"
   $: isHorizontal = direction === "LR"
 

@@ -12,6 +12,7 @@
   } from "@budibase/types"
   import { environment } from "@/stores/portal"
   import { memo } from "@budibase/frontend-core"
+  import { automationStore } from "@/stores/builder"
 
   export let step: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -27,6 +28,7 @@
 
   $: memoEnvVariables.set($environment.variables)
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
+  $: viewMode = $automationStore.viewMode
 
   // Log execution state
   $: logStepData = getLogStepData(logData, step)

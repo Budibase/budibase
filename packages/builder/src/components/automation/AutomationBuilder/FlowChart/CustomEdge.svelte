@@ -27,7 +27,7 @@
   export let targetPosition: Position
   export let target: string
 
-  $: viewMode = data?.viewMode as ViewMode
+  $: viewMode = $automationStore.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
