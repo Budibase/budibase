@@ -1,6 +1,7 @@
 import {
   DuplicateResourceToWorkspaceRequest,
   DuplicateResourceToWorkspaceResponse,
+  DuplicateResourcePreviewResponse,
   ResourceUsageRequest,
   ResourceUsageResponse,
 } from "@budibase/types"
@@ -28,6 +29,21 @@ export class ResourceAPI extends TestAPI {
     const { resourceId: id, ...body } = request
     const result = await this._post<DuplicateResourceToWorkspaceResponse>(
       `/api/resources/${id}/duplicate`,
+      {
+        expectations,
+        body,
+      }
+    )
+    return { body: result }
+  }
+
+  previewDuplicateResourceToWorkspace = async (
+    request: DuplicateResourceToWorkspaceRequest & { resourceId: string },
+    expectations?: Expectations
+  ): Promise<{ body: DuplicateResourcePreviewResponse }> => {
+    const { resourceId: id, ...body } = request
+    const result = await this._post<DuplicateResourcePreviewResponse>(
+      `/api/resources/${id}/duplicate/preview`,
       {
         expectations,
         body,
