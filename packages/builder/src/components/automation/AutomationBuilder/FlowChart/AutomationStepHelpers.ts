@@ -1,6 +1,12 @@
 import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
 import { ViewMode } from "@/types/automations"
+import dagre from "@dagrejs/dagre"
+import {
+  Position,
+  type Node as FlowNode,
+  type Edge as FlowEdge,
+} from "@xyflow/svelte"
 import {
   Automation,
   AutomationActionStepId,
@@ -13,7 +19,9 @@ import {
   BlockDefinitions,
   Branch,
   BranchStep,
+  LayoutDirection,
 } from "@budibase/types"
+import { Modal } from "@budibase/bbui"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
 type BranchChild = { id: string; [key: string]: any }
@@ -102,12 +110,18 @@ const getStepDefinition = (
 export const enrichLog = (
   definitions: BlockDefinitions,
   log: AutomationLog
-) => {
+): AutomationLog => {
   if (!definitions || !log || !log.steps) {
     return log
   }
 
-  const enrichedLog = { ...log, steps: [...log.steps] }
+  const enrichedLog = {
+    ...log,
+    steps: [...log.steps] as [
+      AutomationTriggerResult,
+      ...AutomationStepResult[],
+    ], // Steps array also contains a trigger as well as steps (??? this is a bad code smell that exists all across automations frontend)
+  }
 
   for (let step of enrichedLog.steps) {
     const trigger =
@@ -181,4 +195,266 @@ export const getBranchConditionDetails = (step: AutomationStepResult) => {
     allBranches: branches,
     totalBranches: branches.length,
   }
+}
+
+// Graph building helpers for SvelteFlow
+export interface GraphBuildDeps {
+  ensurePosition: (
+    id: string,
+    fallback: { x: number; y: number }
+  ) => {
+    x: number
+    y: number
+  }
+  xSpacing: number
+  ySpacing: number
+  blockRefs: Record<string, any>
+  testDataModal?: Modal
+  newNodes: FlowNode[]
+  newEdges: FlowEdge[]
+  direction?: LayoutDirection
+}
+
+// Dagre layout for automation flow
+export interface DagreLayoutOptions {
+  rankdir?: LayoutDirection
+  ranksep?: number
+  nodesep?: number
+}
+
+const DEFAULT_NODE_WIDTH = 320
+const DEFAULT_STEP_HEIGHT = 100
+const DEFAULT_BRANCH_HEIGHT = 180
+
+export const dagreLayoutAutomation = (
+  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
+  opts?: DagreLayoutOptions
+) => {
+  const rankdir = opts?.rankdir || "TB"
+  const ranksep = opts?.ranksep ?? 260
+  const nodesep = opts?.nodesep ?? 220
+
+  const dagreGraph = new dagre.graphlib.Graph()
+  dagreGraph.setDefaultEdgeLabel(() => ({}))
+  dagreGraph.setGraph({ rankdir, ranksep, nodesep })
+
+  // Add nodes with estimated sizes for layout
+  graph.nodes.forEach(node => {
+    const width = DEFAULT_NODE_WIDTH
+    let height = DEFAULT_STEP_HEIGHT
+    if (node.type === "branch-node") {
+      height = DEFAULT_BRANCH_HEIGHT
+    } else if (node.type === "anchor-node") {
+      height = 1
+    }
+    dagreGraph.setNode(node.id, { width, height })
+  })
+
+  // Add edges
+  graph.edges.forEach(edge => {
+    dagreGraph.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(dagreGraph)
+
+  graph.nodes.forEach(node => {
+    const dims = dagreGraph.node(node.id)
+    if (!dims) return
+    // Default handle positions based on rank direction
+    if (rankdir === "LR") {
+      node.targetPosition = Position.Left
+      node.sourcePosition = Position.Right
+    } else {
+      node.targetPosition = Position.Top
+      node.sourcePosition = Position.Bottom
+    }
+    node.position = {
+      x: Math.round(dims.x - dims.width / 2),
+      y: Math.round(dims.y - dims.height / 2),
+    }
+  })
+
+  return graph
+}
+
+export const renderChain = (
+  chain: AutomationStep[],
+  parentNodeId: string,
+  parentBlock: any,
+  baseX: number,
+  startY: number,
+  deps: GraphBuildDeps
+): {
+  lastNodeId: string
+  lastNodeBlock: any
+  bottomY: number
+  branched: boolean
+} => {
+  let lastNodeId = parentNodeId
+  let lastNodeBlock = parentBlock
+  let currentY = startY
+  let branched = false
+
+  for (let i = 0; i < chain.length; i++) {
+    const step = chain[i]
+    const isBranch = step.stepId === AutomationActionStepId.BRANCH
+
+    if (isBranch) {
+      const bottom = renderBranches(
+        step,
+        lastNodeId,
+        lastNodeBlock,
+        baseX,
+        currentY,
+        deps
+      )
+      return { lastNodeId, lastNodeBlock, bottomY: bottom, branched: true }
+    }
+
+    const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
+    deps.newNodes.push({
+      id: step.id,
+      type: "step-node",
+      data: {
+        testDataModal: deps.testDataModal,
+        block: step,
+        direction: deps.direction,
+      },
+      position: pos,
+    })
+    deps.newEdges.push({
+      id: `edge-${lastNodeId}-${step.id}`,
+      type: "add-item",
+      source: lastNodeId,
+      target: step.id,
+      data: {
+        block: lastNodeBlock,
+        direction: deps.direction,
+        pathTo:
+          lastNodeBlock?.pathTo || deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
+      },
+    })
+
+    lastNodeId = step.id
+    lastNodeBlock = step
+    currentY += deps.ySpacing
+  }
+
+  return { lastNodeId, lastNodeBlock, bottomY: currentY, branched }
+}
+
+export const renderBranches = (
+  branchStep: AutomationStep,
+  sourceNodeId: string,
+  sourceBlock: any,
+  centerX: number,
+  startY: number,
+  deps: GraphBuildDeps
+): number => {
+  const baseId = branchStep.id
+  const branches: Branch[] = ((branchStep as BranchStep)?.inputs?.branches ||
+    []) as Branch[]
+  const children: Record<string, AutomationStep[]> =
+    (branchStep as BranchStep)?.inputs?.children || {}
+
+  let clusterBottomY = startY + deps.ySpacing // at least one row below
+
+  branches.forEach((branch: Branch, bIdx: number) => {
+    // Include the branch index in the node id so reordering updates positions
+    const branchNodeId = `branch-${baseId}-${bIdx}-${branch.id}`
+    const branchX = centerX + (bIdx - (branches.length - 1) / 2) * deps.xSpacing
+    const branchPos = deps.ensurePosition(branchNodeId, {
+      x: branchX,
+      y: startY,
+    })
+
+    deps.newNodes.push({
+      id: branchNodeId,
+      type: "branch-node",
+      data: {
+        block: branchStep,
+        branch,
+        branchIdx: bIdx,
+        direction: deps.direction,
+      },
+      position: branchPos,
+    })
+
+    deps.newEdges.push({
+      id: `edge-${sourceNodeId}-${branchNodeId}`,
+      type: "add-item",
+      source: sourceNodeId,
+      target: branchNodeId,
+      data: {
+        block: sourceBlock,
+        isBranchEdge: true,
+        isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
+        branchStepId: baseId,
+        branchIdx: bIdx,
+        branchesCount: branches.length,
+        direction: deps.direction,
+        pathTo: deps.blockRefs?.[sourceBlock?.id]?.pathTo,
+      },
+    })
+
+    // Children of this branch
+    const childSteps: AutomationStep[] = children?.[branch.id] || []
+    const branchPath = (deps.blockRefs[baseId]?.pathTo || []).concat({
+      branchIdx: bIdx,
+      branchStepId: baseId,
+    })
+    const branchBlockRef = { branchNode: true, pathTo: branchPath }
+
+    let lastNodeId = branchNodeId
+    let lastNodeBlock: any = branchBlockRef
+    let bottomY = startY + deps.ySpacing
+
+    let encounteredBranch = false
+    if (childSteps.length > 0) {
+      const result = renderChain(
+        childSteps,
+        lastNodeId,
+        lastNodeBlock,
+        branchX,
+        startY + deps.ySpacing,
+        deps
+      )
+      lastNodeId = result.lastNodeId
+      lastNodeBlock = result.lastNodeBlock
+      bottomY = result.bottomY
+      encounteredBranch = result.branched
+    }
+
+    // Add a terminal anchor
+    if (!encounteredBranch) {
+      const terminalId = `anchor-${lastNodeId}`
+      const terminalPos = deps.ensurePosition(terminalId, {
+        x: branchX,
+        y: bottomY,
+      })
+      deps.newNodes.push({
+        id: terminalId,
+        type: "anchor-node",
+        data: { direction: deps.direction },
+        position: terminalPos,
+      })
+      deps.newEdges.push({
+        id: `edge-${lastNodeId}-${terminalId}`,
+        type: "add-item",
+        source: lastNodeId,
+        target: terminalId,
+        data: {
+          block: lastNodeBlock,
+          direction: deps.direction,
+          pathTo:
+            (lastNodeBlock as any)?.pathTo ||
+            deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
+        },
+      })
+    }
+
+    clusterBottomY = Math.max(clusterBottomY, bottomY + deps.ySpacing)
+  })
+
+  return clusterBottomY
 }

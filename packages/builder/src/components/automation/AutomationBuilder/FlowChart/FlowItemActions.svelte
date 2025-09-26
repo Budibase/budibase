@@ -4,12 +4,13 @@
   import { automationStore } from "@/stores/builder"
 
   export let block
+  export let hideBranch = false
 
   const dispatch = createEventDispatcher()
 </script>
 
 <div class="action-bar">
-  {#if !block.branchNode}
+  {#if !hideBranch && !block.branchNode}
     <Icon
       hoverable
       name="git-branch"

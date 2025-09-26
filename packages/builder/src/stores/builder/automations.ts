@@ -28,6 +28,7 @@ import {
   FilterableRowTriggers,
   RowTriggers,
   SelectedAutomationState,
+  ViewMode,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
@@ -45,6 +46,7 @@ import {
   AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AutomationStepResult,
   AutomationStepInputs,
   AutomationStepType,
   AutomationTrigger,
@@ -83,6 +85,7 @@ import {
   UIAutomation,
   UILogicalOperator,
   WebhookTriggerOutputs,
+  AutomationLog,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -99,6 +102,7 @@ const initialAutomationState: AutomationStoreState = {
     ACTION: {},
   },
   selectedAutomationId: null,
+  viewMode: ViewMode.EDITOR,
 }
 
 const getFinalDefinitions = (
@@ -123,6 +127,12 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
+  setViewMode: (mode: ViewMode) => {
+    store.update(state => ({
+      ...state,
+      viewMode: mode,
+    }))
+  },
   /**
    * @param {Automation} auto
    * @param {BlockRef} blockRef
@@ -1967,7 +1977,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param block
    * @param newName
    */
-  updateBlockTitle: async (block: AutomationStep, newName: string) => {
+  updateBlockTitle: async (
+    block: AutomationStep | AutomationTrigger,
+    newName: string
+  ) => {
     if (newName.trim().length === 0) {
       await automationStore.actions.deleteAutomationName(block.id)
     } else {
@@ -2097,7 +2110,10 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openLogPanel: (log: any, stepData: any) => {
+  openLogPanel: (
+    log: AutomationLog,
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) => {
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,

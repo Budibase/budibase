@@ -33,6 +33,7 @@
   export let viewMode: ViewMode = ViewMode.EDITOR
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
+  $: viewMode = $automationStore.viewMode
   $: isTriggerBlock = block ? isTrigger(block) : false
   $: testResults = $automationStore.testResults as TestAutomationResponse
   $: blockResult =
