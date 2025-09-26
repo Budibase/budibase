@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { Table, notifications, Layout } from "@budibase/bbui"
+  import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+  import { auth } from "@/stores/portal/auth"
   import { licensing } from "@/stores/portal/licensing"
   import { users } from "@/stores/portal/users"
-  import { auth } from "@/stores/portal/auth"
+  import { Layout, Table, notifications } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
+  import {
+    type GetUserInvitesResponse,
+    type InviteWithCode,
+  } from "@budibase/types"
+  import { onMount } from "svelte"
+  import { routeActions } from "../.."
+  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
-  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
-  import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
-  import { onMount } from "svelte"
-  import {
-    type InviteWithCode,
-    type GetUserInvitesResponse,
-  } from "@budibase/types"
-  import { sdk } from "@budibase/shared-core"
-  import { routeActions } from "../.."
 
   type ParsedInvite = {
     _id: string
@@ -67,7 +67,9 @@
       return {
         _id: invite.code,
         email: invite.email,
-        builder,
+        builder: {
+          apps: builder?.apps || [],
+        },
         admin,
         userGroups: userGroups,
         apps: apps ? [...new Set(Object.keys(apps))] : undefined,

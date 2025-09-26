@@ -7,16 +7,16 @@
 
 <script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
-  import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
+  import Portal from "svelte-portal"
+  import type { KeyboardEventHandler } from "svelte/elements"
+  import { fly } from "svelte/transition"
+  import clickOutside from "../Actions/clickOutside"
   import positionDropdown, {
     type UpdateHandler,
-  } from "../Actions/position_dropdown"
-  import clickOutside from "../Actions/click_outside"
-  import { fly } from "svelte/transition"
-  import Context from "../context"
-  import type { KeyboardEventHandler } from "svelte/elements"
+  } from "../Actions/positionDropdown"
   import { PopoverAlignment } from "../constants"
+  import Context from "../context"
 
   export let anchor: HTMLElement | undefined
   export let align: PopoverAlignment | `${PopoverAlignment}` =

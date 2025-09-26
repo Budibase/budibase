@@ -12,7 +12,7 @@ import {
   RowValue,
   Workspace,
 } from "@budibase/types"
-import { getAppMigrationCacheKey } from "../../../workspaceMigrations"
+import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
 
@@ -26,19 +26,19 @@ const DESIGN_DOCUMENTS_TO_IMPORT = [
   DesignDocuments.MIGRATIONS,
 ]
 
-async function getNewAppMetadata(
+async function getNewWorkspaceMetadata(
   tempDb: Database,
-  appDb: Database
+  workspaceDb: Database
 ): Promise<Workspace> {
-  // static doc denoting app information
+  // static doc denoting workspace information
   const docId = DocumentType.WORKSPACE_METADATA
   try {
-    const [tempMetadata, appMetadata] = await Promise.all([
+    const [tempMetadata, workspaceMetadata] = await Promise.all([
       tempDb.get<Workspace>(docId),
-      appDb.get<Workspace>(docId),
+      workspaceDb.get<Workspace>(docId),
     ])
     return {
-      ...appMetadata,
+      ...workspaceMetadata,
       automationErrors: undefined,
       theme: tempMetadata.theme,
       customTheme: tempMetadata.customTheme,
@@ -50,7 +50,7 @@ async function getNewAppMetadata(
     }
   } catch (err: any) {
     throw new Error(
-      `Unable to retrieve app metadata for import - ${err.message}`
+      `Unable to retrieve workspace metadata for import - ${err.message}`
     )
   }
 }
@@ -102,7 +102,11 @@ async function removeImportableDocuments(db: Database) {
   )
 
   // add deletion key
-  return documentRefs.map(ref => ({ _deleted: true, ...ref }))
+  const uniqueMap = new Map<string, Document>()
+  documentRefs.forEach(doc => {
+    uniqueMap.set(doc._id!, doc)
+  })
+  return Array.from(uniqueMap.values()).map(ref => ({ _deleted: true, ...ref }))
 }
 
 async function getImportableDocuments(db: Database) {
@@ -137,14 +141,15 @@ async function getImportableDocuments(db: Database) {
 }
 
 export async function updateWithExport(
-  appId: string,
+  workspaceId: string,
   file: FileAttributes,
   password?: string
 ) {
-  const devId = dbCore.getDevWorkspaceID(appId)
-  const tempAppName = `temp_${devId}`
-  const tempDb = dbCore.getDB(tempAppName)
-  const appDb = dbCore.getDB(devId)
+  const devId = dbCore.getDevWorkspaceID(workspaceId)
+  const tempName = `temp_${devId}`
+  const tempDb = dbCore.getDB(tempName)
+  const workspaceDb = dbCore.getDB(devId)
+
   try {
     const template = {
       file: {
@@ -153,26 +158,24 @@ export async function updateWithExport(
         password,
       },
     }
-    // get a temporary version of the import
-    // don't need obj store, the existing app already has everything we need
+
     await backups.importApp(devId, tempDb, template, {
-      importObjStoreContents: false,
       updateAttachmentColumns: true,
     })
-    const newMetadata = await getNewAppMetadata(tempDb, appDb)
+    const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
     // get the documents to copy
     const toUpdate = await getImportableDocuments(tempDb)
     // clear out the old documents
-    const toDelete = await removeImportableDocuments(appDb)
+    const toDelete = await removeImportableDocuments(workspaceDb)
     // now bulk update documents - add new ones, delete old ones and update common ones
-    const updateDocsResult = await appDb.bulkDocs(
+    const updateDocsResult = await workspaceDb.bulkDocs(
       mergeUpdateAndDeleteDocuments(toUpdate, toDelete, newMetadata)
     )
     if (updateDocsResult.some(r => r.error)) {
       throw new HTTPError("Error importing documents", 500)
     }
 
-    await cache.destroy(getAppMigrationCacheKey(devId))
+    await cache.destroy(getWorkspaceMigrationCacheKey(devId))
     await processMigrations(devId)
   } finally {
     await tempDb.destroy()
