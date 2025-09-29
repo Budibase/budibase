@@ -17,7 +17,6 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { admin, featureFlags } from "@/stores/portal"
-  import type { MenuItem } from "@budibase/bbui"
   import {
     AbsTooltip,
     ActionButton,
