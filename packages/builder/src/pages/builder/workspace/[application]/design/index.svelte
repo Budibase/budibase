@@ -17,6 +17,7 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { admin, featureFlags } from "@/stores/portal"
+  import type { MenuItem } from "@budibase/bbui"
   import {
     AbsTooltip,
     ActionButton,
@@ -116,13 +117,19 @@
     window.open(liveUrl, "_blank")
   }
 
+  let isDuplicating = false
+
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
+    isDuplicating = true
+
     try {
       await workspaceAppStore.duplicate(workspaceAppId)
     } catch (e) {
       notifications.error("Failed to duplicate app")
     }
     await appStore.refresh()
+
+    isDuplicating = false
   }
 
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
@@ -172,6 +179,7 @@
         icon: "copy",
         name: "Duplicate",
         visible: true,
+        disabled: isDuplicating,
         callback: () => duplicateWorkspaceApp(workspaceApp._id as string),
       })
     }
