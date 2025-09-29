@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Handle, Position, NodeToolbar } from "@xyflow/svelte"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, Icon } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import type { LayoutDirection } from "@budibase/types"
 
@@ -44,17 +44,91 @@
   type="source"
   position={isHorizontal ? Position.Right : Position.Bottom}
 />
-<div style="height: 100px;">
-  <NodeToolbar position={isHorizontal ? Position.Top : Position.Top}>
+
+<div class="loop-container">
+  <div class="loop-header">
+    <div class="loop-icon-wrapper">
+      <Icon name="Reuse" size="S" />
+    </div>
+    <span class="loop-label">Loop</span>
+  </div>
+
+  <NodeToolbar
+    isVisible={loopChildCount === 0}
+    position={isHorizontal ? Position.Top : Position.Top}
+  >
     <ActionButton icon="plus-circle" on:click={addStep}>Add step</ActionButton>
   </NodeToolbar>
 </div>
 
 <style>
-  /* no explicit header; subflow should be minimal */
+  .loop-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .loop-header {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .loop-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .loop-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.2px;
+  }
 
   :global(.svelte-flow__node-loop-subflow-node) {
-    border: 1px dashed var(--grey-3) !important;
-    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  :global(.svelte-flow__node-loop-subflow-node:hover) {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+  }
+
+  :global(.svelte-flow__node-loop-subflow-node::before) {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.3;
   }
 </style>

@@ -153,87 +153,8 @@
       direction,
     }
 
-<<<<<<< HEAD
     // Build graph via helpers
     buildTopLevelGraph(blocks, deps)
-=======
-    // Build linear chain of top-level steps first
-    blocks.forEach((block: AutomationBlock, idx: number) => {
-      const isTrigger = idx === 0
-      const baseId = block.id
-      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
-      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
-
-      // Branch fan-out
-      if (isBranchStep) {
-        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-        renderBranches(
-          block,
-          sourceForBranches,
-          sourceBlock,
-          pos.x,
-          pos.y + ySpacing,
-          deps
-        )
-        return
-      }
-
-      newNodes.push({
-        id: baseId,
-        type: "step-node",
-        data: {
-          testDataModal,
-          block,
-          isTopLevel: true,
-          direction,
-        },
-        position: pos,
-      })
-
-      if (!isTrigger) {
-        const prevId = blocks[idx - 1].id
-        newEdges.push({
-          id: `edge-${prevId}-${baseId}`,
-          type: "add-item",
-          source: prevId,
-          target: baseId,
-          data: {
-            block: blocks[idx - 1],
-            direction,
-            pathTo: blockRefs?.[prevId]?.pathTo,
-          },
-        })
-      }
-
-      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
-      if (blocks.length === 1 || idx === blocks.length - 1) {
-        const terminalId = `anchor-${baseId}`
-        const terminalPos = ensurePosition(terminalId, {
-          x: pos.x,
-          y: pos.y + ySpacing,
-        })
-        newNodes.push({
-          id: terminalId,
-          type: "anchor-node",
-          data: { direction },
-          position: terminalPos,
-        })
-
-        newEdges.push({
-          id: `edge-${baseId}-${terminalId}`,
-          type: "add-item",
-          source: baseId,
-          target: terminalId,
-          data: {
-            block,
-            direction,
-            pathTo: blockRefs?.[baseId]?.pathTo,
-          },
-        })
-      }
-    })
->>>>>>> origin/master
 
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(

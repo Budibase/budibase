@@ -617,14 +617,13 @@ export const renderLoopV2Container = (
     type: "loop-subflow-node",
     data: {
       block: loopStep,
-      viewMode: deps.viewMode,
       direction: deps.direction,
       containerHeight,
       containerWidth,
     },
     selectable: false,
     draggable: false,
-    style: `background-color: rgba(255, 0, 0, 0.2); width: ${containerWidth}px; height: ${containerHeight}px;`,
+    style: `width: ${containerWidth}px; height: ${containerHeight}px;`,
     position: { x, y },
   })
 
@@ -639,7 +638,6 @@ export const renderLoopV2Container = (
       data: {
         block: child,
         isTopLevel: false,
-        viewMode: deps.viewMode,
         direction: deps.direction,
       },
       parentId: baseId,
@@ -670,7 +668,7 @@ export const renderLoopV2Container = (
     deps.newNodes.push({
       id: exitAnchorId,
       type: "anchor-node",
-      data: { viewMode: deps.viewMode, direction: deps.direction },
+      data: { direction: deps.direction },
       parentId: baseId,
       extent: "parent",
       zIndex: 1001,
@@ -692,7 +690,7 @@ export const renderLoopV2Container = (
 
 // Build entire top-level automation graph (trigger + steps + branches)
 export const buildTopLevelGraph = (
-  blocks: AutomationStep[],
+  blocks: AutomationBlock[],
   deps: GraphBuildDeps
 ) => {
   blocks.forEach((block: any, idx: number) => {
@@ -713,7 +711,6 @@ export const buildTopLevelGraph = (
             testDataModal: deps.testDataModal,
             block,
             isTopLevel: true,
-            viewMode: deps.viewMode,
             direction: deps.direction,
           },
           position: pos,
@@ -730,7 +727,6 @@ export const buildTopLevelGraph = (
         target: baseId,
         data: {
           block: blocks[idx - 1],
-          viewMode: deps.viewMode,
           direction: deps.direction,
           pathTo: deps.blockRefs?.[prevId]?.pathTo,
         },
@@ -746,7 +742,7 @@ export const buildTopLevelGraph = (
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { viewMode: deps.viewMode, direction: deps.direction },
+        data: { direction: deps.direction },
         position: terminalPos,
       })
 
@@ -757,7 +753,6 @@ export const buildTopLevelGraph = (
         target: terminalId,
         data: {
           block,
-          viewMode: deps.viewMode,
           direction: deps.direction,
           pathTo: deps.blockRefs?.[baseId]?.pathTo,
         },
