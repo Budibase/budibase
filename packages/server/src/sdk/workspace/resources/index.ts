@@ -59,11 +59,13 @@ export async function searchForUsages({
     )
 
     baseSearchTargets.push(
-      ...Object.entries(rowActionNames).map(([id, name]) => ({
-        id: id,
-        name: name,
-        type: ResourceType.ROW_ACTION,
-      }))
+      ...Object.values(rowActions).flatMap(ra =>
+        Object.entries(ra.actions).map(([id, action]) => ({
+          id: id,
+          name: rowActionNames[action.automationId],
+          type: ResourceType.ROW_ACTION,
+        }))
+      )
     )
   }
 
@@ -161,8 +163,25 @@ async function prepareWorkspaceAppDuplication(
 
   const docsToCopy = await sourceDb.getMultiple([
     resourceId,
-    ...requiredResources.map(r => r.id),
+    ...requiredResources
+      .filter(r => r.type !== ResourceType.ROW_ACTION)
+      .map(r => r.id),
   ])
+
+  const rowActionsToCopy = requiredResources.filter(
+    r => r.type === ResourceType.ROW_ACTION
+  )
+  if (rowActionsToCopy.length) {
+    const tableRowActions = await sdk.rowActions.getAll()
+
+    docsToCopy.push(
+      ...tableRowActions.filter(ra =>
+        Object.keys(ra.actions).some(rowActionId =>
+          rowActionsToCopy.map(x => x.id).includes(rowActionId)
+        )
+      )
+    )
+  }
 
   const screens = await sdk.screens.fetch()
   const appScreens = screens.filter(

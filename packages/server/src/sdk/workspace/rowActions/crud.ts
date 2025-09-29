@@ -12,6 +12,7 @@ import {
   TableRowActions,
   User,
   VirtualDocumentType,
+  WithDocMetadata,
 } from "@budibase/types"
 import sdk from "../.."
 import * as triggers from "../../../automations/triggers"
@@ -112,7 +113,7 @@ export async function getAllForTable(tableId: string) {
 export async function getAll() {
   const db = context.getWorkspaceDB()
   return (
-    await db.allDocs<TableRowActions>(
+    await db.allDocs<WithDocMetadata<TableRowActions>>(
       docIds.getDocParams(DocumentType.ROW_ACTIONS, undefined, {
         include_docs: true,
       })
