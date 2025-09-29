@@ -44,6 +44,9 @@
         .then(res => {
           resourcesToBeCopied = res.body.toCopy
         })
+        .catch(err => {
+          notifications.error(err.message)
+        })
     }
   }
 

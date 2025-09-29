@@ -191,7 +191,7 @@ async function prepareWorkspaceAppDuplication(
   }
 
   if (await destinationDb.exists(workspaceId)) {
-    throw new HTTPError("App already migrated", 400)
+    throw new HTTPError("App already migrated in this workspace", 400)
   }
 
   const requiredResources = await searchForUsages({
