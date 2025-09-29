@@ -546,8 +546,13 @@ describe("/api/resources/usage", () => {
 
         expect(previewBefore.body).toEqual({
           toCopy: {
-            workspace_app: [appWithTableUsages.app._id],
-            table: [internalTables[0]._id],
+            table: [
+              {
+                id: internalTables[0]._id,
+                name: internalTables[0].name,
+                type: "table",
+              },
+            ],
           },
           existing: {},
         })
@@ -566,8 +571,13 @@ describe("/api/resources/usage", () => {
         expect(previewAfter.body).toEqual({
           toCopy: {},
           existing: {
-            workspace_app: [appWithTableUsages.app._id],
-            table: [internalTables[0]._id],
+            table: [
+              {
+                id: internalTables[0]._id,
+                name: internalTables[0].name,
+                type: "table",
+              },
+            ],
           },
         })
       })
