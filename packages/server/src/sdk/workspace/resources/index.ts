@@ -175,15 +175,19 @@ async function prepareWorkspaceAppDuplication(
     r => r.type === ResourceType.ROW_ACTION
   )
   if (rowActionsToCopy.length) {
-    const tableRowActions = await sdk.rowActions.getAll()
+    const allTableRowActions = await sdk.rowActions.getAll()
 
-    docsToCopy.push(
-      ...tableRowActions.filter(ra =>
-        Object.keys(ra.actions).some(rowActionId =>
-          rowActionsToCopy.map(x => x.id).includes(rowActionId)
-        )
+    const tableRowActionsToCopy = allTableRowActions.filter(ra =>
+      Object.keys(ra.actions).some(rowActionId =>
+        rowActionsToCopy.map(x => x.id).includes(rowActionId)
       )
     )
+    docsToCopy.push(...tableRowActionsToCopy)
+
+    const rowActionAutomationIds = Object.values(tableRowActionsToCopy).flatMap(
+      a => Object.values(a.actions).map(a => a.automationId)
+    )
+    docsToCopy.push(...(await sourceDb.getMultiple(rowActionAutomationIds)))
   }
 
   const screens = await sdk.screens.fetch()
