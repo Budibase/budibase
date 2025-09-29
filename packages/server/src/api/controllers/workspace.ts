@@ -50,7 +50,7 @@ import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { createOnboardingWelcomeScreen } from "../../constants/screens"
+import { createSampleDataTableScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
@@ -185,9 +185,7 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createOnboardingDefaultWorkspaceApp(
-  name: string
-): Promise<string> {
+async function createDefaultWorkspaceApp(name: string): Promise<string> {
   const workspaceApp = await sdk.workspaceApps.create({
     name: name,
     url: "/",
@@ -195,14 +193,14 @@ async function createOnboardingDefaultWorkspaceApp(
       ...defaultAppNavigator(name),
       links: [],
     },
-    disabled: false,
+    disabled: true,
     isDefault: true,
   })
 
   return workspaceApp._id!
 }
 
-async function addOnboardingWelcomeScreen() {
+async function addSampleDataScreen() {
   const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
   const workspaceApp = workspaceApps.find(wa => wa.isDefault)
 
@@ -210,7 +208,17 @@ async function addOnboardingWelcomeScreen() {
     throw new Error("Default workspace app not found")
   }
 
-  const screen = createOnboardingWelcomeScreen(workspaceApp._id!)
+  workspaceApp.navigation.links = workspaceApp.navigation.links || []
+  workspaceApp.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  await sdk.workspaceApps.update(workspaceApp)
+
+  const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
 }
 
@@ -405,6 +413,7 @@ async function performWorkspaceCreate(
     const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
+    const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(workspaceId, db, ctx.user._id!)
@@ -486,17 +495,17 @@ async function performWorkspaceCreate(
       await uploadAppFiles(workspaceId)
     }
 
-    // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
-    if (isOnboarding) {
+    // Add sample datasource and example screen for non-templates/non-imports
+    if (addSampleData) {
       try {
+        await createDefaultWorkspaceApp(name)
         await addSampleDataDocs()
-        await createOnboardingDefaultWorkspaceApp(name)
-        await addOnboardingWelcomeScreen()
+        await addSampleDataScreen()
 
         // Fetch the latest version of the workspace after these changes
         newWorkspace = await sdk.workspaces.metadata.get()
       } catch (err) {
-        ctx.throw(400, "App created, but failed to add onboarding screens")
+        ctx.throw(400, "App created, but failed to add sample data")
       }
     }
 
