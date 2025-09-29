@@ -16,9 +16,7 @@
     AutomationStatus,
     AutomationActionStepId,
     type UIAutomation,
-    type AutomationStep,
     type LayoutDirection,
-    type AutomationTrigger,
   } from "@budibase/types"
   import {
     automationStore,
@@ -35,7 +33,8 @@
     renderBranches,
     dagreLayoutAutomation,
     type GraphBuildDeps,
-    AutomationBlock,
+    type AutomationBlock,
+    type AutomationBlockRefMap,
   } from "./AutomationStepHelpers"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -76,7 +75,7 @@
 
   let testDataModal: Modal
   let confirmDeleteDialog
-  let blockRefs: Record<string, any> = {}
+  let blockRefs: AutomationBlockRefMap = {}
   let prodErrors: number
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
@@ -250,7 +249,7 @@
 
   const refresh = () => {
     // Get all processed block references
-    blockRefs = $selectedAutomation.blockRefs
+    blockRefs = $selectedAutomation.blockRefs as AutomationBlockRefMap
   }
 
   const deleteAutomation = async () => {
