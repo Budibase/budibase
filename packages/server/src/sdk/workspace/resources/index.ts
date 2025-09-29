@@ -180,15 +180,9 @@ interface WorkspaceAppDuplicationPreparation {
 }
 
 async function prepareWorkspaceAppDuplication(
-  resourceId: string,
+  workspaceId: string,
   toWorkspace: string
 ): Promise<WorkspaceAppDuplicationPreparation> {
-  const requiredResources = await searchForUsages({
-    workspaceAppIds: [resourceId],
-  })
-
-  const sourceDb = context.getWorkspaceDB()
-
   const destinationDb = db.getDB(db.getDevWorkspaceID(toWorkspace), {
     skip_setup: true,
   })
@@ -196,35 +190,24 @@ async function prepareWorkspaceAppDuplication(
     throw new HTTPError("Destination workspace does not exist", 400)
   }
 
+  if (await destinationDb.exists(workspaceId)) {
+    throw new HTTPError("App already migrated", 400)
+  }
+
+  const requiredResources = await searchForUsages({
+    workspaceAppIds: [workspaceId],
+  })
+
+  const sourceDb = context.getWorkspaceDB()
+
   const docsToCopy = await sourceDb.getMultiple([
-    resourceId,
-    ...requiredResources
-      // .filter(r => r.type !== ResourceType.ROW_ACTION)
-      .map(r => r.id),
+    workspaceId,
+    ...requiredResources.map(r => r.id),
   ])
-
-  // const rowActionsToCopy = requiredResources.filter(
-  //   r => r.type === ResourceType.ROW_ACTION
-  // )
-  // if (rowActionsToCopy.length) {
-  //   const allTableRowActions = await sdk.rowActions.getAll()
-
-  //   const tableRowActionsToCopy = allTableRowActions.filter(ra =>
-  //     Object.keys(ra.actions).some(rowActionId =>
-  //       rowActionsToCopy.map(x => x.id).includes(rowActionId)
-  //     )
-  //   )
-  //   docsToCopy.push(...tableRowActionsToCopy)
-
-  //   const rowActionAutomationIds = Object.values(tableRowActionsToCopy).flatMap(
-  //     a => Object.values(a.actions).map(a => a.automationId)
-  //   )
-  //   docsToCopy.push(...(await sourceDb.getMultiple(rowActionAutomationIds)))
-  // }
 
   const screens = await sdk.screens.fetch()
   const appScreens = screens.filter(
-    screen => screen.workspaceAppId === resourceId
+    screen => screen.workspaceAppId === workspaceId
   )
   docsToCopy.push(...appScreens)
 
