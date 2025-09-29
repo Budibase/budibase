@@ -40,6 +40,9 @@
     .then(res => {
       usedResource = res.resources
     })
+    .catch(() => {
+      notifications.error(`Error while fetching ${resource.type} usages`)
+    })
 
   $: {
     existingResourcesInDestination = undefined
