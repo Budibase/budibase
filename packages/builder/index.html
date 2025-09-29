@@ -58,11 +58,15 @@
             normalized === "light" ? "light" : "dark"
           if (document.body) {
             document.body.style.backgroundColor = color
+            document.body.style.colorScheme =
+              normalized === "light" ? "light" : "dark"
           } else {
             document.addEventListener(
               "DOMContentLoaded",
               () => {
                 document.body.style.backgroundColor = color
+                document.body.style.colorScheme =
+                  normalized === "light" ? "light" : "dark"
               },
               { once: true }
             )
@@ -87,6 +91,7 @@
 
         const theme = ensureTheme(getStoredTheme())
         setBackground(theme)
+        window.__bbApplyThemeAppearance = setBackground
       })()
     </script>
   </head>

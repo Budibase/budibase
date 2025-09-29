@@ -13,6 +13,12 @@ interface ThemeState {
   theme: Theme
 }
 
+declare global {
+  interface Window {
+    __bbApplyThemeAppearance?: (theme: Theme) => void
+  }
+}
+
 class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
   constructor() {
     const makeDerivedStore = (store: Writable<ThemeState>) => {
@@ -38,6 +44,7 @@ class ThemeStore extends DerivedBudiStore<ThemeState, ThemeState> {
           classNames.includes(className)
         )
       })
+      window.__bbApplyThemeAppearance?.(theme)
     })
   }
 }
