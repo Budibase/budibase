@@ -117,22 +117,25 @@ export async function searchForUsages({
     }
   }
 
-  function checkForNestedAutomations(resources: UsedResource[]) {
-    const automationResources = resources.filter(
-      r => r.type === ResourceType.AUTOMATION
-    )
+  function checkForNestedResources(
+    resources: UsedResource[],
+    resourceType: ResourceType,
+    docs: AnyDocument[]
+  ) {
+    const filteredResources = resources.filter(r => r.type === resourceType)
     const preResourceCount = resources.length
-    for (const resource of automationResources) {
-      const automation = automations.find(a => a._id === resource.id)
-      const json = JSON.stringify(automation)
+    for (const resource of filteredResources) {
+      const doc = docs.find(a => a._id === resource.id)
+      const json = JSON.stringify(doc)
       searchForResource(json)
     }
     if (preResourceCount !== resources.length) {
-      checkForNestedAutomations(resources)
+      checkForNestedResources(resources, resourceType, docs)
     }
   }
 
-  checkForNestedAutomations(resources)
+  checkForNestedResources(resources, ResourceType.AUTOMATION, automations)
+  checkForNestedResources(resources, ResourceType.TABLE, tables)
 
   return resources
 }
