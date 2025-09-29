@@ -18,7 +18,6 @@ import {
   AutomationTriggerStepId,
   BlockDefinitions,
   BlockPath,
-  BlockRef,
   Branch,
   BranchStep,
   LayoutDirection,
@@ -35,37 +34,6 @@ export type AutomationBlock =
   | AutomationStep
   | AutomationTrigger
   | ReconstructedBlock
-
-type AutomationBlockContext = AutomationBlock & { branchNode?: false }
-type BranchPathEntry = Partial<BlockPath> & {
-  branchIdx: number
-  branchStepId: string
-}
-export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
-export interface BranchFlowContext {
-  branchNode: true
-  pathTo: FlowBlockPath
-}
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
-
-type AutomationBlockRef = BlockRef & {
-  stepId?: string
-  name?: string
-  looped?: string
-  blockToLoop?: string
-  inputs?: Record<string, unknown>
-}
-export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
-
-const resolvePathTo = (
-  context: FlowBlockContext | undefined,
-  blockRefs: AutomationBlockRefMap
-): FlowBlockPath | undefined => {
-  if (!context) return undefined
-  return context.branchNode
-    ? context.pathTo
-    : (blockRefs?.[context.id]?.pathTo as FlowBlockPath)
-}
 
 // Block processing and retrieval functions
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
@@ -244,7 +212,7 @@ export interface GraphBuildDeps {
   }
   xSpacing: number
   ySpacing: number
-  blockRefs: AutomationBlockRefMap
+  blockRefs: Record<string, any>
   testDataModal?: Modal
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
@@ -316,13 +284,13 @@ export const dagreLayoutAutomation = (
 export const renderChain = (
   chain: AutomationStep[],
   parentNodeId: string,
-  parentBlock: FlowBlockContext,
+  parentBlock: any,
   baseX: number,
   startY: number,
   deps: GraphBuildDeps
 ): {
   lastNodeId: string
-  lastNodeBlock: FlowBlockContext
+  lastNodeBlock: any
   bottomY: number
   branched: boolean
 } => {
@@ -366,7 +334,8 @@ export const renderChain = (
       data: {
         block: lastNodeBlock,
         direction: deps.direction,
-        pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
+        pathTo:
+          lastNodeBlock?.pathTo || deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
       },
     })
 
@@ -381,7 +350,7 @@ export const renderChain = (
 export const renderBranches = (
   branchStep: AutomationBlock,
   sourceNodeId: string,
-  sourceBlock: FlowBlockContext,
+  sourceBlock: AutomationBlock,
   centerX: number,
   startY: number,
   deps: GraphBuildDeps
@@ -428,27 +397,20 @@ export const renderBranches = (
         branchIdx: bIdx,
         branchesCount: branches.length,
         direction: deps.direction,
-        pathTo: resolvePathTo(sourceBlock, deps.blockRefs),
+        pathTo: deps.blockRefs?.[sourceBlock?.id]?.pathTo,
       },
     })
 
     // Children of this branch
     const childSteps: AutomationStep[] = children?.[branch.id] || []
-    const parentPath = deps.blockRefs[baseId]?.pathTo || []
-    const branchPath: FlowBlockPath = [
-      ...parentPath,
-      {
-        branchIdx: bIdx,
-        branchStepId: baseId,
-      },
-    ]
-    const branchBlockRef: BranchFlowContext = {
-      branchNode: true,
-      pathTo: branchPath,
-    }
+    const branchPath = (deps.blockRefs[baseId]?.pathTo || []).concat({
+      branchIdx: bIdx,
+      branchStepId: baseId,
+    })
+    const branchBlockRef = { branchNode: true, pathTo: branchPath }
 
     let lastNodeId = branchNodeId
-    let lastNodeBlock: FlowBlockContext = branchBlockRef
+    let lastNodeBlock = branchBlockRef
     let bottomY = startY + deps.ySpacing
 
     const chainResult =
@@ -490,7 +452,9 @@ export const renderBranches = (
         data: {
           block: lastNodeBlock,
           direction: deps.direction,
-          pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
+          pathTo:
+            lastNodeBlock?.pathTo ||
+            deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
         },
       })
     }
