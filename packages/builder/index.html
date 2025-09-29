@@ -54,17 +54,6 @@
           const color =
             themeBackgrounds[normalized] || themeBackgrounds[fallback]
           document.documentElement.style.backgroundColor = color
-          if (document.body) {
-            document.body.style.backgroundColor = color
-          } else {
-            document.addEventListener(
-              "DOMContentLoaded",
-              () => {
-                document.body.style.backgroundColor = color
-              },
-              { once: true }
-            )
-          }
         }
 
         const getStoredTheme = () => {
