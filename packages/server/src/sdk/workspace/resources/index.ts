@@ -9,54 +9,48 @@ import {
   DuplicateResourcePreviewResponse,
   ResourceType,
   Screen,
-  Table,
-  TableRowActions,
   UsedResource,
 } from "@budibase/types"
 import sdk from "../.."
 
-export async function searchForUsages(
-  {
-    automationIds,
-    workspaceAppIds,
-  }: {
-    automationIds?: string[]
-    workspaceAppIds?: string[]
-  },
-  exclude: ResourceType[] = []
-) {
-  const shouldSearchTables = !exclude.includes(ResourceType.TABLE)
-  const shouldSearchDatasources = !exclude.includes(ResourceType.DATASOURCE)
-  const shouldSearchQueries = !exclude.includes(ResourceType.QUERY)
-  const shouldSearchRowActions = !exclude.includes(ResourceType.ROW_ACTION)
-
+export async function searchForUsages({
+  automationIds,
+  workspaceAppIds,
+}: {
+  automationIds?: string[]
+  workspaceAppIds?: string[]
+}) {
   const resources: UsedResource[] = []
   const baseSearchTargets: { id: string; name: string; type: ResourceType }[] =
     []
 
   // keep tables as may be used later
-  let tables: Table[] = []
-  if (shouldSearchTables) {
-    tables = await sdk.tables.getAllInternalTables()
-    baseSearchTargets.push(
-      ...tables.map(table => ({
-        id: table._id!,
-        name: table.name!,
-        type: ResourceType.TABLE,
-      }))
-    )
-  }
+  const tables = await sdk.tables.getAllInternalTables()
+  baseSearchTargets.push(
+    ...tables.map(table => ({
+      id: table._id!,
+      name: table.name!,
+      type: ResourceType.TABLE,
+    }))
+  )
 
-  if (shouldSearchDatasources) {
-    const datasources = await sdk.datasources.fetch()
-    baseSearchTargets.push(
-      ...datasources.map(datasource => ({
-        id: datasource._id!,
-        name: datasource.name!,
-        type: ResourceType.DATASOURCE,
-      }))
-    )
-  }
+  const datasources = await sdk.datasources.fetch()
+  baseSearchTargets.push(
+    ...datasources.map(datasource => ({
+      id: datasource._id!,
+      name: datasource.name!,
+      type: ResourceType.DATASOURCE,
+    }))
+  )
+
+  const automations = await sdk.automations.fetch()
+  baseSearchTargets.push(
+    ...automations.map(automation => ({
+      id: automation._id!,
+      name: automation.name!,
+      type: ResourceType.AUTOMATION,
+    }))
+  )
 
   const searchForResource = (json: string) => {
     for (const search of baseSearchTargets) {
@@ -103,67 +97,6 @@ export async function searchForUsages(
     for (const automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(json)
-    }
-  }
-
-  if (shouldSearchQueries) {
-    const queries = await sdk.queries.fetch()
-    for (const resource of resources) {
-      if (resource.type !== ResourceType.DATASOURCE) {
-        continue
-      }
-      const datasourceQueries = queries.filter(
-        query => query.datasourceId === resource.id
-      )
-      resources.push(
-        ...datasourceQueries.map(query => ({
-          id: query._id!,
-          name: query.name,
-          type: ResourceType.QUERY,
-        }))
-      )
-    }
-  }
-
-  if (shouldSearchRowActions) {
-    let usedActions: TableRowActions[] = []
-    const rowActions = await sdk.rowActions.getAll()
-    for (const resource of resources) {
-      if (
-        resource.type !== ResourceType.TABLE &&
-        resource.type !== ResourceType.DATASOURCE
-      ) {
-        continue
-      }
-      const tableActions = rowActions.filter(action =>
-        action._id!.includes(resource.id)
-      )
-      usedActions = usedActions.concat(tableActions)
-      resources.push(
-        ...tableActions.map(action => ({
-          id: action._id!,
-          name: undefined,
-          type: ResourceType.ROW_ACTION,
-        }))
-      )
-    }
-
-    // Add row action automations if searching for automations
-    if (usedActions.length > 0) {
-      const actionAutomationIds = usedActions.flatMap(actionDoc =>
-        Object.values(actionDoc.actions).map(action => action.automationId)
-      )
-      const missingAutomationIds = actionAutomationIds.filter(
-        id => !resources.find(resource => resource.id === id)
-      )
-      const automations = await sdk.automations.find(missingAutomationIds)
-      resources.push(
-        ...automations.map(automation => ({
-          id: automation._id!,
-          name: automation.name,
-          type: ResourceType.AUTOMATION,
-        }))
-      )
     }
   }
 
