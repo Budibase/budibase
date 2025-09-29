@@ -293,6 +293,19 @@
     }
   }
 
+  const shouldRerender = (
+    field: BaseIOStructure,
+    block?: AutomationStep | AutomationTrigger,
+    key?: string,
+    rerenderTypes: SchemaFieldTypes[] = [SchemaFieldTypes.JSON]
+  ) => {
+    if (!block) return null
+    const fieldType = getFieldType(field, block)
+    return fieldType && rerenderTypes.includes(fieldType)
+      ? `${block.id}-${key}`
+      : null
+  }
+
   /**
    *
    * Build the core props used to page the Automation Schema field.
@@ -389,20 +402,7 @@
     {@const { config, props, value, title } = schemaToUI(key, field, block)}
     {#if config}
       {#if config.wrapped === false}
-        <svelte:component
-          this={config.comp}
-          {bindings}
-          {block}
-          {context}
-          {key}
-          {...{ value, ...props }}
-          on:change={config.onChange ??
-            (e => {
-              defaultChange({ [key]: e.detail }, block)
-            })}
-        />
-      {:else}
-        <PropField label={title} fullWidth labelTooltip={config.tooltip || ""}>
+        {#key shouldRerender(field, block, key)}
           <svelte:component
             this={config.comp}
             {bindings}
@@ -415,6 +415,23 @@
                 defaultChange({ [key]: e.detail }, block)
               })}
           />
+        {/key}
+      {:else}
+        <PropField label={title} fullWidth labelTooltip={config.tooltip || ""}>
+          {#key shouldRerender(field, block, key)}
+            <svelte:component
+              this={config.comp}
+              {bindings}
+              {block}
+              {context}
+              {key}
+              {...{ value, ...props }}
+              on:change={config.onChange ??
+                (e => {
+                  defaultChange({ [key]: e.detail }, block)
+                })}
+            />
+          {/key}
         </PropField>
       {/if}
     {/if}
