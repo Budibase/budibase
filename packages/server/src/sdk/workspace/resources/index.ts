@@ -286,18 +286,6 @@ export async function previewDuplicateResourceToWorkspace(
   const { requiredResources, existingIds } =
     await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
 
-  const ensureEntry = (
-    map: Partial<Record<ResourceType, string[]>>,
-    type: ResourceType,
-    id: string
-  ) => {
-    map[type] ??= []
-    const entries = map[type]!
-    if (!entries.includes(id)) {
-      entries.push(id)
-    }
-  }
-
   const resources: UsedResource[] = [
     {
       id: resourceId,
@@ -307,23 +295,19 @@ export async function previewDuplicateResourceToWorkspace(
     ...requiredResources,
   ]
 
-  const toCopy: Partial<Record<ResourceType, string[]>> = {}
-  const existing: Partial<Record<ResourceType, string[]>> = {}
+  const toCopy: Partial<Record<ResourceType, UsedResource[]>> = {}
+  const existing: Partial<Record<ResourceType, UsedResource[]>> = {}
 
   for (const resource of resources) {
-    const target = existingIds.has(resource.id) ? existing : toCopy
-    ensureEntry(target, resource.type, resource.id)
-  }
-
-  const sortResourceMap = (map: Partial<Record<ResourceType, string[]>>) => {
-    for (const ids of Object.values(map)) {
-      ids.sort((a, b) => a.localeCompare(b))
+    if (existingIds.has(resource.id)) {
+      existing[resource.type] = [...(existing[resource.type] || []), resource]
+    } else {
+      toCopy[resource.type] = [...(toCopy[resource.type] || []), resource]
     }
-    return map
   }
 
   return {
-    toCopy: sortResourceMap(toCopy),
-    existing: sortResourceMap(existing),
+    toCopy: toCopy,
+    existing: existing,
   }
 }

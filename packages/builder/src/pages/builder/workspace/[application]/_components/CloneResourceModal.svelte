@@ -30,48 +30,29 @@
     }
   }
 
-  let usedResource: UsedResource[] = []
-  let existingResourcesInDestination: Set<string> | undefined
-  $: API.resource
-    .searchForUsage({
-      workspaceAppIds: resource.type === "app" ? [resource.id] : undefined,
-      automationIds: resource.type === "automation" ? [resource.id] : undefined,
-    })
-    .then(res => {
-      usedResource = res.resources
-    })
-    .catch(() => {
-      notifications.error(`Error while fetching ${resource.type} usages`)
-    })
+  let resourcesToBeCopied: Partial<Record<ResourceType, UsedResource[]>>
+  let loaded: boolean
 
   $: {
-    existingResourcesInDestination = undefined
+    loaded = false
     if (toWorkspaceId) {
       API.resource
         .previewDuplicateResourceToWorkspace(resource.id, {
           toWorkspace: toWorkspaceId,
         })
         .then(res => {
-          existingResourcesInDestination = new Set(
-            Object.entries(res.body.existing).flatMap(([_key, value]) => value)
-          )
+          resourcesToBeCopied = res.body.toCopy
+
+          loaded = true
         })
     }
   }
-
-  $: usedResourceByType = usedResource?.reduce<
-    Partial<Record<ResourceType, UsedResource[]>>
-  >((acc, resource) => {
-    acc[resource.type] ??= []
-    acc[resource.type]!.push(resource)
-    return acc
-  }, {})
 
   $: workspaces = $appsStore.apps.filter(
     a => a.devId !== sdk.applications.getDevAppID($appStore.appId)
   )
 
-  $: disabled = !toWorkspaceId || !existingResourcesInDestination
+  $: disabled = !toWorkspaceId || !resourcesToBeCopied
 
   function getFriendlyName(type: string): string {
     const resourceTypeFriendlyName: Record<ResourceType, string> = {
@@ -101,24 +82,22 @@
         getOptionIcon={() => undefined}
       ></Select>
 
-      {#if usedResource?.length}
+      {#if loaded}
         The following resources will be copied along the {resource.type}:
-        {#each Object.entries(usedResourceByType) as [type, resources]}
-          <div>
+        {#each Object.entries(resourcesToBeCopied) as [type, resourcesToCopy]}
+          {@const resources = resourcesToCopy.filter(r => r.id !== resource.id)}
+          {#if resources.length}
             <div>
-              {getFriendlyName(type)}
-            </div>
-            {#each resources as resource}
               <div>
-                - {resource.name}
-                {#if existingResourcesInDestination?.has(resource.id)}
-                  - existing ✅
-                {:else if existingResourcesInDestination}
-                  - to be copied ↩️
-                {/if}
+                {getFriendlyName(type)}
               </div>
-            {/each}
-          </div>
+              {#each resources as resourceToCopy}
+                <div>
+                  - {resourceToCopy.name}
+                </div>
+              {/each}
+            </div>
+          {/if}
         {/each}
       {/if}
     {/if}

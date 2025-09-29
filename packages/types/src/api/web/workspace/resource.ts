@@ -36,6 +36,6 @@ export interface DuplicateResourceToWorkspaceResponse {
 }
 
 export interface DuplicateResourcePreviewResponse {
-  toCopy: Partial<Record<ResourceType, string[]>>
-  existing: Partial<Record<ResourceType, string[]>>
+  toCopy: Partial<Record<ResourceType, UsedResource[]>>
+  existing: Partial<Record<ResourceType, UsedResource[]>>
 }
