@@ -3,6 +3,7 @@ interface BuilderWorkspaceRouteOptions {
   segments?: Array<string | null | undefined>
 }
 
+// Remove any leading/trailing slashes from a path segment, e.g. "//foo/bar/" -> "foo/bar"
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, "")
 
 const buildPath = (segments: Array<string | null | undefined>) =>
