@@ -82,11 +82,11 @@
       ></Select>
 
       {#if resourcesToBeCopied && Object.keys(resourcesToBeCopied).length}
-        The following resources will be copied along the {resource.type}:
+        The following resources will be copied along the {resource.type}.
         {#each Object.entries(resourcesToBeCopied) as [type, resourcesToCopy]}
           <div>
             <div>
-              {getFriendlyName(type)}
+              {getFriendlyName(type)}:
             </div>
             {#each resourcesToCopy as resourceToCopy}
               <div>
