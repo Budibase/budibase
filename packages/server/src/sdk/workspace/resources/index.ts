@@ -100,6 +100,23 @@ export async function searchForUsages({
     }
   }
 
+  function checkForNestedAutomations(resources: UsedResource[]) {
+    const automationResources = resources.filter(
+      r => r.type === ResourceType.AUTOMATION
+    )
+    const preResourceCount = resources.length
+    for (const resource of automationResources) {
+      const automation = automations.find(a => a._id === resource.id)
+      const json = JSON.stringify(automation)
+      searchForResource(json)
+    }
+    if (preResourceCount !== resources.length) {
+      checkForNestedAutomations(resources)
+    }
+  }
+
+  checkForNestedAutomations(resources)
+
   return resources
 }
 
