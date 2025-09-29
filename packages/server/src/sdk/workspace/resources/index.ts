@@ -298,7 +298,7 @@ export async function previewDuplicateResourceToWorkspace(
   const toCopy: Partial<Record<ResourceType, UsedResource[]>> = {}
   const existing: Partial<Record<ResourceType, UsedResource[]>> = {}
 
-  for (const resource of resources) {
+  for (const resource of resources.filter(r => r.id !== resourceId)) {
     if (existingIds.has(resource.id)) {
       existing[resource.type] = [...(existing[resource.type] || []), resource]
     } else {

@@ -30,11 +30,12 @@
     }
   }
 
-  let resourcesToBeCopied: Partial<Record<ResourceType, UsedResource[]>>
-  let loaded: boolean
+  let resourcesToBeCopied:
+    | Partial<Record<ResourceType, UsedResource[]>>
+    | undefined
 
   $: {
-    loaded = false
+    resourcesToBeCopied = undefined
     if (toWorkspaceId) {
       API.resource
         .previewDuplicateResourceToWorkspace(resource.id, {
@@ -42,8 +43,6 @@
         })
         .then(res => {
           resourcesToBeCopied = res.body.toCopy
-
-          loaded = true
         })
     }
   }
@@ -82,22 +81,19 @@
         getOptionIcon={() => undefined}
       ></Select>
 
-      {#if loaded}
+      {#if resourcesToBeCopied && Object.keys(resourcesToBeCopied).length}
         The following resources will be copied along the {resource.type}:
         {#each Object.entries(resourcesToBeCopied) as [type, resourcesToCopy]}
-          {@const resources = resourcesToCopy.filter(r => r.id !== resource.id)}
-          {#if resources.length}
+          <div>
             <div>
-              <div>
-                {getFriendlyName(type)}
-              </div>
-              {#each resources as resourceToCopy}
-                <div>
-                  - {resourceToCopy.name}
-                </div>
-              {/each}
+              {getFriendlyName(type)}
             </div>
-          {/if}
+            {#each resourcesToCopy as resourceToCopy}
+              <div>
+                - {resourceToCopy.name}
+              </div>
+            {/each}
+          </div>
         {/each}
       {/if}
     {/if}
