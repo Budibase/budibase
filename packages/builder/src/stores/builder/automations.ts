@@ -1307,7 +1307,7 @@ const automationActions = (store: AutomationStore) => ({
     })
 
     // Trigger offset when inserting
-    const rootIdx = Math.max(insertPoint.stepIdx - 1, 0)
+    const rootIdx = insertPoint.stepIdx - 1
     const insertIdx = atRoot ? rootIdx : insertPoint.stepIdx
 
     // Check if the branch point is a on a branch step
@@ -1354,7 +1354,6 @@ const automationActions = (store: AutomationStore) => ({
 
     // Add the new branch to the end.
     cache.push(newBranch)
-
     try {
       await store.actions.save(newAutomation)
     } catch (e) {

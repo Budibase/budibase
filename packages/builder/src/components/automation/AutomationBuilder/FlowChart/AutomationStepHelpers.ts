@@ -40,11 +40,14 @@ type AutomationBlockContext = AutomationBlock & { branchNode?: false }
 type BranchPathEntry = Partial<BlockPath> & {
   branchIdx: number
   branchStepId: string
+  stepIdx?: number
 }
 export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
 export interface BranchFlowContext {
   branchNode: true
   pathTo: FlowBlockPath
+  branchIdx: number
+  branchStepId: string
 }
 export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
 
@@ -433,18 +436,21 @@ export const renderBranches = (
     })
 
     // Children of this branch
-    const childSteps: AutomationStep[] = children?.[branch.id] || []
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
+    const childSteps: AutomationStep[] = children?.[branch.id] || []
     const branchPath: FlowBlockPath = [
       ...parentPath,
       {
         branchIdx: bIdx,
         branchStepId: baseId,
+        stepIdx: childSteps.length - 1,
       },
     ]
     const branchBlockRef: BranchFlowContext = {
       branchNode: true,
       pathTo: branchPath,
+      branchIdx: bIdx,
+      branchStepId: baseId,
     }
 
     let lastNodeId = branchNodeId
