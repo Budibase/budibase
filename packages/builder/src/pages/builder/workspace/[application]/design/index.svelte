@@ -15,7 +15,7 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { admin } from "@/stores/portal"
+  import { admin, featureFlags } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -129,7 +129,7 @@
       {
         icon: "export",
         name: "Copy to another workspace",
-        visible: true,
+        visible: $featureFlags.COPY_APPS_BETWEEN_WORKSPACES,
         callback: () => cloneResourceModal.show(),
       },
     ]
