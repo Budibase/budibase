@@ -19,7 +19,7 @@ export enum ResourceType {
 
 export interface UsedResource {
   id: string
-  name?: string
+  name: string
   type: ResourceType
 }
 

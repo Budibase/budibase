@@ -19,16 +19,21 @@ export async function searchForUsages({
 }: {
   automationIds?: string[]
   workspaceAppIds?: string[]
-}) {
+}): Promise<UsedResource[]> {
   const resources: UsedResource[] = []
-  const baseSearchTargets: { id: string; name: string; type: ResourceType }[] =
-    []
+  const baseSearchTargets: {
+    id: string
+    idToSearch: string
+    name: string
+    type: ResourceType
+  }[] = []
 
   // keep tables as may be used later
   const tables = await sdk.tables.getAllInternalTables()
   baseSearchTargets.push(
     ...tables.map(table => ({
       id: table._id!,
+      idToSearch: table._id!,
       name: table.name!,
       type: ResourceType.TABLE,
     }))
@@ -38,6 +43,7 @@ export async function searchForUsages({
   baseSearchTargets.push(
     ...datasources.map(datasource => ({
       id: datasource._id!,
+      idToSearch: datasource._id!,
       name: datasource.name!,
       type: ResourceType.DATASOURCE,
     }))
@@ -47,6 +53,7 @@ export async function searchForUsages({
   baseSearchTargets.push(
     ...automations.map(automation => ({
       id: automation._id!,
+      idToSearch: automation._id!,
       name: automation.name!,
       type: ResourceType.AUTOMATION,
     }))
@@ -61,7 +68,8 @@ export async function searchForUsages({
     baseSearchTargets.push(
       ...Object.values(rowActions).flatMap(ra =>
         Object.entries(ra.actions).map(([id, action]) => ({
-          id: id,
+          id: ra._id,
+          idToSearch: id,
           name: rowActionNames[action.automationId],
           type: ResourceType.ROW_ACTION,
         }))
@@ -72,7 +80,7 @@ export async function searchForUsages({
   const searchForResource = (json: string) => {
     for (const search of baseSearchTargets) {
       if (
-        json.includes(search.id) &&
+        json.includes(search.idToSearch) &&
         !resources.find(resource => resource.id === search.id)
       ) {
         resources.push({
@@ -114,6 +122,30 @@ export async function searchForUsages({
     for (const automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(json)
+    }
+  }
+
+  for (const rowActionResource of resources.filter(
+    r => r.type === ResourceType.ROW_ACTION
+  )) {
+    const rowAction = rowActions.find(ra => ra._id === rowActionResource.id)
+    if (!rowAction) {
+      continue
+    }
+
+    for (const action of Object.values(rowAction.actions)) {
+      if (resources.some(r => r.id === action.automationId)) {
+        continue
+      }
+      const automation = automations.find(a => a._id === action.automationId)
+      if (!automation) {
+        continue
+      }
+      resources.push({
+        id: automation._id,
+        name: automation.name,
+        type: ResourceType.AUTOMATION,
+      })
     }
   }
 
@@ -167,28 +199,28 @@ async function prepareWorkspaceAppDuplication(
   const docsToCopy = await sourceDb.getMultiple([
     resourceId,
     ...requiredResources
-      .filter(r => r.type !== ResourceType.ROW_ACTION)
+      // .filter(r => r.type !== ResourceType.ROW_ACTION)
       .map(r => r.id),
   ])
 
-  const rowActionsToCopy = requiredResources.filter(
-    r => r.type === ResourceType.ROW_ACTION
-  )
-  if (rowActionsToCopy.length) {
-    const allTableRowActions = await sdk.rowActions.getAll()
+  // const rowActionsToCopy = requiredResources.filter(
+  //   r => r.type === ResourceType.ROW_ACTION
+  // )
+  // if (rowActionsToCopy.length) {
+  //   const allTableRowActions = await sdk.rowActions.getAll()
 
-    const tableRowActionsToCopy = allTableRowActions.filter(ra =>
-      Object.keys(ra.actions).some(rowActionId =>
-        rowActionsToCopy.map(x => x.id).includes(rowActionId)
-      )
-    )
-    docsToCopy.push(...tableRowActionsToCopy)
+  //   const tableRowActionsToCopy = allTableRowActions.filter(ra =>
+  //     Object.keys(ra.actions).some(rowActionId =>
+  //       rowActionsToCopy.map(x => x.id).includes(rowActionId)
+  //     )
+  //   )
+  //   docsToCopy.push(...tableRowActionsToCopy)
 
-    const rowActionAutomationIds = Object.values(tableRowActionsToCopy).flatMap(
-      a => Object.values(a.actions).map(a => a.automationId)
-    )
-    docsToCopy.push(...(await sourceDb.getMultiple(rowActionAutomationIds)))
-  }
+  //   const rowActionAutomationIds = Object.values(tableRowActionsToCopy).flatMap(
+  //     a => Object.values(a.actions).map(a => a.automationId)
+  //   )
+  //   docsToCopy.push(...(await sourceDb.getMultiple(rowActionAutomationIds)))
+  // }
 
   const screens = await sdk.screens.fetch()
   const appScreens = screens.filter(
@@ -277,19 +309,12 @@ export async function previewDuplicateResourceToWorkspace(
   const { requiredResources, existingIds } =
     await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
 
-  const resources: UsedResource[] = [
-    {
-      id: resourceId,
-      type: resourceType,
-      name: undefined,
-    },
-    ...requiredResources,
-  ]
+  const resources: UsedResource[] = [...requiredResources]
 
   const toCopy: Partial<Record<ResourceType, UsedResource[]>> = {}
   const existing: Partial<Record<ResourceType, UsedResource[]>> = {}
 
-  for (const resource of resources.filter(r => r.id !== resourceId)) {
+  for (const resource of resources) {
     if (existingIds.has(resource.id)) {
       existing[resource.type] = [...(existing[resource.type] || []), resource]
     } else {
