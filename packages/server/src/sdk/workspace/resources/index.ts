@@ -206,9 +206,7 @@ async function prepareWorkspaceAppDuplication(
   docsToCopy.push(...appScreens)
 
   const docsToCopyMap = new Map(
-    docsToCopy
-      .filter(doc => !!doc._id)
-      .map(doc => [doc._id!, doc])
+    docsToCopy.filter(doc => !!doc._id).map(doc => [doc._id!, doc])
   )
 
   const existingDocuments = await destinationDb.getMultiple<AnyDocument>(
@@ -317,9 +315,7 @@ export async function previewDuplicateResourceToWorkspace(
     ensureEntry(target, resource.type, resource.id)
   }
 
-  const sortResourceMap = (
-    map: Partial<Record<ResourceType, string[]>>
-  ) => {
+  const sortResourceMap = (map: Partial<Record<ResourceType, string[]>>) => {
     for (const ids of Object.values(map)) {
       ids.sort((a, b) => a.localeCompare(b))
     }
