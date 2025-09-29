@@ -76,7 +76,7 @@
   let testDataModal: Modal
   let confirmDeleteDialog
   let blockRefs: AutomationBlockRefMap = {}
-  let prodErrors: number
+  let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
 
@@ -240,7 +240,10 @@
   }
 
   // When nodes are available and we haven't applied our custom viewport yet, align the top
-  $: $nodes?.length && !initialViewportApplied && fitView({ maxZoom: 1 })
+  $: if ($nodes?.length && !initialViewportApplied) {
+    fitView({ maxZoom: 1 })
+    initialViewportApplied = true
+  }
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
@@ -298,7 +301,7 @@
   const closeAllPanels = () => {
     automationStore.actions.closeLogsPanel()
     automationStore.actions.closeLogPanel()
-    viewMode = ViewMode.EDITOR
+    automationStore.actions.setViewMode(ViewMode.EDITOR)
   }
 
   const handleToggleChange = async () => {
@@ -337,11 +340,11 @@
     <div class="actions-group">
       <Switcher
         on:left={() => {
-          viewMode = ViewMode.EDITOR
+          automationStore.actions.setViewMode(ViewMode.EDITOR)
           closeAllPanels()
         }}
         on:right={() => {
-          viewMode = ViewMode.LOGS
+          automationStore.actions.setViewMode(ViewMode.LOGS)
           // Clear editor selection when switching to logs mode
           automationStore.actions.selectNode(undefined)
           if (

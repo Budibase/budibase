@@ -65,17 +65,13 @@
     : block && block.pathTo
       ? block.pathTo
       : blockRef?.pathTo
-  $: pathSteps =
-    blockRef && $selectedAutomation?.data
-      ? automationStore.actions.getPathSteps(
-          blockRef.pathTo,
-          $selectedAutomation?.data
-        )
-      : []
 
-  $: collectBlockExists = pathSteps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
+  $: collectBlockExists =
+    viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
+      ? automationStore.actions
+          .getPathSteps(blockRef.pathTo, $selectedAutomation.data)
+          .some(step => step.stepId === ActionStepID.COLLECT)
+      : false
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
   $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
 

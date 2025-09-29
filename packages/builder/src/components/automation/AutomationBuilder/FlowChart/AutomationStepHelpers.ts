@@ -277,7 +277,6 @@ export const dagreLayoutAutomation = (
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({ rankdir, ranksep, nodesep })
 
-  // Add nodes with estimated sizes for layout
   graph.nodes.forEach(node => {
     const width = DEFAULT_NODE_WIDTH
     let height = DEFAULT_STEP_HEIGHT
@@ -289,7 +288,6 @@ export const dagreLayoutAutomation = (
     dagreGraph.setNode(node.id, { width, height })
   })
 
-  // Add edges
   graph.edges.forEach(edge => {
     dagreGraph.setEdge(edge.source, edge.target)
   })
@@ -299,7 +297,6 @@ export const dagreLayoutAutomation = (
   graph.nodes.forEach(node => {
     const dims = dagreGraph.node(node.id)
     if (!dims) return
-    // Default handle positions based on rank direction
     if (rankdir === "LR") {
       node.targetPosition = Position.Left
       node.sourcePosition = Position.Right
