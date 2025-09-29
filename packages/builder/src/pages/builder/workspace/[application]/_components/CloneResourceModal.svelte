@@ -47,9 +47,9 @@
     }
   }
 
-  $: workspaces = $appsStore.apps.filter(
-    a => a.devId !== sdk.applications.getDevAppID($appStore.appId)
-  )
+  $: workspaces = $appsStore.apps
+    .filter(a => a.devId !== sdk.applications.getDevAppID($appStore.appId))
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   $: disabled = !toWorkspaceId || !resourcesToBeCopied
 
