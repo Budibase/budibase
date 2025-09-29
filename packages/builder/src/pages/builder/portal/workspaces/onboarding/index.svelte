@@ -1,97 +1,69 @@
 <script lang="ts">
-  import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { Button, Body, notifications } from "@budibase/bbui"
-  import Spinner from "@/components/common/Spinner.svelte"
+  import NamePanel from "./_components/NamePanel.svelte"
+  import ExampleApp from "./_components/ExampleApp.svelte"
+  import { notifications } from "@budibase/bbui"
+  import { SplitPage } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
-  import { initialise } from "@/stores/builder"
-  import {
-    buildBuilderWorkspaceDesignRoute,
-    buildBuilderWorkspaceRoute,
-  } from "@/helpers/routes"
 
-  const DEFAULT_ONBOARDING_NAME = "My first app"
-  const DEFAULT_ONBOARDING_URL = "my-first-app"
+  let name: string = "My first app"
+  let url: string = "my-first-app"
+  let appId: string | null = null
 
-  let loading = true
-  let error: string | null = null
+  let loading = false
 
-  const createOnboardingApp = async () => {
+  const createApp = async () => {
     loading = true
-    error = null
 
-    try {
-      const data = new FormData()
-      data.append("name", DEFAULT_ONBOARDING_NAME)
-      data.append("url", DEFAULT_ONBOARDING_URL)
-      data.append("useTemplate", "false")
-      data.append("isOnboarding", "true")
+    // Create form data to create app
+    // This is form based and not JSON
+    let data = new FormData()
+    data.append("name", name.trim())
+    data.append("url", url.trim())
+    data.append("useTemplate", "false")
+    data.append("isOnboarding", "true")
 
-      const createdApp = await API.createApp(data)
+    const createdApp = await API.createApp(data)
 
-      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+    // Update checklist - in case first app
+    await admin.init()
 
-      await initialise(pkg)
-      await admin.init()
-      await auth.setInitInfo({})
+    // Create user
+    await auth.setInitInfo({})
 
-      const homeScreen = pkg.screens.find(screen => screen.routing?.homeScreen)
-
-      const targetRoute =
-        homeScreen?.workspaceAppId && homeScreen?._id
-          ? buildBuilderWorkspaceDesignRoute({
-              applicationId: createdApp.instance._id,
-              workspaceAppId: homeScreen.workspaceAppId,
-              screenId: homeScreen._id,
-            })
-          : buildBuilderWorkspaceRoute({
-              applicationId: createdApp.instance._id,
-            })
-
-      $goto(targetRoute)
-    } catch (e: any) {
-      loading = false
-      const message = e?.message || "There was a problem creating your app"
-      error = message
-      notifications.error(message)
-    }
+    appId = createdApp.instance._id
+    return createdApp
   }
 
-  onMount(() => {
-    createOnboardingApp()
-  })
+  const goToApp = () => {
+    $goto(`/builder/workspace/${appId}`)
+    notifications.success(`App created successfully`)
+  }
+
+  const handleCreateApp = async () => {
+    try {
+      await createApp()
+
+      goToApp()
+    } catch (e: any) {
+      loading = false
+      notifications.error(e.message || "There was a problem creating your app")
+    }
+  }
 </script>
 
-<div class="container">
-  {#if loading}
-    <div class="content">
-      <Spinner size="10" />
-      <Body size="M">Setting up your workspace...</Body>
+<div class="full-width">
+  <SplitPage>
+    <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
+    <div slot="right">
+      <ExampleApp />
     </div>
-  {:else}
-    <div class="content">
-      <Body size="M">{error}</Body>
-      <Button size="L" cta on:click={createOnboardingApp}>Try again</Button>
-    </div>
-  {/if}
+  </SplitPage>
 </div>
 
 <style>
-  .container {
+  .full-width {
     width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--background);
-  }
-
-  .content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
-    text-align: center;
   }
 </style>

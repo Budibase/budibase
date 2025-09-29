@@ -14,68 +14,6 @@
       rel="stylesheet"
     />
     <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
-    <script>
-      ;(() => {
-        const ThemeClassPrefix = "spectrum--"
-        const ThemeOptions = [
-          { id: "light" },
-          { id: "darkest" },
-          { id: "nord", base: "darkest" },
-          { id: "midnight", base: "darkest" },
-        ]
-        const fallback = "darkest"
-        const themeBackgrounds = {
-          light: "rgb(255, 255, 255)",
-          darkest: "rgb(30, 30, 30)",
-          nord: "#3b4252",
-          midnight: "hsl(220, 10%, 17%)",
-        }
-
-        const ensureTheme = value => {
-          if (!value) {
-            return fallback
-          }
-          if (value.startsWith(ThemeClassPrefix)) {
-            value = value.split(ThemeClassPrefix)[1]
-          }
-          if (value === "lightest") {
-            return "light"
-          }
-          if (value === "dark") {
-            return "darkest"
-          }
-          return ThemeOptions.some(option => option.id === value)
-            ? value
-            : fallback
-        }
-
-        const setBackground = theme => {
-          const normalized = ensureTheme(theme)
-          const color =
-            themeBackgrounds[normalized] || themeBackgrounds[fallback]
-          document.documentElement.style.backgroundColor = color
-        }
-
-        const getStoredTheme = () => {
-          try {
-            const stored = localStorage.getItem("bb-theme")
-            if (!stored) {
-              return undefined
-            }
-            const parsed = JSON.parse(stored)
-            if (parsed && typeof parsed.theme === "string") {
-              return parsed.theme
-            }
-          } catch (error) {
-            /* ignore */
-          }
-          return undefined
-        }
-
-        const theme = ensureTheme(getStoredTheme())
-        setBackground(theme)
-      })()
-    </script>
   </head>
 
   <body id="app">
