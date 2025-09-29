@@ -30,7 +30,6 @@
     Automation,
     AutomationLog,
     AutomationStep,
-    AutomationTrigger,
     AutomationStepResult,
     AutomationTriggerResult,
     Branch,
