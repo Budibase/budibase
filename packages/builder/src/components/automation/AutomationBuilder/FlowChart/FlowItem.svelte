@@ -44,16 +44,20 @@
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
 
-  $: triggerInfo = sdk.automations.isRowAction(
-    $selectedAutomation?.data as any
-  ) && {
-    title: "Automation trigger",
-    tableName: $tables.list.find(
-      x =>
-        x._id ===
-        ($selectedAutomation.data?.definition?.trigger?.inputs as any)?.tableId
-    )?.name,
-  }
+  $: triggerInfo = (() => {
+    const automationData = $selectedAutomation.data
+    if (!automationData) {
+      return undefined
+    }
+    if (!sdk.automations.isRowAction(automationData)) {
+      return undefined
+    }
+    const triggerInputs = automationData.definition.trigger.inputs
+    return {
+      title: "Automation trigger",
+      tableName: $tables.list.find(x => x._id === triggerInputs.tableId)?.name,
+    }
+  })()
 
   $: selectedNodeId = $automationStore.selectedNodeId as string | undefined
   $: selected =

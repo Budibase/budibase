@@ -409,24 +409,26 @@ export const renderBranches = (
     let lastNodeBlock: any = branchBlockRef
     let bottomY = startY + deps.ySpacing
 
-    let encounteredBranch = false
-    if (childSteps.length > 0) {
-      const result = renderChain(
-        childSteps,
-        lastNodeId,
-        lastNodeBlock,
-        branchX,
-        startY + deps.ySpacing,
-        deps
-      )
-      lastNodeId = result.lastNodeId
-      lastNodeBlock = result.lastNodeBlock
-      bottomY = result.bottomY
-      encounteredBranch = result.branched
+    const chainResult =
+      childSteps.length > 0
+        ? renderChain(
+            childSteps,
+            lastNodeId,
+            lastNodeBlock,
+            branchX,
+            startY + deps.ySpacing,
+            deps
+          )
+        : null
+
+    if (chainResult) {
+      lastNodeId = chainResult.lastNodeId
+      lastNodeBlock = chainResult.lastNodeBlock
+      bottomY = chainResult.bottomY
     }
 
-    // Add a terminal anchor
-    if (!encounteredBranch) {
+    // Add a terminal anchor when the branch chain doesn't introduce another branch
+    if (!chainResult?.branched) {
       const terminalId = `anchor-${lastNodeId}`
       const terminalPos = deps.ensurePosition(terminalId, {
         x: branchX,
@@ -447,8 +449,8 @@ export const renderBranches = (
           block: lastNodeBlock,
           direction: deps.direction,
           pathTo:
-            (lastNodeBlock as any)?.pathTo ||
-            deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
+            lastNodeBlock?.pathTo ||
+            deps.blockRefs?.[lastNodeBlock?.id]?.pathTo,
         },
       })
     }
