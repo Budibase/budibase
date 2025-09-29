@@ -31,7 +31,7 @@
   }
 
   let usedResource: UsedResource[] = []
-  let existingResourcesInDestination: Set<string>
+  let existingResourcesInDestination: Set<string> | undefined
   $: API.resource
     .searchForUsage({
       workspaceAppIds: resource.type === "app" ? [resource.id] : undefined,
@@ -41,16 +41,20 @@
       usedResource = res.resources
     })
 
-  $: toWorkspaceId &&
-    API.resource
-      .previewDuplicateResourceToWorkspace(resource.id, {
-        toWorkspace: toWorkspaceId,
-      })
-      .then(res => {
-        existingResourcesInDestination = new Set(
-          Object.entries(res.body.existing).flatMap(([_key, value]) => value)
-        )
-      })
+  $: {
+    existingResourcesInDestination = undefined
+    if (toWorkspaceId) {
+      API.resource
+        .previewDuplicateResourceToWorkspace(resource.id, {
+          toWorkspace: toWorkspaceId,
+        })
+        .then(res => {
+          existingResourcesInDestination = new Set(
+            Object.entries(res.body.existing).flatMap(([_key, value]) => value)
+          )
+        })
+    }
+  }
 
   $: usedResourceByType = usedResource?.reduce<
     Partial<Record<ResourceType, UsedResource[]>>
@@ -63,6 +67,8 @@
   $: workspaces = $appsStore.apps.filter(
     a => a.devId !== sdk.applications.getDevAppID($appStore.appId)
   )
+
+  $: disabled = !toWorkspaceId || !existingResourcesInDestination
 
   function getFriendlyName(type: string): string {
     const resourceTypeFriendlyName: Record<ResourceType, string> = {
@@ -79,12 +85,7 @@
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent
-    title={resource.name}
-    {onConfirm}
-    size="M"
-    disabled={!toWorkspaceId}
-  >
+  <ModalContent title={`Copy ${resource.type}`} {onConfirm} size="M" {disabled}>
     {#if !workspaces.length}
       You don't have access to any other workspace
     {:else}
@@ -97,10 +98,8 @@
         getOptionIcon={() => undefined}
       ></Select>
 
-      Are you sure to copy this {resource.type} to the new workspace?
-
       {#if usedResource?.length}
-        The following resources will be copied:
+        The following resources will be copied along the {resource.type}:
         {#each Object.entries(usedResourceByType) as [type, resources]}
           <div>
             <div>
