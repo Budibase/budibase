@@ -84,7 +84,9 @@ export async function searchForUsages({
         !resources.find(resource => resource.id === search.id)
       ) {
         resources.push({
-          ...search,
+          id: search.id,
+          name: search.name,
+          type: search.type,
         })
       }
     }
