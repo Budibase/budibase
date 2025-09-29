@@ -150,7 +150,13 @@
       },
     }
 
-    const commands = [
+    const commands: {
+      icon: string
+      name: string
+      visible: boolean
+      callback: () => void
+      disabled?: boolean
+    }[] = [
       {
         icon: "pencil",
         name: "Edit",
