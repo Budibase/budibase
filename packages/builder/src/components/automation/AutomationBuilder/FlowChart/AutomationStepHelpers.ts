@@ -17,6 +17,7 @@ import {
   AutomationTriggerResult,
   AutomationTriggerStepId,
   BlockDefinitions,
+  BlockPath,
   Branch,
   BranchStep,
   LayoutDirection,
@@ -24,12 +25,15 @@ import {
 import { Modal } from "@budibase/bbui"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
-type BranchChild = { id: string; [key: string]: any }
+type BranchChild = { id: string; [key: string]: unknown }
 type ReconstructedBlock = AutomationLogStep & {
   name: string
   icon: string
 }
-type AutomationBlock = AutomationStep | AutomationTrigger | ReconstructedBlock
+export type AutomationBlock =
+  | AutomationStep
+  | AutomationTrigger
+  | ReconstructedBlock
 
 // Block processing and retrieval functions
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
@@ -344,9 +348,9 @@ export const renderChain = (
 }
 
 export const renderBranches = (
-  branchStep: AutomationStep,
+  branchStep: AutomationBlock,
   sourceNodeId: string,
-  sourceBlock: any,
+  sourceBlock: AutomationBlock,
   centerX: number,
   startY: number,
   deps: GraphBuildDeps
@@ -406,7 +410,7 @@ export const renderBranches = (
     const branchBlockRef = { branchNode: true, pathTo: branchPath }
 
     let lastNodeId = branchNodeId
-    let lastNodeBlock: any = branchBlockRef
+    let lastNodeBlock = branchBlockRef
     let bottomY = startY + deps.ySpacing
 
     const chainResult =

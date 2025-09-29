@@ -35,6 +35,7 @@
     renderBranches,
     dagreLayoutAutomation,
     type GraphBuildDeps,
+    AutomationBlock,
   } from "./AutomationStepHelpers"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -102,7 +103,7 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
 
-  $: updateGraph(blocks as any, viewMode, layoutDirection)
+  $: updateGraph(blocks, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -124,8 +125,7 @@
   $: viewMode = $automationStore.viewMode
 
   const updateGraph = async (
-    blocks: (AutomationStep | AutomationTrigger)[],
-    currentViewMode: ViewMode,
+    blocks: AutomationBlock[],
     direction: LayoutDirection
   ) => {
     if (!preserveViewport) {
@@ -154,7 +154,7 @@
     }
 
     // Build linear chain of top-level steps first
-    blocks.forEach((block: AutomationStep | AutomationTrigger, idx: number) => {
+    blocks.forEach((block: AutomationBlock, idx: number) => {
       const isTrigger = idx === 0
       const baseId = block.id
       const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })

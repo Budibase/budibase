@@ -33,8 +33,9 @@
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const view = getContext<Writable<DragView>>("draggableView")
-  const pos: any = getContext("viewPos")
-  const contentPos: any = getContext("contentPos")
+  const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
+  const contentPos =
+    getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
 
   let webhookModal: Modal | undefined
   let blockEle: HTMLDivElement | null
@@ -124,7 +125,7 @@
     updateBlockDims()
 
     const { clientX, clientY } = e
-    view.update((state: any) => ({
+    view.update((state: DragView) => ({
       ...state,
       moveStep: {
         id: block.id,
