@@ -54,8 +54,6 @@
           const color =
             themeBackgrounds[normalized] || themeBackgrounds[fallback]
           document.documentElement.style.backgroundColor = color
-          document.documentElement.style.colorScheme =
-            normalized === "light" ? "light" : "dark"
           if (document.body) {
             document.body.style.backgroundColor = color
           } else {
