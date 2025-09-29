@@ -1,15 +1,17 @@
-import { derived, get, type Writable } from "svelte/store"
 import { API } from "@/api"
 import { RoleUtils } from "@budibase/frontend-core"
+import { Role, UIRole } from "@budibase/types"
+import { derived, get, type Writable } from "svelte/store"
 import { DerivedBudiStore } from "../BudiStore"
-import { Role } from "@budibase/types"
 
-export class RoleStore extends DerivedBudiStore<Role[], Role[]> {
+export class RoleStore extends DerivedBudiStore<Role[], UIRole[]> {
   constructor() {
     const makeDerivedStore = (store: Writable<Role[]>) =>
       derived(store, $store => {
-        return $store.map((role: Role) => ({
+        return $store.map<UIRole>(role => ({
           ...role,
+          _id: role._id!,
+          _rev: role._rev!,
           // Ensure we have new metadata for all roles
           uiMetadata: {
             displayName: role.uiMetadata?.displayName || role.name,

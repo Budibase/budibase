@@ -16,7 +16,7 @@
   $: block = data.block
   // branch object is available as data.branch but not needed here
   $: branchIdx = data.branchIdx
-  $: viewMode = data?.viewMode as ViewMode
+  $: viewMode = $automationStore.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
   $: direction = (data?.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"

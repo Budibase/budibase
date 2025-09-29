@@ -24,14 +24,18 @@
   import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash/fp"
   import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import type {
     Automation,
+    AutomationLog,
+    AutomationStep,
     AutomationStepResult,
     AutomationTriggerResult,
     Branch,
     EnrichedBinding,
   } from "@budibase/types"
+  import { type DragView } from "./FlowChartDnD"
 
   export let branchIdx
   export let step
@@ -41,7 +45,7 @@
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
 
-  const view: any = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
   const memoContext = memo({})
   const memoEnvVariables = memo($environment.variables)
 
@@ -95,19 +99,24 @@
   }
 
   // Logs: compute step data and execution state
-  function getLogStepData(logData: any, currentStep: any) {
+  function getLogStepData(
+    currentStep: AutomationStep,
+    logData?: AutomationLog
+  ) {
     if (!logData || viewMode !== ViewMode.LOGS) return null
     if (currentStep.type === "TRIGGER") {
       return logData.trigger
     }
     const logSteps = logData.steps || []
-    return logSteps.find((logStep: any) => logStep.id === currentStep.id)
+    return logSteps.find(
+      (logStep: AutomationStepResult | AutomationTriggerResult) =>
+        logStep.id === currentStep.id
+    )
   }
   $: logData = $automationStore.selectedLog
-  $: logStepData = getLogStepData(logData, step) as
-    | AutomationStepResult
-    | AutomationTriggerResult
-    | null
+  $: viewMode = $automationStore.viewMode
+  $: logStepData = getLogStepData(step, logData)
+
   $: executedBranchId =
     viewMode === ViewMode.LOGS && logStepData?.outputs?.branchId
       ? logStepData.outputs.branchId

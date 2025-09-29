@@ -32,6 +32,8 @@
     buildTopLevelGraph,
     dagreLayoutAutomation,
     type GraphBuildDeps,
+    type AutomationBlock,
+    type AutomationBlockRefMap,
   } from "./AutomationStepHelpers"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -74,8 +76,8 @@
 
   let testDataModal: Modal
   let confirmDeleteDialog
-  let blockRefs: Record<string, any> = {}
-  let prodErrors: number
+  let blockRefs: AutomationBlockRefMap = {}
+  let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
 
@@ -92,7 +94,7 @@
   const dnd = createFlowChartDnD({
     getViewport,
     setViewport,
-    moveBlock: (sourcePath, destPath, automationData) =>
+    moveBlock: ({ sourcePath, destPath, automationData }) =>
       automationStore.actions.moveBlock(sourcePath, destPath, automationData),
     getSelectedAutomation: () => get(selectedAutomation),
   })
@@ -101,7 +103,7 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
 
-  $: updateGraph(blocks as any, viewMode, layoutDirection)
+  $: updateGraph(blocks, layoutDirection)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -120,11 +122,10 @@
     .filter(x => x.stepId !== ActionStepID.LOOP)
     .map((block, idx) => ({ ...block, __top: idx }))
 
-  $: viewMode = ViewMode.EDITOR
+  $: viewMode = $automationStore.viewMode
 
   const updateGraph = async (
-    blocks: any,
-    currentViewMode: any,
+    blocks: AutomationBlock[],
     direction: LayoutDirection
   ) => {
     if (!preserveViewport) {
@@ -146,15 +147,93 @@
       xSpacing,
       ySpacing,
       blockRefs,
-      viewMode: currentViewMode,
       testDataModal,
       newNodes,
       newEdges,
       direction,
     }
 
+<<<<<<< HEAD
     // Build graph via helpers
     buildTopLevelGraph(blocks, deps)
+=======
+    // Build linear chain of top-level steps first
+    blocks.forEach((block: AutomationBlock, idx: number) => {
+      const isTrigger = idx === 0
+      const baseId = block.id
+      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
+      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
+
+      // Branch fan-out
+      if (isBranchStep) {
+        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
+        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
+        renderBranches(
+          block,
+          sourceForBranches,
+          sourceBlock,
+          pos.x,
+          pos.y + ySpacing,
+          deps
+        )
+        return
+      }
+
+      newNodes.push({
+        id: baseId,
+        type: "step-node",
+        data: {
+          testDataModal,
+          block,
+          isTopLevel: true,
+          direction,
+        },
+        position: pos,
+      })
+
+      if (!isTrigger) {
+        const prevId = blocks[idx - 1].id
+        newEdges.push({
+          id: `edge-${prevId}-${baseId}`,
+          type: "add-item",
+          source: prevId,
+          target: baseId,
+          data: {
+            block: blocks[idx - 1],
+            direction,
+            pathTo: blockRefs?.[prevId]?.pathTo,
+          },
+        })
+      }
+
+      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
+      if (blocks.length === 1 || idx === blocks.length - 1) {
+        const terminalId = `anchor-${baseId}`
+        const terminalPos = ensurePosition(terminalId, {
+          x: pos.x,
+          y: pos.y + ySpacing,
+        })
+        newNodes.push({
+          id: terminalId,
+          type: "anchor-node",
+          data: { direction },
+          position: terminalPos,
+        })
+
+        newEdges.push({
+          id: `edge-${baseId}-${terminalId}`,
+          type: "add-item",
+          source: baseId,
+          target: terminalId,
+          data: {
+            block,
+            direction,
+            pathTo: blockRefs?.[baseId]?.pathTo,
+          },
+        })
+      }
+    })
+>>>>>>> origin/master
 
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
@@ -167,7 +246,10 @@
   }
 
   // When nodes are available and we haven't applied our custom viewport yet, align the top
-  $: $nodes?.length && !initialViewportApplied && fitView({ maxZoom: 1 })
+  $: if ($nodes?.length && !initialViewportApplied) {
+    fitView({ maxZoom: 1 })
+    initialViewportApplied = true
+  }
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
@@ -176,7 +258,7 @@
 
   const refresh = () => {
     // Get all processed block references
-    blockRefs = $selectedAutomation.blockRefs
+    blockRefs = $selectedAutomation.blockRefs as AutomationBlockRefMap
   }
 
   const deleteAutomation = async () => {
@@ -212,11 +294,11 @@
   const toggleLogsPanel = () => {
     if ($automationStore.showLogsPanel) {
       automationStore.actions.closeLogsPanel()
-      viewMode = ViewMode.EDITOR
+      automationStore.actions.setViewMode(ViewMode.EDITOR)
     } else {
       automationStore.actions.openLogsPanel()
       automationStore.actions.closeLogPanel()
-      viewMode = ViewMode.LOGS
+      automationStore.actions.setViewMode(ViewMode.LOGS)
       // Clear editor selection when switching to logs mode
       automationStore.actions.selectNode(undefined)
     }
@@ -225,7 +307,7 @@
   const closeAllPanels = () => {
     automationStore.actions.closeLogsPanel()
     automationStore.actions.closeLogPanel()
-    viewMode = ViewMode.EDITOR
+    automationStore.actions.setViewMode(ViewMode.EDITOR)
   }
 
   const handleToggleChange = async () => {
@@ -264,11 +346,11 @@
     <div class="actions-group">
       <Switcher
         on:left={() => {
-          viewMode = ViewMode.EDITOR
+          automationStore.actions.setViewMode(ViewMode.EDITOR)
           closeAllPanels()
         }}
         on:right={() => {
-          viewMode = ViewMode.LOGS
+          automationStore.actions.setViewMode(ViewMode.LOGS)
           // Clear editor selection when switching to logs mode
           automationStore.actions.selectNode(undefined)
           if (
@@ -336,10 +418,10 @@
         {nodeTypes}
         {edges}
         {edgeTypes}
-        colorMode="dark"
+        colorMode="system"
         nodesDraggable={false}
-        minZoom={0.01}
-        maxZoom={4}
+        minZoom={0.4}
+        maxZoom={1}
       >
         <FlowControls
           historyStore={automationHistoryStore}

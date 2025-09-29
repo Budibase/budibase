@@ -17,19 +17,59 @@ import {
   AutomationTriggerResult,
   AutomationTriggerStepId,
   BlockDefinitions,
+  BlockPath,
+  BlockRef,
   Branch,
   BranchStep,
   LayoutDirection,
   LoopV2Step,
 } from "@budibase/types"
+import { Modal } from "@budibase/bbui"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
-type BranchChild = { id: string; [key: string]: any }
+type BranchChild = { id: string; [key: string]: unknown }
 type ReconstructedBlock = AutomationLogStep & {
   name: string
   icon: string
 }
-type AutomationBlock = AutomationStep | AutomationTrigger | ReconstructedBlock
+export type AutomationBlock =
+  | AutomationStep
+  | AutomationTrigger
+  | ReconstructedBlock
+
+type AutomationBlockContext = AutomationBlock & { branchNode?: false }
+type BranchPathEntry = Partial<BlockPath> & {
+  branchIdx: number
+  branchStepId: string
+  stepIdx?: number
+}
+export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
+export interface BranchFlowContext {
+  branchNode: true
+  pathTo: FlowBlockPath
+  branchIdx: number
+  branchStepId: string
+}
+export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+
+type AutomationBlockRef = BlockRef & {
+  stepId?: string
+  name?: string
+  looped?: string
+  blockToLoop?: string
+  inputs?: Record<string, unknown>
+}
+export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
+
+const resolvePathTo = (
+  context: FlowBlockContext | undefined,
+  blockRefs: AutomationBlockRefMap
+): FlowBlockPath | undefined => {
+  if (!context) return undefined
+  return context.branchNode
+    ? context.pathTo
+    : (blockRefs?.[context.id]?.pathTo as FlowBlockPath)
+}
 
 // Block processing and retrieval functions
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
@@ -208,9 +248,8 @@ export interface GraphBuildDeps {
   }
   xSpacing: number
   ySpacing: number
-  blockRefs: Record<string, any>
-  viewMode: ViewMode
-  testDataModal?: any
+  blockRefs: AutomationBlockRefMap
+  testDataModal?: Modal
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
   direction?: LayoutDirection
@@ -242,7 +281,6 @@ const buildLoopEdgeData = (
       loopChildInsertIndex: insertIndex,
       pathTo: loopRef?.pathTo,
     },
-    viewMode: deps.viewMode,
     direction: deps.direction,
     pathTo,
     loopStepId: loopStep.id,
@@ -251,7 +289,7 @@ const buildLoopEdgeData = (
 }
 
 export const dagreLayoutAutomation = (
-  graph: { nodes: any[]; edges: any[] },
+  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
   opts?: DagreLayoutOptions
 ) => {
   const rankdir = opts?.rankdir || "TB"
@@ -268,7 +306,7 @@ export const dagreLayoutAutomation = (
 
   // Add nodes with estimated sizes for layout, ignore subflow children
   graph.nodes
-    .filter(n => !n.parentNode && !n.parentId)
+    .filter(n => !n.parentId)
     .forEach(node => {
       let width = DEFAULT_NODE_WIDTH
       let height = DEFAULT_STEP_HEIGHT
@@ -309,7 +347,7 @@ export const dagreLayoutAutomation = (
   // Apply computed positions with sensible default handle positions based on orientation
   // First pass: place all nodes from dagre output
   graph.nodes
-    .filter(n => !n.parentNode && !n.parentId)
+    .filter(n => !n.parentId)
     .forEach(node => {
       const dims = dagreGraph.node(node.id)
       if (!dims) return
@@ -335,13 +373,13 @@ export const dagreLayoutAutomation = (
 export const renderChain = (
   chain: AutomationStep[],
   parentNodeId: string,
-  parentBlock: any,
+  parentBlock: FlowBlockContext,
   baseX: number,
   startY: number,
   deps: GraphBuildDeps
 ): {
   lastNodeId: string
-  lastNodeBlock: any
+  lastNodeBlock: FlowBlockContext
   bottomY: number
   branched: boolean
 } => {
@@ -380,7 +418,6 @@ export const renderChain = (
         target: step.id,
         data: {
           block: lastNodeBlock,
-          viewMode: deps.viewMode,
           direction: deps.direction,
           pathTo:
             (lastNodeBlock as any)?.pathTo ||
@@ -401,7 +438,6 @@ export const renderChain = (
       data: {
         testDataModal: deps.testDataModal,
         block: step,
-        viewMode: deps.viewMode,
         direction: deps.direction,
       },
       position: pos,
@@ -413,11 +449,8 @@ export const renderChain = (
       target: step.id,
       data: {
         block: lastNodeBlock,
-        viewMode: deps.viewMode,
         direction: deps.direction,
-        pathTo:
-          (lastNodeBlock as any)?.pathTo ||
-          deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
+        pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
       },
     })
 
@@ -430,9 +463,9 @@ export const renderChain = (
 }
 
 export const renderBranches = (
-  branchStep: AutomationStep,
+  branchStep: AutomationBlock,
   sourceNodeId: string,
-  sourceBlock: any,
+  sourceBlock: FlowBlockContext,
   centerX: number,
   startY: number,
   deps: GraphBuildDeps
@@ -461,7 +494,6 @@ export const renderBranches = (
         block: branchStep,
         branch,
         branchIdx: bIdx,
-        viewMode: deps.viewMode,
         direction: deps.direction,
       },
       position: branchPos,
@@ -474,47 +506,58 @@ export const renderBranches = (
       target: branchNodeId,
       data: {
         block: sourceBlock,
-        viewMode: deps.viewMode,
         isBranchEdge: true,
         isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
         branchStepId: baseId,
         branchIdx: bIdx,
         branchesCount: branches.length,
         direction: deps.direction,
-        pathTo: deps.blockRefs?.[sourceBlock?.id]?.pathTo,
+        pathTo: resolvePathTo(sourceBlock, deps.blockRefs),
       },
     })
 
     // Children of this branch
+    const parentPath = deps.blockRefs[baseId]?.pathTo || []
     const childSteps: AutomationStep[] = children?.[branch.id] || []
-    const branchPath = (deps.blockRefs[baseId]?.pathTo || []).concat({
+    const branchPath: FlowBlockPath = [
+      ...parentPath,
+      {
+        branchIdx: bIdx,
+        branchStepId: baseId,
+        stepIdx: childSteps.length - 1,
+      },
+    ]
+    const branchBlockRef: BranchFlowContext = {
+      branchNode: true,
+      pathTo: branchPath,
       branchIdx: bIdx,
       branchStepId: baseId,
-    })
-    const branchBlockRef = { branchNode: true, pathTo: branchPath }
-
-    let lastNodeId = branchNodeId
-    let lastNodeBlock: any = branchBlockRef
-    let bottomY = startY + deps.ySpacing
-
-    let encounteredBranch = false
-    if (childSteps.length > 0) {
-      const result = renderChain(
-        childSteps,
-        lastNodeId,
-        lastNodeBlock,
-        branchX,
-        startY + deps.ySpacing,
-        deps
-      )
-      lastNodeId = result.lastNodeId
-      lastNodeBlock = result.lastNodeBlock
-      bottomY = result.bottomY
-      encounteredBranch = result.branched
     }
 
-    // Add a terminal anchor
-    if (!encounteredBranch) {
+    let lastNodeId = branchNodeId
+    let lastNodeBlock: FlowBlockContext = branchBlockRef
+    let bottomY = startY + deps.ySpacing
+
+    const chainResult =
+      childSteps.length > 0
+        ? renderChain(
+            childSteps,
+            lastNodeId,
+            lastNodeBlock,
+            branchX,
+            startY + deps.ySpacing,
+            deps
+          )
+        : null
+
+    if (chainResult) {
+      lastNodeId = chainResult.lastNodeId
+      lastNodeBlock = chainResult.lastNodeBlock
+      bottomY = chainResult.bottomY
+    }
+
+    // Add a terminal anchor when the branch chain doesn't introduce another branch
+    if (!chainResult?.branched) {
       const terminalId = `anchor-${lastNodeId}`
       const terminalPos = deps.ensurePosition(terminalId, {
         x: branchX,
@@ -523,7 +566,7 @@ export const renderBranches = (
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { viewMode: deps.viewMode, direction: deps.direction },
+        data: { direction: deps.direction },
         position: terminalPos,
       })
       deps.newEdges.push({
@@ -533,11 +576,8 @@ export const renderBranches = (
         target: terminalId,
         data: {
           block: lastNodeBlock,
-          viewMode: deps.viewMode,
           direction: deps.direction,
-          pathTo:
-            (lastNodeBlock as any)?.pathTo ||
-            deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
+          pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
         },
       })
     }

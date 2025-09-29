@@ -7,14 +7,16 @@
     useSvelteFlow,
     type Position,
   } from "@xyflow/svelte"
-  import { selectedAutomation, automationStore } from "@/stores/builder"
-  import FlowItemActions from "./FlowItemActions.svelte"
-  import DragZone from "./DragZone.svelte"
+  import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import { ActionButton } from "@budibase/bbui"
+  import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
   import { ViewMode } from "@/types/automations"
-  import { type LayoutDirection } from "@budibase/types"
-  import { getContext } from "svelte"
+  import { selectedAutomation, automationStore } from "@/stores/builder"
+  import DragZone from "./DragZone.svelte"
+  import FlowItemActions from "./FlowItemActions.svelte"
+  import type { DragView } from "./FlowChartDnD"
 
   export let data: any = undefined
   export let sourceX: number
@@ -25,14 +27,14 @@
   export let targetPosition: Position
   export let target: string
 
-  const view: any = getContext("draggableView")
-  const flow = useSvelteFlow()
-
-  $: viewMode = data?.viewMode as ViewMode
+  $: viewMode = $automationStore.viewMode as ViewMode
   $: block = data?.block
   $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
+
+  const view = getContext<Writable<DragView>>("draggableView")
+  const flow = useSvelteFlow()
 
   $: basePath = getSmoothStepPath({
     sourceX,
@@ -64,17 +66,13 @@
     : block && block.pathTo
       ? block.pathTo
       : blockRef?.pathTo
-  $: pathSteps =
-    blockRef && $selectedAutomation?.data
-      ? automationStore.actions.getPathSteps(
-          blockRef.pathTo,
-          $selectedAutomation?.data
-        )
-      : []
 
-  $: collectBlockExists = pathSteps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
+  $: collectBlockExists =
+    viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
+      ? automationStore.actions
+          .getPathSteps(blockRef.pathTo, $selectedAutomation.data)
+          .some(step => step.stepId === ActionStepID.COLLECT)
+      : false
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
   $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
 
