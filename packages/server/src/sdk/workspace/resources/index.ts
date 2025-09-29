@@ -52,6 +52,21 @@ export async function searchForUsages({
     }))
   )
 
+  const rowActions = await sdk.rowActions.getAll()
+  if (rowActions.length) {
+    const rowActionNames = await sdk.rowActions.getNames(
+      Object.values(rowActions).flatMap(ra => Object.values(ra.actions))
+    )
+
+    baseSearchTargets.push(
+      ...Object.entries(rowActionNames).map(([id, name]) => ({
+        id: id,
+        name: name,
+        type: ResourceType.ROW_ACTION,
+      }))
+    )
+  }
+
   const searchForResource = (json: string) => {
     for (const search of baseSearchTargets) {
       if (

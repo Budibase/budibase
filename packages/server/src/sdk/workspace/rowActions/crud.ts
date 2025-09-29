@@ -7,6 +7,7 @@ import {
   Automation,
   AutomationTriggerStepId,
   DocumentType,
+  RowActionData,
   SEPARATOR,
   TableRowActions,
   User,
@@ -22,7 +23,7 @@ async function ensureUniqueAndThrow(
   name: string,
   existingRowActionId?: string
 ) {
-  const names = await getNames(doc)
+  const names = await getNames(Object.values(doc.actions))
   name = name.toLowerCase().trim()
 
   if (
@@ -266,9 +267,9 @@ export async function run(
   )
 }
 
-export async function getNames({ actions }: TableRowActions) {
+export async function getNames(actions: RowActionData[]) {
   const automations = await sdk.automations.find(
-    Object.values(actions).map(({ automationId }) => automationId)
+    actions.map(({ automationId }) => automationId)
   )
   const automationNames = automations.reduce<Record<string, string>>(
     (names, a) => {
