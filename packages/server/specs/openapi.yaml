@@ -1,8 +1,8 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: Budibase API
   description: The public API for Budibase apps and its services.
-  version: 1.0.0
+  version: 3.3.0
 servers:
   - url: https://budibase.app/api/public/v1
     description: Budibase Cloud API
@@ -12,7 +12,8 @@ servers:
         description: The API key of the user to assume for API call.
       appId:
         default: <App ID>
-        description: The ID of the app the calls will be executed within the context of,
+        description:
+          The ID of the app the calls will be executed within the context of,
           this should start with app_ (production) or app_dev (development).
 components:
   parameters:
@@ -554,7 +555,8 @@ components:
       type: apiKey
       in: header
       name: x-budibase-api-key
-      description: Your individual API key, this will provide access based on the
+      description:
+        Your individual API key, this will provide access based on the
         configured RBAC settings of your user.
   schemas:
     application:
@@ -595,25 +597,29 @@ components:
               description: The ID of the app.
               type: string
             status:
-              description: The status of the app, stating it if is the development or
+              description:
+                The status of the app, stating it if is the development or
                 published version.
               type: string
               enum:
                 - development
                 - published
             createdAt:
-              description: States when the app was created, will be constant. Stored in ISO
+              description:
+                States when the app was created, will be constant. Stored in ISO
                 format.
               type: string
             updatedAt:
               description: States the last time the app was updated - stored in ISO format.
               type: string
             version:
-              description: States the version of the Budibase client this app is currently
+              description:
+                States the version of the Budibase client this app is currently
                 based on.
               type: string
             tenantId:
-              description: In a multi-tenant environment this will state the tenant this app
+              description:
+                In a multi-tenant environment this will state the tenant this app
                 is within.
               type: string
             lockedBy:
@@ -645,25 +651,29 @@ components:
               description: The ID of the app.
               type: string
             status:
-              description: The status of the app, stating it if is the development or
+              description:
+                The status of the app, stating it if is the development or
                 published version.
               type: string
               enum:
                 - development
                 - published
             createdAt:
-              description: States when the app was created, will be constant. Stored in ISO
+              description:
+                States when the app was created, will be constant. Stored in ISO
                 format.
               type: string
             updatedAt:
               description: States the last time the app was updated - stored in ISO format.
               type: string
             version:
-              description: States the version of the Budibase client this app is currently
+              description:
+                States the version of the Budibase client this app is currently
                 based on.
               type: string
             tenantId:
-              description: In a multi-tenant environment this will state the tenant this app
+              description:
+                In a multi-tenant environment this will state the tenant this app
                 is within.
               type: string
             lockedBy:
@@ -697,25 +707,29 @@ components:
                 description: The ID of the app.
                 type: string
               status:
-                description: The status of the app, stating it if is the development or
+                description:
+                  The status of the app, stating it if is the development or
                   published version.
                 type: string
                 enum:
                   - development
                   - published
               createdAt:
-                description: States when the app was created, will be constant. Stored in ISO
+                description:
+                  States when the app was created, will be constant. Stored in ISO
                   format.
                 type: string
               updatedAt:
                 description: States the last time the app was updated - stored in ISO format.
                 type: string
               version:
-                description: States the version of the Budibase client this app is currently
+                description:
+                  States the version of the Budibase client this app is currently
                   based on.
                 type: string
               tenantId:
-                description: In a multi-tenant environment this will state the tenant this app
+                description:
+                  In a multi-tenant environment this will state the tenant this app
                   is within.
                 type: string
               lockedBy:
@@ -749,25 +763,29 @@ components:
                 description: The ID of the app.
                 type: string
               status:
-                description: The status of the app, stating it if is the development or
+                description:
+                  The status of the app, stating it if is the development or
                   published version.
                 type: string
                 enum:
                   - development
                   - published
               createdAt:
-                description: States when the app was created, will be constant. Stored in ISO
+                description:
+                  States when the app was created, will be constant. Stored in ISO
                   format.
                 type: string
               updatedAt:
                 description: States the last time the app was updated - stored in ISO format.
                 type: string
               version:
-                description: States the version of the Budibase client this app is currently
+                description:
+                  States the version of the Budibase client this app is currently
                   based on.
                 type: string
               tenantId:
-                description: In a multi-tenant environment this will state the tenant this app
+                description:
+                  In a multi-tenant environment this will state the tenant this app
                   is within.
                 type: string
               lockedBy:
@@ -814,7 +832,8 @@ components:
           description: An optional password used to encrypt the export.
           type: string
         excludeRows:
-          description: Set whether the internal table rows should be excluded from the
+          description:
+            Set whether the internal table rows should be excluded from the
             export.
           type: boolean
       required:
@@ -827,7 +846,8 @@ components:
           description: An optional password used to encrypt the export.
           type: string
         excludeRows:
-          description: Set whether the internal table rows should be excluded from the
+          description:
+            Set whether the internal table rows should be excluded from the
             export.
           type: boolean
       required:
@@ -844,7 +864,8 @@ components:
         - data
       properties:
         data:
-          description: An array of rows, these will each contain an _id field which can be
+          description:
+            An array of rows, these will each contain an _id field which can be
             used to update or delete them.
           type: array
           items:
@@ -855,7 +876,8 @@ components:
             - type: string
             - type: integer
         hasNextPage:
-          description: If pagination in use, this will determine if there is another page
+          description:
+            If pagination in use, this will determine if there is another page
             to fetch.
           type: boolean
     rowOutput:
@@ -890,7 +912,8 @@ components:
           type: string
         primaryDisplay:
           type: string
-          description: The name of the column which should be used in relationship tags
+          description:
+            The name of the column which should be used in relationship tags
             when relating to this table.
         schema:
           type: object
@@ -905,7 +928,8 @@ components:
                     description: A relationship column.
                   constraints:
                     type: object
-                    description: A constraint can be applied to the column which will be validated
+                    description:
+                      A constraint can be applied to the column which will be validated
                       against when a row is saved.
                     properties:
                       type:
@@ -934,7 +958,8 @@ components:
                     description: Defines the width of the column in the data UI.
                   fieldName:
                     type: string
-                    description: The name of the column which a relationship column is related to in
+                    description:
+                      The name of the column which a relationship column is related to in
                       another table.
                   tableId:
                     type: string
@@ -948,20 +973,24 @@ components:
                     description: Defines the type of relationship that this column will be used for.
                   through:
                     type: string
-                    description: When using a SQL table that contains many to many relationships
+                    description:
+                      When using a SQL table that contains many to many relationships
                       this defines the table the relationships are linked
                       through.
                   foreignKey:
                     type: string
-                    description: When using a SQL table that contains a one to many relationship
+                    description:
+                      When using a SQL table that contains a one to many relationship
                       this defines the foreign key.
                   throughFrom:
                     type: string
-                    description: When using a SQL table that utilises a through table, this defines
+                    description:
+                      When using a SQL table that utilises a through table, this defines
                       the primary key in the through table for this table.
                   throughTo:
                     type: string
-                    description: When using a SQL table that utilises a through table, this defines
+                    description:
+                      When using a SQL table that utilises a through table, this defines
                       the primary key in the through table for the related
                       table.
               - type: object
@@ -973,7 +1002,8 @@ components:
                     description: A formula column.
                   constraints:
                     type: object
-                    description: A constraint can be applied to the column which will be validated
+                    description:
+                      A constraint can be applied to the column which will be validated
                       against when a row is saved.
                     properties:
                       type:
@@ -1002,7 +1032,8 @@ components:
                     description: Defines the width of the column in the data UI.
                   formula:
                     type: string
-                    description: Defines a Handlebars or JavaScript formula to use, note that
+                    description:
+                      Defines a Handlebars or JavaScript formula to use, note that
                       Javascript formulas are expected to be provided in the
                       base64 format.
                   formulaType:
@@ -1034,11 +1065,13 @@ components:
                       - bigint
                       - bb_reference
                       - bb_reference_single
-                    description: Defines the type of the column, most explain themselves, a link
+                    description:
+                      Defines the type of the column, most explain themselves, a link
                       column is a relationship.
                   constraints:
                     type: object
-                    description: A constraint can be applied to the column which will be validated
+                    description:
+                      A constraint can be applied to the column which will be validated
                       against when a row is saved.
                     properties:
                       type:
@@ -1081,7 +1114,8 @@ components:
               type: string
             primaryDisplay:
               type: string
-              description: The name of the column which should be used in relationship tags
+              description:
+                The name of the column which should be used in relationship tags
                 when relating to this table.
             schema:
               type: object
@@ -1096,7 +1130,8 @@ components:
                         description: A relationship column.
                       constraints:
                         type: object
-                        description: A constraint can be applied to the column which will be validated
+                        description:
+                          A constraint can be applied to the column which will be validated
                           against when a row is saved.
                         properties:
                           type:
@@ -1125,7 +1160,8 @@ components:
                         description: Defines the width of the column in the data UI.
                       fieldName:
                         type: string
-                        description: The name of the column which a relationship column is related to in
+                        description:
+                          The name of the column which a relationship column is related to in
                           another table.
                       tableId:
                         type: string
@@ -1139,20 +1175,24 @@ components:
                         description: Defines the type of relationship that this column will be used for.
                       through:
                         type: string
-                        description: When using a SQL table that contains many to many relationships
+                        description:
+                          When using a SQL table that contains many to many relationships
                           this defines the table the relationships are linked
                           through.
                       foreignKey:
                         type: string
-                        description: When using a SQL table that contains a one to many relationship
+                        description:
+                          When using a SQL table that contains a one to many relationship
                           this defines the foreign key.
                       throughFrom:
                         type: string
-                        description: When using a SQL table that utilises a through table, this defines
+                        description:
+                          When using a SQL table that utilises a through table, this defines
                           the primary key in the through table for this table.
                       throughTo:
                         type: string
-                        description: When using a SQL table that utilises a through table, this defines
+                        description:
+                          When using a SQL table that utilises a through table, this defines
                           the primary key in the through table for the related
                           table.
                   - type: object
@@ -1164,7 +1204,8 @@ components:
                         description: A formula column.
                       constraints:
                         type: object
-                        description: A constraint can be applied to the column which will be validated
+                        description:
+                          A constraint can be applied to the column which will be validated
                           against when a row is saved.
                         properties:
                           type:
@@ -1193,7 +1234,8 @@ components:
                         description: Defines the width of the column in the data UI.
                       formula:
                         type: string
-                        description: Defines a Handlebars or JavaScript formula to use, note that
+                        description:
+                          Defines a Handlebars or JavaScript formula to use, note that
                           Javascript formulas are expected to be provided in the
                           base64 format.
                       formulaType:
@@ -1225,11 +1267,13 @@ components:
                           - bigint
                           - bb_reference
                           - bb_reference_single
-                        description: Defines the type of the column, most explain themselves, a link
+                        description:
+                          Defines the type of the column, most explain themselves, a link
                           column is a relationship.
                       constraints:
                         type: object
-                        description: A constraint can be applied to the column which will be validated
+                        description:
+                          A constraint can be applied to the column which will be validated
                           against when a row is saved.
                         properties:
                           type:
@@ -1279,7 +1323,8 @@ components:
                 type: string
               primaryDisplay:
                 type: string
-                description: The name of the column which should be used in relationship tags
+                description:
+                  The name of the column which should be used in relationship tags
                   when relating to this table.
               schema:
                 type: object
@@ -1294,7 +1339,8 @@ components:
                           description: A relationship column.
                         constraints:
                           type: object
-                          description: A constraint can be applied to the column which will be validated
+                          description:
+                            A constraint can be applied to the column which will be validated
                             against when a row is saved.
                           properties:
                             type:
@@ -1323,7 +1369,8 @@ components:
                           description: Defines the width of the column in the data UI.
                         fieldName:
                           type: string
-                          description: The name of the column which a relationship column is related to in
+                          description:
+                            The name of the column which a relationship column is related to in
                             another table.
                         tableId:
                           type: string
@@ -1337,20 +1384,24 @@ components:
                           description: Defines the type of relationship that this column will be used for.
                         through:
                           type: string
-                          description: When using a SQL table that contains many to many relationships
+                          description:
+                            When using a SQL table that contains many to many relationships
                             this defines the table the relationships are linked
                             through.
                         foreignKey:
                           type: string
-                          description: When using a SQL table that contains a one to many relationship
+                          description:
+                            When using a SQL table that contains a one to many relationship
                             this defines the foreign key.
                         throughFrom:
                           type: string
-                          description: When using a SQL table that utilises a through table, this defines
+                          description:
+                            When using a SQL table that utilises a through table, this defines
                             the primary key in the through table for this table.
                         throughTo:
                           type: string
-                          description: When using a SQL table that utilises a through table, this defines
+                          description:
+                            When using a SQL table that utilises a through table, this defines
                             the primary key in the through table for the related
                             table.
                     - type: object
@@ -1362,7 +1413,8 @@ components:
                           description: A formula column.
                         constraints:
                           type: object
-                          description: A constraint can be applied to the column which will be validated
+                          description:
+                            A constraint can be applied to the column which will be validated
                             against when a row is saved.
                           properties:
                             type:
@@ -1391,7 +1443,8 @@ components:
                           description: Defines the width of the column in the data UI.
                         formula:
                           type: string
-                          description: Defines a Handlebars or JavaScript formula to use, note that
+                          description:
+                            Defines a Handlebars or JavaScript formula to use, note that
                             Javascript formulas are expected to be provided in
                             the base64 format.
                         formulaType:
@@ -1423,11 +1476,13 @@ components:
                             - bigint
                             - bb_reference
                             - bb_reference_single
-                          description: Defines the type of the column, most explain themselves, a link
+                          description:
+                            Defines the type of the column, most explain themselves, a link
                             column is a relationship.
                         constraints:
                           type: object
-                          description: A constraint can be applied to the column which will be validated
+                          description:
+                            A constraint can be applied to the column which will be validated
                             against when a row is saved.
                           properties:
                             type:
@@ -1465,14 +1520,17 @@ components:
       properties:
         parameters:
           type: object
-          description: This contains the required parameters for the query, this depends
+          description:
+            This contains the required parameters for the query, this depends
             on query type, setup and bindings.
           additionalProperties:
-            description: Key value properties of any type, depending on the query output
+            description:
+              Key value properties of any type, depending on the query output
               schema.
         pagination:
           type: object
-          description: For supported query types (currently on REST) pagination can be
+          description:
+            For supported query types (currently on REST) pagination can be
             performed using these properties.
           properties:
             page:
@@ -1494,14 +1552,16 @@ components:
           type: object
           properties:
             headers:
-              description: If carrying out a REST request, this will contain the response
+              description:
+                If carrying out a REST request, this will contain the response
                 headers.
               type: object
             raw:
               description: The raw query response, as a string.
               type: string
         pagination:
-          description: If pagination is supported, this will contain the bookmark/anchor
+          description:
+            If pagination is supported, this will contain the bookmark/anchor
             information for it.
           type: object
       required:
@@ -1521,7 +1581,8 @@ components:
           items:
             type: string
         fields:
-          description: The fields that are used to perform this query, e.g. the sql
+          description:
+            The fields that are used to perform this query, e.g. the sql
             statement
           type: object
         queryVerb:
@@ -1538,7 +1599,8 @@ components:
           description: The schema of the data returned when the query is executed.
           type: object
         transformer:
-          description: The JavaScript transformer function, applied after the query
+          description:
+            The JavaScript transformer function, applied after the query
             responds with data.
           type: string
         readable:
@@ -1568,7 +1630,8 @@ components:
                 items:
                   type: string
               fields:
-                description: The fields that are used to perform this query, e.g. the sql
+                description:
+                  The fields that are used to perform this query, e.g. the sql
                   statement
                 type: object
               queryVerb:
@@ -1585,7 +1648,8 @@ components:
                 description: The schema of the data returned when the query is executed.
                 type: object
               transformer:
-                description: The JavaScript transformer function, applied after the query
+                description:
+                  The JavaScript transformer function, applied after the query
                   responds with data.
                 type: string
               readable:
@@ -1604,7 +1668,8 @@ components:
           description: The email address of the user, this must be unique.
           type: string
         password:
-          description: The password of the user if using password based login - this will
+          description:
+            The password of the user if using password based login - this will
             never be returned. This can be left out of subsequent requests
             (updates) and will be enriched back into the user structure.
           type: string
@@ -1620,20 +1685,24 @@ components:
           description: The last name of the user
           type: string
         forceResetPassword:
-          description: If set to true forces the user to reset their password on first
+          description:
+            If set to true forces the user to reset their password on first
             login.
           type: boolean
         builder:
-          description: Describes if the user is a builder user or not. This field can only
+          description:
+            Describes if the user is a builder user or not. This field can only
             be set on a business or enterprise license.
           type: object
           properties:
             global:
-              description: If set to true the user will be able to build any app in the
+              description:
+                If set to true the user will be able to build any app in the
                 system.
               type: boolean
         admin:
-          description: Describes if the user is an admin user or not. This field can only
+          description:
+            Describes if the user is an admin user or not. This field can only
             be set on a business or enterprise license.
           type: object
           properties:
@@ -1641,13 +1710,15 @@ components:
               description: If set to true the user will be able to administrate the system.
               type: boolean
         roles:
-          description: Contains the roles of the user per app (assuming they are not a
+          description:
+            Contains the roles of the user per app (assuming they are not a
             builder user). This field can only be set on a business or
             enterprise license.
           type: object
           additionalProperties:
             type: string
-            description: A map of app ID (production app ID, minus the _dev component) to a
+            description:
+              A map of app ID (production app ID, minus the _dev component) to a
               role ID, e.g. ADMIN.
       required:
         - email
@@ -1661,7 +1732,8 @@ components:
               description: The email address of the user, this must be unique.
               type: string
             password:
-              description: The password of the user if using password based login - this will
+              description:
+                The password of the user if using password based login - this will
                 never be returned. This can be left out of subsequent requests
                 (updates) and will be enriched back into the user structure.
               type: string
@@ -1677,20 +1749,24 @@ components:
               description: The last name of the user
               type: string
             forceResetPassword:
-              description: If set to true forces the user to reset their password on first
+              description:
+                If set to true forces the user to reset their password on first
                 login.
               type: boolean
             builder:
-              description: Describes if the user is a builder user or not. This field can only
+              description:
+                Describes if the user is a builder user or not. This field can only
                 be set on a business or enterprise license.
               type: object
               properties:
                 global:
-                  description: If set to true the user will be able to build any app in the
+                  description:
+                    If set to true the user will be able to build any app in the
                     system.
                   type: boolean
             admin:
-              description: Describes if the user is an admin user or not. This field can only
+              description:
+                Describes if the user is an admin user or not. This field can only
                 be set on a business or enterprise license.
               type: object
               properties:
@@ -1698,13 +1774,15 @@ components:
                   description: If set to true the user will be able to administrate the system.
                   type: boolean
             roles:
-              description: Contains the roles of the user per app (assuming they are not a
+              description:
+                Contains the roles of the user per app (assuming they are not a
                 builder user). This field can only be set on a business or
                 enterprise license.
               type: object
               additionalProperties:
                 type: string
-                description: A map of app ID (production app ID, minus the _dev component) to a
+                description:
+                  A map of app ID (production app ID, minus the _dev component) to a
                   role ID, e.g. ADMIN.
             _id:
               description: The ID of the user.
@@ -1726,7 +1804,8 @@ components:
                 description: The email address of the user, this must be unique.
                 type: string
               password:
-                description: The password of the user if using password based login - this will
+                description:
+                  The password of the user if using password based login - this will
                   never be returned. This can be left out of subsequent requests
                   (updates) and will be enriched back into the user structure.
                 type: string
@@ -1742,20 +1821,24 @@ components:
                 description: The last name of the user
                 type: string
               forceResetPassword:
-                description: If set to true forces the user to reset their password on first
+                description:
+                  If set to true forces the user to reset their password on first
                   login.
                 type: boolean
               builder:
-                description: Describes if the user is a builder user or not. This field can only
+                description:
+                  Describes if the user is a builder user or not. This field can only
                   be set on a business or enterprise license.
                 type: object
                 properties:
                   global:
-                    description: If set to true the user will be able to build any app in the
+                    description:
+                      If set to true the user will be able to build any app in the
                       system.
                     type: boolean
               admin:
-                description: Describes if the user is an admin user or not. This field can only
+                description:
+                  Describes if the user is an admin user or not. This field can only
                   be set on a business or enterprise license.
                 type: object
                 properties:
@@ -1763,13 +1846,15 @@ components:
                     description: If set to true the user will be able to administrate the system.
                     type: boolean
               roles:
-                description: Contains the roles of the user per app (assuming they are not a
+                description:
+                  Contains the roles of the user per app (assuming they are not a
                   builder user). This field can only be set on a business or
                   enterprise license.
                 type: object
                 additionalProperties:
                   type: string
-                  description: A map of app ID (production app ID, minus the _dev component) to a
+                  description:
+                    A map of app ID (production app ID, minus the _dev component) to a
                     role ID, e.g. ADMIN.
               _id:
                 description: The ID of the user.
@@ -1787,7 +1872,8 @@ components:
           properties:
             allOr:
               type: boolean
-              description: Specifies that a row should be returned if it satisfies any of the
+              description:
+                Specifies that a row should be returned if it satisfies any of the
                 specified options, rather than requiring it to fulfill all the
                 search parameters. This defaults to false, meaning AND logic
                 will be used.
@@ -1796,18 +1882,21 @@ components:
               example:
                 columnName1: value
                 columnName2: value
-              description: A map of field name to the string to search for, this will look for
+              description:
+                A map of field name to the string to search for, this will look for
                 rows that have a value starting with the string value.
               additionalProperties:
                 type: string
                 description: The value to search for in the column.
             fuzzy:
               type: object
-              description: Searches for a sub-string within a string column, e.g. searching
+              description:
+                Searches for a sub-string within a string column, e.g. searching
                 for 'dib' will match 'Budibase'.
             range:
               type: object
-              description: Searches within a range, the format of this must be in the format
+              description:
+                Searches within a range, the format of this must be in the format
                 of an object with a "low" and "high" property.
               example:
                 columnName1:
@@ -1815,15 +1904,18 @@ components:
                   high: 20
             equal:
               type: object
-              description: Searches for rows that have a column value that is exactly the
+              description:
+                Searches for rows that have a column value that is exactly the
                 value set.
             notEqual:
               type: object
-              description: Searches for any row which does not contain the specified column
+              description:
+                Searches for any row which does not contain the specified column
                 value.
             empty:
               type: object
-              description: Searches for rows which do not contain the specified column. The
+              description:
+                Searches for rows which do not contain the specified column. The
                 object should simply contain keys of the column names, these can
                 map to any value.
               example:
@@ -1833,12 +1925,14 @@ components:
               description: Searches for rows which have the specified column.
             oneOf:
               type: object
-              description: Searches for rows which have a column value that is any of the
+              description:
+                Searches for rows which have a column value that is any of the
                 specified values. The format of this must be columnName ->
                 [value1, value2].
             contains:
               type: object
-              description: Searches for a value, or set of values in array column types (such
+              description:
+                Searches for a value, or set of values in array column types (such
                 as a multi-select). If an array of search options is provided
                 then it must match all.
               example:
@@ -1847,7 +1941,8 @@ components:
                   - b
             notContains:
               type: object
-              description: The logical inverse of contains. Only works on array column types.
+              description:
+                The logical inverse of contains. Only works on array column types.
                 If an array of values is passed, the row must not match any of
                 them to be returned in the response.
               example:
@@ -1856,7 +1951,8 @@ components:
                   - b
             containsAny:
               type: object
-              description: As with the contains search, only works on array column types and
+              description:
+                As with the contains search, only works on array column types and
                 searches for any of the provided values when given an array.
               example:
                 arrayColumn:
@@ -1869,11 +1965,13 @@ components:
           oneOf:
             - type: string
             - type: integer
-          description: If retrieving another page, the bookmark from the previous request
+          description:
+            If retrieving another page, the bookmark from the previous request
             must be supplied.
         limit:
           type: integer
-          description: The maximum number of rows to return, useful when paginating, for
+          description:
+            The maximum number of rows to return, useful when paginating, for
             internal tables this will be limited to 1000, for SQL tables it will
             be 5000.
         sort:
@@ -1894,7 +1992,8 @@ components:
               enum:
                 - string
                 - number
-              description: Defines whether the column should be treated as a string or as
+              description:
+                Defines whether the column should be treated as a string or as
                 numbers when sorting.
       required:
         - query
@@ -1903,7 +2002,8 @@ components:
       properties:
         name:
           type: string
-          description: The name to be used when searching - this will be used in a case
+          description:
+            The name to be used when searching - this will be used in a case
             insensitive starts with match.
       required:
         - name
@@ -1914,7 +2014,8 @@ components:
           type: object
           properties:
             appId:
-              description: The app that the users should have app builder privileges granted
+              description:
+                The app that the users should have app builder privileges granted
                 for.
               type: string
           description: Allow setting users to builders per app.
@@ -1953,7 +2054,8 @@ components:
           type: object
           properties:
             appId:
-              description: The app that the users should have app builder privileges granted
+              description:
+                The app that the users should have app builder privileges granted
                 for.
               type: string
           description: Allow setting users to builders per app.
@@ -2021,14 +2123,16 @@ components:
             - calculation
         primaryDisplay:
           type: string
-          description: A column used to display rows from this view - usually used when
+          description:
+            A column used to display rows from this view - usually used when
             rendered in tables.
         query:
           description: Search parameters for view
           type: object
           properties:
             logicalOperator:
-              description: When using groups this defines whether all of the filters must
+              description:
+                When using groups this defines whether all of the filters must
                 match, or only one of them.
               type: string
               enum:
@@ -2047,7 +2151,8 @@ components:
                 type: object
                 properties:
                   logicalOperator:
-                    description: When using groups this defines whether all of the filters must
+                    description:
+                      When using groups this defines whether all of the filters must
                       match, or only one of them.
                     type: string
                     enum:
@@ -2078,7 +2183,8 @@ components:
                           type: string
                           description: The field in the view to perform the search on.
                         value:
-                          description: The value to search for - the type will depend on the operator in
+                          description:
+                            The value to search for - the type will depend on the operator in
                             use.
                           oneOf:
                             - type: string
@@ -2093,7 +2199,8 @@ components:
                       type: object
                       properties:
                         logicalOperator:
-                          description: When using groups this defines whether all of the filters must
+                          description:
+                            When using groups this defines whether all of the filters must
                             match, or only one of them.
                           type: string
                           enum:
@@ -2124,7 +2231,8 @@ components:
                                 type: string
                                 description: The field in the view to perform the search on.
                               value:
-                                description: The value to search for - the type will depend on the operator in
+                                description:
+                                  The value to search for - the type will depend on the operator in
                                   use.
                                 oneOf:
                                   - type: string
@@ -2160,24 +2268,29 @@ components:
                 properties:
                   visible:
                     type: boolean
-                    description: Defines whether the column is visible or not - rows
+                    description:
+                      Defines whether the column is visible or not - rows
                       retrieved/updated through this view will not be able to
                       access it.
                   readonly:
                     type: boolean
-                    description: "When used in combination with 'visible: true' the column will be
+                    description:
+                      "When used in combination with 'visible: true' the column will be
                       visible in row responses but cannot be updated."
                   order:
                     type: integer
-                    description: A number defining where the column shows up in tables, lowest being
+                    description:
+                      A number defining where the column shows up in tables, lowest being
                       first.
                   width:
                     type: integer
-                    description: A width for the column, defined in pixels - this affects rendering
+                    description:
+                      A width for the column, defined in pixels - this affects rendering
                       in tables.
                   column:
                     type: array
-                    description: If this is a relationship column, we can set the columns we wish to
+                    description:
+                      If this is a relationship column, we can set the columns we wish to
                       include
                     items:
                       type: object
@@ -2188,7 +2301,8 @@ components:
                 properties:
                   calculationType:
                     type: string
-                    description: This column should be built from a calculation, specifying a type
+                    description:
+                      This column should be built from a calculation, specifying a type
                       and field. It is important to note when a calculation is
                       configured all non-calculation columns will be used for
                       grouping.
@@ -2203,7 +2317,8 @@ components:
                     description: The field from the table to perform the calculation on.
                   distinct:
                     type: boolean
-                    description: Can be used in tandem with the count calculation type, to count
+                    description:
+                      Can be used in tandem with the count calculation type, to count
                       unique entries.
     viewOutput:
       type: object
@@ -2230,14 +2345,16 @@ components:
                 - calculation
             primaryDisplay:
               type: string
-              description: A column used to display rows from this view - usually used when
+              description:
+                A column used to display rows from this view - usually used when
                 rendered in tables.
             query:
               description: Search parameters for view
               type: object
               properties:
                 logicalOperator:
-                  description: When using groups this defines whether all of the filters must
+                  description:
+                    When using groups this defines whether all of the filters must
                     match, or only one of them.
                   type: string
                   enum:
@@ -2256,7 +2373,8 @@ components:
                     type: object
                     properties:
                       logicalOperator:
-                        description: When using groups this defines whether all of the filters must
+                        description:
+                          When using groups this defines whether all of the filters must
                           match, or only one of them.
                         type: string
                         enum:
@@ -2287,7 +2405,8 @@ components:
                               type: string
                               description: The field in the view to perform the search on.
                             value:
-                              description: The value to search for - the type will depend on the operator in
+                              description:
+                                The value to search for - the type will depend on the operator in
                                 use.
                               oneOf:
                                 - type: string
@@ -2302,7 +2421,8 @@ components:
                           type: object
                           properties:
                             logicalOperator:
-                              description: When using groups this defines whether all of the filters must
+                              description:
+                                When using groups this defines whether all of the filters must
                                 match, or only one of them.
                               type: string
                               enum:
@@ -2333,7 +2453,8 @@ components:
                                     type: string
                                     description: The field in the view to perform the search on.
                                   value:
-                                    description: The value to search for - the type will depend on the operator in
+                                    description:
+                                      The value to search for - the type will depend on the operator in
                                       use.
                                     oneOf:
                                       - type: string
@@ -2369,24 +2490,29 @@ components:
                     properties:
                       visible:
                         type: boolean
-                        description: Defines whether the column is visible or not - rows
+                        description:
+                          Defines whether the column is visible or not - rows
                           retrieved/updated through this view will not be able
                           to access it.
                       readonly:
                         type: boolean
-                        description: "When used in combination with 'visible: true' the column will be
+                        description:
+                          "When used in combination with 'visible: true' the column will be
                           visible in row responses but cannot be updated."
                       order:
                         type: integer
-                        description: A number defining where the column shows up in tables, lowest being
+                        description:
+                          A number defining where the column shows up in tables, lowest being
                           first.
                       width:
                         type: integer
-                        description: A width for the column, defined in pixels - this affects rendering
+                        description:
+                          A width for the column, defined in pixels - this affects rendering
                           in tables.
                       column:
                         type: array
-                        description: If this is a relationship column, we can set the columns we wish to
+                        description:
+                          If this is a relationship column, we can set the columns we wish to
                           include
                         items:
                           type: object
@@ -2397,7 +2523,8 @@ components:
                     properties:
                       calculationType:
                         type: string
-                        description: This column should be built from a calculation, specifying a type
+                        description:
+                          This column should be built from a calculation, specifying a type
                           and field. It is important to note when a calculation
                           is configured all non-calculation columns will be used
                           for grouping.
@@ -2412,7 +2539,8 @@ components:
                         description: The field from the table to perform the calculation on.
                       distinct:
                         type: boolean
-                        description: Can be used in tandem with the count calculation type, to count
+                        description:
+                          Can be used in tandem with the count calculation type, to count
                           unique entries.
             id:
               description: The ID of the view.
@@ -2446,14 +2574,16 @@ components:
                   - calculation
               primaryDisplay:
                 type: string
-                description: A column used to display rows from this view - usually used when
+                description:
+                  A column used to display rows from this view - usually used when
                   rendered in tables.
               query:
                 description: Search parameters for view
                 type: object
                 properties:
                   logicalOperator:
-                    description: When using groups this defines whether all of the filters must
+                    description:
+                      When using groups this defines whether all of the filters must
                       match, or only one of them.
                     type: string
                     enum:
@@ -2472,7 +2602,8 @@ components:
                       type: object
                       properties:
                         logicalOperator:
-                          description: When using groups this defines whether all of the filters must
+                          description:
+                            When using groups this defines whether all of the filters must
                             match, or only one of them.
                           type: string
                           enum:
@@ -2503,7 +2634,8 @@ components:
                                 type: string
                                 description: The field in the view to perform the search on.
                               value:
-                                description: The value to search for - the type will depend on the operator in
+                                description:
+                                  The value to search for - the type will depend on the operator in
                                   use.
                                 oneOf:
                                   - type: string
@@ -2518,7 +2650,8 @@ components:
                             type: object
                             properties:
                               logicalOperator:
-                                description: When using groups this defines whether all of the filters must
+                                description:
+                                  When using groups this defines whether all of the filters must
                                   match, or only one of them.
                                 type: string
                                 enum:
@@ -2549,7 +2682,8 @@ components:
                                       type: string
                                       description: The field in the view to perform the search on.
                                     value:
-                                      description: The value to search for - the type will depend on the operator in
+                                      description:
+                                        The value to search for - the type will depend on the operator in
                                         use.
                                       oneOf:
                                         - type: string
@@ -2585,24 +2719,29 @@ components:
                       properties:
                         visible:
                           type: boolean
-                          description: Defines whether the column is visible or not - rows
+                          description:
+                            Defines whether the column is visible or not - rows
                             retrieved/updated through this view will not be able
                             to access it.
                         readonly:
                           type: boolean
-                          description: "When used in combination with 'visible: true' the column will be
+                          description:
+                            "When used in combination with 'visible: true' the column will be
                             visible in row responses but cannot be updated."
                         order:
                           type: integer
-                          description: A number defining where the column shows up in tables, lowest being
+                          description:
+                            A number defining where the column shows up in tables, lowest being
                             first.
                         width:
                           type: integer
-                          description: A width for the column, defined in pixels - this affects rendering
+                          description:
+                            A width for the column, defined in pixels - this affects rendering
                             in tables.
                         column:
                           type: array
-                          description: If this is a relationship column, we can set the columns we wish to
+                          description:
+                            If this is a relationship column, we can set the columns we wish to
                             include
                           items:
                             type: object
@@ -2613,7 +2752,8 @@ components:
                       properties:
                         calculationType:
                           type: string
-                          description: This column should be built from a calculation, specifying a type
+                          description:
+                            This column should be built from a calculation, specifying a type
                             and field. It is important to note when a
                             calculation is configured all non-calculation
                             columns will be used for grouping.
@@ -2628,7 +2768,8 @@ components:
                           description: The field from the table to perform the calculation on.
                         distinct:
                           type: boolean
-                          description: Can be used in tandem with the count calculation type, to count
+                          description:
+                            Can be used in tandem with the count calculation type, to count
                             unique entries.
               id:
                 description: The ID of the view.
@@ -2800,7 +2941,8 @@ paths:
               $ref: "#/components/schemas/appExport"
       responses:
         "200":
-          description: A gzip tarball containing the app export, encrypted if password
+          description:
+            A gzip tarball containing the app export, encrypted if password
             provided.
           content:
             application/gzip:
@@ -2813,7 +2955,8 @@ paths:
       deprecated: true
       operationId: appSearch
       summary: Search for applications
-      description: Based on application properties (currently only name) search for
+      description:
+        Based on application properties (currently only name) search for
         applications.
       tags:
         - applications
@@ -2825,7 +2968,8 @@ paths:
               $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
-          description: Returns the applications that were found based on the search
+          description:
+            Returns the applications that were found based on the search
             parameters.
           content:
             application/json:
@@ -2966,7 +3110,8 @@ paths:
                 $ref: "#/components/examples/inputRow"
       responses:
         "200":
-          description: Returns the created row, including the ID which has been generated
+          description:
+            Returns the created row, including the ID which has been generated
             for it. This can be found in the Budibase portal, viewed under the
             developer information.
           content:
@@ -2998,7 +3143,8 @@ paths:
                 $ref: "#/components/examples/inputRow"
       responses:
         "200":
-          description: Returns the created row, including the ID which has been generated
+          description:
+            Returns the created row, including the ID which has been generated
             for it.
           content:
             application/json:
@@ -3019,7 +3165,8 @@ paths:
         - $ref: "#/components/parameters/appId"
       responses:
         "200":
-          description: Returns the deleted row, including the ID which has been generated
+          description:
+            Returns the deleted row, including the ID which has been generated
             for it.
           content:
             application/json:
@@ -3031,7 +3178,8 @@ paths:
     get:
       operationId: rowGetById
       summary: Retrieve a row
-      description: This gets a single row, it will be enriched with the full related
+      description:
+        This gets a single row, it will be enriched with the full related
         rows, rather than the squashed "primaryDisplay" format returned by the
         search endpoint.
       tags:
@@ -3067,7 +3215,8 @@ paths:
               $ref: "#/components/schemas/rowSearch"
       responses:
         "200":
-          description: The response will contain an array of rows that match the search
+          description:
+            The response will contain an array of rows that match the search
             parameters.
           content:
             application/json:
@@ -3093,7 +3242,8 @@ paths:
               $ref: "#/components/schemas/rowSearch"
       responses:
         "200":
-          description: The response will contain an array of rows that match the search
+          description:
+            The response will contain an array of rows that match the search
             parameters.
           content:
             application/json:
@@ -3121,7 +3271,8 @@ paths:
                 $ref: "#/components/examples/table"
       responses:
         "200":
-          description: Returns the created table, including the ID which has been
+          description:
+            Returns the created table, including the ID which has been
             generated for it. This can be internal or external datasources.
           content:
             application/json:
@@ -3200,7 +3351,8 @@ paths:
     post:
       operationId: tableSearch
       summary: Search for tables
-      description: Based on table properties (currently only name) search for tables.
+      description:
+        Based on table properties (currently only name) search for tables.
         This could be an internal or an external table.
       tags:
         - tables
@@ -3344,7 +3496,8 @@ paths:
                 $ref: "#/components/examples/view"
       responses:
         "200":
-          description: Returns the created view, including the ID which has been generated
+          description:
+            Returns the created view, including the ID which has been generated
             for it.
           content:
             application/json:
@@ -3596,7 +3749,8 @@ paths:
               $ref: "#/components/schemas/workspaceExport"
       responses:
         "200":
-          description: A gzip tarball containing the workspace export, encrypted if
+          description:
+            A gzip tarball containing the workspace export, encrypted if
             password provided.
           content:
             application/gzip:
@@ -3608,7 +3762,8 @@ paths:
     post:
       operationId: workspaceSearch
       summary: Search for workspaces
-      description: Based on workspace properties (currently only name) search for
+      description:
+        Based on workspace properties (currently only name) search for
         workspaces.
       tags:
         - workspaces
@@ -3620,7 +3775,8 @@ paths:
               $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
-          description: Returns the workspaces that were found based on the search
+          description:
+            Returns the workspaces that were found based on the search
             parameters.
           content:
             application/json:
