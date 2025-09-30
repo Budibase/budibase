@@ -762,6 +762,46 @@ describe("/api/resources/usage", () => {
           stack: expect.anything(),
         })
       })
+
+      it("cannot duplicate the same app twice on the same workspace", async () => {
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+        const newWorkspace2 = await config.api.workspace.create({
+          name: `Another destination ${generator.natural()}`,
+        })
+
+        await config.api.resource.duplicateResourceToWorkspace(
+          {
+            resourceId: basicApp.app._id!,
+            toWorkspace: newWorkspace.appId,
+          },
+          { status: 200 }
+        )
+        const error = await config.api.resource.duplicateResourceToWorkspace(
+          {
+            resourceId: basicApp.app._id!,
+            toWorkspace: newWorkspace.appId,
+          },
+          { status: 400 }
+        )
+        expect(error.body).toEqual({
+          message: "App already migrated in this workspace",
+          error: {
+            code: "http",
+          },
+          status: 400,
+          stack: expect.anything(),
+        })
+
+        await config.api.resource.duplicateResourceToWorkspace(
+          {
+            resourceId: basicApp.app._id!,
+            toWorkspace: newWorkspace2.appId,
+          },
+          { status: 200 }
+        )
+      })
     })
 
     describe("previewDuplicateResourceToWorkspace", () => {
