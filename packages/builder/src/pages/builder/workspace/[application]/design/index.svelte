@@ -185,7 +185,7 @@
         name: "Duplicate",
         visible: true,
         disabled: isDuplicating,
-        callback: () => duplicateWorkspaceApp(workspaceApp._id as string),
+        callback: () => !isDuplicating &&  duplicateWorkspaceApp(workspaceApp._id as string),
       })
     }
 
