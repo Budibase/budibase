@@ -18,6 +18,36 @@ export interface AdminState
   usingLocalComponentLibs: boolean
 }
 
+type ChecklistKey = keyof Pick<
+  ConfigChecklistResponse,
+  "apps" | "adminUser" | "smtp" | "sso"
+>
+
+const createDefaultChecklist = (): ConfigChecklistResponse => ({
+  apps: {
+    checked: false,
+    label: "",
+    link: "",
+  },
+  adminUser: {
+    checked: false,
+    label: "",
+    link: "",
+  },
+  smtp: {
+    checked: false,
+    label: "",
+    link: "",
+    fallback: false,
+  },
+  sso: {
+    checked: false,
+    label: "",
+    link: "",
+  },
+  branding: {},
+})
+
 export class AdminStore extends BudiStore<AdminState> {
   constructor() {
     super({
@@ -90,14 +120,13 @@ export class AdminStore extends BudiStore<AdminState> {
     })
   }
 
-  markChecklistItemChecked(key: "apps" | "adminUser" | "smtp" | "sso") {
+  markChecklistItemChecked(key: ChecklistKey) {
     this.update(store => {
-      const checklist = store.checklist ?? {}
-      const current = checklist[key] ?? {}
+      const checklist = store.checklist ?? createDefaultChecklist()
       store.checklist = {
         ...checklist,
         [key]: {
-          ...current,
+          ...checklist[key],
           checked: true,
         },
       }
