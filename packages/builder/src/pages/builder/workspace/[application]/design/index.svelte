@@ -177,17 +177,15 @@
         visible: true,
         callback: () => confirmDeleteDialog.show(),
       },
-    ]
-
-    if (canDuplicate) {
-      commands.push({
+      {
         icon: "copy",
         name: "Duplicate",
-        visible: true,
+        visible: canDuplicate,
         disabled: isDuplicating,
-        callback: () => !isDuplicating &&  duplicateWorkspaceApp(workspaceApp._id as string),
-      })
-    }
+        callback: () =>
+          !isDuplicating && duplicateWorkspaceApp(workspaceApp._id as string),
+      },
+    ]
 
     return commands
   }
