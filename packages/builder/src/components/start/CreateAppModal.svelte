@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import { API } from "@/api"
   import { appsStore, admin, auth, appCreationStore } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -146,6 +147,10 @@
 
       // Create App
       const createdApp = await API.createApp(data)
+
+      // Select Correct Application/DB in prep for creating user
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await initialise(pkg)
 
       // Update checklist - in case first app
       admin.markChecklistItemChecked("apps")
