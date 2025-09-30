@@ -668,7 +668,8 @@ async function workspacePostCreate(
 
   // If the user is a creator, we need to give them access to the new app
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
-    const user = await users.UserDB.getUser(ctx.user._id!)
+    const globalId = dbCore.getGlobalIDFromUserMetadataID(ctx.user._id!)
+    const user = await users.UserDB.getUser(globalId)
     await users.addAppBuilder(user, app.appId)
   }
 }

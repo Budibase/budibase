@@ -1,8 +1,16 @@
 <script lang="ts">
-  import { Context, Icon, Body, Link, Divider } from "@budibase/bbui"
+  import {
+    Context,
+    Icon,
+    Body,
+    Link,
+    Divider,
+    Modal,
+    PopoverAlignment,
+  } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
-  import BBLogo from "assets/bb-emblem.svg"
+  import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
     builderStore,
@@ -15,7 +23,7 @@
     viewsV2,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
-  import { featureFlags } from "@/stores/portal"
+  import { appsStore, featureFlags, licensing } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
@@ -33,6 +41,9 @@
   import { derived, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
   import { bb } from "@/stores/bb"
+  import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
+  import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
+  import HelpMenu from "@/components/common/HelpMenu.svelte"
 
   type ResourceLinkFn = (_id: string) => string
 
@@ -64,18 +75,28 @@
   const datasourceLookup = datasources.lookup
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
+  const navLogoSize = 20
 
   let ignoreFocus = false
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
-
   let allResourceStores: Readable<AllResourceStores> | null = null
   let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
     null
+  let workspaceSelect: WorkspaceSelect | undefined
+  let createWorkspaceModal: Modal | undefined
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
   $: collapsed = !focused && !$pinned
+
+  // Ensure the workspaceSelect closes if the sidebar is hidden
+  $: if (collapsed && workspaceSelect) {
+    workspaceSelect.hide()
+  }
+
+  // Hide the picker if the user cannot see it
+  $: canSelectedWorkspace = !$licensing.isFreePlan || $appsStore.apps.length > 1
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
@@ -207,7 +228,11 @@
   })
 </script>
 
-<div class="nav_wrapper">
+<Modal bind:this={createWorkspaceModal}>
+  <CreateWorkspaceModal />
+</Modal>
+
+<div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
   <div class="nav_spacer" class:pinned={$pinned} />
   <div
     class="nav"
@@ -218,11 +243,25 @@
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <a href={$url("/builder/portal/workspaces")}>
-        <img src={BBLogo} alt="Budibase logo" />
-      </a>
-      <div class="nav_title">
-        <h1>{$appStore.name}</h1>
+      <div>
+        <BBLogo
+          color={"var(--spectrum-global-color-gray-900)"}
+          size={navLogoSize}
+        />
+      </div>
+
+      <div class="nav-title">
+        {#if canSelectedWorkspace}
+          <WorkspaceSelect
+            bind:this={workspaceSelect}
+            on:create={() => {
+              createWorkspaceModal?.show()
+              setFocused(false)
+            }}
+          />
+        {:else}
+          <h1>{$appStore.name}</h1>
+        {/if}
       </div>
       <Icon
         name="sidebar-simple"
@@ -360,16 +399,14 @@
           }}
           {collapsed}
         />
-        <SideNavLink
-          icon="book"
-          text="Documentation"
-          url="https://docs.budibase.com"
-          target="_blank"
-          on:click={() => {
-            keepCollapsed()
-          }}
-          {collapsed}
-        />
+        <HelpMenu align={PopoverAlignment.RightOutside} let:open>
+          <SideNavLink
+            icon={"question"}
+            text={"Help"}
+            {collapsed}
+            forceActive={open}
+          />
+        </HelpMenu>
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
@@ -380,7 +417,6 @@
 <style>
   .nav_wrapper {
     display: contents;
-    --nav-logo-width: 20px;
     --nav-padding: 12px;
     --nav-collapsed-width: calc(
       var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
@@ -396,7 +432,6 @@
     display: none;
   }
 
-  /* Main nav*/
   .nav {
     background: var(--background-alt);
     position: absolute;
@@ -423,8 +458,10 @@
     flex: 0 0 var(--nav-width);
     width: var(--nav-width);
   }
-  /* Header */
+
   .nav_header {
+    width: 100%;
+    box-sizing: border-box;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -434,30 +471,35 @@
     border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
   }
-  .nav_header a {
+  .nav_header > div :global(> svg) {
     display: grid;
     place-items: center;
     transition: filter 130ms ease-out;
   }
-  .nav_header a:hover {
-    cursor: pointer;
-    filter: brightness(1.2);
+  .nav:not(.pinned):not(.focused) .nav-title {
+    opacity: 0;
   }
-  .nav_header img {
-    width: var(--nav-logo-width);
-  }
-  .nav_title {
+
+  .nav-title {
+    max-width: 100%;
+    min-width: 0;
     width: 0;
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 4px;
-    transition: color 130ms ease-out;
-    color: var(--spectrum-global-color-gray-800);
+    transition: opacity 130ms ease-out;
+    color: var(--spectrum-global-color-gray-900);
   }
-  .nav_title h1 {
+
+  .nav-title :global(> div) {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .nav-title h1 {
     font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
@@ -468,7 +510,6 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  /* Body */
   .nav_body {
     display: flex;
     flex-direction: column;
@@ -480,12 +521,10 @@
     min-height: 0;
   }
 
-  /* Popover container */
   .popover-container {
     position: absolute;
   }
 
-  /*  Links */
   .links {
     display: flex;
     flex-direction: column;
@@ -507,7 +546,6 @@
     min-height: 0;
   }
 
-  /*  favourite section */
   .favourite-wrapper {
     display: flex;
     flex-direction: column;
