@@ -161,6 +161,7 @@ describe("/api/resources/usage", () => {
 
     let basicApp: WorkspaceAppInfo
     let appWithTableUsages: WorkspaceAppInfo
+    let appWithTableUsagesCopy: WorkspaceAppInfo
     let appSharingTableDependency: WorkspaceAppInfo
     let appWithRepeatedDependencyUsage: WorkspaceAppInfo
     let appWithDatasourceDependency: WorkspaceAppInfo
@@ -214,7 +215,7 @@ describe("/api/resources/usage", () => {
 
       datasourceWithDependency = await config.createDatasource()
       queryForDatasource = await config.api.query.save(
-        basicQuery(datasourceWithDependency._id)
+        basicQuery(datasourceWithDependency._id!)
       )
 
       basicApp = await createApp(
@@ -240,6 +241,13 @@ describe("/api/resources/usage", () => {
         {
           name: "App with tables",
           url: "/app-with-tables",
+        },
+        [screenWithDataProvider]
+      )
+      appWithTableUsagesCopy = await createApp(
+        {
+          name: "App with tables copy",
+          url: "/app-with-tables-copy",
         },
         [screenWithDataProvider]
       )
@@ -788,7 +796,7 @@ describe("/api/resources/usage", () => {
 
         const previewAfter =
           await config.api.resource.previewDuplicateResourceToWorkspace({
-            resourceId: appWithTableUsages.app._id!,
+            resourceId: appWithTableUsagesCopy.app._id!,
             toWorkspace: newWorkspace.appId,
           })
 
