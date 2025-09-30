@@ -9,7 +9,11 @@
     Search,
   } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
-  import { AutomationActionStepId, BlockDefinitionTypes } from "@budibase/types"
+  import {
+    AutomationActionStepId,
+    BlockDefinitionTypes,
+    isBranchStep,
+  } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
@@ -18,6 +22,10 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import NewPill from "@/components/common/NewPill.svelte"
+  import type {
+    BranchFlowContext,
+    FlowBlockPath,
+  } from "./AutomationStepHelpers"
 
   export let block
   export let onClose = () => {}
@@ -47,12 +55,57 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: blockRef = $selectedAutomation.blockRefs?.[block.id]
+  const resolveBranchAnchorPath = (): FlowBlockPath | undefined => {
+    if (!block?.branchNode) return undefined
+
+    const branchContext = block as BranchFlowContext
+    const automationData = $selectedAutomation?.data
+    const branchRef =
+      $selectedAutomation.blockRefs?.[branchContext.branchStepId]
+
+    // Return fallback path if any required data is missing
+    if (!automationData || !branchRef?.pathTo) {
+      return branchContext.pathTo
+    }
+
+    const branchStep = automationStore.actions.getBlockByRef(
+      automationData,
+      branchRef
+    )
+
+    // Return fallback path if branch step is invalid
+    if (!branchStep || !isBranchStep(branchStep)) {
+      return branchContext.pathTo
+    }
+
+    const branchDef = branchStep.inputs?.branches?.[branchContext.branchIdx]
+    if (!branchDef) {
+      return branchContext.pathTo
+    }
+
+    const childSteps = branchStep.inputs?.children?.[branchDef.id] || []
+
+    return [
+      ...(branchRef.pathTo as FlowBlockPath),
+      {
+        branchIdx: branchContext.branchIdx,
+        branchStepId: branchContext.branchStepId,
+        stepIdx: childSteps.length - 1,
+      },
+    ]
+  }
+
+  $: blockRef = block?.id
+    ? $selectedAutomation.blockRefs?.[block.id]
+    : undefined
+  $: targetPath =
+    blockRef?.pathTo || resolveBranchAnchorPath() || block?.pathTo || []
+
   $: lastStep = blockRef?.terminating
   $: pathSteps =
-    block.id && $selectedAutomation?.data
+    targetPath && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
-          blockRef?.pathTo,
+          targetPath,
           $selectedAutomation.data
         )
       : []
@@ -211,10 +264,7 @@
         action.stepId,
         action
       )
-      await automationStore.actions.addBlockToAutomation(
-        newBlock,
-        blockRef ? blockRef.pathTo : block.pathTo
-      )
+      await automationStore.actions.addBlockToAutomation(newBlock, targetPath)
 
       // Determine presence of the block before focusing
       const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
