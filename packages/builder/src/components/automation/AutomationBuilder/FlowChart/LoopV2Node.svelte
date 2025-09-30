@@ -25,7 +25,7 @@
     })
   }
 
-  const _selectSelf = async () => {
+  const selectSelf = async () => {
     if (block?.id) {
       await automationStore.actions.selectNode(block.id)
     }
@@ -46,7 +46,9 @@
   position={isHorizontal ? Position.Right : Position.Bottom}
 />
 
-<div class="loop-container">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div on:click|stopPropagation={selectSelf} class="loop-container">
   <div class="loop-header">
     <div class="loop-icon-wrapper">
       <Icon name="Reuse" size="S" />
@@ -114,9 +116,6 @@
   }
 
   :global(.svelte-flow__node-loop-subflow-node::before) {
-    content: "";
-    position: absolute;
-    inset: 0;
     border-radius: 14px;
     padding: 1px;
     background: linear-gradient(
@@ -124,11 +123,6 @@
       rgba(255, 255, 255, 0.04),
       rgba(255, 255, 255, 0.02)
     );
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
     pointer-events: none;
     opacity: 0.3;
   }
