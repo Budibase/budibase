@@ -23,28 +23,20 @@ type ChecklistKey = keyof Pick<
   "apps" | "adminUser" | "smtp" | "sso"
 >
 
+const checklistDefault = {
+  checked: false,
+  label: "",
+  link: "",
+}
+
 const createDefaultChecklist = (): ConfigChecklistResponse => ({
-  apps: {
-    checked: false,
-    label: "",
-    link: "",
-  },
-  adminUser: {
-    checked: false,
-    label: "",
-    link: "",
-  },
+  apps: { ...checklistDefault },
+  adminUser: { ...checklistDefault },
   smtp: {
-    checked: false,
-    label: "",
-    link: "",
+    ...checklistDefault,
     fallback: false,
   },
-  sso: {
-    checked: false,
-    label: "",
-    link: "",
-  },
+  sso: { ...checklistDefault },
   branding: {},
 })
 
@@ -58,6 +50,7 @@ export class AdminStore extends BudiStore<AdminState> {
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
+      checklist: createDefaultChecklist(),
       usingLocalComponentLibs: false,
     })
   }
