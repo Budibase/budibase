@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     getSmoothStepPath,
-    EdgeLabelRenderer,
     BaseEdge,
     getStraightPath,
     useSvelteFlow,
@@ -9,16 +8,29 @@
   } from "@xyflow/svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
-  import { ActionButton } from "@budibase/bbui"
   import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
-  import { ViewMode } from "@/types/automations"
+  import {
+    ViewMode,
+    type EdgeData,
+    type BranchEdgeData,
+    type FlowBlockContext,
+  } from "@/types/automations"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import DragZone from "./DragZone.svelte"
-  import FlowItemActions from "./FlowItemActions.svelte"
+  import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
+  import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "./FlowChartDnD"
+  const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
+    if (!ctx) {
+      return undefined
+    }
+    if ("branchNode" in ctx && ctx.branchNode) {
+      return ctx.branchStepId
+    }
+    return ctx.id
+  }
 
-  export let data: any = undefined
+  export let data: EdgeData
   export let sourceX: number
   export let sourceY: number
   export let targetX: number
@@ -36,6 +48,13 @@
   const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
 
+  /*
+  Depending on the type of edge there can realistically be different properties
+  coming in here depending on if it's a branch edge or not.
+  */
+  $: isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
+    "isBranchEdge" in d && d.isBranchEdge === true
+
   $: basePath = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -50,7 +69,7 @@
 
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
-  $: isSubflowEdge = data?.isSubflowEdge === true
+  $: isSubflowEdge = data.isSubflowEdge === true
   $: path = isAnchorTarget
     ? getStraightPath({
         sourceX,
@@ -60,12 +79,9 @@
       })
     : basePath
 
-  $: blockRef = $selectedAutomation?.blockRefs?.[block?.id]
-  $: sourcePathForDrop = passedPathTo
-    ? passedPathTo
-    : block && block.pathTo
-      ? block.pathTo
-      : blockRef?.pathTo
+  $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
+  $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
+  $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
 
   $: collectBlockExists =
     viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
@@ -74,7 +90,7 @@
           .some(step => step.stepId === ActionStepID.COLLECT)
       : false
   $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
-  $: isPrimaryBranchEdge = data?.isBranchEdge && data?.isPrimaryEdge
+  $: isPrimaryBranchEdge = isBranchEdgeData(data) && data.isPrimaryEdge
 
   $: showEdgeActions =
     viewMode === ViewMode.EDITOR &&
@@ -112,17 +128,14 @@
       : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2 - 20)
 
   const handleBranch = () => {
-    const explicitTargetRef =
-      isBranchTarget && data?.branchStepId
-        ? $selectedAutomation?.blockRefs?.[data.branchStepId]
-        : null
-    const targetPath = explicitTargetRef?.pathTo || blockRef?.pathTo
+    const targetPath = blockRef?.pathTo
     if (targetPath && automation) {
       automationStore.actions.branchAutomation(targetPath, automation)
     }
   }
 
   const handleAddBranch = () => {
+    if (!isBranchEdgeData(data)) return
     const targetRef = $selectedAutomation?.blockRefs?.[data.branchStepId]
     if (targetRef && automation) {
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
@@ -134,77 +147,37 @@
 {#if !hideEdge}
   <BaseEdge path={path[0]} />
 {/if}
-<EdgeLabelRenderer>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div
-    class="add-item-label nodrag nopan"
-    style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
-  >
-    {#if showEdgeDrop && !collectBlockExists}
-      <DragZone path={sourcePathForDrop} variant="edge" />
-    {/if}
-    {#if !collectBlockExists}
-      {#if showEdgeActions}
-        <div
-          class="actions-stack"
-          on:mousedown|stopPropagation
-          on:click|stopPropagation
-        >
-          <FlowItemActions {block} on:branch={handleBranch} />
-        </div>
-      {/if}
-    {/if}
-  </div>
-</EdgeLabelRenderer>
 
-<!-- Render the Actions / dropzone above the branch fan-out on the primary branch edge -->
-{#if !collectBlockExists && (showPreBranchActions || showPreBranchDrop)}
-  <EdgeLabelRenderer>
-    <div
-      class="add-item-label nodrag nopan"
-      style="transform:translate(-50%, -50%) translate({preBranchLabelX}px,{preBranchLabelY}px);"
-    >
-      {#if showPreBranchDrop}
-        <DragZone path={sourcePathForDrop} variant="edge" />
-      {/if}
-      <div class="actions-stack">
-        <FlowItemActions {block} hideBranch />
-
-        {#if isPrimaryBranchEdge}
-          {#if $selectedAutomation?.blockRefs?.[data?.branchStepId]}
-            <div class="branch-controls">
-              <ActionButton
-                icon="plus-circle"
-                disabled={viewMode === ViewMode.LOGS}
-                on:click={handleAddBranch}
-              >
-                Add branch
-              </ActionButton>
-            </div>
-          {/if}
-        {/if}
-      </div>
-    </div>
-  </EdgeLabelRenderer>
+<!-- Branch edge -->
+{#if isBranchEdgeData(data)}
+  <BranchEdgeLabels
+    {data}
+    {labelX}
+    {labelY}
+    {preBranchLabelX}
+    {preBranchLabelY}
+    {showEdgeActions}
+    {showEdgeDrop}
+    {showPreBranchActions}
+    {showPreBranchDrop}
+    {collectBlockExists}
+    {sourcePathForDrop}
+    {block}
+    {handleBranch}
+    {handleAddBranch}
+    {viewMode}
+    {isPrimaryBranchEdge}
+  />
+  <!-- Standard and Loop edges -->
+{:else}
+  <StandardEdgeLabel
+    {labelX}
+    {labelY}
+    {showEdgeActions}
+    {showEdgeDrop}
+    {collectBlockExists}
+    {sourcePathForDrop}
+    {block}
+    {handleBranch}
+  />
 {/if}
-
-<style>
-  .add-item-label {
-    position: absolute;
-    color: white;
-    pointer-events: all;
-    cursor: default;
-  }
-  .actions-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    pointer-events: all;
-  }
-  .branch-controls :global(.spectrum-ActionButton) {
-    margin-top: 4px;
-    cursor: pointer;
-  }
-</style>

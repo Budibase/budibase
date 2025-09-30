@@ -18,7 +18,10 @@ export interface BlockRef {
   looped?: string
   pathTo: BlockPath[]
   terminating?: boolean
-  loopV2Child?: boolean
+  isLoopV2Child?: boolean
+  insertIntoLoopV2?: boolean
+  loopStepId?: string
+  loopChildInsertIndex?: number
 }
 
 export enum BlockDefinitionTypes {

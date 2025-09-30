@@ -1,6 +1,20 @@
 import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
-import { ViewMode } from "@/types/automations"
+import {
+  ViewMode,
+  type AutomationBlock,
+  type AutomationLogStep,
+  type BranchFlowContext,
+  type FlowBlockContext,
+  type FlowBlockPath,
+  type StepNodeData,
+  type BranchNodeData,
+  type LoopV2NodeData,
+  type AnchorNodeData,
+  type BaseEdgeData,
+  type BranchEdgeData,
+  type LoopEdgeData,
+} from "@/types/automations"
 import dagre from "@dagrejs/dagre"
 import {
   Position,
@@ -11,9 +25,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationLog,
-  AutomationStep,
   AutomationStepResult,
-  AutomationTrigger,
   AutomationTriggerResult,
   AutomationTriggerStepId,
   BlockDefinitions,
@@ -26,50 +38,7 @@ import {
 } from "@budibase/types"
 import { Modal } from "@budibase/bbui"
 
-type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
 type BranchChild = { id: string; [key: string]: unknown }
-type ReconstructedBlock = AutomationLogStep & {
-  name: string
-  icon: string
-}
-export type AutomationBlock =
-  | AutomationStep
-  | AutomationTrigger
-  | ReconstructedBlock
-
-type AutomationBlockContext = AutomationBlock & { branchNode?: false }
-type BranchPathEntry = Partial<BlockPath> & {
-  branchIdx: number
-  branchStepId: string
-  stepIdx?: number
-}
-export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
-export interface BranchFlowContext {
-  branchNode: true
-  pathTo: FlowBlockPath
-  branchIdx: number
-  branchStepId: string
-}
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
-
-type AutomationBlockRef = BlockRef & {
-  stepId?: string
-  name?: string
-  looped?: string
-  blockToLoop?: string
-  inputs?: Record<string, unknown>
-}
-export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
-
-const resolvePathTo = (
-  context: FlowBlockContext | undefined,
-  blockRefs: AutomationBlockRefMap
-): FlowBlockPath | undefined => {
-  if (!context) return undefined
-  return context.branchNode
-    ? context.pathTo
-    : (blockRefs?.[context.id]?.pathTo as FlowBlockPath)
-}
 
 // Block processing and retrieval functions
 export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
@@ -248,7 +217,7 @@ export interface GraphBuildDeps {
   }
   xSpacing: number
   ySpacing: number
-  blockRefs: AutomationBlockRefMap
+  blockRefs: Record<string, BlockRef>
   testDataModal?: Modal
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
@@ -267,20 +236,14 @@ const DEFAULT_STEP_HEIGHT = 100
 const DEFAULT_BRANCH_HEIGHT = 180
 
 const buildLoopEdgeData = (
-  loopStep: AutomationStep,
+  sourceChild: AutomationBlock,
+  loopStep: AutomationBlock,
   deps: GraphBuildDeps,
   insertIndex: number,
-  pathTo?: any[]
-) => {
-  const loopRef = deps.blockRefs?.[loopStep.id]
+  pathTo?: BlockPath[]
+): LoopEdgeData => {
   return {
-    block: {
-      id: loopStep.id,
-      loopV2Children: true,
-      loopStepId: loopStep.id,
-      loopChildInsertIndex: insertIndex,
-      pathTo: loopRef?.pathTo,
-    },
+    block: sourceChild,
     direction: deps.direction,
     pathTo,
     loopStepId: loopStep.id,
@@ -371,7 +334,7 @@ export const dagreLayoutAutomation = (
 }
 
 export const renderChain = (
-  chain: AutomationStep[],
+  chain: AutomationBlock[],
   parentNodeId: string,
   parentBlock: FlowBlockContext,
   baseX: number,
@@ -405,24 +368,21 @@ export const renderChain = (
       return { lastNodeId, lastNodeBlock, bottomY: bottom, branched: true }
     }
 
+    // Render Loop V2 as a subflow container with internal children
     if (isLoopV2) {
-      // Render Loop V2 as a subflow container with internal children
       const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
-      renderLoopV2Container(step, pos.x, pos.y, deps)
+      renderLoopV2Container(step as LoopV2Step, pos.x, pos.y, deps)
 
-      // External chain edge into the container
+      const loopEntryEdgeData: BaseEdgeData = {
+        block: lastNodeBlock,
+        direction: deps.direction,
+      }
       deps.newEdges.push({
         id: `edge-${lastNodeId}-${step.id}`,
         type: "add-item",
         source: lastNodeId,
         target: step.id,
-        data: {
-          block: lastNodeBlock,
-          direction: deps.direction,
-          pathTo:
-            (lastNodeBlock as any)?.pathTo ||
-            deps.blockRefs?.[(lastNodeBlock as any)?.id]?.pathTo,
-        },
+        data: loopEntryEdgeData,
       })
 
       lastNodeId = step.id
@@ -432,26 +392,27 @@ export const renderChain = (
     }
 
     const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
+    const nodeData: StepNodeData = {
+      testDataModal: deps.testDataModal,
+      block: step,
+      direction: deps.direction,
+    }
     deps.newNodes.push({
       id: step.id,
       type: "step-node",
-      data: {
-        testDataModal: deps.testDataModal,
-        block: step,
-        direction: deps.direction,
-      },
+      data: nodeData,
       position: pos,
     })
+    const edgeData: BaseEdgeData = {
+      block: lastNodeBlock,
+      direction: deps.direction,
+    }
     deps.newEdges.push({
       id: `edge-${lastNodeId}-${step.id}`,
       type: "add-item",
       source: lastNodeId,
       target: step.id,
-      data: {
-        block: lastNodeBlock,
-        direction: deps.direction,
-        pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
-      },
+      data: edgeData,
     })
 
     lastNodeId = step.id
@@ -473,7 +434,7 @@ export const renderBranches = (
   const baseId = branchStep.id
   const branches: Branch[] = ((branchStep as BranchStep)?.inputs?.branches ||
     []) as Branch[]
-  const children: Record<string, AutomationStep[]> =
+  const children: Record<string, AutomationBlock[]> =
     (branchStep as BranchStep)?.inputs?.children || {}
 
   let clusterBottomY = startY + deps.ySpacing // at least one row below
@@ -487,38 +448,39 @@ export const renderBranches = (
       y: startY,
     })
 
+    const branchNodeData: BranchNodeData = {
+      block: branchStep,
+      branch,
+      branchIdx: bIdx,
+      direction: deps.direction,
+    }
     deps.newNodes.push({
       id: branchNodeId,
       type: "branch-node",
-      data: {
-        block: branchStep,
-        branch,
-        branchIdx: bIdx,
-        direction: deps.direction,
-      },
+      data: branchNodeData,
       position: branchPos,
     })
 
+    const branchEdgeData: BranchEdgeData = {
+      block: sourceBlock,
+      isBranchEdge: true,
+      isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
+      branchStepId: baseId,
+      branchIdx: bIdx,
+      branchesCount: branches.length,
+      direction: deps.direction,
+    }
     deps.newEdges.push({
       id: `edge-${sourceNodeId}-${branchNodeId}`,
       type: "add-item",
       source: sourceNodeId,
       target: branchNodeId,
-      data: {
-        block: sourceBlock,
-        isBranchEdge: true,
-        isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
-        branchStepId: baseId,
-        branchIdx: bIdx,
-        branchesCount: branches.length,
-        direction: deps.direction,
-        pathTo: resolvePathTo(sourceBlock, deps.blockRefs),
-      },
+      data: branchEdgeData,
     })
 
     // Children of this branch
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
-    const childSteps: AutomationStep[] = children?.[branch.id] || []
+    const childSteps: AutomationBlock[] = children?.[branch.id] || []
     const branchPath: FlowBlockPath = [
       ...parentPath,
       {
@@ -563,22 +525,23 @@ export const renderBranches = (
         x: branchX,
         y: bottomY,
       })
+      const anchorNodeData: AnchorNodeData = { direction: deps.direction }
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { direction: deps.direction },
+        data: anchorNodeData,
         position: terminalPos,
       })
+      const anchorEdgeData: BaseEdgeData = {
+        block: lastNodeBlock,
+        direction: deps.direction,
+      }
       deps.newEdges.push({
         id: `edge-${lastNodeId}-${terminalId}`,
         type: "add-item",
         source: lastNodeId,
         target: terminalId,
-        data: {
-          block: lastNodeBlock,
-          direction: deps.direction,
-          pathTo: resolvePathTo(lastNodeBlock, deps.blockRefs),
-        },
+        data: anchorEdgeData,
       })
     }
 
@@ -595,7 +558,7 @@ export const renderLoopV2Container = (
   deps: GraphBuildDeps
 ) => {
   const baseId = loopStep.id
-  const children: AutomationStep[] = loopStep.inputs?.children || []
+  const children: AutomationBlock[] = loopStep.inputs?.children || []
   // Compute container dimensions based on children count
   const childHeight = 120
   const paddingTop = 90
@@ -612,15 +575,16 @@ export const renderLoopV2Container = (
     minContainerHeight
   )
 
+  const loopNodeData: LoopV2NodeData = {
+    block: loopStep,
+    direction: deps.direction,
+    containerHeight,
+    containerWidth,
+  }
   deps.newNodes.push({
     id: baseId,
     type: "loop-subflow-node",
-    data: {
-      block: loopStep,
-      direction: deps.direction,
-      containerHeight,
-      containerWidth,
-    },
+    data: loopNodeData,
     selectable: false,
     draggable: false,
     style: `width: ${containerWidth}px; height: ${containerHeight}px;`,
@@ -632,14 +596,15 @@ export const renderLoopV2Container = (
   const baseX = Math.max(0, Math.floor((containerWidth - stepWidth) / 2))
   let innerY = paddingTop
   children.forEach((child, cIdx) => {
+    const childNodeData: StepNodeData = {
+      block: child,
+      isTopLevel: false,
+      direction: deps.direction,
+    }
     deps.newNodes.push({
       id: child.id,
       type: "step-node",
-      data: {
-        block: child,
-        isTopLevel: false,
-        direction: deps.direction,
-      },
+      data: childNodeData,
       parentId: baseId,
       extent: "parent",
       position: { x: baseX, y: innerY },
@@ -653,8 +618,13 @@ export const renderLoopV2Container = (
         type: "add-item",
         source: prevChild.id,
         target: child.id,
-        zIndex: 1001,
-        data: buildLoopEdgeData(loopStep, deps, cIdx, prevRef?.pathTo),
+        data: buildLoopEdgeData(
+          prevChild,
+          loopStep,
+          deps,
+          cIdx,
+          prevRef?.pathTo
+        ),
       })
     }
 
@@ -665,13 +635,13 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
+    const exitAnchorData: AnchorNodeData = { direction: deps.direction }
     deps.newNodes.push({
       id: exitAnchorId,
       type: "anchor-node",
-      data: { direction: deps.direction },
+      data: exitAnchorData,
       parentId: baseId,
       extent: "parent",
-      zIndex: 1001,
       position: { x: baseX, y: innerY },
     })
 
@@ -680,8 +650,13 @@ export const renderLoopV2Container = (
       type: "add-item",
       source: lastChild.id,
       target: exitAnchorId,
-      zIndex: 1001,
-      data: buildLoopEdgeData(loopStep, deps, children.length, lastRef?.pathTo),
+      data: buildLoopEdgeData(
+        lastChild,
+        loopStep,
+        deps,
+        children.length,
+        lastRef?.pathTo
+      ),
     })
   }
 
@@ -704,15 +679,16 @@ export const buildTopLevelGraph = (
       if (isLoopV2) {
         renderLoopV2Container(block, pos.x, pos.y, deps)
       } else {
+        const stepNodeData: StepNodeData = {
+          testDataModal: deps.testDataModal,
+          block,
+          isTopLevel: true,
+          direction: deps.direction,
+        }
         deps.newNodes.push({
           id: baseId,
           type: "step-node",
-          data: {
-            testDataModal: deps.testDataModal,
-            block,
-            isTopLevel: true,
-            direction: deps.direction,
-          },
+          data: stepNodeData,
           position: pos,
         })
       }
@@ -720,16 +696,16 @@ export const buildTopLevelGraph = (
 
     if (!isTrigger && !isBranchStep) {
       const prevId = blocks[idx - 1].id
+      const topLevelEdgeData: BaseEdgeData = {
+        block: blocks[idx - 1],
+        direction: deps.direction,
+      }
       deps.newEdges.push({
         id: `edge-${prevId}-${baseId}`,
         type: "add-item",
         source: prevId,
         target: baseId,
-        data: {
-          block: blocks[idx - 1],
-          direction: deps.direction,
-          pathTo: deps.blockRefs?.[prevId]?.pathTo,
-        },
+        data: topLevelEdgeData,
       })
     }
 
@@ -739,23 +715,24 @@ export const buildTopLevelGraph = (
         x: pos.x,
         y: pos.y + deps.ySpacing,
       })
+      const terminalAnchorData: AnchorNodeData = { direction: deps.direction }
       deps.newNodes.push({
         id: terminalId,
         type: "anchor-node",
-        data: { direction: deps.direction },
+        data: terminalAnchorData,
         position: terminalPos,
       })
 
+      const terminalEdgeData: BaseEdgeData = {
+        block,
+        direction: deps.direction,
+      }
       deps.newEdges.push({
         id: `edge-${baseId}-${terminalId}`,
         type: "add-item",
         source: baseId,
         target: terminalId,
-        data: {
-          block,
-          direction: deps.direction,
-          pathTo: deps.blockRefs?.[baseId]?.pathTo,
-        },
+        data: terminalEdgeData,
       })
     }
 

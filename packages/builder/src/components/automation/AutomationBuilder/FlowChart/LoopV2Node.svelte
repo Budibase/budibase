@@ -3,10 +3,11 @@
   import { ActionButton, Icon } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import type { LayoutDirection } from "@budibase/types"
+  import type { LoopV2NodeData } from "@/types/automations"
 
-  export let data: any
-  $: block = data?.block
-  $: direction = (data?.direction || "TB") as LayoutDirection
+  export let data: LoopV2NodeData
+  $: block = data.block
+  $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
   $: _selected = $automationStore.selectedNodeId === block?.id
   $: loopChildCount = Array.isArray(block?.inputs?.children)
@@ -18,7 +19,7 @@
     automationStore.actions.openActionPanel({
       id: block.id,
       pathTo: $selectedAutomation?.blockRefs?.[block.id]?.pathTo,
-      loopV2Children: true,
+      insertIntoLoopV2: true,
       loopStepId: block.id,
       loopChildInsertIndex: loopChildCount,
     })

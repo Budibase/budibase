@@ -145,7 +145,7 @@
       >
         Delete
       </ActionButton>
-      {#if $memoBlock && !isBranchStep($memoBlock) && !blockRef?.loopV2Child}
+      {#if $memoBlock && !isBranchStep($memoBlock) && !blockRef?.isLoopV2Child}
         <ActionButton
           quiet
           noPadding

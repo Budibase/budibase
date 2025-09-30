@@ -22,10 +22,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import NewPill from "@/components/common/NewPill.svelte"
-  import type {
-    BranchFlowContext,
-    FlowBlockPath,
-  } from "./AutomationStepHelpers"
+  import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
 
   export let block
   export let onClose = () => {}
@@ -56,7 +53,7 @@
   ]
 
   // If adding inside a Loop V2 subflow, disallow Branch, Collect and any Loop steps
-  $: insideLoopV2 = Boolean(block?.loopV2Children || blockRef?.loopV2Child)
+  $: insideLoopV2 = Boolean(block?.insertIntoLoopV2 || blockRef?.isLoopV2Child)
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
     typeof block?.loopChildInsertIndex === "number"

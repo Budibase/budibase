@@ -57,7 +57,6 @@ import {
   BlockDefinitions,
   BlockDefinitionTypes,
   BlockPath,
-  BlockRef,
   Branch,
   BranchStep,
   EmptyFilterOption,
@@ -86,6 +85,7 @@ import {
   UILogicalOperator,
   WebhookTriggerOutputs,
   AutomationLog,
+  BlockRef,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -471,7 +471,7 @@ const automationActions = (store: AutomationStore) => ({
     if (lastHop && lastHop.loopStepId) {
       blocks[block.id] = {
         ...blocks[block.id],
-        loopV2Child: true,
+        isLoopV2Child: true,
       }
     }
   },
@@ -718,7 +718,7 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @param {Object} automation
    */
-  traverse: (blockRefs: Record<string, any>, automation: Automation) => {
+  traverse: (blockRefs: Record<string, BlockRef>, automation: Automation) => {
     let blocks: (AutomationStep | AutomationTrigger)[] = []
     if (!automation || !blockRefs) {
       return
