@@ -202,7 +202,7 @@ async function prepareWorkspaceAppDuplication(
 
   const sourceDb = context.getWorkspaceDB()
 
-  const docsToCopy = await sourceDb.getMultiple([
+  const docsToCopy: AnyDocument[] = await sourceDb.getMultiple([
     workspaceId,
     ...requiredResources.map(r => r.id),
   ])
