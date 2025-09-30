@@ -13,7 +13,7 @@ import { auth } from "./auth"
 export interface AdminState
   extends Omit<GetEnvironmentResponse, "serveDevClientFromStorage"> {
   loaded: boolean
-  checklist?: ConfigChecklistResponse
+  checklist: ConfigChecklistResponse
   status?: SystemStatusResponse
   usingLocalComponentLibs: boolean
 }
@@ -115,7 +115,7 @@ export class AdminStore extends BudiStore<AdminState> {
 
   markChecklistItemChecked(key: ChecklistKey) {
     this.update(store => {
-      const checklist = store.checklist ?? createDefaultChecklist()
+      const checklist = store.checklist
       store.checklist = {
         ...checklist,
         [key]: {
