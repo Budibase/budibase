@@ -159,9 +159,9 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
-  ctx.body = savedTable
 
   savedTable = await processTable(savedTable)
+  ctx.body = savedTable
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

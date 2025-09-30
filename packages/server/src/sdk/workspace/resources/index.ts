@@ -39,7 +39,7 @@ export async function searchForUsages({
     }))
   )
 
-  const datasources = await sdk.datasources.fetch()
+  const datasources = await sdk.datasources.getExternalDatasources()
   baseSearchTargets.push(
     ...datasources.map(datasource => ({
       id: datasource._id!,

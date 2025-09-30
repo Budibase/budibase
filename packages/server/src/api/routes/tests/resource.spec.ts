@@ -7,6 +7,7 @@ import {
   InsertWorkspaceAppRequest,
   Query,
   ResourceType,
+  RowActionResponse,
   Screen,
   Table,
   WorkspaceApp,
@@ -14,10 +15,12 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { generateRowActionsID } from "../../../db/utils"
 import {
   basicQuery,
   basicScreen,
   basicTable,
+  createQueryScreen,
 } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -37,6 +40,33 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    it("should detect datasource usage via query screens", async () => {
+      const datasource = await config.createDatasource()
+      const query = await config.api.query.save(basicQuery(datasource._id))
+      const screen = createQueryScreen(datasource._id, query)
+      const { workspaceApp } = await config.api.workspaceApp.create({
+        name: "Datasource usage app",
+        url: "/datasource-usage-app",
+      })
+      screen.workspaceAppId = workspaceApp._id
+
+      await config.api.screen.save(screen)
+
+      const result = await config.api.resource.searchForUsage({
+        workspaceAppIds: [workspaceApp._id!],
+      })
+
+      expect(result.body.resources).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: datasource._id,
+            name: datasource.name,
+            type: ResourceType.DATASOURCE,
+          }),
+        ])
+      )
+    })
+
     it("should check screens for datasource usage", async () => {
       const screen = basicScreen()
       screen.props._children?.push({
@@ -85,6 +115,31 @@ describe("/api/resources/usage", () => {
       )
     })
 
+    it("should include row actions and their automations when referenced by an automation", async () => {
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Row action usage",
+      })
+
+      const result = await config.api.resource.searchForUsage({
+        automationIds: [rowAction.automationId],
+      })
+
+      expect(result.body.resources).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: generateRowActionsID(table._id!),
+            name: rowAction.name,
+            type: ResourceType.ROW_ACTION,
+          }),
+          expect.objectContaining({
+            id: rowAction.automationId,
+            name: rowAction.name,
+            type: ResourceType.AUTOMATION,
+          }),
+        ])
+      )
+    })
+
     it("should handle empty inputs", async () => {
       await config.api.resource.searchForUsage(
         {
@@ -108,7 +163,15 @@ describe("/api/resources/usage", () => {
     let appWithTableUsages: WorkspaceAppInfo
     let appSharingTableDependency: WorkspaceAppInfo
     let appWithRepeatedDependencyUsage: WorkspaceAppInfo
+    let appWithDatasourceDependency: WorkspaceAppInfo
+    let appWithRowActionDependency: WorkspaceAppInfo
+    let datasourceWithDependency: Datasource
+    let queryForDatasource: Query
     let internalTables: Table[] = []
+    let tableWithRowAction: Table
+    let rowActionAutomation: Automation
+    let rowActionDocId: string
+    let rowActionExpectations: RowActionResponse[] = []
 
     async function createInternalTable(data: Partial<Table> = {}) {
       const table = await config.api.table.save(basicTable(undefined, data))
@@ -149,8 +212,10 @@ describe("/api/resources/usage", () => {
       await config.api.query.save(basicQuery(datasource1._id))
       await config.api.query.save(basicQuery(datasource1._id))
 
-      const datasource2 = await config.createDatasource()
-      await config.api.query.save(basicQuery(datasource2._id))
+      datasourceWithDependency = await config.createDatasource()
+      queryForDatasource = await config.api.query.save(
+        basicQuery(datasourceWithDependency._id)
+      )
 
       basicApp = await createApp(
         {
@@ -199,6 +264,18 @@ describe("/api/resources/usage", () => {
         [secondScreenWithDataProvider]
       )
 
+      const screenWithDatasourceDependency = createQueryScreen(
+        datasourceWithDependency._id!,
+        queryForDatasource
+      )
+      appWithDatasourceDependency = await createApp(
+        {
+          name: "App with datasource",
+          url: "/app-with-datasource",
+        },
+        [screenWithDatasourceDependency]
+      )
+
       const screenWithRepeatedDependency = basicScreen()
       screenWithRepeatedDependency.props._children?.push(
         {
@@ -242,6 +319,60 @@ describe("/api/resources/usage", () => {
         },
         [screenWithRepeatedDependency, secondScreenWithRepeatedDependency]
       )
+
+      tableWithRowAction = await config.api.table.save(
+        basicTable(undefined, { name: "Row action table" })
+      )
+
+      const rowAction = await config.api.rowAction.save(
+        tableWithRowAction._id!,
+        {
+          name: "Row action button",
+        }
+      )
+      rowActionDocId = generateRowActionsID(tableWithRowAction._id!)
+      rowActionAutomation = await config.api.automation.get(
+        rowAction.automationId
+      )
+      const rowActionList = await config.api.rowAction.find(
+        tableWithRowAction._id!
+      )
+      rowActionExpectations = Object.values(rowActionList.actions)
+
+      const screenWithRowAction = basicScreen()
+      screenWithRowAction.props._children?.push({
+        _id: "row-action-button",
+        _instanceName: "Row Action Button",
+        _component: "@budibase/standard-components/button",
+        _styles: {
+          normal: {},
+          hover: {},
+          active: {},
+          selected: {},
+        },
+        text: rowAction.name,
+        type: "primary",
+        quiet: true,
+        onClick: [
+          {
+            id: "row-action-handler",
+            "##eventHandlerType": "Row Action",
+            parameters: {
+              rowActionId: rowAction.id,
+              resourceId: tableWithRowAction._id!,
+              rowId: "{{ [row-action-source].[_id] }}",
+            },
+          },
+        ],
+      })
+
+      appWithRowActionDependency = await createApp(
+        {
+          name: "App with row action",
+          url: "/app-row-action",
+        },
+        [screenWithRowAction]
+      )
     })
 
     describe("duplicateResourceToWorkspace", () => {
@@ -254,6 +385,7 @@ describe("/api/resources/usage", () => {
           datasource?: Datasource[]
           queries?: Query[]
           automations?: Automation[]
+          rowActions?: { tableId: string; actions: RowActionResponse[] }[]
         }
       ) {
         const sortById = (a: AnyDocument, b: AnyDocument) =>
@@ -327,6 +459,19 @@ describe("/api/resources/usage", () => {
               updatedAt: new Date().toISOString(),
             }))
           )
+
+          for (const rowActionExpectation of expected.rowActions || []) {
+            const rowActionsResponse = await config.api.rowAction.find(
+              rowActionExpectation.tableId
+            )
+            const actual = Object.values(rowActionsResponse.actions).sort(
+              (a, b) => a.id.localeCompare(b.id)
+            )
+            const expectedRowActions = [...rowActionExpectation.actions].sort(
+              (a, b) => a.id.localeCompare(b.id)
+            )
+            expect(actual).toEqual(expectedRowActions)
+          }
         })
       }
 
@@ -490,6 +635,85 @@ describe("/api/resources/usage", () => {
         )
       })
 
+      it("duplicates row action dependencies and associated automations", async () => {
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        tk.freeze(new Date())
+        const duplication =
+          await config.api.resource.duplicateResourceToWorkspace({
+            resourceId: appWithRowActionDependency.app._id!,
+            toWorkspace: newWorkspace.appId,
+          })
+
+        expect(duplication.body).toEqual({
+          resources: {
+            workspace_app: [appWithRowActionDependency.app._id],
+            table: [tableWithRowAction._id!],
+            row_action: [rowActionDocId],
+            automation: [rowActionAutomation._id!],
+          },
+        })
+
+        await validateWorkspace(
+          newWorkspace.appId,
+          appWithRowActionDependency.app,
+          {
+            screens: appWithRowActionDependency.screens.map(s => ({
+              ...s,
+              pluginAdded: undefined,
+              _rev: expect.stringMatching(/^1-\w+/),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })),
+            tables: [tableWithRowAction],
+            automations: [rowActionAutomation],
+            rowActions: [
+              {
+                tableId: tableWithRowAction._id!,
+                actions: rowActionExpectations,
+              },
+            ],
+          }
+        )
+      })
+
+      it("copies datasource dependencies referenced by the app", async () => {
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        tk.freeze(new Date())
+        const duplication =
+          await config.api.resource.duplicateResourceToWorkspace({
+            resourceId: appWithDatasourceDependency.app._id!,
+            toWorkspace: newWorkspace.appId,
+          })
+
+        expect(duplication.body).toEqual({
+          resources: {
+            workspace_app: [appWithDatasourceDependency.app._id],
+            datasource: [datasourceWithDependency._id],
+          },
+        })
+
+        await validateWorkspace(
+          newWorkspace.appId,
+          appWithDatasourceDependency.app,
+          {
+            screens: appWithDatasourceDependency.screens.map(s => ({
+              ...s,
+              pluginAdded: undefined,
+              _rev: expect.stringMatching(/^1-\w+/),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })),
+            datasource: [datasourceWithDependency],
+          }
+        )
+      })
+
       it("rejects non workspace app document types", async () => {
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
@@ -579,6 +803,31 @@ describe("/api/resources/usage", () => {
               },
             ],
           },
+        })
+      })
+
+      it("previews datasource dependencies that would be duplicated", async () => {
+        const newWorkspace = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        const preview =
+          await config.api.resource.previewDuplicateResourceToWorkspace({
+            resourceId: appWithDatasourceDependency.app._id!,
+            toWorkspace: newWorkspace.appId,
+          })
+
+        expect(preview.body).toEqual({
+          toCopy: {
+            datasource: [
+              {
+                id: datasourceWithDependency._id,
+                name: datasourceWithDependency.name,
+                type: ResourceType.DATASOURCE,
+              },
+            ],
+          },
+          existing: {},
         })
       })
     })
