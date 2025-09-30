@@ -672,7 +672,11 @@ async function handleUserWorkspacePermission(
   const appCreator = Object.entries(existingUser.roles)
     .filter(([_appId, role]) => role === "CREATOR")
     .map(([appId]) => appId)
-  if (!appCreator.length && existingUser.builder) {
+  if (
+    !appCreator.length &&
+    existingUser.builder &&
+    !existingUser.builder.creator
+  ) {
     delete existingUser.builder.creator
     delete existingUser.builder.apps
   } else if (appCreator.length) {
