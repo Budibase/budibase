@@ -1,7 +1,7 @@
-import { join } from "path"
 import { writeFileSync } from "fs"
-import { examples, schemas } from "./resources"
+import { join } from "path"
 import * as parameters from "./parameters"
+import { examples, schemas } from "./resources"
 import * as security from "./security"
 
 import swaggerJsdoc from "swagger-jsdoc"
@@ -10,11 +10,11 @@ const VARIABLES = {}
 
 const opts: swaggerJsdoc.Options = {
   definition: {
-    openapi: "3.0.0",
+    openapi: "3.1.0",
     info: {
       title: "Budibase API",
       description: "The public API for Budibase apps and its services.",
-      version: "1.0.0",
+      version: "3.3.0",
     },
     servers: [
       {
