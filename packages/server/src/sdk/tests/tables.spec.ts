@@ -1,7 +1,7 @@
-import TestConfig from "../../tests/utilities/TestConfiguration"
-import { basicTable } from "../../tests/utilities/structures"
 import { Table } from "@budibase/types"
 import sdk from "../"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../tests/utilities/structures"
 
 describe("tables", () => {
   const config = new TestConfig()
@@ -14,7 +14,7 @@ describe("tables", () => {
 
   describe("getTables", () => {
     it("should be able to retrieve tables", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const tables = await sdk.tables.getTables([table._id!])
         expect(tables.length).toBe(1)
         expect(tables[0]._id).toBe(table._id)
@@ -23,14 +23,14 @@ describe("tables", () => {
     })
 
     it("shouldn't fail when retrieving tables that don't exist", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const tables = await sdk.tables.getTables(["unknown"])
         expect(tables.length).toBe(0)
       })
     })
 
     it("should de-duplicate the IDs", async () => {
-      await config.doInContext(config.appId, async () => {
+      await config.doInContext(config.devWorkspaceId, async () => {
         const tables = await sdk.tables.getTables([table._id!, table._id!])
         expect(tables.length).toBe(1)
       })

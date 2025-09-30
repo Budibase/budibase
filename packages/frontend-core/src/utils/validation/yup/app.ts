@@ -3,11 +3,18 @@ import { mixed, string } from "yup"
 import { ValidationStore } from "."
 import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
 
+interface ValidationContext {
+  workspaces: Workspace[]
+  currentWorkspace?: Workspace
+}
+
+const defaultContext = {
+  workspaces: [],
+}
+
 export const name = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: Workspace[]; currentApp?: Workspace } = {
-    apps: [],
-  }
+  { workspaces, currentWorkspace }: ValidationContext = defaultContext
 ) => {
   validation.addValidator(
     "name",
@@ -26,12 +33,15 @@ export const name = (
             // exit early, above validator will fail
             return true
           }
-          return !apps
-            .filter(app => {
-              return app.appId !== currentApp?.appId
+          return !workspaces
+            .filter(workspace => {
+              return workspace.appId !== currentWorkspace?.appId
             })
-            .map(app => app.name)
-            .some(appName => appName.toLowerCase() === value.toLowerCase())
+            .map(workspace => workspace.name)
+            .some(
+              workspaceName =>
+                workspaceName.toLowerCase() === value.toLowerCase()
+            )
         }
       )
   )
@@ -39,9 +49,7 @@ export const name = (
 
 export const url = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: Workspace[]; currentApp?: Workspace } = {
-    apps: [],
-  }
+  { workspaces, currentWorkspace }: ValidationContext = defaultContext
 ) => {
   validation.addValidator(
     "url",
@@ -57,17 +65,19 @@ export const url = (
           if (!value) {
             return true
           }
-          if (currentApp) {
-            // filter out the current app if present
-            apps = apps.filter(app => app.appId !== currentApp.appId)
+          if (currentWorkspace) {
+            // filter out the current workspace if present
+            workspaces = workspaces.filter(
+              workspace => workspace.appId !== currentWorkspace.appId
+            )
           }
-          return !apps
-            .map(app => app.url)
-            .some(appUrl => {
+          return !workspaces
+            .map(workspace => workspace.url)
+            .some(workspaceUrl => {
               const url =
-                appUrl?.[0] === "/"
-                  ? appUrl.substring(1, appUrl.length)
-                  : appUrl
+                workspaceUrl?.[0] === "/"
+                  ? workspaceUrl.substring(1, workspaceUrl.length)
+                  : workspaceUrl
               return url?.toLowerCase() === value.toLowerCase()
             })
         }

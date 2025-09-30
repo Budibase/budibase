@@ -136,6 +136,12 @@ export const orgRoutes = (
       comp: Pages.get("auth"),
     },
     {
+      section: "Recaptcha",
+      path: "recaptcha",
+      icon: "shield-check",
+      comp: Pages.get("recaptcha"),
+    },
+    {
       section: "Audit logs",
       access: () => isAdmin,
       path: "audit",

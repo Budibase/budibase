@@ -44,7 +44,7 @@ import {
   NODE_MODULES_PATH,
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
-import { isAppFullyMigrated } from "../../../workspaceMigrations"
+import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 
 export const uploadFile = async function (
@@ -207,7 +207,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
-    isAppFullyMigrated(appId),
+    isWorkspaceFullyMigrated(appId),
     configs.getSettingsConfigDoc(),
     configs.getRecaptchaConfig(),
   ])
@@ -223,7 +223,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
-    const appInfo = await sdk.applications.metadata.get()
+    const appInfo = await sdk.workspaces.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
@@ -393,10 +393,11 @@ export const serveClientLibrary = async function (
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
-    ctx.body = await objectStore.getReadStream(
+    const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       await objectStore.clientLibraryPath(appId!)
     )
+    ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
   } else {
     if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
@@ -414,10 +415,15 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
 
   const serveLocally = shouldServeLocally()
   if (!serveLocally) {
-    ctx.body = await objectStore.getReadStream(
+    const { stream, contentType } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.client3rdPartyLibrary(appId!, file)
     )
+
+    if (contentType) {
+      ctx.set("Content-Type", contentType)
+    }
+    ctx.body = stream
   } else {
     return serveLocalFile(ctx, file)
   }

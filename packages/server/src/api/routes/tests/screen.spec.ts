@@ -7,7 +7,7 @@ import {
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
+import { ONBOARDING_WELCOME_SCREEN_NAME } from "../../../constants/screens"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -35,7 +35,7 @@ describe("/screens", () => {
   beforeEach(async () => {
     await config.newTenant()
     // Replace the regular app with an onboarding app to get sample data
-    await config.createAppWithOnboarding("test-app-with-sample")
+    await config.createWorkspaceWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -44,14 +44,11 @@ describe("/screens", () => {
     return screens.splice(index, 1)[0]
   }
 
-  describe("fetch", () => {
-    it("should create the sample data screen", async () => {
-      const screens = await config.api.screen.list()
-      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
-        true
-      )
-    })
+  function withoutOnboarding(screens: Screen[]) {
+    return screens.filter(s => s.name !== ONBOARDING_WELCOME_SCREEN_NAME)
+  }
 
+  describe("fetch", () => {
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
       expect(screens.length).toEqual(2)
@@ -110,13 +107,9 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.withProdApp(() =>
-          config.api.workspace.getDefinition(config.getProdAppId())
+          config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
-
-        // Filter out sample screen
-        const screens = res.screens.filter(
-          s => s.name !== SAMPLE_DATA_SCREEN_NAME
-        )
+        const screens = withoutOnboarding(res.screens)
 
         expect(screens.length).toEqual(screenIds.length)
         expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -146,13 +139,9 @@ describe("/screens", () => {
         },
         async () => {
           const res = await config.api.workspace.getDefinition(
-            config.getAppId()
+            config.getDevWorkspaceId()
           )
-
-          // Filter out sample screen
-          const screens = res.screens.filter(
-            s => s.name !== SAMPLE_DATA_SCREEN_NAME
-          )
+          const screens = withoutOnboarding(res.screens)
 
           const screenIds = [screen._id!, screen1._id!]
           expect(screens.length).toEqual(screenIds.length)

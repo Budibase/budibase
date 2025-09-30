@@ -346,7 +346,6 @@ export async function save(
     if (existingConfig?.config && !brandingEnabled) {
       const {
         emailBrandingEnabled,
-        testimonialsEnabled,
         platformTitle,
         metaDescription,
         loginHeading,
@@ -358,7 +357,6 @@ export async function save(
       body.config = {
         ...body.config,
         emailBrandingEnabled,
-        testimonialsEnabled,
         platformTitle,
         metaDescription,
         loginHeading,

@@ -5,7 +5,7 @@ import {
   SQLiteDefinition,
   SQLiteType,
 } from "@budibase/types"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import {
   generateJunctionTableID,
@@ -17,7 +17,7 @@ import { basicTable } from "../../../tests/utilities/structures"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20240604153647_initial_sqs",
     func: migration,
@@ -67,23 +67,26 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 }
 
 describe.each([
-  ["dev", () => config.getAppId()],
-  ["prod", () => config.getProdAppId()],
-])("SQS migration (%s)", (_, getAppId) => {
+  ["dev", () => config.getDevWorkspaceId()],
+  ["prod", () => config.getProdWorkspaceId()],
+])("SQS migration (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
     const table = await config.api.table.save(basicTable())
     tableId = table._id!
-    const db = dbCore.getDB(config.getAppId())
+    const db = dbCore.getDB(config.getDevWorkspaceId())
     // old link document
     await db.put(oldLinkDocument())
   })
 
   beforeEach(async () => {
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+    for (const workspaceId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
       await config.doInTenant(async () => {
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: "",
         })
       })
@@ -91,14 +94,14 @@ describe.each([
   })
 
   it("test migration runs as expected against an older DB", async () => {
-    const db = dbCore.getDB(config.getAppId())
+    const db = dbCore.getDB(config.getDevWorkspaceId())
 
     // remove sqlite design doc to simulate it comes from an older installation
     const doc = await db.get(SQLITE_DESIGN_DOC_ID)
     await db.remove({ _id: doc._id, _rev: doc._rev })
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
     const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
     expect(designDoc.sql.tables).toBeDefined()

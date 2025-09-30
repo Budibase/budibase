@@ -7,28 +7,64 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
-  import { onMount, onDestroy } from "svelte"
+  import { onMount, onDestroy, setContext } from "svelte"
 
   let searchValue
   let maxWidth = window.innerWidth / 3
+  let panelWidth = 260
+
+  // Load persisted panel width from localStorage
+  const loadPanelWidth = () => {
+    const saved = localStorage.getItem("datasource-panel-width")
+    if (saved) {
+      const width = parseInt(saved, 10)
+      if (width && width > 100 && width < window.innerWidth) {
+        panelWidth = width
+      }
+    }
+  }
 
   const updateMaxWidth = () => {
     maxWidth = window.innerWidth / 3
   }
 
+  let gridDispatch = null
+
+  // Function to be called by child components to register grid dispatch
+  const registerGridDispatch = dispatch => {
+    gridDispatch = dispatch
+  }
+
+  // Make registerGridDispatch available to child components
+  setContext("data-layout", { registerGridDispatch })
+
   const [resizable, resizableHandle] = getHorizontalResizeActions(
-    260,
+    panelWidth,
     width => {
       if (width > maxWidth) {
         const element = document.querySelector(".panel-container")
         if (element) {
           element.style.width = `${maxWidth}px`
+          width = maxWidth
         }
+      }
+
+      // Save the width to localStorage
+      if (width) {
+        localStorage.setItem("datasource-panel-width", width.toString())
+        panelWidth = width
+      }
+    },
+    () => {
+      // Callback for when resize starts - close any open popovers
+      if (gridDispatch) {
+        gridDispatch("close-edit-column", {})
       }
     }
   )
 
   onMount(() => {
+    loadPanelWidth()
     window.addEventListener("resize", updateMaxWidth)
   })
 
@@ -51,7 +87,7 @@
   <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
-      <div class="panel-container" use:resizable>
+      <div class="panel-container" style="width: {panelWidth}px;" use:resizable>
         <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
           <span class="panel-title-content" slot="panel-title-content">
             <NavHeader
@@ -98,10 +134,11 @@
   }
   .panel-container {
     display: flex;
-    min-width: 260px;
+    min-width: 262px;
     width: 260px;
     max-width: 33.33vw;
     height: 100%;
+    overflow: visible;
   }
   .content {
     padding: 28px 40px 40px 40px;
@@ -112,7 +149,7 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
-    z-index: 1;
+    z-index: 2;
     position: relative;
   }
 
@@ -127,7 +164,8 @@
     background: var(--spectrum-global-color-gray-200);
     transition: background 130ms ease-out;
     min-width: 2px;
-    z-index: 2;
+    z-index: 1;
+    flex-shrink: 0;
   }
   .divider:hover {
     background: var(--spectrum-global-color-gray-300);
