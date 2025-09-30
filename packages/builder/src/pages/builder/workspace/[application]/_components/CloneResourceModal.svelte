@@ -30,12 +30,14 @@
     }
   }
 
+  let errorMessage: string | undefined
   let resourcesToBeCopied:
     | Partial<Record<ResourceType, UsedResource[]>>
     | undefined
 
   $: {
     resourcesToBeCopied = undefined
+    errorMessage = undefined
     if (toWorkspaceId) {
       API.resource
         .previewDuplicateResourceToWorkspace(resource.id, {
@@ -45,16 +47,25 @@
           resourcesToBeCopied = res.body.toCopy
         })
         .catch(err => {
+          if (err.status === 400) {
+            errorMessage = err.message
+            resourcesToBeCopied = {}
+            return
+          }
           notifications.error(err.message)
         })
     }
   }
 
+  $: resourcesToBeCopiedCount = Object.values(
+    resourcesToBeCopied || {}
+  ).flatMap(r => r).length
+
   $: workspaces = $appsStore.apps
     .filter(a => a.devId !== sdk.applications.getDevAppID($appStore.appId))
     .sort((a, b) => a.name.localeCompare(b.name))
 
-  $: disabled = !toWorkspaceId || !resourcesToBeCopied
+  $: disabled = !toWorkspaceId || !resourcesToBeCopied || !!errorMessage
 
   function getFriendlyName(type: string): string {
     const resourceTypeFriendlyName: Record<ResourceType, string> = {
@@ -68,10 +79,21 @@
 
     return resourceTypeFriendlyName[type as ResourceType]
   }
+
+  let confirmText: string | undefined
+  $: confirmText = resourcesToBeCopiedCount
+    ? `Copy ${resourcesToBeCopiedCount} resources`
+    : "Copy"
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent title={`Copy ${resource.type}`} {onConfirm} size="M" {disabled}>
+  <ModalContent
+    title={`Copy ${resource.type}`}
+    {onConfirm}
+    size="M"
+    {disabled}
+    {confirmText}
+  >
     {#if !workspaces.length}
       You don't have access to any other workspace
     {:else}
@@ -84,7 +106,9 @@
         getOptionIcon={() => undefined}
       ></Select>
 
-      {#if resourcesToBeCopied && Object.keys(resourcesToBeCopied).length}
+      {#if errorMessage}
+        <div class="bbui-text-danger">{errorMessage}</div>
+      {:else if resourcesToBeCopied && resourcesToBeCopiedCount}
         The following resources will be copied along the {resource.type}.
         {#each Object.entries(resourcesToBeCopied) as [type, resourcesToCopy]}
           <div>
@@ -104,4 +128,7 @@
 </Modal>
 
 <style>
+  .bbui-text-danger {
+    color: var(--bb-coral);
+  }
 </style>
