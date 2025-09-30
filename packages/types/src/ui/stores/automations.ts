@@ -18,6 +18,7 @@ export interface BlockRef {
   looped?: string
   pathTo: BlockPath[]
   terminating?: boolean
+  loopV2Child?: boolean
 }
 
 export enum BlockDefinitionTypes {

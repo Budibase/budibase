@@ -100,8 +100,6 @@
     isPrimaryBranchEdge &&
     $view?.dragging
 
-  $: isLoopEdge = !!(data?.loopStepId || data?.loopChildInsertIndex)
-
   // For TB we keep it vertically centered under the source;
   // for LR we center horizontally and align to the source Y.
   $: preBranchLabelX =

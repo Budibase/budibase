@@ -132,21 +132,19 @@
           {loopBlock ? `Stop Looping` : `Loop`}
         </ActionButton>
       {/if}
-      {#if !blockRef?.loopV2Child}
-        <ActionButton
-          quiet
-          noPadding
-          icon="trash"
-          on:click={async () => {
-            if (!blockRef) {
-              return
-            }
-            await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
-          }}
-        >
-          Delete
-        </ActionButton>
-      {/if}
+      <ActionButton
+        quiet
+        noPadding
+        icon="trash"
+        on:click={async () => {
+          if (!blockRef) {
+            return
+          }
+          await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+        }}
+      >
+        Delete
+      </ActionButton>
       {#if $memoBlock && !isBranchStep($memoBlock) && !blockRef?.loopV2Child}
         <ActionButton
           quiet

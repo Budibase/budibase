@@ -291,19 +291,29 @@ const automationActions = (store: AutomationStore) => ({
     const newRefs: Record<string, any> = {}
     store.actions.traverse(newRefs, newAutomation)
 
-    let finalPath
+    let finalPath: BlockPath[] = []
+    let offsetStepIdx = true
     // If dropping in a branch-step dropzone you need to find
     // the updated parent step route then add the branch details again
     if (pathEnd?.branchStepId) {
       const branchStepRef = newRefs[pathEnd.branchStepId]
-      finalPath = branchStepRef.pathTo
-      finalPath.push(pathEnd)
+      finalPath = cloneDeep(branchStepRef.pathTo)
+      finalPath.push(cloneDeep(pathEnd))
+      offsetStepIdx = false
     } else {
       // Place the target 1 after the drop
       if (pathEnd?.id) {
-        finalPath = newRefs[pathEnd.id].pathTo
+        const targetRef = newRefs[pathEnd.id]
+        finalPath = cloneDeep(targetRef.pathTo)
+      } else if (destPath?.length) {
+        finalPath = cloneDeep(destPath)
       }
-      finalPath.at(-1).stepIdx += 1
+    }
+
+    if (offsetStepIdx) {
+      const lastHop = finalPath.at(-1)
+      if (!lastHop) return
+      lastHop.stepIdx += 1
     }
 
     // Uses the updated tree refs to resolve the new position
@@ -342,7 +352,7 @@ const automationActions = (store: AutomationStore) => ({
     let cache: any
     pathTo.forEach((path, pathIdx, array) => {
       const final = pathIdx === array.length - 1
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
 
       const deleteCore = (steps: AutomationStep[], idx: number) => {
         const targetBlock = steps[idx]
@@ -403,6 +413,19 @@ const automationActions = (store: AutomationStore) => ({
         } else {
           cache = currentBlock
         }
+        return
+      }
+
+      if (loopStepId) {
+        const children = (cache.inputs.children || []) as AutomationStep[]
+        const currentBlock = children[stepIdx]
+
+        if (final) {
+          cache = deleteCore(children, stepIdx)
+        } else {
+          cache = currentBlock
+        }
+        return
       }
     })
 
