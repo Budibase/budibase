@@ -1,17 +1,17 @@
+import { Row, Table, Workspace } from "@budibase/types"
 import jestOpenAPI from "jest-openapi"
+import nock from "nock"
 import { run as generateSchema } from "../../../../../specs/generate"
+import environment from "../../../../environment"
 import * as setup from "../../tests/utilities"
 import { generateMakeRequest } from "./utils"
-import { Table, App, Row } from "@budibase/types"
-import nock from "nock"
-import environment from "../../../../environment"
 
 const yamlPath = generateSchema()
 jestOpenAPI(yamlPath!)
 
 describe("compare", () => {
   let config = setup.getConfig()
-  let apiKey: string, table: Table, app: App, makeRequest: any
+  let apiKey: string, table: Table, app: Workspace, makeRequest: any
 
   beforeAll(async () => {
     app = await config.init()
@@ -45,8 +45,8 @@ describe("compare", () => {
     })
 
     it("should allow updating an application", async () => {
-      const app = config.getApp()
-      const appId = config.getAppId()
+      const app = config.getDevWorkspace()
+      const appId = config.getDevWorkspaceId()
       const res = await makeRequest(
         "put",
         `/applications/${appId}`,
@@ -60,18 +60,21 @@ describe("compare", () => {
     })
 
     it("should allow retrieving an application", async () => {
-      const res = await makeRequest("get", `/applications/${config.getAppId()}`)
+      const res = await makeRequest(
+        "get",
+        `/applications/${config.getDevWorkspaceId()}`
+      )
       expect(res).toSatisfyApiSpec()
     })
 
     it("should allow deleting an application", async () => {
       nock(environment.WORKER_URL!)
-        .delete(`/api/global/roles/${config.getProdAppId()}`)
+        .delete(`/api/global/roles/${config.getDevWorkspaceId()}`)
         .reply(200, {})
 
       const res = await makeRequest(
         "delete",
-        `/applications/${config.getAppId()}`
+        `/applications/${config.getDevWorkspaceId()}`
       )
       expect(res).toSatisfyApiSpec()
     })
@@ -79,7 +82,7 @@ describe("compare", () => {
 
   describe("check the tables endpoints", () => {
     it("should allow retrieving tables through search", async () => {
-      await config.createApp("new app 1")
+      await config.createWorkspace("new app 1")
       table = await config.upsertTable()
       const res = await makeRequest("post", "/tables/search")
       expect(res).toSatisfyApiSpec()

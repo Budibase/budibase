@@ -1,16 +1,16 @@
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
-import { events, features, roles } from "@budibase/backend-core"
+import { events, roles } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
 import {
-  Screen,
-  Role,
   BuiltinPermissionID,
+  Role,
+  Screen,
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
+import { ONBOARDING_WELCOME_SCREEN_NAME } from "../../../constants/screens"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
-import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
-import { structures } from "@budibase/backend-core/tests"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 const {
   basicScreen,
@@ -35,7 +35,7 @@ describe("/screens", () => {
   beforeEach(async () => {
     await config.newTenant()
     // Replace the regular app with an onboarding app to get sample data
-    await config.createAppWithOnboarding("test-app-with-sample")
+    await config.createWorkspaceWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -44,14 +44,11 @@ describe("/screens", () => {
     return screens.splice(index, 1)[0]
   }
 
-  describe("fetch", () => {
-    it("should create the sample data screen", async () => {
-      const screens = await config.api.screen.list()
-      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
-        true
-      )
-    })
+  function withoutOnboarding(screens: Screen[]) {
+    return screens.filter(s => s.name !== ONBOARDING_WELCOME_SCREEN_NAME)
+  }
 
+  describe("fetch", () => {
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
       expect(screens.length).toEqual(2)
@@ -110,13 +107,9 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.withProdApp(() =>
-          config.api.application.getDefinition(config.getProdAppId())
+          config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
-
-        // Filter out sample screen
-        const screens = res.screens.filter(
-          s => s.name !== SAMPLE_DATA_SCREEN_NAME
-        )
+        const screens = withoutOnboarding(res.screens)
 
         expect(screens.length).toEqual(screenIds.length)
         expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -145,14 +138,10 @@ describe("/screens", () => {
           "x-budibase-role": role1._id!,
         },
         async () => {
-          const res = await config.api.application.getDefinition(
-            config.getAppId()
+          const res = await config.api.workspace.getDefinition(
+            config.getDevWorkspaceId()
           )
-
-          // Filter out sample screen
-          const screens = res.screens.filter(
-            s => s.name !== SAMPLE_DATA_SCREEN_NAME
-          )
+          const screens = withoutOnboarding(res.screens)
 
           const screenIds = [screen._id!, screen1._id!]
           expect(screens.length).toEqual(screenIds.length)
@@ -230,103 +219,45 @@ describe("/screens", () => {
       })
     })
 
-    describe("workspace apps", () => {
-      let featureCleanup: () => void
-      beforeAll(() => {
-        featureCleanup = features.testutils.setFeatureFlags("*", {
-          WORKSPACES: true,
-        })
-      })
-
-      afterAll(() => {
-        featureCleanup()
-      })
-
-      it("should allow deleting screens", async () => {
-        const { workspaceApp } = await config.api.workspaceApp.create(
+    it("should allow deleting screens across all apps", async () => {
+      const { workspaceApp: workspaceApp1 } =
+        await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest()
         )
-        const screens = await Promise.all(
-          Array.from({ length: 3 }).map(() =>
-            config.api.screen.save({
-              ...basicScreen(),
-              workspaceAppId: workspaceApp._id,
-            })
-          )
+      const { workspaceApp: workspaceApp2 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
         )
+      const app1Screens = await Promise.all(
+        Array.from({ length: 3 }).map(() =>
+          config.api.screen.save({
+            ...basicScreen(),
+            workspaceAppId: workspaceApp1._id,
+          })
+        )
+      )
+      // Other screens
+      await Promise.all(
+        Array.from({ length: 2 }).map(() =>
+          config.api.screen.save({
+            ...basicScreen(),
+            workspaceAppId: workspaceApp2._id,
+          })
+        )
+      )
 
-        let screenToDelete = popRandomScreen(screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        expect(await config.api.screen.list()).toHaveLength(2)
-
-        screenToDelete = popRandomScreen(screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        expect(await config.api.screen.list()).toHaveLength(1)
-
-        screenToDelete = popRandomScreen(screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        expect(await config.api.screen.list()).toHaveLength(0)
-      })
-
-      it("should allow deleting screens across all apps", async () => {
-        const { workspaceApp: workspaceApp1 } =
-          await config.api.workspaceApp.create(
-            structures.workspaceApps.createRequest()
-          )
-        const { workspaceApp: workspaceApp2 } =
-          await config.api.workspaceApp.create(
-            structures.workspaceApps.createRequest()
-          )
-        const app1Screens = await Promise.all(
-          Array.from({ length: 3 }).map(() =>
-            config.api.screen.save({
-              ...basicScreen(),
-              workspaceAppId: workspaceApp1._id,
-            })
-          )
-        )
-        // Other screens
-        await Promise.all(
-          Array.from({ length: 2 }).map(() =>
-            config.api.screen.save({
-              ...basicScreen(),
-              workspaceAppId: workspaceApp2._id,
-            })
-          )
-        )
-
-        let screenToDelete = popRandomScreen(app1Screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        screenToDelete = popRandomScreen(app1Screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        screenToDelete = popRandomScreen(app1Screens)
-        await config.api.screen.destroy(
-          screenToDelete._id!,
-          screenToDelete._rev!
-        )
-        expect(await config.api.screen.list()).toHaveLength(2)
-      })
+      let screenToDelete = popRandomScreen(app1Screens)
+      await config.api.screen.destroy(screenToDelete._id!, screenToDelete._rev!)
+      screenToDelete = popRandomScreen(app1Screens)
+      await config.api.screen.destroy(screenToDelete._id!, screenToDelete._rev!)
+      screenToDelete = popRandomScreen(app1Screens)
+      await config.api.screen.destroy(screenToDelete._id!, screenToDelete._rev!)
+      expect(await config.api.screen.list()).toHaveLength(2)
     })
   })
 
   describe("usage", () => {
     beforeEach(async () => {
-      await config.init()
       await config.api.screen.save(basicScreen())
     })
 

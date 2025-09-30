@@ -1,4 +1,3 @@
-import { DocumentType } from "../../db/utils"
 import {
   context,
   db as dbCore,
@@ -6,7 +5,7 @@ import {
   roles,
   tenancy,
 } from "@budibase/backend-core"
-import { updateAppPackage } from "./application"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 import {
   DeleteScreenResponse,
   FetchScreenResponse,
@@ -19,9 +18,10 @@ import {
   UsageInScreensResponse,
   UserCtx,
 } from "@budibase/types"
-import { builderSocket } from "../../websockets"
+import { DocumentType } from "../../db/utils"
 import sdk from "../../sdk"
-import { sdk as sharedSdk } from "@budibase/shared-core"
+import { builderSocket } from "../../websockets"
+import { updateWorkspacePackage } from "./workspace"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
@@ -39,7 +39,7 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
 export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
@@ -73,7 +73,7 @@ export async function save(
       })
 
     // Update the app metadata
-    const application = await db.get<any>(DocumentType.APP_METADATA)
+    const application = await db.get<any>(DocumentType.WORKSPACE_METADATA)
     let usedPlugins = application.usedPlugins || []
 
     requiredPlugins.forEach((plugin: Plugin) => {
@@ -90,7 +90,7 @@ export async function save(
     })
 
     if (pluginAdded) {
-      await updateAppPackage({ usedPlugins }, ctx.appId)
+      await updateWorkspacePackage({ usedPlugins }, ctx.appId)
     }
   }
 
@@ -125,7 +125,7 @@ export async function save(
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 

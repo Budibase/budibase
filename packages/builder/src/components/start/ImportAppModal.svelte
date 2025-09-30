@@ -1,46 +1,48 @@
-<script>
-  import {
-    ModalContent,
-    Toggle,
-    Input,
-    Layout,
-    Dropzone,
-    notifications,
-    Body,
-    Helpers,
-  } from "@budibase/bbui"
+<script lang="ts">
   import { API } from "@/api"
   import { initialise } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
+  import {
+    Body,
+    Dropzone,
+    Input,
+    Layout,
+    ModalContent,
+    notifications,
+    Toggle,
+  } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
+  import type { ImportToUpdateWorkspaceRequest } from "@budibase/types"
 
-  export let app
+  export let app: {
+    appId: string
+    name: string
+  }
 
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
+  let encrypted: boolean = false
+  let password: string
+  let file: File
   $: disabled = (encrypted && !password) || !file
-  let encrypted = false,
-    password
-  let file
 
   async function updateApp() {
     try {
-      let data = new FormData()
-      data.append("appExport", file)
+      const body: ImportToUpdateWorkspaceRequest = {}
       if (encrypted) {
-        data.append("encryptionPassword", password.trim())
+        body.encryptionPassword = password.trim()
       }
-      const appId = app.devId
-      await API.updateAppFromExport(appId, data)
+      const appId = sdk.applications.getDevAppID(app.appId)
+      await API.updateAppFromExport(appId, body, file)
       const pkg = await API.fetchAppPackage(appId)
       await initialise(pkg)
 
-      notifications.success(
-        `${Helpers.capitalise(appOrWorkspace)} updated successfully`
-      )
-    } catch (err) {
-      notifications.error(
-        `Failed to update ${appOrWorkspace} - ${err.message || err}`
-      )
+      notifications.success("Workspace updated successfully")
+    } catch (err: any) {
+      notifications.error(`Failed to update workspace - ${err.message || err}`)
     }
+  }
+
+  async function onFileChange(e: CustomEvent) {
+    file = e.detail?.[0]
+    encrypted = file?.name?.endsWith(".enc.tar.gz")
   }
 </script>
 
@@ -51,18 +53,15 @@
   bind:disabled
 >
   <Body size="S">
-    Updating {$featureFlags.WORKSPACES ? "a workspace" : "an app"} using an export
-    bundle will replace all tables, datasources, queries, screens and automations.
-    It is recommended to perform a backup before running this operation.
+    Updating a workspace using an export bundle will replace all tables,
+    datasources, queries, screens and automations. It is recommended to perform
+    a backup before running this operation.
   </Body>
   <Layout noPadding gap="XS">
     <Dropzone
       gallery={false}
-      label={`${Helpers.capitalise(appOrWorkspace)} export`}
-      on:change={e => {
-        file = e.detail?.[0]
-        encrypted = file?.name?.endsWith(".enc.tar.gz")
-      }}
+      label={"Workspace export"}
+      on:change={onFileChange}
     />
     <Toggle text="Encrypted" bind:value={encrypted} />
     {#if encrypted}

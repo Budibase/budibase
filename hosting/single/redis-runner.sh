@@ -1,28 +1,22 @@
 #!/bin/bash
 
 REDIS_CONFIG="/etc/redis/redis.conf"
+
 sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
 
-if [[ -n "${USE_DEFAULT_REDIS_CONFIG}" ]]; then
-    unset REDIS_CONFIG
+REDIS_LAUNCH_SCRIPT="/tmp/redis-server-launch.sh"
+cat <<'EOF' > "$REDIS_LAUNCH_SCRIPT"
+#!/bin/bash
+
+CMD=("redis-server" "/etc/redis/redis.conf")
+
+if [[ -n "${REDIS_USERNAME}" && -n "${REDIS_PASSWORD}" ]]; then
+    CMD+=("--user" "${REDIS_USERNAME}" "--requirepass" "${REDIS_PASSWORD}")
+elif [[ -n "${REDIS_PASSWORD}" ]]; then
+    CMD+=("--requirepass" "${REDIS_PASSWORD}")
 fi
 
-REDIS_LAUNCH_SCRIPT="/tmp/redis-server-launch.sh"
-cat <<EOF > "$REDIS_LAUNCH_SCRIPT"
-#!/bin/bash
-if [[ -n "\${REDIS_PASSWORD}" ]]; then
-    if [[ -n "\${REDIS_CONFIG}" ]]; then
-        exec redis-server "\${REDIS_CONFIG}" --requirepass "\$REDIS_PASSWORD"
-    else
-        exec redis-server --requirepass "\$REDIS_PASSWORD"
-    fi
-else
-    if [[ -n "\${REDIS_CONFIG}" ]]; then
-        exec redis-server "\${REDIS_CONFIG}"
-    else
-        exec redis-server
-    fi
-fi
+exec "${CMD[@]}"
 EOF
 
 chmod +x "$REDIS_LAUNCH_SCRIPT"

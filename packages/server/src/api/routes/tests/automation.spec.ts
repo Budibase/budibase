@@ -1,15 +1,5 @@
-import {
-  checkBuilderEndpoint,
-  getAllTableRows,
-  testAutomation,
-} from "./utilities/TestFunctions"
-import * as setup from "./utilities"
-import {
-  TRIGGER_DEFINITIONS,
-  BUILTIN_ACTION_DEFINITIONS,
-} from "../../../automations"
 import { configs, context, events } from "@budibase/backend-core"
-import sdk from "../../../sdk"
+import { mocks } from "@budibase/backend-core/tests"
 import {
   AutomationResults,
   ConfigType,
@@ -22,10 +12,20 @@ import {
   SettingsConfig,
   Table,
 } from "@budibase/types"
-import { mocks } from "@budibase/backend-core/tests"
+import {
+  BUILTIN_ACTION_DEFINITIONS,
+  TRIGGER_DEFINITIONS,
+} from "../../../automations"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as setup from "./utilities"
+import {
+  checkBuilderEndpoint,
+  getAllTableRows,
+  testAutomation,
+} from "./utilities/TestFunctions"
 
 const MAX_RETRIES = 4
 const {
@@ -273,7 +273,7 @@ describe("/automations", () => {
           tableId: table._id,
         },
       }
-      automation.appId = config.getAppId()
+      automation.appId = config.getDevWorkspaceId()
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation, {
@@ -725,7 +725,10 @@ describe("/automations", () => {
     it.each(testCases)(
       "$description",
       async ({ filters, row, oldRow, expectToRun }) => {
-        let req = updateRowAutomationWithFilters(config.getAppId(), table._id!)
+        let req = updateRowAutomationWithFilters(
+          config.getDevWorkspaceId(),
+          table._id!
+        )
         req.definition.trigger.inputs = {
           tableId: table._id,
           filters,

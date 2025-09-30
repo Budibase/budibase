@@ -86,7 +86,7 @@ export async function postAuth(
     ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, tokens: string[]) => {
-      const baseUrl = `/builder/app/${authStateCookie.appId}/data`
+      const baseUrl = `/builder/workspace/${authStateCookie.appId}/data`
 
       const id = utils.newid()
       await cache.store(

@@ -1,29 +1,28 @@
-import { getAllApps, getDevAppID } from "../db"
-import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
-import env from "../environment"
-import * as tenancy from "../tenancy"
-import * as context from "../context"
 import {
-  App,
   AuditedEventFriendlyName,
   Ctx,
   Event,
   TenantResolutionStrategy,
+  Workspace,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
+import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
+import * as context from "../context"
+import { getAllWorkspaces } from "../db"
+import env from "../environment"
+import * as tenancy from "../tenancy"
 
-const APP_PREFIX = DocumentType.APP + SEPARATOR
+const APP_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
-const BUILDER_PREVIEW_PATH = "/app/preview"
 const BUILDER_PREFIX = "/builder"
-const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
+const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/workspace/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
-export async function resolveAppUrl(ctx: Ctx) {
-  const appUrl = ctx.path.split("/")[2]
-  let possibleAppUrl = `/${appUrl.toLowerCase()}`
+async function resolveAppUrl(ctx: Ctx) {
+  const workspaceUrl = ctx.path.split("/")[2]
+  let possibleUrl = `/${workspaceUrl.toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
   if (!env.isDev() && env.MULTI_TENANCY) {
@@ -36,15 +35,14 @@ export async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for an url that matches
-  const apps: App[] = await context.doInTenant(
-    tenantId,
-    () => getAllApps({ dev: false }) as Promise<App[]>
+  const workspaces: Workspace[] = await context.doInTenant(tenantId, () =>
+    getAllWorkspaces({ dev: false })
   )
-  const app = apps.filter(
-    a => a.url && a.url.toLowerCase() === possibleAppUrl
+  const workspace = workspaces.filter(
+    a => a.url && a.url.toLowerCase() === possibleUrl
   )[0]
 
-  return app && app.appId ? app.appId : undefined
+  return workspace && workspace.appId ? workspace.appId : undefined
 }
 
 export function isServingApp(ctx: Ctx) {
@@ -61,7 +59,11 @@ export function isServingBuilder(ctx: Ctx): boolean {
 }
 
 export function isServingBuilderPreview(ctx: Ctx): boolean {
-  return ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  return isBuilderPreviewUrl(ctx.path)
+}
+
+function isBuilderPreviewUrl(path: string): boolean {
+  return new RegExp(/^\/app\/app_\w+\/preview$/).test(path)
 }
 
 export function isPublicApiRequest(ctx: Ctx): boolean {
@@ -74,9 +76,6 @@ export function isPublicApiRequest(ctx: Ctx): boolean {
  * @returns If an appId was found it will be returned.
  */
 export async function getAppIdFromCtx(ctx: Ctx) {
-  // look in headers
-  const options = [ctx.request.headers[Header.APP_ID]]
-
   let appId: string | undefined
 
   function confirmAppId(possibleAppId: string | undefined) {
@@ -88,18 +87,19 @@ export async function getAppIdFromCtx(ctx: Ctx) {
       return appId
     }
 
-    if (appId && getDevAppID(appId) !== getDevAppID(possibleAppId)) {
-      // TODO: check dev/prod conflicts
+    if (appId && appId !== possibleAppId) {
       ctx.throw("App id conflict", 403)
     }
     return appId ?? possibleAppId
   }
 
-  for (let option of options) {
-    appId = confirmAppId(option as string)
-    if (appId) {
-      break
-    }
+  // look in headers
+  let headers = ctx.request.headers[Header.APP_ID] || []
+  if (typeof headers === "string") {
+    headers = [headers]
+  }
+  for (let header of headers) {
+    appId = confirmAppId(header)
   }
 
   // look in body
@@ -121,20 +121,11 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // lookup using custom url - prod apps only
   // filter out the builder preview path which collides with the prod app path
   // to ensure we don't load all apps excessively
-  const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  const isBuilderPreview = isBuilderPreviewUrl(ctx.path)
   const isViewingProdApp =
     ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
   if (isViewingProdApp) {
     appId = confirmAppId(await resolveAppUrl(ctx))
-  }
-
-  // look in the referer - builder only
-  // make sure this is performed after prod app url resolution, in case the
-  // referer header is present from a builder redirect
-  const referer = ctx.request.headers.referer
-  if (referer?.includes(BUILDER_APP_PREFIX)) {
-    const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
-    appId = confirmAppId(refererId)
   }
 
   return appId

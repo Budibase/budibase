@@ -1,3 +1,4 @@
+import { DatabaseQueryOpts } from "@budibase/types"
 import {
   DocumentType,
   InternalTable,
@@ -5,8 +6,7 @@ import {
   UNICODE_MAX,
   ViewName,
 } from "../constants"
-import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts } from "@budibase/types"
+import { getProdWorkspaceID } from "./conversions"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -65,20 +65,6 @@ export function getQueryIndex(viewName: ViewName) {
 }
 
 /**
- * Gets parameters for retrieving workspaces.
- */
-export function getWorkspaceParams(
-  id = "",
-  otherProps: Partial<DatabaseQueryOpts> = {}
-): DatabaseQueryOpts {
-  return {
-    ...otherProps,
-    startkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}`,
-    endkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
-  }
-}
-
-/**
  * Gets parameters for retrieving users.
  */
 export function getGlobalUserParams(
@@ -109,15 +95,15 @@ export function getUserMetadataParams(
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
-export function getUsersByAppParams(
+export function getUsersByWorkspaceParams(
   appId: any,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ): DatabaseQueryOpts {
-  const prodAppId = getProdAppID(appId)
+  const prodWorkspaceId = getProdWorkspaceID(appId)
   return {
     ...otherProps,
-    startkey: prodAppId,
-    endkey: `${prodAppId}${UNICODE_MAX}`,
+    startkey: prodWorkspaceId,
+    endkey: `${prodWorkspaceId}${UNICODE_MAX}`,
   }
 }
 

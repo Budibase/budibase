@@ -31,7 +31,8 @@ import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { processSearchFilters } from "./utils"
 import { deepGet, schema } from "./helpers"
-import { isPlainObject, isEmpty } from "lodash"
+import isPlainObject from "lodash/isPlainObject"
+import isEmpty from "lodash/isEmpty"
 import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g

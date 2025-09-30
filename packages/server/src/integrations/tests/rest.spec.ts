@@ -1,6 +1,4 @@
-import nock from "nock"
-import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
-import { RestIntegration } from "../rest"
+import { generator } from "@budibase/backend-core/tests"
 import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
@@ -9,10 +7,12 @@ import {
   OAuth2GrantType,
   RestAuthType,
 } from "@budibase/types"
-import { Response } from "node-fetch"
 import { createServer } from "http"
 import { AddressInfo } from "net"
-import { generator } from "@budibase/backend-core/tests"
+import nock from "nock"
+import { Response } from "node-fetch"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { RestIntegration } from "../rest"
 
 const UUID_REGEX =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
@@ -318,7 +318,7 @@ describe("REST Integration", () => {
       })
 
       const { data, info } = await config.doInContext(
-        config.appId,
+        config.devWorkspaceId,
         async () =>
           await integration.read({
             authConfigId: oauthConfig._id,
@@ -363,7 +363,7 @@ describe("REST Integration", () => {
         .reply(200, { foo: "bar" })
 
       const { data, info } = await config.doInContext(
-        config.appId,
+        config.devWorkspaceId,
         async () =>
           await integration.read({
             authConfigId: oauthConfig._id,
@@ -398,7 +398,7 @@ describe("REST Integration", () => {
       )
 
       const { data, info } = await config.doInContext(
-        config.appId,
+        config.devWorkspaceId,
         async () =>
           await integration.read({
             authConfigId: oauthConfig._id,
@@ -446,7 +446,7 @@ describe("REST Integration", () => {
       )
 
       const { data, info } = await config.doInContext(
-        config.appId,
+        config.devWorkspaceId,
         async () =>
           await integration.read({
             authConfigId: oauthConfig._id,
@@ -643,6 +643,40 @@ describe("REST Integration", () => {
       })
       expect(data).toEqual({ foo: "bar" })
     })
+
+    it("should remove empty query parameters", async () => {
+      nock("https://example.com")
+        .get("/api?param2=value&param3=another")
+        .reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "param1=&param2=value&param3=another",
+      })
+      expect(data).toEqual({ success: true })
+    })
+
+    it("should handle query string with only empty parameters", async () => {
+      nock("https://example.com").get("/api").reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "param1=&param2=",
+      })
+      expect(data).toEqual({ success: true })
+    })
+
+    it("should handle mixed empty and valid parameters", async () => {
+      nock("https://example.com")
+        .get("/api?valid=test&another=123")
+        .reply(200, { success: true })
+
+      const { data } = await integration.read({
+        path: "api",
+        queryString: "empty1=&valid=test&empty2=&another=123&empty3=",
+      })
+      expect(data).toEqual({ success: true })
+    })
   })
 
   describe("Configuration options", () => {
@@ -694,7 +728,7 @@ describe("REST Integration", () => {
 
   describe("File Handling", () => {
     it("uploads file to object store and returns signed URL", async () => {
-      await config.doInContext(config.getAppId(), async () => {
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
         const content = "test file content"
         nock("https://example.com").get("/api").reply(200, content, {
           "content-disposition": `attachment; filename="testfile.tar.gz"`,
@@ -719,7 +753,7 @@ describe("REST Integration", () => {
     })
 
     it("uploads file with non ascii filename to object store and returns signed URL", async () => {
-      await config.doInContext(config.getAppId(), async () => {
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
         const content = "test file content"
         nock("https://example.com").get("/api").reply(200, content, {
           // eslint-disable-next-line no-useless-escape

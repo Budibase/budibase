@@ -1,81 +1,26 @@
-import { derived, get, readable, Readable } from "svelte/store"
 import { API } from "@/api"
-import { cloneDeep } from "lodash/fp"
-import { generate } from "shortid"
-import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
-import { licensing, organisation, environment } from "@/stores/portal"
-import {
-  tables,
-  appStore,
-  permissions,
-  workspaceDeploymentStore,
-  deploymentStore,
-} from "@/stores/builder"
-import { notifications } from "@budibase/bbui"
+import { TableNames } from "@/constants"
+import { FIELDS as COLUMNS } from "@/constants/backend"
+import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import {
   getEnvironmentBindings,
-  migrateReferencesInObject,
-  getUserBindings,
-  getSettingBindings,
   getSchemaForDatasourcePlus,
+  getSettingBindings,
+  getUserBindings,
+  migrateReferencesInObject,
 } from "@/dataBinding"
-import {
-  AutomationTriggerStepId,
-  AutomationEventType,
-  AutomationActionStepId,
-  Automation,
-  AutomationStep,
-  Table,
-  Branch,
-  AutomationTrigger,
-  AutomationStatus,
-  UILogicalOperator,
-  EmptyFilterOption,
-  AutomationIOType,
-  BlockPath,
-  BlockRef,
-  BlockDefinitions,
-  isBranchStep,
-  isTrigger,
-  isRowUpdateTrigger,
-  isRowSaveTrigger,
-  isAppTrigger,
-  BranchStep,
-  GetAutomationTriggerDefinitionsResponse,
-  GetAutomationActionDefinitionsResponse,
-  AppSelfResponse,
-  TestAutomationResponse,
-  isAutomationResults,
-  AutomationCustomIOType,
-  AutomationStepInputs,
-  AutomationIOProps,
-  AutomationTriggerInputs,
-  RowActionTriggerInputs,
-  RowActionTrigger,
-  EnrichedBinding,
-  BlockDefinitionTypes,
-  AutomationTriggerResultOutputs,
-  AutomationStepType,
-  PermissionLevel,
-  isDidNotTriggerResponse,
-  AutomationResults,
-  isActionStep,
-  PublishResourceState,
-  UIAutomation,
-  FeatureFlag,
-  isRowActionTrigger,
-  isWebhookTrigger,
-  AutomationTriggerResult,
-  RowActionTriggerOutputs,
-  WebhookTriggerOutputs,
-} from "@budibase/types"
-import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
-import { FIELDS as COLUMNS } from "@/constants/backend"
-import { sdk } from "@budibase/shared-core"
-import { rowActions } from "./rowActions"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
-import { QueryUtils, Utils } from "@budibase/frontend-core"
+import { getSequentialName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import {
+  appStore,
+  deploymentStore,
+  permissions,
+  tables,
+  workspaceDeploymentStore,
+} from "@/stores/builder"
+import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
+import { environment, licensing, organisation } from "@/stores/portal"
 import {
   AutomationStoreState,
   DataMode,
@@ -83,14 +28,70 @@ import {
   FilterableRowTriggers,
   RowTriggers,
   SelectedAutomationState,
+  ViewMode,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
-import { TableNames } from "@/constants"
-import { getSequentialName } from "@/helpers/duplicate"
-import { featureFlag } from "@/helpers"
-import { EnvVar } from "../portal/environment"
+import { notifications } from "@budibase/bbui"
+import { QueryUtils, Utils } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
 import { makePropSafe } from "@budibase/string-templates"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationCustomIOType,
+  AutomationEventType,
+  AutomationIOProps,
+  AutomationIOType,
+  AutomationResults,
+  AutomationStatus,
+  AutomationStep,
+  AutomationStepResult,
+  AutomationStepInputs,
+  AutomationStepType,
+  AutomationTrigger,
+  AutomationTriggerInputs,
+  AutomationTriggerResult,
+  AutomationTriggerResultOutputs,
+  AutomationTriggerStepId,
+  BlockDefinitions,
+  BlockDefinitionTypes,
+  BlockPath,
+  BlockRef,
+  Branch,
+  BranchStep,
+  EmptyFilterOption,
+  EnrichedBinding,
+  GetAutomationActionDefinitionsResponse,
+  GetAutomationTriggerDefinitionsResponse,
+  isActionStep,
+  isAppTrigger,
+  isAutomationResults,
+  isBranchStep,
+  isDidNotTriggerResponse,
+  isRowActionTrigger,
+  isRowSaveTrigger,
+  isRowUpdateTrigger,
+  isTrigger,
+  isWebhookTrigger,
+  PermissionLevel,
+  PublishResourceState,
+  RowActionTrigger,
+  RowActionTriggerInputs,
+  RowActionTriggerOutputs,
+  SelfResponse,
+  Table,
+  TestAutomationResponse,
+  UIAutomation,
+  UILogicalOperator,
+  WebhookTriggerOutputs,
+  AutomationLog,
+} from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import { generate } from "shortid"
+import { derived, get, readable, Readable } from "svelte/store"
+import { EnvVar } from "../portal/environment"
+import { rowActions } from "./rowActions"
 
 const initialAutomationState: AutomationStoreState = {
   automations: [],
@@ -101,6 +102,7 @@ const initialAutomationState: AutomationStoreState = {
     ACTION: {},
   },
   selectedAutomationId: null,
+  viewMode: ViewMode.EDITOR,
 }
 
 const getFinalDefinitions = (
@@ -125,6 +127,12 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
+  setViewMode: (mode: ViewMode) => {
+    store.update(state => ({
+      ...state,
+      viewMode: mode,
+    }))
+  },
   /**
    * @param {Automation} auto
    * @param {BlockRef} blockRef
@@ -207,11 +215,11 @@ const automationActions = (store: AutomationStore) => ({
    * Fetches the app user context used for live evaluation
    * This matches the context used on the server. Only expose
    * valid schema values used in bindings
-   * @returns {AppSelfResponse | null}
+   * @returns {SelfResponse | null}
    */
-  initAppSelf: async (): Promise<AppSelfResponse | null> => {
+  initAppSelf: async (): Promise<SelfResponse | null> => {
     // Fetch and update the app self if it hasn't been set
-    const appSelfResponse: AppSelfResponse | null = await API.fetchSelf()
+    const appSelfResponse: SelfResponse | null = await API.fetchSelf()
 
     if (!appSelfResponse) {
       return appSelfResponse
@@ -220,11 +228,11 @@ const automationActions = (store: AutomationStore) => ({
       getSchemaForDatasourcePlus(TableNames.USERS, null)
 
     const keys = [...Object.keys(schema), "globalId"] as Array<
-      keyof AppSelfResponse
+      keyof SelfResponse
     >
 
     // Reduce the fields to include the same elements as seen in the bindings
-    const serverUser = keys.reduce<Partial<AppSelfResponse>>((acc, key) => {
+    const serverUser = keys.reduce<Partial<SelfResponse>>((acc, key) => {
       if (key in appSelfResponse) {
         acc[key] = appSelfResponse[key]
       }
@@ -1299,7 +1307,7 @@ const automationActions = (store: AutomationStore) => ({
     })
 
     // Trigger offset when inserting
-    const rootIdx = Math.max(insertPoint.stepIdx - 1, 0)
+    const rootIdx = insertPoint.stepIdx - 1
     const insertIdx = atRoot ? rootIdx : insertPoint.stepIdx
 
     // Check if the branch point is a on a branch step
@@ -1346,7 +1354,6 @@ const automationActions = (store: AutomationStore) => ({
 
     // Add the new branch to the end.
     cache.push(newBranch)
-
     try {
       await store.actions.save(newAutomation)
     } catch (e) {
@@ -1589,7 +1596,7 @@ const automationActions = (store: AutomationStore) => ({
         steps: [],
         trigger,
       },
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
+      disabled: true,
     }
     const response = await store.actions.save(automation)
     return response
@@ -1605,7 +1612,7 @@ const automationActions = (store: AutomationStore) => ({
       ),
       _id: undefined,
       _rev: undefined,
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
+      disabled: true,
     })
     return response
   },
@@ -1969,7 +1976,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param block
    * @param newName
    */
-  updateBlockTitle: async (block: AutomationStep, newName: string) => {
+  updateBlockTitle: async (
+    block: AutomationStep | AutomationTrigger,
+    newName: string
+  ) => {
     if (newName.trim().length === 0) {
       await automationStore.actions.deleteAutomationName(block.id)
     } else {
@@ -2099,7 +2109,10 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openLogPanel: (log: any, stepData: any) => {
+  openLogPanel: (
+    log: AutomationLog,
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) => {
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,
@@ -2147,7 +2160,7 @@ const automationActions = (store: AutomationStore) => ({
 
 export interface AutomationContext {
   state?: Record<string, any>
-  user: AppSelfResponse | null
+  user: SelfResponse | null
   trigger?: AutomationTriggerResultOutputs
   steps: Record<string, AutomationStep>
   env?: Record<string, any>

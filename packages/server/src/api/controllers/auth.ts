@@ -1,10 +1,10 @@
-import { outputProcessing } from "../../utilities/rowProcessor"
+import { context, db as dbCore, roles } from "@budibase/backend-core"
+import { ContextUser, SelfResponse, UserCtx } from "@budibase/types"
 import { InternalTables } from "../../db/utils"
-import { getFullUser } from "../../utilities/users"
-import { roles, context, db as dbCore } from "@budibase/backend-core"
-import { AppSelfResponse, ContextUser, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
+import { outputProcessing } from "../../utilities/rowProcessor"
+import { getFullUser } from "../../utilities/users"
 
 const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
@@ -17,7 +17,7 @@ const addSessionAttributesToUser = (ctx: any) => {
   }
 }
 
-export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
+export async function fetchSelf(ctx: UserCtx<void, SelfResponse>) {
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId || !ctx.isAuthenticated) {
@@ -25,7 +25,7 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
     return
   }
 
-  const appId = context.getAppId()
+  const appId = context.getWorkspaceId()
   let user: ContextUser = await getFullUser(userId)
   // add globalId of user
   user.globalId = dbCore.getGlobalIDFromUserMetadataID(userId)
@@ -35,7 +35,7 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
   user.csrfToken = ctx.user.csrfToken
 
   if (appId) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     // check for group permissions
     if (!user.roleId || user.roleId === PUBLIC_ROLE) {
       user = await processUser(user, { appId })

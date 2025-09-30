@@ -1,26 +1,24 @@
-// some test cases call functions directly, need to
-// store an app ID to pretend there is a context
-import env from "../environment"
-import Context from "./Context"
-import * as conversions from "../docIds/conversions"
-import { getDB } from "../db/db"
-import {
-  DocumentType,
-  SEPARATOR,
-  StaticDatabases,
-  DEFAULT_TENANT_ID,
-} from "../constants"
 import {
   Database,
   IdentityContext,
-  Snippet,
-  App,
-  Table,
   License,
+  Snippet,
+  Table,
+  Workspace,
 } from "@budibase/types"
+import {
+  DEFAULT_TENANT_ID,
+  DocumentType,
+  SEPARATOR,
+  StaticDatabases,
+} from "../constants"
+import { getDB } from "../db/db"
+import * as conversions from "../docIds/conversions"
+import env from "../environment"
+import Context from "./Context"
 import { ContextMap } from "./types"
 
-let TEST_APP_ID: string | null = null
+let TEST_WORKSPACE_ID: string | null = null
 
 export function getGlobalDBName(tenantId?: string) {
   // tenant ID can be set externally, for example user API where
@@ -79,17 +77,17 @@ export function isTenancyEnabled() {
 }
 
 /**
- * Given an app ID this will attempt to retrieve the tenant ID from it.
- * @return The tenant ID found within the app ID.
+ * Given a workspace ID this will attempt to retrieve the tenant ID from it.
+ * @return The tenant ID found within the workspace ID.
  */
-export function getTenantIDFromAppID(appId: string) {
-  if (!appId) {
+export function getTenantIDFromWorkspaceID(workspaceId: string) {
+  if (!workspaceId) {
     return undefined
   }
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
   }
-  const split = appId.split(SEPARATOR)
+  const split = workspaceId.split(SEPARATOR)
   const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
     return undefined
@@ -125,27 +123,30 @@ async function newContext<T>(updates: ContextMap, task: () => T) {
 }
 
 export async function doInAutomationContext<T>(params: {
-  appId: string
+  workspaceId: string
   automationId: string
   task: () => T
 }): Promise<T> {
   await ensureSnippetContext()
   return await newContext(
     {
-      tenantId: getTenantIDFromAppID(params.appId),
-      appId: params.appId,
+      tenantId: getTenantIDFromWorkspaceID(params.workspaceId),
+      appId: params.workspaceId,
       automationId: params.automationId,
     },
     params.task
   )
 }
 
-export async function doInContext(appId: string, task: any): Promise<any> {
-  const tenantId = getTenantIDFromAppID(appId)
+export async function doInContext(
+  workspaceId: string,
+  task: any
+): Promise<any> {
+  const tenantId = getTenantIDFromWorkspaceID(workspaceId)
   return newContext(
     {
       tenantId,
-      appId,
+      appId: workspaceId,
     },
     task
   )
@@ -203,24 +204,24 @@ export function getSelfHostCloudDB() {
   return getDB(StaticDatabases.SELF_HOST_CLOUD.name)
 }
 
-export async function doInAppContext<T>(
-  appId: string,
+export async function doInWorkspaceContext<T>(
+  workspaceId: string,
   task: () => T
 ): Promise<T> {
-  return _doInAppContext(appId, task)
+  return _doInWorkspaceContext(workspaceId, task)
 }
 
-async function _doInAppContext<T>(
-  appId: string,
+async function _doInWorkspaceContext<T>(
+  workspaceId: string,
   task: () => T,
   extraContextSettings?: ContextMap
 ): Promise<T> {
-  if (!appId) {
-    throw new Error("appId is required")
+  if (!workspaceId) {
+    throw new Error("workspaceId is required")
   }
 
-  const tenantId = getTenantIDFromAppID(appId)
-  const updates: ContextMap = { appId, ...extraContextSettings }
+  const tenantId = getTenantIDFromWorkspaceID(workspaceId)
+  const updates: ContextMap = { appId: workspaceId, ...extraContextSettings }
   if (tenantId) {
     updates.tenantId = tenantId
   }
@@ -254,11 +255,11 @@ function guardMigration() {
   }
 }
 
-export async function doInAppMigrationContext<T>(
-  appId: string,
+export async function doInWorkspaceMigrationContext<T>(
+  workspaceId: string,
   task: () => T
 ): Promise<T> {
-  return _doInAppContext(appId, task, {
+  return _doInWorkspaceContext(workspaceId, task, {
     isMigrating: true,
   })
 }
@@ -289,11 +290,11 @@ export function getAutomationId(): string | undefined {
   return context?.automationId
 }
 
-export function getAppId(): string | undefined {
+export function getWorkspaceId(): string | undefined {
   const context = Context.get()
   const foundId = context?.appId
-  if (!foundId && env.isTest() && TEST_APP_ID) {
-    return TEST_APP_ID
+  if (!foundId && env.isTest() && TEST_WORKSPACE_ID) {
+    return TEST_WORKSPACE_ID
   } else {
     return foundId
   }
@@ -304,20 +305,20 @@ export function getIP(): string | undefined {
   return context?.ip
 }
 
-export const getDevAppId = () => {
-  const appId = getAppId()
-  if (!appId) {
-    throw new Error("Could not get appId")
+export const getDevWorkspaceId = () => {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Could not get workspaceId")
   }
-  return conversions.getDevAppID(appId)
+  return conversions.getDevWorkspaceID(workspaceId)
 }
 
-export const getProdAppId = () => {
-  const appId = getAppId()
-  if (!appId) {
-    throw new Error("Could not get appId")
+export const getProdWorkspaceId = () => {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Could not get workspaceId")
   }
-  return conversions.getProdAppID(appId)
+  return conversions.getProdWorkspaceID(workspaceId)
 }
 
 export function doInEnvironmentContext<T>(
@@ -352,12 +353,14 @@ export async function ensureSnippetContext() {
     return
   }
 
-  // Otherwise get snippets for this app and update context
+  // Otherwise get snippets for this workspace and update context
   let snippets: Snippet[] | undefined
-  const db = getAppDB()
+  const db = getWorkspaceDB()
   if (db) {
-    const app = await db.tryGet<App>(DocumentType.APP_METADATA)
-    snippets = app?.snippets
+    const workspace = await db.tryGet<Workspace>(
+      DocumentType.WORKSPACE_METADATA
+    )
+    snippets = workspace?.snippets
   }
 
   // Always set snippets to a non-null value so that we can tell we've attempted
@@ -395,44 +398,44 @@ export function getAuditLogsDB(): Database {
 }
 
 /**
- * Gets the app database based on whatever the request
+ * Gets the workspace database based on whatever the request
  * contained, dev or prod.
  */
-export function getAppDB(opts?: any): Database {
-  const appId = getAppId()
-  if (!appId) {
-    throw new Error("Unable to retrieve app DB - no app ID.")
+export function getWorkspaceDB(opts?: any): Database {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Unable to retrieve workspace DB - no workspace ID.")
   }
   if (isSelfHostUsingCloud()) {
     throw new Error(
-      "App DB not found - self-host users using cloud don't have app DBs"
+      "Workspace DB not found - self-host users using cloud don't have workspace DBs"
     )
   }
-  return getDB(appId, opts)
+  return getDB(workspaceId, opts)
 }
 
 /**
- * This specifically gets the prod app ID, if the request
- * contained a development app ID, this will get the prod one.
+ * This specifically gets the prod workspace ID, if the request
+ * contained a development workspace ID, this will get the prod one.
  */
-export function getProdAppDB(opts?: any): Database {
-  const appId = getAppId()
-  if (!appId) {
-    throw new Error("Unable to retrieve prod DB - no app ID.")
+export function getProdWorkspaceDB(opts?: any): Database {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Unable to retrieve prod DB - no workspace ID.")
   }
-  return getDB(conversions.getProdAppID(appId), opts)
+  return getDB(conversions.getProdWorkspaceID(workspaceId), opts)
 }
 
 /**
- * This specifically gets the dev app ID, if the request
- * contained a prod app ID, this will get the dev one.
+ * This specifically gets the dev workspace ID, if the request
+ * contained a prod workspace ID, this will get the dev one.
  */
-export function getDevAppDB(opts?: any): Database {
-  const appId = getAppId()
-  if (!appId) {
-    throw new Error("Unable to retrieve dev DB - no app ID.")
+export function getDevWorkspaceDB(opts?: any): Database {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Unable to retrieve dev DB - no workspace ID.")
   }
-  return getDB(conversions.getDevelopmentAppID(appId), opts)
+  return getDB(conversions.getDevWorkspaceID(workspaceId), opts)
 }
 
 export function isScim(): boolean {

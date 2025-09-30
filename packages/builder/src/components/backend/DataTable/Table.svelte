@@ -78,7 +78,7 @@
 
   const selectRelationship = ({ tableId, rowId, fieldName }) => {
     $goto(
-      `/builder/app/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
+      `/builder/workspace/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
     )
   }
 </script>

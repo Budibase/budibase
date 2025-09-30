@@ -6,15 +6,15 @@
     Input,
     notifications,
     Body,
-    Helpers,
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
-  import { appStore, initialise } from "@/stores/builder"
-  import { appsStore, featureFlags } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
+  import { appStore } from "@/stores/builder/app"
+  import { appsStore } from "@/stores/portal/apps"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
-  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
+  import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -48,9 +48,6 @@
 
   let updating = false
   let initialised = false
-
-  let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps[0]
@@ -87,7 +84,7 @@
     })
   }
 
-  // On app/apps update, reset the state.
+  // On workspace/apps update, reset the state.
   $: initForm(appMeta)
   $: validate($values)
 
@@ -128,22 +125,14 @@
   }
 
   const setupValidation = async () => {
-    appValidation.name(
-      validation,
-      {
-        apps: $appsStore.apps,
-        currentApp: app,
-      },
-      appOrWorkspace
-    )
-    appValidation.url(
-      validation,
-      {
-        apps: $appsStore.apps,
-        currentApp: app,
-      },
-      appOrWorkspace
-    )
+    workspaceValidation.name(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
+    })
+    workspaceValidation.url(validation, {
+      workspaces: $appsStore.apps,
+      currentWorkspace: app,
+    })
   }
 
   async function updateApp() {
@@ -158,12 +147,10 @@
       })
 
       await initialiseApp()
-      notifications.success(
-        `${Helpers.capitalise(appOrWorkspace)} update successful`
-      )
+      notifications.success("Workspace update successful")
     } catch (error) {
       console.error(error)
-      notifications.error(`Error updating ${appOrWorkspace}`)
+      notifications.error("Error updating workspace")
     }
   }
 
@@ -225,9 +212,7 @@
       {:else}
         <div class="edit-info">
           <Icon size="M" name="info" />
-          <Body size="S">
-            Unpublish your {appOrWorkspace} to edit name and URL
-          </Body>
+          <Body size="S">Unpublish your workspace to edit name and URL</Body>
         </div>
       {/if}
     </div>

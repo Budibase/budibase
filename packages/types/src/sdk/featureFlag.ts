@@ -2,7 +2,7 @@ export enum FeatureFlag {
   DEBUG_UI = "DEBUG_UI",
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
   AI_AGENTS = "AI_AGENTS",
-  WORKSPACES = "WORKSPACES",
+  USE_DYNAMIC_LOADING = "USE_DYNAMIC_LOADING",
 
   // Account-portal
   DIRECT_LOGIN_TO_ACCOUNT_PORTAL = "DIRECT_LOGIN_TO_ACCOUNT_PORTAL",
@@ -11,7 +11,7 @@ export enum FeatureFlag {
 export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.WORKSPACES]: false,
+  [FeatureFlag.USE_DYNAMIC_LOADING]: true,
 
   // Account-portal
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,

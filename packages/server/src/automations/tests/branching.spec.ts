@@ -1,15 +1,18 @@
-import * as automation from "../index"
-import { Table, AutomationStatus, EmptyFilterOption } from "@budibase/types"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import * as automation from "../index"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 
 describe("Branching automations", () => {
   const config = new TestConfiguration()
   let table: Table
 
+  beforeAll(async () => {
+    await config.init()
+  })
+
   beforeEach(async () => {
     await automation.init()
-    await config.init()
     table = await config.createTable()
     await config.createRow()
   })

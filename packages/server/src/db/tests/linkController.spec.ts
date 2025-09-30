@@ -1,10 +1,3 @@
-import TestConfig from "../../tests/utilities/TestConfiguration"
-import {
-  basicLinkedRow,
-  basicRow,
-  basicTable,
-} from "../../tests/utilities/structures"
-import LinkController from "../linkedRows/LinkController"
 import { context } from "@budibase/backend-core"
 import {
   FieldType,
@@ -17,6 +10,13 @@ import {
   Table,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import {
+  basicLinkedRow,
+  basicRow,
+  basicTable,
+} from "../../tests/utilities/structures"
+import LinkController from "../linkedRows/LinkController"
 
 const baseColumn = {
   type: FieldType.LINK,
@@ -75,7 +75,7 @@ describe("test the link controller", () => {
     row?: Row,
     oldTable?: Table
   ) {
-    return context.doInAppContext(appId, () => {
+    return context.doInWorkspaceContext(appId, () => {
       const linkConfig: {
         tableId?: string
         table: Table
@@ -157,7 +157,7 @@ describe("test the link controller", () => {
   it("should be able to delete a row", async () => {
     const row = await createLinkedRow()
     const controller = await createLinkController(table1, row)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       // get initial count
       const beforeLinks = await controller.getRowLinkDocs(row._id!)
       await controller.rowDeleted()
@@ -170,7 +170,7 @@ describe("test the link controller", () => {
   it("shouldn't throw an error when deleting a row with no links", async () => {
     const row = await config.createRow(basicRow(table1._id!))
     const controller = await createLinkController(table1, row)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       let error
       try {
         await controller.rowDeleted()
@@ -209,7 +209,7 @@ describe("test the link controller", () => {
     // remove the link from the row
     row.link = []
     const controller = await createLinkController(table1, row)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       await controller.rowSaved()
       let links = await controller.getRowLinkDocs(row._id!)
       expect(links.length).toEqual(0)
@@ -219,7 +219,7 @@ describe("test the link controller", () => {
   it("should be able to delete a table and have links deleted", async () => {
     await createLinkedRow()
     const controller = await createLinkController(table1)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       let before = await controller.getTableLinkDocs()
       await controller.tableDeleted()
       let after = await controller.getTableLinkDocs()
@@ -232,7 +232,7 @@ describe("test the link controller", () => {
     await createLinkedRow()
     await createLinkedRow("link2")
     const controller = await createLinkController(table1, undefined, table1)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       let before = await controller.getTableLinkDocs()
       await controller.removeFieldFromTable("link")
       let after = await controller.getTableLinkDocs()
@@ -262,7 +262,7 @@ describe("test the link controller", () => {
     const newTable = cloneDeep(table1)
     delete newTable.schema.link
     const controller = await createLinkController(newTable, undefined, table1)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       await controller.tableUpdated()
       const links = await controller.getTableLinkDocs()
       expect(links.length).toEqual(0)
@@ -333,7 +333,7 @@ describe("test the link controller", () => {
     const linkSchema = table1.schema["link"] as RelationshipFieldMetadata
     linkSchema.tableId = "not_found"
     const controller = await createLinkController(table1, undefined, table1)
-    await context.doInAppContext(appId, async () => {
+    await context.doInWorkspaceContext(appId, async () => {
       let before = await controller.getTableLinkDocs()
       await controller.removeFieldFromTable("link")
       let after = await controller.getTableLinkDocs()

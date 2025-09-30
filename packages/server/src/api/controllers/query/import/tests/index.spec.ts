@@ -1,8 +1,8 @@
-import TestConfig from "../../../../../tests/utilities/TestConfiguration"
-import { RestImporter } from "../index"
+import { events } from "@budibase/backend-core"
 import fs from "fs"
 import path from "path"
-import { events } from "@budibase/backend-core"
+import TestConfig from "../../../../../tests/utilities/TestConfiguration"
+import { RestImporter } from "../index"
 
 type Assertions = Record<
   DatasetKey,
@@ -70,7 +70,7 @@ describe("Rest Importer", () => {
     ) => Promise<void>,
     assertions: Assertions
   ) => {
-    await config.doInContext(config.appId, async () => {
+    await config.doInContext(config.devWorkspaceId, async () => {
       for (let [key, data] of Object.entries(datasets)) {
         await test(key as DatasetKey, data, assertions)
       }

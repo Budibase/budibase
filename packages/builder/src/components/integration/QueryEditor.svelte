@@ -20,7 +20,6 @@
   export let mode
   export let editorHeight = 500
   export let editorWidth = 640
-  // export let parameters = []
 
   let width
   let height
@@ -194,9 +193,10 @@
   }
 
   div :global(.CodeMirror) {
-    height: var(--code-mirror-height) !important;
+    height: var(--code-mirror-height);
     border-radius: var(--border-radius-s);
     font-family: var(--font-mono);
     line-height: 1.3;
+    resize: vertical;
   }
 </style>

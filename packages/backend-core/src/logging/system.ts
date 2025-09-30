@@ -76,6 +76,8 @@ export function getLogReadStream() {
 
   streams.push(fs.readFileSync(getFullPath(logsFileName)))
 
-  const combinedContent = Buffer.concat(streams)
+  const combinedContent = Buffer.concat(
+    streams.map(stream => new Uint8Array(stream))
+  )
   return combinedContent
 }

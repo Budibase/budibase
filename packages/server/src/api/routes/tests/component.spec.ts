@@ -1,6 +1,6 @@
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as env from "../../../environment"
 import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/component", () => {
   let request = setup.getRequest()
@@ -16,11 +16,11 @@ describe("/component", () => {
     it("should be able to fetch definitions locally", async () => {
       await env.withEnv(
         {
-          USE_LOCAL_COMPONENT_LIBS: "1",
+          DEV_USE_CLIENT_FROM_STORAGE: "0",
         },
         async () => {
           const res = await request
-            .get(`/api/${config.getAppId()}/components/definitions`)
+            .get(`/api/${config.getDevWorkspaceId()}/components/definitions`)
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
             .expect(200)
@@ -34,13 +34,13 @@ describe("/component", () => {
     it("should be able to fetch definitions from object store", async () => {
       await env.withEnv(
         {
-          USE_LOCAL_COMPONENT_LIBS: "0",
+          DEV_USE_CLIENT_FROM_STORAGE: "1",
         },
         async () => {
           // init again to make an app with a real component lib
           await config.init()
           const res = await request
-            .get(`/api/${config.getAppId()}/components/definitions`)
+            .get(`/api/${config.getDevWorkspaceId()}/components/definitions`)
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
             .expect(200)
@@ -55,7 +55,7 @@ describe("/component", () => {
       await checkBuilderEndpoint({
         config,
         method: "GET",
-        url: `/api/${config.getAppId()}/components/definitions`,
+        url: `/api/${config.getDevWorkspaceId()}/components/definitions`,
       })
     })
   })
