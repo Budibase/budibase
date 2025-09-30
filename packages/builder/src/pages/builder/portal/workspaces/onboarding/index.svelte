@@ -5,7 +5,6 @@
   import Spinner from "@/components/common/Spinner.svelte"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
-  import { initialise } from "@/stores/builder"
   import {
     buildBuilderWorkspaceDesignRoute,
     buildBuilderWorkspaceRoute,
@@ -32,8 +31,7 @@
 
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
 
-      await initialise(pkg)
-      await admin.init()
+      admin.markChecklistItemChecked("apps")
       await auth.setInitInfo({})
 
       const homeScreen = pkg.screens.find(screen => screen.routing?.homeScreen)

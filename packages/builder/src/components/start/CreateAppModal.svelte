@@ -7,7 +7,6 @@
     ModalContent,
     Dropzone,
   } from "@budibase/bbui"
-  import { initialise } from "@/stores/builder"
   import { API } from "@/api"
   import { appsStore, admin, auth, appCreationStore } from "@/stores/portal"
   import { onMount } from "svelte"
@@ -148,13 +147,8 @@
       // Create App
       const createdApp = await API.createApp(data)
 
-      // Select Correct Application/DB in prep for creating user
-      const pkg = await API.fetchAppPackage(createdApp.instance._id)
-
-      await initialise(pkg)
-
       // Update checklist - in case first app
-      await admin.init()
+      admin.markChecklistItemChecked("apps")
 
       // Create user
       await auth.setInitInfo({})

@@ -34,7 +34,7 @@
       // Save the admin user
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
-      await admin.init()
+      admin.markChecklistItemChecked("adminUser")
       await auth.login(formData?.email.trim(), formData?.password)
       $goto("../portal")
     } catch (error) {

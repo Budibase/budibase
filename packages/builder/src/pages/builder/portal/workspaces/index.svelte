@@ -1,4 +1,7 @@
 <script>
+  import { onMount } from "svelte"
+  import { get } from "svelte/store"
+  import { goto } from "@roxi/routify"
   import {
     Heading,
     Layout,
@@ -11,14 +14,13 @@
     Body,
     Search,
   } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
+  import { API } from "@/api"
   import Spinner from "@/components/common/Spinner.svelte"
   import CreateAppModal from "@/components/start/CreateAppModal.svelte"
   import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import { automationStore, initialise } from "@/stores/builder"
-  import { API } from "@/api"
-  import { onMount } from "svelte"
+  import { automationStore } from "@/stores/builder"
   import {
     appsStore,
     auth,
@@ -30,7 +32,6 @@
     appCreationStore,
     backups,
   } from "@/stores/portal"
-  import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
   import TemplatesModal from "@/components/start/TemplatesModal.svelte"
@@ -197,12 +198,8 @@
       // Create App
       const createdApp = await API.createApp(data)
 
-      // Select Correct Application/DB in prep for creating user
-      const pkg = await API.fetchAppPackage(createdApp.instance._id)
-      await initialise(pkg)
-
       // Update checklist - in case first app
-      await admin.init()
+      admin.markChecklistItemChecked("apps")
 
       // Create user
       await API.updateOwnMetadata({
@@ -258,7 +255,9 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
-      await templates.load()
+      if (get(templates).length === 0) {
+        await templates.load()
+      }
     } catch (error) {
       notifications.error("Error getting init info")
     }

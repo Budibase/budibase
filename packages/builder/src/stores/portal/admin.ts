@@ -90,6 +90,21 @@ export class AdminStore extends BudiStore<AdminState> {
     })
   }
 
+  markChecklistItemChecked(key: "apps" | "adminUser" | "smtp" | "sso") {
+    this.update(store => {
+      const checklist = store.checklist ?? {}
+      const current = checklist[key] ?? {}
+      store.checklist = {
+        ...checklist,
+        [key]: {
+          ...current,
+          checked: true,
+        },
+      }
+      return store
+    })
+  }
+
   unload() {
     this.update(store => {
       store.loaded = false
