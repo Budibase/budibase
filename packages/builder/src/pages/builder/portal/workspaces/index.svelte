@@ -20,7 +20,7 @@
   import CreateAppModal from "@/components/start/CreateAppModal.svelte"
   import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
-  import { automationStore } from "@/stores/builder"
+  import { automationStore, initialise } from "@/stores/builder"
   import {
     appsStore,
     auth,
