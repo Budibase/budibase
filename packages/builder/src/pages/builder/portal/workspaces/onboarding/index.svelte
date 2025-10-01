@@ -5,6 +5,7 @@
   import Spinner from "@/components/common/Spinner.svelte"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
   import {
     buildBuilderWorkspaceDesignRoute,
     buildBuilderWorkspaceRoute,
@@ -30,6 +31,7 @@
       const createdApp = await API.createApp(data)
 
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await initialise(pkg)
 
       admin.markChecklistItemChecked("apps")
       await auth.setInitInfo({})
