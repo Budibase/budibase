@@ -11,7 +11,7 @@
   export let readonly = false
   export let api
 
-  const { API, notifications, props } = getContext("grid")
+  const { API, notifications, props, datasource } = getContext("grid")
 
   let isOpen = false
   let modal
@@ -47,9 +47,12 @@
     attachRequest.append("file", signatureFile)
 
     try {
-      const uploadReq = await API.uploadBuilderAttachment(attachRequest)
-      const [signatureAttachment] = uploadReq
-      onChange(signatureAttachment)
+      const tableId = $datasource?.tableId || $datasource?.id
+      const result = await (tableId
+        ? API.uploadAttachment(tableId, attachRequest)
+        : API.uploadBuilderAttachment(attachRequest))
+
+      onChange(result[0])
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
       return []
