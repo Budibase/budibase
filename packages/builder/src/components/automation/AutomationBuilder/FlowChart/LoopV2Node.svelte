@@ -9,7 +9,7 @@
   $: block = data.block
   $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
-  $: _selected = $automationStore.selectedNodeId === block?.id
+  $: selected = $automationStore.selectedNodeId === block?.id
   $: loopChildCount = Array.isArray(block?.inputs?.children)
     ? block.inputs.children.length
     : 0
@@ -25,7 +25,7 @@
     })
   }
 
-  const selectSelf = async () => {
+  const selectNode = async () => {
     if (block?.id) {
       await automationStore.actions.selectNode(block.id)
     }
@@ -48,7 +48,11 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div on:click|stopPropagation={selectSelf} class="loop-container">
+<div
+  on:click|stopPropagation={selectNode}
+  class="loop-container"
+  class:selected
+>
   <div class="loop-header">
     <div class="loop-icon-wrapper">
       <Icon name="Reuse" size="S" />
@@ -71,6 +75,11 @@
     position: relative;
     display: flex;
     flex-direction: column;
+  }
+
+  .loop-container.selected {
+    border-color: var(--spectrum-global-color-blue-700);
+    transition: border 130ms ease-out;
   }
 
   .loop-header {
@@ -108,6 +117,10 @@
     border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 16px !important;
     transition: all 0.2s ease !important;
+  }
+
+  :global(.svelte-flow__node-loop-subflow-node:has(.loop-container.selected)) {
+    border-color: var(--spectrum-global-color-blue-700) !important;
   }
 
   :global(.svelte-flow__node-loop-subflow-node:hover) {

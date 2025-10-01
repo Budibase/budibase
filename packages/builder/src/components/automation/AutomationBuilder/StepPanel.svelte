@@ -60,6 +60,21 @@
     x => $memoBlock && x.blockToLoop === $memoBlock.id
   )
 
+  // LOOP_V2: detect parent loop container and expose it for UI
+  $: loopContextId = blockRef?.pathTo?.at(-1)?.loopStepId
+  $: loopV2BlockRef = loopContextId
+    ? $selectedAutomation.blockRefs?.[loopContextId]
+    : undefined
+  $: loopV2Block = loopV2BlockRef
+    ? automationStore.actions.getBlockByRef($memoAutomation, loopV2BlockRef)
+    : undefined
+  $: insideLoopV2 = Boolean(blockRef?.isLoopV2Child && loopV2Block)
+  $: hasAnyLoop = Boolean(loopBlock || insideLoopV2)
+  $: canStopLoopingV2 =
+    insideLoopV2 &&
+    Array.isArray((loopV2Block as any)?.inputs?.children) &&
+    (loopV2Block as any).inputs.children.length === 1
+
   $: isAppAction = block?.stepId === AutomationTriggerStepId.APP
   $: isAppAction && fetchPermissions($memoAutomation?._id)
   $: isAppAction &&
@@ -122,14 +137,16 @@
           noPadding
           icon="arrow-clockwise"
           on:click={async () => {
-            if (loopBlock) {
+            if (!blockRef) return
+            if (hasAnyLoop) {
               await automationStore.actions.removeLooping(blockRef)
             } else {
-              await automationStore.actions.addLooping(blockRef)
+              await automationStore.actions.wrapStepInLoopV2(blockRef)
             }
           }}
+          disabled={insideLoopV2 && !canStopLoopingV2}
         >
-          {loopBlock ? `Stop Looping` : `Loop`}
+          {hasAnyLoop ? `Stop Looping` : `Loop`}
         </ActionButton>
       {/if}
       <ActionButton
@@ -176,11 +193,11 @@
 <Divider noMargin />
 <div class="panel config" use:resizable>
   <div class="content" bind:this={configPanel}>
-    {#if loopBlock}
+    {#if loopBlock || loopV2Block}
       <div class="loop">
         <DetailSummary name="Loop details" padded={false} initiallyShow>
           <BlockProperties
-            block={loopBlock}
+            block={loopBlock || loopV2Block}
             context={$memoContext}
             automation={$memoAutomation}
           />

@@ -2206,12 +2206,59 @@ const automationActions = (store: AutomationStore) => ({
    * @returns
    */
   removeLooping: async (blockRef?: BlockRef) => {
-    if (!blockRef?.looped) {
+    if (!blockRef) {
       return
     }
-    let loopBlockRef = get(selectedAutomation).blockRefs[blockRef.looped]
-    if (loopBlockRef) {
-      await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    const automation = get(selectedAutomation)?.data
+
+    // Legacy LOOP: referenced via `looped`
+    if (blockRef.looped) {
+      const loopBlockRef = blockRefs[blockRef.looped]
+      if (loopBlockRef) {
+        await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
+      }
+      return
+    }
+
+    // Loop V2 unwrap: only when parent loop has exactly one child (the target)
+    const lastHop: any = blockRef.pathTo?.at(-1)
+    const parentLoopId: string | undefined = lastHop?.loopStepId
+    if (!automation || !parentLoopId) {
+      return
+    }
+
+    const loopRef = blockRefs[parentLoopId]
+    if (!loopRef) {
+      return
+    }
+
+    try {
+      const loopNode = automationStore.actions.getBlockByRef(automation, loopRef)
+      if (!loopNode || (loopNode as any).stepId !== AutomationActionStepId.LOOP_V2) {
+        console.error("Parent is not a Loop V2 node")
+        return
+      }
+
+      const children = (((loopNode as any).inputs?.children || []) as any[])
+        .slice()
+      if (children.length !== 1) {
+        notifications.info(
+          "Stop Looping is only available when the loop contains a single step."
+        )
+        return
+      }
+
+      const updated = automationStore.actions.updateStep(
+        loopRef.pathTo,
+        automation,
+        cloneDeep(children[0])
+      )
+      await automationStore.actions.save(updated)
+      await automationStore.actions.selectNode(children[0].id)
+    } catch (e) {
+      notifications.error("Error removing loop from step")
+      console.error("Error unwrapping from Loop V2", e)
     }
   },
 
@@ -2238,6 +2285,57 @@ const automationActions = (store: AutomationStore) => ({
       loopBlock,
       blockRef.pathTo
     )
+  },
+
+  /**
+   * Wrap the target step in a Loop V2 container and move the step into
+   * the loop's children as the first child.
+   * @param blockRef The step to wrap
+   */
+  wrapStepInLoopV2: async (blockRef?: BlockRef) => {
+    if (!blockRef) {
+      return
+    }
+    const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return
+    }
+
+    try {
+      const pathSteps = automationStore.actions.getPathSteps(
+        blockRef.pathTo,
+        automation
+      )
+      const targetStep = pathSteps.at(-1)
+      if (!targetStep || Array.isArray(targetStep)) {
+        console.error("Invalid target step for Loop V2 wrap")
+        return
+      }
+
+      const loopDefinition = get(store).blockDefinitions.ACTION.LOOP_V2
+      const loopBlock = automationStore.actions.constructBlock(
+        BlockDefinitionTypes.ACTION,
+        AutomationActionStepId.LOOP_V2,
+        loopDefinition
+      ) as any
+
+      loopBlock.inputs = {
+        ...(loopBlock.inputs || {}),
+        children: [cloneDeep(targetStep as any)],
+      }
+
+      const updated = automationStore.actions.updateStep(
+        blockRef.pathTo,
+        automation,
+        loopBlock
+      )
+
+      await automationStore.actions.save(updated)
+      await automationStore.actions.selectNode((targetStep as any).id)
+    } catch (e) {
+      notifications.error("Error wrapping step in Loop")
+      console.error("Error wrapping step in Loop V2", e)
+    }
   },
 
   /**
