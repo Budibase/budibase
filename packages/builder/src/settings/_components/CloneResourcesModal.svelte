@@ -1,0 +1,214 @@
+<script lang="ts">
+  import { API } from "@/api"
+  import {
+    appStore,
+    automationStore,
+    datasources,
+    tables,
+    workspaceAppStore,
+  } from "@/stores/builder"
+  import { appsStore } from "@/stores/portal"
+  import {
+    Modal,
+    ModalContent,
+    notifications,
+    Select,
+    Table,
+  } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
+  import type { UsedResource } from "@budibase/types"
+  import { ResourceType } from "@budibase/types"
+
+  let modal: Modal
+  export const show = () => modal.show()
+
+  interface DataType {
+    _id: string
+    name: string
+    direct: boolean
+    __selectable: boolean
+  }
+
+  let toWorkspaceId: string
+
+  let selectedResources: Record<ResourceType, DataType[]> = {
+    [ResourceType.DATASOURCE]: [],
+    [ResourceType.TABLE]: [],
+    [ResourceType.ROW_ACTION]: [],
+    [ResourceType.QUERY]: [],
+    [ResourceType.AUTOMATION]: [],
+    [ResourceType.WORKSPACE_APP]: [],
+  }
+
+  $: workspaces = $appsStore.apps
+    .filter(a => a.devId !== sdk.applications.getDevAppID($appStore.appId))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  function onShow() {}
+
+  async function onConfirm() {}
+
+  let dependantResources: Record<
+    string,
+    Partial<Record<ResourceType, UsedResource[]>>
+  > = {}
+
+  let resourceTypesToDisplay: Partial<{
+    [K in ResourceType]: {
+      displayName: string
+      type: K
+      data: DataType[]
+    }
+  }>
+
+  const mapToDataType = (d: any): DataType => ({
+    _id: d._id,
+    name: d.name,
+    direct: true,
+    __selectable: true,
+  })
+  $: resourceTypesToDisplay = {
+    [ResourceType.WORKSPACE_APP]: {
+      displayName: "Apps",
+      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
+      type: ResourceType.WORKSPACE_APP,
+    },
+    [ResourceType.TABLE]: {
+      displayName: "Tables",
+      data: $tables.list.map(mapToDataType),
+      type: ResourceType.TABLE,
+    },
+    [ResourceType.DATASOURCE]: {
+      displayName: "Datasources",
+      data: $datasources.list.map(mapToDataType),
+      type: ResourceType.DATASOURCE,
+    },
+    [ResourceType.AUTOMATION]: {
+      displayName: "Automations",
+      data: $automationStore.automations.map(mapToDataType),
+      type: ResourceType.AUTOMATION,
+    },
+  }
+
+  $: resourceTypesToDisplay[ResourceType.WORKSPACE_APP]?.data.forEach(app => {
+    API.resource
+      .searchForUsage({ workspaceAppIds: [app._id!] })
+      .then(res => {
+        dependantResources[app._id!] = res.resources.reduce<
+          Partial<Record<ResourceType, UsedResource[]>>
+        >((acc, value) => {
+          acc[value.type] = [...(acc[value.type] || []), value]
+          return acc
+        }, {})
+      })
+      .catch(err => {
+        notifications.error(err.message)
+      })
+  })
+
+  $: resourceTypesToDisplay[ResourceType.AUTOMATION]?.data.forEach(
+    automation => {
+      API.resource
+        .searchForUsage({ automationIds: [automation._id!] })
+        .then(res => {
+          dependantResources[automation._id!] = res.resources.reduce<
+            Partial<Record<ResourceType, UsedResource[]>>
+          >((acc, value) => {
+            acc[value.type] = [...(acc[value.type] || []), value]
+            return acc
+          }, {})
+        })
+        .catch(err => {
+          notifications.error(err.message)
+        })
+    }
+  )
+
+  function calculateDependants(
+    selectedId: string[],
+    dependantResources: Record<
+      string,
+      Partial<Record<ResourceType, UsedResource[]>>
+    >
+  ) {
+    for (const type of Object.keys(selectedResources)) {
+      const castedType = type as keyof typeof selectedResources
+      selectedResources[castedType] = selectedResources[castedType].filter(
+        x => x.direct
+      )
+    }
+    for (const id of selectedId) {
+      for (const [type, resources] of Object.entries(dependantResources[id])) {
+        const castedType = type as ResourceType
+        for (const app of resources) {
+          if (selectedResources[castedType].find(x => x._id === id)) continue
+          selectedResources[castedType].push({
+            _id: app.id,
+            name: app.name,
+            direct: false,
+            __selectable: false,
+          })
+        }
+      }
+    }
+  }
+
+  $: calculateDependants(
+    Object.values(selectedResources)
+      .flatMap(x => x)
+      .filter(x => x.direct)
+      .map(a => a._id),
+    dependantResources
+  )
+
+  $: resourcesToBeCopiedCount = Object.values(selectedResources).flatMap(
+    x => x
+  ).length
+
+  $: disabled = !resourcesToBeCopiedCount || !toWorkspaceId
+
+  let confirmText: string | undefined
+  $: confirmText = resourcesToBeCopiedCount
+    ? `Copy ${resourcesToBeCopiedCount} resources`
+    : "Copy"
+</script>
+
+<Modal bind:this={modal} on:show={onShow} on:hide>
+  <ModalContent
+    title={`Copy resources`}
+    {onConfirm}
+    size="M"
+    {disabled}
+    {confirmText}
+  >
+    <p class="workspace-selection-label">Select the destination workspace:</p>
+    <Select
+      bind:value={toWorkspaceId}
+      options={workspaces}
+      getOptionLabel={w => w.name.trim()}
+      getOptionValue={w => w.devId}
+      getOptionIcon={() => undefined}
+    />
+
+    {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
+      {#if data.length}
+        <Table
+          bind:selectedRows={selectedResources[type]}
+          {data}
+          schema={{ name: { type: "string", displayName } }}
+          allowEditColumns={false}
+          allowEditRows={false}
+          allowSelectRows
+          compact
+          quiet
+        />
+      {/if}
+    {/each}
+  </ModalContent>
+</Modal>
+
+<style>
+  .workspace-selection-label {
+    margin-bottom: var(--bb-spacing-xs);
+  }
+</style>
