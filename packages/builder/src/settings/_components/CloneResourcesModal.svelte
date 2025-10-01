@@ -26,7 +26,7 @@
     _id: string
     name: string
     direct: boolean
-    __selectable: boolean
+    __disabled: boolean
   }
 
   let toWorkspaceId: string
@@ -65,7 +65,7 @@
     _id: d._id,
     name: d.name,
     direct: true,
-    __selectable: true,
+    __disabled: false,
   })
   $: resourceTypesToDisplay = {
     [ResourceType.WORKSPACE_APP]: {
@@ -138,17 +138,35 @@
       )
     }
     for (const id of selectedId) {
+      if (!dependantResources[id]) {
+        continue
+      }
       for (const [type, resources] of Object.entries(dependantResources[id])) {
         const castedType = type as ResourceType
         for (const app of resources) {
-          if (selectedResources[castedType].find(x => x._id === id)) continue
+          if (selectedResources[castedType].find(x => x._id === id)) {
+            continue
+          }
           selectedResources[castedType].push({
             _id: app.id,
             name: app.name,
             direct: false,
-            __selectable: false,
+            __disabled: true,
           })
         }
+      }
+    }
+
+    for (const type of Object.keys(selectedResources)) {
+      const castedType = type as ResourceType
+      const undirectlySelected = new Set(
+        selectedResources[castedType].filter(x => !x.direct).map(x => x._id)
+      )
+
+      if (resourceTypesToDisplay[castedType]?.data.length) {
+        resourceTypesToDisplay[castedType].data = resourceTypesToDisplay[
+          castedType
+        ].data.map(x => ({ ...x, __disabled: undirectlySelected.has(x._id) }))
       }
     }
   }
