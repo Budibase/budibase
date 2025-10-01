@@ -235,6 +235,9 @@ export interface DagreLayoutOptions {
 const DEFAULT_NODE_WIDTH = 320
 const DEFAULT_STEP_HEIGHT = 100
 const DEFAULT_BRANCH_HEIGHT = 180
+// Minimum gap after a loop container so the edge from the loop to the
+// next node is clearly visible (prevents micro-edges)
+const LOOP_CLEARANCE = 100
 
 const buildLoopEdgeData = (
   sourceChild: AutomationBlock,
@@ -280,15 +283,13 @@ export const dagreLayoutAutomation = (
         width = DEFAULT_NODE_WIDTH
         height = 1
       } else if (node.type === "loop-subflow-node") {
-        // Use the container dimensions passed in data for more accurate layout
+        // Keep real width so siblings don't overlap horizontally, but use a
+        // small fixed height so Dagre doesn't inflate the whole rank.
         const w = node?.data?.containerWidth
-        const h = node?.data?.containerHeight
         if (typeof w === "number" && w > 0) {
           width = w
         }
-        if (typeof h === "number" && h > 0) {
-          height = h
-        }
+        // height intentionally left as DEFAULT_STEP_HEIGHT
       }
       dagreGraph.setNode(node.id, { width, height })
     })
@@ -298,8 +299,8 @@ export const dagreLayoutAutomation = (
     .filter(e => {
       const s = nodeById[e.source]
       const t = nodeById[e.target]
-      const sIsChild = s?.parentNode || s?.parentId
-      const tIsChild = t?.parentNode || t?.parentId
+      const sIsChild = Boolean(s?.parentId)
+      const tIsChild = Boolean(t?.parentId)
       return !sIsChild && !tIsChild
     })
     .forEach(edge => {
@@ -331,7 +332,81 @@ export const dagreLayoutAutomation = (
       }
     })
 
+  // After layout, clear visual space only for the loop's own lane
+  applyLoopClearance(graph, rankdir)
+
   return graph
+}
+
+// Keep Dagre ranks compact across branches by treating loops as short for layout,
+// then only shifting the loop’s own downstream chain so it visually clears the
+// container height/width. This avoids long edges in sibling lanes.
+const applyLoopClearance = (
+  graph: { nodes: FlowNode[]; edges: FlowEdge[] },
+  rankdir: LayoutDirection
+) => {
+  const nodesById: Record<string, FlowNode> = {}
+  graph.nodes.forEach(n => (nodesById[n.id] = n))
+
+  // Top-level adjacency only
+  const outgoing: Record<string, string[]> = {}
+  for (const e of graph.edges) {
+    const s = nodesById[e.source]
+    const t = nodesById[e.target]
+    if (!s || !t) continue
+    if (s.parentId || t.parentId) continue
+    ;(outgoing[e.source] ||= []).push(e.target)
+  }
+
+  const visited = new Set<string>()
+  const shiftSubtree = (startId: string, delta: number, axis: "x" | "y") => {
+    if (delta <= 0) return
+    const stack = [startId]
+    while (stack.length) {
+      const id = stack.pop()!
+      const node = nodesById[id]
+      if (!node || node.parentId) continue
+      const key = `${id}:${delta}:${axis}`
+      if (visited.has(key)) continue
+      visited.add(key)
+      node.position =
+        axis === "y"
+          ? { x: node.position.x, y: node.position.y + delta }
+          : { x: node.position.x + delta, y: node.position.y }
+      const nexts = outgoing[id] || []
+      for (const nId of nexts) stack.push(nId)
+    }
+  }
+
+  for (const loopNode of graph.nodes) {
+    if (loopNode.parentId || loopNode.type !== "loop-subflow-node") continue
+    const nexts = outgoing[loopNode.id] || []
+    if (rankdir === "LR") {
+      const visualWidth =
+        typeof loopNode?.data?.containerWidth === "number"
+          ? loopNode.data.containerWidth
+          : DEFAULT_NODE_WIDTH
+      const right = loopNode.position.x + visualWidth + LOOP_CLEARANCE
+      for (const targetId of nexts) {
+        const target = nodesById[targetId]
+        if (!target || target.parentId) continue
+        const delta = right - target.position.x
+        if (delta > 0) shiftSubtree(targetId, delta, "x")
+      }
+    } else {
+      const visualHeight =
+        typeof loopNode?.data?.containerHeight === "number"
+          ? loopNode.data.containerHeight
+          : DEFAULT_STEP_HEIGHT
+      const bottom = loopNode.position.y + visualHeight + LOOP_CLEARANCE
+      for (const targetId of nexts) {
+        const target = nodesById[targetId]
+        if (!target || target.parentId) continue
+        const delta = bottom - target.position.y
+        if (delta > 0) shiftSubtree(targetId, delta, "y")
+      }
+    }
+  }
 }
 
 export const renderChain = (
