@@ -34,7 +34,6 @@
     type UIWorkspaceApp,
   } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
-  import CloneResourceModal from "../_components/CloneResourceModal.svelte"
   import NoResults from "../_components/NoResults.svelte"
 
   type ShowUI = { show: () => void }
@@ -46,7 +45,6 @@
   let confirmDeleteDialog: ConfirmDialog
   let appChangingStatus: string | undefined = undefined
   let versionModal: ShowUI
-  let cloneResourceModal: CloneResourceModal
 
   $: favourites = workspaceFavouriteStore.lookup
   $: updateAvailable =
@@ -178,12 +176,6 @@
         name: "Delete",
         visible: true,
         callback: () => confirmDeleteDialog.show(),
-      },
-      {
-        icon: "export",
-        name: "Copy to another workspace",
-        visible: $featureFlags.COPY_APPS_BETWEEN_WORKSPACES,
-        callback: () => cloneResourceModal.show(),
       },
       {
         icon: "copy",
@@ -381,18 +373,6 @@
   workspaceApp={selectedWorkspaceApp}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
-
-{#if selectedWorkspaceApp}
-  <CloneResourceModal
-    bind:this={cloneResourceModal}
-    resource={{
-      id: selectedWorkspaceApp._id || "",
-      name: selectedWorkspaceApp.name,
-      type: "app",
-    }}
-    on:hide={() => (selectedWorkspaceApp = undefined)}
-  />
-{/if}
 
 {#if selectedWorkspaceApp}
   <ConfirmDialog
