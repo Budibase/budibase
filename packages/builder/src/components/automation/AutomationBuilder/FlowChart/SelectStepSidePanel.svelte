@@ -22,7 +22,11 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import NewPill from "@/components/common/NewPill.svelte"
-  import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
+  import type {
+    BranchFlowContext,
+    FlowBlockContext,
+    FlowBlockPath,
+  } from "@/types/automations"
 
   export let block
   export let onClose = () => {}

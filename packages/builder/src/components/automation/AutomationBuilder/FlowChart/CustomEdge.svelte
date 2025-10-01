@@ -20,15 +20,6 @@
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
   import type { DragView } from "./FlowChartDnD"
-  const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
-    if (!ctx) {
-      return undefined
-    }
-    if ("branchNode" in ctx && ctx.branchNode) {
-      return ctx.branchStepId
-    }
-    return ctx.id
-  }
 
   export let data: EdgeData
   export let sourceX: number
@@ -49,8 +40,8 @@
   const flow = useSvelteFlow()
 
   /*
-  Depending on the type of edge there can realistically be different properties
-  coming in here depending on if it's a branch edge or not.
+  Need a type guard here because there can be different properties
+  coming in here depending on if it's a branch edge or not.  
   */
   $: isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
     "isBranchEdge" in d && d.isBranchEdge === true
@@ -126,6 +117,16 @@
     direction === "LR"
       ? (sourceY ?? 0)
       : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2 - 20)
+
+  const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
+    if (!ctx) {
+      return undefined
+    }
+    if ("branchNode" in ctx && ctx.branchNode) {
+      return ctx.branchStepId
+    }
+    return ctx.id
+  }
 
   const handleBranch = () => {
     const targetPath = blockRef?.pathTo

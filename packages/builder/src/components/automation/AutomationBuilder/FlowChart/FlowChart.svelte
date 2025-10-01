@@ -158,7 +158,7 @@
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 150, nodesep: 300 }
+      { rankdir: direction, ranksep: 100, nodesep: 100 }
     )
 
     nodes.set(laidOut.nodes)
@@ -167,7 +167,16 @@
 
   // When nodes are available and we haven't applied our custom viewport yet, align the top
   $: if ($nodes?.length && !initialViewportApplied) {
-    fitView({ maxZoom: 1 })
+    fitView({ maxZoom: 1 }).then(() => {
+      const viewport = getViewport()
+      const toplevelNodes = $nodes.filter(n => !n.parentId)
+      const minY = Math.min(...toplevelNodes.map(n => n.position.y))
+      setViewport({
+        x: viewport.x,
+        y: -(viewport.y - minY) + 40,
+        zoom: viewport.zoom,
+      })
+    })
     initialViewportApplied = true
   }
 
@@ -205,7 +214,7 @@
         ...automation,
         layoutDirection,
       })
-      fitView()
+      fitView({ maxZoom: 1 })
     } catch (error) {
       notifications.error("Unable to save layout direction")
     }

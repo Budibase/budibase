@@ -4,7 +4,6 @@ import {
   ViewMode,
   type AutomationBlock,
   type AutomationLogStep,
-  type BranchFlowContext,
   type FlowBlockContext,
   type FlowBlockPath,
   type StepNodeData,
@@ -14,6 +13,7 @@ import {
   type BaseEdgeData,
   type BranchEdgeData,
   type LoopEdgeData,
+  BranchFlowContext,
 } from "@/types/automations"
 import dagre from "@dagrejs/dagre"
 import {
@@ -25,6 +25,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationLog,
+  AutomationStep,
   AutomationStepResult,
   AutomationTriggerResult,
   AutomationTriggerStepId,
@@ -434,7 +435,7 @@ export const renderBranches = (
   const baseId = branchStep.id
   const branches: Branch[] = ((branchStep as BranchStep)?.inputs?.branches ||
     []) as Branch[]
-  const children: Record<string, AutomationBlock[]> =
+  const children: Record<string, AutomationStep[]> =
     (branchStep as BranchStep)?.inputs?.children || {}
 
   let clusterBottomY = startY + deps.ySpacing // at least one row below
@@ -480,7 +481,7 @@ export const renderBranches = (
 
     // Children of this branch
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
-    const childSteps: AutomationBlock[] = children?.[branch.id] || []
+    const childSteps: AutomationStep[] = children?.[branch.id] || []
     const branchPath: FlowBlockPath = [
       ...parentPath,
       {
@@ -558,7 +559,7 @@ export const renderLoopV2Container = (
   deps: GraphBuildDeps
 ) => {
   const baseId = loopStep.id
-  const children: AutomationBlock[] = loopStep.inputs?.children || []
+  const children: AutomationStep[] = loopStep.inputs?.children || []
   // Compute container dimensions based on children count
   const childHeight = 120
   const paddingTop = 90
