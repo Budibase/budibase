@@ -669,16 +669,19 @@ async function handleUserWorkspacePermission(
     throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
-  const appCreator = Object.entries(existingUser.roles)
+  const creatorForApps = Object.entries(existingUser.roles)
     .filter(([_appId, role]) => role === "CREATOR")
     .map(([appId]) => appId)
-  if (!appCreator.length && existingUser.builder) {
-    delete existingUser.builder.creator
-    delete existingUser.builder.apps
-  } else if (appCreator.length) {
+
+  const shouldHaveCreatorRole =
+    existingUser.builder?.creator || creatorForApps.length
+  if (!shouldHaveCreatorRole) {
+    delete existingUser.builder?.creator
+    delete existingUser.builder?.apps
+  } else {
     existingUser.builder ??= {}
     existingUser.builder.creator = true
-    existingUser.builder.apps = appCreator
+    existingUser.builder.apps = creatorForApps
   }
 
   const user = await userSdk.db.save(existingUser, {
