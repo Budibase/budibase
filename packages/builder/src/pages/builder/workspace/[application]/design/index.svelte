@@ -125,10 +125,10 @@
       await workspaceAppStore.duplicate(workspaceAppId)
     } catch (e) {
       notifications.error("Failed to duplicate app")
+    } finally {
+      isDuplicating = false
     }
     await appStore.refresh()
-
-    isDuplicating = false
   }
 
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
