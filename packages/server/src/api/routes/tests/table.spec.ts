@@ -41,7 +41,7 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/tables ($dbName)",
-    ({ config, dsProvider, isInternal, isOracle, isSql }) => {
+    ({ config, dsProvider, isInternal, isOracle, isSql, dbName }) => {
       let datasource: Datasource | undefined
 
       beforeAll(async () => {
@@ -692,10 +692,12 @@ if (descriptions.length) {
 
           const response = await config.api.table.save(saveTableRequest)
 
+          // TODO: SQS should be coming as sql
+          const addSqlFiles = isSql || dbName === "sqs"
           const expectedResponse = {
             ...saveTableRequest,
-            primary: isSql ? ["_id"] : undefined,
-            sql: isSql ? true : undefined,
+            primary: addSqlFiles ? ["_id"] : undefined,
+            sql: addSqlFiles ? true : undefined,
             _rev: expect.stringMatching(/^\d-.+/),
             _id: expect.stringMatching(/^ta_.+/),
             createdAt: expect.stringMatching(ISO_REGEX_PATTERN),

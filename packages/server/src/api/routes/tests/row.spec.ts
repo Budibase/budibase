@@ -1158,7 +1158,6 @@ if (descriptions.length) {
         })
 
         isSql &&
-          !isInternal &&
           describe("date", () => {
             it("should be able to write back a date fetched directly from the DB", async () => {
               const table = await config.api.table.save(
@@ -3224,7 +3223,6 @@ if (descriptions.length) {
       })
 
       isSql &&
-        !isInternal &&
         describe("imported many-to-many", () => {
           let table1: Table
           let table2: Table
