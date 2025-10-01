@@ -4,10 +4,13 @@
     appStore,
     automationStore,
     datasources,
+    queries,
+    rowActions,
     tables,
     workspaceAppStore,
   } from "@/stores/builder"
   import { appsStore } from "@/stores/portal"
+  import type { RowAction } from "@/types"
   import {
     Modal,
     ModalContent,
@@ -16,7 +19,7 @@
     Table,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import type { UsedResource } from "@budibase/types"
+  import type { AnyDocument, UsedResource } from "@budibase/types"
   import { ResourceType } from "@budibase/types"
 
   let modal: Modal
@@ -53,20 +56,22 @@
     Partial<Record<ResourceType, UsedResource[]>>
   > = {}
 
-  let resourceTypesToDisplay: Partial<{
+  const mapToDataType = (d: AnyDocument): DataType => ({
+    _id: d._id!,
+    name: d.name,
+    direct: true,
+    __disabled: false,
+  })
+
+  $: $tables.list.forEach(t => rowActions.refreshRowActions(t._id!))
+
+  let resourceTypesToDisplay: {
     [K in ResourceType]: {
       displayName: string
       type: K
       data: DataType[]
     }
-  }>
-
-  const mapToDataType = (d: any): DataType => ({
-    _id: d._id,
-    name: d.name,
-    direct: true,
-    __disabled: false,
-  })
+  }
   $: resourceTypesToDisplay = {
     [ResourceType.WORKSPACE_APP]: {
       displayName: "Apps",
@@ -87,6 +92,30 @@
       displayName: "Automations",
       data: $automationStore.automations.map(mapToDataType),
       type: ResourceType.AUTOMATION,
+    },
+    [ResourceType.QUERY]: {
+      displayName: "Queries",
+      data: $queries.list.map(mapToDataType),
+      type: ResourceType.QUERY,
+    },
+    [ResourceType.ROW_ACTION]: {
+      displayName: "Row actions",
+      data: [
+        ...Object.values($rowActions)
+          .flatMap(a => a)
+          .reduce<Map<string, RowAction>>(
+            (map, action) => {
+              if (!map.has(action.id)) {
+                map.set(action.id, action)
+              }
+              return map
+            },
+
+            new Map<string, RowAction>()
+          )
+          .values(),
+      ].map(a => mapToDataType(a)),
+      type: ResourceType.ROW_ACTION,
     },
   }
 
