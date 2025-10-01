@@ -2234,14 +2234,21 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     try {
-      const loopNode = automationStore.actions.getBlockByRef(automation, loopRef)
-      if (!loopNode || (loopNode as any).stepId !== AutomationActionStepId.LOOP_V2) {
+      const loopNode = automationStore.actions.getBlockByRef(
+        automation,
+        loopRef
+      )
+      if (
+        !loopNode ||
+        (loopNode as any).stepId !== AutomationActionStepId.LOOP_V2
+      ) {
         console.error("Parent is not a Loop V2 node")
         return
       }
 
-      const children = (((loopNode as any).inputs?.children || []) as any[])
-        .slice()
+      const children = (
+        ((loopNode as any).inputs?.children || []) as any[]
+      ).slice()
       if (children.length !== 1) {
         notifications.info(
           "Stop Looping is only available when the loop contains a single step."
