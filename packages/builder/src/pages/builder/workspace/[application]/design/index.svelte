@@ -54,6 +54,8 @@
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
 
+  $: canDuplicate = $featureFlags.DUPLICATE_APP
+
   const filters: {
     label: string
     filterValue: PublishResourceState | undefined
@@ -116,6 +118,21 @@
     window.open(liveUrl, "_blank")
   }
 
+  let isDuplicating = false
+
+  const duplicateWorkspaceApp = async (workspaceAppId: string) => {
+    isDuplicating = true
+
+    try {
+      await workspaceAppStore.duplicate(workspaceAppId)
+    } catch (e) {
+      notifications.error("Failed to duplicate app")
+    } finally {
+      isDuplicating = false
+    }
+    await appStore.refresh()
+  }
+
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
     const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
     const pause = {
@@ -135,7 +152,13 @@
       },
     }
 
-    return [
+    const commands: {
+      icon: string
+      name: string
+      visible: boolean
+      callback: () => void
+      disabled?: boolean
+    }[] = [
       {
         icon: "pencil",
         name: "Edit",
@@ -148,6 +171,7 @@
         visible: !!liveUrl,
         callback: () => openLiveWorkspaceApp(liveUrl),
       },
+
       pause,
       {
         icon: "trash",
@@ -161,7 +185,17 @@
         visible: $featureFlags.COPY_APPS_BETWEEN_WORKSPACES,
         callback: () => cloneResourceModal.show(),
       },
+      {
+        icon: "copy",
+        name: "Duplicate",
+        visible: canDuplicate,
+        disabled: isDuplicating,
+        callback: () =>
+          !isDuplicating && duplicateWorkspaceApp(workspaceApp._id as string),
+      },
     ]
+
+    return commands
   }
 
   const openContextMenu = (e: MouseEvent, workspaceApp: UIWorkspaceApp) => {
