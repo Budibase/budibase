@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import "@spectrum-css/button/dist/index-vars.css"
+  import { loadPhosphorIconWeight } from "../../utils/phosphorIconLoader.js"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -20,6 +21,23 @@
   let node
   let touched = false
   let handlingOnClick = false
+
+  // Backwards compatibility: detect if icon is old RemixIcon format or new Phosphor format
+  $: isLegacyIcon = icon && (icon.startsWith("ri-") || icon.includes("remix"))
+  $: isPhosphorIcon = icon && !isLegacyIcon
+
+  // Load Phosphor icon weight for new icons
+  $: if (isPhosphorIcon) {
+    loadPhosphorIconWeight("regular")
+  }
+
+  // Generate appropriate icon class
+  $: iconClass = isPhosphorIcon
+    ? (() => {
+        const iconName = icon.replace(/^ph-/, "")
+        return `ph ph-${iconName}`
+      })()
+    : icon
 
   $: $component.editing && node?.focus()
   $: componentText = getComponentText(text, $builderStore, $component)
@@ -65,7 +83,7 @@
     contenteditable={$component.editing && !icon}
   >
     {#if icon}
-      <i class="{icon} {size}" />
+      <i class="{iconClass} {size}" />
     {/if}
     {componentText}
   </button>

@@ -5,19 +5,19 @@ import environment from "../environment"
 import sdk from "../sdk"
 import { MIGRATIONS } from "./migrations"
 import { getAppMigrationQueue } from "./queue"
-import { getAppMigrationVersion } from "./workspaceMigrationMetadata"
+import { getWorkspaceMigrationVerions } from "./workspaceMigrationMetadata"
 
 export * from "./migrationLock"
 export * from "./workspaceMigrationMetadata"
 
-export type AppMigration = {
+export type WorkspaceMigration = {
   id: string
   func: () => Promise<void>
   // disabled so that by default all migrations listed are enabled
   disabled?: boolean
 }
 
-export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
+export function getLatestEnabledMigrationId(migrations?: WorkspaceMigration[]) {
   let latestMigrationId: string | undefined
   if (!migrations) {
     migrations = MIGRATIONS
@@ -39,7 +39,7 @@ function getMigrationIndex(versionId: string) {
 export async function checkMissingMigrations(
   ctx: UserCtx,
   next: Next,
-  appId: string
+  workspaceId: string
 ) {
   const latestMigration = getLatestEnabledMigrationId()
 
@@ -48,30 +48,30 @@ export async function checkMissingMigrations(
     return next()
   }
 
-  const appExists = await context.doInWorkspaceContext(
-    appId,
-    async () => !!(await sdk.applications.metadata.tryGet())
+  const workspaceExists = await context.doInWorkspaceContext(
+    workspaceId,
+    async () => !!(await sdk.workspaces.metadata.tryGet())
   )
-  if (!appExists) {
+  if (!workspaceExists) {
     return next()
   }
 
-  if (!(await isAppFullyMigrated(appId))) {
+  if (!(await isWorkspaceFullyMigrated(workspaceId))) {
     const queue = getAppMigrationQueue()
     await queue.add(
       {
-        appId,
+        appId: workspaceId,
       },
       {
-        jobId: `${appId}_${latestMigration}`,
+        jobId: `${workspaceId}_${latestMigration}`,
       }
     )
 
-    const { applied: migrationApplied } = await waitForMigration(appId, {
+    const { applied: migrationApplied } = await waitForMigration(workspaceId, {
       timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
     })
     if (!migrationApplied) {
-      ctx.response.set(Header.MIGRATING_APP, appId)
+      ctx.response.set(Header.MIGRATING_APP, workspaceId)
     }
   }
 
@@ -87,7 +87,7 @@ const waitForMigration = async (
   const devId = db.getDevWorkspaceID(appId)
 
   while (Date.now() - start < timeoutMs) {
-    if (await isAppFullyMigrated(devId)) {
+    if (await isWorkspaceFullyMigrated(devId)) {
       console.log(`Migration ran in ${Date.now() - start}ms`)
       return { applied: true }
     }
@@ -98,12 +98,12 @@ const waitForMigration = async (
   return { applied: false }
 }
 
-export const isAppFullyMigrated = async (appId: string) => {
+export const isWorkspaceFullyMigrated = async (workspaceId: string) => {
   const latestMigration = getLatestEnabledMigrationId()
   if (!latestMigration) {
     return true
   }
-  const latestMigrationApplied = await getAppMigrationVersion(appId)
+  const latestMigrationApplied = await getWorkspaceMigrationVerions(workspaceId)
   return (
     getMigrationIndex(latestMigrationApplied) >=
     getMigrationIndex(latestMigration)

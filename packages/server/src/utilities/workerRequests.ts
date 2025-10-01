@@ -1,7 +1,6 @@
 import {
   constants,
   env as coreEnv,
-  db as dbCore,
   logging,
   tenancy,
 } from "@budibase/backend-core"
@@ -138,9 +137,8 @@ export async function sendSmtpEmail({
 }
 
 export async function removeWorkspaceFromUserRoles(ctx: Ctx, appId: string) {
-  const prodAppId = dbCore.getProdWorkspaceID(appId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${appId}`),
     createRequest({
       ctx,
       method: "DELETE",

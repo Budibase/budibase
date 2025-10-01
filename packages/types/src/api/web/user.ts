@@ -6,9 +6,23 @@ import {
 } from "../../documents"
 import { SearchFilters } from "../../sdk"
 
+interface InviteInfo {
+  tenantId?: string
+  apps?: Record<string, string>
+  userGroups?: string[]
+  builder?: {
+    global?: boolean
+    creator?: boolean
+    apps?: string[]
+  }
+  admin?: {
+    global?: boolean
+  }
+}
+
 export interface Invite {
   email: string
-  info: any
+  info: InviteInfo
 }
 
 export interface InviteWithCode extends Invite {
@@ -65,7 +79,7 @@ export interface BulkUserResponse {
 
 export interface InviteUserRequest {
   email: string
-  userInfo: any
+  userInfo: InviteInfo
 }
 export interface InviteUserResponse {
   message: string
@@ -84,7 +98,7 @@ export interface DeleteInviteUsersResponse {
 }
 
 export interface InviteUsersResponse {
-  successful: { email: string }[]
+  successful: { email: string; password?: string }[]
   unsuccessful: { email: string; reason: string }[]
   created?: boolean
 }

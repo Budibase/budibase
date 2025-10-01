@@ -54,9 +54,15 @@
 <style>
   .actions {
     display: none;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link:hover .actions {
-    display: block;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link {
     display: flex;
@@ -98,12 +104,15 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
   }
 
   .link .link_content {
     flex: 1;
     display: flex;
     justify-content: space-between;
+    min-width: 0;
   }
   .link.collapsed .link_content {
     display: none;

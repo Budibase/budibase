@@ -312,6 +312,7 @@ function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
     testData: automation.testData,
     createdAt: automation.createdAt,
     updatedAt: automation.updatedAt,
+    layoutDirection: automation.layoutDirection,
   }
   const result = { ...allRequired } as T
   for (const key in result) {

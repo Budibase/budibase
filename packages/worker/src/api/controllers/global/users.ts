@@ -416,7 +416,7 @@ export const onboardUsers = async (
   }
 
   let createdPasswords: Record<string, string> = {}
-  const users: User[] = ctx.request.body.map(invite => {
+  const users = ctx.request.body.map<User>(invite => {
     const password = generatePassword(12)
     createdPasswords[invite.email] = password
 
@@ -424,8 +424,8 @@ export const onboardUsers = async (
       email: invite.email,
       password,
       forceResetPassword: true,
-      roles: invite.userInfo.apps,
-      admin: invite.userInfo.admin,
+      roles: invite.userInfo.apps || {},
+      admin: { global: !!invite.userInfo.admin },
       builder: invite.userInfo.builder,
       tenantId: tenancy.getTenantId(),
     }
@@ -669,16 +669,19 @@ async function handleUserWorkspacePermission(
     throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
-  const appCreator = Object.entries(existingUser.roles)
+  const creatorForApps = Object.entries(existingUser.roles)
     .filter(([_appId, role]) => role === "CREATOR")
     .map(([appId]) => appId)
-  if (!appCreator.length && existingUser.builder) {
-    delete existingUser.builder.creator
-    delete existingUser.builder.apps
-  } else if (appCreator.length) {
+
+  const shouldHaveCreatorRole =
+    existingUser.builder?.creator || creatorForApps.length
+  if (!shouldHaveCreatorRole) {
+    delete existingUser.builder?.creator
+    delete existingUser.builder?.apps
+  } else {
     existingUser.builder ??= {}
     existingUser.builder.creator = true
-    existingUser.builder.apps = appCreator
+    existingUser.builder.apps = creatorForApps
   }
 
   const user = await userSdk.db.save(existingUser, {

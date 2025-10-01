@@ -11,7 +11,7 @@ export enum FeatureFlag {
 export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.USE_DYNAMIC_LOADING]: false,
+  [FeatureFlag.USE_DYNAMIC_LOADING]: true,
 
   // Account-portal
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
