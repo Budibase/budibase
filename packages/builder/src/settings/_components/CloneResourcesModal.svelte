@@ -10,7 +10,6 @@
     workspaceAppStore,
   } from "@/stores/builder"
   import { appsStore } from "@/stores/portal"
-  import type { RowAction } from "@/types"
   import {
     Modal,
     ModalContent,
@@ -100,21 +99,7 @@
     },
     [ResourceType.ROW_ACTION]: {
       displayName: "Row actions",
-      data: [
-        ...Object.values($rowActions)
-          .flatMap(a => a)
-          .reduce<Map<string, RowAction>>(
-            (map, action) => {
-              if (!map.has(action.id)) {
-                map.set(action.id, action)
-              }
-              return map
-            },
-
-            new Map<string, RowAction>()
-          )
-          .values(),
-      ].map(a => mapToDataType(a)),
+      data: [],
       type: ResourceType.ROW_ACTION,
     },
   }

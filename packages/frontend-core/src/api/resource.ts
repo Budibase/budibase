@@ -8,10 +8,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface ResourceEndpoints {
-  searchForUsage: (body: {
-    automationIds?: string[]
-    workspaceAppIds?: string[]
-  }) => Promise<ResourceUsageResponse>
+  searchForUsage: (body: ResourceUsageRequest) => Promise<ResourceUsageResponse>
   duplicateResourceToWorkspace: (
     resourceId: string,
     request: DuplicateResourceToWorkspaceRequest
