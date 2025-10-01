@@ -22,7 +22,12 @@
   import { ResourceType } from "@budibase/types"
 
   let modal: Modal
-  export const show = () => modal.show()
+  let isOpen = false
+
+  export const show = () => {
+    isOpen = true
+    modal.show()
+  }
 
   interface DataType {
     _id: string
@@ -104,28 +109,12 @@
     },
   }
 
-  $: resourceTypesToDisplay[ResourceType.WORKSPACE_APP]?.data.forEach(app => {
-    API.resource
-      .searchForUsage({ workspaceAppIds: [app._id!] })
-      .then(res => {
-        dependantResources[app._id!] = res.resources.reduce<
-          Partial<Record<ResourceType, UsedResource[]>>
-        >((acc, value) => {
-          acc[value.type] = [...(acc[value.type] || []), value]
-          return acc
-        }, {})
-      })
-      .catch(err => {
-        notifications.error(err.message)
-      })
-  })
-
-  $: resourceTypesToDisplay[ResourceType.AUTOMATION]?.data.forEach(
-    automation => {
+  $: isOpen &&
+    resourceTypesToDisplay[ResourceType.WORKSPACE_APP]?.data.forEach(app => {
       API.resource
-        .searchForUsage({ automationIds: [automation._id!] })
+        .searchForUsage({ workspaceAppIds: [app._id!] })
         .then(res => {
-          dependantResources[automation._id!] = res.resources.reduce<
+          dependantResources[app._id!] = res.resources.reduce<
             Partial<Record<ResourceType, UsedResource[]>>
           >((acc, value) => {
             acc[value.type] = [...(acc[value.type] || []), value]
@@ -135,8 +124,26 @@
         .catch(err => {
           notifications.error(err.message)
         })
-    }
-  )
+    })
+
+  $: isOpen &&
+    resourceTypesToDisplay[ResourceType.AUTOMATION]?.data.forEach(
+      automation => {
+        API.resource
+          .searchForUsage({ automationIds: [automation._id!] })
+          .then(res => {
+            dependantResources[automation._id!] = res.resources.reduce<
+              Partial<Record<ResourceType, UsedResource[]>>
+            >((acc, value) => {
+              acc[value.type] = [...(acc[value.type] || []), value]
+              return acc
+            }, {})
+          })
+          .catch(err => {
+            notifications.error(err.message)
+          })
+      }
+    )
 
   function calculateDependants(
     selectedId: string[],
@@ -205,7 +212,14 @@
     : "Copy"
 </script>
 
-<Modal bind:this={modal} on:show={onShow} on:hide>
+<Modal
+  bind:this={modal}
+  on:show={onShow}
+  on:hide
+  on:hide={() => {
+    isOpen = false
+  }}
+>
   <ModalContent
     title={`Copy resources`}
     {onConfirm}
