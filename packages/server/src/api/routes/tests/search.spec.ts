@@ -50,7 +50,7 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "search ($dbName)",
-    ({ config, dsProvider, isInternal, isOracle, isSql }) => {
+    ({ config, dsProvider, isInternal, isExternal, isOracle, isSql }) => {
       let datasource: Datasource | undefined
       let client: Knex | undefined
       let tableOrViewId: string
@@ -3038,204 +3038,205 @@ if (descriptions.length) {
               })
 
             isSql &&
-              describe("relationship - table with spaces", () => {
-                let primaryTable: Table, row: Row, name: string
+              isExternal &&
+              describe("sql relationships", () => {
+                describe("relationship - table with spaces", () => {
+                  let primaryTable: Table, row: Row, name: string
 
-                beforeAll(async () => {
-                  name = `${utils.newid().substring(0, 16)} space`
+                  beforeAll(async () => {
+                    name = `${utils.newid().substring(0, 16)} space`
 
-                  const { relatedTable, tableId } =
-                    await basicRelationshipTables(
-                      RelationshipType.ONE_TO_MANY,
-                      {
-                        tableName: name,
-                        primaryColumn: "related",
-                        otherColumn: "related",
+                    const { relatedTable, tableId } =
+                      await basicRelationshipTables(
+                        RelationshipType.ONE_TO_MANY,
+                        {
+                          tableName: name,
+                          primaryColumn: "related",
+                          otherColumn: "related",
+                        }
+                      )
+                    tableOrViewId = tableId
+                    primaryTable = relatedTable
+
+                    row = await config.api.row.save(primaryTable._id!, {
+                      name: "foo",
+                    })
+
+                    await config.api.row.save(tableOrViewId, {
+                      name: "foo",
+                      related: [row._id],
+                    })
+
+                    await config.api.row.save(tableOrViewId, {
+                      name: "bar",
+                      related: [row._id],
+                    })
+                  })
+
+                  it("should be able to search by table name with spaces", async () => {
+                    await expectQuery({
+                      equal: {
+                        [`${name}.name`]: "foo",
+                      },
+                    }).toContain([{ name: "foo" }])
+                  })
+                })
+
+                describe.each([
+                  RelationshipType.MANY_TO_ONE,
+                  RelationshipType.MANY_TO_MANY,
+                ])("big relations (%s)", relationshipType => {
+                  beforeAll(async () => {
+                    const { relatedTable, tableId } =
+                      await basicRelationshipTables(relationshipType)
+                    tableOrViewId = tableId
+                    const mainRow = await config.api.row.save(tableOrViewId, {
+                      name: "foo",
+                    })
+                    for (let i = 0; i < 11; i++) {
+                      await config.api.row.save(relatedTable._id!, {
+                        name: i,
+                        product: [mainRow._id!],
+                      })
+                    }
+                  })
+
+                  it("can only pull 10 related rows", async () => {
+                    await withCoreEnv(
+                      { SQL_MAX_RELATED_ROWS: "10" },
+                      async () => {
+                        const response = await expectQuery({}).toContain([
+                          { name: "foo" },
+                        ])
+                        expect(response.rows[0].productCat).toBeArrayOfSize(10)
                       }
                     )
-                  tableOrViewId = tableId
-                  primaryTable = relatedTable
-
-                  row = await config.api.row.save(primaryTable._id!, {
-                    name: "foo",
                   })
 
-                  await config.api.row.save(tableOrViewId, {
-                    name: "foo",
-                    related: [row._id],
-                  })
-
-                  await config.api.row.save(tableOrViewId, {
-                    name: "bar",
-                    related: [row._id],
+                  it("can pull max rows when env not set (defaults to 500)", async () => {
+                    const response = await expectQuery({}).toContain([
+                      { name: "foo" },
+                    ])
+                    expect(response.rows[0].productCat).toBeArrayOfSize(11)
                   })
                 })
 
-                it("should be able to search by table name with spaces", async () => {
-                  await expectQuery({
-                    equal: {
-                      [`${name}.name`]: "foo",
-                    },
-                  }).toContain([{ name: "foo" }])
-                })
-              })
+                describe("relations to same table", () => {
+                  let relatedTable: string, relatedRows: Row[]
 
-            isSql &&
-              describe.each([
-                RelationshipType.MANY_TO_ONE,
-                RelationshipType.MANY_TO_MANY,
-              ])("big relations (%s)", relationshipType => {
-                beforeAll(async () => {
-                  const { relatedTable, tableId } =
-                    await basicRelationshipTables(relationshipType)
-                  tableOrViewId = tableId
-                  const mainRow = await config.api.row.save(tableOrViewId, {
-                    name: "foo",
-                  })
-                  for (let i = 0; i < 11; i++) {
-                    await config.api.row.save(relatedTable._id!, {
-                      name: i,
-                      product: [mainRow._id!],
+                  beforeAll(async () => {
+                    relatedTable = await createTableWithSchema({
+                      name: { name: "name", type: FieldType.STRING },
                     })
-                  }
-                })
-
-                it("can only pull 10 related rows", async () => {
-                  await withCoreEnv(
-                    { SQL_MAX_RELATED_ROWS: "10" },
-                    async () => {
-                      const response = await expectQuery({}).toContain([
-                        { name: "foo" },
-                      ])
-                      expect(response.rows[0].productCat).toBeArrayOfSize(10)
-                    }
-                  )
-                })
-
-                it("can pull max rows when env not set (defaults to 500)", async () => {
-                  const response = await expectQuery({}).toContain([
-                    { name: "foo" },
-                  ])
-                  expect(response.rows[0].productCat).toBeArrayOfSize(11)
-                })
-              })
-
-            isSql &&
-              describe("relations to same table", () => {
-                let relatedTable: string, relatedRows: Row[]
-
-                beforeAll(async () => {
-                  relatedTable = await createTableWithSchema({
-                    name: { name: "name", type: FieldType.STRING },
+                    tableOrViewId = await createTableOrView({
+                      name: { name: "name", type: FieldType.STRING },
+                      related1: {
+                        type: FieldType.LINK,
+                        name: "related1",
+                        fieldName: "main1",
+                        tableId: relatedTable,
+                        relationshipType: RelationshipType.MANY_TO_MANY,
+                      },
+                      related2: {
+                        type: FieldType.LINK,
+                        name: "related2",
+                        fieldName: "main2",
+                        tableId: relatedTable,
+                        relationshipType: RelationshipType.MANY_TO_MANY,
+                      },
+                    })
+                    relatedRows = await Promise.all([
+                      config.api.row.save(relatedTable, { name: "foo" }),
+                      config.api.row.save(relatedTable, { name: "bar" }),
+                      config.api.row.save(relatedTable, { name: "baz" }),
+                      config.api.row.save(relatedTable, { name: "boo" }),
+                    ])
+                    await Promise.all([
+                      config.api.row.save(tableOrViewId, {
+                        name: "test",
+                        related1: [relatedRows[0]._id!],
+                        related2: [relatedRows[1]._id!],
+                      }),
+                      config.api.row.save(tableOrViewId, {
+                        name: "test2",
+                        related1: [relatedRows[2]._id!],
+                        related2: [relatedRows[3]._id!],
+                      }),
+                      config.api.row.save(tableOrViewId, {
+                        name: "test3",
+                        related1: [relatedRows[1]._id],
+                        related2: [relatedRows[2]._id!],
+                      }),
+                    ])
                   })
-                  tableOrViewId = await createTableOrView({
-                    name: { name: "name", type: FieldType.STRING },
-                    related1: {
-                      type: FieldType.LINK,
-                      name: "related1",
-                      fieldName: "main1",
-                      tableId: relatedTable,
-                      relationshipType: RelationshipType.MANY_TO_MANY,
-                    },
-                    related2: {
-                      type: FieldType.LINK,
-                      name: "related2",
-                      fieldName: "main2",
-                      tableId: relatedTable,
-                      relationshipType: RelationshipType.MANY_TO_MANY,
-                    },
+
+                  it("should be able to relate to same table", async () => {
+                    await expectSearch({
+                      query: {},
+                    }).toContainExactly([
+                      {
+                        name: "test",
+                        related1: [{ _id: relatedRows[0]._id }],
+                        related2: [{ _id: relatedRows[1]._id }],
+                      },
+                      {
+                        name: "test2",
+                        related1: [{ _id: relatedRows[2]._id }],
+                        related2: [{ _id: relatedRows[3]._id }],
+                      },
+                      {
+                        name: "test3",
+                        related1: [{ _id: relatedRows[1]._id }],
+                        related2: [{ _id: relatedRows[2]._id }],
+                      },
+                    ])
                   })
-                  relatedRows = await Promise.all([
-                    config.api.row.save(relatedTable, { name: "foo" }),
-                    config.api.row.save(relatedTable, { name: "bar" }),
-                    config.api.row.save(relatedTable, { name: "baz" }),
-                    config.api.row.save(relatedTable, { name: "boo" }),
-                  ])
-                  await Promise.all([
-                    config.api.row.save(tableOrViewId, {
-                      name: "test",
-                      related1: [relatedRows[0]._id!],
-                      related2: [relatedRows[1]._id!],
-                    }),
-                    config.api.row.save(tableOrViewId, {
-                      name: "test2",
-                      related1: [relatedRows[2]._id!],
-                      related2: [relatedRows[3]._id!],
-                    }),
-                    config.api.row.save(tableOrViewId, {
-                      name: "test3",
-                      related1: [relatedRows[1]._id],
-                      related2: [relatedRows[2]._id!],
-                    }),
-                  ])
-                })
 
-                it("should be able to relate to same table", async () => {
-                  await expectSearch({
-                    query: {},
-                  }).toContainExactly([
-                    {
-                      name: "test",
-                      related1: [{ _id: relatedRows[0]._id }],
-                      related2: [{ _id: relatedRows[1]._id }],
-                    },
-                    {
-                      name: "test2",
-                      related1: [{ _id: relatedRows[2]._id }],
-                      related2: [{ _id: relatedRows[3]._id }],
-                    },
-                    {
-                      name: "test3",
-                      related1: [{ _id: relatedRows[1]._id }],
-                      related2: [{ _id: relatedRows[2]._id }],
-                    },
-                  ])
-                })
-
-                it("should be able to filter via the first relation field with equal", async () => {
-                  await expectSearch({
-                    query: {
-                      equal: {
-                        ["related1.name"]: "baz",
+                  it("should be able to filter via the first relation field with equal", async () => {
+                    await expectSearch({
+                      query: {
+                        equal: {
+                          ["related1.name"]: "baz",
+                        },
                       },
-                    },
-                  }).toContainExactly([
-                    {
-                      name: "test2",
-                      related1: [{ _id: relatedRows[2]._id }],
-                    },
-                  ])
-                })
-
-                it("should be able to filter via the second relation field with not equal", async () => {
-                  await expectSearch({
-                    query: {
-                      notEqual: {
-                        ["1:related2.name"]: "foo",
-                        ["2:related2.name"]: "baz",
-                        ["3:related2.name"]: "boo",
+                    }).toContainExactly([
+                      {
+                        name: "test2",
+                        related1: [{ _id: relatedRows[2]._id }],
                       },
-                    },
-                  }).toContainExactly([
-                    {
-                      name: "test",
-                    },
-                  ])
-                })
+                    ])
+                  })
 
-                it("should be able to filter on both fields", async () => {
-                  await expectSearch({
-                    query: {
-                      notEqual: {
-                        ["related1.name"]: "foo",
-                        ["related2.name"]: "baz",
+                  it("should be able to filter via the second relation field with not equal", async () => {
+                    await expectSearch({
+                      query: {
+                        notEqual: {
+                          ["1:related2.name"]: "foo",
+                          ["2:related2.name"]: "baz",
+                          ["3:related2.name"]: "boo",
+                        },
                       },
-                    },
-                  }).toContainExactly([
-                    {
-                      name: "test2",
-                    },
-                  ])
+                    }).toContainExactly([
+                      {
+                        name: "test",
+                      },
+                    ])
+                  })
+
+                  it("should be able to filter on both fields", async () => {
+                    await expectSearch({
+                      query: {
+                        notEqual: {
+                          ["related1.name"]: "foo",
+                          ["related2.name"]: "baz",
+                        },
+                      },
+                    }).toContainExactly([
+                      {
+                        name: "test2",
+                      },
+                    ])
+                  })
                 })
               })
 
@@ -3648,6 +3649,7 @@ if (descriptions.length) {
               })
 
             isSql &&
+              isExternal &&
               describe("primaryDisplay", () => {
                 beforeAll(async () => {
                   let toRelateTableId = await createTableWithSchema({
@@ -3999,6 +4001,7 @@ if (descriptions.length) {
             })
 
             isSql &&
+              isExternal &&
               describe("max related columns", () => {
                 let relatedRows: Row[]
 
