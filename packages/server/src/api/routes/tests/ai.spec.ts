@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { zodResponseFormat } from "openai/helpers/zod"
 import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
@@ -19,6 +18,7 @@ import {
   PlanType,
   ProviderConfig,
   RelationshipType,
+  ResponseFormat,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
@@ -29,12 +29,23 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import { zodSchema } from "ai"
 
 function dedent(str: string) {
   return str
     .split("\n")
     .map(line => line.trim())
     .join("\n")
+}
+
+function schemaResponseFormat(schema: z.ZodType): ResponseFormat {
+  const converted = zodSchema(schema)
+  return {
+    type: "json_schema",
+    json_schema: {
+      schema: converted.jsonSchema,
+    },
+  }
 }
 
 type SetupFn = (
@@ -455,11 +466,10 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = zodResponseFormat(
+      const structuredOutput = schemaResponseFormat(
         z.object({
           [generator.word()]: z.string(),
-        }),
-        "key"
+        })
       )
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
       const { messages } = await config.api.ai.chat({
@@ -496,7 +506,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure
     ) =>
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: zodResponseFormat(ai.generationStructure, "key"),
+        format: schemaResponseFormat(ai.generationStructure),
       })
 
     const mockAIColumnGeneration = (
@@ -504,11 +514,10 @@ describe("BudibaseAI", () => {
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: zodResponseFormat(
+        format: schemaResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
-          ),
-          "key"
+          )
         ),
       })
 
@@ -516,7 +525,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
+        format: schemaResponseFormat(ai.tableDataStructuredOutput([])),
       })
 
     const mockProcessAIColumn = (response: string) =>
