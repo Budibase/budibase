@@ -26,6 +26,15 @@
 
   export const show = () => {
     isOpen = true
+    toWorkspaceId = undefined
+    selectedResources = {
+      [ResourceType.DATASOURCE]: [],
+      [ResourceType.TABLE]: [],
+      [ResourceType.ROW_ACTION]: [],
+      [ResourceType.QUERY]: [],
+      [ResourceType.AUTOMATION]: [],
+      [ResourceType.WORKSPACE_APP]: [],
+    }
     modal.show()
   }
 
@@ -36,7 +45,7 @@
     __disabled: boolean
   }
 
-  let toWorkspaceId: string
+  let toWorkspaceId: string | undefined
 
   let selectedResources: Record<ResourceType, DataType[]> = {
     [ResourceType.DATASOURCE]: [],
