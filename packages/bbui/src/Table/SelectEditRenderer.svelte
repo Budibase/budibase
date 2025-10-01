@@ -10,8 +10,8 @@
 </script>
 
 <div>
-  {#if allowSelectRows}
-    <Checkbox value={selected} disabled={!data.__selectable} />
+  {#if allowSelectRows && data.__selectable !== false}
+    <Checkbox value={selected} disabled={data.__disabled} />
   {/if}
   {#if allowEditRows}
     <ActionButton size="S" on:click={onEdit}>Edit</ActionButton>
