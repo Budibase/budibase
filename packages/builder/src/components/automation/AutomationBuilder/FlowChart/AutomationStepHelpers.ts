@@ -246,8 +246,12 @@ const buildLoopEdgeData = (
   insertIndex: number,
   pathTo?: BlockPath[]
 ): LoopEdgeData => {
+  const blockContext: FlowBlockContext = {
+    ...sourceChild,
+    branchNode: false,
+  }
   return {
-    block: sourceChild,
+    block: blockContext,
     direction: deps.direction,
     pathTo,
     loopStepId: loopStep.id,
