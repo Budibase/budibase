@@ -34,6 +34,7 @@
       [ResourceType.QUERY]: [],
       [ResourceType.AUTOMATION]: [],
       [ResourceType.WORKSPACE_APP]: [],
+      [ResourceType.SCREEN]: [],
     }
     modal.show()
   }
@@ -54,6 +55,7 @@
     [ResourceType.QUERY]: [],
     [ResourceType.AUTOMATION]: [],
     [ResourceType.WORKSPACE_APP]: [],
+    [ResourceType.SCREEN]: [],
   }
 
   $: workspaces = $appsStore.apps
@@ -102,7 +104,9 @@
   $: resourceTypesToDisplay = {
     [ResourceType.WORKSPACE_APP]: {
       displayName: "Apps",
-      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
+      data: $workspaceAppStore.workspaceApps.map(a =>
+        mapToDataType({ ...a, name: `${a.name} (${a.screens.length} screens)` })
+      ),
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
@@ -129,6 +133,11 @@
       displayName: "Row actions",
       data: [],
       type: ResourceType.ROW_ACTION,
+    },
+    [ResourceType.SCREEN]: {
+      displayName: "Screens",
+      data: [],
+      type: ResourceType.SCREEN,
     },
   }
 
