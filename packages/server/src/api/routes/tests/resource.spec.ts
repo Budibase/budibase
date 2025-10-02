@@ -202,6 +202,65 @@ describe("/api/resources/usage", () => {
       }
     }
 
+    const uniqueIds = (ids: string[]) => Array.from(new Set(ids))
+
+    const sanitizeResourceIds = (ids: string[]) =>
+      uniqueIds(
+        ids.filter(
+          (id): id is string => !!id && id !== "bb_internal"
+        )
+      )
+
+    async function collectWorkspaceAppResourceIds(
+      appId: string
+    ): Promise<string[]> {
+      const [usage, screens] = await Promise.all([
+        config.api.resource.searchForUsage({ workspaceAppIds: [appId] }),
+        config.api.screen.list(),
+      ])
+      const screenIds = screens
+        .filter(screen => screen.workspaceAppId === appId)
+        .map(screen => screen._id!)
+
+      return sanitizeResourceIds([
+        appId,
+        ...usage.body.resources.map(resource => resource.id),
+        ...screenIds,
+      ])
+    }
+
+    const expectIdsToMatch = (actual: string[], expected: string[]) => {
+      expect(sanitizeResourceIds(actual).sort()).toEqual(
+        sanitizeResourceIds(expected).sort()
+      )
+    }
+
+    const previewResources = async (
+      resources: string[],
+      toWorkspace: string
+    ) => {
+      return await config.api.resource.previewDuplicateResourceToWorkspace({
+        resources,
+        toWorkspace,
+      })
+    }
+
+    const duplicateResources = async (
+      resources: string[],
+      toWorkspace: string,
+      expectations?: Parameters<
+        typeof config.api.resource.duplicateResourceToWorkspace
+      >[1]
+    ) => {
+      return await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resources,
+          toWorkspace,
+        },
+        expectations ?? { status: 204 }
+      )
+    }
+
     beforeAll(async () => {
       await config.createWorkspace()
 
@@ -488,51 +547,22 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        tk.freeze(new Date())
-        const response = await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: basicApp.app._id!,
-            toWorkspace: newWorkspace.appId,
-          }
+        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+          appWithTableUsages.app._id!
         )
 
-        expect(response.body).toEqual({
-          resources: {
-            workspace_app: [basicApp.app._id],
-          },
-        })
-
-        await validateWorkspace(newWorkspace.appId, basicApp.app, {
-          screens: basicApp.screens.map(s => ({
-            ...s,
-            pluginAdded: undefined,
-            _rev: expect.stringMatching(/^1-\w+/),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })),
-        })
-      })
-
-      it("copies the resource and dependencies into the destination workspace for apps with table usages", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
+        const preview = await previewResources(
+          resourcesToCopy,
+          newWorkspace.appId
+        )
+        expect(preview.body.existing).toEqual([])
+        expectIdsToMatch(preview.body.toCopy, resourcesToCopy)
 
         tk.freeze(new Date())
-        const response = await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: appWithTableUsages.app._id!,
-            toWorkspace: newWorkspace.appId,
-          }
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
         )
-
-        expect(response.body).toEqual({
-          resources: {
-            workspace_app: [appWithTableUsages.app._id],
-
-            table: [internalTables[0]._id],
-          },
-        })
 
         await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
           screens: appWithTableUsages.screens.map(s => ({
@@ -551,19 +581,20 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        tk.freeze(new Date())
-        const firstDuplication =
-          await config.api.resource.duplicateResourceToWorkspace({
-            resourceId: appWithTableUsages.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const firstResources = await collectWorkspaceAppResourceIds(
+          appWithTableUsages.app._id!
+        )
+        const firstPreview = await previewResources(
+          firstResources,
+          newWorkspace.appId
+        )
+        expect(firstPreview.body.existing).toEqual([])
 
-        expect(firstDuplication.body).toEqual({
-          resources: {
-            workspace_app: [appWithTableUsages.app._id],
-            table: [internalTables[0]._id],
-          },
-        })
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(firstPreview.body.toCopy),
+          newWorkspace.appId
+        )
 
         await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
           screens: appWithTableUsages.screens.map(s => ({
@@ -576,18 +607,21 @@ describe("/api/resources/usage", () => {
           tables: [internalTables[0]],
         })
 
-        const secondDuplication =
-          await config.api.resource.duplicateResourceToWorkspace({
-            resourceId: appSharingTableDependency.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const secondResources = await collectWorkspaceAppResourceIds(
+          appSharingTableDependency.app._id!
+        )
+        const secondPreview = await previewResources(
+          secondResources,
+          newWorkspace.appId
+        )
+        expect(secondPreview.body.existing).toEqual(
+          expect.arrayContaining([internalTables[0]._id!])
+        )
 
-        expect(secondDuplication.body).toEqual({
-          resources: {
-            workspace_app: [appSharingTableDependency.app._id],
-            table: [internalTables[0]._id],
-          },
-        })
+        await duplicateResources(
+          sanitizeResourceIds(secondPreview.body.toCopy),
+          newWorkspace.appId
+        )
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -613,19 +647,26 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        tk.freeze(new Date())
-        const duplication =
-          await config.api.resource.duplicateResourceToWorkspace({
-            resourceId: appWithRepeatedDependencyUsage.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+          appWithRepeatedDependencyUsage.app._id!
+        )
+        const preview = await previewResources(
+          resourcesToCopy,
+          newWorkspace.appId
+        )
 
-        expect(duplication.body).toEqual({
-          resources: {
-            workspace_app: [appWithRepeatedDependencyUsage.app._id],
-            table: [internalTables[1]._id],
-          },
-        })
+        expect(preview.body.existing).toEqual([])
+        expect(
+          sanitizeResourceIds(preview.body.toCopy).filter(
+            id => id === internalTables[1]._id!
+          )
+        ).toHaveLength(1)
+
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
+        )
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -648,21 +689,23 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        tk.freeze(new Date())
-        const duplication =
-          await config.api.resource.duplicateResourceToWorkspace({
-            resourceId: appWithRowActionDependency.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+          appWithRowActionDependency.app._id!
+        )
+        const preview = await previewResources(
+          resourcesToCopy,
+          newWorkspace.appId
+        )
 
-        expect(duplication.body).toEqual({
-          resources: {
-            workspace_app: [appWithRowActionDependency.app._id],
-            table: [tableWithRowAction._id!],
-            row_action: [rowActionDocId],
-            automation: [rowActionAutomation._id!],
-          },
-        })
+        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+          expect.arrayContaining([rowActionDocId, rowActionAutomation._id!])
+        )
+
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
+        )
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -687,24 +730,28 @@ describe("/api/resources/usage", () => {
         )
       })
 
-      it("copies datasource dependencies referenced by the app", async () => {
+      it("duplicates datasource dependencies when duplicating apps", async () => {
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
         })
 
-        tk.freeze(new Date())
-        const duplication =
-          await config.api.resource.duplicateResourceToWorkspace({
-            resourceId: appWithDatasourceDependency.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+          appWithDatasourceDependency.app._id!
+        )
+        const preview = await previewResources(
+          resourcesToCopy,
+          newWorkspace.appId
+        )
 
-        expect(duplication.body).toEqual({
-          resources: {
-            workspace_app: [appWithDatasourceDependency.app._id],
-            datasource: [datasourceWithDependency._id],
-          },
-        })
+        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+          expect.arrayContaining([datasourceWithDependency._id!])
+        )
+
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
+        )
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -722,33 +769,43 @@ describe("/api/resources/usage", () => {
         )
       })
 
-      it("rejects non workspace app document types", async () => {
+      it("duplicates individual tables", async () => {
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
         })
 
-        const response = await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: _.sample(internalTables)?._id!,
-            toWorkspace: newWorkspace.appId,
-          },
-          {
-            status: 400,
-          }
+        const tableToCopy = internalTables[2]
+
+        const preview = await previewResources(
+          [tableToCopy._id!],
+          newWorkspace.appId
         )
-        expect(response.body).toEqual({
-          message: '"ta" cannot be duplicated',
-          status: 400,
-          stack: expect.anything(),
+
+        expect(preview.body.existing).toEqual([])
+        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual([
+          tableToCopy._id!,
+        ])
+
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
+        )
+
+        await config.withHeaders({ [Header.APP_ID]: newWorkspace.appId }, async () => {
+          const tables = await config.api.table.fetch()
+          expect(tables).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ _id: tableToCopy._id! }),
+            ])
+          )
         })
       })
 
       it("throws when destination workspace already exists", async () => {
-        const response = await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: basicApp.app._id!,
-            toWorkspace: "app_unexisting",
-          },
+        const response = await duplicateResources(
+          [basicApp.app._id!],
+          "app_unexisting",
           {
             status: 400,
           }
@@ -763,44 +820,36 @@ describe("/api/resources/usage", () => {
         })
       })
 
-      it("cannot duplicate the same app twice on the same workspace", async () => {
+      it("cannot duplicate the same resources twice on the same workspace", async () => {
         const newWorkspace = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
         })
-        const newWorkspace2 = await config.api.workspace.create({
-          name: `Another destination ${generator.natural()}`,
-        })
 
-        await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: basicApp.app._id!,
-            toWorkspace: newWorkspace.appId,
-          },
-          { status: 200 }
+        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+          basicApp.app._id!
         )
-        const error = await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: basicApp.app._id!,
-            toWorkspace: newWorkspace.appId,
-          },
+        const preview = await previewResources(
+          resourcesToCopy,
+          newWorkspace.appId
+        )
+
+        tk.freeze(new Date())
+        await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId
+        )
+
+        const error = await duplicateResources(
+          sanitizeResourceIds(preview.body.toCopy),
+          newWorkspace.appId,
           { status: 400 }
         )
-        expect(error.body).toEqual({
-          message: "App already migrated in this workspace",
-          error: {
-            code: "http",
-          },
+        expect(error.body).toMatchObject({
+          message: expect.stringContaining(
+            "Resources already exist in destination workspace"
+          ),
           status: 400,
-          stack: expect.anything(),
         })
-
-        await config.api.resource.duplicateResourceToWorkspace(
-          {
-            resourceId: basicApp.app._id!,
-            toWorkspace: newWorkspace2.appId,
-          },
-          { status: 200 }
-        )
       })
     })
 
@@ -810,48 +859,36 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const previewBefore =
-          await config.api.resource.previewDuplicateResourceToWorkspace({
-            resourceId: appWithTableUsages.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const initialResources = await collectWorkspaceAppResourceIds(
+          appWithTableUsages.app._id!
+        )
+        const previewBefore = await previewResources(
+          initialResources,
+          newWorkspace.appId
+        )
 
-        expect(previewBefore.body).toEqual({
-          toCopy: {
-            table: [
-              {
-                id: internalTables[0]._id,
-                name: internalTables[0].name,
-                type: "table",
-              },
-            ],
-          },
-          existing: {},
-        })
+        expect(previewBefore.body.existing).toEqual([])
+        expectIdsToMatch(previewBefore.body.toCopy, initialResources)
 
-        await config.api.resource.duplicateResourceToWorkspace({
-          resourceId: appWithTableUsages.app._id!,
-          toWorkspace: newWorkspace.appId,
-        })
+        await duplicateResources(
+          sanitizeResourceIds(previewBefore.body.toCopy),
+          newWorkspace.appId
+        )
 
-        const previewAfter =
-          await config.api.resource.previewDuplicateResourceToWorkspace({
-            resourceId: appWithTableUsagesCopy.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const copyResources = await collectWorkspaceAppResourceIds(
+          appWithTableUsagesCopy.app._id!
+        )
+        const previewAfter = await previewResources(
+          copyResources,
+          newWorkspace.appId
+        )
 
-        expect(previewAfter.body).toEqual({
-          toCopy: {},
-          existing: {
-            table: [
-              {
-                id: internalTables[0]._id,
-                name: internalTables[0].name,
-                type: "table",
-              },
-            ],
-          },
-        })
+        expect(previewAfter.body.existing).toEqual(
+          expect.arrayContaining([internalTables[0]._id!])
+        )
+        expect(
+          sanitizeResourceIds(previewAfter.body.toCopy)
+        ).not.toContain(internalTables[0]._id)
       })
 
       it("previews datasource dependencies that would be duplicated", async () => {
@@ -859,24 +896,18 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const preview =
-          await config.api.resource.previewDuplicateResourceToWorkspace({
-            resourceId: appWithDatasourceDependency.app._id!,
-            toWorkspace: newWorkspace.appId,
-          })
+        const resources = await collectWorkspaceAppResourceIds(
+          appWithDatasourceDependency.app._id!
+        )
+        const preview = await previewResources(
+          resources,
+          newWorkspace.appId
+        )
 
-        expect(preview.body).toEqual({
-          toCopy: {
-            datasource: [
-              {
-                id: datasourceWithDependency._id,
-                name: datasourceWithDependency.name,
-                type: ResourceType.DATASOURCE,
-              },
-            ],
-          },
-          existing: {},
-        })
+        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+          expect.arrayContaining([datasourceWithDependency._id!])
+        )
+        expect(preview.body.existing).toEqual([])
       })
     })
   })

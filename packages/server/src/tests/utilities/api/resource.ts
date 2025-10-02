@@ -23,30 +23,28 @@ export class ResourceAPI extends TestAPI {
   }
 
   duplicateResourceToWorkspace = async (
-    request: DuplicateResourceToWorkspaceRequest & { resourceId: string },
+    request: DuplicateResourceToWorkspaceRequest,
     expectations?: Expectations
   ): Promise<{ body: DuplicateResourceToWorkspaceResponse }> => {
-    const { resourceId: id, ...body } = request
     const result = await this._post<DuplicateResourceToWorkspaceResponse>(
-      `/api/resources/${id}/duplicate`,
+      `/api/resources/duplicate`,
       {
         expectations,
-        body,
+        body: request,
       }
     )
     return { body: result }
   }
 
   previewDuplicateResourceToWorkspace = async (
-    request: DuplicateResourceToWorkspaceRequest & { resourceId: string },
+    request: DuplicateResourceToWorkspaceRequest,
     expectations?: Expectations
   ): Promise<{ body: DuplicateResourcePreviewResponse }> => {
-    const { resourceId: id, ...body } = request
     const result = await this._post<DuplicateResourcePreviewResponse>(
-      `/api/resources/${id}/duplicate/preview`,
+      `/api/resources/duplicate/preview`,
       {
         expectations,
-        body,
+        body: request,
       }
     )
     return { body: result }
