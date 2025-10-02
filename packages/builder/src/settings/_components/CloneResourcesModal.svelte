@@ -166,24 +166,30 @@
         x => x.direct
       )
     }
-    for (const id of selectedId) {
+
+    function analyseDependants(id: string) {
       if (!dependantResources[id]) {
-        continue
+        return
       }
       for (const [type, resources] of Object.entries(dependantResources[id])) {
         const castedType = type as ResourceType
-        for (const app of resources) {
-          if (selectedResources[castedType].find(x => x._id === id)) {
+        for (const resource of resources) {
+          if (selectedResources[castedType].find(x => x._id === resource.id)) {
             continue
           }
           selectedResources[castedType].push({
-            _id: app.id,
-            name: app.name,
+            _id: resource.id,
+            name: resource.name,
             direct: false,
             __disabled: true,
           })
+          analyseDependants(resource.id)
         }
       }
+    }
+
+    for (const id of selectedId) {
+      analyseDependants(id)
     }
 
     for (const type of Object.keys(selectedResources)) {
