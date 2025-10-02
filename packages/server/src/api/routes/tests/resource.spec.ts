@@ -4,7 +4,9 @@ import {
   AnyDocument,
   Automation,
   Datasource,
+  FieldType,
   Query,
+  RelationshipType,
   ResourceType,
   RowActionResponse,
   Screen,
@@ -24,11 +26,9 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
-  let table: Table
 
   beforeAll(async () => {
     await config.init()
-    table = await config.api.table.save(basicTable())
   })
 
   afterAll(config.end)
@@ -38,6 +38,12 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    let table: Table
+
+    beforeAll(async () => {
+      table = await config.api.table.save(basicTable())
+    })
+
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))
@@ -50,9 +56,9 @@ describe("/api/resources/usage", () => {
 
       await config.api.screen.save(screen)
 
-      const result = await config.api.resource.searchForUsage()
+      const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[workspaceApp._id!]).toEqual(
+      expect(result.body.dependencies[workspaceApp._id!]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: datasource._id,
@@ -79,9 +85,9 @@ describe("/api/resources/usage", () => {
       // Save the screen to the database so it can be found
       await config.api.screen.save(screen)
 
-      const result = await config.api.resource.searchForUsage()
+      const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[screen.workspaceAppId!]).toEqual(
+      expect(result.body.dependencies[screen.workspaceAppId!]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: table._id,
@@ -98,9 +104,9 @@ describe("/api/resources/usage", () => {
         .onRowSaved({ tableId: table._id! })
         .save()
 
-      const result = await config.api.resource.searchForUsage()
+      const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[automation._id!]).toEqual(
+      expect(result.body.dependencies[automation._id!]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: table._id,
@@ -116,9 +122,9 @@ describe("/api/resources/usage", () => {
         name: "Row action usage",
       })
 
-      const result = await config.api.resource.searchForUsage()
+      const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[rowAction.automationId]).toEqual(
+      expect(result.body.dependencies[rowAction.automationId]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: generateRowActionsID(table._id!),
@@ -128,7 +134,9 @@ describe("/api/resources/usage", () => {
         ])
       )
 
-      expect(result.body.resources[generateRowActionsID(table._id!)]).toEqual(
+      expect(
+        result.body.dependencies[generateRowActionsID(table._id!)]
+      ).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: rowAction.automationId,
@@ -141,18 +149,16 @@ describe("/api/resources/usage", () => {
   })
 
   describe("duplication", () => {
-    interface WorkspaceAppInfo {
-      id: string
-      app: WorkspaceApp
-      screens: Screen[]
-    }
+    beforeAll(async () => {
+      await config.createWorkspace()
+    })
 
     async function createInternalTable(data: Partial<Table> = {}) {
       const table = await config.api.table.save(basicTable(undefined, data))
       return table
     }
 
-    async function createApp(...screens: Screen[]): Promise<WorkspaceAppInfo> {
+    async function createApp(...screens: Screen[]) {
       const uuid = generator.guid()
       const { workspaceApp: createdApp } = await config.api.workspaceApp.create(
         {
@@ -223,13 +229,6 @@ describe("/api/resources/usage", () => {
       return screen
     }
 
-    beforeAll(async () => {
-      await config.createWorkspace()
-    })
-
-    const sanitizeResources = (ids: string[]) =>
-      Array.from(new Set(ids)).filter(id => id && id !== "bb_internal")
-
     const duplicateResources = async (
       resources: string[],
       toWorkspace: string,
@@ -239,7 +238,7 @@ describe("/api/resources/usage", () => {
     ) => {
       return await config.api.resource.duplicateResourceToWorkspace(
         {
-          resources: sanitizeResources(resources),
+          resources,
           toWorkspace,
         },
         expectations ?? { status: 204 }
@@ -247,20 +246,8 @@ describe("/api/resources/usage", () => {
     }
 
     const collectResourceIds = async (id: string): Promise<string[]> => {
-      const usage = await config.api.resource.searchForUsage()
-      const dependants = new Set<string>([id])
-      const crawl = (resourceId: string) => {
-        const dependencies = usage.body.resources[resourceId] || []
-        for (const dependency of dependencies) {
-          if (dependants.has(dependency.id)) {
-            continue
-          }
-          dependants.add(dependency.id)
-          crawl(dependency.id)
-        }
-      }
-      crawl(id)
-      return sanitizeResources(Array.from(dependants))
+      const usage = await config.api.resource.getResourceDependencies()
+      return [id, ...usage.body.dependencies[id].map(r => r.id)]
     }
 
     const validateWorkspace = async (
@@ -446,6 +433,42 @@ describe("/api/resources/usage", () => {
         apps: [app.app],
         screens: app.screens,
         tables: [table1, table2],
+      })
+    })
+
+    it("duplicates tables with link relationships", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const linkedTable = await createInternalTable({ name: "Linked table" })
+      const mainTableConfig = basicTable(undefined, {
+        name: "Linking table",
+      })
+      mainTableConfig.schema.linkedRecord = {
+        type: FieldType.LINK,
+        name: "linkedRecord",
+        fieldName: "linkedRecord",
+        tableId: linkedTable._id!,
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      }
+      const mainTable = await config.api.table.save(mainTableConfig)
+
+      const app = await createApp(createScreenWithDataprovider(mainTable._id!))
+
+      const resourcesToCopy = await collectResourceIds(app.id)
+      expect(resourcesToCopy).toEqual([
+        app.id,
+        ...app.screens.map(s => s._id),
+        mainTable._id,
+        linkedTable._id,
+      ])
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app.app],
+        screens: app.screens,
+        tables: [mainTable, linkedTable],
       })
     })
 

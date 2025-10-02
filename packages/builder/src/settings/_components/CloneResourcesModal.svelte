@@ -143,9 +143,9 @@
 
   $: isOpen &&
     API.resource
-      .searchForUsage()
+      .getResourceDependencies()
       .then(res => {
-        dependantResources = Object.entries(res.resources).reduce<
+        dependantResources = Object.entries(res.dependencies).reduce<
           typeof dependantResources
         >((acc, [id, resources]) => {
           acc[id] = {}

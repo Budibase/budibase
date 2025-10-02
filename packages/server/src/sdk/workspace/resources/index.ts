@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import sdk from "../.."
 
-export async function searchForUsages(): Promise<
+export async function getDependencies(): Promise<
   Record<string, UsedResource[]>
 > {
   const automations = await sdk.automations.fetch()
@@ -20,6 +20,12 @@ export async function searchForUsages(): Promise<
     idToSearch: string
     name: string
     type: ResourceType
+    extraDependencies?: {
+      id: string
+
+      name: string
+      type: ResourceType
+    }[]
   }[] = []
 
   // keep tables as may be used later
@@ -30,6 +36,7 @@ export async function searchForUsages(): Promise<
       idToSearch: table._id!,
       name: table.name!,
       type: ResourceType.TABLE,
+      doc: table,
     }))
   )
 
@@ -42,6 +49,7 @@ export async function searchForUsages(): Promise<
         idToSearch: datasource._id!,
         name: datasource.name!,
         type: ResourceType.DATASOURCE,
+        doc: datasource,
       }))
   )
 
@@ -51,6 +59,7 @@ export async function searchForUsages(): Promise<
       idToSearch: automation._id!,
       name: automation.name!,
       type: ResourceType.AUTOMATION,
+      doc: automation,
     }))
   )
 
@@ -61,6 +70,7 @@ export async function searchForUsages(): Promise<
       idToSearch: query._id!,
       name: query.name!,
       type: ResourceType.QUERY,
+      doc: query,
     }))
   )
 
@@ -70,19 +80,30 @@ export async function searchForUsages(): Promise<
       Object.values(rowActions).flatMap(ra => Object.values(ra.actions))
     )
 
-    baseSearchTargets.push(
-      ...Object.values(rowActions).flatMap(ra =>
-        Object.entries(ra.actions).map(([id, action]) => ({
+    for (const ra of rowActions) {
+      for (const [id, action] of Object.entries(ra.actions)) {
+        baseSearchTargets.push({
           id: ra._id,
           idToSearch: id,
           name: rowActionNames[action.automationId],
           type: ResourceType.ROW_ACTION,
-        }))
-      )
-    )
+          extraDependencies: automations
+            .filter(a => a._id === action.automationId)
+            .map(a => ({
+              id: a._id!,
+              name: a.name!,
+              type: ResourceType.AUTOMATION,
+            })),
+        })
+      }
+    }
   }
 
-  const searchForResource = (forResource: string, json: string) => {
+  const searchForUsages = (
+    forResource: string,
+    possibleUsages: AnyDocument
+  ) => {
+    const json = JSON.stringify(possibleUsages)
     dependencies[forResource] ??= []
     for (const search of baseSearchTargets) {
       if (
@@ -94,7 +115,27 @@ export async function searchForUsages(): Promise<
           name: search.name,
           type: search.type,
         })
+
+        const toAdd = [
+          ...(search.extraDependencies || []),
+          ...(dependencies[search.id] || []),
+        ].filter(({ id }) => !dependencies[forResource].some(r => r.id === id))
+        dependencies[forResource].push(...toAdd)
       }
+    }
+  }
+
+  // Search in tables
+  if (internalTables.length) {
+    for (const table of internalTables) {
+      searchForUsages(table._id!, table)
+    }
+  }
+
+  // Search in automations
+  if (automations.length) {
+    for (const automation of automations) {
+      searchForUsages(automation._id, automation)
     }
   }
 
@@ -125,25 +166,8 @@ export async function searchForUsages(): Promise<
       )
 
       for (const screen of screens) {
-        const json = JSON.stringify(screen)
-        searchForResource(workspaceApp._id!, json)
+        searchForUsages(workspaceApp._id!, screen)
       }
-    }
-  }
-
-  // Search in automations
-  if (automations.length) {
-    for (const automation of automations) {
-      const json = JSON.stringify(automation)
-      searchForResource(automation._id, json)
-    }
-  }
-
-  // Search in tables
-  if (internalTables.length) {
-    for (const table of internalTables) {
-      const json = JSON.stringify(table)
-      searchForResource(table._id!, json)
     }
   }
 
@@ -175,31 +199,6 @@ export async function searchForUsages(): Promise<
       })
     }
   }
-
-  function checkForNestedResources(
-    resources: Record<string, UsedResource[]>,
-    resourceType: ResourceType,
-    docs: AnyDocument[]
-  ) {
-    const countDependencies = (deps: Record<string, UsedResource[]>) =>
-      Object.values(deps).reduce((total, items) => total + items.length, 0)
-
-    const filteredResources = Object.values(resources)
-      .flatMap(r => r)
-      .filter(r => r.type === resourceType)
-    const preResourceCount = countDependencies(resources)
-    for (const resource of filteredResources) {
-      const doc = docs.find(a => a._id === resource.id)
-      const json = JSON.stringify(doc)
-      searchForResource(resource.id, json)
-    }
-    if (preResourceCount !== countDependencies(resources)) {
-      checkForNestedResources(resources, resourceType, docs)
-    }
-  }
-
-  checkForNestedResources(dependencies, ResourceType.AUTOMATION, automations)
-  checkForNestedResources(dependencies, ResourceType.TABLE, internalTables)
 
   return dependencies
 }

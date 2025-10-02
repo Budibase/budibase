@@ -19,8 +19,8 @@ export interface UsedResource {
   type: ResourceType
 }
 
-export interface ResourceUsageResponse {
-  resources: Record<string, UsedResource[]>
+export interface ResourceDependenciesResponse {
+  dependencies: Record<string, UsedResource[]>
 }
 
 export interface DuplicateResourceToWorkspaceRequest {

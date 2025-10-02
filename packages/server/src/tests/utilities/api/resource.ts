@@ -1,16 +1,16 @@
 import {
   DuplicateResourceToWorkspaceRequest,
   DuplicateResourceToWorkspaceResponse,
-  ResourceUsageResponse,
+  ResourceDependenciesResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class ResourceAPI extends TestAPI {
-  searchForUsage = async (
+  getResourceDependencies = async (
     expectations?: Expectations
-  ): Promise<{ body: ResourceUsageResponse }> => {
-    const result = await this._get<ResourceUsageResponse>(
-      `/api/resources/usage`,
+  ): Promise<{ body: ResourceDependenciesResponse }> => {
+    const result = await this._get<ResourceDependenciesResponse>(
+      `/api/resources/dependencies`,
       {
         expectations,
       }
