@@ -167,16 +167,7 @@
 
   // When nodes are available and we haven't applied our custom viewport yet, align the top
   $: if ($nodes?.length && !initialViewportApplied) {
-    fitView({ maxZoom: 1 }).then(() => {
-      const viewport = getViewport()
-      const toplevelNodes = $nodes.filter(n => !n.parentId)
-      const minY = Math.min(...toplevelNodes.map(n => n.position.y))
-      setViewport({
-        x: viewport.x,
-        y: -(viewport.y - minY) + 40,
-        zoom: viewport.zoom,
-      })
-    })
+    fitView({ maxZoom: 1 })
     initialViewportApplied = true
   }
 

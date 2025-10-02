@@ -13,6 +13,7 @@
     type AutomationStep,
     type AutomationTrigger,
     type BlockRef,
+    AutomationActionStepId,
     AutomationTriggerStepId,
     isBranchStep,
     isTrigger,
@@ -193,11 +194,14 @@
 <Divider noMargin />
 <div class="panel config" use:resizable>
   <div class="content" bind:this={configPanel}>
-    {#if loopBlock || loopV2Block}
+    {#if loopBlock || $memoBlock?.stepId === AutomationActionStepId.LOOP_V2}
       <div class="loop">
         <DetailSummary name="Loop details" padded={false} initiallyShow>
           <BlockProperties
-            block={loopBlock || loopV2Block}
+            block={loopBlock ||
+              ($memoBlock?.stepId === AutomationActionStepId.LOOP_V2
+                ? $memoBlock
+                : undefined)}
             context={$memoContext}
             automation={$memoAutomation}
           />
