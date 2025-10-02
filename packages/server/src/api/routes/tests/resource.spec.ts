@@ -229,13 +229,11 @@ describe("/api/resources/usage", () => {
         visited.add(screenId)
       }
 
-      return sanitizeResourceIds(Array.from(visited))
+      return Array.from(visited)
     }
 
     const expectIdsToMatch = (actual: string[], expected: string[]) => {
-      expect(sanitizeResourceIds(actual).sort()).toEqual(
-        sanitizeResourceIds(expected).sort()
-      )
+      expect(actual.sort()).toEqual(expected.sort())
     }
 
     const previewResources = async (
@@ -660,9 +658,7 @@ describe("/api/resources/usage", () => {
 
         expect(preview.body.existing).toEqual([])
         expect(
-          sanitizeResourceIds(preview.body.toCopy).filter(
-            id => id === internalTables[1]._id!
-          )
+          preview.body.toCopy.filter(id => id === internalTables[1]._id!)
         ).toHaveLength(1)
 
         tk.freeze(new Date())
@@ -700,7 +696,7 @@ describe("/api/resources/usage", () => {
           newWorkspace.appId
         )
 
-        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+        expect(preview.body.toCopy).toEqual(
           expect.arrayContaining([rowActionDocId, rowActionAutomation._id!])
         )
 
@@ -746,7 +742,7 @@ describe("/api/resources/usage", () => {
           newWorkspace.appId
         )
 
-        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+        expect(preview.body.toCopy).toEqual(
           expect.arrayContaining([datasourceWithDependency._id!])
         )
 
@@ -785,9 +781,7 @@ describe("/api/resources/usage", () => {
         )
 
         expect(preview.body.existing).toEqual([])
-        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual([
-          tableToCopy._id!,
-        ])
+        expect(preview.body.toCopy).toEqual([tableToCopy._id!])
 
         tk.freeze(new Date())
         await duplicateResources(
@@ -890,9 +884,7 @@ describe("/api/resources/usage", () => {
         expect(previewAfter.body.existing).toEqual(
           expect.arrayContaining([internalTables[0]._id!])
         )
-        expect(sanitizeResourceIds(previewAfter.body.toCopy)).not.toContain(
-          internalTables[0]._id
-        )
+        expect(previewAfter.body.toCopy).not.toContain(internalTables[0]._id)
       })
 
       it("previews datasource dependencies that would be duplicated", async () => {
@@ -905,7 +897,7 @@ describe("/api/resources/usage", () => {
         )
         const preview = await previewResources(resources, newWorkspace.appId)
 
-        expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
+        expect(preview.body.toCopy).toEqual(
           expect.arrayContaining([datasourceWithDependency._id!])
         )
         expect(preview.body.existing).toEqual([])
