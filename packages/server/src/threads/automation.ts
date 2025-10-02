@@ -547,7 +547,16 @@ class Orchestrator {
 
             // Process results based on their type
             for (const result of iterationResults) {
-              automationUtils.processStandardResult(storage, result, iterations)
+              const isDirectChild = children.some(
+                child => child.id === result.id
+              )
+              if (isDirectChild) {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations
+                )
+              }
             }
 
             const hasFailures = iterationResults.some(

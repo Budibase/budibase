@@ -4,6 +4,8 @@
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import type { LayoutDirection } from "@budibase/types"
   import type { LoopV2NodeData } from "@/types/automations"
+  import FlowItemStatus from "../../FlowItemStatus.svelte"
+  import { ViewMode } from "@/types/automations"
 
   export let data: LoopV2NodeData
   $: block = data.block
@@ -13,6 +15,7 @@
   $: loopChildCount = Array.isArray(block?.inputs?.children)
     ? block.inputs.children.length
     : 0
+  $: viewMode = $automationStore.viewMode
 
   const addStep = () => {
     // Provide a marker so the side panel knows we're inserting inside the loop subflow
@@ -48,27 +51,48 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div
-  on:click|stopPropagation={selectNode}
-  class="loop-container"
-  class:selected
->
-  <div class="loop-header">
-    <div class="loop-icon-wrapper">
-      <Icon name="Reuse" size="S" />
-    </div>
-    <span class="loop-label">Loop</span>
+<div class="loop-wrapper">
+  <div class="loop-status">
+    <FlowItemStatus {block} branch={undefined} hideStatus={false} {viewMode} />
   </div>
-
-  <NodeToolbar
-    isVisible={loopChildCount === 0}
-    position={isHorizontal ? Position.Top : Position.Top}
+  <div
+    on:click|stopPropagation={selectNode}
+    class="loop-container"
+    class:selected
   >
-    <ActionButton icon="plus-circle" on:click={addStep}>Add step</ActionButton>
-  </NodeToolbar>
+    <div class="loop-header">
+      <div class="loop-icon-wrapper">
+        <Icon name="Reuse" size="S" />
+      </div>
+      <span class="loop-label">Loop</span>
+    </div>
+
+    <NodeToolbar
+      isVisible={loopChildCount === 0}
+      position={isHorizontal ? Position.Top : Position.Top}
+    >
+      <ActionButton icon="plus-circle" on:click={addStep}>Add step</ActionButton
+      >
+    </NodeToolbar>
+  </div>
 </div>
 
 <style>
+  .loop-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .loop-status {
+    pointer-events: none;
+    width: 100%;
+    position: absolute;
+    top: -35px;
+    left: 0;
+    z-index: 10;
+  }
+
   .loop-container {
     width: 100%;
     height: 100%;
