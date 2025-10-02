@@ -190,11 +190,6 @@ describe("/api/resources/usage", () => {
       }
     }
 
-    const uniqueIds = (ids: string[]) => Array.from(new Set(ids))
-
-    const sanitizeResourceIds = (ids: string[]) =>
-      uniqueIds(ids.filter((id): id is string => !!id && id !== "bb_internal"))
-
     async function collectResourceIds(id: string): Promise<string[]> {
       const usage = await config.api.resource.searchForUsage()
       const dependants = new Set([id])
@@ -575,10 +570,7 @@ describe("/api/resources/usage", () => {
         expect(firstPreview.body.existing).toEqual([])
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(firstPreview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(firstPreview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
           screens: appWithTableUsages.screens.map(s => ({
@@ -602,10 +594,7 @@ describe("/api/resources/usage", () => {
           expect.arrayContaining([internalTables[0]._id!])
         )
 
-        await duplicateResources(
-          sanitizeResourceIds(secondPreview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(secondPreview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -645,10 +634,7 @@ describe("/api/resources/usage", () => {
         ).toHaveLength(1)
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -684,10 +670,7 @@ describe("/api/resources/usage", () => {
         )
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -730,10 +713,7 @@ describe("/api/resources/usage", () => {
         )
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(
           newWorkspace.appId,
@@ -767,10 +747,7 @@ describe("/api/resources/usage", () => {
         expect(preview.body.toCopy).toEqual([tableToCopy._id!])
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         await config.withHeaders(
           { [Header.APP_ID]: newWorkspace.appId },
@@ -815,13 +792,10 @@ describe("/api/resources/usage", () => {
         )
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         const error = await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
+          preview.body.toCopy,
           newWorkspace.appId,
           { status: 400 }
         )
@@ -849,10 +823,7 @@ describe("/api/resources/usage", () => {
         expect(previewBefore.body.existing).toEqual([])
         expectIdsToMatch(previewBefore.body.toCopy, initialResources)
 
-        await duplicateResources(
-          sanitizeResourceIds(previewBefore.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(previewBefore.body.toCopy, newWorkspace.appId)
 
         const copyResources = await collectResourceIds(
           appWithTableUsagesCopy.app._id!
