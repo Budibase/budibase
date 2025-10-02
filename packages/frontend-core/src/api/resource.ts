@@ -1,5 +1,4 @@
 import {
-  DuplicateResourcePreviewResponse,
   DuplicateResourceToWorkspaceRequest,
   DuplicateResourceToWorkspaceResponse,
   ResourceUsageResponse,
@@ -11,9 +10,6 @@ export interface ResourceEndpoints {
   duplicateResourceToWorkspace: (
     request: DuplicateResourceToWorkspaceRequest
   ) => Promise<DuplicateResourceToWorkspaceResponse>
-  previewDuplicateResourceToWorkspace: (
-    request: DuplicateResourceToWorkspaceRequest
-  ) => Promise<{ body: DuplicateResourcePreviewResponse }>
 }
 
 export const buildResourceEndpoints = (
@@ -35,19 +31,5 @@ export const buildResourceEndpoints = (
       url: `/api/resources/duplicate`,
       body: request,
     })
-  },
-
-  previewDuplicateResourceToWorkspace: async (
-    request: DuplicateResourceToWorkspaceRequest
-  ): Promise<{ body: DuplicateResourcePreviewResponse }> => {
-    const result = await API.post<
-      DuplicateResourceToWorkspaceRequest,
-      DuplicateResourcePreviewResponse
-    >({
-      url: `/api/resources/duplicate/preview`,
-
-      body: request,
-    })
-    return { body: result }
   },
 })

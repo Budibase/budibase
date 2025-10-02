@@ -1,5 +1,4 @@
 import {
-  DuplicateResourcePreviewResponse,
   DuplicateResourceToWorkspaceRequest,
   DuplicateResourceToWorkspaceResponse,
   ResourceUsageResponse,
@@ -25,20 +24,6 @@ export class ResourceAPI extends TestAPI {
   ): Promise<{ body: DuplicateResourceToWorkspaceResponse }> => {
     const result = await this._post<DuplicateResourceToWorkspaceResponse>(
       `/api/resources/duplicate`,
-      {
-        expectations,
-        body: request,
-      }
-    )
-    return { body: result }
-  }
-
-  previewDuplicateResourceToWorkspace = async (
-    request: DuplicateResourceToWorkspaceRequest,
-    expectations?: Expectations
-  ): Promise<{ body: DuplicateResourcePreviewResponse }> => {
-    const result = await this._post<DuplicateResourcePreviewResponse>(
-      `/api/resources/duplicate/preview`,
       {
         expectations,
         body: request,

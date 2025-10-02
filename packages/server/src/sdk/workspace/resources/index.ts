@@ -1,7 +1,6 @@
 import { context, db, HTTPError } from "@budibase/backend-core"
 import {
   AnyDocument,
-  DuplicateResourcePreviewResponse,
   INTERNAL_TABLE_SOURCE_ID,
   ResourceType,
   Screen,
@@ -210,37 +209,6 @@ export async function duplicateResourcesToWorkspace(
   resources: string[],
   toWorkspace: string
 ) {
-  const { toCopy } = await previewDuplicateResourceToWorkspace(
-    resources,
-    toWorkspace
-  )
-  if (!toCopy.length) {
-    throw new HTTPError(`No resources to copy`, 400)
-  }
-
-  const documentToCopy = await context
-    .getWorkspaceDB()
-    .getMultiple<AnyDocument>(resources, {
-      allowMissing: false,
-    })
-
-  const destinationDb = await getDestinationDb(toWorkspace)
-
-  await destinationDb.bulkDocs(
-    documentToCopy.map<AnyDocument>(doc => {
-      const sanitizedDoc: AnyDocument = { ...doc }
-      delete sanitizedDoc._rev
-      delete sanitizedDoc.createdAt
-      delete sanitizedDoc.updatedAt
-      return sanitizedDoc
-    })
-  )
-}
-
-export async function previewDuplicateResourceToWorkspace(
-  resources: string[],
-  toWorkspace: string
-): Promise<DuplicateResourcePreviewResponse> {
   resources = Array.from(new Set(resources).keys())
 
   const destinationDb = await getDestinationDb(toWorkspace)
@@ -254,8 +222,23 @@ export async function previewDuplicateResourceToWorkspace(
   const existingIds = new Set(existingDocuments.map(doc => doc._id))
   const toCopy = resources.filter(id => !existingIds.has(id))
 
-  return {
-    toCopy,
-    existing: existingIds.values().toArray(),
+  if (!toCopy.length) {
+    throw new HTTPError(`No resources to copy`, 400)
   }
+
+  const documentToCopy = await context
+    .getWorkspaceDB()
+    .getMultiple<AnyDocument>(resources, {
+      allowMissing: false,
+    })
+
+  await destinationDb.bulkDocs(
+    documentToCopy.map<AnyDocument>(doc => {
+      const sanitizedDoc: AnyDocument = { ...doc }
+      delete sanitizedDoc._rev
+      delete sanitizedDoc.createdAt
+      delete sanitizedDoc.updatedAt
+      return sanitizedDoc
+    })
+  )
 }

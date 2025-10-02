@@ -1,5 +1,4 @@
 import {
-  DuplicateResourcePreviewResponse,
   DuplicateResourceToWorkspaceRequest,
   ResourceUsageResponse,
   UserCtx,
@@ -20,18 +19,4 @@ export async function duplicateResourceToWorkspace(
   const { toWorkspace, resources } = ctx.request.body
   await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace)
   ctx.status = 204
-}
-
-export async function previewDuplicateResourceToWorkspace(
-  ctx: UserCtx<
-    DuplicateResourceToWorkspaceRequest,
-    DuplicateResourcePreviewResponse
-  >
-) {
-  const { toWorkspace, resources } = ctx.request.body
-
-  ctx.body = await sdk.resources.previewDuplicateResourceToWorkspace(
-    resources,
-    toWorkspace
-  )
 }

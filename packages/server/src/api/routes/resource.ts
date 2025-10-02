@@ -16,8 +16,3 @@ builderRoutes.post(
   duplicateRequestValidator,
   controller.duplicateResourceToWorkspace
 )
-builderRoutes.post(
-  "/api/resources/duplicate/preview",
-  duplicateRequestValidator,
-  controller.previewDuplicateResourceToWorkspace
-)
