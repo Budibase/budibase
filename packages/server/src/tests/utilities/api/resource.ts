@@ -10,7 +10,7 @@ export class ResourceAPI extends TestAPI {
   searchForUsage = async (
     expectations?: Expectations
   ): Promise<{ body: ResourceUsageResponse }> => {
-    const result = await this._post<ResourceUsageResponse>(
+    const result = await this._get<ResourceUsageResponse>(
       `/api/resources/usage`,
       {
         expectations,
