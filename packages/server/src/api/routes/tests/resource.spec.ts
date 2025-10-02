@@ -4,7 +4,6 @@ import {
   AnyDocument,
   Automation,
   Datasource,
-  InsertWorkspaceAppRequest,
   Query,
   ResourceType,
   RowActionResponse,
@@ -143,36 +142,24 @@ describe("/api/resources/usage", () => {
 
   describe("duplication", () => {
     interface WorkspaceAppInfo {
+      id: string
       app: WorkspaceApp
       screens: Screen[]
     }
 
-    let basicApp: WorkspaceAppInfo
-    let appWithTableUsages: WorkspaceAppInfo
-    let appWithTableUsagesCopy: WorkspaceAppInfo
-    let appSharingTableDependency: WorkspaceAppInfo
-    let appWithRepeatedDependencyUsage: WorkspaceAppInfo
-    let appWithDatasourceDependency: WorkspaceAppInfo
-    let appWithRowActionDependency: WorkspaceAppInfo
-    let datasourceWithDependency: Datasource
-    let queryForDatasource: Query
-    let internalTables: Table[] = []
-    let tableWithRowAction: Table
-    let rowActionAutomation: Automation
-    let rowActionDocId: string
-    let rowActionExpectations: RowActionResponse[] = []
-
     async function createInternalTable(data: Partial<Table> = {}) {
       const table = await config.api.table.save(basicTable(undefined, data))
-      internalTables.push(await config.api.table.get(table._id!))
+      return table
     }
 
-    async function createApp(
-      app: InsertWorkspaceAppRequest,
-      screens: Screen[]
-    ): Promise<WorkspaceAppInfo> {
-      const { workspaceApp: createdApp } =
-        await config.api.workspaceApp.create(app)
+    async function createApp(...screens: Screen[]): Promise<WorkspaceAppInfo> {
+      const uuid = generator.guid()
+      const { workspaceApp: createdApp } = await config.api.workspaceApp.create(
+        {
+          name: uuid,
+          url: `/uuid`,
+        }
+      )
       const createdScreens: Screen[] = []
       for (const screen of screens) {
         screen.workspaceAppId = createdApp._id!
@@ -185,213 +172,32 @@ describe("/api/resources/usage", () => {
       }
 
       return {
+        id: createdApp._id!,
         app: createdApp,
         screens: createdScreens,
       }
     }
 
-    async function collectResourceIds(id: string): Promise<string[]> {
-      const usage = await config.api.resource.searchForUsage()
-      const dependants = new Set([id])
-
-      function checkDependants(id: string) {
-        if (!usage.body.resources[id]) {
-          return
-        }
-
-        for (const resource of usage.body.resources[id]) {
-          if (dependants.has(resource.id)) {
-            continue
-          }
-          dependants.add(resource.id)
-          checkDependants(resource.id)
-        }
-      }
-
-      checkDependants(id)
-
-      return dependants.values().toArray()
-    }
-
-    const expectIdsToMatch = (actual: string[], expected: string[]) => {
-      expect(actual.sort()).toEqual(expected.sort())
-    }
-
-    const previewResources = async (
-      resources: string[],
-      toWorkspace: string
-    ) => {
-      return await config.api.resource.previewDuplicateResourceToWorkspace({
-        resources,
-        toWorkspace,
-      })
-    }
-
-    const duplicateResources = async (
-      resources: string[],
-      toWorkspace: string,
-      expectations?: Parameters<
-        typeof config.api.resource.duplicateResourceToWorkspace
-      >[1]
-    ) => {
-      return await config.api.resource.duplicateResourceToWorkspace(
-        {
-          resources,
-          toWorkspace,
-        },
-        expectations ?? { status: 204 }
-      )
-    }
-
-    beforeAll(async () => {
-      await config.createWorkspace()
-
-      await createInternalTable({ name: "Internal table 1" })
-      await createInternalTable({ name: "Internal table 2" })
-      await createInternalTable({ name: "Internal table 3" })
-
-      const datasource1 = await config.createDatasource()
-      await config.api.query.save(basicQuery(datasource1._id))
-      await config.api.query.save(basicQuery(datasource1._id))
-
-      datasourceWithDependency = await config.createDatasource()
-      queryForDatasource = await config.api.query.save(
-        basicQuery(datasourceWithDependency._id!)
-      )
-
-      basicApp = await createApp(
-        {
-          name: "My first app",
-          url: "/my-first-app",
-        },
-        [basicScreen()]
-      )
-
-      const screenWithDataProvider = basicScreen()
-      screenWithDataProvider.props._children?.push({
+    function createScreenWithDataprovider(tableId: string) {
+      const screen = basicScreen()
+      screen.props._children?.push({
         _id: "child-props",
         _instanceName: "child",
         _styles: {},
         _component: "@budibase/standard-components/dataprovider",
         datasource: {
-          tableId: internalTables[0]._id,
+          tableId,
           type: "table",
         },
       })
-      appWithTableUsages = await createApp(
-        {
-          name: "App with tables",
-          url: "/app-with-tables",
-        },
-        [screenWithDataProvider]
-      )
-      appWithTableUsagesCopy = await createApp(
-        {
-          name: "App with tables copy",
-          url: "/app-with-tables-copy",
-        },
-        [screenWithDataProvider]
-      )
+      return screen
+    }
 
-      const secondScreenWithDataProvider = basicScreen()
-      secondScreenWithDataProvider.props._children?.push({
-        _id: "child-props",
-        _instanceName: "child",
-        _styles: {},
-        _component: "@budibase/standard-components/dataprovider",
-        datasource: {
-          tableId: internalTables[0]._id,
-          type: "table",
-        },
-      })
-
-      appSharingTableDependency = await createApp(
-        {
-          name: "App sharing table",
-          url: "/app-sharing-table",
-        },
-        [secondScreenWithDataProvider]
-      )
-
-      const screenWithDatasourceDependency = createQueryScreen(
-        datasourceWithDependency._id!,
-        queryForDatasource
-      )
-      appWithDatasourceDependency = await createApp(
-        {
-          name: "App with datasource",
-          url: "/app-with-datasource",
-        },
-        [screenWithDatasourceDependency]
-      )
-
-      const screenWithRepeatedDependency = basicScreen()
-      screenWithRepeatedDependency.props._children?.push(
-        {
-          _id: "child-props-one",
-          _instanceName: "child",
-          _styles: {},
-          _component: "@budibase/standard-components/dataprovider",
-          datasource: {
-            tableId: internalTables[1]._id,
-            type: "table",
-          },
-        },
-        {
-          _id: "child-props-two",
-          _instanceName: "child",
-          _styles: {},
-          _component: "@budibase/standard-components/dataprovider",
-          datasource: {
-            tableId: internalTables[1]._id,
-            type: "table",
-          },
-        }
-      )
-
-      const secondScreenWithRepeatedDependency = basicScreen()
-      secondScreenWithRepeatedDependency.props._children?.push({
-        _id: "child-props-three",
-        _instanceName: "child",
-        _styles: {},
-        _component: "@budibase/standard-components/dataprovider",
-        datasource: {
-          tableId: internalTables[1]._id,
-          type: "table",
-        },
-      })
-
-      appWithRepeatedDependencyUsage = await createApp(
-        {
-          name: "App with repeated dependency",
-          url: "/app-repeated-dependency",
-        },
-        [screenWithRepeatedDependency, secondScreenWithRepeatedDependency]
-      )
-
-      tableWithRowAction = await config.api.table.save(
-        basicTable(undefined, { name: "Row action table" })
-      )
-
-      const rowAction = await config.api.rowAction.save(
-        tableWithRowAction._id!,
-        {
-          name: "Row action button",
-        }
-      )
-      rowActionDocId = generateRowActionsID(tableWithRowAction._id!)
-      rowActionAutomation = await config.api.automation.get(
-        rowAction.automationId
-      )
-      const rowActionList = await config.api.rowAction.find(
-        tableWithRowAction._id!
-      )
-      rowActionExpectations = Object.values(rowActionList.actions)
-
-      const screenWithRowAction = basicScreen()
-      screenWithRowAction.props._children?.push({
+    function createScreenWithRowActionUsage(rowAction: RowActionResponse) {
+      const screen = basicScreen()
+      screen.props._children?.push({
         _id: "row-action-button",
-        _instanceName: "Row Action Button",
+        _instanceName: 'Row action button"',
         _component: "@budibase/standard-components/button",
         _styles: {
           normal: {},
@@ -408,451 +214,377 @@ describe("/api/resources/usage", () => {
             "##eventHandlerType": "Row Action",
             parameters: {
               rowActionId: rowAction.id,
-              resourceId: tableWithRowAction._id!,
+              resourceId: rowAction.tableId,
               rowId: "{{ [row-action-source].[_id] }}",
             },
           },
         ],
       })
+      return screen
+    }
 
-      appWithRowActionDependency = await createApp(
+    beforeAll(async () => {
+      await config.createWorkspace()
+    })
+
+    const sanitizeResources = (ids: string[]) =>
+      Array.from(new Set(ids)).filter(id => id && id !== "bb_internal")
+
+    const duplicateResources = async (
+      resources: string[],
+      toWorkspace: string,
+      expectations?: Parameters<
+        typeof config.api.resource.duplicateResourceToWorkspace
+      >[1]
+    ) => {
+      return await config.api.resource.duplicateResourceToWorkspace(
         {
-          name: "App with row action",
-          url: "/app-row-action",
+          resources: sanitizeResources(resources),
+          toWorkspace,
         },
-        [screenWithRowAction]
+        expectations ?? { status: 204 }
       )
-    })
+    }
 
-    describe("duplicateResourceToWorkspace", () => {
-      async function validateWorkspace(
-        appId: string,
-        expectedApp: WorkspaceApp,
-        expected: {
-          screens?: Screen[]
-          tables?: Table[]
-          datasource?: Datasource[]
-          queries?: Query[]
-          automations?: Automation[]
-          rowActions?: { tableId: string; actions: RowActionResponse[] }[]
+    const collectResourceIds = async (id: string): Promise<string[]> => {
+      const usage = await config.api.resource.searchForUsage()
+      const dependants = new Set<string>([id])
+      const crawl = (resourceId: string) => {
+        const dependencies = usage.body.resources[resourceId] || []
+        for (const dependency of dependencies) {
+          if (dependants.has(dependency.id)) {
+            continue
+          }
+          dependants.add(dependency.id)
+          crawl(dependency.id)
         }
-      ) {
-        const sortById = (a: AnyDocument, b: AnyDocument) =>
-          a._id!.localeCompare(b._id!)
-
-        await config.withHeaders({ [Header.APP_ID]: appId }, async () => {
-          const { workspaceApps: resultingWorkspaceApps } =
-            await config.api.workspaceApp.fetch()
-          expect(resultingWorkspaceApps).toContainEqual(
-            expect.objectContaining({
-              ...expectedApp,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-          )
-
-          const screens = await config.api.screen.list()
-          expect(screens.sort(sortById)).toEqual(
-            (expected.screens || []).sort(sortById).map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }))
-          )
-
-          const tables = await config.api.table.fetch()
-          expect(tables.sort(sortById)).toEqual(
-            [
-              expect.objectContaining({
-                _id: "ta_users",
-              }),
-              ...(expected.tables || []).map(t => ({
-                ...t,
-                _rev: expect.stringMatching(/^1-\w+/),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              })),
-            ].sort(sortById)
-          )
-
-          const datasources = await config.api.datasource.fetch()
-          expect(datasources).toEqual([
-            expect.objectContaining({ _id: "bb_internal" }),
-            ...(expected.datasource || []).map(d => ({
-              ...d,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })),
-          ])
-
-          const queries = await config.api.query.fetch()
-          expect(queries).toEqual(
-            (expected.queries || []).map(q => ({
-              ...q,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }))
-          )
-
-          const { automations } = await config.api.automation.fetch()
-          expect(automations).toEqual(
-            (expected.automations || []).map(a => ({
-              ...a,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }))
-          )
-
-          for (const rowActionExpectation of expected.rowActions || []) {
-            const rowActionsResponse = await config.api.rowAction.find(
-              rowActionExpectation.tableId
-            )
-            const actual = Object.values(rowActionsResponse.actions).sort(
-              (a, b) => a.id.localeCompare(b.id)
-            )
-            const expectedRowActions = [...rowActionExpectation.actions].sort(
-              (a, b) => a.id.localeCompare(b.id)
-            )
-            expect(actual).toEqual(expectedRowActions)
-          }
-        })
       }
+      crawl(id)
+      return sanitizeResources(Array.from(dependants))
+    }
 
-      it("copies the resource and dependencies into the destination workspace for basic apps", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
+    const validateWorkspace = async (
+      workspaceId: string,
+      expected: {
+        apps?: WorkspaceApp[]
+        screens?: Screen[]
+        tables?: Table[]
+        datasource?: Datasource[]
+        queries?: Query[]
+        automations?: Automation[]
+        rowActions?: { tableId: string; actions: RowActionResponse[] }[]
+      }
+    ) => {
+      const sortById = (a: AnyDocument, b: AnyDocument) =>
+        a._id!.localeCompare(b._id!)
 
-        const resourcesToCopy = await collectResourceIds(
-          appWithTableUsages.app._id!
+      await config.withHeaders({ [Header.APP_ID]: workspaceId }, async () => {
+        const { workspaceApps: resultingWorkspaceApps } =
+          await config.api.workspaceApp.fetch()
+
+        expect(resultingWorkspaceApps.sort(sortById)).toEqual(
+          resultingWorkspaceApps.sort((a, b) => a._id!.localeCompare(b._id!))
         )
 
-        const preview = await previewResources(
-          resourcesToCopy,
-          newWorkspace.appId
-        )
-        expect(preview.body.existing).toEqual([])
-        expectIdsToMatch(preview.body.toCopy, resourcesToCopy)
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
-          screens: appWithTableUsages.screens.map(s => ({
-            ...s,
-            pluginAdded: undefined,
-            _rev: expect.stringMatching(/^1-\w+/),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })),
-          tables: [internalTables[0]],
+        const screens = await config.api.screen.list()
+        const normaliseScreen = (screen: Screen) => ({
+          _id: screen._id,
+          name: screen.name,
+          workspaceAppId: screen.workspaceAppId,
         })
+        expect(screens.sort(sortById).map(normaliseScreen)).toEqual(
+          (expected.screens || [])
+            .sort((a, b) => a._id!.localeCompare(b._id!))
+            .map(normaliseScreen)
+        )
+
+        const tables = await config.api.table.fetch()
+        const actualTableIds = tables.map(table => table._id!).sort()
+        const expectedTableIds = [
+          "ta_users",
+          ...(expected.tables || []).map(table => table._id!),
+        ].sort()
+        expect(actualTableIds).toEqual(expectedTableIds)
+
+        const datasources = await config.api.datasource.fetch()
+        const actualDatasourceIds = datasources
+          .map(datasource => datasource._id!)
+          .sort()
+        const expectedDatasourceIds = [
+          "bb_internal",
+          ...(expected.datasource || []).map(ds => ds._id!),
+        ].sort()
+        expect(actualDatasourceIds).toEqual(expectedDatasourceIds)
+
+        const queries = await config.api.query.fetch()
+        expect(queries.map(query => query._id!).sort()).toEqual(
+          (expected.queries || []).map(q => q._id!).sort()
+        )
+
+        const { automations } = await config.api.automation.fetch()
+        expect(automations.map(automation => automation._id!).sort()).toEqual(
+          (expected.automations || []).map(a => a._id!).sort()
+        )
+
+        for (const rowActionExpectation of expected.rowActions || []) {
+          const rowActionsResponse = await config.api.rowAction.find(
+            rowActionExpectation.tableId
+          )
+          const actual = Object.values(rowActionsResponse.actions).sort(
+            (a, b) => a.id.localeCompare(b.id)
+          )
+          const expectedRowActions = [...rowActionExpectation.actions].sort(
+            (a, b) => a.id.localeCompare(b.id)
+          )
+          expect(actual).toEqual(expectedRowActions)
+        }
+      })
+    }
+
+    it("copies basic apps with its screens", async () => {
+      const basicApp = await createApp(basicScreen())
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
       })
 
-      it("does not duplicate shared dependencies when copying multiple apps", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
+      const resourcesToCopy = await collectResourceIds(basicApp.id)
+      expect(resourcesToCopy).toEqual([
+        basicApp.id,
+        ...basicApp.screens.map(s => s._id!),
+      ])
 
-        const firstResources = await collectResourceIds(
-          appWithTableUsages.app._id!
-        )
-        const firstPreview = await previewResources(
-          firstResources,
-          newWorkspace.appId
-        )
-        expect(firstPreview.body.existing).toEqual([])
-
-        tk.freeze(new Date())
-        await duplicateResources(firstPreview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
-          screens: appWithTableUsages.screens.map(s => ({
-            ...s,
-            pluginAdded: undefined,
-            _rev: expect.stringMatching(/^1-\w+/),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })),
-          tables: [internalTables[0]],
-        })
-
-        const secondResources = await collectResourceIds(
-          appSharingTableDependency.app._id!
-        )
-        const secondPreview = await previewResources(
-          secondResources,
-          newWorkspace.appId
-        )
-        expect(secondPreview.body.existing).toEqual(
-          expect.arrayContaining([internalTables[0]._id!])
-        )
-
-        await duplicateResources(secondPreview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(
-          newWorkspace.appId,
-          appSharingTableDependency.app,
-          {
-            screens: [
-              ...appWithTableUsages.screens,
-              ...appSharingTableDependency.screens,
-            ].map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })),
-            tables: [internalTables[0]],
-          }
-        )
-      })
-
-      it("duplicates apps that reference the same dependency multiple times", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const resourcesToCopy = await collectResourceIds(
-          appWithRepeatedDependencyUsage.app._id!
-        )
-        const preview = await previewResources(
-          resourcesToCopy,
-          newWorkspace.appId
-        )
-
-        expect(preview.body.existing).toEqual([])
-        expect(
-          preview.body.toCopy.filter(id => id === internalTables[1]._id!)
-        ).toHaveLength(1)
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(
-          newWorkspace.appId,
-          appWithRepeatedDependencyUsage.app,
-          {
-            screens: appWithRepeatedDependencyUsage.screens.map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })),
-            tables: [internalTables[1]],
-          }
-        )
-      })
-
-      it("duplicates row action dependencies and associated automations", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const resourcesToCopy = await collectResourceIds(
-          appWithRowActionDependency.app._id!
-        )
-        const preview = await previewResources(
-          resourcesToCopy,
-          newWorkspace.appId
-        )
-
-        expect(preview.body.toCopy).toEqual(
-          expect.arrayContaining([rowActionDocId, rowActionAutomation._id!])
-        )
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(
-          newWorkspace.appId,
-          appWithRowActionDependency.app,
-          {
-            screens: appWithRowActionDependency.screens.map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })),
-            tables: [tableWithRowAction],
-            automations: [rowActionAutomation],
-            rowActions: [
-              {
-                tableId: tableWithRowAction._id!,
-                actions: rowActionExpectations,
-              },
-            ],
-          }
-        )
-      })
-
-      it("duplicates datasource dependencies when duplicating apps", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const resourcesToCopy = await collectResourceIds(
-          appWithDatasourceDependency.app._id!
-        )
-        const preview = await previewResources(
-          resourcesToCopy,
-          newWorkspace.appId
-        )
-
-        expect(preview.body.toCopy).toEqual(
-          expect.arrayContaining([datasourceWithDependency._id!])
-        )
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        await validateWorkspace(
-          newWorkspace.appId,
-          appWithDatasourceDependency.app,
-          {
-            screens: appWithDatasourceDependency.screens.map(s => ({
-              ...s,
-              pluginAdded: undefined,
-              _rev: expect.stringMatching(/^1-\w+/),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })),
-            datasource: [datasourceWithDependency],
-          }
-        )
-      })
-
-      it("duplicates individual tables", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const tableToCopy = internalTables[2]
-
-        const preview = await previewResources(
-          [tableToCopy._id!],
-          newWorkspace.appId
-        )
-
-        expect(preview.body.existing).toEqual([])
-        expect(preview.body.toCopy).toEqual([tableToCopy._id!])
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        await config.withHeaders(
-          { [Header.APP_ID]: newWorkspace.appId },
-          async () => {
-            const tables = await config.api.table.fetch()
-            expect(tables).toEqual(
-              expect.arrayContaining([
-                expect.objectContaining({ _id: tableToCopy._id! }),
-              ])
-            )
-          }
-        )
-      })
-
-      it("throws when destination workspace already exists", async () => {
-        const response = await duplicateResources(
-          [basicApp.app._id!],
-          "app_unexisting",
-          {
-            status: 400,
-          }
-        )
-        expect(response.body).toEqual({
-          message: "Destination workspace does not exist",
-          error: {
-            code: "http",
-          },
-          status: 400,
-          stack: expect.anything(),
-        })
-      })
-
-      it("cannot duplicate the same resources twice on the same workspace", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const resourcesToCopy = await collectResourceIds(basicApp.app._id!)
-        const preview = await previewResources(
-          resourcesToCopy,
-          newWorkspace.appId
-        )
-
-        tk.freeze(new Date())
-        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
-
-        const error = await duplicateResources(
-          preview.body.toCopy,
-          newWorkspace.appId,
-          { status: 400 }
-        )
-        expect(error.body).toMatchObject({
-          message: "No resources to copy",
-          status: 400,
-        })
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [basicApp.app],
+        screens: basicApp.screens,
       })
     })
 
-    describe("previewDuplicateResourceToWorkspace", () => {
-      it("previews resources that would be duplicated and existing ones", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const initialResources = await collectResourceIds(
-          appWithTableUsages.app._id!
-        )
-        const previewBefore = await previewResources(
-          initialResources,
-          newWorkspace.appId
-        )
-
-        expect(previewBefore.body.existing).toEqual([])
-        expectIdsToMatch(previewBefore.body.toCopy, initialResources)
-
-        await duplicateResources(previewBefore.body.toCopy, newWorkspace.appId)
-
-        const copyResources = await collectResourceIds(
-          appWithTableUsagesCopy.app._id!
-        )
-        const previewAfter = await previewResources(
-          copyResources,
-          newWorkspace.appId
-        )
-
-        expect(previewAfter.body.existing).toEqual(
-          expect.arrayContaining([internalTables[0]._id!])
-        )
-        expect(previewAfter.body.toCopy).not.toContain(internalTables[0]._id)
+    it("copies apps with tables into the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
       })
 
-      it("previews datasource dependencies that would be duplicated", async () => {
-        const newWorkspace = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
+      const table = await createInternalTable()
 
-        const resources = await collectResourceIds(
-          appWithDatasourceDependency.app._id!
-        )
-        const preview = await previewResources(resources, newWorkspace.appId)
+      const appWithTableUsages = await createApp(
+        createScreenWithDataprovider(table._id!)
+      )
 
-        expect(preview.body.toCopy).toEqual(
-          expect.arrayContaining([datasourceWithDependency._id!])
-        )
-        expect(preview.body.existing).toEqual([])
+      const resourcesToCopy = await collectResourceIds(appWithTableUsages.id)
+      expect(resourcesToCopy).toEqual([
+        appWithTableUsages.id,
+        ...appWithTableUsages.screens.map(s => s._id!),
+        table._id!,
+      ])
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [appWithTableUsages.app],
+        screens: appWithTableUsages.screens,
+        tables: [table],
+      })
+    })
+
+    it("does not duplicate shared dependencies when copying multiple apps", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable()
+      const app1 = await createApp(createScreenWithDataprovider(table._id!))
+
+      const app2 = await createApp(createScreenWithDataprovider(table._id!))
+
+      const firstResources = await collectResourceIds(app1.id)
+      expect(firstResources).toEqual([
+        app1.id,
+        ...app1.screens.map(s => s._id!),
+        table._id!,
+      ])
+      await duplicateResources(firstResources, newWorkspace.appId)
+
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app1.app],
+        screens: app1.screens,
+        tables: [table],
+      })
+
+      const secondResources = await collectResourceIds(app2.id)
+      expect(secondResources).toEqual([
+        app2.id,
+        ...app2.screens.map(s => s._id!),
+        table._id!,
+      ])
+
+      await duplicateResources(secondResources, newWorkspace.appId)
+
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app1.app, app2.app],
+        screens: [...app1.screens, ...app2.screens],
+        tables: [table],
+      })
+    })
+
+    it("duplicates apps that reference the same dependency multiple times", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table1 = await createInternalTable()
+      const table2 = await createInternalTable()
+
+      const app = await createApp(
+        createScreenWithDataprovider(table1._id!),
+        createScreenWithDataprovider(table2._id!),
+        createScreenWithDataprovider(table1._id!)
+      )
+
+      const resourcesToCopy = await collectResourceIds(app.id)
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app.app],
+        screens: app.screens,
+        tables: [table1, table2],
+      })
+    })
+
+    it("duplicates row action dependencies and associated automations", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await config.api.table.save(
+        basicTable(undefined, { name: "Row action table" })
+      )
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Row action button",
+      })
+      const rowActionDocId = generateRowActionsID(table._id!)
+      const rowActionAutomation = await config.api.automation.get(
+        rowAction.automationId
+      )
+
+      const rowActionList = await config.api.rowAction.find(table._id!)
+      const rowActionsForTable = Object.values(rowActionList.actions)
+
+      const app = await createApp(createScreenWithRowActionUsage(rowAction))
+
+      const resourcesToCopy = await collectResourceIds(app.id)
+      expect(resourcesToCopy).toEqual([
+        app.id,
+        ...app.screens.map(s => s._id!),
+        table._id!,
+        rowActionDocId,
+        rowActionAutomation._id!,
+      ])
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app.app],
+        screens: app.screens,
+        tables: [table],
+        automations: [rowActionAutomation],
+        rowActions: [
+          {
+            tableId: table._id!,
+            actions: rowActionsForTable,
+          },
+        ],
+      })
+    })
+
+    it("duplicates datasource and queries when duplicating apps with usages of it", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const datasourceWithDependency = await config.createDatasource()
+      const queryForDatasource = await config.api.query.save(
+        basicQuery(datasourceWithDependency._id!)
+      )
+
+      const screenWithDatasourceDependency = createQueryScreen(
+        datasourceWithDependency._id!,
+        queryForDatasource
+      )
+      const app = await createApp(screenWithDatasourceDependency)
+
+      const resourcesToCopy = await collectResourceIds(app.id)
+      expect(resourcesToCopy).toEqual([
+        app.id,
+        ...app.screens.map(s => s._id),
+        datasourceWithDependency._id,
+        queryForDatasource._id,
+      ])
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [app.app],
+        screens: app.screens,
+        datasource: [datasourceWithDependency],
+      })
+    })
+
+    it("duplicates individual tables", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const internalTables = [
+        await createInternalTable({ name: "Internal table 1" }),
+        await createInternalTable({ name: "Internal table 2" }),
+        await createInternalTable({ name: "Internal table 3" }),
+      ]
+      const tableToCopy = [internalTables[0], internalTables[2]]
+
+      await duplicateResources(
+        tableToCopy.map(t => t._id!),
+        newWorkspace.appId
+      )
+      await validateWorkspace(newWorkspace.appId, {
+        tables: tableToCopy,
+      })
+    })
+
+    it("throws when destination workspace does not exist", async () => {
+      const basicApp = await createApp()
+
+      const response = await duplicateResources(
+        [basicApp.id],
+        "app_unexisting",
+        { status: 400 }
+      )
+
+      expect(response.body).toEqual({
+        message: "Destination workspace does not exist",
+        error: {
+          code: "http",
+        },
+        status: 400,
+        stack: expect.anything(),
+      })
+    })
+
+    it("throws when copying the same resources twice", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const basicApp = await createApp(basicScreen())
+
+      const resourcesToCopy = await collectResourceIds(basicApp.id)
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      const error = await duplicateResources(
+        resourcesToCopy,
+        newWorkspace.appId,
+        { status: 400 }
+      )
+      expect(error.body).toMatchObject({
+        message: "No resources to copy",
+        status: 400,
       })
     })
   })
