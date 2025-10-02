@@ -524,6 +524,7 @@ describe("/api/resources/usage", () => {
         apps: [app.app],
         screens: app.screens,
         datasource: [datasourceWithDependency],
+        queries: [queryForDatasource],
       })
     })
 

@@ -54,6 +54,16 @@ export async function searchForUsages(): Promise<
     }))
   )
 
+  const queries = await sdk.queries.fetch()
+  baseSearchTargets.push(
+    ...queries.map(query => ({
+      id: query._id!,
+      idToSearch: query._id!,
+      name: query.name!,
+      type: ResourceType.QUERY,
+    }))
+  )
+
   const rowActions = await sdk.rowActions.getAll()
   if (rowActions.length) {
     const rowActionNames = await sdk.rowActions.getNames(
