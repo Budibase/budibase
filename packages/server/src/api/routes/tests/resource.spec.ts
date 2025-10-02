@@ -195,41 +195,27 @@ describe("/api/resources/usage", () => {
     const sanitizeResourceIds = (ids: string[]) =>
       uniqueIds(ids.filter((id): id is string => !!id && id !== "bb_internal"))
 
-    async function collectWorkspaceAppResourceIds(
-      appId: string
-    ): Promise<string[]> {
-      const [usage, screens] = await Promise.all([
-        config.api.resource.searchForUsage(),
-        config.api.screen.list(),
-      ])
+    async function collectResourceIds(id: string): Promise<string[]> {
+      const usage = await config.api.resource.searchForUsage()
+      const dependants = new Set([id])
 
-      const screenIds = screens
-        .filter(screen => screen.workspaceAppId === appId)
-        .map(screen => screen._id!)
-
-      const resourceMap = usage.body.resources
-      const visited = new Set<string>()
-      const queue: string[] = [appId]
-
-      while (queue.length) {
-        const current = queue.shift()!
-        if (visited.has(current)) {
-          continue
+      function checkDependants(id: string) {
+        if (!usage.body.resources[id]) {
+          return
         }
-        visited.add(current)
-        const dependenciesForResource = resourceMap[current] || []
-        for (const dependency of dependenciesForResource) {
-          if (!visited.has(dependency.id)) {
-            queue.push(dependency.id)
+
+        for (const resource of usage.body.resources[id]) {
+          if (dependants.has(resource.id)) {
+            continue
           }
+          dependants.add(resource.id)
+          checkDependants(resource.id)
         }
       }
 
-      for (const screenId of screenIds) {
-        visited.add(screenId)
-      }
+      checkDependants(id)
 
-      return Array.from(visited)
+      return dependants.values().toArray()
     }
 
     const expectIdsToMatch = (actual: string[], expected: string[]) => {
@@ -548,7 +534,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+        const resourcesToCopy = await collectResourceIds(
           appWithTableUsages.app._id!
         )
 
@@ -560,10 +546,7 @@ describe("/api/resources/usage", () => {
         expectIdsToMatch(preview.body.toCopy, resourcesToCopy)
 
         tk.freeze(new Date())
-        await duplicateResources(
-          sanitizeResourceIds(preview.body.toCopy),
-          newWorkspace.appId
-        )
+        await duplicateResources(preview.body.toCopy, newWorkspace.appId)
 
         await validateWorkspace(newWorkspace.appId, appWithTableUsages.app, {
           screens: appWithTableUsages.screens.map(s => ({
@@ -582,7 +565,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const firstResources = await collectWorkspaceAppResourceIds(
+        const firstResources = await collectResourceIds(
           appWithTableUsages.app._id!
         )
         const firstPreview = await previewResources(
@@ -608,7 +591,7 @@ describe("/api/resources/usage", () => {
           tables: [internalTables[0]],
         })
 
-        const secondResources = await collectWorkspaceAppResourceIds(
+        const secondResources = await collectResourceIds(
           appSharingTableDependency.app._id!
         )
         const secondPreview = await previewResources(
@@ -648,7 +631,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+        const resourcesToCopy = await collectResourceIds(
           appWithRepeatedDependencyUsage.app._id!
         )
         const preview = await previewResources(
@@ -688,7 +671,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+        const resourcesToCopy = await collectResourceIds(
           appWithRowActionDependency.app._id!
         )
         const preview = await previewResources(
@@ -734,7 +717,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resourcesToCopy = await collectWorkspaceAppResourceIds(
+        const resourcesToCopy = await collectResourceIds(
           appWithDatasourceDependency.app._id!
         )
         const preview = await previewResources(
@@ -825,9 +808,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resourcesToCopy = await collectWorkspaceAppResourceIds(
-          basicApp.app._id!
-        )
+        const resourcesToCopy = await collectResourceIds(basicApp.app._id!)
         const preview = await previewResources(
           resourcesToCopy,
           newWorkspace.appId
@@ -857,7 +838,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const initialResources = await collectWorkspaceAppResourceIds(
+        const initialResources = await collectResourceIds(
           appWithTableUsages.app._id!
         )
         const previewBefore = await previewResources(
@@ -873,7 +854,7 @@ describe("/api/resources/usage", () => {
           newWorkspace.appId
         )
 
-        const copyResources = await collectWorkspaceAppResourceIds(
+        const copyResources = await collectResourceIds(
           appWithTableUsagesCopy.app._id!
         )
         const previewAfter = await previewResources(
@@ -892,7 +873,7 @@ describe("/api/resources/usage", () => {
           name: `Destination ${generator.natural()}`,
         })
 
-        const resources = await collectWorkspaceAppResourceIds(
+        const resources = await collectResourceIds(
           appWithDatasourceDependency.app._id!
         )
         const preview = await previewResources(resources, newWorkspace.appId)
