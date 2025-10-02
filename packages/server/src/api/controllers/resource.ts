@@ -1,10 +1,6 @@
-import { getDocumentType } from "@budibase/shared-core"
 import {
-  DocumentType,
-  DuplicateResourceToWorkspaceRequest,
-  DuplicateResourceToWorkspaceResponse,
   DuplicateResourcePreviewResponse,
-  ResourceType,
+  DuplicateResourceToWorkspaceRequest,
   ResourceUsageRequest,
   ResourceUsageResponse,
   UserCtx,
@@ -29,51 +25,23 @@ export async function searchForResourceUsage(
 }
 
 export async function duplicateResourceToWorkspace(
-  ctx: UserCtx<
-    DuplicateResourceToWorkspaceRequest,
-    DuplicateResourceToWorkspaceResponse,
-    { id: string }
-  >
+  ctx: UserCtx<DuplicateResourceToWorkspaceRequest, void>
 ) {
-  const { toWorkspace } = ctx.request.body
-  const { id } = ctx.params
-  const documentType = getDocumentType(id)
-  if (!documentType) {
-    ctx.throw("Document type could not be inferred from the id", 400)
-  }
-  if (documentType !== DocumentType.WORKSPACE_APP) {
-    ctx.throw(`"${documentType}" cannot be duplicated`, 400)
-  }
-
-  ctx.body = {
-    resources: await sdk.resources.duplicateResourceToWorkspace(
-      id,
-      ResourceType.WORKSPACE_APP,
-      toWorkspace
-    ),
-  }
+  const { toWorkspace, resources } = ctx.request.body
+  await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace)
+  ctx.status = 204
 }
 
 export async function previewDuplicateResourceToWorkspace(
   ctx: UserCtx<
     DuplicateResourceToWorkspaceRequest,
-    DuplicateResourcePreviewResponse,
-    { id: string }
+    DuplicateResourcePreviewResponse
   >
 ) {
-  const { toWorkspace } = ctx.request.body
-  const { id } = ctx.params
-  const documentType = getDocumentType(id)
-  if (!documentType) {
-    ctx.throw("Document type could not be inferred from the id", 400)
-  }
-  if (documentType !== DocumentType.WORKSPACE_APP) {
-    ctx.throw(`"${documentType}" cannot be duplicated`, 400)
-  }
+  const { toWorkspace, resources } = ctx.request.body
 
   ctx.body = await sdk.resources.previewDuplicateResourceToWorkspace(
-    id,
-    ResourceType.WORKSPACE_APP,
+    resources,
     toWorkspace
   )
 }

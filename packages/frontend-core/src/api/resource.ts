@@ -10,11 +10,9 @@ import { BaseAPIClient } from "./types"
 export interface ResourceEndpoints {
   searchForUsage: (body: ResourceUsageRequest) => Promise<ResourceUsageResponse>
   duplicateResourceToWorkspace: (
-    resourceId: string,
     request: DuplicateResourceToWorkspaceRequest
   ) => Promise<DuplicateResourceToWorkspaceResponse>
   previewDuplicateResourceToWorkspace: (
-    resourceId: string,
     request: DuplicateResourceToWorkspaceRequest
   ) => Promise<{ body: DuplicateResourcePreviewResponse }>
 }
@@ -33,27 +31,25 @@ export const buildResourceEndpoints = (
   },
 
   duplicateResourceToWorkspace: async (
-    resourceId: string,
     request: DuplicateResourceToWorkspaceRequest
   ) => {
     return await API.post<
       DuplicateResourceToWorkspaceRequest,
       DuplicateResourceToWorkspaceResponse
     >({
-      url: `/api/resources/${resourceId}/duplicate`,
+      url: `/api/resources/duplicate`,
       body: request,
     })
   },
 
   previewDuplicateResourceToWorkspace: async (
-    resourceId: string,
     request: DuplicateResourceToWorkspaceRequest
   ): Promise<{ body: DuplicateResourcePreviewResponse }> => {
     const result = await API.post<
       DuplicateResourceToWorkspaceRequest,
       DuplicateResourcePreviewResponse
     >({
-      url: `/api/resources/${resourceId}/duplicate/preview`,
+      url: `/api/resources/duplicate/preview`,
 
       body: request,
     })

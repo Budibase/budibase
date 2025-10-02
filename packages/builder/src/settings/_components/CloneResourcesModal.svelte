@@ -62,7 +62,21 @@
 
   function onShow() {}
 
-  async function onConfirm() {}
+  async function onConfirm() {
+    await API.resource
+      .duplicateResourceToWorkspace({
+        resources: resourcesToBeCopied.map(r => r._id),
+        toWorkspace: toWorkspaceId!,
+      })
+      .then(() => {
+        notifications.success("Resources copied successfully")
+        isOpen = false
+        modal.hide()
+      })
+      .catch(err => {
+        notifications.error(err.message)
+      })
+  }
 
   let dependantResources: Record<
     string,
@@ -92,7 +106,7 @@
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
-      displayName: "Tables",
+      displayName: "BB tables",
       data: $tables.list.map(mapToDataType),
       type: ResourceType.TABLE,
     },
@@ -209,9 +223,8 @@
     dependantResources
   )
 
-  $: resourcesToBeCopiedCount = Object.values(selectedResources).flatMap(
-    x => x
-  ).length
+  $: resourcesToBeCopied = Object.values(selectedResources).flatMap(x => x)
+  $: resourcesToBeCopiedCount = resourcesToBeCopied.length
 
   $: disabled = !resourcesToBeCopiedCount || !toWorkspaceId
 

@@ -1,12 +1,23 @@
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
 import * as controller from "../controllers/resource"
 import { builderRoutes } from "./endpointGroups"
 
+const duplicateRequestValidator = auth.joiValidator.body(
+  Joi.object({
+    toWorkspace: Joi.string().required(),
+    resources: Joi.array().min(1).items(Joi.string()),
+  }).unknown(false)
+)
+
 builderRoutes.post("/api/resources/usage", controller.searchForResourceUsage)
 builderRoutes.post(
-  "/api/resources/:id/duplicate",
+  "/api/resources/duplicate",
+  duplicateRequestValidator,
   controller.duplicateResourceToWorkspace
 )
 builderRoutes.post(
-  "/api/resources/:id/duplicate/preview",
+  "/api/resources/duplicate/preview",
+  duplicateRequestValidator,
   controller.previewDuplicateResourceToWorkspace
 )

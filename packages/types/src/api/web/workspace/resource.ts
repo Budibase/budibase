@@ -29,6 +29,7 @@ export interface ResourceUsageResponse {
 
 export interface DuplicateResourceToWorkspaceRequest {
   toWorkspace: string
+  resources: string[]
 }
 
 export interface DuplicateResourceToWorkspaceResponse {
@@ -36,6 +37,6 @@ export interface DuplicateResourceToWorkspaceResponse {
 }
 
 export interface DuplicateResourcePreviewResponse {
-  toCopy: Partial<Record<ResourceType, UsedResource[]>>
-  existing: Partial<Record<ResourceType, UsedResource[]>>
+  toCopy: string[]
+  existing: string[]
 }

@@ -1,9 +1,4 @@
-import {
-  context,
-  db,
-  HTTPError,
-  NotImplementedError,
-} from "@budibase/backend-core"
+import { context, db, HTTPError } from "@budibase/backend-core"
 import {
   AnyDocument,
   DuplicateResourcePreviewResponse,
@@ -174,17 +169,7 @@ export async function searchForUsages({
   return resources
 }
 
-interface WorkspaceAppDuplicationPreparation {
-  requiredResources: UsedResource[]
-  docsToCopyMap: Map<string, AnyDocument>
-  existingIds: Set<string>
-  destinationDb: ReturnType<typeof db.getDB>
-}
-
-async function prepareWorkspaceAppDuplication(
-  workspaceId: string,
-  toWorkspace: string
-): Promise<WorkspaceAppDuplicationPreparation> {
+async function getDestinationDb(toWorkspace: string) {
   const destinationDb = db.getDB(db.getDevWorkspaceID(toWorkspace), {
     skip_setup: true,
   })
@@ -192,123 +177,65 @@ async function prepareWorkspaceAppDuplication(
     throw new HTTPError("Destination workspace does not exist", 400)
   }
 
-  if (await destinationDb.exists(workspaceId)) {
-    throw new HTTPError("App already migrated in this workspace", 400)
+  return destinationDb
+}
+
+export async function duplicateResourcesToWorkspace(
+  resources: string[],
+  toWorkspace: string
+) {
+  const { toCopy, existing } = await previewDuplicateResourceToWorkspace(
+    resources,
+    toWorkspace
+  )
+  if (existing.length) {
+    throw new HTTPError(
+      `Resources already exist in destination workspace: ${existing.join(", ")}`,
+      400
+    )
+  }
+  if (!toCopy.length) {
+    throw new HTTPError(`No resources to copy`, 400)
   }
 
-  const requiredResources = await searchForUsages({
-    workspaceAppIds: [workspaceId],
-  })
+  const documentToCopy = await context
+    .getWorkspaceDB()
+    .getMultiple<AnyDocument>(resources, {
+      allowMissing: false,
+    })
 
-  const sourceDb = context.getWorkspaceDB()
+  const destinationDb = await getDestinationDb(toWorkspace)
 
-  const docsToCopy: AnyDocument[] = await sourceDb.getMultiple([
-    workspaceId,
-    ...requiredResources.map(r => r.id),
-  ])
-
-  const screens = await sdk.screens.fetch()
-  const appScreens = screens.filter(
-    screen => screen.workspaceAppId === workspaceId
+  await destinationDb.bulkDocs(
+    documentToCopy.map<AnyDocument>(doc => {
+      const sanitizedDoc: AnyDocument = { ...doc }
+      delete sanitizedDoc._rev
+      delete sanitizedDoc.createdAt
+      delete sanitizedDoc.updatedAt
+      return sanitizedDoc
+    })
   )
-  docsToCopy.push(...appScreens)
+}
 
-  const docsToCopyMap = new Map(
-    docsToCopy.filter(doc => !!doc._id).map(doc => [doc._id!, doc])
-  )
+export async function previewDuplicateResourceToWorkspace(
+  resources: string[],
+  toWorkspace: string
+): Promise<DuplicateResourcePreviewResponse> {
+  resources = Array.from(new Set(resources).keys())
+
+  const destinationDb = await getDestinationDb(toWorkspace)
 
   const existingDocuments = await destinationDb.getMultiple<AnyDocument>(
-    Array.from(docsToCopyMap.keys()),
+    resources,
     {
       allowMissing: true,
     }
   )
-  const existingIds = new Set(
-    existingDocuments
-      .map(doc => doc._id ?? (doc as { id?: string }).id)
-      .filter((id): id is string => !!id)
-  )
-
-  return {
-    requiredResources,
-    docsToCopyMap,
-    existingIds,
-    destinationDb,
-  }
-}
-
-export async function duplicateResourceToWorkspace(
-  resourceId: string,
-  resourceType: ResourceType.WORKSPACE_APP,
-  toWorkspace: string
-): Promise<Partial<Record<ResourceType, string[]>>> {
-  if (resourceType !== ResourceType.WORKSPACE_APP) {
-    throw new NotImplementedError(
-      `Duplicating ${resourceType} is not supported`
-    )
-  }
-
-  const { requiredResources, docsToCopyMap, existingIds, destinationDb } =
-    await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
-
-  const documentsToPersist = Array.from(docsToCopyMap.values()).filter(
-    doc => doc._id && !existingIds.has(doc._id)
-  )
-
-  if (documentsToPersist.length) {
-    await destinationDb.bulkDocs(
-      documentsToPersist.map<AnyDocument>(doc => {
-        const sanitizedDoc = { ...doc }
-        delete sanitizedDoc._rev
-        delete sanitizedDoc.createdAt
-        delete sanitizedDoc.updatedAt
-        return sanitizedDoc
-      })
-    )
-  }
-
-  return {
-    [resourceType]: [resourceId],
-    ...requiredResources.reduce<Partial<Record<ResourceType, string[]>>>(
-      (acc, r) => {
-        acc[r.type] ??= []
-        acc[r.type]!.push(r.id)
-        return acc
-      },
-      {}
-    ),
-  }
-}
-
-export async function previewDuplicateResourceToWorkspace(
-  resourceId: string,
-  resourceType: ResourceType.WORKSPACE_APP,
-  toWorkspace: string
-): Promise<DuplicateResourcePreviewResponse> {
-  if (resourceType !== ResourceType.WORKSPACE_APP) {
-    throw new NotImplementedError(
-      `Duplicating ${resourceType} is not supported`
-    )
-  }
-
-  const { requiredResources, existingIds } =
-    await prepareWorkspaceAppDuplication(resourceId, toWorkspace)
-
-  const resources: UsedResource[] = [...requiredResources]
-
-  const toCopy: Partial<Record<ResourceType, UsedResource[]>> = {}
-  const existing: Partial<Record<ResourceType, UsedResource[]>> = {}
-
-  for (const resource of resources) {
-    if (existingIds.has(resource.id)) {
-      existing[resource.type] = [...(existing[resource.type] || []), resource]
-    } else {
-      toCopy[resource.type] = [...(toCopy[resource.type] || []), resource]
-    }
-  }
+  const existingIds = new Set(existingDocuments.map(doc => doc._id))
+  const toCopy = resources.filter(id => !existingIds.has(id))
 
   return {
     toCopy: toCopy,
-    existing: existing,
+    existing: existingIds.values().toArray(),
   }
 }
