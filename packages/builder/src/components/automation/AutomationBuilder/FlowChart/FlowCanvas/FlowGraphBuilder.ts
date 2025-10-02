@@ -89,6 +89,11 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const branches: Branch[] = (step.inputs?.branches || []) as Branch[]
   const childrenMap: Record<string, AutomationStep[]> = (step.inputs
     ?.children || {}) as Record<string, AutomationStep[]>
+  // Subflow internals are always laid out vertically; force TB for
+  // node/edge directions within a loop container so handles/labels align.
+  const internalDir = (
+    mode === BranchMode.SUBFLOW ? "TB" : deps.direction
+  ) as LayoutDirection
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -124,7 +129,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           step,
           branch,
           bIdx,
-          deps.direction,
+          internalDir,
           parentId,
           visuals.laneWidth,
           { x: left, y: coords.y }
@@ -135,7 +140,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     deps.newEdges.push(
       edgeBranchAddItem(source.id, branchNodeId, {
         block: source.block,
-        direction: deps.direction,
+        direction: internalDir,
         isPrimaryEdge: bIdx === Math.floor((branches.length - 1) / 2),
         branchStepId: baseId,
         branchIdx: bIdx,
@@ -204,7 +209,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
 
       branchChildren.forEach(child => {
         deps.newNodes.push(
-          stepNode(child.id, child, deps.direction, parentId, {
+          stepNode(child.id, child, internalDir, parentId, {
             x: childLeft,
             y: laneY,
           })
@@ -212,7 +217,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         deps.newEdges.push(
           edgeAddItem(prevId, child.id, {
             block: prevBlock,
-            direction: deps.direction,
+            direction: internalDir,
           })
         )
         prevId = child.id
@@ -223,7 +228,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
       const anchorId = `anchor-${branchNodeId}`
       const anchorY = laneY
       deps.newNodes.push(
-        anchorNode(anchorId, deps.direction, parentId, {
+        anchorNode(anchorId, internalDir, parentId, {
           x: childLeft,
           y: anchorY,
         })
@@ -231,7 +236,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
       deps.newEdges.push(
         edgeAddItem(prevId, anchorId, {
           block: prevBlock,
-          direction: deps.direction,
+          direction: internalDir,
         })
       )
       clusterBottomY = Math.max(clusterBottomY, anchorY + deps.ySpacing)
@@ -343,6 +348,8 @@ export const renderLoopV2Container = (
 ) => {
   const baseId = loopStep.id
   const children: AutomationStep[] = loopStep.inputs?.children || []
+  // Force a vertical flow inside the loop container regardless of global layout
+  const internalDir = "TB" as LayoutDirection
 
   // Pre-compute container dimensions
   let containerWidth = 400
@@ -407,7 +414,7 @@ export const renderLoopV2Container = (
     const isBranch = child.stepId === AutomationActionStepId.BRANCH
     if (!isBranch) {
       deps.newNodes.push(
-        stepNode(child.id, child, deps.direction, baseId, {
+        stepNode(child.id, child, internalDir, baseId, {
           x: baseX,
           y: innerY,
         })
@@ -417,7 +424,7 @@ export const renderLoopV2Container = (
         deps.newEdges.push(
           edgeLoopAddItem(lastLinearChild.id, child.id, {
             block: lastLinearChild,
-            direction: deps.direction,
+            direction: internalDir,
             loopStepId: loopStep.id,
             loopChildInsertIndex: cIdx,
             pathTo: prevRef?.pathTo,
@@ -481,12 +488,12 @@ export const renderLoopV2Container = (
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
     deps.newNodes.push(
-      anchorNode(exitAnchorId, deps.direction, baseId, { x: baseX, y: innerY })
+      anchorNode(exitAnchorId, internalDir, baseId, { x: baseX, y: innerY })
     )
     deps.newEdges.push(
       edgeLoopAddItem(lastChild.id, exitAnchorId, {
         block: lastChild,
-        direction: deps.direction,
+        direction: internalDir,
         loopStepId: loopStep.id,
         loopChildInsertIndex: children.length,
         pathTo: lastRef?.pathTo,

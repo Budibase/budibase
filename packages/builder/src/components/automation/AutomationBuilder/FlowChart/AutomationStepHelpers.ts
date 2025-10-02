@@ -310,11 +310,14 @@ export const dagreLayoutAutomation = (
         width = ANCHOR.width
         height = ANCHOR.height
       } else if (node.type === "loop-subflow-node") {
-        const w = (node as any)?.data?.containerWidth
-        if (typeof w === "number" && w > 0) width = w
-        if (!compactLoops) {
-          const h = (node as any)?.data?.containerHeight
-          if (typeof h === "number" && h > 0) height = h
+        const w = node.data?.containerWidth as number
+        if (w > 0) width = w
+        // In horizontal (LR) layouts Dagre must know the vertical
+        // length of the loop container so it can place rows correctly.
+        const h = node?.data?.containerHeight as number
+        const shouldUseHeight = rankdir === "LR" || !compactLoops
+        if (shouldUseHeight && h > 0) {
+          height = h
         }
       }
       dagreGraph.setNode(node.id, { width, height })

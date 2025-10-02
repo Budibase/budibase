@@ -5,7 +5,6 @@
   import type { LayoutDirection } from "@budibase/types"
   import type { LoopV2NodeData } from "@/types/automations"
   import FlowItemStatus from "../../FlowItemStatus.svelte"
-  import { ViewMode } from "@/types/automations"
 
   export let data: LoopV2NodeData
   $: block = data.block
