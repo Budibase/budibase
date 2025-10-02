@@ -12,7 +12,6 @@ import {
   Table,
   WorkspaceApp,
 } from "@budibase/types"
-import _ from "lodash"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
@@ -194,11 +193,7 @@ describe("/api/resources/usage", () => {
     const uniqueIds = (ids: string[]) => Array.from(new Set(ids))
 
     const sanitizeResourceIds = (ids: string[]) =>
-      uniqueIds(
-        ids.filter(
-          (id): id is string => !!id && id !== "bb_internal"
-        )
-      )
+      uniqueIds(ids.filter((id): id is string => !!id && id !== "bb_internal"))
 
     async function collectWorkspaceAppResourceIds(
       appId: string
@@ -800,14 +795,17 @@ describe("/api/resources/usage", () => {
           newWorkspace.appId
         )
 
-        await config.withHeaders({ [Header.APP_ID]: newWorkspace.appId }, async () => {
-          const tables = await config.api.table.fetch()
-          expect(tables).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({ _id: tableToCopy._id! }),
-            ])
-          )
-        })
+        await config.withHeaders(
+          { [Header.APP_ID]: newWorkspace.appId },
+          async () => {
+            const tables = await config.api.table.fetch()
+            expect(tables).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ _id: tableToCopy._id! }),
+              ])
+            )
+          }
+        )
       })
 
       it("throws when destination workspace already exists", async () => {
@@ -853,9 +851,7 @@ describe("/api/resources/usage", () => {
           { status: 400 }
         )
         expect(error.body).toMatchObject({
-          message: expect.stringContaining(
-            "Resources already exist in destination workspace"
-          ),
+          message: "No resources to copy",
           status: 400,
         })
       })
@@ -894,9 +890,9 @@ describe("/api/resources/usage", () => {
         expect(previewAfter.body.existing).toEqual(
           expect.arrayContaining([internalTables[0]._id!])
         )
-        expect(
-          sanitizeResourceIds(previewAfter.body.toCopy)
-        ).not.toContain(internalTables[0]._id)
+        expect(sanitizeResourceIds(previewAfter.body.toCopy)).not.toContain(
+          internalTables[0]._id
+        )
       })
 
       it("previews datasource dependencies that would be duplicated", async () => {
@@ -907,10 +903,7 @@ describe("/api/resources/usage", () => {
         const resources = await collectWorkspaceAppResourceIds(
           appWithDatasourceDependency.app._id!
         )
-        const preview = await previewResources(
-          resources,
-          newWorkspace.appId
-        )
+        const preview = await previewResources(resources, newWorkspace.appId)
 
         expect(sanitizeResourceIds(preview.body.toCopy)).toEqual(
           expect.arrayContaining([datasourceWithDependency._id!])

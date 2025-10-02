@@ -243,7 +243,7 @@ export async function previewDuplicateResourceToWorkspace(
   const toCopy = resources.filter(id => !existingIds.has(id))
 
   return {
-    toCopy: toCopy,
+    toCopy,
     existing: existingIds.values().toArray(),
   }
 }
