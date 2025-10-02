@@ -124,7 +124,6 @@
     "tar": "6.2.1",
     "tmp": "0.2.3",
     "to-json-schema": "0.2.5",
-    "undici": "^7.16.0",
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
