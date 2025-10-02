@@ -52,11 +52,9 @@ describe("/api/resources/usage", () => {
 
       await config.api.screen.save(screen)
 
-      const result = await config.api.resource.searchForUsage({
-        workspaceAppIds: [workspaceApp._id!],
-      })
+      const result = await config.api.resource.searchForUsage()
 
-      expect(result.body.resources).toEqual(
+      expect(result.body.resources[workspaceApp._id!]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: datasource._id,
@@ -83,16 +81,16 @@ describe("/api/resources/usage", () => {
       // Save the screen to the database so it can be found
       await config.api.screen.save(screen)
 
-      const result = await config.api.resource.searchForUsage({
-        workspaceAppIds: [screen.workspaceAppId!],
-      })
+      const result = await config.api.resource.searchForUsage()
 
-      expect(result.body.resources).toContainEqual(
-        expect.objectContaining({
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        })
+      expect(result.body.resources[screen.workspaceAppId!]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          }),
+        ])
       )
     })
 
@@ -102,16 +100,16 @@ describe("/api/resources/usage", () => {
         .onRowSaved({ tableId: table._id! })
         .save()
 
-      const result = await config.api.resource.searchForUsage({
-        automationIds: [automation._id!],
-      })
+      const result = await config.api.resource.searchForUsage()
 
-      expect(result.body.resources).toContainEqual(
-        expect.objectContaining({
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        })
+      expect(result.body.resources[automation._id!]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          }),
+        ])
       )
     })
 
@@ -120,35 +118,26 @@ describe("/api/resources/usage", () => {
         name: "Row action usage",
       })
 
-      const result = await config.api.resource.searchForUsage({
-        automationIds: [rowAction.automationId],
-      })
+      const result = await config.api.resource.searchForUsage()
 
-      expect(result.body.resources).toEqual(
+      expect(result.body.resources[rowAction.automationId]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: generateRowActionsID(table._id!),
             name: rowAction.name,
             type: ResourceType.ROW_ACTION,
           }),
+        ])
+      )
+
+      expect(result.body.resources[generateRowActionsID(table._id!)]).toEqual(
+        expect.arrayContaining([
           expect.objectContaining({
             id: rowAction.automationId,
             name: rowAction.name,
             type: ResourceType.AUTOMATION,
           }),
         ])
-      )
-    })
-
-    it("should handle empty inputs", async () => {
-      await config.api.resource.searchForUsage(
-        {
-          workspaceAppIds: [],
-          automationIds: [],
-        },
-        {
-          status: 400,
-        }
       )
     })
   })
@@ -215,18 +204,37 @@ describe("/api/resources/usage", () => {
       appId: string
     ): Promise<string[]> {
       const [usage, screens] = await Promise.all([
-        config.api.resource.searchForUsage({ workspaceAppIds: [appId] }),
+        config.api.resource.searchForUsage(),
         config.api.screen.list(),
       ])
+
       const screenIds = screens
         .filter(screen => screen.workspaceAppId === appId)
         .map(screen => screen._id!)
 
-      return sanitizeResourceIds([
-        appId,
-        ...usage.body.resources.map(resource => resource.id),
-        ...screenIds,
-      ])
+      const resourceMap = usage.body.resources
+      const visited = new Set<string>()
+      const queue: string[] = [appId]
+
+      while (queue.length) {
+        const current = queue.shift()!
+        if (visited.has(current)) {
+          continue
+        }
+        visited.add(current)
+        const dependenciesForResource = resourceMap[current] || []
+        for (const dependency of dependenciesForResource) {
+          if (!visited.has(dependency.id)) {
+            queue.push(dependency.id)
+          }
+        }
+      }
+
+      for (const screenId of screenIds) {
+        visited.add(screenId)
+      }
+
+      return sanitizeResourceIds(Array.from(visited))
     }
 
     const expectIdsToMatch = (actual: string[], expected: string[]) => {

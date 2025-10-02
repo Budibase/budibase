@@ -160,16 +160,19 @@ export async function searchForUsages(): Promise<
     resourceType: ResourceType,
     docs: AnyDocument[]
   ) {
+    const countDependencies = (deps: Record<string, UsedResource[]>) =>
+      Object.values(deps).reduce((total, items) => total + items.length, 0)
+
     const filteredResources = Object.values(resources)
       .flatMap(r => r)
       .filter(r => r.type === resourceType)
-    const preResourceCount = resources.length
+    const preResourceCount = countDependencies(resources)
     for (const resource of filteredResources) {
       const doc = docs.find(a => a._id === resource.id)
       const json = JSON.stringify(doc)
       searchForResource(resource.id, json)
     }
-    if (preResourceCount !== resources.length) {
+    if (preResourceCount !== countDependencies(resources)) {
       checkForNestedResources(resources, resourceType, docs)
     }
   }
@@ -195,16 +198,10 @@ export async function duplicateResourcesToWorkspace(
   resources: string[],
   toWorkspace: string
 ) {
-  const { toCopy, existing } = await previewDuplicateResourceToWorkspace(
+  const { toCopy } = await previewDuplicateResourceToWorkspace(
     resources,
     toWorkspace
   )
-  if (existing.length) {
-    throw new HTTPError(
-      `Resources already exist in destination workspace: ${existing.join(", ")}`,
-      400
-    )
-  }
   if (!toCopy.length) {
     throw new HTTPError(`No resources to copy`, 400)
   }
