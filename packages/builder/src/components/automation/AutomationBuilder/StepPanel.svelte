@@ -198,10 +198,7 @@
       <div class="loop">
         <DetailSummary name="Loop details" padded={false} initiallyShow>
           <BlockProperties
-            block={loopBlock ||
-              ($memoBlock?.stepId === AutomationActionStepId.LOOP_V2
-                ? $memoBlock
-                : undefined)}
+            block={loopBlock || loopV2Block || $memoBlock}
             context={$memoContext}
             automation={$memoAutomation}
           />
@@ -214,11 +211,13 @@
       </PropField>
     {/if}
     <span class="props">
-      <BlockProperties
-        block={$memoBlock}
-        context={$memoContext}
-        automation={$memoAutomation}
-      />
+      {#if $memoBlock?.stepId !== AutomationActionStepId.LOOP_V2}
+        <BlockProperties
+          block={$memoBlock}
+          context={$memoContext}
+          automation={$memoAutomation}
+        />
+      {/if}
     </span>
 
     {#if block?.stepId === AutomationTriggerStepId.WEBHOOK}
