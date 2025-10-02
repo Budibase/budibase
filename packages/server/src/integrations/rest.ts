@@ -28,6 +28,7 @@ import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
+import { getProxyDispatcher } from "../utilities"
 
 const coreFields = {
   path: {
@@ -494,6 +495,17 @@ export class RestIntegration implements IntegrationBase {
     if (await blacklist.isBlacklisted(url)) {
       throw new Error("Cannot connect to URL.")
     }
+
+    const dispatcher = getProxyDispatcher()
+    if (dispatcher) {
+      console.log("[rest integration] Using proxy for request", {
+        url,
+        hasDispatcher: true,
+      })
+      // @ts-expect-error - dispatcher is a valid option for fetch in Node.js
+      input.dispatcher = dispatcher
+    }
+
     const response = await fetch(url, input)
     if (
       response.status === 401 &&
