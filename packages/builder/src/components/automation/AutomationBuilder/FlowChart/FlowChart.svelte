@@ -37,13 +37,13 @@
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { createFlowChartDnD } from "./FlowChartDnD"
+  import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
-  import NodeWrapper from "./NodeWrapper.svelte"
-  import CustomEdge from "./CustomEdge.svelte"
-  import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
-  import AnchorNode from "./AnchorNode.svelte"
-  import LoopV2Node from "./LoopV2Node.svelte"
+  import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
+  import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
+  import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
+  import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
+  import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
 
   import {
     SvelteFlow,
@@ -137,16 +137,10 @@
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
 
-    // helper to get or create position
-    const ensurePosition = (_id: string, fallback: { x: number; y: number }) =>
-      fallback
-
     const deps: GraphBuildDeps = {
-      ensurePosition,
       xSpacing,
       ySpacing,
       blockRefs,
-      testDataModal,
       newNodes,
       newEdges,
       direction,
@@ -158,7 +152,7 @@
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 100, nodesep: 100 }
+      { rankdir: direction, ranksep: 100, nodesep: 100, compactLoops: true }
     )
 
     nodes.set(laidOut.nodes)

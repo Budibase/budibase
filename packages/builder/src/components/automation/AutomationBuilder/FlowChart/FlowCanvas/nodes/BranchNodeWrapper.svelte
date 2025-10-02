@@ -3,7 +3,7 @@
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { enrichLog } from "./AutomationStepHelpers"
+  import { enrichLog } from "../../AutomationStepHelpers"
   import {
     type AutomationStepResult,
     type AutomationTriggerResult,

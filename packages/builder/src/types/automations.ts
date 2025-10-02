@@ -24,7 +24,6 @@ import {
   LoopV2Step,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
-import type { Modal } from "@budibase/bbui"
 
 export enum DataMode {
   INPUT = "data_in",
@@ -285,10 +284,8 @@ export type BlockStatus = {
  * SvelteFlow Node Data Types
  */
 export interface StepNodeData {
-  testDataModal?: Modal
   block: AutomationBlock
   direction?: LayoutDirection
-  isTopLevel?: boolean
   [key: string]: unknown
 }
 

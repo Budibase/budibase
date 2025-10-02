@@ -19,7 +19,7 @@
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
-  import type { DragView } from "./FlowChartDnD"
+  import type { DragView } from "../FlowChartDnD"
 
   export let data: EdgeData
   export let sourceX: number

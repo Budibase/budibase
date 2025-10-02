@@ -8,8 +8,8 @@
     type FlowBlockContext,
     type FlowBlockPath,
   } from "@/types/automations"
-  import DragZone from "./DragZone.svelte"
-  import FlowItemActions from "./FlowItemActions.svelte"
+  import DragZone from "../../DragZone.svelte"
+  import FlowItemActions from "../../FlowItemActions.svelte"
 
   export let data: BranchEdgeData
   export let labelX: number

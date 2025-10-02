@@ -1,8 +1,8 @@
 <script lang="ts">
   import { EdgeLabelRenderer } from "@xyflow/svelte"
   import type { FlowBlockContext, FlowBlockPath } from "@/types/automations"
-  import DragZone from "./DragZone.svelte"
-  import FlowItemActions from "./FlowItemActions.svelte"
+  import DragZone from "../../DragZone.svelte"
+  import FlowItemActions from "../../FlowItemActions.svelte"
 
   export let labelX: number
   export let labelY: number

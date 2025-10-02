@@ -86,7 +86,6 @@ import {
   WebhookTriggerOutputs,
   AutomationLog,
   BlockRef,
-  LoopV2Step,
   isLoopV2Step,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
@@ -1464,12 +1463,15 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Array<Object>} path - the insertion point on the tree.
    * @param {Object} automation - the target automation to update.
    */
-  branchAutomation: async (path: Array<any>, automation: Automation) => {
+  branchAutomation: async (path: Array<BlockPath>, automation: Automation) => {
     const insertPoint = path.at(-1)
+    if (!insertPoint) {
+      return
+    }
     let newAutomation = cloneDeep(automation)
 
     // Build utilities
-    const createBranch = (name: string) => ({
+    const createBranch = (name: string): Branch => ({
       name,
       ...store.actions.generateDefaultConditions(),
       id: generate(),
@@ -1478,11 +1480,11 @@ const automationActions = (store: AutomationStore) => ({
     // Traverse the path and resolve the array (container) that holds the
     // siblings of the insertion point, accounting for branches and Loop V2 subflows.
     let container: AutomationStep[] = newAutomation.definition.steps
-    let current: any = undefined
+    let current: AutomationStep | AutomationTrigger | undefined = undefined
     let atRoot = false
 
-    path.forEach((hop: any, idx: number, arr: any[]) => {
-      const final = idx === arr.length - 1
+    path.forEach((hop: BlockPath, idx: number, path: BlockPath[]) => {
+      const final = idx === path.length - 1
       const { stepIdx, branchIdx, loopStepId } = hop
 
       // First hop from the root
@@ -1498,28 +1500,31 @@ const automationActions = (store: AutomationStore) => ({
 
       // Inside a branch lane
       if (Number.isInteger(branchIdx)) {
-        const branchId = current.inputs.branches[branchIdx].id
-        const children = current.inputs.children[branchId]
-        if (final) {
-          container = children
-        } else {
-          current = children[stepIdx]
+        if (current && isBranchStep(current)) {
+          const branchId = current.inputs.branches[branchIdx].id
+          const children = current.inputs.children?.[branchId] ?? []
+          if (final) {
+            container = children
+          } else {
+            current = children[stepIdx]
+          }
+          return
         }
-        return
       }
 
       // Inside a Loop V2 subflow
       if (loopStepId) {
-        const children = (current.inputs.children || []) as AutomationStep[]
-        if (final) {
-          container = children
-        } else {
-          current = children[stepIdx]
+        if (current && isLoopV2Step(current)) {
+          const children = current.inputs.children ?? []
+          if (final) {
+            container = children
+          } else {
+            current = children[stepIdx]
+          }
+          return
         }
-        return
       }
 
-      // Otherwise continue along the top-level chain
       if (final) {
         container = newAutomation.definition.steps
       } else {
@@ -1533,11 +1538,15 @@ const automationActions = (store: AutomationStore) => ({
       : insertPoint.stepIdx
 
     // Case 1: user clicked above an existing Branch step — append a branch
-    if (container[insertIdx]?.stepId == "BRANCH") {
-      let branches = container[insertIdx].inputs.branches
+    if (container[insertIdx]?.stepId === AutomationActionStepId.BRANCH) {
+      const branchNode = container[insertIdx] as BranchStep
+      const branches = branchNode.inputs.branches
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
       branches.splice(branches.length, 0, branchEntry)
-      container[insertIdx].inputs.children[branchEntry.id] = []
+      branchNode.inputs.children = {
+        ...(branchNode.inputs.children || {}),
+        [branchEntry.id]: [],
+      }
       try {
         await store.actions.save(newAutomation)
       } catch (e) {
@@ -1547,13 +1556,15 @@ const automationActions = (store: AutomationStore) => ({
       return
     }
 
-    // Case 2: insert a new Branch step after the selected step
     const newBranch = store.actions.generateBranchBlock()
+
+    // Default branch node count is 2. Build 2 default entries
     newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) =>
       createBranch(`Branch ${idx + 1}`)
     )
 
-    // Move all siblings after the insertion point into branch 0
+    // Init the branch children. Shift all steps following the new branch step
+    // into the 0th branch.
     newBranch.inputs.children = newBranch.inputs.branches.reduce(
       (acc: Record<string, AutomationStep[]>, branch: Branch, idx: number) => {
         acc[branch.id] = idx === 0 ? container.slice(insertIdx + 1) : []
