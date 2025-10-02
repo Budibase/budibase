@@ -23,9 +23,9 @@ export async function searchForUsages(): Promise<
   }[] = []
 
   // keep tables as may be used later
-  const tables = await sdk.tables.getAllInternalTables()
+  const internalTables = await sdk.tables.getAllInternalTables()
   baseSearchTargets.push(
-    ...tables.map(table => ({
+    ...internalTables.map(table => ({
       id: table._id!,
       idToSearch: table._id!,
       name: table.name!,
@@ -119,8 +119,8 @@ export async function searchForUsages(): Promise<
   }
 
   // Search in tables
-  if (tables.length) {
-    for (const table of tables) {
+  if (internalTables.length) {
+    for (const table of internalTables) {
       const json = JSON.stringify(table)
       searchForResource(table._id!, json)
     }
@@ -175,7 +175,7 @@ export async function searchForUsages(): Promise<
   }
 
   checkForNestedResources(dependencies, ResourceType.AUTOMATION, automations)
-  checkForNestedResources(dependencies, ResourceType.TABLE, tables)
+  checkForNestedResources(dependencies, ResourceType.TABLE, internalTables)
 
   return dependencies
 }
