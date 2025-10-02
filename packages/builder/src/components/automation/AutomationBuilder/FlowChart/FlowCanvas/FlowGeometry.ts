@@ -37,4 +37,3 @@ export const defaultHandlePositions = (dir: LayoutDirection | undefined) => {
     targetPosition: isLR ? "left" : "top",
   } as const
 }
-
