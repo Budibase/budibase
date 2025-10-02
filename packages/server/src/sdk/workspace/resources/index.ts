@@ -2,6 +2,7 @@ import { context, db, HTTPError } from "@budibase/backend-core"
 import {
   AnyDocument,
   DuplicateResourcePreviewResponse,
+  INTERNAL_TABLE_SOURCE_ID,
   ResourceType,
   Screen,
   UsedResource,
@@ -35,7 +36,9 @@ export async function searchForUsages(): Promise<
 
   const datasources = await sdk.datasources.fetch()
   baseSearchTargets.push(
-    ...datasources.map(datasource => ({
+    ...datasources
+      .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
+      .map(datasource => ({
         id: datasource._id!,
         idToSearch: datasource._id!,
         name: datasource.name!,
