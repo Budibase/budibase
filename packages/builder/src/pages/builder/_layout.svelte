@@ -254,7 +254,6 @@
 
       await analyticsPing()
     } catch (err) {
-      console.err(err)
       throw err
     }
   }
