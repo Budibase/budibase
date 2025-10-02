@@ -14,9 +14,6 @@ export async function searchForUsages(): Promise<
   const automations = await sdk.automations.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
 
-  const automationIds = automations.map(a => a._id!)
-  const workspaceAppIds = workspaceApps.map(a => a._id!)
-
   const dependencies: Record<string, UsedResource[]> = {}
   const baseSearchTargets: {
     id: string
@@ -90,7 +87,7 @@ export async function searchForUsages(): Promise<
   }
 
   // Search in workspace app screens
-  if (workspaceAppIds?.length) {
+  if (workspaceApps.length) {
     const screens = await sdk.screens.fetch()
     const workspaceAppScreens: Record<string, Screen[]> = {}
 
@@ -104,23 +101,28 @@ export async function searchForUsages(): Promise<
       workspaceAppScreens[screen.workspaceAppId].push(screen)
     }
 
-    for (const workspaceAppId of workspaceAppIds) {
-      const screens = workspaceAppScreens[workspaceAppId] || []
+    for (const workspaceApp of workspaceApps) {
+      const screens = workspaceAppScreens[workspaceApp._id!] || []
       for (const screen of screens) {
         const json = JSON.stringify(screen)
-        searchForResource(workspaceAppId, json)
+        searchForResource(workspaceApp._id!, json)
       }
     }
   }
 
   // Search in automations
-  if (automationIds?.length) {
-    const automations = await sdk.automations.find(automationIds, {
-      allowMissing: true,
-    })
+  if (automations.length) {
     for (const automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(automation._id, json)
+    }
+  }
+
+  // Search in tables
+  if (tables.length) {
+    for (const table of tables) {
+      const json = JSON.stringify(table)
+      searchForResource(table._id!, json)
     }
   }
 
