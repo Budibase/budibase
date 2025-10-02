@@ -10,7 +10,7 @@ const duplicateRequestValidator = auth.joiValidator.body(
   }).unknown(false)
 )
 
-builderRoutes.post("/api/resources/usage", controller.searchForResourceUsage)
+builderRoutes.get("/api/resources/usage", controller.searchForResourceUsage)
 builderRoutes.post(
   "/api/resources/duplicate",
   duplicateRequestValidator,

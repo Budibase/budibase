@@ -1,5 +1,3 @@
-export interface ResourceUsageRequest {}
-
 export enum UsedByType {
   WORKSPACE = "workspace",
   AUTOMATION = "automation",

@@ -134,7 +134,7 @@
 
   $: isOpen &&
     API.resource
-      .searchForUsage({})
+      .searchForUsage()
       .then(res => {
         dependantResources = Object.entries(res.resources).reduce<
           typeof dependantResources

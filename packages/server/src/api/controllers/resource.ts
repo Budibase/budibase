@@ -1,14 +1,13 @@
 import {
   DuplicateResourcePreviewResponse,
   DuplicateResourceToWorkspaceRequest,
-  ResourceUsageRequest,
   ResourceUsageResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function searchForResourceUsage(
-  ctx: UserCtx<ResourceUsageRequest, ResourceUsageResponse>
+  ctx: UserCtx<void, ResourceUsageResponse>
 ) {
   ctx.body = {
     resources: await sdk.resources.searchForUsages(),
