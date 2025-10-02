@@ -1663,62 +1663,91 @@ const automationActions = (store: AutomationStore) => ({
    */
   deleteBranch: async (path: Array<any>, automation: Automation) => {
     let newAutomation = cloneDeep(automation)
-    let cache: any = []
+    let cache: Array<{ node: any; context: AutomationStep[] }> = []
 
     path.forEach((path, pathIdx, array) => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       const final = pathIdx === array.length - 1
 
-      // The first poi
+      // Initialise traversal at root level (after trigger)
       if (!cache.length) {
         if (final) {
-          cache = newAutomation.definition.steps
           return
         }
-        // Trigger offset
+        const stepsWithTrigger = [
+          newAutomation.definition.trigger,
+          ...newAutomation.definition.steps,
+        ]
+        const rootNode = stepsWithTrigger[stepIdx]
         cache = [
           {
-            node: newAutomation.definition.steps[stepIdx - 1],
+            node: rootNode,
             context: newAutomation.definition.steps,
           },
         ]
+        return
       }
 
       const current = cache.at(-1)
 
+      // Traverse into Loop V2 subflow children when present
+      if (loopStepId) {
+        let loopNode = current?.node
+        if (!loopNode || loopNode.id !== loopStepId) {
+          loopNode = current?.context?.find((n: any) => n?.id === loopStepId)
+        }
+
+        if (loopNode && isLoopV2Step(loopNode)) {
+          const children = (loopNode.inputs?.children || []) as AutomationStep[]
+          if (final) {
+            cache.push({ node: children[stepIdx], context: children })
+          } else {
+            cache.push({ node: children[stepIdx], context: children })
+          }
+          return
+        }
+      }
+
+      // Traverse into branch children
       if (Number.isInteger(branchIdx)) {
-        // data.inputs.branches.length
-        const branchId = current.node.inputs.branches[branchIdx].id
-        const children = current.node.inputs.children[branchId]
+        const branchHost = current?.node
+        const branches = branchHost?.inputs?.branches
+        const childrenMap = branchHost?.inputs?.children
+
+        const branchId = branches[branchIdx]?.id
+        const children = childrenMap[branchId] as AutomationStep[]
 
         if (final) {
-          // 2 is the minimum amount of nodes on a branch
-          const minBranches = current.node.inputs.branches.length == 2
+          // 2 is the minimum number of branches on a branch node
+          const minBranches = branches.length === 2
 
-          // Delete the target branch and its contents.
-          current.node.inputs.branches.splice(branchIdx, 1)
-          delete current.node.inputs.children[branchId]
+          // Delete the target branch and its contents
+          branchHost.inputs.branches.splice(branchIdx, 1)
+          delete branchHost.inputs.children[branchId]
 
-          // If deleting with only 2 branches, the entire branch step
-          // will be deleted, with its contents placed onto the parent.
           if (minBranches) {
-            const lastBranchId = current.node.inputs.branches[0].id
-            const lastBranchContent = current.node.inputs.children[lastBranchId]
+            const lastBranchId = branchHost.inputs.branches[0].id
+            const lastBranchContent = branchHost.inputs.children[lastBranchId]
 
             // Take the remaining branch and push all children onto the context
-            const parentContext = cache.at(-1).context
+            const parentContext: AutomationStep[] = current?.context
+              ? current.context
+              : newAutomation.definition.steps
 
-            // Remove the branch node.
-            parentContext.pop()
-
-            // Splice in the remaining branch content into the parent.
-            parentContext.splice(parentContext.length, 0, ...lastBranchContent)
+            // Find and remove the branch host from its parent context
+            const hostIndex = parentContext.findIndex(
+              n => n.id === branchHost.id
+            )
+            if (hostIndex !== -1) {
+              // Remove the branch node and splice in remaining content
+              parentContext.splice(hostIndex, 1, ...lastBranchContent)
+            }
           }
 
           return
         }
 
-        cache.push({ node: children[stepIdx], context: children })
+        cache.push({ node: children?.[stepIdx], context: children || [] })
       }
     })
 
