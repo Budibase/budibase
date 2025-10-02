@@ -36,11 +36,11 @@ export async function searchForUsages(): Promise<
   const datasources = await sdk.datasources.fetch()
   baseSearchTargets.push(
     ...datasources.map(datasource => ({
-      id: datasource._id!,
-      idToSearch: datasource._id!,
-      name: datasource.name!,
-      type: ResourceType.DATASOURCE,
-    }))
+        id: datasource._id!,
+        idToSearch: datasource._id!,
+        name: datasource.name!,
+        type: ResourceType.DATASOURCE,
+      }))
   )
 
   baseSearchTargets.push(
@@ -103,6 +103,15 @@ export async function searchForUsages(): Promise<
 
     for (const workspaceApp of workspaceApps) {
       const screens = workspaceAppScreens[workspaceApp._id!] || []
+      dependencies[workspaceApp._id!] ??= []
+      dependencies[workspaceApp._id!].push(
+        ...screens.map(s => ({
+          id: s._id!,
+          name: s.name!,
+          type: ResourceType.SCREEN,
+        }))
+      )
+
       for (const screen of screens) {
         const json = JSON.stringify(screen)
         searchForResource(workspaceApp._id!, json)

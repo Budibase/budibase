@@ -10,6 +10,7 @@ export enum ResourceType {
   QUERY = "query",
   AUTOMATION = "automation",
   WORKSPACE_APP = "workspace_app",
+  SCREEN = "screen",
 }
 
 export interface UsedResource {
