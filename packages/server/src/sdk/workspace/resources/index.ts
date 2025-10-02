@@ -8,14 +8,16 @@ import {
 } from "@budibase/types"
 import sdk from "../.."
 
-export async function searchForUsages({
-  automationIds,
-  workspaceAppIds,
-}: {
-  automationIds?: string[]
-  workspaceAppIds?: string[]
-}): Promise<UsedResource[]> {
-  const resources: UsedResource[] = []
+export async function searchForUsages(): Promise<
+  Record<string, UsedResource[]>
+> {
+  const automations = await sdk.automations.fetch()
+  const workspaceApps = await sdk.workspaceApps.fetch()
+
+  const automationIds = automations.map(a => a._id!)
+  const workspaceAppIds = workspaceApps.map(a => a._id!)
+
+  const dependencies: Record<string, UsedResource[]> = {}
   const baseSearchTargets: {
     id: string
     idToSearch: string
@@ -34,7 +36,7 @@ export async function searchForUsages({
     }))
   )
 
-  const datasources = await sdk.datasources.getExternalDatasources()
+  const datasources = await sdk.datasources.fetch()
   baseSearchTargets.push(
     ...datasources.map(datasource => ({
       id: datasource._id!,
@@ -44,7 +46,6 @@ export async function searchForUsages({
     }))
   )
 
-  const automations = await sdk.automations.fetch()
   baseSearchTargets.push(
     ...automations.map(automation => ({
       id: automation._id!,
@@ -72,13 +73,14 @@ export async function searchForUsages({
     )
   }
 
-  const searchForResource = (json: string) => {
+  const searchForResource = (forResource: string, json: string) => {
+    dependencies[forResource] ??= []
     for (const search of baseSearchTargets) {
       if (
         json.includes(search.idToSearch) &&
-        !resources.find(resource => resource.id === search.id)
+        !dependencies[forResource].find(resource => resource.id === search.id)
       ) {
-        resources.push({
+        dependencies[forResource].push({
           id: search.id,
           name: search.name,
           type: search.type,
@@ -106,7 +108,7 @@ export async function searchForUsages({
       const screens = workspaceAppScreens[workspaceAppId] || []
       for (const screen of screens) {
         const json = JSON.stringify(screen)
-        searchForResource(json)
+        searchForResource(workspaceAppId, json)
       }
     }
   }
@@ -118,27 +120,32 @@ export async function searchForUsages({
     })
     for (const automation of automations) {
       const json = JSON.stringify(automation)
-      searchForResource(json)
+      searchForResource(automation._id, json)
     }
   }
 
-  for (const rowActionResource of resources.filter(
-    r => r.type === ResourceType.ROW_ACTION
-  )) {
+  for (const rowActionResource of Object.values(dependencies)
+    .flatMap(r => r)
+    .filter(r => r.type === ResourceType.ROW_ACTION)) {
     const rowAction = rowActions.find(ra => ra._id === rowActionResource.id)
     if (!rowAction) {
       continue
     }
 
     for (const action of Object.values(rowAction.actions)) {
-      if (resources.some(r => r.id === action.automationId)) {
+      if (
+        dependencies[rowActionResource.id]?.some(
+          r => r.id === action.automationId
+        )
+      ) {
         continue
       }
       const automation = automations.find(a => a._id === action.automationId)
       if (!automation) {
         continue
       }
-      resources.push({
+      dependencies[rowActionResource.id] ??= []
+      dependencies[rowActionResource.id].push({
         id: automation._id,
         name: automation.name,
         type: ResourceType.AUTOMATION,
@@ -147,26 +154,28 @@ export async function searchForUsages({
   }
 
   function checkForNestedResources(
-    resources: UsedResource[],
+    resources: Record<string, UsedResource[]>,
     resourceType: ResourceType,
     docs: AnyDocument[]
   ) {
-    const filteredResources = resources.filter(r => r.type === resourceType)
+    const filteredResources = Object.values(resources)
+      .flatMap(r => r)
+      .filter(r => r.type === resourceType)
     const preResourceCount = resources.length
     for (const resource of filteredResources) {
       const doc = docs.find(a => a._id === resource.id)
       const json = JSON.stringify(doc)
-      searchForResource(json)
+      searchForResource(resource.id, json)
     }
     if (preResourceCount !== resources.length) {
       checkForNestedResources(resources, resourceType, docs)
     }
   }
 
-  checkForNestedResources(resources, ResourceType.AUTOMATION, automations)
-  checkForNestedResources(resources, ResourceType.TABLE, tables)
+  checkForNestedResources(dependencies, ResourceType.AUTOMATION, automations)
+  checkForNestedResources(dependencies, ResourceType.TABLE, tables)
 
-  return resources
+  return dependencies
 }
 
 async function getDestinationDb(toWorkspace: string) {

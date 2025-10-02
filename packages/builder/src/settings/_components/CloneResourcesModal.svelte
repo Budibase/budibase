@@ -133,40 +133,25 @@
   }
 
   $: isOpen &&
-    resourceTypesToDisplay[ResourceType.WORKSPACE_APP]?.data.forEach(app => {
-      API.resource
-        .searchForUsage({ workspaceAppIds: [app._id!] })
-        .then(res => {
-          dependantResources[app._id!] = res.resources.reduce<
-            Partial<Record<ResourceType, UsedResource[]>>
-          >((acc, value) => {
-            acc[value.type] = [...(acc[value.type] || []), value]
-            return acc
-          }, {})
-        })
-        .catch(err => {
-          notifications.error(err.message)
-        })
-    })
-
-  $: isOpen &&
-    resourceTypesToDisplay[ResourceType.AUTOMATION]?.data.forEach(
-      automation => {
-        API.resource
-          .searchForUsage({ automationIds: [automation._id!] })
-          .then(res => {
-            dependantResources[automation._id!] = res.resources.reduce<
-              Partial<Record<ResourceType, UsedResource[]>>
-            >((acc, value) => {
-              acc[value.type] = [...(acc[value.type] || []), value]
-              return acc
-            }, {})
-          })
-          .catch(err => {
-            notifications.error(err.message)
-          })
-      }
-    )
+    API.resource
+      .searchForUsage({})
+      .then(res => {
+        dependantResources = Object.entries(res.resources).reduce<
+          typeof dependantResources
+        >((acc, [id, resources]) => {
+          acc[id] = {}
+          for (const resource of resources) {
+            acc[id][resource.type] = [
+              ...(acc[id][resource.type] || []),
+              resource,
+            ]
+          }
+          return acc
+        }, {})
+      })
+      .catch(err => {
+        notifications.error(err.message)
+      })
 
   function calculateDependants(
     selectedId: string[],

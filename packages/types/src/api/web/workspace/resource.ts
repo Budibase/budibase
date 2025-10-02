@@ -1,7 +1,4 @@
-export interface ResourceUsageRequest {
-  workspaceAppIds?: string[]
-  automationIds?: string[]
-}
+export interface ResourceUsageRequest {}
 
 export enum UsedByType {
   WORKSPACE = "workspace",
@@ -24,7 +21,7 @@ export interface UsedResource {
 }
 
 export interface ResourceUsageResponse {
-  resources: UsedResource[]
+  resources: Record<string, UsedResource[]>
 }
 
 export interface DuplicateResourceToWorkspaceRequest {
