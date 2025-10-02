@@ -214,48 +214,44 @@
 
   async function initBuilder() {
     loaded.set(false)
-    try {
-      await auth.getSelf()
-      await admin.init()
+    await auth.getSelf()
+    await admin.init()
 
-      if ($admin.maintenance.length > 0) {
-        $redirect("./maintenance")
-        return
-      }
-      if ($auth.user) {
-        // We need to load apps to know if we need to show onboarding fullscreen
-        await Promise.all([
-          licensing.init(),
-          appsStore.load(),
-          organisation.init(),
-          groups.init(),
-        ])
-
-        await auth.getInitInfo()
-
-        if (usersLimitLockAction) {
-          usersLimitLockAction()
-        }
-      }
-
-      // Validate tenant if in a multi-tenant env
-      if (multiTenancyEnabled) {
-        await validateTenantId()
-      }
-
-      loaded.set(true)
-
-      const invalidated = popNumSessionsInvalidated()
-      if (invalidated > 0) {
-        notifications.info(invalidationMessage(invalidated), {
-          duration: 5000,
-        })
-      }
-
-      await analyticsPing()
-    } catch (err) {
-      throw err
+    if ($admin.maintenance.length > 0) {
+      $redirect("./maintenance")
+      return
     }
+    if ($auth.user) {
+      // We need to load apps to know if we need to show onboarding fullscreen
+      await Promise.all([
+        licensing.init(),
+        appsStore.load(),
+        organisation.init(),
+        groups.init(),
+      ])
+
+      await auth.getInitInfo()
+
+      if (usersLimitLockAction) {
+        usersLimitLockAction()
+      }
+    }
+
+    // Validate tenant if in a multi-tenant env
+    if (multiTenancyEnabled) {
+      await validateTenantId()
+    }
+
+    loaded.set(true)
+
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notifications.info(invalidationMessage(invalidated), {
+        duration: 5000,
+      })
+    }
+
+    await analyticsPing()
   }
 
   onMount(() => {
