@@ -1,1 +1,3 @@
-export { getProxyDispatcher } from "@budibase/backend-core"
+import { utils } from "@budibase/backend-core"
+
+export const { getProxyDispatcher } = utils
