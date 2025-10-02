@@ -136,6 +136,7 @@
     padding: 9px 10px 12px 10px;
     position: relative;
     transition: width 360ms ease-out;
+    background: var(--background);
   }
   .drawer-container {
     position: absolute;

@@ -36,6 +36,22 @@ export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
   }
 }
 
+export async function duplicate(
+  ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
+) {
+  const { id } = ctx.params
+  const workspaceApp = await sdk.workspaceApps.get(id)
+  if (!workspaceApp) {
+    ctx.throw(404)
+  }
+
+  const duplicatedApp = await sdk.workspaceApps.duplicate(workspaceApp)
+
+  ctx.message = `App ${workspaceApp.name} duplicated successfully.`
+  ctx.body = { workspaceApp: toWorkspaceAppResponse(duplicatedApp) }
+  ctx.status = 201
+}
+
 export async function find(
   ctx: Ctx<void, FindWorkspaceAppResponse, { id: string }>
 ) {
