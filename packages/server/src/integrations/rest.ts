@@ -12,10 +12,7 @@ import {
   RestQueryFields as RestQuery,
 } from "@budibase/types"
 import get from "lodash/get"
-import * as https from "https"
 import qs from "querystring"
-import type { Response, RequestInit } from "node-fetch"
-import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
@@ -29,6 +26,7 @@ import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
+import { fetch, Response, RequestInit, Agent } from "undici"
 
 const coreFields = {
   path: {
@@ -216,9 +214,9 @@ export class RestIntegration implements IntegrationBase {
 
     const size = formatBytes(contentLength || "0")
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
-    headers = response.headers.raw()
-    for (let [key, value] of Object.entries(headers)) {
-      headers[key] = Array.isArray(value) ? value[0] : value
+    // converts headers to plain object
+    for (const [key, value] of response.headers.entries()) {
+      headers[key] = value
     }
 
     // Check if a pagination cursor exists in the response
@@ -473,12 +471,6 @@ export class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
-    if (this.config.rejectUnauthorized == false) {
-      input.agent = new https.Agent({
-        rejectUnauthorized: false,
-      })
-    }
-
     // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
       // NOTE(samwho): it seems like this code doesn't actually work because it requires
@@ -496,17 +488,40 @@ export class RestIntegration implements IntegrationBase {
       throw new Error("Cannot connect to URL.")
     }
 
-    const dispatcher = getProxyDispatcher()
-    if (dispatcher) {
+    // Configure dispatcher for proxy and/or TLS settings
+    const proxyDispatcher = getProxyDispatcher({
+      rejectUnauthorized: this.config.rejectUnauthorized,
+    })
+    if (proxyDispatcher) {
       console.log("[rest integration] Using proxy for request", {
         url,
         hasDispatcher: true,
+        rejectUnauthorized: this.config.rejectUnauthorized,
       })
-      // @ts-expect-error - dispatcher is a valid option for fetch in Node.js
-      input.dispatcher = dispatcher
+      input.dispatcher = proxyDispatcher
+    } else if (this.config.rejectUnauthorized === false) {
+      // No proxy, but need to disable TLS verification
+      const agent = new Agent({
+        connect: {
+          rejectUnauthorized: false,
+        },
+      })
+      input.dispatcher = agent
     }
 
-    const response = await fetch(url, input)
+    let response: Response
+    try {
+      response = (await fetch(url, input)) as Response
+    } catch (err: any) {
+      console.log("[rest integration] Fetch error details", {
+        url,
+        error: err.message,
+        cause: err.cause?.message,
+        code: err.cause?.code,
+        hasDispatcher: !!input.dispatcher,
+      })
+      throw err
+    }
     if (
       response.status === 401 &&
       authConfigType === RestAuthType.OAUTH2 &&
