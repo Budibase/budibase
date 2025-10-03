@@ -22,9 +22,11 @@ jest.mock("@budibase/backend-core", () => {
       ObjectStoreBuckets: actual.objectStore.ObjectStoreBuckets,
     },
     db: {
+      ...actual.db,
       isProdWorkspaceID: jest.fn(),
       getProdWorkspaceID: jest.fn(),
       dbExists: jest.fn(),
+      getDB: jest.fn(),
     },
   }
 })
@@ -32,6 +34,10 @@ jest.mock("@budibase/backend-core", () => {
 const mockedDeleteFiles = objectStore.deleteFiles as jest.MockedFunction<
   typeof objectStore.deleteFiles
 >
+
+const mockedGetDB = db.getDB as jest.MockedFunction<typeof db.getDB>
+
+let prodAllDocsMock: jest.Mock
 
 const rowGenerators: [
   string,
@@ -94,6 +100,7 @@ describe.each(rowGenerators)(
   (_, attachmentFieldType, colKey, rowGenerator) => {
     function tableGenerator(): Table {
       return {
+        _id: "table",
         name: "table",
         sourceId: DEFAULT_BB_DATASOURCE_ID,
         sourceType: TableSourceType.INTERNAL,
@@ -120,24 +127,57 @@ describe.each(rowGenerators)(
     }
 
     beforeEach(() => {
-      mockedDeleteFiles.mockClear()
       jest.resetAllMocks()
+      prodAllDocsMock = jest.fn().mockResolvedValue({ rows: [] })
 
       jest.spyOn(context, "getWorkspaceId").mockReturnValue(DEV_WORKSPACEID)
       jest.spyOn(db, "isProdWorkspaceID").mockReturnValue(false)
       jest.spyOn(db, "getProdWorkspaceID").mockReturnValue(PROD_WORKSPACEID)
-      jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(false))
+      jest.spyOn(db, "dbExists").mockResolvedValue(false)
+      mockedGetDB.mockReturnValue({
+        allDocs: prodAllDocsMock,
+      } as any)
+      mockedDeleteFiles.mockClear()
     })
 
-    // Ignore calls to prune attachments when app is in production.
-    it(`${attachmentFieldType} - should not attempt to delete attachments/signatures if a published app exists`, async () => {
-      jest.spyOn(db, "dbExists").mockReturnValue(Promise.resolve(true))
+    it(`${attachmentFieldType} - should not remove files still referenced in a published app`, async () => {
+      const targetRow = rowGenerator()
+      jest.spyOn(db, "dbExists").mockResolvedValue(true)
+      prodAllDocsMock.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "row_1",
+              tableId: "table",
+              [colKey]: targetRow[colKey],
+            },
+          },
+        ],
+      })
+
       const originalTable = tableGenerator()
       delete originalTable.schema[colKey]
-      await AttachmentCleanup.tableUpdate(originalTable, [rowGenerator()], {
+      await AttachmentCleanup.tableUpdate(originalTable, [targetRow], {
         oldTable: tableGenerator(),
       })
       expect(mockedDeleteFiles).not.toHaveBeenCalled()
+    })
+
+    it(`${attachmentFieldType} - should remove files unused by a published app`, async () => {
+      const targetRow = rowGenerator()
+      jest.spyOn(db, "dbExists").mockResolvedValue(true)
+      prodAllDocsMock.mockResolvedValue({ rows: [] })
+
+      const originalTable = tableGenerator()
+      delete originalTable.schema[colKey]
+      await AttachmentCleanup.tableUpdate(originalTable, [targetRow], {
+        oldTable: tableGenerator(),
+      })
+
+      expect(mockedDeleteFiles).toHaveBeenCalledWith(
+        BUCKET,
+        getRowKeys(targetRow, colKey)
+      )
     })
 
     it(`${attachmentFieldType} - should be able to cleanup a table update`, async () => {
