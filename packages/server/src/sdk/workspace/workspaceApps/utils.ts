@@ -5,13 +5,13 @@ import sdk from "../.."
 export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
-  const app = await sdk.applications.metadata.get()
-  const baseUrl = db.isProdWorkspaceID(app.appId)
-    ? `/app/${app.url}`.replace("//", "/")
-    : `/${app.appId}`
+  const workspace = await sdk.workspaces.metadata.get()
+  const baseUrl = db.isProdWorkspaceID(workspace.appId)
+    ? `/app/${workspace.url}`.replace("//", "/")
+    : `/${workspace.appId}`
 
-  const embedUrl = db.isProdWorkspaceID(app.appId)
-    ? `/embed/${app.url}`.replace("//", "/")
+  const embedUrl = db.isProdWorkspaceID(workspace.appId)
+    ? `/embed/${workspace.url}`.replace("//", "/")
     : null
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()

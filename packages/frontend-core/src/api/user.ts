@@ -12,6 +12,7 @@ import {
   DeleteInviteUsersRequest,
   DeleteInviteUsersResponse,
   DeleteUserResponse,
+  EditUserPermissionsResponse,
   FetchUsersResponse,
   FindUserResponse,
   GetUserInvitesResponse,
@@ -22,7 +23,6 @@ import {
   SearchUsersRequest,
   SearchUsersResponse,
   UnsavedUser,
-  UpdateInviteRequest,
   UpdateInviteResponse,
   UpdateSelfMetadataRequest,
   UpdateSelfMetadataResponse,
@@ -59,17 +59,20 @@ export interface UserEndpoints {
     users: UnsavedUser[],
     groups: any[]
   ) => Promise<BulkUserCreated | undefined>
-  updateUserInvite: (
+  addWorkspaceIdToInvite: (
     code: string,
-    data: UpdateInviteRequest
+    role: string
   ) => Promise<UpdateInviteResponse>
-
-  // Missing request or response types
-  addAppBuilder: (userId: string, appId: string) => Promise<{ message: string }>
-  removeAppBuilder: (
+  removeWorkspaceIdFromInvite: (code: string) => Promise<UpdateInviteResponse>
+  addUserToWorkspace: (
     userId: string,
-    appId: string
-  ) => Promise<{ message: string }>
+    role: string,
+    rev: string
+  ) => Promise<SaveUserResponse>
+  removeUserFromWorkspace: (
+    userId: string,
+    rev: string
+  ) => Promise<SaveUserResponse>
 }
 
 export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
@@ -188,14 +191,31 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
     })
   },
 
-  /**
-   * Accepts a user invite as a body and will update the associated app roles.
-   * for an existing invite
-   */
-  updateUserInvite: async (code, data) => {
-    return await API.post<UpdateInviteRequest, UpdateInviteResponse>({
-      url: `/api/global/users/invite/update/${code}`,
-      body: data,
+  addWorkspaceIdToInvite: async (code, role) => {
+    return await API.post<void, UpdateInviteResponse>({
+      url: `/api/global/users/invite/${code}/${role}`,
+    })
+  },
+  removeWorkspaceIdFromInvite: async code => {
+    return await API.delete<void, UpdateInviteResponse>({
+      url: `/api/global/users/invite/${code}`,
+    })
+  },
+
+  addUserToWorkspace: async (userId, role, rev) => {
+    return await API.post<EditUserPermissionsResponse, SaveUserResponse>({
+      url: `/api/global/users/${userId}/permission/${role}`,
+      body: {
+        _rev: rev,
+      },
+    })
+  },
+  removeUserFromWorkspace: async (userId, rev) => {
+    return await API.delete<EditUserPermissionsResponse, SaveUserResponse>({
+      url: `/api/global/users/${userId}/permission`,
+      body: {
+        _rev: rev,
+      },
     })
   },
 
@@ -257,28 +277,6 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
       url: `/api/global/users/count/${appId}`,
     })
     return res.userCount
-  },
-
-  /**
-   * Adds a per app builder to the selected app
-   * @param userId The id of the user to add as a builder
-   * @param appId the applications id
-   */
-  addAppBuilder: async (userId, appId) => {
-    return await API.post({
-      url: `/api/global/users/${userId}/app/${appId}/builder`,
-    })
-  },
-
-  /**
-   * Removes a per app builder to the selected app
-   * @param userId The id of the user to remove as a builder
-   * @param appId the applications id
-   */
-  removeAppBuilder: async (userId, appId) => {
-    return await API.delete({
-      url: `/api/global/users/${userId}/app/${appId}/builder`,
-    })
   },
 
   /**

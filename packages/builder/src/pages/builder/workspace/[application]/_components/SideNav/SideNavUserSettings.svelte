@@ -28,7 +28,7 @@
 </script>
 
 {#if user}
-  <UserDropdown align={PopoverAlignment.RightOutside} let:open isPortal={false}>
+  <UserDropdown align={PopoverAlignment.RightOutside} let:open>
     <SideNavLink text={name} {collapsed} forceActive={open}>
       <UserAvatar slot="icon" size="XS" {user} showTooltip={false} />
     </SideNavLink>

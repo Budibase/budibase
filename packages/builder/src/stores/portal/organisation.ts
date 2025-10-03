@@ -21,7 +21,6 @@ type OrganisationState = SavedOrganisationState &
 const DEFAULT_STATE: OrganisationState = {
   platformUrl: "",
   emailBrandingEnabled: true,
-  testimonialsEnabled: true,
   platformTitle: "Budibase",
   company: "Budibase",
   google: false,

@@ -3,7 +3,13 @@
   import ToggleActionButtonGroup from "@/components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { SchemaUtils } from "@budibase/frontend-core"
-  import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"
+  import {
+    Icon,
+    notifications,
+    ActionButton,
+    Popover,
+    Input,
+  } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import { FieldPermissions } from "./GridColumnsSettingButton.svelte"
 
@@ -124,6 +130,7 @@
         visible: column.visible,
         readonly: column.readonly,
         icon: column.icon,
+        displayName: column.displayName,
       },
     }
   })
@@ -168,6 +175,31 @@
 
     return FieldPermissions.WRITABLE
   }
+
+  async function updateDisplayName(column, displayName) {
+    // If the display name is the same as the column name, clear it to avoid redundancy
+    const finalDisplayName =
+      displayName === column.name ? undefined : displayName
+
+    if (!fromRelationshipField) {
+      await datasource.actions.addSchemaMutation(column.name, {
+        displayName: finalDisplayName,
+      })
+    } else {
+      await datasource.actions.addSubSchemaMutation(
+        column.name,
+        fromRelationshipField.name,
+        {
+          displayName: finalDisplayName,
+        }
+      )
+    }
+    try {
+      await datasource.actions.saveSchemaMutations()
+    } catch (e) {
+      notifications.error(e.message)
+    }
+  }
 </script>
 
 <div class="content">
@@ -175,8 +207,13 @@
     {#each displayColumns as column}
       <div class="column">
         <Icon size="S" name={SchemaUtils.getColumnIcon(column)} />
-        <div class="column-label" title={column.label}>
-          {column.label}
+        <div class="display-name-input">
+          <Input
+            placeholder="Column display name"
+            value={column.schema.displayName || column.name}
+            on:blur={e => updateDisplayName(column, e.detail || undefined)}
+            quiet
+          />
         </div>
       </div>
       <div class="column-options">
@@ -253,17 +290,16 @@
   .column {
     display: flex;
     gap: 8px;
-  }
-  .column-label {
-    min-width: 80px;
-    max-width: 200px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+    align-items: center;
+    min-width: 0;
   }
   .column-options {
     display: flex;
     gap: var(--spacing-xs);
+  }
+  .display-name-input {
+    flex: 1;
+    min-width: 0;
   }
   .relationship-header {
     color: var(--spectrum-global-color-gray-600);

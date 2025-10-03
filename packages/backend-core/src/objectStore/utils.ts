@@ -1,19 +1,19 @@
-import path, { join } from "path"
-import { tmpdir } from "os"
-import fs from "fs"
-import env from "../environment"
 import {
   LifecycleRule,
   PutBucketLifecycleConfigurationCommandInput,
 } from "@aws-sdk/client-s3"
-import * as objectStore from "./objectStore"
 import {
   AutomationAttachment,
   AutomationAttachmentContent,
   BucketedContent,
 } from "@budibase/types"
-import stream from "stream"
+import fs from "fs"
 import streamWeb from "node:stream/web"
+import { tmpdir } from "os"
+import path, { join } from "path"
+import stream from "stream"
+import env from "../environment"
+import * as objectStore from "./objectStore"
 
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
@@ -92,7 +92,10 @@ export async function processObjectStoreAttachment(
   }
 
   const { bucket, path: objectPath } = result
-  const readStream = await objectStore.getReadStream(bucket, objectPath)
+  const { stream: readStream } = await objectStore.getReadStream(
+    bucket,
+    objectPath
+  )
   const fallbackFilename = path.basename(objectPath)
   return {
     bucket,

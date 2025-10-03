@@ -1,17 +1,18 @@
 import {
   ContextUser,
   DocumentType,
+  InternalTable,
   SEPARATOR,
   User,
-  InternalTable,
-  UserGroup,
-  UserBuilderInfo,
   UserAdminInfo,
+  UserBuilderInfo,
+  UserGroup,
   UserRoleInfo,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
+// TODO: check its usages, as appId checks are not actually checked for global builders
 export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
   if (!user) {
     return false
@@ -42,6 +43,25 @@ export function isAdmin(user?: UserAdminInfo): boolean {
     return false
   }
   return hasAdminPermissions(user)
+}
+
+export function isAdminOrWorkspaceBuilder(
+  user: UserBuilderInfo & UserAdminInfo,
+  appId: string
+): boolean {
+  if (!user) {
+    return false
+  }
+
+  if (isAdmin(user)) {
+    return true
+  }
+
+  if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+    return true
+  }
+
+  return false
 }
 
 export function isAdminOrBuilder(
@@ -134,26 +154,24 @@ export function containsUserID(value: string | undefined): boolean {
   return value.includes(`${DocumentType.USER}${SEPARATOR}`)
 }
 
-export function getUserGroups(user: User, groups?: UserGroup[]) {
-  return (
-    groups?.filter(group => group.users?.find(u => u._id === user._id)) || []
-  )
+function getUserGroups(userId: string | undefined, groups?: UserGroup[]) {
+  return groups?.filter(group => group.users?.find(u => u._id === userId)) || []
 }
 
 export function getUserAppGroups(
   appId: string,
-  user: User,
+  userId: string,
   groups?: UserGroup[]
 ) {
   const prodAppId = getProdAppID(appId)
-  const userGroups = getUserGroups(user, groups)
+  const userGroups = getUserGroups(userId, groups)
   return userGroups.filter(group =>
     Object.keys(group.roles || {}).find(app => app === prodAppId)
   )
 }
 
 export function userAppAccessList(user: User, groups?: UserGroup[]) {
-  const userGroups = getUserGroups(user, groups)
+  const userGroups = getUserGroups(user._id, groups)
   const userGroupApps = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )

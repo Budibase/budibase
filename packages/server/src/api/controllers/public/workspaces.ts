@@ -90,14 +90,14 @@ export async function unpublish(ctx: UserCtx, next: Next) {
 
 export async function publish(ctx: UserCtx, next: Next) {
   await context.doInWorkspaceContext(ctx.params.appId, async () => {
-    await deployController.publishApp(ctx)
+    await deployController.publishWorkspace(ctx)
     await next()
   })
 }
 
 // get licensed endpoints from pro
 export const importToApp = proSdk.publicApi.applications.buildImportFn(
-  controller.importToApp
+  controller.importToWorkspace
 )
 export const exportApp = proSdk.publicApi.applications.buildExportFn(
   backupController.exportAppDump

@@ -1,69 +1,97 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import NamePanel from "./_components/NamePanel.svelte"
-  import ExampleApp from "./_components/ExampleApp.svelte"
-  import { notifications } from "@budibase/bbui"
-  import { SplitPage } from "@budibase/frontend-core"
+  import { Button, Body, notifications } from "@budibase/bbui"
+  import Spinner from "@/components/common/Spinner.svelte"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
+  import { initialise } from "@/stores/builder"
+  import {
+    buildBuilderWorkspaceDesignRoute,
+    buildBuilderWorkspaceRoute,
+  } from "@/helpers/routes"
 
-  let name: string = "My first app"
-  let url: string = "my-first-app"
-  let appId: string | null = null
+  const DEFAULT_ONBOARDING_NAME = "My first app"
+  const DEFAULT_ONBOARDING_URL = "my-first-app"
 
-  let loading = false
+  let loading = true
+  let error: string | null = null
 
-  const createApp = async () => {
+  const createOnboardingApp = async () => {
     loading = true
+    error = null
 
-    // Create form data to create app
-    // This is form based and not JSON
-    let data = new FormData()
-    data.append("name", name.trim())
-    data.append("url", url.trim())
-    data.append("useTemplate", "false")
-    data.append("isOnboarding", "true")
-
-    const createdApp = await API.createApp(data)
-
-    // Update checklist - in case first app
-    await admin.init()
-
-    // Create user
-    await auth.setInitInfo({})
-
-    appId = createdApp.instance._id
-    return createdApp
-  }
-
-  const goToApp = () => {
-    $goto(`/builder/workspace/${appId}`)
-    notifications.success(`App created successfully`)
-  }
-
-  const handleCreateApp = async () => {
     try {
-      await createApp()
+      const data = new FormData()
+      data.append("name", DEFAULT_ONBOARDING_NAME)
+      data.append("url", DEFAULT_ONBOARDING_URL)
+      data.append("useTemplate", "false")
+      data.append("isOnboarding", "true")
 
-      goToApp()
+      const createdApp = await API.createApp(data)
+
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+
+      await initialise(pkg)
+      await admin.init()
+      await auth.setInitInfo({})
+
+      const homeScreen = pkg.screens.find(screen => screen.routing?.homeScreen)
+
+      const targetRoute =
+        homeScreen?.workspaceAppId && homeScreen?._id
+          ? buildBuilderWorkspaceDesignRoute({
+              applicationId: createdApp.instance._id,
+              workspaceAppId: homeScreen.workspaceAppId,
+              screenId: homeScreen._id,
+            })
+          : buildBuilderWorkspaceRoute({
+              applicationId: createdApp.instance._id,
+            })
+
+      $goto(targetRoute)
     } catch (e: any) {
       loading = false
-      notifications.error(e.message || "There was a problem creating your app")
+      const message = e?.message || "There was a problem creating your app"
+      error = message
+      notifications.error(message)
     }
   }
+
+  onMount(() => {
+    createOnboardingApp()
+  })
 </script>
 
-<div class="full-width">
-  <SplitPage>
-    <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
-    <div slot="right">
-      <ExampleApp />
+<div class="container">
+  {#if loading}
+    <div class="content">
+      <Spinner size="10" />
+      <Body size="M">Setting up your workspace...</Body>
     </div>
-  </SplitPage>
+  {:else}
+    <div class="content">
+      <Body size="M">{error}</Body>
+      <Button size="L" cta on:click={createOnboardingApp}>Try again</Button>
+    </div>
+  {/if}
 </div>
 
 <style>
-  .full-width {
+  .container {
     width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--background);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xl);
+    text-align: center;
   }
 </style>

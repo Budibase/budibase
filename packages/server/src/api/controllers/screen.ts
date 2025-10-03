@@ -21,7 +21,7 @@ import {
 import { DocumentType } from "../../db/utils"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { updateAppPackage } from "./workspace"
+import { updateWorkspacePackage } from "./workspace"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
@@ -90,7 +90,7 @@ export async function save(
     })
 
     if (pluginAdded) {
-      await updateAppPackage({ usedPlugins }, ctx.appId)
+      await updateWorkspacePackage({ usedPlugins }, ctx.appId)
     }
   }
 

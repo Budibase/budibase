@@ -5,6 +5,7 @@ import {
   PublishWorkspaceResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
+  WithRequired,
   Workspace,
   type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
@@ -27,6 +28,23 @@ export class WorkspaceAPI extends TestAPI {
       expectations,
     })
   }
+  createFromImport = async (
+    app: Omit<
+      WithRequired<CreateWorkspaceRequest, "fileToImport">,
+      "file" | "useTemplate"
+    >,
+    expectations?: Expectations
+  ): Promise<Workspace> => {
+    const res = this.request
+      .post("/api/applications")
+      .attach("fileToImport", app.fileToImport)
+      .set(await this.getHeaders())
+    // .send(app)
+    for (const [key, value] of Object.entries(app)) {
+      res.field(key, value)
+    }
+    return this._checkResponse(await res, expectations).body
+  }
 
   delete = async (
     appId: string,
@@ -48,7 +66,7 @@ export class WorkspaceAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<PublishWorkspaceResponse> => {
     if (!appId) {
-      appId = this.config.getAppId()
+      appId = this.config.getDevWorkspaceId()
     }
     return await this._post<PublishWorkspaceResponse>(
       `/api/applications/${appId}/publish`,
@@ -95,16 +113,16 @@ export class WorkspaceAPI extends TestAPI {
     })
   }
 
-  duplicateApp = async (
-    appId: string,
+  duplicateWorkspace = async (
+    workspaceId: string,
     fields: object,
     expectations?: Expectations
   ): Promise<DuplicateWorkspaceResponse> => {
     let headers = {
       ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
+      [constants.Header.APP_ID]: workspaceId,
     }
-    return this._post(`/api/applications/${appId}/duplicate`, {
+    return this._post(`/api/applications/${workspaceId}/duplicate`, {
       headers,
       fields,
       expectations,

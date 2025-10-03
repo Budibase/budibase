@@ -143,13 +143,14 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedLogStepData?: any
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean
+  viewMode: ViewMode
 }
 
 export interface DerivedAutomationStoreState
   extends AutomationStoreState<UIAutomation> {}
 
 export interface SelectedAutomationState {
-  data?: Automation
+  data?: UIAutomation
   blockRefs: Record<string, BlockRef>
 }
 
