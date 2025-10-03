@@ -1,5 +1,9 @@
 import { TenantResolutionStrategy } from "@budibase/types"
-import { addTenantToUrl, getTenantIDFromCtx, isUserInAppTenant } from "../"
+import {
+  addTenantToUrl,
+  getTenantIDFromCtx,
+  isUserInWorkspaceTenant,
+} from "../"
 import { getTenantIDFromWorkspaceID, isMultiTenant } from "../../context"
 
 jest.mock("../../context", () => ({
@@ -40,32 +44,32 @@ describe("addTenantToUrl", () => {
   })
 })
 
-describe("isUserInAppTenant", () => {
+describe("isUserInWorkspaceTenant", () => {
   mockedGetTenantIDFromWorkspaceID.mockImplementation(() => "budibase")
   const mockUser = { tenantId: "budibase" }
 
   it("returns true if user tenant ID matches app tenant ID", () => {
-    const appId = "app-budibase"
-    const result = isUserInAppTenant(appId, mockUser)
+    const workspaceId = "app-budibase"
+    const result = isUserInWorkspaceTenant(workspaceId, mockUser)
     expect(result).toBe(true)
   })
 
   it("uses default tenant ID if user is not provided", () => {
-    const appId = "app-budibase"
-    const result = isUserInAppTenant(appId)
+    const workspaceId = "app-budibase"
+    const result = isUserInWorkspaceTenant(workspaceId)
     expect(result).toBe(true)
   })
 
   it("uses default tenant ID if app tenant ID is not found", () => {
-    const appId = "not-budibase-app"
-    const result = isUserInAppTenant(appId, mockUser)
+    const workspaceId = "not-budibase-app"
+    const result = isUserInWorkspaceTenant(workspaceId, mockUser)
     expect(result).toBe(true)
   })
 
   it("returns false if user tenant ID does not match app tenant ID", () => {
-    const appId = "app-budibase"
+    const workspaceId = "app-budibase"
     mockedGetTenantIDFromWorkspaceID.mockImplementation(() => "not-budibase")
-    const result = isUserInAppTenant(appId, mockUser)
+    const result = isUserInWorkspaceTenant(workspaceId, mockUser)
     expect(result).toBe(false)
   })
 })
