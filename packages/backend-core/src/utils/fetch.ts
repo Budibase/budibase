@@ -40,7 +40,7 @@ let cachedDispatcher: ProxyAgent | undefined | null = null
 /**
  * Get or create a cached proxy dispatcher.
  * The dispatcher is cached to avoid creating a new ProxyAgent for every request.
- * 
+ *
  * @param options Optional configuration for the ProxyAgent
  */
 export function getProxyDispatcher(options?: {
@@ -50,7 +50,7 @@ export function getProxyDispatcher(options?: {
   if (options) {
     return createProxyDispatcher(options)
   }
-  
+
   if (cachedDispatcher === null) {
     cachedDispatcher = createProxyDispatcher()
   }
