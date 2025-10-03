@@ -472,6 +472,32 @@ if (descriptions.length) {
                 })
               })
 
+              describe("notIn", () => {
+                it("successfully finds false row", async () => {
+                  await expectQuery({
+                    notIn: { isTrue: [true] },
+                  }).toContainExactly([{ isTrue: false }])
+                })
+
+                it("successfully finds true row", async () => {
+                  await expectQuery({
+                    notIn: { isTrue: [false] },
+                  }).toContainExactly([{ isTrue: true }])
+                })
+
+                it("excludes multiple values", async () => {
+                  await expectQuery({
+                    notIn: { isTrue: [true, false] },
+                  }).toFindNothing()
+                })
+
+                it("finds all when excluding nonexistent value", async () => {
+                  await expectQuery({
+                    notIn: { isTrue: [] },
+                  }).toContainExactly([{ isTrue: true }, { isTrue: false }])
+                })
+              })
+
               describe("sort", () => {
                 it("sorts ascending", async () => {
                   await expectSearch({
@@ -1033,6 +1059,60 @@ if (descriptions.length) {
                   })
               })
 
+              describe("notIn", () => {
+                it("successfully finds excluded row", async () => {
+                  await expectQuery({
+                    notIn: { name: ["foo"] },
+                  }).toContainExactly([{ name: "bar" }])
+                })
+
+                it("excludes multiple values", async () => {
+                  await expectQuery({
+                    notIn: { name: ["foo", "bar"] },
+                  }).toFindNothing()
+                })
+
+                it("finds all when excluding nonexistent value", async () => {
+                  await expectQuery({
+                    notIn: { name: ["none"] },
+                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                })
+
+                it("splits comma separated strings", async () => {
+                  await expectQuery({
+                    notIn: {
+                      // @ts-ignore
+                      name: "foo,bar",
+                    },
+                  }).toFindNothing()
+                })
+
+                it("trims whitespace", async () => {
+                  await expectQuery({
+                    notIn: {
+                      // @ts-ignore
+                      name: "foo, bar",
+                    },
+                  }).toFindNothing()
+                })
+
+                it("empty arrays returns all when onEmptyFilter is set to return 'all'", async () => {
+                  await expectQuery({
+                    onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+                    notIn: { name: [] },
+                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                })
+
+                // onEmptyFilter cannot be sent to view searches
+                !isView &&
+                  it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
+                    await expectQuery({
+                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                      notIn: { name: [] },
+                    }).toContainExactly([])
+                  })
+              })
+
               describe("fuzzy", () => {
                 it("successfully finds a row", async () => {
                   await expectQuery({ fuzzy: { name: "oo" } }).toContainExactly(
@@ -1277,6 +1357,43 @@ if (descriptions.length) {
                       age: "1,10",
                     },
                   }).toContainExactly([{ age: 1 }, { age: 10 }])
+                })
+              })
+
+              describe("notIn", () => {
+                it("successfully finds excluded row", async () => {
+                  await expectQuery({ notIn: { age: [1] } }).toContainExactly([
+                    { age: 10 },
+                  ])
+                })
+
+                it("excludes multiple values", async () => {
+                  await expectQuery({ notIn: { age: [1, 10] } }).toFindNothing()
+                })
+
+                it("finds all when excluding nonexistent value", async () => {
+                  await expectQuery({ notIn: { age: [2] } }).toContainExactly([
+                    { age: 1 },
+                    { age: 10 },
+                  ])
+                })
+
+                it("can convert from a string", async () => {
+                  await expectQuery({
+                    notIn: {
+                      // @ts-ignore
+                      age: "1",
+                    },
+                  }).toContainExactly([{ age: 10 }])
+                })
+
+                it("can find multiple values for same column", async () => {
+                  await expectQuery({
+                    notIn: {
+                      // @ts-ignore
+                      age: "1,10",
+                    },
+                  }).toFindNothing()
                 })
               })
 
@@ -2596,6 +2713,114 @@ if (descriptions.length) {
                 })
               })
 
+              // describe("notIn", () => {
+              //   it("successfully finds excluded row", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: [user1._id] } },
+              //     }).toMatch({})
+
+              //     // Should find rows that don't have user1._id (empty rows or other users)
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // None of the results should have user1._id
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).not.toContain(user1._id)
+              //   })
+
+              //   it("excludes multiple values", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: [user1._id, "us_none"] } },
+              //     }).toMatch({})
+
+              //     // Should find rows that don't have user1._id or us_none (empty rows or other users)
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // None of the results should have user1._id or us_none
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).not.toContain(user1._id)
+              //     expect(userIds).not.toContain("us_none")
+              //   })
+
+              //   it("finds all when excluding nonexistent value", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: ["us_none"] } },
+              //     }).toMatch({})
+
+              //     // Should find all rows since we're excluding a non-existent user
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // Should include the user we set up (user1._id should be in one of the results)
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).toContain(user1._id)
+              //   })
+              // })
+              describe("notIn", () => {
+                let user1: User
+                let user2: User
+
+                beforeAll(async () => {
+                  user1 = await config.createUser({
+                    _id: `us_${utils.newid()}`,
+                  })
+                  user2 = await config.createUser({
+                    _id: `us_${utils.newid()}`,
+                  })
+
+                  tableOrViewId = await createTableOrView({
+                    user: {
+                      name: "user",
+                      type: FieldType.BB_REFERENCE_SINGLE,
+                      subtype: BBReferenceFieldSubType.USER,
+                    },
+                  })
+
+                  await createRows([
+                    { user: user1 },
+                    { user: user2 },
+                    { user: null },
+                  ])
+                })
+
+                it("successfully finds excluded row", async () => {
+                  await expectQuery({
+                    equal: { user: user1._id },
+                  }).toContainExactly([{ user: { _id: user2._id } }]) // Do I also need to include the third row that is null?
+                })
+
+                it("excludes multiple values", async () => {
+                  const result = await expectSearch({
+                    query: { notIn: { user: [user1._id, user2._id] } },
+                  }).toMatch({})
+
+                  expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+                  const userIds = result.rows
+                    .filter(row => row.user)
+                    .map(row => row.user._id)
+                  expect(userIds).not.toContain(user1._id)
+                  expect(userIds).not.toContain(user2._id)
+                })
+
+                it("finds all when excluding nonexistent value", async () => {
+                  const result = await expectSearch({
+                    query: { notIn: { user: ["us_nonexistent"] } },
+                  }).toMatch({})
+
+                  expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+                  const userIds = result.rows
+                    .filter(row => row.user)
+                    .map(row => row.user._id)
+                  expect(userIds).toContain(user1._id)
+                })
+              })
+              // ---------------------------
               describe("empty", () => {
                 it("finds empty rows", async () => {
                   await expectQuery({ empty: { user: null } }).toContainExactly(

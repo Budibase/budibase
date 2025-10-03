@@ -224,7 +224,7 @@
                     bind:value={condition.referenceValue}
                   />
                 {:else if (type === FieldType.OPTIONS || type === FieldType.ARRAY) && condition.valueType === type}
-                  {#if condition.operator === Constants.OperatorOptions.In.value}
+                  {#if condition.operator === Constants.OperatorOptions.In.value || condition.operator === Constants.OperatorOptions.NotIn.value}
                     <Multiselect
                       disabled={condition.noValue}
                       options={componentInstance.schema?.[
@@ -246,6 +246,7 @@
                     value={condition.referenceValue}
                     multiselect={[
                       Constants.OperatorOptions.In.value,
+                      Constants.OperatorOptions.NotIn.value,
                       Constants.OperatorOptions.ContainsAny.value,
                     ].includes(condition.operator)}
                     on:change={e => {
