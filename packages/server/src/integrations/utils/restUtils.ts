@@ -1,4 +1,4 @@
-import type { Headers } from "node-fetch"
+import type { Headers } from "undici"
 
 export function getAttachmentHeaders(
   headers: Headers,
