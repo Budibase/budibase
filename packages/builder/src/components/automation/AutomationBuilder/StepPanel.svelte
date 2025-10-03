@@ -19,7 +19,6 @@
     isTrigger,
     AutomationFeature,
     isLoopV2Step,
-    LoopV2Step,
   } from "@budibase/types"
   import { memo } from "@budibase/frontend-core"
   import {
