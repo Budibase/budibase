@@ -18,6 +18,8 @@
     isBranchStep,
     isTrigger,
     AutomationFeature,
+    isLoopV2Step,
+    LoopV2Step,
   } from "@budibase/types"
   import { memo } from "@budibase/frontend-core"
   import {
@@ -61,20 +63,20 @@
     x => $memoBlock && x.blockToLoop === $memoBlock.id
   )
 
-  // LOOP_V2: detect parent loop container and expose it for UI
+  // LOOP_V2: detect parent loop container
   $: loopContextId = blockRef?.pathTo?.at(-1)?.loopStepId
   $: loopV2BlockRef = loopContextId
     ? $selectedAutomation.blockRefs?.[loopContextId]
     : undefined
-  $: loopV2Block = loopV2BlockRef
-    ? automationStore.actions.getBlockByRef($memoAutomation, loopV2BlockRef)
-    : undefined
+  $: loopV2Block = automationStore.actions.getBlockByRef(
+    $memoAutomation,
+    loopV2BlockRef
+  )
+
   $: insideLoopV2 = Boolean(blockRef?.isLoopV2Child && loopV2Block)
   $: hasAnyLoop = Boolean(loopBlock || insideLoopV2)
-  $: canStopLoopingV2 =
-    insideLoopV2 &&
-    Array.isArray((loopV2Block as any)?.inputs?.children) &&
-    (loopV2Block as any).inputs.children.length === 1
+
+  $: canStopLooping = checkCanStopLooping(loopV2Block)
 
   $: isAppAction = block?.stepId === AutomationTriggerStepId.APP
   $: isAppAction && fetchPermissions($memoAutomation?._id)
@@ -83,6 +85,14 @@
 
   // Reset the panel scroll when the target node is changed
   $: resetScroll(selectedNodeId)
+
+  const checkCanStopLooping = (
+    block: AutomationStep | AutomationTrigger | undefined
+  ) => {
+    if (!block) return false
+    if (!isLoopV2Step(block)) return false
+    return block.inputs.children?.length === 1
+  }
 
   const resetScroll = (selectedNodeId: string | undefined) => {
     if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
@@ -145,7 +155,7 @@
               await automationStore.actions.wrapStepInLoopV2(blockRef)
             }
           }}
-          disabled={insideLoopV2 && !canStopLoopingV2}
+          disabled={insideLoopV2 && !canStopLooping}
         >
           {hasAnyLoop ? `Stop Looping` : `Loop`}
         </ActionButton>
