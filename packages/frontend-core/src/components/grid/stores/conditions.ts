@@ -48,12 +48,17 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
 
       // Add button conditions
       if ($props.buttons) {
-        for (let button of $props.buttons) {
+        for (
+          let buttonIndex = 0;
+          buttonIndex < $props.buttons.length;
+          buttonIndex++
+        ) {
+          const button = $props.buttons[buttonIndex]
           for (let condition of button.conditions || []) {
             newConditions.push({
               ...condition,
               target: "button",
-              buttonIndex: $props.buttons.indexOf(button),
+              buttonIndex,
             })
           }
         }
@@ -161,14 +166,30 @@ const evaluateConditions = (
 
   // Add dynamic button conditions from getRowConditions
   if ($props.buttons) {
-    for (let button of $props.buttons) {
-      if (button.getRowConditions) {
-        const dynamicConditions = button.getRowConditions(row) || []
+    for (
+      let buttonIndex = 0;
+      buttonIndex < $props.buttons.length;
+      buttonIndex++
+    ) {
+      const button = $props.buttons[buttonIndex]
+      if (!button.getRowConditions) {
+        continue
+      }
+
+      const dynamicConditions = button.getRowConditions(row) || []
+      if (dynamicConditions.length) {
+        allConditions = allConditions.filter(condition => {
+          return !(
+            condition.target === "button" &&
+            condition.buttonIndex === buttonIndex
+          )
+        })
+
         for (let condition of dynamicConditions) {
           allConditions.push({
             ...condition,
             target: "button",
-            buttonIndex: $props.buttons.indexOf(button),
+            buttonIndex,
           })
         }
       }
