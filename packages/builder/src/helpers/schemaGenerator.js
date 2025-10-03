@@ -52,5 +52,15 @@ function recurse(schemaLevel = {}, objectLevel) {
 }
 
 export function generate(object) {
+  // Handle case where root level is an array
+  if (Array.isArray(object)) {
+    const schema = recurse({}, object[0])
+    return {
+      values: {
+        type: FieldType.ARRAY,
+        schema,
+      }
+    }
+  }
   return recurse({}, object).schema
 }
