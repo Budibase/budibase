@@ -10,7 +10,7 @@ import {
 import { createServer } from "http"
 import { AddressInfo } from "net"
 import nock from "nock"
-import { Response } from "node-fetch"
+import { Response } from "undici"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { RestIntegration } from "../rest"
 
