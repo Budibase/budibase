@@ -1,4 +1,5 @@
 export * from "./fileUtils"
+export * from "./fetch"
 import { context } from "@budibase/backend-core"
 import { Document } from "@budibase/types"
 import dayjs from "dayjs"

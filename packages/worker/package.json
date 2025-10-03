@@ -68,6 +68,7 @@
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
     "server-destroy": "1.0.1",
+    "undici": "^7.16.0",
     "uuid": "^8.3.2",
     "yaml": "^2.8.0"
   },
