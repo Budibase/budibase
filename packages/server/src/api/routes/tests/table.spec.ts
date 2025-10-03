@@ -41,7 +41,7 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/tables ($dbName)",
-    ({ config, dsProvider, isInternal, isOracle }) => {
+    ({ config, dsProvider, isInternal, isOracle, isSql, dbName }) => {
       let datasource: Datasource | undefined
 
       beforeAll(async () => {
@@ -90,7 +90,10 @@ if (descriptions.length) {
           expect(events.table.imported).toHaveBeenCalledTimes(1)
           expect(events.table.imported).toHaveBeenCalledWith(res)
           expect(events.rows.imported).toHaveBeenCalledTimes(1)
-          expect(events.rows.imported).toHaveBeenCalledWith(res, 1)
+          expect(events.rows.imported).toHaveBeenCalledWith(
+            { ...res, primary: undefined, sql: undefined },
+            1
+          )
         })
 
         it("should not allow a column to have a default value and be required", async () => {
@@ -689,8 +692,12 @@ if (descriptions.length) {
 
           const response = await config.api.table.save(saveTableRequest)
 
+          // TODO: SQS should be coming as sql
+          const addSqlFiles = isSql || dbName === "sqs"
           const expectedResponse = {
             ...saveTableRequest,
+            primary: addSqlFiles ? ["_id"] : undefined,
+            sql: addSqlFiles ? true : undefined,
             _rev: expect.stringMatching(/^\d-.+/),
             _id: expect.stringMatching(/^ta_.+/),
             createdAt: expect.stringMatching(ISO_REGEX_PATTERN),

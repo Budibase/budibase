@@ -40,4 +40,9 @@ export type WithoutDocMetadata<T extends Document> = Omit<
   "_id" | "_rev" | "createdAt" | "updatedAt"
 >
 
+export type WithDocMetadata<T extends Document> = WithRequired<
+  T,
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+
 export type Primitive = string | number | boolean | object

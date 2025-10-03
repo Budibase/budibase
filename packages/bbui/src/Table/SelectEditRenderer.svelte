@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Checkbox from "../Form/Checkbox.svelte"
   import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Checkbox from "../Form/Checkbox.svelte"
 
   export let selected: boolean | undefined
   export let onEdit: (_e: Event) => void
@@ -11,7 +11,7 @@
 
 <div>
   {#if allowSelectRows && data.__selectable !== false}
-    <Checkbox value={selected} />
+    <Checkbox value={selected} disabled={data.__disabled} />
   {/if}
   {#if allowEditRows}
     <ActionButton size="S" on:click={onEdit}>Edit</ActionButton>

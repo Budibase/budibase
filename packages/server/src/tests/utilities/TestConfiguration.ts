@@ -643,7 +643,10 @@ export default class TestConfiguration {
   }
 
   // WORKSPACE
-  async createWorkspace(name: string, url?: string): Promise<Workspace> {
+  async createWorkspace(
+    name: string = generator.guid(),
+    url?: string
+  ): Promise<Workspace> {
     this.devWorkspaceId = undefined
     this.devWorkspace = await context.doInTenant(
       this.tenantId!,
