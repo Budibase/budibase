@@ -24,7 +24,7 @@ export class AttachmentCleanup {
       const prodAppId = dbCore.getProdWorkspaceID(appId!)
       const exists = await dbCore.dbExists(prodAppId)
       if (exists) {
-        files = await AttachmentCleanup.filterFilesUsedInProd(
+        files = await AttachmentCleanup.excludeFilesUsedInProd(
           files,
           prodAppId,
           opts
@@ -38,7 +38,7 @@ export class AttachmentCleanup {
     await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
   }
 
-  private static async filterFilesUsedInProd(
+  private static async excludeFilesUsedInProd(
     files: string[],
     prodAppId: string,
     opts: { tableId?: string; schema?: Table["schema"] }
@@ -56,16 +56,16 @@ export class AttachmentCleanup {
     )
 
     const usedKeys = new Set<string>()
-    for (let result of response.rows) {
+    for (const result of response.rows) {
       if (!result.doc) {
         continue
       }
 
       const row = result.doc as Row
-      for (let [key, column] of Object.entries(schema)) {
+      for (const [key, column] of Object.entries(schema)) {
         const columnKeys = AttachmentCleanup.extractAttachmentKeys(
           column.type,
-          row[key] as any
+          row[key]
         )
         columnKeys.forEach(value => usedKeys.add(value))
       }
