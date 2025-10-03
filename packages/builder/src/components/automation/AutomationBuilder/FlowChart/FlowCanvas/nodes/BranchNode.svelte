@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
   import PropField from "@/components/automation/SetupPanel/PropField.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
-  import FlowItemStatus from "./FlowItemStatus.svelte"
+  import FlowItemStatus from "../../FlowItemStatus.svelte"
   import {
     automationStore,
     selectedAutomation,
@@ -25,7 +25,7 @@
   import { cloneDeep } from "lodash/fp"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
-  import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
+  import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import type {
     Automation,
     AutomationLog,
@@ -35,7 +35,7 @@
     Branch,
     EnrichedBinding,
   } from "@budibase/types"
-  import { type DragView } from "./FlowChartDnD"
+  import { type DragView } from "../FlowChartDnD"
 
   export let branchIdx
   export let step

@@ -13,10 +13,12 @@
     type AutomationStep,
     type AutomationTrigger,
     type BlockRef,
+    AutomationActionStepId,
     AutomationTriggerStepId,
     isBranchStep,
     isTrigger,
     AutomationFeature,
+    isLoopV2Step,
   } from "@budibase/types"
   import { memo } from "@budibase/frontend-core"
   import {
@@ -60,6 +62,21 @@
     x => $memoBlock && x.blockToLoop === $memoBlock.id
   )
 
+  // LOOP_V2: detect parent loop container
+  $: loopContextId = blockRef?.pathTo?.at(-1)?.loopStepId
+  $: loopV2BlockRef = loopContextId
+    ? $selectedAutomation.blockRefs?.[loopContextId]
+    : undefined
+  $: loopV2Block = automationStore.actions.getBlockByRef(
+    $memoAutomation,
+    loopV2BlockRef
+  )
+
+  $: insideLoopV2 = Boolean(blockRef?.isLoopV2Child && loopV2Block)
+  $: hasAnyLoop = Boolean(loopBlock || insideLoopV2)
+
+  $: canStopLooping = checkCanStopLooping(loopV2Block)
+
   $: isAppAction = block?.stepId === AutomationTriggerStepId.APP
   $: isAppAction && fetchPermissions($memoAutomation?._id)
   $: isAppAction &&
@@ -67,6 +84,14 @@
 
   // Reset the panel scroll when the target node is changed
   $: resetScroll(selectedNodeId)
+
+  const checkCanStopLooping = (
+    block: AutomationStep | AutomationTrigger | undefined
+  ) => {
+    if (!block) return false
+    if (!isLoopV2Step(block)) return false
+    return block.inputs.children?.length === 1
+  }
 
   const resetScroll = (selectedNodeId: string | undefined) => {
     if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
@@ -122,14 +147,16 @@
           noPadding
           icon="arrow-clockwise"
           on:click={async () => {
-            if (loopBlock) {
+            if (!blockRef) return
+            if (hasAnyLoop) {
               await automationStore.actions.removeLooping(blockRef)
             } else {
-              await automationStore.actions.addLooping(blockRef)
+              await automationStore.actions.wrapStepInLoopV2(blockRef)
             }
           }}
+          disabled={insideLoopV2 && !canStopLooping}
         >
-          {loopBlock ? `Stop Looping` : `Loop`}
+          {hasAnyLoop ? `Stop Looping` : `Loop`}
         </ActionButton>
       {/if}
       <ActionButton
@@ -145,7 +172,7 @@
       >
         Delete
       </ActionButton>
-      {#if $memoBlock && !isBranchStep($memoBlock)}
+      {#if $memoBlock && !isBranchStep($memoBlock) && !blockRef?.isLoopV2Child}
         <ActionButton
           quiet
           noPadding
@@ -176,11 +203,11 @@
 <Divider noMargin />
 <div class="panel config" use:resizable>
   <div class="content" bind:this={configPanel}>
-    {#if loopBlock}
+    {#if loopBlock || $memoBlock?.stepId === AutomationActionStepId.LOOP_V2}
       <div class="loop">
         <DetailSummary name="Loop details" padded={false} initiallyShow>
           <BlockProperties
-            block={loopBlock}
+            block={loopBlock || loopV2Block || $memoBlock}
             context={$memoContext}
             automation={$memoAutomation}
           />
@@ -193,11 +220,13 @@
       </PropField>
     {/if}
     <span class="props">
-      <BlockProperties
-        block={$memoBlock}
-        context={$memoContext}
-        automation={$memoAutomation}
-      />
+      {#if $memoBlock?.stepId !== AutomationActionStepId.LOOP_V2}
+        <BlockProperties
+          block={$memoBlock}
+          context={$memoContext}
+          automation={$memoAutomation}
+        />
+      {/if}
     </span>
 
     {#if block?.stepId === AutomationTriggerStepId.WEBHOOK}

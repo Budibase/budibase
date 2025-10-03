@@ -1,10 +1,11 @@
 <script lang="ts">
   // Invisible anchor node used as a target for edges that only need an action label
   import type { LayoutDirection } from "@budibase/types"
+  import type { AnchorNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
 
-  export let data: { direction?: LayoutDirection } | undefined
-  $: direction = (data?.direction || "TB") as LayoutDirection
+  export let data: AnchorNodeData
+  $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
 </script>
 
