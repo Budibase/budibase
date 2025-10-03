@@ -8,7 +8,12 @@ import type {
   AutomationBlock,
 } from "@/types/automations"
 import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
-import type { Branch, BranchStep, LayoutDirection } from "@budibase/types"
+import type {
+  BlockPath,
+  Branch,
+  BranchStep,
+  LayoutDirection,
+} from "@budibase/types"
 
 export const stepNode = (
   id: string,
@@ -18,7 +23,7 @@ export const stepNode = (
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
   const data: StepNodeData = { block, direction }
-  const node: any = {
+  const node: FlowNode = {
     id,
     type: "step-node",
     data,
@@ -42,7 +47,7 @@ export const branchNode = (
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
   const data = { block: step, branch, branchIdx, direction }
-  const node: any = {
+  const node: FlowNode = {
     id,
     type: "branch-node",
     data,
@@ -63,7 +68,7 @@ export const anchorNode = (
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
   const data: AnchorNodeData = { direction }
-  const node: any = { id, type: "anchor-node", data, position }
+  const node: FlowNode = { id, type: "anchor-node", data, position }
   if (parentId) {
     node.parentId = parentId
     node.extent = "parent"
@@ -74,7 +79,11 @@ export const anchorNode = (
 export const edgeAddItem = (
   source: string,
   target: string,
-  ctx: { block: FlowBlockContext; direction?: LayoutDirection; pathTo?: any }
+  ctx: {
+    block: FlowBlockContext
+    direction?: LayoutDirection
+    pathTo?: BlockPath[]
+  }
 ): FlowEdge => {
   const data: BaseEdgeData = {
     block: ctx.block,
@@ -100,7 +109,7 @@ export const edgeBranchAddItem = (
     branchIdx: number
     branchesCount: number
     isPrimaryEdge: boolean
-    pathTo?: any
+    pathTo?: BlockPath[]
   }
 ): FlowEdge => {
   const data: BranchEdgeData = {
@@ -130,7 +139,7 @@ export const edgeLoopAddItem = (
     direction?: LayoutDirection
     loopStepId: string
     loopChildInsertIndex: number
-    pathTo?: any
+    pathTo?: BlockPath[]
   }
 ): FlowEdge => {
   const data: LoopEdgeData = {

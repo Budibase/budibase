@@ -6,8 +6,10 @@ import {
   type Branch,
   type LayoutDirection,
   type LoopV2Step,
+  BlockRef,
+  BlockPath,
 } from "@budibase/types"
-import type { AutomationBlock } from "@/types/automations"
+import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
 import type {
   BranchFlowContext,
   FlowBlockContext,
@@ -26,7 +28,7 @@ import {
 export interface GraphBuildDeps {
   xSpacing: number
   ySpacing: number
-  blockRefs: Record<string, any>
+  blockRefs: Record<string, BlockRef>
   newNodes: FlowNode[]
   newEdges: FlowEdge[]
   direction?: LayoutDirection
@@ -75,7 +77,7 @@ const pushAnchor = (
 
 interface PlaceBranchClusterArgs {
   step: BranchStep
-  source: { id: string; block: FlowBlockContext; pathTo?: FlowBlockPath }
+  source: { id: string; block: FlowBlockContext; pathTo?: BlockPath[] }
   coords: { y: number }
   deps: GraphBuildDeps
   mode: BranchMode
@@ -281,9 +283,9 @@ export const renderChain = (
       return { lastNodeId, lastNodeBlock, bottomY: bottom, branched: true }
     }
 
-    if (isLoopV2) {
+    if (isLoopV2 && "schema" in step) {
       const pos = { x: baseX, y: currentY }
-      renderLoopV2Container(step as LoopV2Step, pos.x, pos.y, deps)
+      renderLoopV2Container(step, pos.x, pos.y, deps)
       deps.newEdges.push(
         edgeAddItem(lastNodeId, step.id, {
           block: lastNodeBlock,
@@ -388,7 +390,7 @@ export const renderLoopV2Container = (
   containerWidth = Math.max(containerWidth, maxFanoutWidth + 80)
   const containerHeight = Math.max(dynamicHeight, 260)
 
-  const loopNodeData: any = {
+  const loopNodeData: LoopV2NodeData = {
     block: loopStep,
     direction: deps.direction,
     containerHeight,

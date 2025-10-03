@@ -44,8 +44,8 @@ export const applyLoopClearance = (
     const nexts = outgoing[loopNode.id] || []
     if (rankdir === "LR") {
       const visualWidth =
-        typeof (loopNode as any)?.data?.containerWidth === "number"
-          ? (loopNode as any).data.containerWidth
+        typeof loopNode?.data?.containerWidth === "number"
+          ? loopNode.data.containerWidth
           : STEP.width
       const right = loopNode.position.x + visualWidth + LOOP.clearance
       for (const targetId of nexts) {

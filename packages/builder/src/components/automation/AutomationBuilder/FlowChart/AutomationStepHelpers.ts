@@ -96,9 +96,8 @@ const getBranchChildStepIds = (steps: AutomationLogStep[]) => {
       logStep.stepId === AutomationActionStepId.BRANCH &&
       logStep.outputs?.branchId
     ) {
-      const executedBranchId = (logStep as any).outputs.branchId
-      const branchChildren =
-        (logStep as any)?.inputs?.children?.[executedBranchId] || []
+      const executedBranchId = logStep.outputs.branchId
+      const branchChildren = logStep.inputs?.children?.[executedBranchId] || []
       branchChildren.forEach((child: BranchChild) => {
         branchChildStepIds.add(child.id)
       })
@@ -130,7 +129,7 @@ export const enrichLog = (
     ...log,
     steps: [...log.steps],
   } as AutomationLog
-  for (let step of enrichedLog.steps as any[]) {
+  for (let step of enrichedLog.steps) {
     const trigger =
       definitions.TRIGGER?.[step.stepId as AutomationTriggerStepId]
     const action = definitions.ACTION[step.stepId as AutomationActionStepId]
@@ -212,15 +211,15 @@ export const buildTopLevelGraph = (
   blocks: AutomationBlock[],
   deps: GraphBuildDeps
 ) => {
-  blocks.forEach((block: any, idx: number) => {
+  blocks.forEach((block: AutomationBlock, idx: number) => {
     const isTrigger = idx === 0
     const isBranchStep = block.stepId === "BRANCH"
     const isLoopV2 = block.stepId === "LOOP_V2"
     const baseId = block.id
 
     if (!isBranchStep) {
-      if (isLoopV2) {
-        renderLoopV2Container(block as any, 0, idx * deps.ySpacing, deps)
+      if (isLoopV2 && "schema" in block) {
+        renderLoopV2Container(block, 0, idx * deps.ySpacing, deps)
       } else {
         deps.newNodes.push(
           stepNode(baseId, block, deps.direction, undefined, {
@@ -235,7 +234,7 @@ export const buildTopLevelGraph = (
       const prevId = blocks[idx - 1].id
       deps.newEdges.push(
         edgeAddItem(prevId, baseId, {
-          block: blocks[idx - 1] as any as FlowBlockContext,
+          block: blocks[idx - 1],
           direction: deps.direction,
         })
       )
@@ -251,7 +250,7 @@ export const buildTopLevelGraph = (
       )
       deps.newEdges.push(
         edgeAddItem(baseId, terminalId, {
-          block: block as any as FlowBlockContext,
+          block,
           direction: deps.direction,
         })
       )
@@ -259,9 +258,9 @@ export const buildTopLevelGraph = (
 
     if (isBranchStep) {
       const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-      const sourceBlock = (!isTrigger ? blocks[idx - 1] : block) as any
+      const sourceBlock = !isTrigger ? blocks[idx - 1] : block
       renderBranches(
-        block as any,
+        block,
         sourceForBranches,
         sourceBlock,
         0,
@@ -296,7 +295,7 @@ export const dagreLayoutAutomation = (
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({ rankdir, ranksep, nodesep })
 
-  const nodeById: Record<string, any> = {}
+  const nodeById: Record<string, FlowNode> = {}
   graph.nodes.forEach(n => (nodeById[n.id] = n))
 
   graph.nodes
