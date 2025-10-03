@@ -1,14 +1,13 @@
 <script>
   import {
-    ModalContent,
-    Modal,
-    Icon,
     ActionButton,
-    Input,
     Button,
+    Icon,
+    Input,
+    Modal,
+    ModalContent,
     StatusLight,
   } from "@budibase/bbui"
-  import { loadQRCode } from "../../../utils/dependencies"
   import { createEventDispatcher } from "svelte"
 
   export let value
@@ -55,7 +54,7 @@
       html5QrCode.stop()
     }
 
-    const Html5Qrcode = await loadQRCode()
+    const { Html5Qrcode } = await import("html5-qrcode")
     html5QrCode = new Html5Qrcode("reader")
 
     return new Promise(resolve => {
@@ -80,7 +79,7 @@
   }
 
   const checkCamera = async () => {
-    const Html5Qrcode = await loadQRCode()
+    const { Html5Qrcode } = await import("html5-qrcode")
 
     return new Promise(resolve => {
       Html5Qrcode.getCameras()

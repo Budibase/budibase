@@ -14,6 +14,8 @@ const ignoredWarnings = [
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
+  const bundleVersion = process.env.BUNDLE_VERSION || "new"
+  const isModuleBuild = bundleVersion === "new"
 
   return {
     server: {
@@ -22,13 +24,36 @@ export default defineConfig(({ mode }) => {
     build: {
       lib: {
         entry: "src/index.ts",
-        formats: ["iife"],
+        formats: isModuleBuild ? ["es"] : ["iife"],
         outDir: "dist",
-        name: "budibase_client",
-        fileName: () => "budibase-client.js",
+        ...(isModuleBuild ? {} : { name: "budibase_client" }),
+        fileName: () =>
+          isModuleBuild ? "budibase-client.new.js" : "budibase-client.js",
       },
       emptyOutDir: false,
       minify: isProduction,
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: !isModuleBuild,
+          entryFileNames: chunkInfo => {
+            if (isModuleBuild) {
+              return chunkInfo.isEntry
+                ? "budibase-client.new.js"
+                : "chunks/[name]-[hash].js"
+            }
+            return "budibase-client.js"
+          },
+          chunkFileNames: isModuleBuild ? "chunks/[name]-[hash].js" : undefined,
+          assetFileNames: isModuleBuild
+            ? assetInfo => {
+                if (assetInfo.name && assetInfo.name.endsWith(".css")) {
+                  return "chunks/[name]-[hash][extname]"
+                }
+                return "assets/[name]-[hash][extname]"
+              }
+            : undefined,
+        },
+      },
     },
     plugins: [
       svelte({
