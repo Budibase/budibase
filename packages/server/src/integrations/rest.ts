@@ -27,6 +27,8 @@ import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
 import { fetch, Response, RequestInit, Agent } from "undici"
+import nodeFetch from "node-fetch"
+import type { Response as NodeFetchResponse } from "node-fetch"
 
 const coreFields = {
   path: {
@@ -146,7 +148,7 @@ export class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(
-    response: Response,
+    response: Response | NodeFetchResponse,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
     let data: any[] | string | undefined,
@@ -513,7 +515,12 @@ export class RestIntegration implements IntegrationBase {
 
     let response: Response
     try {
-      response = (await fetch(url, input)) as Response
+      // Use node-fetch in test environment for nock compatibility
+      if (process.env.NODE_ENV === "jest") {
+        response = (await nodeFetch(url, input as any)) as any
+      } else {
+        response = (await fetch(url, input)) as Response
+      }
     } catch (err: any) {
       console.log("[rest integration] Fetch error details", {
         url,
