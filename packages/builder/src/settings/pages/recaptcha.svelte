@@ -15,7 +15,7 @@
   import { API } from "@/api"
   import { writable, get } from "svelte/store"
   import { onMount } from "svelte"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { routeActions } from "."
 
   let loading = false

@@ -19,7 +19,7 @@
   import { sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
   import { routeActions } from "@/settings/pages"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
 
   const DefaultGroup = {
     name: "",
