@@ -25,7 +25,6 @@ import {
   ViewMode,
   type AutomationBlock,
   type AutomationLogStep,
-  type FlowBlockContext,
 } from "@/types/automations"
 
 import { stepNode, anchorNode, edgeAddItem } from "./FlowCanvas/FlowFactories"
