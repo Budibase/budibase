@@ -17,7 +17,6 @@
     Select,
     Table,
   } from "@budibase/bbui"
-  import { sdk } from "@budibase/shared-core"
   import type { AnyDocument, UsedResource } from "@budibase/types"
   import { ResourceType } from "@budibase/types"
 
@@ -59,7 +58,7 @@
   }
 
   $: workspaces = $appsStore.apps
-    .filter(a => a.devId !== sdk.applications.getDevAppID($appStore.appId))
+    .filter(a => a.devId !== $appStore.appId)
     .sort((a, b) => a.name.localeCompare(b.name))
 
   function onShow() {}
