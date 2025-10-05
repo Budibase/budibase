@@ -1015,27 +1015,50 @@ describe("/api/global/users", () => {
       expect(updatedUser.builder?.creator).toBe(true)
       expect(updatedUser.builder?.apps).toEqual([workspaceId])
     })
+    it("should keep builder creator flag when assigning non-CREATOR roles", async () => {
+      const builderUser = await config.createUser({
+        builder: {
+          creator: true,
+        },
+      })
+      const workspaceId = "app_creator_preserve"
 
-    it("should remove CREATOR role and clean up builder properties when no creator apps remain", async () => {
-      mocks.licenses.useAppBuilders()
-      const user = await config.createUser()
-      const workspaceId = "app_123456789"
-
-      // First assign CREATOR role
       const res = await config.withApp(workspaceId, () =>
-        config.api.users.addUserToWorkspace(user._id!, user._rev!, "CREATOR")
+        config.api.users.addUserToWorkspace(
+          builderUser._id!,
+          builderUser._rev!,
+          "BASIC"
+        )
       )
-      user._rev = res.body._rev
+      builderUser._rev = res.body._rev
 
-      // Then remove the user from workspace
-      await config.withApp(workspaceId, () =>
-        config.api.users.removeUserFromWorkspace(user._id!, user._rev!)
+      const updatedUser = await config.getUser(builderUser.email)
+      expect(updatedUser.roles[workspaceId]).toBe("BASIC")
+      expect(updatedUser.builder?.creator).toBe(true)
+    })
+
+    it("should keep builder creator flag when assigning CREATOR roles", async () => {
+      featureMocks.licenses.useAppBuilders()
+
+      const builderUser = await config.createUser({
+        builder: {
+          creator: true,
+        },
+      })
+      const workspaceId = "app_creator_preserve"
+
+      const res = await config.withApp(workspaceId, () =>
+        config.api.users.addUserToWorkspace(
+          builderUser._id!,
+          builderUser._rev!,
+          "CREATOR"
+        )
       )
+      builderUser._rev = res.body._rev
 
-      const updatedUser = await config.getUser(user.email)
-      expect(updatedUser.roles[workspaceId]).toBeUndefined()
-      expect(updatedUser.builder?.creator).toBeUndefined()
-      expect(updatedUser.builder?.apps).toBeUndefined()
+      const updatedUser = await config.getUser(builderUser.email)
+      expect(updatedUser.roles[workspaceId]).toBe("CREATOR")
+      expect(updatedUser.builder?.creator).toBe(true)
     })
 
     it("should maintain builder properties when user has multiple CREATOR roles", async () => {
