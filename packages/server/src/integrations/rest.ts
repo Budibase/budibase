@@ -28,7 +28,10 @@ import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
 import { fetch, Response, RequestInit, Agent } from "undici"
 import nodeFetch from "node-fetch"
-import type { Response as NodeFetchResponse } from "node-fetch"
+import type {
+  Response as NodeFetchResponse,
+  RequestInit as NodeFetchRequestInit,
+} from "node-fetch"
 
 const coreFields = {
   path: {
@@ -513,13 +516,14 @@ export class RestIntegration implements IntegrationBase {
       input.dispatcher = agent
     }
 
-    let response: Response
+    let response: Response | NodeFetchResponse
     try {
       // Use node-fetch in test environment for nock compatibility
       if (process.env.NODE_ENV === "jest") {
-        response = (await nodeFetch(url, input as any)) as any
+        const { dispatcher, ...nodeFetchInput } = input
+        response = await nodeFetch(url, nodeFetchInput as NodeFetchRequestInit)
       } else {
-        response = (await fetch(url, input)) as Response
+        response = await fetch(url, input)
       }
     } catch (err: any) {
       console.log("[rest integration] Fetch error details", {
