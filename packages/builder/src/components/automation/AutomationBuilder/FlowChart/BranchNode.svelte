@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import {
     Drawer,
@@ -12,7 +12,6 @@
   } from "@budibase/bbui"
   import PropField from "@/components/automation/SetupPanel/PropField.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
-  import FlowItemActions from "./FlowItemActions.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import {
     automationStore,
@@ -20,50 +19,111 @@
     evaluationContext,
     contextMenuStore,
   } from "@/stores/builder"
-  import { ViewMode } from "@/types"
+  import { ViewMode } from "@/types/automations"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
+  import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher, getContext } from "svelte"
-  import DragZone from "./DragZone.svelte"
+  import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
+  import type {
+    Automation,
+    AutomationLog,
+    AutomationStep,
+    AutomationStepResult,
+    AutomationTriggerResult,
+    Branch,
+    EnrichedBinding,
+  } from "@budibase/types"
+  import { type DragView } from "./FlowChartDnD"
 
-  const dispatch = createEventDispatcher()
-
-  export let pathTo
   export let branchIdx
   export let step
-  export let isLast
-  export let bindings = []
-  export let automation
-  export let executed = false
-  export let unexecuted = false
-  export let viewMode = null
-  export let logStepData = null
-  export let onStepSelect = () => {}
+  export let automation: Automation | undefined
+  export let viewMode: ViewMode = ViewMode.EDITOR
+  export let onStepSelect: (
+    _data: AutomationStepResult | AutomationTriggerResult
+  ) => void = () => {}
 
-  const view = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
   const memoContext = memo({})
+  const memoEnvVariables = memo($environment.variables)
 
-  let drawer
-  let confirmDeleteModal
+  let drawer: Drawer | undefined
+  let confirmDeleteModal: Modal | undefined
 
   $: memoContext.set($evaluationContext)
+  $: memoEnvVariables.set($environment.variables)
 
   $: branch = step.inputs?.branches?.[branchIdx]
   $: editableConditionUI = branch.conditionUI || {}
+  $: isLast = (step?.inputs?.branches?.length || 0) - 1 === branchIdx
+  $: blockRef = $selectedAutomation?.blockRefs?.[step?.id]
+
+  // Build bindings for the condition builder
+  $: availableBindings = automationStore.actions.getPathBindings(
+    step.id,
+    automation
+  )
+  $: environmentBindings =
+    $memoEnvVariables && automationStore.actions.buildEnvironmentBindings()
+  $: userBindings = automationStore.actions.buildUserBindings()
+  $: settingBindings = automationStore.actions.buildSettingBindings()
+  $: stateBindings =
+    ($automationStore.selectedNodeId,
+    automationStore.actions.buildStateBindings())
+  $: bindings = [
+    ...availableBindings,
+    ...environmentBindings,
+    ...userBindings,
+    ...settingBindings,
+    ...stateBindings,
+  ] as EnrichedBinding[]
 
   // Parse all the bindings into fields for the condition builder
   $: schemaFields = bindings?.map(binding => {
     return {
       name: `{{${binding.runtimeBinding}}}`,
-      displayName: `${binding.category} - ${binding.display.name}`,
+      displayName: `${binding.category} - ${binding.display?.name}`,
       type: "string",
     }
   })
   $: branchBlockRef = {
     branchNode: true,
-    pathTo: (pathTo || []).concat({ branchIdx, branchStepId: step.id }),
+    pathTo: (blockRef?.pathTo || []).concat({
+      stepIdx: 0,
+      branchIdx,
+      branchStepId: step.id,
+      id: step.id,
+    }),
   }
+
+  // Logs: compute step data and execution state
+  function getLogStepData(
+    currentStep: AutomationStep,
+    logData?: AutomationLog
+  ) {
+    if (!logData || viewMode !== ViewMode.LOGS) return null
+    if (currentStep.type === "TRIGGER") {
+      return logData.trigger
+    }
+    const logSteps = logData.steps || []
+    return logSteps.find(
+      (logStep: AutomationStepResult | AutomationTriggerResult) =>
+        logStep.id === currentStep.id
+    )
+  }
+  $: logData = $automationStore.selectedLog
+  $: viewMode = $automationStore.viewMode
+  $: logStepData = getLogStepData(step, logData)
+
+  $: executedBranchId =
+    viewMode === ViewMode.LOGS && logStepData?.outputs?.branchId
+      ? logStepData.outputs.branchId
+      : null
+  $: executed = executedBranchId === branch?.id
+  $: unexecuted =
+    viewMode === ViewMode.LOGS && Boolean(executedBranchId) && !executed
 
   const getContextMenuItems = () => {
     return [
@@ -76,8 +136,8 @@
         callback: async () => {
           const branchSteps = step.inputs?.children[branch.id]
           if (branchSteps.length) {
-            confirmDeleteModal.show()
-          } else {
+            confirmDeleteModal?.show()
+          } else if ($selectedAutomation.data) {
             await automationStore.actions.deleteBranch(
               branchBlockRef.pathTo,
               $selectedAutomation.data
@@ -92,11 +152,13 @@
         visible: true,
         disabled: branchIdx == 0,
         callback: async () => {
-          automationStore.actions.branchLeft(
-            branchBlockRef.pathTo,
-            $selectedAutomation.data,
-            step
-          )
+          if ($selectedAutomation.data) {
+            automationStore.actions.branchLeft(
+              branchBlockRef.pathTo,
+              $selectedAutomation.data,
+              step
+            )
+          }
         },
       },
       {
@@ -106,17 +168,38 @@
         visible: true,
         disabled: isLast,
         callback: async () => {
-          automationStore.actions.branchRight(
-            branchBlockRef.pathTo,
-            $selectedAutomation.data,
-            step
-          )
+          if ($selectedAutomation.data) {
+            automationStore.actions.branchRight(
+              branchBlockRef.pathTo,
+              $selectedAutomation.data,
+              step
+            )
+          }
         },
       },
     ]
   }
 
-  const openContextMenu = e => {
+  const branchUpdate = async (e: CustomEvent<string>) => {
+    let stepUpdate = cloneDeep(step)
+    let branchUpdate = stepUpdate.inputs?.branches.find(
+      (stepBranch: Branch) => stepBranch.id == branch.id
+    )
+    branchUpdate.name = e.detail
+
+    if ($selectedAutomation.data) {
+      const updatedAuto = automationStore.actions.updateStep(
+        blockRef?.pathTo,
+        $selectedAutomation.data,
+        stepUpdate
+      )
+      if (updatedAuto) {
+        await automationStore.actions.save(updatedAuto)
+      }
+    }
+  }
+
+  const openContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -131,10 +214,12 @@
     title={"Are you sure you want to delete?"}
     confirmText="Delete"
     onConfirm={async () => {
-      await automationStore.actions.deleteBranch(
-        branchBlockRef.pathTo,
-        $selectedAutomation.data
-      )
+      if ($selectedAutomation.data) {
+        await automationStore.actions.deleteBranch(
+          branchBlockRef.pathTo,
+          $selectedAutomation.data
+        )
+      }
     }}
   >
     <Body>By deleting this branch, you will delete all of its contents.</Body>
@@ -145,13 +230,47 @@
   <Button
     cta
     slot="buttons"
-    on:click={() => {
-      drawer.hide()
+    on:click={async () => {
+      drawer?.hide()
       const updatedConditionsUI = Utils.parseFilter(editableConditionUI)
-      dispatch("change", {
+      const updatedBranch = {
+        ...branch,
         conditionUI: updatedConditionsUI,
         condition: QueryUtils.buildQuery(updatedConditionsUI),
-      })
+      }
+
+      // Update step with modified branch
+      let branchStepUpdate = cloneDeep(step)
+      branchStepUpdate.inputs.branches[branchIdx] = updatedBranch
+
+      // Ensure valid base configuration for all branches
+      const branchesArray = branchStepUpdate.inputs.branches || []
+      for (let i = 0; i < branchesArray.length; i++) {
+        const br = branchesArray[i]
+        if (!Object.keys(br.condition).length) {
+          branchesArray[i] = {
+            ...br,
+            ...automationStore.actions.generateDefaultConditions(),
+          }
+        }
+      }
+      branchStepUpdate.inputs.branches = branchesArray
+
+      const updated = automation
+        ? automationStore.actions.updateStep(
+            blockRef?.pathTo,
+            automation,
+            branchStepUpdate
+          )
+        : null
+
+      if (updated) {
+        try {
+          await automationStore.actions.save(updated)
+        } catch (e) {
+          console.error("Error saving branch update", e)
+        }
+      }
     }}
   >
     Save
@@ -190,12 +309,7 @@
     }}
   >
     <div class="block-float">
-      <FlowItemStatus
-        block={step}
-        {automation}
-        {branch}
-        hideStatus={$view?.dragging}
-      />
+      <FlowItemStatus block={step} {branch} hideStatus={$view?.dragging} />
     </div>
     <div class="blockSection">
       <div class="heading">
@@ -203,20 +317,7 @@
           {automation}
           block={step}
           itemName={branch.name}
-          on:update={async e => {
-            let stepUpdate = cloneDeep(step)
-            let branchUpdate = stepUpdate.inputs?.branches.find(
-              stepBranch => stepBranch.id == branch.id
-            )
-            branchUpdate.name = e.detail
-
-            const updatedAuto = automationStore.actions.updateStep(
-              pathTo,
-              $selectedAutomation.data,
-              stepUpdate
-            )
-            await automationStore.actions.save(updatedAuto)
-          }}
+          on:update={branchUpdate}
         />
         <div class="actions">
           <Icon
@@ -254,18 +355,6 @@
       </PropField>
     </div>
   </div>
-
-  <div class="separator" />
-
-  {#if $view.dragging}
-    <DragZone path={branchBlockRef.pathTo} />
-  {:else if viewMode === ViewMode.EDITOR}
-    <FlowItemActions block={branchBlockRef} />
-  {/if}
-
-  {#if step.inputs.children[branch.id]?.length}
-    <div class="separator" />
-  {/if}
 </div>
 
 <style>

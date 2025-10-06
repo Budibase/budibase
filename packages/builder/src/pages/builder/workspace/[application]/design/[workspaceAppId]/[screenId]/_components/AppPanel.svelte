@@ -10,7 +10,7 @@
   } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Toggle, AbsTooltip } from "@budibase/bbui"
+  import { ActionButton, Divider, Icon, Toggle } from "@budibase/bbui"
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -60,15 +60,17 @@
         <div class="workspace-info">
           {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
             <div class="workspace-url">
-              <AbsTooltip text="Open live app">
-                <ActionButton
-                  icon="globe-simple"
-                  quiet
-                  on:click={() => {
-                    window.open(liveUrl, "_blank")
-                  }}
-                />
-              </AbsTooltip>
+              <button
+                class="live-app-btn"
+                type="button"
+                aria-label="View live app"
+                on:click={() => {
+                  window.open(liveUrl, "_blank")
+                }}
+              >
+                <Icon name="globe-simple" size="S" />
+                <span class="live-app-btn__label">View live app</span>
+              </button>
             </div>
           {/if}
         </div>
@@ -134,6 +136,7 @@
     padding: 9px 10px 12px 10px;
     position: relative;
     transition: width 360ms ease-out;
+    background: var(--background);
   }
   .drawer-container {
     position: absolute;
@@ -175,6 +178,41 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  .live-app-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-s);
+    height: 28px;
+    padding: 0 var(--spacing-m);
+    color: var(--spectrum-global-color-gray-900);
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 500;
+    margin-right: var(--spacing-s);
+    transition:
+      background 130ms ease-out,
+      border 130ms ease-out,
+      color 130ms ease-out;
+  }
+
+  .live-app-btn__label {
+    white-space: nowrap;
+  }
+
+  .live-app-btn:hover,
+  .live-app-btn:focus {
+    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  .live-app-btn:active {
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .header-right {

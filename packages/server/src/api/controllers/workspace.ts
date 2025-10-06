@@ -50,7 +50,7 @@ import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { createSampleDataTableScreen } from "../../constants/screens"
+import { createOnboardingWelcomeScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
@@ -185,7 +185,9 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createDefaultWorkspaceApp(name: string): Promise<string> {
+async function createOnboardingDefaultWorkspaceApp(
+  name: string
+): Promise<string> {
   const workspaceApp = await sdk.workspaceApps.create({
     name: name,
     url: "/",
@@ -193,14 +195,14 @@ async function createDefaultWorkspaceApp(name: string): Promise<string> {
       ...defaultAppNavigator(name),
       links: [],
     },
-    disabled: true,
+    disabled: false,
     isDefault: true,
   })
 
   return workspaceApp._id!
 }
 
-async function addSampleDataScreen() {
+async function addOnboardingWelcomeScreen() {
   const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
   const workspaceApp = workspaceApps.find(wa => wa.isDefault)
 
@@ -208,17 +210,7 @@ async function addSampleDataScreen() {
     throw new Error("Default workspace app not found")
   }
 
-  workspaceApp.navigation.links = workspaceApp.navigation.links || []
-  workspaceApp.navigation.links.push({
-    text: "Inventory",
-    url: "/inventory",
-    type: "link",
-    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-  })
-
-  await sdk.workspaceApps.update(workspaceApp)
-
-  const screen = createSampleDataTableScreen(workspaceApp._id!)
+  const screen = createOnboardingWelcomeScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
 }
 
@@ -413,7 +405,6 @@ async function performWorkspaceCreate(
     const instance = await createInstance(workspaceId, instanceConfig)
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
-    const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(workspaceId, db, ctx.user._id!)
@@ -495,17 +486,17 @@ async function performWorkspaceCreate(
       await uploadAppFiles(workspaceId)
     }
 
-    // Add sample datasource and example screen for non-templates/non-imports
-    if (addSampleData) {
+    // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
+    if (isOnboarding) {
       try {
-        await createDefaultWorkspaceApp(name)
         await addSampleDataDocs()
-        await addSampleDataScreen()
+        await createOnboardingDefaultWorkspaceApp(name)
+        await addOnboardingWelcomeScreen()
 
         // Fetch the latest version of the workspace after these changes
         newWorkspace = await sdk.workspaces.metadata.get()
       } catch (err) {
-        ctx.throw(400, "App created, but failed to add sample data")
+        ctx.throw(400, "App created, but failed to add onboarding screens")
       }
     }
 
@@ -604,9 +595,9 @@ async function updateUserColumns(
 
 async function creationEvents(
   request: BBRequest<CreateWorkspaceRequest>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  let creationFns: ((app: Workspace) => Promise<void>)[] = []
+  let creationFns: ((workspace: Workspace) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
   if (useTemplate === "true") {
@@ -621,7 +612,7 @@ async function creationEvents(
     // from server file path
     else if (file) {
       // explicitly pass in the newly created workspace id
-      creationFns.push(a => events.app.duplicated(a, app.appId))
+      creationFns.push(a => events.app.duplicated(a, workspace.appId))
     }
     // unknown
     else {
@@ -634,23 +625,23 @@ async function creationEvents(
   creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
-    await fn(app)
+    await fn(workspace)
   }
 }
 
 async function workspacePostCreate(
   ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  await creationEvents(ctx.request, app)
+  await creationEvents(ctx.request, workspace)
 
   // app import, template creation and duplication
   if (ctx.request.body.useTemplate) {
-    const { rows } = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([workspace.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
-        await context.doInWorkspaceContext(app.appId, () => {
+        await context.doInWorkspaceContext(workspace.appId, () => {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
@@ -658,7 +649,7 @@ async function workspacePostCreate(
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
-          ctx.params.appId = app.appId
+          ctx.params.appId = workspace.appId
           await destroyWorkspace(ctx)
         }
         throw err
@@ -669,7 +660,7 @@ async function workspacePostCreate(
   // If the user is a creator, we need to give them access to the new app
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
     const user = await users.UserDB.getUser(ctx.user._id!)
-    await users.addAppBuilder(user, app.appId)
+    await users.addAppBuilder(user, workspace.appId)
   }
 }
 

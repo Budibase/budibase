@@ -14,7 +14,9 @@
 
   $: {
     const { provider, defaultModel, name, apiKey } = config
-    complete = Boolean(provider && name && defaultModel && apiKey)
+    complete = Boolean(
+      provider && name && apiKey && (provider === "AzureOpenAI" || defaultModel)
+    )
   }
   $: canEditBaseUrl =
     config.provider &&
