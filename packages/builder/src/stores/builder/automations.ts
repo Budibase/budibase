@@ -418,20 +418,7 @@ const automationActions = (store: AutomationStore) => ({
         const currentBlock = children[stepIdx]
 
         if (final) {
-          // Special case: Loop V2 subflow cascade
-          // If deleting the first child and the next sibling is a Branch,
-          // also delete that Branch so we don't orphan it at the top of the subflow.
-          let extraIds: string[] | undefined
-          const isFirstChild = stepIdx === 0
-          const nextSibling = children?.[1]
-          if (
-            isFirstChild &&
-            nextSibling &&
-            nextSibling.stepId === AutomationActionStepId.BRANCH
-          ) {
-            extraIds = [nextSibling.id]
-          }
-          cache = deleteCore(children, stepIdx, extraIds)
+          cache = deleteCore(children, stepIdx)
         } else {
           cache = currentBlock
         }
@@ -1819,13 +1806,10 @@ const automationActions = (store: AutomationStore) => ({
       return
     }
 
-    // Special handling for Loop V2 subflow children so we can
-    // atomically remove an orphanable Branch when deleting the
-    // first child inside the subflow.
     const lastHop: BlockPath | undefined = pathTo?.at(-1)
     const loopId: string | undefined = lastHop?.loopStepId
 
-    if (loopId != null && lastHop?.stepIdx) {
+    if (loopId != null && typeof lastHop?.stepIdx === "number") {
       let newAutomation = cloneDeep(automation)
       try {
         const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
@@ -1836,13 +1820,11 @@ const automationActions = (store: AutomationStore) => ({
             loopNode.inputs?.children || []
           ).slice()
 
+          children.splice(lastHop.stepIdx, 1)
           if (
-            lastHop?.stepIdx === 0 &&
-            children[1]?.stepId === AutomationActionStepId.BRANCH
+            children[lastHop.stepIdx]?.stepId === AutomationActionStepId.BRANCH
           ) {
-            children.splice(0, 2)
-          } else {
-            children.splice(lastHop?.stepIdx, 1)
+            children.splice(lastHop.stepIdx, 1)
           }
 
           loopNode.inputs = { ...(loopNode.inputs || {}), children }
