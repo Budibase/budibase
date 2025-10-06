@@ -283,7 +283,7 @@ export const renderChain = (
 
     if (isLoopV2 && "schema" in step) {
       const pos = { x: baseX, y: currentY }
-      renderLoopV2Container(step, pos.x, pos.y, deps)
+      const loopResult = renderLoopV2Container(step, pos.x, pos.y, deps)
       deps.newEdges.push(
         edgeAddItem(lastNodeId, step.id, {
           block: lastNodeBlock,
@@ -292,7 +292,7 @@ export const renderChain = (
       )
       lastNodeId = step.id
       lastNodeBlock = step
-      currentY += deps.ySpacing
+      currentY += loopResult.containerHeight + deps.ySpacing
       continue
     }
 

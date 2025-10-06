@@ -219,20 +219,24 @@ export const buildTopLevelGraph = (
   blocks: AutomationBlock[],
   deps: GraphBuildDeps
 ) => {
+  let currentY = 0
+
   blocks.forEach((block: AutomationBlock, idx: number) => {
     const isTrigger = idx === 0
     const isBranchStep = block.stepId === "BRANCH"
     const isLoopV2 = block.stepId === "LOOP_V2"
     const baseId = block.id
+    let blockHeight = deps.ySpacing
 
     if (!isBranchStep) {
       if (isLoopV2 && "schema" in block) {
-        renderLoopV2Container(block, 0, idx * deps.ySpacing, deps)
+        const loopResult = renderLoopV2Container(block, 0, currentY, deps)
+        blockHeight = loopResult.containerHeight
       } else {
         deps.newNodes.push(
           stepNode(baseId, block, deps.direction, undefined, {
             x: 0,
-            y: idx * deps.ySpacing,
+            y: currentY,
           })
         )
       }
@@ -249,11 +253,12 @@ export const buildTopLevelGraph = (
     }
 
     if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
+      const terminalY = currentY + blockHeight
       const terminalId = `anchor-${baseId}`
       deps.newNodes.push(
         anchorNode(terminalId, deps.direction, undefined, {
           x: 0,
-          y: idx * deps.ySpacing + deps.ySpacing,
+          y: terminalY,
         })
       )
       deps.newEdges.push(
@@ -267,15 +272,18 @@ export const buildTopLevelGraph = (
     if (isBranchStep) {
       const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
       const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-      renderBranches(
+      const branchBottomY = renderBranches(
         block,
         sourceForBranches,
         sourceBlock,
         0,
-        idx * deps.ySpacing + deps.ySpacing,
+        currentY + deps.ySpacing,
         deps
       )
+      blockHeight = branchBottomY - currentY
     }
+
+    currentY += blockHeight
   })
 }
 
