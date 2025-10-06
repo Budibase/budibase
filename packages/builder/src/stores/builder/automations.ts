@@ -355,10 +355,18 @@ const automationActions = (store: AutomationStore) => ({
       const final = pathIdx === array.length - 1
       const { stepIdx, branchIdx, loopStepId } = path
 
-      const deleteCore = (steps: AutomationStep[], idx: number) => {
+      const deleteCore = (
+        steps: AutomationStep[],
+        idx: number,
+        extraIds?: string[]
+      ) => {
         const targetBlock = steps[idx]
         // By default, include the id of the target block
         const idsToDelete = [targetBlock.id]
+        // Include any caller-specified extra ids to delete atomically
+        if (Array.isArray(extraIds) && extraIds.length) {
+          idsToDelete.push(...extraIds)
+        }
         const blocksDeleted: AutomationStep[] = []
 
         // If deleting a looped block, ensure all related block references are
@@ -410,7 +418,20 @@ const automationActions = (store: AutomationStore) => ({
         const currentBlock = children[stepIdx]
 
         if (final) {
-          cache = deleteCore(children, stepIdx)
+          // Special case: Loop V2 subflow cascade
+          // If deleting the first child and the next sibling is a Branch,
+          // also delete that Branch so we don't orphan it at the top of the subflow.
+          let extraIds: string[] | undefined
+          const isFirstChild = stepIdx === 0
+          const nextSibling = children?.[1]
+          if (
+            isFirstChild &&
+            nextSibling &&
+            nextSibling.stepId === AutomationActionStepId.BRANCH
+          ) {
+            extraIds = [nextSibling.id]
+          }
+          cache = deleteCore(children, stepIdx, extraIds)
         } else {
           cache = currentBlock
         }
@@ -771,7 +792,7 @@ const automationActions = (store: AutomationStore) => ({
 
       // Traverse children of Loop V2 subflow
       if (block.stepId === AutomationActionStepId.LOOP_V2) {
-        const children: AutomationStep[] = (block.inputs?.children || []) as any
+        const children: AutomationStep[] = block.inputs?.children || []
         children.forEach((child, cIdx) => {
           const isChildTerminating = cIdx === children.length - 1
           // For the child we continue with the current path, injecting loop context
@@ -1391,7 +1412,7 @@ const automationActions = (store: AutomationStore) => ({
     let cache: any
     loopRef.pathTo.forEach(
       (path: BlockPath, idx: number, array: BlockPath[]) => {
-        const { stepIdx, branchIdx } = path as any
+        const { stepIdx, branchIdx } = path
         const final = idx === array.length - 1
 
         if (!cache) {
@@ -1406,16 +1427,14 @@ const automationActions = (store: AutomationStore) => ({
       }
     )
 
-    const loopNode = cache?.stepId
-      ? cache
-      : (steps.find(s => (s as any).id === loopId) as any)
+    const loopNode = cache?.stepId ? cache : steps.find(s => s.id === loopId)
 
     if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
       console.error("Target is not a Loop V2 node")
       return
     }
 
-    const children = (loopNode.inputs?.children || []) as AutomationStep[]
+    const children: AutomationStep[] = loopNode.inputs?.children || []
     const targetIndex = Math.max(
       0,
       Math.min(
@@ -1798,6 +1817,41 @@ const automationActions = (store: AutomationStore) => ({
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
+    }
+
+    // Special handling for Loop V2 subflow children so we can
+    // atomically remove an orphanable Branch when deleting the
+    // first child inside the subflow.
+    const lastHop: BlockPath | undefined = pathTo?.at(-1)
+    const loopId: string | undefined = lastHop?.loopStepId
+
+    if (loopId != null && lastHop?.stepIdx) {
+      let newAutomation = cloneDeep(automation)
+      try {
+        const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
+        const loopNode = store.actions.getBlockByRef(newAutomation, loopRef)
+
+        if (loopNode && loopNode.stepId === AutomationActionStepId.LOOP_V2) {
+          const children: AutomationStep[] = (
+            loopNode.inputs?.children || []
+          ).slice()
+
+          if (
+            lastHop?.stepIdx === 0 &&
+            children[1]?.stepId === AutomationActionStepId.BRANCH
+          ) {
+            children.splice(0, 2)
+          } else {
+            children.splice(lastHop?.stepIdx, 1)
+          }
+
+          loopNode.inputs = { ...(loopNode.inputs || {}), children }
+          await store.actions.save(newAutomation)
+          return
+        }
+      } catch (e) {
+        console.error("Loop V2 cascade delete fallback", e)
+      }
     }
 
     const { newAutomation } = store.actions.deleteBlock(pathTo, automation)
@@ -2329,17 +2383,12 @@ const automationActions = (store: AutomationStore) => ({
         automation,
         loopRef
       )
-      if (
-        !loopNode ||
-        (loopNode as any).stepId !== AutomationActionStepId.LOOP_V2
-      ) {
+      if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
         console.error("Parent is not a Loop V2 node")
         return
       }
 
-      const children = (
-        ((loopNode as any).inputs?.children || []) as any[]
-      ).slice()
+      const children = (loopNode.inputs?.children || []).slice()
       if (children.length !== 1) {
         notifications.info(
           "Stop Looping is only available when the loop contains a single step."
@@ -2415,7 +2464,7 @@ const automationActions = (store: AutomationStore) => ({
         BlockDefinitionTypes.ACTION,
         AutomationActionStepId.LOOP_V2,
         loopDefinition
-      ) as any
+      )
 
       loopBlock.inputs = {
         ...(loopBlock.inputs || {}),
