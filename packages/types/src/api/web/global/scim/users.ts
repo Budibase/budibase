@@ -1,4 +1,4 @@
-import { ScimResource, ScimMeta } from "scim-patch"
+import { ScimMeta, ScimResource } from "scim-patch"
 import { ScimListResponse } from "./shared"
 
 type BooleanString = boolean | "True" | "true" | "False" | "false"
@@ -25,6 +25,9 @@ export interface ScimUserResponse extends ScimResource {
   }
   active: BooleanString
   emails?: Emails
+  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"?: {
+    manager?: { value: string }
+  }
 }
 
 export interface ScimCreateUserRequest {
