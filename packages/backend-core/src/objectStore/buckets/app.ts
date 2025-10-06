@@ -20,7 +20,7 @@ export async function clientLibraryPath(appId: string) {
   }
 }
 export function client3rdPartyLibrary(appId: string, file: string) {
-  return `${objectStore.sanitizeKey(appId)}/_dependencies/${file}`
+  return `${objectStore.sanitizeKey(appId)}/${file}`
 }
 
 /**

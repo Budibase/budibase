@@ -1,6 +1,5 @@
 import { objectStore } from "@budibase/backend-core"
 import { sdk, utils } from "@budibase/shared-core"
-import { libDependencies } from "@budibase/types"
 import fs from "fs"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
@@ -84,26 +83,25 @@ export async function updateClientLibrary(appId: string) {
   if (env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
-    manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
+    const distFolder = path.dirname(clientPath)
+    manifest = join(path.dirname(distFolder), "manifest.json")
     client = clientPath
-    clientNew = join(
-      path.dirname(path.dirname(clientPath)),
-      "dist",
-      "budibase-client.new.js"
-    )
-    for (const lib of Object.values(libDependencies)) {
-      dependencies.push(
-        join(path.dirname(path.dirname(clientPath)), "dist", lib.outFile)
-      )
-    }
+    clientNew = join(distFolder, "budibase-client.new.js")
+    const chunksDir = join(distFolder, "chunks")
+    dependencies = fs
+      .readdirSync(chunksDir)
+      .filter(f => f.endsWith(".js"))
+      .map(f => join(chunksDir, f))
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
     clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.new.js")
-    for (const lib of Object.values(libDependencies)) {
-      dependencies.push(resolve(TOP_LEVEL_PATH, "client", lib.outFile))
-    }
+    const chunksDir = join(resolve(TOP_LEVEL_PATH, "client"), "chunks")
+    dependencies = fs
+      .readdirSync(chunksDir)
+      .filter(f => f.endsWith(".js"))
+      .map(f => join(chunksDir, f))
   }
 
   // Upload latest manifest and client library
@@ -127,7 +125,7 @@ export async function updateClientLibrary(appId: string) {
     depUploads.push(
       objectStore.streamUpload({
         bucket: ObjectStoreBuckets.APPS,
-        filename: join(appId, "_dependencies", path.basename(dependency)),
+        filename: join(appId, "chunks", path.basename(dependency)),
         stream: fs.createReadStream(dependency),
       })
     )
