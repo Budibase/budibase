@@ -208,13 +208,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [
+      for (const workspaceId of [
         config.getDevWorkspaceId(),
         config.getProdWorkspaceId(),
       ]) {
-        await config.doInContext(appId, async () => {
+        await config.doInContext(workspaceId, async () => {
           await updateWorkspaceMigrationMetadata({
-            workspaceId: appId,
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
@@ -242,11 +242,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const appId = config.getDevWorkspaceId()
-      await config.doInContext(appId, async () => {
+      const workspaceId = config.getDevWorkspaceId()
+      await config.doInContext(workspaceId, async () => {
         // Set a version that doesn't exist in the migrations array
         await updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+          workspaceId: workspaceId,
           version: "nonexistent_version",
         })
       })
@@ -357,13 +357,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [
+      for (const workspaceId of [
         config.getDevWorkspaceId(),
         config.getProdWorkspaceId(),
       ]) {
-        await config.doInContext(appId, async () => {
+        await config.doInContext(workspaceId, async () => {
           await updateWorkspaceMigrationMetadata({
-            workspaceId: appId,
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
@@ -440,10 +440,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         }))
 
-        const appId = config.getDevWorkspaceId()
-        await config.doInContext(appId, async () => {
+        const workspaceId = config.getDevWorkspaceId()
+        await config.doInContext(workspaceId, async () => {
           await updateWorkspaceMigrationMetadata({
-            workspaceId: appId,
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
