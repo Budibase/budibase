@@ -43,7 +43,7 @@
   let commandPaletteModal
   let settingsModal
   let accountLockedModal
-  let isAuthenticated = undefined
+  let hasAuthenticated = false
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -73,7 +73,7 @@
       $loaded,
     ]) => {
       // Only run logic when fully loaded
-      if (!$loaded || !$admin.loaded || !$auth.loaded || $appsStore.loading) {
+      if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
       }
 
@@ -128,7 +128,6 @@
         // Builders without apps should be redirected to the onboarding flow.
         if (
           isBuilder &&
-          !$appsStore.loading &&
           $appsStore.apps.length === 0 &&
           !$isActive("./onboarding") &&
           !$isActive("./apps")
@@ -256,20 +255,16 @@
 
   onMount(() => {
     initPromise = initBuilder()
-    isAuthenticated = !!$auth.user
+    hasAuthenticated = !!$auth.user
   })
 
   // Re-run initBuilder when user logs in
-  // Don't re-run on logout as the redirect will handle it
   $: {
-    // Only act on login, not initial load or logout
-    if (!!$auth.user && isAuthenticated === false) {
+    const isAuthenticated = !!$auth.user
+    if (isAuthenticated && !hasAuthenticated) {
       initPromise = initBuilder()
     }
-    // Track current state for next evaluation
-    if (isAuthenticated !== undefined) {
-      isAuthenticated = !!$auth.user
-    }
+    hasAuthenticated = isAuthenticated
   }
 
   // Handle navigation actions from derived store

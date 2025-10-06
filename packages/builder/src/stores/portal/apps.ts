@@ -9,14 +9,12 @@ import { auth } from "./auth"
 export interface PortalAppsStore {
   apps: StoreApp[]
   sortBy?: string
-  loading: boolean
 }
 
 export class AppsStore extends BudiStore<PortalAppsStore> {
   constructor() {
     super({
       apps: [],
-      loading: false,
     })
 
     this.extractAppId = this.extractAppId.bind(this)
@@ -70,7 +68,6 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   async load() {
     this.update(state => ({
       ...state,
-      loading: true,
     }))
     const json = await API.getApps()
     if (Array.isArray(json)) {
@@ -134,13 +131,11 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
       this.update(state => ({
         ...state,
         apps,
-        loading: false,
       }))
     } else {
       this.update(state => ({
         ...state,
         apps: [],
-        loading: false,
       }))
     }
   }
