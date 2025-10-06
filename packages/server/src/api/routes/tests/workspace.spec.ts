@@ -647,8 +647,8 @@ describe("/applications", () => {
   describe("fetchAppPackage", () => {
     it("should be able to fetch the app package", async () => {
       const res = await config.api.workspace.getAppPackage(workspace.appId)
-      expect(res.workspace).toBeDefined()
-      expect(res.workspace.appId).toEqual(config.getDevWorkspaceId())
+      expect(res.application).toBeDefined()
+      expect(res.application.appId).toEqual(config.getDevWorkspaceId())
     })
 
     it("should retrieve all the screens for builder calls", async () => {
