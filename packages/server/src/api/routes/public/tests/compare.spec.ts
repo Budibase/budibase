@@ -11,10 +11,10 @@ jestOpenAPI(yamlPath!)
 
 describe("compare", () => {
   let config = setup.getConfig()
-  let apiKey: string, table: Table, app: Workspace, makeRequest: any
+  let apiKey: string, table: Table, workspace: Workspace, makeRequest: any
 
   beforeAll(async () => {
-    app = await config.init()
+    workspace = await config.init()
     table = await config.upsertTable()
     apiKey = await config.generateApiKey()
     makeRequest = generateMakeRequest(apiKey)
