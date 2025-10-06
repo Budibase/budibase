@@ -25,6 +25,7 @@ import {
   ViewMode,
   type AutomationBlock,
   type AutomationLogStep,
+  LoopV2NodeData,
 } from "@/types/automations"
 
 import { stepNode, anchorNode, edgeAddItem } from "./FlowCanvas/FlowFactories"
@@ -35,6 +36,14 @@ import {
 } from "./FlowCanvas/FlowGraphBuilder"
 import { ANCHOR, BRANCH, STEP } from "./FlowCanvas/FlowGeometry"
 import { applyLoopClearance } from "./FlowCanvas/FlowLayout"
+
+// -----------------
+// Type Guards
+// -----------------
+type LoopSubflowNode = FlowNode<LoopV2NodeData, "loop-subflow-node">
+const isLoopSubflowNode = (node: FlowNode): node is LoopSubflowNode => {
+  return node.type === "loop-subflow-node"
+}
 
 // -----------------
 // Blocks / Logs API
@@ -307,12 +316,12 @@ export const dagreLayoutAutomation = (
       } else if (node.type === "anchor-node") {
         width = ANCHOR.width
         height = ANCHOR.height
-      } else if (node.type === "loop-subflow-node") {
-        const w = node.data?.containerWidth as number
+      } else if (isLoopSubflowNode(node)) {
+        const w = node.data?.containerWidth
         if (w > 0) width = w
         // In horizontal (LR) layouts Dagre must know the vertical
         // length of the loop container so it can place rows correctly.
-        const h = node?.data?.containerHeight as number
+        const h = node?.data?.containerHeight
         const shouldUseHeight = rankdir === "LR" || !compactLoops
         if (shouldUseHeight && h > 0) {
           height = h

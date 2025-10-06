@@ -35,6 +35,7 @@
   import { type AutomationContext } from "@/stores/builder/automations"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -45,6 +46,7 @@
   let role: string | undefined
   let webhookModal: Modal | undefined
   let configPanel: HTMLDivElement | undefined
+  let confirmCascadeDialog: any
 
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
@@ -114,6 +116,27 @@
       ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
       : []
   }
+
+  const shouldCascadeDeleteInLoopV2 = (
+    blockRef: BlockRef | undefined,
+    automation: Automation | undefined
+  ) => {
+    if (!blockRef || !automation) return false
+    const lastHop: any = blockRef.pathTo?.at(-1)
+    const parentLoopId: string | undefined = lastHop?.loopStepId
+    const childIndex: number | undefined = lastHop?.stepIdx
+    if (!parentLoopId || !Number.isInteger(childIndex)) return false
+
+    const loopRef = $selectedAutomation?.blockRefs?.[parentLoopId]
+    const loopNode = automationStore.actions.getBlockByRef(automation, loopRef)
+    if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
+      return false
+    }
+    const children = (loopNode.inputs?.children || []) as AutomationStep[]
+    if (childIndex !== 0) return false
+    const nextSibling = children?.[1]
+    return nextSibling?.stepId === AutomationActionStepId.BRANCH
+  }
 </script>
 
 <Modal bind:this={webhookModal}>
@@ -165,6 +188,10 @@
         icon="trash"
         on:click={async () => {
           if (!blockRef) {
+            return
+          }
+          if (shouldCascadeDeleteInLoopV2(blockRef, $memoAutomation)) {
+            confirmCascadeDialog?.show()
             return
           }
           await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
@@ -262,6 +289,20 @@
     }}
   />
 </div>
+
+<ConfirmDialog
+  bind:this={confirmCascadeDialog}
+  okText="Delete"
+  title="Confirm Deletion"
+  onOk={async () => {
+    if (!blockRef) return
+    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+  }}
+>
+  Deleting this step will also delete the Branch and its lanes below it. This is
+  required to avoid orphaning branches in the loop subflow. Are you sure you
+  want to proceed?
+</ConfirmDialog>
 
 <style>
   .step-actions {

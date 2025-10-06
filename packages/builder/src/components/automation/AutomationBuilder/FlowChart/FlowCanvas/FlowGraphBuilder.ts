@@ -52,7 +52,7 @@ const computeLaneCenters = (
   mode: BranchMode,
   opts: { laneWidth?: number; gap?: number; containerWidth?: number }
 ) => {
-  if (count <= 0) return [] as number[]
+  if (count <= 0) return []
   if (mode === BranchMode.TOPLEVEL) {
     // let Dagre position top-level branches; return zeros
     return Array.from({ length: count }, () => 0)
@@ -88,14 +88,12 @@ interface PlaceBranchClusterArgs {
 const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const { step, source, coords, deps, mode, parentId, visuals } = args
   const baseId = step.id
-  const branches: Branch[] = (step.inputs?.branches || []) as Branch[]
-  const childrenMap: Record<string, AutomationStep[]> = (step.inputs
-    ?.children || {}) as Record<string, AutomationStep[]>
+  const branches: Branch[] = step.inputs?.branches || []
+  const childrenMap: Record<string, AutomationStep[]> =
+    step.inputs?.children || {}
   // Subflow internals are always laid out vertically; force TB for
   // node/edge directions within a loop container so handles/labels align.
-  const internalDir = (
-    mode === BranchMode.SUBFLOW ? "TB" : deps.direction
-  ) as LayoutDirection
+  const internalDir = mode === BranchMode.SUBFLOW ? "TB" : deps.direction
 
   const centers = computeLaneCenters(branches.length, mode, {
     laneWidth: visuals.laneWidth,
@@ -245,7 +243,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     }
   })
 
-  return { bottomY: clusterBottomY, branched: true as const }
+  return { bottomY: clusterBottomY, branched: true }
 }
 
 export const renderChain = (
@@ -351,7 +349,7 @@ export const renderLoopV2Container = (
   const baseId = loopStep.id
   const children: AutomationStep[] = loopStep.inputs?.children || []
   // Force a vertical flow inside the loop container regardless of global layout
-  const internalDir = "TB" as LayoutDirection
+  const internalDir = "TB"
 
   // Pre-compute container dimensions
   let containerWidth = 400
@@ -364,10 +362,9 @@ export const renderLoopV2Container = (
   let maxFanoutWidth = SUBFLOW.laneWidth
   for (const step of children) {
     if (step.stepId === AutomationActionStepId.BRANCH) {
-      const branches: Branch[] = ((step as BranchStep)?.inputs?.branches ||
-        []) as Branch[]
+      const branches: Branch[] = step?.inputs?.branches || []
       const childrenMap: Record<string, AutomationStep[]> =
-        (step as BranchStep)?.inputs?.children || {}
+        step?.inputs?.children || {}
 
       const fanoutWidth =
         SUBFLOW.laneWidth +
@@ -441,7 +438,7 @@ export const renderLoopV2Container = (
     if (lastLinearChild) {
       const prevRef = deps.blockRefs?.[lastLinearChild.id]
       placeBranchCluster({
-        step: child as BranchStep,
+        step: child,
         source: {
           id: lastLinearChild.id,
           block: lastLinearChild,
@@ -461,7 +458,7 @@ export const renderLoopV2Container = (
       })
     } else {
       placeBranchCluster({
-        step: child as BranchStep,
+        step: child,
         source: { id: child.id, block: child },
         coords: { y: innerY },
         deps,
