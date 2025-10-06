@@ -266,9 +266,10 @@ export default class TestConfiguration {
     }
   }
 
-  async withApp<R>(app: Workspace | string, f: () => Promise<R>) {
+  async withApp<R>(workspace: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.devWorkspaceId
-    this.devWorkspaceId = typeof app === "string" ? app : app.appId
+    this.devWorkspaceId =
+      typeof workspace === "string" ? workspace : workspace.appId
     return await context.doInWorkspaceContext(this.devWorkspaceId, async () => {
       try {
         return await f()

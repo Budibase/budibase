@@ -686,8 +686,8 @@ class Orchestrator {
 }
 
 export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
-  const appId = job.data.event.appId
-  if (!appId) {
+  const workspaceId = job.data.event.appId
+  if (!workspaceId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
@@ -697,7 +697,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   }
 
   return context.doInAutomationContext({
-    workspaceId: appId,
+    workspaceId,
     automationId,
     task: async () => {
       await context.ensureSnippetContext()
