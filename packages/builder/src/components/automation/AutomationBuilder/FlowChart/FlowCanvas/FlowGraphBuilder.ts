@@ -359,7 +359,7 @@ export const renderLoopV2Container = (
   const childHeight = SUBFLOW.childHeight
 
   let dynamicHeight = paddingTop
-  let maxFanoutWidth = SUBFLOW.laneWidth
+  let maxFanoutWidth = SUBFLOW.stepWidth
   for (const step of children) {
     if (step.stepId === AutomationActionStepId.BRANCH) {
       const branches: Branch[] = step?.inputs?.branches || []

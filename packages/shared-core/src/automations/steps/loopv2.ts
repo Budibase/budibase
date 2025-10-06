@@ -19,6 +19,7 @@ export const definition: AutomationStepDefinition = {
       properties: {
         children: {
           type: AutomationIOType.ARRAY,
+          title: "Input type",
         },
         binding: {
           type: AutomationIOType.STRING,

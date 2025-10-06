@@ -840,7 +840,8 @@ const automationActions = (store: AutomationStore) => ({
       idx: number,
       isLoopBlock: boolean,
       pathBlock: AutomationStep | AutomationTrigger,
-      bindingName: string
+      bindingName: string,
+      opts?: { displayName?: string; readableChildName?: string }
     ) => {
       if (!name) return
 
@@ -871,8 +872,24 @@ const automationActions = (store: AutomationStore) => ({
       )
 
       const isStep = !isLoopBlock && idx !== 0
-      const defaultReadable =
-        bindingName && isStep ? `steps.${bindingName}.${name}` : runtimeBinding
+      // Readable text shown to users. For loop outputs, use the loop's name.
+      // For items drill-downs, prefer the child step name.
+      let defaultReadable: string
+      if (isLoopBlock) {
+        // Keep currentItem readable when inside the loop
+        if (name === "currentItem") {
+          defaultReadable = "loop.currentItem"
+        } else if (name?.startsWith?.("items.") && opts?.readableChildName) {
+          defaultReadable = `steps.${bindingName}.items.${opts.readableChildName}`
+        } else {
+          defaultReadable = `steps.${bindingName}.${name}`
+        }
+      } else {
+        defaultReadable =
+          bindingName && isStep
+            ? `steps.${bindingName}.${name}`
+            : runtimeBinding
+      }
 
       // Check if the schema matches any column types.
       const column = Object.values(COLUMNS).find(
@@ -888,6 +905,7 @@ const automationActions = (store: AutomationStore) => ({
       // Shown in the bindable menus
       const displayType = ignoreColumnType ? schema.type : column?.name
 
+      const displayName = opts?.displayName || name
       bindings.push({
         readableBinding: readableBinding || defaultReadable,
         runtimeBinding,
@@ -897,7 +915,7 @@ const automationActions = (store: AutomationStore) => ({
         category: categoryName,
         display: {
           type: displayType,
-          name,
+          name: displayName,
           rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
         },
       })
@@ -907,7 +925,7 @@ const automationActions = (store: AutomationStore) => ({
 
     for (let blockIdx = 0; blockIdx < pathSteps.length; blockIdx++) {
       const pathBlock = pathSteps[blockIdx]
-      const bindingName =
+      let bindingName =
         automation.definition.stepNames?.[pathBlock.id] || pathBlock.name
 
       let schema = cloneDeep(pathBlock?.schema?.outputs?.properties) ?? {}
@@ -991,6 +1009,36 @@ const automationActions = (store: AutomationStore) => ({
         }
       }
 
+      // For Loop V2 blocks, when selecting a step AFTER the loop, expose
+      // per-child drilldowns under items.
+      const targetInsideLoopV2 = Boolean(block?.isLoopV2Child)
+      if (
+        pathBlock.stepId === AutomationActionStepId.LOOP_V2 &&
+        !targetInsideLoopV2
+      ) {
+        const children: AutomationStep[] = pathBlock.inputs?.children || []
+        for (const child of children) {
+          const childName =
+            automation.definition.stepNames?.[child.id] || child.name
+          addBinding(
+            `items.${child.id}`,
+            {
+              type: AutomationIOType.ARRAY,
+              description: `Per-iteration results for ${childName}. Index into [i].outputs.<prop>.`,
+            },
+            icon,
+            blockIdx,
+            isLoopBlock,
+            pathBlock,
+            bindingName,
+            {
+              displayName: `Items › ${childName}`,
+              readableChildName: childName,
+            }
+          )
+        }
+      }
+
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(
           name,
@@ -1059,8 +1107,6 @@ const automationActions = (store: AutomationStore) => ({
     currentBlock: AutomationStep | AutomationTrigger | undefined,
     pathSteps: (AutomationStep | AutomationTrigger)[]
   ) => {
-    let runtimeName: string
-
     // Legacy support for EXECUTE_SCRIPT steps
     const isJSScript =
       currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
@@ -1089,26 +1135,33 @@ const automationActions = (store: AutomationStore) => ({
     /* End special cases for generating custom schemas based on triggers */
 
     if (isLoopBlock) {
-      runtimeName = `loop.${name}`
-    } else if (idx === 0) {
-      runtimeName = `trigger.[${name}]`
-    } else if (isJSScript) {
-      const stepId = pathSteps[idx].id
+      if (name === "currentItem") {
+        return "loop.currentItem"
+      }
+
+      // For legacy loops, outputs are stored under the looped child step id
+      const loopStep = pathSteps[idx]
+      const legacyLoopChildId = loopStep?.blockToLoop
+      const stepId = legacyLoopChildId || loopStep?.id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
         return
       }
-      runtimeName = `steps["${stepId}"].${name}`
-    } else {
-      const stepId = pathSteps[idx].id
-      if (!stepId) {
-        notifications.error("Error generating binding: Step ID not found.")
-        return
-      }
-      runtimeName = `steps.${stepId}.${name}`
+      return isJSScript
+        ? `steps["${stepId}"].${name}`
+        : `steps.${stepId}.${name}`
     }
 
-    return runtimeName
+    if (idx === 0) {
+      return `trigger.[${name}]`
+    }
+
+    const stepId = pathSteps[idx]?.id
+    if (!stepId) {
+      notifications.error("Error generating binding: Step ID not found.")
+      return
+    }
+    return isJSScript ? `steps["${stepId}"].${name}` : `steps.${stepId}.${name}`
   },
 
   determineCategoryName: (
@@ -1118,7 +1171,7 @@ const automationActions = (store: AutomationStore) => ({
     loopBlockCount: number
   ) => {
     if (idx === 0) return "Trigger outputs"
-    if (isLoopBlock) return "Loop Outputs"
+    if (isLoopBlock) return `${bindingName || "Loop"} outputs`
     return bindingName
       ? `${bindingName} outputs`
       : `Step ${idx - loopBlockCount} outputs`

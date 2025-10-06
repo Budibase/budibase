@@ -116,7 +116,7 @@
   $: preBranchLabelY =
     direction === "LR"
       ? (sourceY ?? 0)
-      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2 - 20)
+      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
 
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
     if (!ctx) {
