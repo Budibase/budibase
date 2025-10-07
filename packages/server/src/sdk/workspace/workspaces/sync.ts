@@ -1,5 +1,6 @@
 import { context, db as dbCore, logging, roles } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
+import { utils } from "@budibase/shared-core"
 import { ContextUser, User, UserGroup } from "@budibase/types"
 import sdk from "../.."
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
@@ -22,7 +23,7 @@ async function syncUsersToApp(
   }
   await context.doInWorkspaceContext(appId, async () => {
     const db = context.getWorkspaceDB()
-    for (let user of users) {
+    for (const user of users) {
       let ctxUser = user as ContextUser
       let deletedUser = false
       const metadataId = generateUserMetadataID(user._id!)
@@ -93,13 +94,20 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
     }
   }
   const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
-  let promises = []
-  for (const devId of devWorkspaceIds) {
-    const prodId = dbCore.getProdWorkspaceID(devId)
-    for (const workspaceId of [prodId, devId]) {
-      promises.push(syncUsersToApp(workspaceId, finalUsers, groups))
-    }
-  }
+  const workspaceIdsToCheck = devWorkspaceIds.flatMap(devId => [
+    devId,
+    dbCore.getProdWorkspaceID(devId),
+  ])
+  let promises: Promise<void>[] = []
+  await utils.parallelForeach(
+    workspaceIdsToCheck,
+    async id => {
+      const syncAction = syncUsersToApp(id, finalUsers, groups)
+      promises.push(syncAction)
+      await syncAction
+    },
+    10
+  )
   const resp = await Promise.allSettled(promises)
   const failed = resp.filter(promise => promise.status === "rejected")
   const reasons = failed
