@@ -44,7 +44,14 @@
   let schema = {}
   let nestedSchemaFields = {}
   let rows = []
+  let hasPreviewed = false
   let keys = {}
+
+  const getQueryState = () => ({
+    query: newQuery,
+    schema,
+    nestedSchemaFields,
+  })
 
   const parseQuery = query => {
     modified = false
@@ -55,18 +62,22 @@
 
     newQuery = cloneDeep(query)
     // init schema from the query if one already exists
-    schema = newQuery.schema
+    schema = newQuery.schema || {}
+    nestedSchemaFields = newQuery.nestedSchemaFields || {}
+    hasPreviewed =
+      Object.keys(schema || {}).length > 0 ||
+      Object.keys(nestedSchemaFields || {}).length > 0
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
 
-    queryHash = JSON.stringify(newQuery)
+    queryHash = JSON.stringify(getQueryState())
   }
 
   $: parseQuery(query)
 
-  const checkIsModified = newQuery => {
-    const newQueryHash = JSON.stringify(newQuery)
+  const checkIsModified = state => {
+    const newQueryHash = JSON.stringify(state || getQueryState())
     modified = newQueryHash !== queryHash
 
     return modified
@@ -74,7 +85,7 @@
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
-  $: debouncedCheckIsModified(newQuery)
+  $: debouncedCheckIsModified(getQueryState())
 
   async function runQuery({ suppressErrors = true }) {
     try {
@@ -92,6 +103,8 @@
 
       schema = response.schema
       rows = response.rows
+
+      hasPreviewed = true
 
       notifications.success("Query executed successfully")
     } catch (error) {
@@ -158,7 +171,7 @@
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <QueryViewerSavePromptModal
-  checkIsModified={() => checkIsModified(newQuery)}
+  checkIsModified={() => checkIsModified(getQueryState())}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}
 />
 <div class="queryViewer">
@@ -190,14 +203,11 @@
               if (response._id && !newQuery._id) {
                 // Set the comparison query hash to match the new query so that the user doesn't
                 // get nagged when navigating to the edit view
-                queryHash = JSON.stringify(newQuery)
+                queryHash = JSON.stringify(getQueryState())
                 $goto(`../../${response._id}`)
               }
             }}
-            disabled={loading ||
-              !newQuery.name ||
-              nameError ||
-              rows.length === 0}
+            disabled={loading || !newQuery.name || nameError || !hasPreviewed}
             overBackground
           >
             <Icon size="S" name="floppy-disk" />
@@ -322,6 +332,7 @@
       onClose={() => (showSidePanel = false)}
       onSchemaChange={newSchema => {
         schema = newSchema
+        hasPreviewed = true
       }}
       {rows}
       {schema}
