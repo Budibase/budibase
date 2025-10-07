@@ -13,15 +13,15 @@ function userSyncEnabled() {
   return !env.DISABLE_USER_SYNC
 }
 
-async function syncUsersToApp(
-  appId: string,
+async function syncUsersToWorkspace(
+  workspaceId: string,
   users: (User | DeletedUser)[],
   groups: UserGroup[]
 ) {
-  if (!(await dbCore.dbExists(appId))) {
+  if (!(await dbCore.dbExists(workspaceId))) {
     return
   }
-  await context.doInWorkspaceContext(appId, async () => {
+  await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     for (const user of users) {
       let ctxUser = user as ContextUser
@@ -33,7 +33,7 @@ async function syncUsersToApp(
 
       // make sure role is correct
       if (!deletedUser) {
-        ctxUser = await processUser(ctxUser, { appId, groups })
+        ctxUser = await processUser(ctxUser, { appId: workspaceId, groups })
       }
       let roleId = ctxUser.roleId
       if (roleId === roles.BUILTIN_ROLE_IDS.PUBLIC) {
@@ -48,7 +48,7 @@ async function syncUsersToApp(
           throw err
         }
         // no metadata and user is to be deleted, can skip
-        // no role - user isn't in app anyway
+        // no role - user isn't in workspace anyway
         if (!roleId) {
           continue
         } else if (!deletedUser) {
@@ -102,7 +102,7 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
   await utils.parallelForeach(
     workspaceIdsToCheck,
     async id => {
-      const syncAction = syncUsersToApp(id, finalUsers, groups)
+      const syncAction = syncUsersToWorkspace(id, finalUsers, groups)
       promises.push(syncAction)
       await syncAction
     },
@@ -114,7 +114,7 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
     .map(fail => (fail as PromiseRejectedResult).reason)
     .filter(reason => !dbCore.isDocumentConflictError(reason))
   if (reasons.length > 0) {
-    logging.logWarn("Failed to sync users to apps", reasons)
+    logging.logWarn("Failed to sync users to workspaces", reasons)
   }
 }
 
