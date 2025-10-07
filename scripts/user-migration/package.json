@@ -1,0 +1,17 @@
+{
+  "name": "@budibase/user-migration",
+  "version": "1.0.0",
+  "description": "Budibase user migration script for transferring users between instances",
+  "main": "migrate-users.js",
+  "scripts": {
+    "export": "node migrate-users.js export",
+    "import": "node migrate-users.js import"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "dotenv": "^16.0.1",
+    "node-fetch": "^2.6.7"
+  },
+  "author": "Budibase",
+  "license": "GPL-3.0"
+}

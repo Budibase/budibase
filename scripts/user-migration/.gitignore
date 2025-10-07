@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# Export/Import files
+*-export.json
+*-passwords.json
+users-*.json
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
