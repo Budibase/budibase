@@ -1,6 +1,6 @@
 import { constants, logging } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
-import { DocUpdateEvent, UserGroupSyncEvents } from "@budibase/types"
+import { DocUpdateEvent, WorkspaceUserSyncEvents } from "@budibase/types"
 import { syncUsersToAllWorkspaces } from "../../sdk/workspace/workspaces/sync"
 import { UpdateCallback } from "./processors"
 
@@ -35,5 +35,5 @@ export default function process(updateCb?: UpdateCallback) {
       }
     }
   }
-  return { events: UserGroupSyncEvents, processor }
+  return { events: WorkspaceUserSyncEvents, processor }
 }
