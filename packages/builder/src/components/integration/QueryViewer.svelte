@@ -46,6 +46,17 @@
   let rows = []
   let keys = {}
 
+  const buildQueryHash = (
+    queryState = {},
+    schemaState = {},
+    nestedSchemaState = {}
+  ) =>
+    JSON.stringify({
+      ...(queryState || {}),
+      schema: schemaState || {},
+      nestedSchemaFields: nestedSchemaState || {},
+    })
+
   const parseQuery = query => {
     modified = false
 
@@ -55,18 +66,27 @@
 
     newQuery = cloneDeep(query)
     // init schema from the query if one already exists
-    schema = newQuery.schema
+    schema = cloneDeep(newQuery.schema) || {}
+    nestedSchemaFields = cloneDeep(newQuery.nestedSchemaFields) || {}
+    newQuery.schema = cloneDeep(schema)
+    newQuery.nestedSchemaFields = cloneDeep(nestedSchemaFields)
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
 
-    queryHash = JSON.stringify(newQuery)
+    queryHash = buildQueryHash(newQuery, schema, nestedSchemaFields)
   }
 
   $: parseQuery(query)
 
-  const checkIsModified = newQuery => {
-    const newQueryHash = JSON.stringify(newQuery)
+  const checkIsModified = state => {
+    const { query: nextQuery = newQuery, schema: nextSchema = schema, nestedSchemaFields: nextNestedSchemaFields = nestedSchemaFields } =
+      state || {}
+    const newQueryHash = buildQueryHash(
+      nextQuery,
+      nextSchema,
+      nextNestedSchemaFields
+    )
     modified = newQueryHash !== queryHash
 
     return modified
@@ -74,7 +94,11 @@
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
-  $: debouncedCheckIsModified(newQuery)
+  $: debouncedCheckIsModified({
+    query: newQuery,
+    schema,
+    nestedSchemaFields,
+  })
 
   async function runQuery({ suppressErrors = true }) {
     try {
@@ -88,9 +112,12 @@
         return
       }
 
-      nestedSchemaFields = response.nestedSchemaFields
+      nestedSchemaFields = cloneDeep(response.nestedSchemaFields) || {}
 
-      schema = response.schema
+      schema = cloneDeep(response.schema) || {}
+      newQuery.schema = cloneDeep(schema)
+      newQuery.nestedSchemaFields = cloneDeep(nestedSchemaFields)
+      newQuery = { ...newQuery }
       rows = response.rows
 
       notifications.success("Query executed successfully")
@@ -122,6 +149,7 @@
       })
 
       notifications.success("Query saved successfully")
+      queryHash = buildQueryHash(newQuery, schema, nestedSchemaFields)
       return response
     } catch (error) {
       notifications.error(error.message || "Error saving query")
@@ -158,7 +186,12 @@
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <QueryViewerSavePromptModal
-  checkIsModified={() => checkIsModified(newQuery)}
+  checkIsModified={() =>
+    checkIsModified({
+      query: newQuery,
+      schema,
+      nestedSchemaFields,
+    })}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}
 />
 <div class="queryViewer">
@@ -190,14 +223,18 @@
               if (response._id && !newQuery._id) {
                 // Set the comparison query hash to match the new query so that the user doesn't
                 // get nagged when navigating to the edit view
-                queryHash = JSON.stringify(newQuery)
+                queryHash = buildQueryHash(
+                  newQuery,
+                  schema,
+                  nestedSchemaFields
+                )
                 $goto(`../../${response._id}`)
               }
             }}
             disabled={loading ||
               !newQuery.name ||
               nameError ||
-              rows.length === 0}
+              (rows.length === 0 && !modified)}
             overBackground
           >
             <Icon size="S" name="floppy-disk" />
@@ -321,7 +358,9 @@
     <QueryViewerSidePanel
       onClose={() => (showSidePanel = false)}
       onSchemaChange={newSchema => {
-        schema = newSchema
+        schema = newSchema || {}
+        newQuery.schema = cloneDeep(schema)
+        newQuery = { ...newQuery }
       }}
       {rows}
       {schema}
