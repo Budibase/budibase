@@ -69,10 +69,12 @@ export default function process() {
         userIds = [docId]
       }
 
-      await cache.append(batchProcessingKey, userIds)
+      if (userIds.length) {
+        await cache.append(batchProcessingKey, userIds)
 
-      const batchSyncProcessor = getUserSyncProcessor()
-      await batchSyncProcessor.queueRun()
+        const batchSyncProcessor = getUserSyncProcessor()
+        await batchSyncProcessor.queueRun()
+      }
     } catch (err: any) {
       // if something not found - no changes to perform
       if (err?.status === 404) {
