@@ -116,7 +116,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitRowUpdate(ctx: Ctx<any, any, any>, row: Row) {
+  emitRowUpdate(ctx: Ctx, row: Row) {
     const source = getSourceId(ctx)
     const resourceId = source.viewId ?? source.tableId
     const room = `${ctx.appId}-${resourceId}`
@@ -126,7 +126,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitRowDeletion(ctx: Ctx<any, any, any>, row: Row) {
+  emitRowDeletion(ctx: Ctx, row: Row) {
     const source = getSourceId(ctx)
     const resourceId = source.viewId ?? source.tableId
     const room = `${ctx.appId}-${resourceId}`
@@ -136,7 +136,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitWorkspaceAppUpdate(ctx: Ctx<any, any, any>, workspaceApp: WorkspaceApp) {
+  emitWorkspaceAppUpdate(ctx: Ctx, workspaceApp: WorkspaceApp) {
     const room = `${ctx.appId}-${workspaceApp._id}`
     this.emitToRoom(ctx, room, GridSocketEvent.WorkspaceAppChange, {
       id: workspaceApp._id,
@@ -144,7 +144,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitTableUpdate(ctx: Ctx<any, any, any>, table: Table) {
+  emitTableUpdate(ctx: Ctx, table: Table) {
     const room = `${ctx.appId}-${table._id}`
     this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
       id: table._id,
@@ -152,7 +152,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitTableDeletion(ctx: Ctx<any, any, any>, table: Table) {
+  emitTableDeletion(ctx: Ctx, table: Table) {
     const room = `${ctx.appId}-${table._id}`
     this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
       id: table._id,
@@ -168,7 +168,7 @@ export default class GridSocket extends BaseSocket {
       })
   }
 
-  emitViewUpdate(ctx: Ctx<any, any, any>, view: ViewV2) {
+  emitViewUpdate(ctx: Ctx, view: ViewV2) {
     const room = `${ctx.appId}-${view.id}`
     this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
       id: view.id,
@@ -176,7 +176,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitViewDeletion(ctx: Ctx<any, any, any>, view: ViewV2) {
+  emitViewDeletion(ctx: Ctx, view: ViewV2) {
     const room = `${ctx.appId}-${view.id}`
     this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
       id: view.id,
