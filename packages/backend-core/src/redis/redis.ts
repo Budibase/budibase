@@ -245,6 +245,14 @@ class RedisWrapper {
     })
   }
 
+  async removeFromArray(key: string, values: string[]) {
+    return await this.trace("RedisWrapper.removeFromArray", async span => {
+      span.addTags({ key: key })
+      key = this.prefixed(key)
+      return await this.client.srem(key, values)
+    })
+  }
+
   async store(key: string, value: any, expirySeconds: number | null = null) {
     return await this.trace("RedisWrapper.store", async span => {
       span.addTags({ key, expirySeconds })

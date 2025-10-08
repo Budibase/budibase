@@ -24,6 +24,7 @@ function getUserSyncProcessor() {
     userSyncProcessor.process(async () => {
       const userIds = await cache.getArray(batchProcessingKey)
       await syncUsersAcrossWorkspaces(userIds)
+      await cache.removeFromArray(batchProcessingKey, userIds)
     })
   }
   return {

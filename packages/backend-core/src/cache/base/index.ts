@@ -189,4 +189,14 @@ export default class BaseCache {
     const client = await this.getClient()
     return client.getArray(key)
   }
+
+  async removeFromArray(
+    key: string,
+    values: string[],
+    opts = { useTenancy: true }
+  ) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.removeFromArray(key, values)
+  }
 }
