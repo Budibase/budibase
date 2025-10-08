@@ -1,42 +1,22 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-import { constants, context, events, roles } from "@budibase/backend-core"
+import { context, events, roles } from "@budibase/backend-core"
+import { utils } from "@budibase/backend-core/tests"
 import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
-import EventEmitter from "events"
-import { init } from "../../../../events"
+import { UserSyncProcessor } from "../../../../events/docUpdates/syncUsers"
 import { rawUserMetadata } from "../../../users/utils"
 
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User
 const ROLE_ID = roles.BUILTIN_ROLE_IDS.BASIC
 
-const emitter = new EventEmitter()
-
-function updateCb(docId: string) {
-  const isGroup = docId.startsWith(constants.DocumentType.GROUP)
-  if (isGroup) {
-    emitter.emit("update-group")
-  } else {
-    emitter.emit("update-user")
-  }
-}
-
-init(updateCb)
-
-function waitForUpdate(opts: { group?: boolean }) {
-  return new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject()
-    }, 5000)
-    const event = opts?.group ? "update-group" : "update-user"
-    emitter.on(event, () => {
-      clearTimeout(timeout)
-      resolve()
-    })
-  })
+async function waitForUpdate() {
+  await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
+  await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
 }
 
 beforeAll(async () => {
+  await utils.queue.useRealQueues()
   await config.init("syncWorkspace")
 })
 
@@ -101,7 +81,7 @@ describe("app user/group sync", () => {
     email: string,
     opts?: { group?: boolean; notFound?: boolean }
   ) {
-    await waitForUpdate(opts || {})
+    await waitForUpdate()
     const metadata = await getUserMetadata()
     const found = metadata.find(data => data.email === email)
     if (opts?.notFound) {

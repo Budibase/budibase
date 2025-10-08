@@ -5,44 +5,55 @@ import { syncUsersAcrossWorkspaces } from "../../sdk/workspace/workspaces/sync"
 
 const batchProcessingKey = "usersync:batch"
 
-let userSyncProcessor: queue.BudibaseQueue<{}> | undefined
+export class UserSyncProcessor {
+  private static _queue: queue.BudibaseQueue<{}>
 
-function getUserSyncProcessor() {
-  if (!userSyncProcessor) {
-    userSyncProcessor = new queue.BudibaseQueue<{}>(
-      queue.JobQueue.BATCH_USER_SYNC_PROCESSOR,
-      {
-        maxStalledCount: 3,
-        jobOptions: {
-          attempts: 3,
-          removeOnFail: false,
-          removeOnComplete: true,
-        },
-      }
-    )
+  public static get queue() {
+    if (!UserSyncProcessor._queue) {
+      UserSyncProcessor._queue = new queue.BudibaseQueue<{}>(
+        queue.JobQueue.BATCH_USER_SYNC_PROCESSOR,
+        {
+          jobOptions: {
+            attempts: 3,
+            removeOnComplete: true,
+            removeOnFail: true,
+          },
+        }
+      )
+    }
 
-    userSyncProcessor.process(async () => {
+    return UserSyncProcessor._queue
+  }
+
+  init() {
+    UserSyncProcessor.queue.process(async job => {
       const userIds = await cache.getArray(batchProcessingKey)
       await syncUsersAcrossWorkspaces(userIds)
       await cache.removeFromArray(batchProcessingKey, userIds)
+      await job.moveToCompleted()
     })
   }
-  return {
-    queueRun: async () => {
-      if (!userSyncProcessor) {
-        throw new Error("userSyncProcessor is not initialised")
-      }
 
-      const waitingCount = await userSyncProcessor
-        .getBullQueue()
-        .getWaitingCount()
-      if (waitingCount) {
-        // Another process already queued
-        return
-      }
-      await userSyncProcessor.add({})
-    },
+  async queueRun() {
+    const waitingCount = await UserSyncProcessor.queue
+      .getBullQueue()
+      .getWaitingCount()
+    if (waitingCount) {
+      // Another process already queued
+      return
+    }
+    await UserSyncProcessor.queue.add({})
   }
+}
+
+let userSyncProcessor: UserSyncProcessor
+
+export function getUserSyncProcessor(): UserSyncProcessor {
+  if (!userSyncProcessor) {
+    userSyncProcessor = new UserSyncProcessor()
+    userSyncProcessor.init()
+  }
+  return userSyncProcessor
 }
 
 export default function process() {
