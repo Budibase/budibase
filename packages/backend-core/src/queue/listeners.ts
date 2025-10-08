@@ -1,6 +1,6 @@
 import { Job, JobId, Queue } from "bull"
-import { JobQueue } from "./constants"
 import * as context from "../context"
+import { JobQueue } from "./constants"
 
 export type StalledFn = (job: Job) => Promise<void>
 
@@ -90,6 +90,7 @@ enum QueueEventType {
   APP_MIGRATION = "app-migration",
   DOC_WRITETHROUGH = "doc-writethrough",
   DEV_REVERT_EVENT = "dev-revert-event",
+  BATCH_USER_SYNC_PROCESSOR = "batch-user-sync-processor",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -100,6 +101,8 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.APP_MIGRATION]: QueueEventType.APP_MIGRATION,
   [JobQueue.DOC_WRITETHROUGH_QUEUE]: QueueEventType.DOC_WRITETHROUGH,
   [JobQueue.DEV_REVERT_PROCESSOR]: QueueEventType.DEV_REVERT_EVENT,
+  [JobQueue.BATCH_USER_SYNC_PROCESSOR]:
+    QueueEventType.BATCH_USER_SYNC_PROCESSOR,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {
