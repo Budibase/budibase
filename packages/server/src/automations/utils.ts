@@ -36,11 +36,11 @@ function loggingArgs(job: AutomationJob) {
 
 export async function processEvent(job: AutomationJob) {
   return tracer.trace("processEvent", async span => {
-    const appId = job.data.event.appId!
+    const workspaceId = job.data.event.appId!
     const automationId = job.data.automation._id!
 
     span.addTags({
-      appId,
+      appId: workspaceId,
       automationId,
       job: {
         id: job.id,
@@ -88,7 +88,7 @@ export async function processEvent(job: AutomationJob) {
     }
 
     return await context.doInAutomationContext({
-      workspaceId: appId,
+      workspaceId,
       automationId,
       task,
     })
