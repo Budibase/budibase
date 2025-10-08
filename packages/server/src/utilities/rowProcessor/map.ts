@@ -178,4 +178,25 @@ export const TYPE_TRANSFORM_MAP: Record<
       }
     },
   },
+  [FieldType.AI]: {
+    parse: () => {
+      throw new Error(`FieldType.AI parse is not implemented`)
+    },
+  },
+
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    parse: () => {
+      throw new Error(`FieldType.BB_REFERENCE_SINGLE parse is not implemented`)
+    },
+  },
+  [FieldType.SIGNATURE_SINGLE]: {
+    parse: () => {
+      throw new Error(`FieldType.SIGNATURE_SINGLE parse is not implemented`)
+    },
+  },
+  [FieldType.INTERNAL]: {
+    parse: () => {
+      throw new Error(`FieldType.INTERNAL is deprecated`)
+    },
+  },
 }
