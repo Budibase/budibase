@@ -907,6 +907,66 @@ if (descriptions.length) {
             })
 
           isInternal &&
+            it("allows grouping by static formula fields", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    label: {
+                      name: "label",
+                      type: FieldType.STRING,
+                    },
+                    staticLabel: {
+                      name: "staticLabel",
+                      type: FieldType.FORMULA,
+                      formulaType: FormulaType.STATIC,
+                      responseType: FieldType.STRING,
+                      formula: "{{ label }}",
+                    },
+                  },
+                })
+              )
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  { label: "Group A" },
+                  { label: "Group A" },
+                  { label: "Group B" },
+                ],
+              })
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  staticLabel: {
+                    visible: true,
+                  },
+                  labelCount: {
+                    visible: true,
+                    calculationType: CalculationType.COUNT,
+                    field: "staticLabel",
+                  },
+                },
+              })
+
+              const { rows } = await config.api.row.search(view.id)
+              expect(rows).toHaveLength(2)
+              expect(rows).toEqual(
+                expect.arrayContaining([
+                  expect.objectContaining({
+                    staticLabel: "Group A",
+                    labelCount: 2,
+                  }),
+                  expect.objectContaining({
+                    staticLabel: "Group B",
+                    labelCount: 1,
+                  }),
+                ])
+              )
+            })
+
+          isInternal &&
             it("shouldn't trigger a complex type check on a group by field if field is invisible", async () => {
               const table = await config.api.table.save(
                 saveTableRequest({
