@@ -176,11 +176,17 @@ export default class BaseCache {
 
   async append(
     key: string,
-    value: string | number | (string | number)[],
+    value: string | string[],
     opts = { useTenancy: true }
   ) {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
     return client.append(key, value)
+  }
+
+  async getArray(key: string, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.getArray(key)
   }
 }

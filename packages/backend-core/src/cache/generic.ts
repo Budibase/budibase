@@ -37,3 +37,5 @@ export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
   GENERIC.bustCache(...args)
 export const append = (...args: Parameters<typeof GENERIC.append>) =>
   GENERIC.append(...args)
+export const getArray = (...args: Parameters<typeof GENERIC.getArray>) =>
+  GENERIC.getArray(...args)

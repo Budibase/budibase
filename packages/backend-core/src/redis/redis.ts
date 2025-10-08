@@ -225,15 +225,23 @@ class RedisWrapper {
     })
   }
 
-  async append(key: string, value: string | number | (string | number)[]) {
+  async append(key: string, value: string | string[]) {
     return await this.trace("RedisWrapper.append", async span => {
       span.addTags({ key: key })
       key = this.prefixed(key)
       if (!Array.isArray(value)) {
-        await this.client.append(key, value)
+        await this.client.sadd(key, value)
       } else {
-        await this.client.rpush(key, ...value)
+        await this.client.sadd(key, ...value)
       }
+    })
+  }
+
+  async getArray(key: string) {
+    return await this.trace("RedisWrapper.getArray", async span => {
+      span.addTags({ key: key })
+      key = this.prefixed(key)
+      return await this.client.smembers(key)
     })
   }
 
