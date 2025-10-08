@@ -22,13 +22,13 @@ export class ThemeStore extends BudiStore<ThemeState> {
     })
   }
 
-  syncAppTheme = (app: Workspace) => {
+  syncAppTheme = (workspace: Workspace) => {
     this.update(state => {
-      const theme = ensureValidTheme(app.theme, DefaultAppTheme)
+      const theme = ensureValidTheme(workspace.theme, DefaultAppTheme)
       return {
         ...state,
         theme,
-        customTheme: app.customTheme || {},
+        customTheme: workspace.customTheme || {},
       }
     })
   }

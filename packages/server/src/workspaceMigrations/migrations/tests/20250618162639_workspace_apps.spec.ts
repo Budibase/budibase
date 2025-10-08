@@ -1,12 +1,12 @@
+import { structures } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
+import sdk from "../../../sdk"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250618162639_workspace_apps"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
-import sdk from "../../../sdk"
-import { structures } from "@budibase/backend-core/tests"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20250618162639_workspace_apps",
     func: migration,
@@ -17,19 +17,22 @@ const MIGRATIONS: AppMigration[] = [
 const config = setup.getConfig()
 
 describe.each([
-  ["dev", () => config.getAppId()],
-  ["prod", () => config.getProdAppId()],
-])("Workspace apps (%s)", (_, getAppId) => {
+  ["dev", () => config.getDevWorkspaceId()],
+  ["prod", () => config.getProdWorkspaceId()],
+])("Workspace apps (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(async () => {
     tk.reset()
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
-      await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+    for (const workspaceId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
+      await config.doInContext(workspaceId, async () => {
+        await updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: "",
         })
 
@@ -46,16 +49,16 @@ describe.each([
   })
 
   it("migration will never create multiple workspace apps", async () => {
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const devWorkspaceApps = await config.doInContext(
-      config.getAppId(),
+      config.getDevWorkspaceId(),
       sdk.workspaceApps.fetch
     )
     const prodWorkspaceApps = await config.doInContext(
-      config.getProdAppId(),
+      config.getProdWorkspaceId(),
       sdk.workspaceApps.fetch
     )
 

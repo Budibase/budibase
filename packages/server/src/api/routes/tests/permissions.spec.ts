@@ -1,4 +1,5 @@
 import { roles } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import {
   BuiltinPermissionID,
   Document,
@@ -8,7 +9,6 @@ import {
   Table,
 } from "@budibase/types"
 import * as setup from "./utilities"
-import { generator, mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -299,7 +299,7 @@ describe("/permission", () => {
     let table1: Table, table2: Table, role1: Role, role2: Role
     beforeEach(async () => {
       // create new app
-      await config.init()
+      await config.newTenant()
       table1 = await config.createTable()
       table2 = await config.createTable()
       await config.api.row.save(table1._id!, {

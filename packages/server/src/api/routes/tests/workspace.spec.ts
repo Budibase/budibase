@@ -18,6 +18,7 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { WorkspaceStatus } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
+import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import {
   basicQuery,
   basicScreen,
@@ -33,7 +34,7 @@ const generateAppName = () => {
 
 describe("/applications", () => {
   let config = setup.getConfig()
-  let app: Workspace
+  let workspace: Workspace
 
   afterAll(() => {
     setup.afterAll()
@@ -44,7 +45,7 @@ describe("/applications", () => {
   })
 
   async function createNewApp() {
-    app = await config.newTenant()
+    workspace = await config.newTenant()
     await config.publish()
   }
 
@@ -70,7 +71,7 @@ describe("/applications", () => {
       user = await config.globalUser({
         ...user,
         builder: {
-          apps: [config.getProdAppId()],
+          apps: [config.getProdWorkspaceId()],
         },
       })
 
@@ -101,7 +102,7 @@ describe("/applications", () => {
       user = await config.globalUser({
         ...user,
         roles: {
-          [config.getProdAppId()]: role.name,
+          [config.getProdWorkspaceId()]: role.name,
         },
       })
 
@@ -146,7 +147,9 @@ describe("/applications", () => {
 
   describe("create", () => {
     const checkScreenCount = async (expectedCount: number) => {
-      const res = await config.api.workspace.getDefinition(config.getAppId())
+      const res = await config.api.workspace.getDefinition(
+        config.getDevWorkspaceId()
+      )
       expect(res.screens.length).toEqual(expectedCount)
     }
 
@@ -275,16 +278,72 @@ describe("/applications", () => {
 
     it("should reject with a known name", async () => {
       await config.api.workspace.create(
-        { name: app.name },
+        { name: workspace.name },
         { body: { message: "App name is already in use." }, status: 400 }
       )
     })
 
     it("should reject with a known url", async () => {
       await config.api.workspace.create(
-        { name: "made up", url: app!.url! },
+        { name: "made up", url: workspace!.url! },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
+    })
+
+    it("creates app from a old import", async () => {
+      const newApp = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: path.join(__dirname, "data", "old-export.enc.tar.gz"),
+        encryptionPassword: "testtest",
+      })
+      expect(newApp._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+
+      // Check resources from import file in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.workspace.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(2)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(7)
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(newApp.appId)
+      expect(fileEtags).toEqual({
+        // These etags match the ones from the export file
+        "budibase-client.js": "a0ab956601262aae131122b3f65102da-2",
+        "manifest.json": "8eecdd3935062de5298d8d115453e124",
+      })
+    })
+
+    it("creates app from a new import", async () => {
+      const newApp = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: path.join(__dirname, "data", "export.tar.gz"),
+      })
+      expect(newApp._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+
+      // Check resources from import file in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.workspace.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(6)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(3)
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(newApp.appId)
+      expect(fileEtags).toEqual({
+        // These etags match the ones from the export file
+        "_dependencies/apexcharts.js": "f69025c0acbca8d05cddf60fb085b2d9",
+        "_dependencies/html5-qrcode.js": "ed3116b4b46ee666b7c3f8f857ccbcd4",
+        "budibase-client.js": "b27f5d2981b4a44da59028dac62c5ea9-2",
+        "budibase-client.new.js": "c010656cbf120c24f42a41a29b86d4bb-2",
+        "manifest.json": "23c83411010b942309cf3ed7cf74bc3e",
+      })
     })
   })
 
@@ -303,8 +362,8 @@ describe("/applications", () => {
       expect(response.apps).toHaveLength(1)
       expect(response.apps[0]).toEqual(
         expect.objectContaining({
-          prodId: config.getProdAppId(),
-          url: app.url,
+          prodId: config.getProdWorkspaceId(),
+          url: workspace.url,
         })
       )
     })
@@ -325,9 +384,9 @@ describe("/applications", () => {
       const testApp = response.apps.find(a => a.name === "Test Workspace App")
       expect(testApp).toEqual(
         expect.objectContaining({
-          prodId: config.getProdAppId(),
+          prodId: config.getProdWorkspaceId(),
           name: "Test Workspace App",
-          url: `${app.url}/testapp`,
+          url: `${workspace.url}/testapp`,
         })
       )
     })
@@ -367,14 +426,14 @@ describe("/applications", () => {
           {
             appId: `${app.appId}_${workspaceApp1._id}`,
             name: "App One",
-            prodId: config.getProdAppId(),
+            prodId: config.getProdWorkspaceId(),
             updatedAt: app.updatedAt,
             url: `${app.url}/appone`,
           },
           {
             appId: `${app.appId}_${workspaceApp2._id}`,
             name: "App Two",
-            prodId: config.getProdAppId(),
+            prodId: config.getProdWorkspaceId(),
             updatedAt: app.updatedAt,
             url: `${app.url}/apptwo`,
           },
@@ -390,7 +449,7 @@ describe("/applications", () => {
             url: "/appone",
           })
         )
-      app = await config.publish()
+      workspace = await config.publish()
 
       const secondWorkspace = await tk.withFreeze(new Date(), async () => {
         // Create second workspace
@@ -420,19 +479,19 @@ describe("/applications", () => {
         expect.arrayContaining([
           {
             appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
+              new RegExp(`^${workspace.appId}_workspace_app_.+`)
             ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
-            url: app.url,
+            name: workspace.name,
+            prodId: workspace.appId,
+            updatedAt: workspace.updatedAt,
+            url: workspace.url,
           },
           {
-            appId: `${app.appId}_${app1Workspace1._id}`,
+            appId: `${workspace.appId}_${app1Workspace1._id}`,
             name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
+            prodId: config.getProdWorkspaceId(),
+            updatedAt: workspace.updatedAt,
+            url: `${workspace.url}/appone`,
           },
           {
             appId: expect.stringMatching(
@@ -458,7 +517,7 @@ describe("/applications", () => {
             disabled: false,
           })
         )
-      app = await config.publish()
+      workspace = await config.publish()
 
       // Non published workspace
       await config.api.workspaceApp.create(
@@ -503,19 +562,19 @@ describe("/applications", () => {
         expect.arrayContaining([
           {
             appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
+              new RegExp(`^${workspace.appId}_workspace_app_.+`)
             ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
-            url: app.url,
+            name: workspace.name,
+            prodId: workspace.appId,
+            updatedAt: workspace.updatedAt,
+            url: workspace.url,
           },
           {
-            appId: `${app.appId}_${app1Workspace1._id}`,
+            appId: `${workspace.appId}_${app1Workspace1._id}`,
             name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
+            prodId: config.getProdWorkspaceId(),
+            updatedAt: workspace.updatedAt,
+            url: `${workspace.url}/appone`,
           },
           {
             appId: expect.stringMatching(
@@ -550,7 +609,7 @@ describe("/applications", () => {
         })
       )
 
-      app = await config.publish()
+      workspace = await config.publish()
 
       const response = await config.api.workspace.fetchClientApps()
 
@@ -559,19 +618,19 @@ describe("/applications", () => {
         expect.arrayContaining([
           {
             appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
+              new RegExp(`^${workspace.appId}_workspace_app_.+`)
             ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
-            url: app.url,
+            name: workspace.name,
+            prodId: workspace.appId,
+            updatedAt: workspace.updatedAt,
+            url: workspace.url,
           },
           {
-            appId: `${app.appId}_${app1Workspace1._id}`,
+            appId: `${workspace.appId}_${app1Workspace1._id}`,
             name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
+            prodId: config.getProdWorkspaceId(),
+            updatedAt: workspace.updatedAt,
+            url: `${workspace.url}/appone`,
           },
         ])
       )
@@ -580,16 +639,16 @@ describe("/applications", () => {
 
   describe("fetchAppDefinition", () => {
     it("should be able to get an apps definition", async () => {
-      const res = await config.api.workspace.getDefinition(app.appId)
+      const res = await config.api.workspace.getDefinition(workspace.appId)
       expect(res.libraries.length).toEqual(1)
     })
   })
 
   describe("fetchAppPackage", () => {
     it("should be able to fetch the app package", async () => {
-      const res = await config.api.workspace.getAppPackage(app.appId)
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
       expect(res.application).toBeDefined()
-      expect(res.application.appId).toEqual(config.getAppId())
+      expect(res.application.appId).toEqual(config.getDevWorkspaceId())
     })
 
     it("should retrieve all the screens for builder calls", async () => {
@@ -597,7 +656,7 @@ describe("/applications", () => {
       await config.api.screen.save(basicScreen())
       await config.api.screen.save(basicScreen())
 
-      const res = await config.api.workspace.getAppPackage(app.appId)
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
 
       expect(res.screens).toHaveLength(3) // 3 created screens
     })
@@ -616,9 +675,9 @@ describe("/applications", () => {
 
       await config.publish()
       const res = await config.withHeaders(
-        { referer: `http://localhost:10000/app${app.url}` },
+        { referer: `http://localhost:10000/app${workspace.url}` },
         () =>
-          config.api.workspace.getAppPackage(config.getProdAppId(), {
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
             publicUser: true,
           })
       )
@@ -635,7 +694,7 @@ describe("/applications", () => {
           structures.workspaceApps.createRequest()
         )
 
-        const res = await config.api.workspace.getAppPackage(app.appId)
+        const res = await config.api.workspace.getAppPackage(workspace.appId)
 
         expect(res.screens).toHaveLength(0)
       })
@@ -647,7 +706,9 @@ describe("/applications", () => {
         }[]
 
         beforeEach(async () => {
-          const appPackage = await config.api.workspace.getAppPackage(app.appId)
+          const appPackage = await config.api.workspace.getAppPackage(
+            workspace.appId
+          )
 
           let defaultWorkspaceApp: WorkspaceApp | undefined
 
@@ -712,11 +773,11 @@ describe("/applications", () => {
           async closingChar => {
             await config.withHeaders(
               {
-                referer: `http://localhost:10000/${config.appId}${closingChar}`,
+                referer: `http://localhost:10000/${config.devWorkspaceId}${closingChar}`,
               },
               async () => {
                 const res = await config.api.workspace.getAppPackage(
-                  app.appId,
+                  workspace.appId,
                   {
                     headers: {
                       [Header.TYPE]: "client",
@@ -743,11 +804,11 @@ describe("/applications", () => {
             const { url } = workspaceAppInfo[1].workspaceApp
             await config.withHeaders(
               {
-                referer: `http://localhost:10000/${config.appId}${url}${closingChar}`,
+                referer: `http://localhost:10000/${config.devWorkspaceId}${url}${closingChar}`,
               },
               async () => {
                 const res = await config.api.workspace.getAppPackage(
-                  app.appId,
+                  workspace.appId,
                   {
                     headers: {
                       [Header.TYPE]: "client",
@@ -772,14 +833,17 @@ describe("/applications", () => {
           const { url } = workspaceAppInfo[1].workspaceApp
           await config.withHeaders(
             {
-              referer: `http://localhost:10000/${config.appId}${url}#page-1`,
+              referer: `http://localhost:10000/${config.devWorkspaceId}${url}#page-1`,
             },
             async () => {
-              const res = await config.api.workspace.getAppPackage(app.appId, {
-                headers: {
-                  [Header.TYPE]: "client",
-                },
-              })
+              const res = await config.api.workspace.getAppPackage(
+                workspace.appId,
+                {
+                  headers: {
+                    [Header.TYPE]: "client",
+                  },
+                }
+              )
 
               expect(res.screens).toHaveLength(3)
               expect(res.screens).toEqual(
@@ -798,11 +862,11 @@ describe("/applications", () => {
           await config.withProdApp(() =>
             config.withHeaders(
               {
-                referer: `http://localhost:10000/app${config.prodApp?.url}`,
+                referer: `http://localhost:10000/app${config.prodWorkspace?.url}`,
               },
               async () => {
                 const res = await config.api.workspace.getAppPackage(
-                  config.getAppId(),
+                  config.getDevWorkspaceId(),
                   {
                     headers: {
                       [Header.TYPE]: "client",
@@ -828,7 +892,7 @@ describe("/applications", () => {
 
   describe("update", () => {
     it("should be able to update the app package", async () => {
-      const updatedApp = await config.api.workspace.update(app.appId, {
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
         name: "TEST_APP",
       })
       expect(updatedApp._rev).toBeDefined()
@@ -838,12 +902,12 @@ describe("/applications", () => {
 
   describe("publish", () => {
     it("should publish app with dev app ID", async () => {
-      await config.api.workspace.publish(app.appId)
+      await config.api.workspace.publish(workspace.appId)
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
     it("should publish app with prod app ID", async () => {
-      await config.api.workspace.publish(app.appId.replace("_dev", ""))
+      await config.api.workspace.publish(workspace.appId.replace("_dev", ""))
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
@@ -873,7 +937,7 @@ describe("/applications", () => {
           .onRowSaved({ tableId: table._id! })
           .save()
 
-      await config.api.workspace.filteredPublish(app.appId, {
+      await config.api.workspace.filteredPublish(workspace.appId, {
         automationIds: [automation._id!],
       })
 
@@ -931,7 +995,7 @@ describe("/applications", () => {
         name: "unpublished-screen",
       })
 
-      await config.api.workspace.filteredPublish(app.appId, {
+      await config.api.workspace.filteredPublish(workspace.appId, {
         workspaceAppIds: [workspaceApp1._id],
       })
 
@@ -994,13 +1058,13 @@ describe("/applications", () => {
 
   describe("manage client library version", () => {
     it("should be able to update the app client library version", async () => {
-      await config.api.workspace.updateClient(app.appId)
+      await config.api.workspace.updateClient(workspace.appId)
       expect(events.app.versionUpdated).toHaveBeenCalledTimes(1)
     })
 
     it("should be able to revert the app client library version", async () => {
-      await config.api.workspace.updateClient(app.appId)
-      await config.api.workspace.revertClient(app.appId)
+      await config.api.workspace.updateClient(workspace.appId)
+      await config.api.workspace.revertClient(workspace.appId)
       expect(events.app.versionReverted).toHaveBeenCalledTimes(1)
     })
   })
@@ -1033,13 +1097,13 @@ describe("/applications", () => {
 
   describe("sync", () => {
     it("app should sync correctly", async () => {
-      const { message } = await config.api.workspace.sync(app.appId)
+      const { message } = await config.api.workspace.sync(workspace.appId)
       expect(message).toEqual("App sync completed successfully.")
     })
 
     it("app should not sync if production", async () => {
       const { message } = await config.withProdApp(() =>
-        config.api.workspace.sync(app.appId.replace("_dev", ""), {
+        config.api.workspace.sync(workspace.appId.replace("_dev", ""), {
           status: 400,
         })
       )
@@ -1051,7 +1115,7 @@ describe("/applications", () => {
 
     it("app should not sync if sync is disabled", async () => {
       env._set("DISABLE_AUTO_PROD_APP_SYNC", true)
-      const { message } = await config.api.workspace.sync(app.appId)
+      const { message } = await config.api.workspace.sync(workspace.appId)
       expect(message).toEqual(
         "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable."
       )
@@ -1061,13 +1125,13 @@ describe("/applications", () => {
 
   describe("unpublish", () => {
     it("should unpublish app with dev app ID", async () => {
-      await config.api.workspace.unpublish(app.appId)
+      await config.api.workspace.unpublish(workspace.appId)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should unpublish app with prod app ID", async () => {
       await config.withProdApp(() =>
-        config.api.workspace.unpublish(app.appId.replace("_dev", ""))
+        config.api.workspace.unpublish(workspace.appId.replace("_dev", ""))
       )
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
@@ -1075,18 +1139,17 @@ describe("/applications", () => {
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
-      const prodAppId = app.appId.replace("_dev", "")
       nock("http://localhost:10000")
-        .delete(`/api/global/roles/${prodAppId}`)
+        .delete(`/api/global/roles/${workspace.appId}`)
         .reply(200, {})
 
-      await config.api.workspace.delete(app.appId)
+      await config.api.workspace.delete(workspace.appId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
-      const prodAppId = app.appId.replace("_dev", "")
+      const prodAppId = workspace.appId.replace("_dev", "")
       nock("http://localhost:10000")
         .delete(`/api/global/roles/${prodAppId}`)
         .reply(200, {})
@@ -1109,9 +1172,8 @@ describe("/applications", () => {
         func: migrationMock,
       })
 
-      const prodAppId = app.appId.replace("_dev", "")
       nock("http://localhost:10000")
-        .delete(`/api/global/roles/${prodAppId}`)
+        .delete(`/api/global/roles/${workspace.appId}`)
         .reply(200, {})
 
       expect(migrationMock).not.toHaveBeenCalled()
@@ -1120,7 +1182,7 @@ describe("/applications", () => {
           SYNC_MIGRATION_CHECKS_MS: 1000,
         },
         () =>
-          config.api.workspace.delete(app.appId, {
+          config.api.workspace.delete(workspace.appId, {
             headersNotPresent: [Header.MIGRATING_APP],
           })
       )
@@ -1134,8 +1196,8 @@ describe("/applications", () => {
 
   describe("POST /api/applications/:appId/duplicate", () => {
     it("should duplicate an existing app", async () => {
-      const resp = await config.api.workspace.duplicateApp(
-        app.appId,
+      const resp = await config.api.workspace.duplicateWorkspace(
+        workspace.appId,
         {
           name: "to-dupe copy",
           url: "/to-dupe-copy",
@@ -1147,12 +1209,12 @@ describe("/applications", () => {
 
       expect(events.app.duplicated).toHaveBeenCalled()
       expect(resp.duplicateAppId).toBeDefined()
-      expect(resp.sourceAppId).toEqual(app.appId)
-      expect(resp.duplicateAppId).not.toEqual(app.appId)
+      expect(resp.sourceAppId).toEqual(workspace.appId)
+      expect(resp.duplicateAppId).not.toEqual(workspace.appId)
     })
 
     it("should reject an unknown app id with a 404", async () => {
-      await config.api.workspace.duplicateApp(
+      await config.api.workspace.duplicateWorkspace(
         structures.db.id(),
         {
           name: "to-dupe 123",
@@ -1165,10 +1227,10 @@ describe("/applications", () => {
     })
 
     it("should reject with a known name", async () => {
-      await config.api.workspace.duplicateApp(
-        app.appId,
+      await config.api.workspace.duplicateWorkspace(
+        workspace.appId,
         {
-          name: app.name,
+          name: workspace.name,
           url: "/known-name",
         },
         { body: { message: "App name is already in use." }, status: 400 }
@@ -1177,11 +1239,11 @@ describe("/applications", () => {
     })
 
     it("should reject with a known url", async () => {
-      await config.api.workspace.duplicateApp(
-        app.appId,
+      await config.api.workspace.duplicateWorkspace(
+        workspace.appId,
         {
           name: "this is fine",
-          url: app.url,
+          url: workspace.url,
         },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
@@ -1192,17 +1254,17 @@ describe("/applications", () => {
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
-      await context.doInWorkspaceContext(app.appId, () =>
+      await context.doInWorkspaceContext(workspace.appId, () =>
         config.createAutomationLog(automation)
       )
 
-      await config.api.workspace.sync(app.appId)
+      await config.api.workspace.sync(workspace.appId)
 
       // does exist in prod
       const prodLogs = await config.getAutomationLogs()
       expect(prodLogs.data.length).toBe(1)
 
-      await config.api.workspace.unpublish(app.appId)
+      await config.api.workspace.unpublish(workspace.appId)
 
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
@@ -1212,7 +1274,7 @@ describe("/applications", () => {
 
   describe("POST /api/applications/:appId/sample", () => {
     it("should be able to add sample data", async () => {
-      await config.api.workspace.addSampleData(config.getAppId())
+      await config.api.workspace.addSampleData(config.getDevWorkspaceId())
       for (let table of DEFAULT_TABLES) {
         const res = await config.api.row.search(
           table._id!,
@@ -1242,12 +1304,12 @@ describe("/applications", () => {
       expect(devRows.rows).toHaveLength(3)
 
       // Publish with seedProductionTables option
-      await config.api.workspace.filteredPublish(config.getAppId(), {
+      await config.api.workspace.filteredPublish(config.getDevWorkspaceId(), {
         seedProductionTables: true,
       })
 
       // Switch to production context and verify data was seeded
-      await context.doInWorkspaceContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodWorkspaceId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1270,7 +1332,7 @@ describe("/applications", () => {
 
       // Verify the API accepts seedProductionTables option without error
       const result = await config.api.workspace.filteredPublish(
-        config.getAppId(),
+        config.getDevWorkspaceId(),
         {
           seedProductionTables: true,
         }
@@ -1280,7 +1342,7 @@ describe("/applications", () => {
       expect(result).toBeDefined()
 
       // Verify data was published to production (since test mode publishes all data)
-      await context.doInWorkspaceContext(config.prodAppId!, async () => {
+      await context.doInWorkspaceContext(config.prodWorkspaceId!, async () => {
         const prodRows = await config.api.row.search(table._id!, {
           query: {},
         })
@@ -1292,7 +1354,7 @@ describe("/applications", () => {
 
       // Test that we can call listEmptyProductionTables without error
       const emptyTables = await context.doInWorkspaceContext(
-        config.getAppId(),
+        config.getDevWorkspaceId(),
         async () => {
           return await sdk.tables.listEmptyProductionTables()
         }

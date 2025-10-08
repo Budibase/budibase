@@ -720,7 +720,7 @@
         "key": "disabled"
       },
       {
-        "type": "icon",
+        "type": "phosphorIcon",
         "label": "Icon",
         "key": "icon"
       },
@@ -1467,11 +1467,11 @@
     },
     "settings": [
       {
-        "type": "icon",
+        "type": "phosphorIcon",
         "label": "Icon",
         "key": "icon",
         "required": true,
-        "defaultValue": "ri-star-fill"
+        "defaultValue": "star"
       },
       {
         "type": "select",
@@ -1538,6 +1538,78 @@
           {
             "value": "ri-10x",
             "label": "10XL"
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color"
+      },
+      {
+        "type": "event",
+        "label": "On click",
+        "key": "onClick"
+      }
+    ]
+  },
+  "iconphosphor": {
+    "name": "Icon",
+    "description": "A basic component for displaying icons",
+    "icon": "phosphor-logo",
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
+    },
+    "settings": [
+      {
+        "type": "phosphorIcon",
+        "label": "Icon",
+        "key": "icon",
+        "required": true,
+        "defaultValue": "star"
+      },
+      {
+        "type": "number",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": 48,
+        "min": 8,
+        "max": 256
+      },
+      {
+        "type": "select",
+        "label": "Weight",
+        "key": "weight",
+        "defaultValue": "regular",
+        "options": [
+          {
+            "value": "thin",
+            "label": "Thin"
+          },
+          {
+            "value": "light",
+            "label": "Light"
+          },
+          {
+            "value": "regular",
+            "label": "Regular"
+          },
+          {
+            "value": "bold",
+            "label": "Bold"
+          },
+          {
+            "value": "fill",
+            "label": "Fill"
+          },
+          {
+            "value": "duotone",
+            "label": "Duotone"
           }
         ]
       },

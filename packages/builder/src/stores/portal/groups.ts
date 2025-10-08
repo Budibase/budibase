@@ -1,7 +1,7 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
 import { licensing } from "@/stores/portal"
 import { UserGroup } from "@budibase/types"
+import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 
 class GroupStore extends BudiStore<UserGroup[]> {
@@ -82,14 +82,6 @@ class GroupStore extends BudiStore<UserGroup[]> {
       groupAppIds = groupAppIds.concat(group.builder.apps)
     }
     return groupAppIds
-  }
-
-  async addGroupAppBuilder(groupId: string, appId: string) {
-    return await API.addGroupAppBuilder(groupId, appId)
-  }
-
-  async removeGroupAppBuilder(groupId: string, appId: string) {
-    return await API.removeGroupAppBuilder(groupId, appId)
   }
 
   async bulkAddUsersFromCsv(groupId: string, csvContent: string) {

@@ -149,8 +149,11 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
+  layoutDirection?: LayoutDirection
   testData?: AutomationTriggerResultOutputs
 }
+
+export type LayoutDirection = "TB" | "LR"
 
 export interface BaseIOStructure {
   type?: AutomationIOType

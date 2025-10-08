@@ -147,7 +147,6 @@ describe("clientLibrary", () => {
 
   describe("updateClientLibrary", () => {
     beforeEach(() => {
-      mockedFs.createReadStream.mockReturnValue("stream" as any)
       ;(mockedFs.promises.readFile as MockedReadFile).mockResolvedValue(
         '{"version": "1.0.0"}' as any
       )
@@ -157,20 +156,41 @@ describe("clientLibrary", () => {
       ["dev", true],
       ["production", false],
     ])("should upload manifest and client in %s mode", async (_, isDev) => {
+      mockedFs.createReadStream.mockReturnValueOnce("stream1" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream2" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream3" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream5" as any)
+
       mockedEnv.isDev.mockReturnValue(isDev)
 
       const result = await updateClientLibrary(testAppId)
 
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(2)
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(5)
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/manifest.json",
-        stream: "stream",
+        stream: "stream1",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
         filename: "app_123/budibase-client.js",
-        stream: "stream",
+        stream: "stream2",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/budibase-client.new.js",
+        stream: "stream3",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/_dependencies/apexcharts.js",
+        stream: "stream4",
+      })
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: "app_123/_dependencies/html5-qrcode.js",
+        stream: "stream5",
       })
       expect(result).toEqual({ version: "1.0.0" })
     })
@@ -232,8 +252,12 @@ describe("clientLibrary", () => {
         { Key: "app_123/budibase-client.js.bak" },
       ]
 
-      mockedObjectStore.getReadStream.mockReturnValueOnce("stream1" as any)
-      mockedObjectStore.getReadStream.mockReturnValueOnce("stream2" as any)
+      mockedObjectStore.getReadStream.mockReturnValueOnce({
+        stream: "stream1",
+      } as any)
+      mockedObjectStore.getReadStream.mockReturnValueOnce({
+        stream: "stream2",
+      } as any)
 
       mockedObjectStore.listAllObjects
         .mockReturnValueOnce([] as any) // No .bak folder

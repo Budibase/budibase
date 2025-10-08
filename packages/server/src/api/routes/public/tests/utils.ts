@@ -1,10 +1,10 @@
-import * as setup from "../../tests/utilities"
-import { checkSlashesInUrl } from "../../../../utilities"
-import supertest from "supertest"
-import { User } from "@budibase/types"
-import environment from "../../../../environment"
-import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import { User } from "@budibase/types"
+import nock from "nock"
+import supertest from "supertest"
+import environment from "../../../../environment"
+import { checkSlashesInUrl } from "../../../../utilities"
+import * as setup from "../../tests/utilities"
 
 export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
 
@@ -53,7 +53,7 @@ export function generateMakeRequest(
     method: HttpMethod,
     endpoint: string,
     body?: any,
-    intAppId: string | undefined = config.getAppId()
+    intAppId: string | undefined = config.getDevWorkspaceId()
   ) => {
     const { headers, url } = base(apiKey, endpoint, { ...opts, intAppId })
     if (body && typeof body !== "string") {
@@ -79,7 +79,7 @@ export function generateMakeRequestWithFormData(
     method: HttpMethod,
     endpoint: string,
     fields: Record<string, string | { path: string }>,
-    intAppId: string | undefined = config.getAppId()
+    intAppId: string | undefined = config.getDevWorkspaceId()
   ) => {
     const { headers, url } = base(apiKey, endpoint, { ...opts, intAppId })
     const req = request[method](url).set(config.defaultHeaders(headers))

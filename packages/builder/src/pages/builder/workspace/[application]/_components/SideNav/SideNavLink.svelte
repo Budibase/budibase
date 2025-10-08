@@ -8,6 +8,7 @@
   export let collapsed = false
   export let target: string | undefined = undefined
   export let forceActive: boolean | undefined = undefined
+  export let iconColor: string = ""
 
   $: active = forceActive ?? (url ? $isActive(url) : false)
 </script>
@@ -22,18 +23,27 @@
   tabindex="0"
 >
   <div class="link_icon">
-    {#if $$slots.icon}
-      <slot name="icon" />
-    {:else}
+    <slot name="icon" />
+    {#if icon}
       <Icon
         name={icon}
         size="M"
         weight="regular"
-        color="var(--spectrum-global-color-gray-800)"
+        color={iconColor || "var(--spectrum-global-color-gray-800)"}
       />
     {/if}
   </div>
-  <div class="link_text">{text}</div>
+  <div class="link_content">
+    <div class="link_text" style={iconColor ? `color: ${iconColor};` : ""}>
+      {text}
+    </div>
+    {#if $$slots.right}
+      <div class="right">
+        <slot name="right" />
+      </div>
+    {/if}
+  </div>
+
   {#if $$slots.actions}
     <div class="actions">
       <slot name="actions" />
@@ -44,9 +54,15 @@
 <style>
   .actions {
     display: none;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link:hover .actions {
-    display: block;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }
   .link {
     display: flex;
@@ -88,9 +104,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
     flex: 1;
   }
-  .link.collapsed .link_text {
+
+  .link .link_content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    min-width: 0;
+  }
+  .link.collapsed .link_content {
     display: none;
   }
 </style>

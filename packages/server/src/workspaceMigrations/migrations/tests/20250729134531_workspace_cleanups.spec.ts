@@ -2,14 +2,14 @@ import { db } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { WorkspaceApp } from "@budibase/types"
 import tk from "timekeeper"
-import { AppMigration, updateAppMigrationMetadata } from "../.."
+import { WorkspaceMigration, updateWorkspaceMigrationMetadata } from "../.."
 import * as setup from "../../../api/routes/tests/utilities"
 import sdk from "../../../sdk"
 import { basicScreen } from "../../../tests/utilities/structures"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250729134531_workspace_cleanups"
 
-const MIGRATIONS: AppMigration[] = [
+const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20250729134531_workspace_cleanups",
     func: jest.fn().mockImplementation(migration),
@@ -28,9 +28,9 @@ async function createWorkspaceApp(isDefault = false) {
 }
 
 describe.each([
-  ["dev", () => config.getAppId()],
-  ["prod", () => config.getProdAppId()],
-])("Workspace cleanups migration (%s)", (_, getAppId) => {
+  ["dev", () => config.getDevWorkspaceId()],
+  ["prod", () => config.getProdWorkspaceId()],
+])("Workspace cleanups migration (%s)", (_, getWorkspaceId) => {
   let defaultWorkspaceApp: WorkspaceApp
 
   beforeAll(async () => {
@@ -39,16 +39,19 @@ describe.each([
 
   beforeEach(async () => {
     await config.newTenant()
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
-      await config.doInContext(appId, async () => {
-        await updateAppMigrationMetadata({
-          appId,
+    for (const workspaceId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
+      await config.doInContext(workspaceId, async () => {
+        await updateWorkspaceMigrationMetadata({
+          workspaceId,
           version: "",
         })
       })
 
       const workspaceApps = await config.doInContext(
-        getAppId(),
+        getWorkspaceId(),
         sdk.workspaceApps.fetch
       )
       expect(workspaceApps).toHaveLength(1)
@@ -64,12 +67,12 @@ describe.each([
   })
 
   it("does nothing when only one default workspace app exists", async () => {
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
     expect(workspaceApps).toHaveLength(1)
@@ -77,35 +80,35 @@ describe.each([
   })
 
   it("does nothing when multiple non-default workspace apps exist", async () => {
-    await config.doInContext(getAppId(), async () => {
+    await config.doInContext(getWorkspaceId(), async () => {
       await createWorkspaceApp(false)
       await createWorkspaceApp(false)
     })
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
     expect(workspaceApps).toHaveLength(3)
   })
 
   it("removes duplicate default workspace apps and keeps only one", async () => {
-    await config.doInContext(getAppId(), async () => {
+    await config.doInContext(getWorkspaceId(), async () => {
       await createWorkspaceApp(true)
       await createWorkspaceApp(true)
       await createWorkspaceApp(true)
     })
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
 
@@ -116,7 +119,7 @@ describe.each([
   it("updates screens to reference the kept workspace app when removing duplicates", async () => {
     let keptWorkspaceAppId: string = undefined!
 
-    await config.doInContext(getAppId(), async () => {
+    await config.doInContext(getWorkspaceId(), async () => {
       const workspaceApp1 = await createWorkspaceApp(true)
       const workspaceApp2 = await createWorkspaceApp(true)
 
@@ -143,15 +146,18 @@ describe.each([
       })
     })
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
-    const screens = await config.doInContext(getAppId(), sdk.screens.fetch)
+    const screens = await config.doInContext(
+      getWorkspaceId(),
+      sdk.screens.fetch
+    )
 
     expect(workspaceApps).toHaveLength(1)
     expect(workspaceApps[0]._id).toBe(keptWorkspaceAppId)
@@ -165,18 +171,18 @@ describe.each([
   })
 
   it("handles mixed default and non-default workspace apps correctly", async () => {
-    await config.doInContext(getAppId(), async () => {
+    await config.doInContext(getWorkspaceId(), async () => {
       await createWorkspaceApp(true)
       await createWorkspaceApp(true)
       await createWorkspaceApp(false)
     })
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
 
@@ -190,8 +196,8 @@ describe.each([
   })
 
   it("handles different workspace apps between dev and prod", async () => {
-    const prodAppId = db.getProdWorkspaceID(getAppId())
-    const devId = db.getDevWorkspaceID(getAppId())
+    const prodAppId = db.getProdWorkspaceID(getWorkspaceId())
+    const devId = db.getDevWorkspaceID(getWorkspaceId())
     await config.doInContext(prodAppId, async () => {
       await createWorkspaceApp(true)
     })
@@ -210,12 +216,12 @@ describe.each([
       )
     )
 
-    await config.doInContext(getAppId(), () =>
-      processMigrations(config.getAppId(), MIGRATIONS)
+    await config.doInContext(getWorkspaceId(), () =>
+      processMigrations(config.getDevWorkspaceId(), MIGRATIONS)
     )
 
     const workspaceApps = await config.doInContext(
-      getAppId(),
+      getWorkspaceId(),
       sdk.workspaceApps.fetch
     )
 
