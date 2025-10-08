@@ -102,9 +102,13 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
   await utils.parallelForeach(
     workspaceIdsToCheck,
     async id => {
-      const syncAction = syncUsersToWorkspace(id, finalUsers, groups)
-      promises.push(syncAction)
-      await syncAction
+      try {
+        const syncAction = syncUsersToWorkspace(id, finalUsers, groups)
+        promises.push(syncAction)
+        await syncAction
+      } catch {
+        // Don't throw, promises checks will be check under
+      }
     },
     10
   )
