@@ -1,21 +1,19 @@
-import { cache, constants, logging, queue } from "@budibase/backend-core"
+import { constants, logging, queue } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
 import { DocUpdateEvent, WorkspaceUserSyncEvents } from "@budibase/types"
 import { syncUsersAcrossWorkspaces } from "../../sdk/workspace/workspaces/sync"
 
 export class UserSyncProcessor {
-  private static batchProcessingKey = "usersync:batch"
-  private static _queue: queue.BudibaseQueue<{}>
+  private static _queue: queue.BudibaseQueue<{ userId: string }>
 
   public static get queue() {
     if (!UserSyncProcessor._queue) {
-      UserSyncProcessor._queue = new queue.BudibaseQueue<{}>(
+      UserSyncProcessor._queue = new queue.BudibaseQueue<{ userId: string }>(
         queue.JobQueue.BATCH_USER_SYNC_PROCESSOR,
         {
           jobOptions: {
-            attempts: 3,
             removeOnComplete: true,
-            removeOnFail: true,
+            removeOnFail: 1000,
           },
         }
       )
@@ -25,30 +23,25 @@ export class UserSyncProcessor {
   }
 
   init() {
-    UserSyncProcessor.queue.process(async job => {
-      const userIds = await cache.getArray(UserSyncProcessor.batchProcessingKey)
+    UserSyncProcessor.queue.process(1, async job => {
+      const jobs = [
+        job,
+        ...(await UserSyncProcessor.queue.getBullQueue().getWaiting(0, 100)),
+      ]
+
+      const userIds = new Set(jobs.map(m => m.data.userId)).values().toArray()
       await syncUsersAcrossWorkspaces(userIds)
-      await cache.removeFromArray(UserSyncProcessor.batchProcessingKey, userIds)
-      await job.moveToCompleted()
+
+      for (const job of jobs) {
+        await job.moveToCompleted()
+      }
     })
   }
 
   async add(userIds: string[]) {
-    if (userIds.length) {
-      await cache.append(UserSyncProcessor.batchProcessingKey, userIds)
+    for (const userId of userIds) {
+      await UserSyncProcessor.queue.add({ userId })
     }
-    await this.queueRun()
-  }
-
-  private async queueRun() {
-    const waitingCount = await UserSyncProcessor.queue
-      .getBullQueue()
-      .getWaitingCount()
-    if (waitingCount) {
-      // Another process already queued
-      return
-    }
-    await UserSyncProcessor.queue.add({})
   }
 }
 
