@@ -191,7 +191,7 @@ export const TYPE_TRANSFORM_MAP: Record<
   },
   [FieldType.SIGNATURE_SINGLE]: {
     parse: () => {
-      throw new Error(`FieldType.SIGNATURE_SINGLE parse is not implemented`)
+      throw new Error(`FieldType.SIGNATURE_SINGLE #parse is not implemented`)
     },
   },
   [FieldType.INTERNAL]: {
