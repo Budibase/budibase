@@ -1,7 +1,7 @@
 import { sql } from "@budibase/backend-core"
 import { FieldType } from "@budibase/types"
 
-const parseArrayString = (value: any) => {
+const parseArrayString = (value: string | unknown) => {
   if (typeof value === "string") {
     if (value === "") {
       return []
@@ -27,7 +27,7 @@ export const TYPE_TRANSFORM_MAP: any = {
     [null]: [],
     //@ts-ignore
     [undefined]: undefined,
-    parse: (link: any) => {
+    parse: (link: string | { _id?: string }[]) => {
       if (Array.isArray(link) && typeof link[0] === "object") {
         return link.map(el => (el && el._id ? el._id : el))
       }
