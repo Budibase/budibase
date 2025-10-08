@@ -1,10 +1,10 @@
-import { constants, logging } from "@budibase/backend-core"
+import { cache, constants, logging } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
 import { DocUpdateEvent, WorkspaceUserSyncEvents } from "@budibase/types"
-import { syncUsersToAllWorkspaces } from "../../sdk/workspace/workspaces/sync"
-import { UpdateCallback } from "./processors"
 
-export default function process(updateCb?: UpdateCallback) {
+const batchProcessingKey = "usersync:batch"
+
+export default function process() {
   const processor = async (update: DocUpdateEvent) => {
     try {
       const docId = update.id
@@ -16,12 +16,8 @@ export default function process(updateCb?: UpdateCallback) {
       } else {
         userIds = [docId]
       }
-      if (userIds.length > 0) {
-        await syncUsersToAllWorkspaces(userIds)
-      }
-      if (updateCb) {
-        updateCb(docId)
-      }
+
+      await cache.append(batchProcessingKey, userIds)
     } catch (err: any) {
       // if something not found - no changes to perform
       if (err?.status === 404) {
