@@ -91,8 +91,8 @@
     fullScreen: false,
     zoomControl: false,
     scrollWheelZoom: zoomEnabled,
-    minZoomLevel,
-    maxZoomLevel,
+    minZoom: minZoomLevel,
+    maxZoom: maxZoomLevel,
   }
   const fallbackCoordinates = [51.5072, -0.1276] //London
 
@@ -296,7 +296,6 @@
       })
       L.tileLayer(tileURL, {
         attribution: "&copy; " + cleanAttribution,
-        zoom,
       }).addTo(mapInstance)
 
       // Add click handler
