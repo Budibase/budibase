@@ -23,7 +23,7 @@ const parseArrayString = (value: string | unknown) => {
 export const TYPE_TRANSFORM_MAP: Record<
   FieldType,
   {
-    ""?: null
+    ""?: null | []
     true?: true
     false?: false
     parse?: (input: string | Date) => string | undefined | {}
@@ -35,7 +35,7 @@ export const TYPE_TRANSFORM_MAP: Record<
     [null]: [],
     //@ts-ignore
     [undefined]: undefined,
-    parse: (link: string | { _id?: string }[]) => {
+    parse: link => {
       if (Array.isArray(link) && typeof link[0] === "object") {
         return link.map(el => (el && el._id ? el._id : el))
       }
@@ -176,6 +176,27 @@ export const TYPE_TRANSFORM_MAP: Record<
       } catch (err) {
         return input
       }
+    },
+  },
+  [FieldType.AI]: {
+    parse: () => {
+      throw new Error(`FieldType.AI parse is not implemented`)
+    },
+  },
+
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    parse: () => {
+      throw new Error(`FieldType.BB_REFERENCE_SINGLE parse is not implemented`)
+    },
+  },
+  [FieldType.SIGNATURE_SINGLE]: {
+    parse: () => {
+      throw new Error(`FieldType.SIGNATURE_SINGLE #parse is not implemented`)
+    },
+  },
+  [FieldType.INTERNAL]: {
+    parse: () => {
+      throw new Error(`FieldType.INTERNAL is deprecated`)
     },
   },
 }
