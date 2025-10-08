@@ -3,9 +3,8 @@ import { sdk as proSdk } from "@budibase/pro"
 import { DocUpdateEvent, WorkspaceUserSyncEvents } from "@budibase/types"
 import { syncUsersAcrossWorkspaces } from "../../sdk/workspace/workspaces/sync"
 
-const batchProcessingKey = "usersync:batch"
-
 export class UserSyncProcessor {
+  private static batchProcessingKey = "usersync:batch"
   private static _queue: queue.BudibaseQueue<{}>
 
   public static get queue() {
@@ -27,14 +26,21 @@ export class UserSyncProcessor {
 
   init() {
     UserSyncProcessor.queue.process(async job => {
-      const userIds = await cache.getArray(batchProcessingKey)
+      const userIds = await cache.getArray(UserSyncProcessor.batchProcessingKey)
       await syncUsersAcrossWorkspaces(userIds)
-      await cache.removeFromArray(batchProcessingKey, userIds)
+      await cache.removeFromArray(UserSyncProcessor.batchProcessingKey, userIds)
       await job.moveToCompleted()
     })
   }
 
-  async queueRun() {
+  async add(userIds: string[]) {
+    if (userIds.length) {
+      await cache.append(UserSyncProcessor.batchProcessingKey, userIds)
+    }
+    await this.queueRun()
+  }
+
+  private async queueRun() {
     const waitingCount = await UserSyncProcessor.queue
       .getBullQueue()
       .getWaitingCount()
@@ -69,12 +75,8 @@ export default function process() {
         userIds = [docId]
       }
 
-      if (userIds.length) {
-        await cache.append(batchProcessingKey, userIds)
-
-        const batchSyncProcessor = getUserSyncProcessor()
-        await batchSyncProcessor.queueRun()
-      }
+      const batchSyncProcessor = getUserSyncProcessor()
+      await batchSyncProcessor.add(userIds)
     } catch (err: any) {
       // if something not found - no changes to perform
       if (err?.status === 404) {
