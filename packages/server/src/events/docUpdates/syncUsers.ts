@@ -29,11 +29,11 @@ export class UserSyncProcessor {
         ...(await UserSyncProcessor.queue.getBullQueue().getWaiting(0, 100)),
       ]
 
-      const userIds = new Set(jobs.map(m => m.data.userId)).values().toArray()
+      const userIds = Array.from(new Set(jobs.map(m => m.data.userId)))
       await syncUsersAcrossWorkspaces(userIds)
 
       for (const job of jobs) {
-        await job.moveToCompleted()
+        await job.moveToCompleted(undefined, true)
       }
     })
   }
