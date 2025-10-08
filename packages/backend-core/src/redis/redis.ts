@@ -1,5 +1,5 @@
-import env from "../environment"
 import Redis, { Cluster, ScanStream } from "ioredis"
+import env from "../environment"
 
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
@@ -12,16 +12,16 @@ if (env.MOCK_REDIS) {
   }
 }
 
-import {
-  removeDbPrefix,
-  getRedisOptions,
-  SEPARATOR,
-  SelectableDatabase,
-  getRedisConnectionDetails,
-  getRedisClusterOptions,
-} from "./utils"
 import { Span, tracer } from "dd-trace"
 import { zip } from "lodash"
+import {
+  SEPARATOR,
+  SelectableDatabase,
+  getRedisClusterOptions,
+  getRedisConnectionDetails,
+  getRedisOptions,
+  removeDbPrefix,
+} from "./utils"
 
 async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
   return await tracer.trace("Redis.init", async span => {
@@ -222,6 +222,18 @@ class RedisWrapper {
         },
         {} as Record<string, T | null>
       )
+    })
+  }
+
+  async append(key: string, value: string | number | (string | number)[]) {
+    return await this.trace("RedisWrapper.append", async span => {
+      span.addTags({ key: key })
+      key = this.prefixed(key)
+      if (!Array.isArray(value)) {
+        await this.client.append(key, value)
+      } else {
+        await this.client.rpush(key, ...value)
+      }
     })
   }
 
