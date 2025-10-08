@@ -128,7 +128,7 @@ export async function trigger(
 
         if (triggers.isAutomationResults(response)) {
           let collectedValue = response.steps.find(
-            (step: any) => step.stepId === AutomationActionStepId.COLLECT
+            step => step.stepId === AutomationActionStepId.COLLECT
           )
 
           ctx.body = collectedValue?.outputs
