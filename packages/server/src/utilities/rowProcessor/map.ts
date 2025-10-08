@@ -23,7 +23,7 @@ const parseArrayString = (value: string | unknown) => {
 export const TYPE_TRANSFORM_MAP: Record<
   FieldType,
   {
-    ""?: null
+    ""?: null | []
     true?: true
     false?: false
     parse?: (input: string | Date) => string | undefined | {}
@@ -35,7 +35,7 @@ export const TYPE_TRANSFORM_MAP: Record<
     [null]: [],
     //@ts-ignore
     [undefined]: undefined,
-    parse: (link: string | { _id?: string }[]) => {
+    parse: link => {
       if (Array.isArray(link) && typeof link[0] === "object") {
         return link.map(el => (el && el._id ? el._id : el))
       }
