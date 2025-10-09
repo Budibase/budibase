@@ -17,10 +17,10 @@ export class RecaptchaStore extends BudiStore<RecaptchaState> {
     })
   }
 
-  syncRecaptcha = (app: Workspace, key?: string) => {
+  syncRecaptcha = (workspace: Workspace, key?: string) => {
     this.set({
       available: !!key,
-      enabled: !!app.recaptchaEnabled && !!key,
+      enabled: !!workspace.recaptchaEnabled && !!key,
     })
   }
 

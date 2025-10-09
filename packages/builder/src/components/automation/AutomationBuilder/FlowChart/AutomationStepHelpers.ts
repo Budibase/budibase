@@ -127,9 +127,15 @@ const getBranchChildStepIds = (steps: AutomationLogStep[]) => {
     ) {
       const executedBranchId = logStep.outputs.branchId
       const branchChildren = logStep.inputs.children?.[executedBranchId] || []
-      branchChildren.forEach((child: BranchChild) => {
-        branchChildStepIds.add(child.id)
-      })
+
+      branchChildren.forEach(
+        (child: BranchChild & { blockToLoop?: string }) => {
+          branchChildStepIds.add(child.id)
+          if (child.blockToLoop) {
+            branchChildStepIds.add(child.blockToLoop)
+          }
+        }
+      )
     }
   })
   return branchChildStepIds
@@ -332,8 +338,35 @@ export const renderChain = (
   let branched = false
 
   for (let i = 0; i < chain.length; i++) {
-    const step = chain[i]
+    let step = chain[i]
     const isBranch = step.stepId === AutomationActionStepId.BRANCH
+    if (
+      step.stepId === AutomationActionStepId.LOOP ||
+      step.stepId === AutomationActionStepId.LOOP_V2
+    ) {
+      const targetId = step.blockToLoop
+      const targetExistsInChain = chain.some(s => s.id === targetId)
+      if (!targetId) {
+        continue
+      }
+      if (targetExistsInChain) {
+        continue
+      }
+      const targetRef = deps.blockRefs?.[targetId]
+      if (!targetRef?.stepId) {
+        continue
+      }
+      const definitions = get(automationStore).blockDefinitions
+      const def = getStepDefinition(definitions, targetRef.stepId)
+      step = {
+        id: targetId,
+        stepId: targetRef.stepId,
+        type: "ACTION",
+        name: targetRef.name || def?.name || "",
+        icon: def?.icon || "",
+        inputs: {},
+      } as AutomationStep
+    }
 
     if (isBranch) {
       const bottom = renderBranches(
@@ -347,13 +380,21 @@ export const renderChain = (
       return { lastNodeId, lastNodeBlock, bottomY: bottom, branched: true }
     }
 
+    const definitions = get(automationStore).blockDefinitions
+    const def = getStepDefinition(definitions, step.stepId)
+    const stepForDisplay = {
+      ...step,
+      name: def?.name || step.name || "",
+      icon: def?.icon || step.icon || "",
+    } as AutomationStep
+
     const pos = deps.ensurePosition(step.id, { x: baseX, y: currentY })
     deps.newNodes.push({
       id: step.id,
       type: "step-node",
       data: {
         testDataModal: deps.testDataModal,
-        block: step,
+        block: stepForDisplay,
         direction: deps.direction,
       },
       position: pos,
@@ -371,7 +412,7 @@ export const renderChain = (
     })
 
     lastNodeId = step.id
-    lastNodeBlock = step
+    lastNodeBlock = stepForDisplay
     currentY += deps.ySpacing
   }
 
