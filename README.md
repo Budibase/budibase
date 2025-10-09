@@ -145,7 +145,8 @@ Deploy Budibase using Docker, Kubernetes, and Digital Ocean on your existing inf
 
 ## 🎓 Learning Budibase
 
-The Budibase documentation [lives here](https://docs.budibase.com/docs).
+The Budibase documentation [lives here](https://dnpm run dev
+cs.budibase.com/docs).
 <br />
 
 <br /><br />
