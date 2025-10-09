@@ -47,31 +47,39 @@ describe("/api/resources/usage", () => {
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))
-      const screen = createQueryScreen(datasource._id, query)
       const { workspaceApp } = await config.api.workspaceApp.create({
         name: "Datasource usage app",
         url: "/datasource-usage-app",
       })
-      screen.workspaceAppId = workspaceApp._id
-
-      await config.api.screen.save(screen)
+      const screen = await config.api.screen.save({
+        ...createQueryScreen(datasource._id, query),
+        workspaceAppId: workspaceApp._id,
+      })
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[workspaceApp._id!]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: datasource._id,
-            name: datasource.name,
-            type: ResourceType.DATASOURCE,
-          }),
-        ])
-      )
+      expect(result.body.dependencies[workspaceApp._id!]).toEqual([
+        {
+          id: screen._id,
+          name: screen.name,
+          type: ResourceType.SCREEN,
+        },
+        {
+          id: datasource._id,
+          name: datasource.name,
+          type: ResourceType.DATASOURCE,
+        },
+        {
+          id: query._id,
+          name: query.name,
+          type: ResourceType.QUERY,
+        },
+      ])
     })
 
     it("should check screens for datasource usage", async () => {
-      const screen = basicScreen()
-      screen.props._children?.push({
+      const screenData = basicScreen()
+      screenData.props._children?.push({
         _id: "child-props",
         _instanceName: "child",
         _styles: {},
@@ -83,19 +91,22 @@ describe("/api/resources/usage", () => {
       })
 
       // Save the screen to the database so it can be found
-      await config.api.screen.save(screen)
+      const screen = await config.api.screen.save(screenData)
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[screen.workspaceAppId!]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: table._id,
-            name: table.name,
-            type: ResourceType.TABLE,
-          }),
-        ])
-      )
+      expect(result.body.dependencies[screen.workspaceAppId!]).toEqual([
+        {
+          id: screen._id,
+          name: screen.name,
+          type: ResourceType.SCREEN,
+        },
+        {
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+        },
+      ])
     })
 
     it("should check automations for datasource usage", async () => {
@@ -106,15 +117,18 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[automation._id!]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: table._id,
-            name: table.name,
-            type: ResourceType.TABLE,
-          }),
-        ])
-      )
+      expect(result.body.dependencies[automation._id!]).toEqual([
+        {
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+        },
+        {
+          id: automation._id,
+          name: automation.name,
+          type: ResourceType.AUTOMATION,
+        },
+      ])
     })
 
     it("should include row actions and their automations when referenced by an automation", async () => {
@@ -124,27 +138,33 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[rowAction.automationId]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: generateRowActionsID(table._id!),
-            name: rowAction.name,
-            type: ResourceType.ROW_ACTION,
-          }),
-        ])
-      )
+      expect(result.body.dependencies[rowAction.automationId]).toEqual([
+        {
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+        },
+        {
+          id: rowAction.automationId,
+          name: "Row action usage",
+          type: ResourceType.AUTOMATION,
+        },
+        {
+          id: generateRowActionsID(table._id!),
+          name: rowAction.name,
+          type: ResourceType.ROW_ACTION,
+        },
+      ])
 
       expect(
         result.body.dependencies[generateRowActionsID(table._id!)]
-      ).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: rowAction.automationId,
-            name: rowAction.name,
-            type: ResourceType.AUTOMATION,
-          }),
-        ])
-      )
+      ).toEqual([
+        {
+          id: rowAction.automationId,
+          name: rowAction.name,
+          type: ResourceType.AUTOMATION,
+        },
+      ])
     })
 
     it("should detect datasource when for rest queries", async () => {
