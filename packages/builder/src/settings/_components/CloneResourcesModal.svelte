@@ -1,5 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { TableNames } from "@/constants"
   import {
     appStore,
     automationStore,
@@ -113,7 +114,11 @@
     [ResourceType.TABLE]: {
       displayName: "Tables",
       data: $tables.list
-        .filter(t => t.sourceType === TableSourceType.INTERNAL)
+        .filter(
+          t =>
+            t.sourceType === TableSourceType.INTERNAL &&
+            t._id !== TableNames.USERS
+        )
         .map(mapToDataType),
       type: ResourceType.TABLE,
     },
