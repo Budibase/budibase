@@ -1,9 +1,7 @@
 import { API } from "@/api"
-import { featureFlag } from "@/helpers"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
-  FeatureFlag,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
@@ -16,7 +14,6 @@ export interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
-  usingLocalComponentLibs: boolean
 }
 
 export class AdminStore extends BudiStore<AdminState> {
@@ -29,7 +26,6 @@ export class AdminStore extends BudiStore<AdminState> {
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
-      usingLocalComponentLibs: false,
     })
   }
 
@@ -61,9 +57,7 @@ export class AdminStore extends BudiStore<AdminState> {
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
       store.passwordMinLength = environment.passwordMinLength
-      store.usingLocalComponentLibs =
-        environment.isDev &&
-        !featureFlag.isEnabled(FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE)
+
       return store
     })
   }
