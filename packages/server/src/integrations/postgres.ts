@@ -393,13 +393,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         })
       }
 
-      // Create virtual table definitions for JSON arrays
-      try {
-        await this.addJsonArrayTables(tables, datasourceId)
-      } catch (err) {
-        console.log("Error creating virtual JSON array tables:", err)
-      }
-
       const finalizedTables = finaliseExternalTables(tables, entities)
       const errors = checkExternalTables(finalizedTables)
       return { tables: finalizedTables, errors }
@@ -445,12 +438,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json).toLowerCase()
-
-    // Check if this is a JSON array query
-    if (this.isJsonArrayQuery(json)) {
-      return this.queryJsonArray(json)
-    }
-
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
@@ -462,140 +449,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     } else {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
-    }
-  }
-
-  private isJsonArrayQuery(json: EnrichedQueryJson): boolean {
-    // Check if the table ID contains a JSON path (like datasource_table.field.subfield)
-    const tableId = json.meta?.table?.name || ""
-    return tableId.includes(".") && (tableId.includes("json_array") || tableId.includes("jsonb_array"))
-  }
-
-  private async queryJsonArray(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
-    const tableId = json.meta?.table?.name || ""
-    const parts = tableId.split(".")
-
-    if (parts.length < 3) {
-      throw new Error("Invalid JSON array table path")
-    }
-
-    // Extract: datasource_table, json_column, array_field
-    const baseTableName = parts[1] // Remove datasource prefix
-    const jsonColumnName = parts[2]
-    const arrayFieldPath = parts.slice(3).join(".")
-
-    // Build SQL to unwind the JSON array
-    let sql: string
-    if (arrayFieldPath) {
-      // Nested path like json_array.values -> json_array->'values'
-      sql = `
-        SELECT
-          base_row.id as parent_id,
-          base_row.name as parent_name,
-          array_element.value::jsonb as element_data,
-          (array_element.value::jsonb)->>'name' as name,
-          (array_element.value::jsonb)->>'role' as role
-        FROM ${baseTableName} as base_row,
-        jsonb_array_elements(base_row.${jsonColumnName}) as array_element(value)
-        WHERE base_row.${jsonColumnName} IS NOT NULL
-      `
-    } else {
-      // Direct array access
-      sql = `
-        SELECT
-          base_row.id as parent_id,
-          base_row.name as parent_name,
-          array_element.value::jsonb as element_data
-        FROM ${baseTableName} as base_row,
-        jsonb_array_elements(base_row.${jsonColumnName}) as array_element(value)
-        WHERE base_row.${jsonColumnName} IS NOT NULL
-      `
-    }
-
-    const response = await this.internalQuery({ sql })
-    return response.rows
-  }
-
-  private async addJsonArrayTables(tables: { [key: string]: Table }, datasourceId: string) {
-    for (const [tableName, table] of Object.entries(tables)) {
-      for (const [fieldName, field] of Object.entries(table.schema)) {
-        if (field.externalType && field.externalType.toLowerCase().includes('json') && field.externalType.includes('[]')) {
-          try {
-            // Sample data from the JSON array column to understand its structure
-            console.log(`Sampling JSON array data from ${tableName}.${fieldName}`)
-            const sampleQuery = `SELECT ${fieldName} FROM ${tableName} WHERE ${fieldName} IS NOT NULL LIMIT 3`
-            const sampleResult = await this.client.query(sampleQuery)
-            console.log(`Sample result for ${fieldName}:`, sampleResult.rows)
-
-            if (sampleResult.rows && sampleResult.rows.length > 0) {
-              const allKeys = new Set<string>()
-
-              // Analyze sample data to extract object keys
-              for (const row of sampleResult.rows) {
-                const arrayValue = row[fieldName]
-                if (Array.isArray(arrayValue)) {
-                  for (const item of arrayValue) {
-                    if (typeof item === 'object' && item !== null) {
-                      Object.keys(item).forEach(key => allKeys.add(key))
-                    }
-                  }
-                }
-              }
-
-              console.log(`Found keys for ${fieldName}:`, Array.from(allKeys))
-
-              // Create virtual table for array elements
-              if (allKeys.size > 0) {
-                const virtualTableName = `${tableName}.${fieldName}.values`
-                const virtualTableId = buildExternalTableId(datasourceId, virtualTableName)
-                console.log(`Creating virtual table: ${virtualTableName} with ID: ${virtualTableId}`)
-
-                tables[virtualTableName] = {
-                  type: "table",
-                  _id: virtualTableId,
-                  primary: ["parent_id"], // Use parent row ID as primary key
-                  name: virtualTableName,
-                  schema: {
-                    parent_id: generateColumnDefinition({
-                      autocolumn: false,
-                      name: "parent_id",
-                      presence: false,
-                      externalType: 'integer',
-                    }),
-                    parent_name: generateColumnDefinition({
-                      autocolumn: false,
-                      name: "parent_name",
-                      presence: false,
-                      externalType: 'text',
-                    }),
-                    element_data: generateColumnDefinition({
-                      autocolumn: false,
-                      name: "element_data",
-                      presence: false,
-                      externalType: 'jsonb',
-                    }),
-                  },
-                  sourceId: datasourceId,
-                  sourceType: TableSourceType.EXTERNAL,
-                }
-
-                // Add columns for each discovered key
-                for (const key of allKeys) {
-                  tables[virtualTableName].schema[key] = generateColumnDefinition({
-                    autocolumn: false,
-                    name: key,
-                    presence: false,
-                    externalType: 'text',
-                  })
-                }
-                console.log(`Virtual table ${virtualTableName} created with schema:`, Object.keys(tables[virtualTableName].schema))
-              }
-            }
-          } catch (err) {
-            console.log(`Error creating virtual table for JSON array ${fieldName}:`, err)
-          }
-        }
-      }
     }
   }
 
