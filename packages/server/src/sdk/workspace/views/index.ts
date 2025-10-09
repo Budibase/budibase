@@ -9,7 +9,7 @@ import {
 import {
   BBReferenceFieldSubType,
   CalculationType,
-  canGroupBy,
+  canGroupBySchema,
   FieldType,
   isNumeric,
   isNumericStaticFormula,
@@ -200,7 +200,7 @@ async function guardCalculationViewSchema(
       )
     }
 
-    if (!canGroupBy(targetSchema.type)) {
+    if (!canGroupBySchema(targetSchema)) {
       throw new HTTPError(
         `Grouping by fields of type "${targetSchema.type}" is not supported`,
         400
