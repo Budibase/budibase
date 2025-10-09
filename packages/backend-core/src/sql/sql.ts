@@ -1286,10 +1286,7 @@ class InternalBuilder {
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
     if (!hasAggregations) {
       const primarySortKey = this.findSortablePrimaryKey(primaryKey)
-      if (
-        primarySortKey &&
-        (!sort || sort[primarySortKey] === undefined)
-      ) {
+      if (primarySortKey && (!sort || sort[primarySortKey] === undefined)) {
         query = query.orderBy(`${aliased}.${primarySortKey}`)
       } else if (!primarySortKey && (!sort || Object.keys(sort).length === 0)) {
         throw new Error(`Primary key not found for table ${this.table.name}`)
@@ -1301,10 +1298,6 @@ class InternalBuilder {
   private isUnsortableField(schema: FieldSchema | undefined): boolean {
     if (!schema) {
       return false
-    }
-    const externalType = schema.externalType?.toLowerCase()
-    if (externalType?.includes("json") && externalType.includes("[]")) {
-      return true
     }
     if (schema.type === FieldType.JSON) {
       return true
