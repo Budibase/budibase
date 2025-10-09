@@ -231,7 +231,7 @@ export async function duplicateResourcesToWorkspace(
   const toCopy = resources.filter(id => !existingIds.has(id))
 
   if (!toCopy.length) {
-    throw new HTTPError(`No resources to copy`, 400)
+    throw new HTTPError(`No resources left to copy`, 400)
   }
 
   const documentToCopy = await context

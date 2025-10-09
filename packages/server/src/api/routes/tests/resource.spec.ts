@@ -658,7 +658,7 @@ describe("/api/resources/usage", () => {
         { status: 400 }
       )
       expect(error.body).toMatchObject({
-        message: "No resources to copy",
+        message: "No resources left to copy",
         status: 400,
       })
     })

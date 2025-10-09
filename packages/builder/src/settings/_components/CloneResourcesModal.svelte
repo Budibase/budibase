@@ -107,7 +107,7 @@
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
-      displayName: "BB tables",
+      displayName: "Tables",
       data: $tables.list.map(mapToDataType),
       type: ResourceType.TABLE,
     },
