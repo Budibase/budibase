@@ -68,7 +68,7 @@ async function syncUsersToWorkspace(
 
       // assign the roleId for the metadata doc
       if (roleId) {
-        metadata.roleId = roleId
+        ctxUser.roleId = roleId
       }
 
       let combined = sdk.users.combineMetadataAndUser(ctxUser, metadata)
