@@ -1,10 +1,18 @@
-import { context, db, HTTPError } from "@budibase/backend-core"
+import { context, db, events, HTTPError } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 import {
   AnyDocument,
+  Automation,
+  Datasource,
+  DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
+  prefixed,
+  Query,
   ResourceType,
   Screen,
+  Table,
   UsedResource,
+  WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
 
@@ -240,13 +248,80 @@ export async function duplicateResourcesToWorkspace(
       allowMissing: false,
     })
 
+  const fromWorkspace = context.getWorkspaceId()
+  if (!fromWorkspace) {
+    throw new Error("Could not get workspaceId")
+  }
   await destinationDb.bulkDocs(
     documentToCopy.map<AnyDocument>(doc => {
-      const sanitizedDoc: AnyDocument = { ...doc }
+      const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
       delete sanitizedDoc._rev
       delete sanitizedDoc.createdAt
       delete sanitizedDoc.updatedAt
       return sanitizedDoc
     })
   )
+
+  const fromWorkspaceName =
+    (await sdk.workspaces.metadata.tryGet())?.name || fromWorkspace
+  const toWorkspaceName = await context.doInContext(
+    toWorkspace,
+    async () => (await sdk.workspaces.metadata.tryGet())?.name || toWorkspace
+  )
+
+  const resourceTypeIdPrefixes: Record<ResourceType, string> = {
+    [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
+    [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
+    [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
+    [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
+    [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
+    [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
+    [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),
+  }
+
+  for (const doc of documentToCopy) {
+    let name: string
+    const type: ResourceType | "Unknown" =
+      (Object.entries(resourceTypeIdPrefixes).find(([_, idPrefix]) =>
+        doc._id.startsWith(idPrefix)
+      )?.[0] as ResourceType) ?? "Unknown"
+
+    switch (type) {
+      case ResourceType.AUTOMATION:
+        name = (doc as Automation).name
+        break
+      case ResourceType.DATASOURCE:
+        name = (doc as Datasource).name || "Unknown"
+        break
+      case ResourceType.QUERY:
+        name = (doc as Query).name
+        break
+      case ResourceType.ROW_ACTION:
+        name = doc._id // We don't really have a row action name
+        break
+      case ResourceType.TABLE:
+        name = (doc as Table).name
+        break
+      case ResourceType.SCREEN:
+        name = (doc as Screen).name || "Unkown"
+        break
+      case ResourceType.WORKSPACE_APP:
+        name = (doc as WorkspaceApp).name
+        break
+      default:
+        throw utils.unreachable(type)
+    }
+
+    const resource = {
+      id: doc._id,
+      name,
+      type: type.substring(0, 1).toUpperCase() + type.substring(1),
+    }
+
+    await events.resource.duplicatedToWorkspace({
+      resource,
+      fromWorkspace: fromWorkspaceName,
+      toWorkspace: toWorkspaceName,
+    })
+  }
 }
