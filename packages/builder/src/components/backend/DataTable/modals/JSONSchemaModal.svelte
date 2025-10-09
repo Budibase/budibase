@@ -55,7 +55,10 @@
       }
     }
 
-    if (isPlainObject(value) && Object.values(value || {}).every(isSchemaEntry)) {
+    if (
+      isPlainObject(value) &&
+      Object.values(value || {}).every(isSchemaEntry)
+    ) {
       return {
         wrapper: null,
         map: value,
@@ -247,7 +250,7 @@
       {#if arrayDetected}
         <div class="array-note">
           <Body size="S">
-            Array detected, define the schema for the child objects below.
+            Array detected. Define the schema for the child objects below.
           </Body>
         </div>
       {/if}
