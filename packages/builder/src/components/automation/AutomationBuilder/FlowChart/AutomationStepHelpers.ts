@@ -345,7 +345,7 @@ export const renderChain = (
       step.stepId === AutomationActionStepId.LOOP_V2
     ) {
       const targetId = step.blockToLoop
-      const targetExistsInChain = !!chain.find(s => s.id === targetId)
+      const targetExistsInChain = chain.some(s => s.id === targetId)
       if (!targetId) {
         continue
       }
