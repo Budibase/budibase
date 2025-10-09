@@ -182,14 +182,14 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: Workspace,
+  workspace: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
-  if (!app.scripts?.length) {
+  if (!workspace.scripts?.length) {
     return ""
   }
-  return app.scripts
+  return workspace.scripts
     .filter(script => script.location === location && script.html?.length)
     .map(script => script.html)
     .join("\n")
@@ -391,7 +391,7 @@ export const serveClientLibrary = async function (
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally()
+  const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
@@ -413,7 +413,7 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
 
   const appId = context.getWorkspaceId()
 
-  const serveLocally = shouldServeLocally()
+  const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream, contentType } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,

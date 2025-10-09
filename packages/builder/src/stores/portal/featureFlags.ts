@@ -1,15 +1,14 @@
-import { auth } from "@/stores/portal"
-import { FeatureFlag, FeatureFlags, FeatureFlagDefaults } from "@budibase/types"
-import { BudiStore } from "@/stores/BudiStore"
 import { API } from "@/api"
+import { BudiStore } from "@/stores/BudiStore"
+import { auth } from "@/stores/portal"
 import { notifications } from "@budibase/bbui"
+import { FeatureFlag, FeatureFlags } from "@budibase/types"
 
-class FeatureFlagStore extends BudiStore<FeatureFlags> {
+class FeatureFlagStore extends BudiStore<Partial<FeatureFlags>> {
   constructor() {
-    super(FeatureFlagDefaults)
+    super({})
     auth.subscribe($auth => {
       this.set({
-        ...FeatureFlagDefaults,
         ...($auth?.user?.flags || {}),
       })
     })

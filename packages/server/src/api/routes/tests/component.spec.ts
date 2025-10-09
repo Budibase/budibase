@@ -1,4 +1,4 @@
-import * as env from "../../../environment"
+import { features } from "@budibase/backend-core"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
@@ -14,9 +14,10 @@ describe("/component", () => {
 
   describe("fetch definitions", () => {
     it("should be able to fetch definitions locally", async () => {
-      await env.withEnv(
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
         {
-          DEV_USE_CLIENT_FROM_STORAGE: "0",
+          DEV_USE_CLIENT_FROM_STORAGE: false,
         },
         async () => {
           const res = await request
@@ -32,9 +33,10 @@ describe("/component", () => {
     })
 
     it("should be able to fetch definitions from object store", async () => {
-      await env.withEnv(
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
         {
-          DEV_USE_CLIENT_FROM_STORAGE: "1",
+          DEV_USE_CLIENT_FROM_STORAGE: true,
         },
         async () => {
           // init again to make an app with a real component lib
