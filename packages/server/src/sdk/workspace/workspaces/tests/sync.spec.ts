@@ -3,7 +3,7 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { context, events, roles } from "@budibase/backend-core"
 import { generator, utils } from "@budibase/backend-core/tests"
 import { sdk as proSdk } from "@budibase/pro"
-import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
+import { User, UserGroup, UserMetadata } from "@budibase/types"
 import {
   UserSyncProcessor,
   getUserSyncProcessor,
@@ -23,47 +23,25 @@ jest.mock("../sync", () => {
 
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User
-const ROLE_ID = roles.BUILTIN_ROLE_IDS.BASIC
 
 beforeAll(async () => {
   await utils.queue.useRealQueues()
   await config.init("syncWorkspace")
 })
 
-async function createUser(email: string, roles: UserRoles, builder?: boolean) {
-  const user = await config.createUser({
-    email,
-    roles,
-    builder: { global: builder || false },
-    admin: { global: false },
-  })
-  await context.doInContext(config.devWorkspaceId!, async () => {
-    await events.user.created(user)
-  })
-  return user
-}
-
-async function removeUserRole(user: User) {
-  const final = await config.globalUser({
-    ...user,
-    _id: user._id,
-    roles: {},
+async function createUser(user?: Partial<User>) {
+  const persistedUser = await config.createUser({
     builder: { global: false },
-    admin: { global: false },
+    ...user,
   })
   await context.doInContext(config.devWorkspaceId!, async () => {
-    await events.user.updated(final)
+    await events.user.created(persistedUser)
   })
+  return persistedUser
 }
 
-async function addUserRole(user: User, role: string) {
-  const final = await config.globalUser({
-    ...user,
-    roles: {
-      ...user.roles,
-      [config.getProdWorkspaceId()]: role,
-    },
-  })
+async function updateUser(user: User) {
+  const final = await config.globalUser(user)
   await context.doInContext(config.devWorkspaceId!, async () => {
     await events.user.updated(final)
   })
@@ -87,54 +65,93 @@ async function removeUserFromGroup() {
   })
 }
 
-async function getUserMetadata(): Promise<UserMetadata[]> {
-  return context.doInContext(config.devWorkspaceId!, async () => {
-    return await rawUserMetadata()
-  })
-}
-
-function buildRoles() {
-  return { [config.prodWorkspaceId!]: ROLE_ID }
-}
-
 describe("app user/group sync", () => {
-  const groupEmail = "test2@example.com",
-    normalEmail = "test@example.com"
   async function getMetadata(email: string) {
     await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
     await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
 
-    const metadata = await getUserMetadata()
+    const metadata: UserMetadata[] = await context.doInContext(
+      config.devWorkspaceId!,
+      () => rawUserMetadata()
+    )
     const found = metadata.find(data => data.email === email)
     return found
   }
 
   it("should be able to sync a new user, add then remove", async () => {
-    const user = await createUser(normalEmail, buildRoles())
-    expect(await getMetadata(normalEmail)).toBeDefined()
-    await removeUserRole(user)
-    expect(await getMetadata(normalEmail)).toBeUndefined()
+    const email = generator.email({})
+    const user = await createUser({
+      email,
+      roles: { [config.prodWorkspaceId!]: "BASIC" },
+      builder: { global: false },
+    })
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: "BASIC",
+        builder: expect.objectContaining({ global: false }),
+      })
+    )
+    await updateUser({ ...user, roles: {} })
+    expect(await getMetadata(email)).toBeUndefined()
   })
 
   it("should be able to sync a group", async () => {
-    await createGroupAndUser(groupEmail)
-    expect(await getMetadata(groupEmail)).toBeDefined()
+    const email = generator.email({})
+    await createGroupAndUser(email)
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: "BASIC",
+        builder: expect.objectContaining({ global: false }),
+      })
+    )
   })
 
   it("should be able to remove user from group", async () => {
+    const email = generator.email({})
     if (!group) {
-      await createGroupAndUser(groupEmail)
+      await createGroupAndUser(email)
     }
     await removeUserFromGroup()
-    expect(await getMetadata(groupEmail)).toBeUndefined()
+    expect(await getMetadata(email)).toBeUndefined()
   })
 
   it("should be able to handle builder users", async () => {
-    await createUser("test3@example.com", {}, true)
-    expect(await getMetadata("test3@example.com")).toEqual(
+    const email = generator.email({})
+    const user = await createUser({ email, builder: { global: true } })
+    expect(await getMetadata(email)).toEqual(
       expect.objectContaining({
         roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
         builder: expect.objectContaining({ global: true }),
+      })
+    )
+
+    await updateUser({
+      ...user,
+      builder: { global: false },
+    })
+    expect(await getMetadata(email)).toBeUndefined()
+  })
+
+  it("should be able to remove builder users", async () => {
+    const email = "test3@example.com"
+    const user = await createUser({ email, builder: { global: true } })
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        builder: expect.objectContaining({ global: true }),
+      })
+    )
+
+    await updateUser({
+      ...user,
+      roles: { [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        builder: expect.objectContaining({ global: false }),
       })
     )
   })
@@ -165,15 +182,61 @@ describe("app user/group sync", () => {
     )
   })
 
+  it("should remove builder role when group no longer builder", async () => {
+    const email = generator.email({})
+    await createGroupAndUser(email)
+    const prodWorkspaceId = config.getProdWorkspaceId()
+    await config.doInTenant(async () => {
+      const response = await proSdk.groups.save({
+        ...group,
+        builder: {
+          apps: [prodWorkspaceId],
+        },
+      })
+
+      group = await proSdk.groups.get(response.id)
+    })
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        builder: {
+          apps: [prodWorkspaceId],
+        },
+      })
+    )
+
+    await config.doInTenant(async () => {
+      await proSdk.groups.save({
+        ...group,
+        builder: undefined,
+      })
+    })
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        builder: { global: false },
+      })
+    )
+  })
+
   it("should be able to handle role changes", async () => {
     const workspaceId = config.getProdWorkspaceId()
-    const user = await createUser(generator.email({}), {
-      [workspaceId]: "ADMIN",
+    const user = await createUser({
+      email: generator.email({}),
+      roles: {
+        [workspaceId]: "ADMIN",
+      },
     })
     expect(await getMetadata(user.email)).toEqual(
       expect.objectContaining({ roleId: "ADMIN" })
     )
-    await addUserRole(user, "BASIC")
+    await updateUser({
+      ...user,
+      roles: {
+        ...user.roles,
+        [workspaceId]: "BASIC",
+      },
+    })
     expect(await getMetadata(user.email)).toEqual(
       expect.objectContaining({ roleId: "BASIC" })
     )
