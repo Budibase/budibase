@@ -2,6 +2,7 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 import { context, events, roles } from "@budibase/backend-core"
 import { generator, utils } from "@budibase/backend-core/tests"
+import { sdk as proSdk } from "@budibase/pro"
 import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
 import {
   UserSyncProcessor,
@@ -23,11 +24,6 @@ jest.mock("../sync", () => {
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User
 const ROLE_ID = roles.BUILTIN_ROLE_IDS.BASIC
-
-async function waitForUpdate() {
-  await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
-  await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
-}
 
 beforeAll(async () => {
   await utils.queue.useRealQueues()
@@ -105,7 +101,9 @@ describe("app user/group sync", () => {
   const groupEmail = "test2@example.com",
     normalEmail = "test@example.com"
   async function getMetadata(email: string) {
-    await waitForUpdate()
+    await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
+    await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
+
     const metadata = await getUserMetadata()
     const found = metadata.find(data => data.email === email)
     return found
@@ -133,7 +131,38 @@ describe("app user/group sync", () => {
 
   it("should be able to handle builder users", async () => {
     await createUser("test3@example.com", {}, true)
-    expect(await getMetadata("test3@example.com")).toBeDefined()
+    expect(await getMetadata("test3@example.com")).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        builder: expect.objectContaining({ global: true }),
+      })
+    )
+  })
+
+  it("should promote group builders to admin role", async () => {
+    const email = generator.email({})
+    await createGroupAndUser(email)
+    const prodWorkspaceId = config.getProdWorkspaceId()
+    await config.doInTenant(async () => {
+      await proSdk.groups.save({
+        ...group,
+        builder: {
+          apps: [prodWorkspaceId],
+        },
+      })
+    })
+    group = {
+      ...group,
+      builder: {
+        apps: [prodWorkspaceId],
+      },
+    }
+    expect(await getMetadata(email)).toEqual(
+      expect.objectContaining({
+        roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        builder: expect.objectContaining({ apps: [prodWorkspaceId] }),
+      })
+    )
   })
 
   it("should be able to handle role changes", async () => {
