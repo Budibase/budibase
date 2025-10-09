@@ -18,7 +18,11 @@
     Table,
   } from "@budibase/bbui"
   import type { AnyDocument, UsedResource } from "@budibase/types"
-  import { INTERNAL_TABLE_SOURCE_ID, ResourceType } from "@budibase/types"
+  import {
+    INTERNAL_TABLE_SOURCE_ID,
+    ResourceType,
+    TableSourceType,
+  } from "@budibase/types"
 
   let modal: Modal
   let isOpen = false
@@ -108,7 +112,9 @@
     },
     [ResourceType.TABLE]: {
       displayName: "Tables",
-      data: $tables.list.map(mapToDataType),
+      data: $tables.list
+        .filter(t => t.sourceType === TableSourceType.INTERNAL)
+        .map(mapToDataType),
       type: ResourceType.TABLE,
     },
     [ResourceType.DATASOURCE]: {
