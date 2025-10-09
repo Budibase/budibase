@@ -106,9 +106,7 @@
   $: resourceTypesToDisplay = {
     [ResourceType.WORKSPACE_APP]: {
       displayName: "Apps",
-      data: $workspaceAppStore.workspaceApps.map(a =>
-        mapToDataType({ ...a, name: `${a.name} (${a.screens.length} screens)` })
-      ),
+      data: $workspaceAppStore.workspaceApps.map(a => mapToDataType(a)),
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
