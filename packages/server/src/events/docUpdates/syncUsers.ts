@@ -24,16 +24,17 @@ export class UserSyncProcessor {
 
   init() {
     UserSyncProcessor.queue.process(1, async job => {
-      const jobs = [
-        job,
-        ...(await UserSyncProcessor.queue.getBullQueue().getWaiting(0, 100)),
-      ]
+      const pendingJobs = await UserSyncProcessor.queue
+        .getBullQueue()
+        .getWaiting(0, 100)
 
-      const userIds = Array.from(new Set(jobs.map(m => m.data.userId)))
+      const userIds = Array.from(
+        new Set([job, ...pendingJobs].map(m => m.data.userId))
+      )
       await syncUsersAcrossWorkspaces(userIds)
 
-      for (const job of jobs) {
-        await job.moveToCompleted(undefined, true)
+      for (const job of pendingJobs) {
+        await job.remove()
       }
     })
   }
