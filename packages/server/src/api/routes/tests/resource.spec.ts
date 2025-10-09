@@ -38,12 +38,6 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
-    let table: Table
-
-    beforeAll(async () => {
-      table = await config.api.table.save(basicTable())
-    })
-
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))
@@ -78,6 +72,7 @@ describe("/api/resources/usage", () => {
     })
 
     it("should check screens for datasource usage", async () => {
+      const table = await config.api.table.save(basicTable())
       const screenData = basicScreen()
       screenData.props._children?.push({
         _id: "child-props",
@@ -110,6 +105,7 @@ describe("/api/resources/usage", () => {
     })
 
     it("should check automations for datasource usage", async () => {
+      const table = await config.api.table.save(basicTable())
       // Create an automation using the builder
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
@@ -132,6 +128,7 @@ describe("/api/resources/usage", () => {
     })
 
     it("should include row actions and their automations when referenced by an automation", async () => {
+      const table = await config.api.table.save(basicTable())
       const rowAction = await config.api.rowAction.save(table._id!, {
         name: "Row action usage",
       })
@@ -163,6 +160,20 @@ describe("/api/resources/usage", () => {
           id: rowAction.automationId,
           name: rowAction.name,
           type: ResourceType.AUTOMATION,
+        },
+      ])
+    })
+
+    it("should not detect datasource when for internal tables", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(result.body.dependencies[table._id!]).toEqual([
+        {
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
         },
       ])
     })

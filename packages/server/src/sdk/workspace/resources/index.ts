@@ -126,54 +126,47 @@ export async function getDependencies(): Promise<
   }
 
   // Search in tables
-  if (internalTables.length) {
-    for (const table of internalTables) {
-      searchForUsages(table._id!, table)
-    }
+  for (const table of internalTables) {
+    searchForUsages(table._id!, table)
   }
 
   // Search in automations
-  if (automations.length) {
-    for (const automation of automations) {
-      searchForUsages(automation._id, automation)
-    }
+  for (const automation of automations) {
+    searchForUsages(automation._id, automation)
   }
+
   // Search in queries
-  if (queries.length) {
-    for (const query of queries) {
-      searchForUsages(query._id!, query)
-    }
+  for (const query of queries) {
+    searchForUsages(query._id!, query)
   }
 
   // Search in workspace app screens
-  if (workspaceApps.length) {
-    const screens = await sdk.screens.fetch()
-    const workspaceAppScreens: Record<string, Screen[]> = {}
+  const screens = await sdk.screens.fetch()
+  const workspaceAppScreens: Record<string, Screen[]> = {}
+
+  for (const screen of screens) {
+    if (!screen.workspaceAppId) {
+      continue
+    }
+    if (!workspaceAppScreens[screen.workspaceAppId]) {
+      workspaceAppScreens[screen.workspaceAppId] = []
+    }
+    workspaceAppScreens[screen.workspaceAppId].push(screen)
+  }
+
+  for (const workspaceApp of workspaceApps) {
+    const screens = workspaceAppScreens[workspaceApp._id!] || []
+    dependencies[workspaceApp._id!] ??= []
+    dependencies[workspaceApp._id!].push(
+      ...screens.map(s => ({
+        id: s._id!,
+        name: s.name!,
+        type: ResourceType.SCREEN,
+      }))
+    )
 
     for (const screen of screens) {
-      if (!screen.workspaceAppId) {
-        continue
-      }
-      if (!workspaceAppScreens[screen.workspaceAppId]) {
-        workspaceAppScreens[screen.workspaceAppId] = []
-      }
-      workspaceAppScreens[screen.workspaceAppId].push(screen)
-    }
-
-    for (const workspaceApp of workspaceApps) {
-      const screens = workspaceAppScreens[workspaceApp._id!] || []
-      dependencies[workspaceApp._id!] ??= []
-      dependencies[workspaceApp._id!].push(
-        ...screens.map(s => ({
-          id: s._id!,
-          name: s.name!,
-          type: ResourceType.SCREEN,
-        }))
-      )
-
-      for (const screen of screens) {
-        searchForUsages(workspaceApp._id!, screen)
-      }
+      searchForUsages(workspaceApp._id!, screen)
     }
   }
 
