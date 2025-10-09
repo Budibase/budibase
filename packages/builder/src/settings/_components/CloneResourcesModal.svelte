@@ -18,7 +18,7 @@
     Table,
   } from "@budibase/bbui"
   import type { AnyDocument, UsedResource } from "@budibase/types"
-  import { ResourceType } from "@budibase/types"
+  import { INTERNAL_TABLE_SOURCE_ID, ResourceType } from "@budibase/types"
 
   let modal: Modal
   let isOpen = false
@@ -113,7 +113,9 @@
     },
     [ResourceType.DATASOURCE]: {
       displayName: "Datasources",
-      data: $datasources.list.map(mapToDataType),
+      data: $datasources.list
+        .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
+        .map(mapToDataType),
       type: ResourceType.DATASOURCE,
     },
     [ResourceType.AUTOMATION]: {
