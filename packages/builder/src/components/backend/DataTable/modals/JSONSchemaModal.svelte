@@ -14,9 +14,11 @@
   import { onMount, createEventDispatcher } from "svelte"
   import { FIELDS } from "@/constants/backend"
   import { generate } from "@/helpers/schemaGenerator"
+  import { JsonFieldSubType } from "@budibase/types"
 
   export let schema = {}
   export let json
+  export let subtype
 
   let dispatcher = createEventDispatcher()
   let mode = "Form"
@@ -24,6 +26,8 @@
   let fieldKeys = [],
     fieldTypes = []
   let arrayDetected = false
+  let workingSchema = {}
+  let schemaWrapper
   let keyValueOptions = [
     { label: "String", value: FIELDS.STRING.type },
     { label: "Number", value: FIELDS.NUMBER.type },
@@ -35,6 +39,59 @@
 
   const isPlainObject = value =>
     value != null && typeof value === "object" && !Array.isArray(value)
+
+  const isSchemaEntry = value =>
+    isPlainObject(value) && ("type" in value || "schema" in value)
+
+  const unpackSchemaValue = value => {
+    if (
+      isPlainObject(value) &&
+      "schema" in value &&
+      ("type" in value || isPlainObject(value.schema))
+    ) {
+      return {
+        wrapper: value,
+        map: value.schema || {},
+      }
+    }
+
+    if (isPlainObject(value) && Object.values(value || {}).every(isSchemaEntry)) {
+      return {
+        wrapper: null,
+        map: value,
+      }
+    }
+
+    return {
+      wrapper: null,
+      map: {},
+    }
+  }
+
+  const packSchemaValue = (map, wrapper) => {
+    if (isPlainObject(wrapper) && "schema" in wrapper) {
+      return {
+        ...wrapper,
+        schema: map,
+      }
+    }
+    return map
+  }
+
+  function updateStateFromSchema(nextSchema = {}) {
+    schema = nextSchema || {}
+    const { wrapper, map } = unpackSchemaValue(schema)
+    schemaWrapper = wrapper
+    workingSchema = map
+    fieldKeys = Object.keys(workingSchema)
+    fieldTypes = fieldKeys.map(
+      key => workingSchema[key]?.type || FIELDS.STRING.type
+    )
+    fieldCount = fieldKeys.length
+    if (!arrayDetected && schemaWrapper?.subtype === JsonFieldSubType.ARRAY) {
+      arrayDetected = true
+    }
+  }
 
   function mergeArrayItems(items) {
     return items.reduce((acc, item) => {
@@ -73,31 +130,24 @@
     return [incomingSample != null ? incomingSample : existingSample]
   }
 
-  function loadSchema(newSchema = {}) {
-    schema = newSchema || {}
-    fieldKeys = Object.keys(schema)
-    fieldTypes = fieldKeys.map(key => schema[key]?.type || FIELDS.STRING.type)
-    fieldCount = fieldKeys.length
-  }
-
   function deriveSchemaFromJson(parsedJson) {
     const jsonIsArray = Array.isArray(parsedJson)
     arrayDetected = jsonIsArray
     if (jsonIsArray) {
       const mergedItems = mergeArrayItems(parsedJson)
       if (Object.keys(mergedItems).length === 0) {
-        loadSchema({})
+        updateStateFromSchema({})
         return
       }
       const generated = generate(mergedItems)
-      loadSchema(generated || {})
+      updateStateFromSchema(generated || {})
       return
     }
     if (isPlainObject(parsedJson)) {
       const generated = generate(parsedJson)
-      loadSchema(generated || {})
+      updateStateFromSchema(generated || {})
     } else {
-      loadSchema({})
+      updateStateFromSchema({})
     }
   }
 
@@ -120,12 +170,17 @@
     for (let [index, key] of fieldKeys.entries()) {
       // they were added to schema, rather than generated
       newSchema[key] = {
-        ...schema[key],
+        ...workingSchema[key],
         type: fieldTypes[index],
       }
     }
-    dispatcher("save", { schema: newSchema, json })
-    schema = newSchema
+    const packedSchema = packSchemaValue(newSchema, schemaWrapper)
+    updateStateFromSchema(packedSchema)
+    dispatcher("save", {
+      schema: packedSchema,
+      json,
+      subtype: arrayDetected ? JsonFieldSubType.ARRAY : undefined,
+    })
   }
 
   function removeKey(index) {
@@ -133,10 +188,11 @@
     fieldKeys = fieldKeys.filter((_, i) => i !== index)
     fieldTypes = fieldTypes.filter((_, i) => i !== index)
     fieldCount = fieldKeys.length
-    if (schema && keyToRemove in schema) {
-      const updatedSchema = { ...schema }
+    if (workingSchema && keyToRemove in workingSchema) {
+      const updatedSchema = { ...workingSchema }
       delete updatedSchema[keyToRemove]
-      schema = updatedSchema
+      const packedSchema = packSchemaValue(updatedSchema, schemaWrapper)
+      updateStateFromSchema(packedSchema)
     }
     if (json) {
       try {
@@ -165,6 +221,7 @@
   }
 
   onMount(() => {
+    arrayDetected = subtype === JsonFieldSubType.ARRAY
     if (json) {
       try {
         deriveSchemaFromJson(JSON.parse(json))
@@ -174,8 +231,7 @@
         invalid = true
       }
     }
-    arrayDetected = false
-    loadSchema(schema)
+    updateStateFromSchema(schema)
   })
 </script>
 
