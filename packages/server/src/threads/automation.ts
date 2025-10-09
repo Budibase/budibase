@@ -397,6 +397,8 @@ class Orchestrator {
         ctx.stepsById[step.id] = result.outputs
         ctx.stepsByName[step.name || step.id] = result.outputs
 
+        ctx.previous = result.outputs
+
         ctx._stepIndex ||= 0
         ctx.steps[ctx._stepIndex] = result.outputs
         ctx._stepIndex++
@@ -686,8 +688,8 @@ class Orchestrator {
 }
 
 export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
-  const appId = job.data.event.appId
-  if (!appId) {
+  const workspaceId = job.data.event.appId
+  if (!workspaceId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
@@ -697,7 +699,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   }
 
   return context.doInAutomationContext({
-    workspaceId: appId,
+    workspaceId,
     automationId,
     task: async () => {
       await context.ensureSnippetContext()

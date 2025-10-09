@@ -69,7 +69,7 @@ services:
     image: budibase/proxy
     environment:
       - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
-      - PROXY_RATE_LIMIT_API_PER_SECOND=20
+      - PROXY_RATE_LIMIT_API_PER_SECOND=50
       - APPS_UPSTREAM_URL=http://app-service:4002
       - WORKER_UPSTREAM_URL=http://worker-service:4003
       - MINIO_UPSTREAM_URL=http://minio-service:9000
