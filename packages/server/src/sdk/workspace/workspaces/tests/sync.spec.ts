@@ -1,7 +1,7 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 import { context, events, roles } from "@budibase/backend-core"
-import { utils } from "@budibase/backend-core/tests"
+import { generator, utils } from "@budibase/backend-core/tests"
 import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
 import {
   UserSyncProcessor,
@@ -60,6 +60,19 @@ async function removeUserRole(user: User) {
   })
 }
 
+async function addUserRole(user: User, role: string) {
+  const final = await config.globalUser({
+    ...user,
+    roles: {
+      ...user.roles,
+      [config.getProdWorkspaceId()]: role,
+    },
+  })
+  await context.doInContext(config.devWorkspaceId!, async () => {
+    await events.user.updated(final)
+  })
+}
+
 async function createGroupAndUser(email: string) {
   groupUser = await config.createUser({
     email,
@@ -91,30 +104,23 @@ function buildRoles() {
 describe("app user/group sync", () => {
   const groupEmail = "test2@example.com",
     normalEmail = "test@example.com"
-  async function checkEmail(
-    email: string,
-    opts?: { group?: boolean; notFound?: boolean }
-  ) {
+  async function getMetadata(email: string) {
     await waitForUpdate()
     const metadata = await getUserMetadata()
     const found = metadata.find(data => data.email === email)
-    if (opts?.notFound) {
-      expect(found).toBeUndefined()
-    } else {
-      expect(found).toBeDefined()
-    }
+    return found
   }
 
   it("should be able to sync a new user, add then remove", async () => {
     const user = await createUser(normalEmail, buildRoles())
-    await checkEmail(normalEmail)
+    expect(await getMetadata(normalEmail)).toBeDefined()
     await removeUserRole(user)
-    await checkEmail(normalEmail, { notFound: true })
+    expect(await getMetadata(normalEmail)).toBeUndefined()
   })
 
   it("should be able to sync a group", async () => {
     await createGroupAndUser(groupEmail)
-    await checkEmail(groupEmail, { group: true })
+    expect(await getMetadata(groupEmail)).toBeDefined()
   })
 
   it("should be able to remove user from group", async () => {
@@ -122,12 +128,26 @@ describe("app user/group sync", () => {
       await createGroupAndUser(groupEmail)
     }
     await removeUserFromGroup()
-    await checkEmail(groupEmail, { notFound: true })
+    expect(await getMetadata(groupEmail)).toBeUndefined()
   })
 
   it("should be able to handle builder users", async () => {
     await createUser("test3@example.com", {}, true)
-    await checkEmail("test3@example.com")
+    expect(await getMetadata("test3@example.com")).toBeDefined()
+  })
+
+  it("should be able to handle role changes", async () => {
+    const workspaceId = config.getProdWorkspaceId()
+    const user = await createUser(generator.email({}), {
+      [workspaceId]: "ADMIN",
+    })
+    expect(await getMetadata(user.email)).toEqual(
+      expect.objectContaining({ roleId: "ADMIN" })
+    )
+    await addUserRole(user, "BASIC")
+    expect(await getMetadata(user.email)).toEqual(
+      expect.objectContaining({ roleId: "BASIC" })
+    )
   })
 })
 

@@ -66,7 +66,7 @@ async function syncUsersToWorkspace(
         continue
       }
 
-      // assign the roleId for the metadata doc
+      // assign the roleId for the ctxUser doc
       if (roleId) {
         ctxUser.roleId = roleId
       }
