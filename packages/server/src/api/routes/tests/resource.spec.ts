@@ -146,6 +146,26 @@ describe("/api/resources/usage", () => {
         ])
       )
     })
+
+    it("should detect datasource when for rest queries", async () => {
+      const datasource = await config.createDatasource()
+      const query = await config.api.query.save(basicQuery(datasource._id))
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(result.body.dependencies[query._id!]).toEqual([
+        {
+          id: datasource._id,
+          name: datasource.name,
+          type: ResourceType.DATASOURCE,
+        },
+        {
+          id: query._id,
+          name: query.name,
+          type: ResourceType.QUERY,
+        },
+      ])
+    })
   })
 
   describe("duplication", () => {

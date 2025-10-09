@@ -138,6 +138,12 @@ export async function getDependencies(): Promise<
       searchForUsages(automation._id, automation)
     }
   }
+  // Search in queries
+  if (queries.length) {
+    for (const query of queries) {
+      searchForUsages(query._id!, query)
+    }
+  }
 
   // Search in workspace app screens
   if (workspaceApps.length) {
