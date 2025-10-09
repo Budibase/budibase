@@ -105,10 +105,16 @@ const getBranchChildStepIds = (steps: AutomationLogStep[]) => {
       logStep.outputs?.branchId
     ) {
       const executedBranchId = logStep.outputs.branchId
-      const branchChildren = logStep.inputs?.children?.[executedBranchId] || []
-      branchChildren.forEach((child: BranchChild) => {
-        branchChildStepIds.add(child.id)
-      })
+      const branchChildren = logStep.inputs.children?.[executedBranchId] || []
+
+      branchChildren.forEach(
+        (child: BranchChild & { blockToLoop?: string }) => {
+          branchChildStepIds.add(child.id)
+          if (child.blockToLoop) {
+            branchChildStepIds.add(child.blockToLoop)
+          }
+        }
+      )
     }
   })
   return branchChildStepIds
