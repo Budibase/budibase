@@ -241,6 +241,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 
   [FeatureFlag.DEBUG_UI]: env.isDev(),
+  [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.DUPLICATE_APP]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)

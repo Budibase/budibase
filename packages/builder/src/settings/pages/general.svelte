@@ -104,7 +104,7 @@
         You're running the latest client version from your file system, as
         you're in developer mode.
         <br />
-        Use the env var DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
+        Use the flag DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
       </Body>
     {:else if updateAvailable}
       <Body size="S">
