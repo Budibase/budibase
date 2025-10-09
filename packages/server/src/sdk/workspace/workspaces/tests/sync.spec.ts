@@ -65,19 +65,19 @@ async function removeUserFromGroup() {
   })
 }
 
+async function getMetadata(email: string) {
+  await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
+  await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
+
+  const metadata: UserMetadata[] = await context.doInContext(
+    config.devWorkspaceId!,
+    () => rawUserMetadata()
+  )
+  const found = metadata.find(data => data.email === email)
+  return found
+}
+
 describe("app user/group sync", () => {
-  async function getMetadata(email: string) {
-    await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
-    await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
-
-    const metadata: UserMetadata[] = await context.doInContext(
-      config.devWorkspaceId!,
-      () => rawUserMetadata()
-    )
-    const found = metadata.find(data => data.email === email)
-    return found
-  }
-
   it("should be able to sync a new user, add then remove", async () => {
     const email = generator.email({})
     const user = await createUser({
@@ -262,5 +262,31 @@ describe("user sync batching", () => {
 
     expect(mockSync).toHaveBeenCalledTimes(1)
     expect(mockSync).toHaveBeenCalledWith(["batch-user-1", "batch-user-2"])
+  })
+
+  it("syncs users from group", async () => {
+    const group = await config.createGroup(roles.BUILTIN_ROLE_IDS.ADMIN)
+
+    const user = await createUser()
+    expect(await getMetadata(user.email)).toBeUndefined()
+
+    await config.addUserToGroup(group._id, user._id!)
+    expect(await getMetadata(user.email)).toEqual(
+      expect.objectContaining({ roleId: "ADMIN" })
+    )
+
+    await config.updateGroup({
+      ...group,
+      roles: {
+        ...group.roles,
+        [config.getProdWorkspaceId()]: "BASIC",
+      },
+    })
+    expect(await getMetadata(user.email)).toEqual(
+      expect.objectContaining({ roleId: "BASIC" })
+    )
+
+    await config.removeUserFromGroup(group._id, user._id!)
+    expect(await getMetadata(user.email)).toBeUndefined()
   })
 })
