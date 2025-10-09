@@ -23,6 +23,7 @@
   let fieldCount = 0
   let fieldKeys = [],
     fieldTypes = []
+  let arrayDetected = false
   let keyValueOptions = [
     { label: "String", value: FIELDS.STRING.type },
     { label: "Number", value: FIELDS.NUMBER.type },
@@ -32,34 +33,86 @@
   ]
   let invalid = false
 
+  const isPlainObject = value =>
+    value != null && typeof value === "object" && !Array.isArray(value)
+
+  function mergeArrayItems(items) {
+    return items.reduce((acc, item) => {
+      if (isPlainObject(item)) {
+        acc = mergeObjects(acc, item)
+      }
+      return acc
+    }, {})
+  }
+
+  function mergeObjects(target = {}, source = {}) {
+    const result = { ...target }
+    for (const [key, value] of Object.entries(source)) {
+      if (Array.isArray(value)) {
+        result[key] = mergeArraySamples(target[key], value)
+      } else if (isPlainObject(value)) {
+        result[key] = mergeObjects(target[key], value)
+      } else {
+        result[key] = value
+      }
+    }
+    return result
+  }
+
+  function mergeArraySamples(existing, incoming) {
+    const existingSample = Array.isArray(existing) ? existing[0] : undefined
+    const incomingSample = incoming[0]
+    if (isPlainObject(existingSample) || isPlainObject(incomingSample)) {
+      return [
+        mergeObjects(
+          isPlainObject(existingSample) ? existingSample : {},
+          isPlainObject(incomingSample) ? incomingSample : {}
+        ),
+      ]
+    }
+    return [incomingSample != null ? incomingSample : existingSample]
+  }
+
+  function loadSchema(newSchema = {}) {
+    schema = newSchema || {}
+    fieldKeys = Object.keys(schema)
+    fieldTypes = fieldKeys.map(key => schema[key]?.type || FIELDS.STRING.type)
+    fieldCount = fieldKeys.length
+  }
+
+  function deriveSchemaFromJson(parsedJson) {
+    const jsonIsArray = Array.isArray(parsedJson)
+    arrayDetected = jsonIsArray
+    if (jsonIsArray) {
+      const mergedItems = mergeArrayItems(parsedJson)
+      if (Object.keys(mergedItems).length === 0) {
+        loadSchema({})
+        return
+      }
+      const generated = generate(mergedItems)
+      loadSchema(generated || {})
+      return
+    }
+    if (isPlainObject(parsedJson)) {
+      const generated = generate(parsedJson)
+      loadSchema(generated || {})
+    } else {
+      loadSchema({})
+    }
+  }
+
   async function onJsonUpdate({ detail }) {
     const input = detail.value
     json = input
     try {
       // check json valid first
       let inputJson = JSON.parse(input)
-      schema = generate(inputJson)
-      updateCounts()
+      deriveSchemaFromJson(inputJson)
       invalid = false
     } catch (err) {
       // json not currently valid
       invalid = true
     }
-  }
-
-  function updateCounts() {
-    if (!schema) {
-      schema = {}
-    }
-    // find the entries which aren't in the list
-    const schemaEntries = Object.entries(schema).filter(
-      ([key]) => !fieldKeys.includes(key)
-    )
-    for (let [key, value] of schemaEntries) {
-      fieldKeys.push(key)
-      fieldTypes.push(value.type)
-    }
-    fieldCount = fieldKeys.length
   }
 
   function saveSchema() {
@@ -77,26 +130,52 @@
 
   function removeKey(index) {
     const keyToRemove = fieldKeys[index]
-    if (fieldKeys[index + 1] != null) {
-      fieldKeys[index] = fieldKeys[index + 1]
-      fieldTypes[index] = fieldTypes[index + 1]
+    fieldKeys = fieldKeys.filter((_, i) => i !== index)
+    fieldTypes = fieldTypes.filter((_, i) => i !== index)
+    fieldCount = fieldKeys.length
+    if (schema && keyToRemove in schema) {
+      const updatedSchema = { ...schema }
+      delete updatedSchema[keyToRemove]
+      schema = updatedSchema
     }
-    fieldKeys.splice(index, 1)
-    fieldTypes.splice(index, 1)
-    fieldCount--
     if (json) {
       try {
         const parsed = JSON.parse(json)
-        delete parsed[keyToRemove]
-        json = JSON.stringify(parsed, null, 2)
+        if (Array.isArray(parsed)) {
+          for (let item of parsed) {
+            if (isPlainObject(item)) {
+              delete item[keyToRemove]
+            }
+          }
+          json = JSON.stringify(parsed, null, 2)
+        } else if (isPlainObject(parsed)) {
+          delete parsed[keyToRemove]
+          json = JSON.stringify(parsed, null, 2)
+        }
       } catch (err) {
         // json not valid, ignore
       }
     }
   }
 
+  function addField() {
+    fieldKeys = [...fieldKeys, ""]
+    fieldTypes = [...fieldTypes, FIELDS.STRING.type]
+    fieldCount = fieldKeys.length
+  }
+
   onMount(() => {
-    updateCounts()
+    if (json) {
+      try {
+        deriveSchemaFromJson(JSON.parse(json))
+        invalid = false
+        return
+      } catch (err) {
+        invalid = true
+      }
+    }
+    arrayDetected = false
+    loadSchema(schema)
   })
 </script>
 
@@ -109,6 +188,13 @@
 >
   <Tabs selected={mode} noPadding>
     <Tab title="Form">
+      {#if arrayDetected}
+        <div class="array-note">
+          <Body size="S">
+            Array detected, define the schema for the child objects below.
+          </Body>
+        </div>
+      {/if}
       {#each Array(fieldCount) as _, i}
         <div class="horizontal">
           <Input outline label="Key" bind:value={fieldKeys[i]} />
@@ -123,7 +209,7 @@
         </div>
       {/each}
       <div class:add-field-btn={fieldCount !== 0}>
-        <Button primary text on:click={() => fieldCount++}>Add Field</Button>
+        <Button primary text on:click={addField}>Add Field</Button>
       </div>
     </Tab>
     <Tab title="JSON">
@@ -148,5 +234,9 @@
 
   .add-field-btn {
     margin-top: var(--spacing-xl);
+  }
+
+  .array-note {
+    margin-bottom: var(--spacing-m);
   }
 </style>
