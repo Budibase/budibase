@@ -1,7 +1,9 @@
 import { API } from "@/api"
+import { featureFlag } from "@/helpers"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
+  FeatureFlag,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
@@ -10,8 +12,7 @@ import Analytics from "../../analytics"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 
-export interface AdminState
-  extends Omit<GetEnvironmentResponse, "serveDevClientFromStorage"> {
+export interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
@@ -61,7 +62,8 @@ export class AdminStore extends BudiStore<AdminState> {
       store.maintenance = environment.maintenance
       store.passwordMinLength = environment.passwordMinLength
       store.usingLocalComponentLibs =
-        environment.isDev && !environment.serveDevClientFromStorage
+        environment.isDev &&
+        !featureFlag.isEnabled(FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE)
       return store
     })
   }
