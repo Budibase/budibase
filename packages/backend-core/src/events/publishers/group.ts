@@ -1,16 +1,16 @@
-import { publishEvent } from "../events"
 import {
   Event,
-  UserGroup,
+  GroupAddedOnboardingEvent,
   GroupCreatedEvent,
   GroupDeletedEvent,
+  GroupPermissionsEditedEvent,
   GroupUpdatedEvent,
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
-  GroupAddedOnboardingEvent,
-  GroupPermissionsEditedEvent,
+  UserGroup,
 } from "@budibase/types"
 import { isScim } from "../../context"
+import { publishEvent } from "../events"
 
 async function created(group: UserGroup, timestamp?: number) {
   const properties: GroupCreatedEvent = {
@@ -45,10 +45,11 @@ async function deleted(group: UserGroup) {
   await publishEvent(Event.USER_GROUP_DELETED, properties)
 }
 
-async function usersAdded(count: number, group: UserGroup) {
+async function usersAdded(count: number, group: UserGroup, userIds: string[]) {
   const properties: GroupUsersAddedEvent = {
     count,
     groupId: group._id as string,
+    userIds,
     viaScim: isScim(),
     audited: {
       name: group.name,
@@ -57,10 +58,15 @@ async function usersAdded(count: number, group: UserGroup) {
   await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
 }
 
-async function usersDeleted(count: number, group: UserGroup) {
+async function usersDeleted(
+  count: number,
+  group: UserGroup,
+  userIds: string[]
+) {
   const properties: GroupUsersDeletedEvent = {
     count,
     groupId: group._id as string,
+    userIds,
     viaScim: isScim(),
     audited: {
       name: group.name,
