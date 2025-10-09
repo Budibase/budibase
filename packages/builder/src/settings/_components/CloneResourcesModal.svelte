@@ -57,9 +57,7 @@
     [ResourceType.SCREEN]: [],
   }
 
-  $: workspaces = $appsStore.apps
-    .filter(a => a.devId !== $appStore.appId)
-    .sort((a, b) => a.name.localeCompare(b.name))
+  $: workspaces = $appsStore.apps.filter(a => a.devId !== $appStore.appId)
 
   function onShow() {}
 
@@ -255,7 +253,10 @@
       {#if data.length}
         <Table
           bind:selectedRows={selectedResources[type]}
-          {data}
+          data={data.sort((a, b) =>
+            a.name.toLocaleLowerCase().localeCompare(b.name.toLowerCase())
+          )}
+          disableSorting
           schema={{ name: { type: "string", displayName } }}
           allowEditColumns={false}
           allowEditRows={false}
