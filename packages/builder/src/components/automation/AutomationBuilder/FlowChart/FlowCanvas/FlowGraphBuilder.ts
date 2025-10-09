@@ -39,6 +39,10 @@ enum BranchMode {
   SUBFLOW = "subflow",
 }
 
+const filterLegacyLoops = (steps: AutomationStep[]): AutomationStep[] => {
+  return steps.filter(step => step.stepId !== AutomationActionStepId.LOOP)
+}
+
 interface LaneVisuals {
   laneWidth: number
   gap: number
@@ -150,7 +154,9 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     )
 
     const parentPath = deps.blockRefs[baseId]?.pathTo || []
-    const childSteps: AutomationStep[] = childrenMap?.[branch.id] || []
+    const childSteps: AutomationStep[] = filterLegacyLoops(
+      childrenMap?.[branch.id] || []
+    )
     const branchPath: FlowBlockPath = [
       ...parentPath,
       {
@@ -202,7 +208,9 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
       const childLeft = Math.round(
         left + (visuals.laneWidth - visuals.anchorWidth) / 2
       )
-      const branchChildren: AutomationStep[] = childrenMap?.[branch.id] || []
+      const branchChildren: AutomationStep[] = filterLegacyLoops(
+        childrenMap?.[branch.id] || []
+      )
       let laneY = coords.y + visuals.laneYSpacing
       let prevId: string = branchNodeId
       let prevBlock: FlowBlockContext = branchBlockRef
@@ -347,7 +355,9 @@ export const renderLoopV2Container = (
   deps: GraphBuildDeps
 ) => {
   const baseId = loopStep.id
-  const children: AutomationStep[] = loopStep.inputs?.children || []
+  const children: AutomationStep[] = filterLegacyLoops(
+    loopStep.inputs?.children || []
+  )
   // Force a vertical flow inside the loop container regardless of global layout
   const internalDir = "TB"
 
@@ -372,7 +382,7 @@ export const renderLoopV2Container = (
       maxFanoutWidth = Math.max(maxFanoutWidth, fanoutWidth)
 
       const maxLaneChildren = branches.reduce((acc, br) => {
-        const len = (childrenMap?.[br.id] || []).length
+        const len = filterLegacyLoops(childrenMap?.[br.id] || []).length
         return Math.max(acc, len)
       }, 0)
       dynamicHeight +=
