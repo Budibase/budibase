@@ -280,7 +280,7 @@ export async function duplicateResourcesToWorkspace(
   }
 
   for (const doc of documentToCopy) {
-    let name: string
+    let name: string, displayType: string
     const type: ResourceType | "Unknown" =
       (Object.entries(resourceTypeIdPrefixes).find(([_, idPrefix]) =>
         doc._id.startsWith(idPrefix)
@@ -289,24 +289,31 @@ export async function duplicateResourcesToWorkspace(
     switch (type) {
       case ResourceType.AUTOMATION:
         name = (doc as Automation).name
+        displayType = "Automation"
         break
       case ResourceType.DATASOURCE:
         name = (doc as Datasource).name || "Unknown"
+        displayType = "Datasource"
         break
       case ResourceType.QUERY:
         name = (doc as Query).name
+        displayType = "Query"
         break
       case ResourceType.ROW_ACTION:
         name = doc._id // We don't really have a row action name
+        displayType = "Row action"
         break
       case ResourceType.TABLE:
         name = (doc as Table).name
+        displayType = "Table"
         break
       case ResourceType.SCREEN:
         name = (doc as Screen).name || "Unkown"
+        displayType = "Screen"
         break
       case ResourceType.WORKSPACE_APP:
         name = (doc as WorkspaceApp).name
+        displayType = "App"
         break
       default:
         throw utils.unreachable(type)
@@ -315,7 +322,7 @@ export async function duplicateResourcesToWorkspace(
     const resource = {
       id: doc._id,
       name,
-      type: type.substring(0, 1).toUpperCase() + type.substring(1),
+      type: displayType,
     }
 
     await events.resource.duplicatedToWorkspace({

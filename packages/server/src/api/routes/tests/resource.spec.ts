@@ -1,3 +1,4 @@
+import { events } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -378,6 +379,65 @@ describe("/api/resources/usage", () => {
         }
       })
     }
+
+    it("emits duplication events with the expected payload", async () => {
+      const destinationName = `Destination ${generator.natural()}`
+      const newWorkspace = await config.api.workspace.create({
+        name: destinationName,
+      })
+
+      const table = await createInternalTable({ name: "Duplicated table" })
+      const app = await createApp(createScreenWithDataprovider(table._id!))
+
+      const resourcesToCopy = await collectResourceIds(app.id)
+
+      const duplicatedToWorkspaceSpy = jest.spyOn(
+        events.resource,
+        "duplicatedToWorkspace"
+      )
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      const sourceWorkspace = config.getDevWorkspace()
+
+      expect(duplicatedToWorkspaceSpy).toHaveBeenCalledTimes(
+        resourcesToCopy.length
+      )
+      expect(duplicatedToWorkspaceSpy?.mock.calls).toEqual([
+        [
+          {
+            fromWorkspace: sourceWorkspace.name,
+            toWorkspace: newWorkspace.name,
+            resource: {
+              id: app.id,
+              name: app.app.name,
+              type: "App",
+            },
+          },
+        ],
+        [
+          {
+            fromWorkspace: sourceWorkspace.name,
+            toWorkspace: newWorkspace.name,
+            resource: {
+              id: app.screens[0]._id,
+              name: app.screens[0].name,
+              type: "Screen",
+            },
+          },
+        ],
+        [
+          {
+            fromWorkspace: sourceWorkspace.name,
+            toWorkspace: newWorkspace.name,
+            resource: {
+              id: table._id,
+              name: table.name,
+              type: "Table",
+            },
+          },
+        ],
+      ])
+    })
 
     it("copies basic apps with its screens", async () => {
       const basicApp = await createApp(basicScreen())
