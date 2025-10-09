@@ -460,6 +460,7 @@ export type DocUpdateEvent = {
   id: string
   tenantId: string
   appId?: string
+  properties: any
 }
 
 export interface EventProcessor {

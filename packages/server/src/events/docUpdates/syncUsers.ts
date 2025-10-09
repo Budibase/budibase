@@ -61,12 +61,17 @@ export default function process() {
     try {
       const docId = update.id
       const isGroup = docId.startsWith(constants.DocumentType.GROUP)
-      let userIds: string[]
+      const userIds: string[] = []
+
       if (isGroup) {
+        if ("userIds" in update.properties) {
+          userIds.push(...update.properties.userIds)
+        }
+
         const group = await proSdk.groups.get(docId)
-        userIds = group.users?.map(user => user._id) || []
+        userIds.push(...(group.users?.map(user => user._id) || []))
       } else {
-        userIds = [docId]
+        userIds.push(docId)
       }
 
       const batchSyncProcessor = getUserSyncProcessor()
