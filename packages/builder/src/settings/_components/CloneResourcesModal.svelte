@@ -222,8 +222,15 @@
     dependantResources
   )
 
+  $: resourceTypesToDisplayIds = new Set(
+    Object.values(resourceTypesToDisplay)
+      .flatMap(x => x.data)
+      .map(x => x._id)
+  )
   $: resourcesToBeCopied = Object.values(selectedResources).flatMap(x => x)
-  $: resourcesToBeCopiedCount = resourcesToBeCopied.length
+  $: resourcesToBeCopiedCount = resourcesToBeCopied.filter(
+    r => resourceTypesToDisplayIds.has(r._id) // Don't display hidden dependencies
+  ).length
 
   $: disabled = !resourcesToBeCopiedCount || !toWorkspaceId
 
