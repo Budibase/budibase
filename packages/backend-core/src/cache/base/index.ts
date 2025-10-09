@@ -1,6 +1,6 @@
 import { getTenantId } from "../../context"
-import { Client } from "../../redis"
 import * as redis from "../../redis/init"
+import { Client } from "../../redis"
 
 function generateTenantKey(key: string) {
   const tenantId = getTenantId()
@@ -172,31 +172,5 @@ export default class BaseCache {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
     await client.deleteIfValue(key, value)
-  }
-
-  async append(
-    key: string,
-    value: string | string[],
-    opts = { useTenancy: true }
-  ) {
-    key = opts.useTenancy ? generateTenantKey(key) : key
-    const client = await this.getClient()
-    return client.append(key, value)
-  }
-
-  async getArray(key: string, opts = { useTenancy: true }) {
-    key = opts.useTenancy ? generateTenantKey(key) : key
-    const client = await this.getClient()
-    return client.getArray(key)
-  }
-
-  async removeFromArray(
-    key: string,
-    values: string[],
-    opts = { useTenancy: true }
-  ) {
-    key = opts.useTenancy ? generateTenantKey(key) : key
-    const client = await this.getClient()
-    return client.removeFromArray(key, values)
   }
 }
