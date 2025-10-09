@@ -50,7 +50,7 @@
   export let defaultRows: Row[] | undefined = []
 
   // Limit datasourceType "user" to app users only
-  export let appUsersOnly: boolean | undefined = false
+  export let workspaceUsersOnly: boolean | undefined = false
 
   const { API } = getContext("sdk")
 
@@ -71,7 +71,7 @@
   let loadingMissingOptions: boolean = false
 
   // Reset the available options when our base filter changes
-  $: filter, appUsersOnly, (optionsMap = {})
+  $: filter, workspaceUsersOnly, (optionsMap = {})
   // Determine if we can select multiple rows or not
   $: multiselect =
     multi ??
@@ -92,7 +92,7 @@
     datasourceType,
     migratedFilter,
     linkedTableId,
-    appUsersOnly
+    workspaceUsersOnly
   )
 
   // Attempt to determine the primary display field to use
@@ -147,7 +147,7 @@
     dsType: typeof datasourceType,
     filter: UISearchFilter | undefined,
     linkedTableId?: string,
-    appUsersOnly?: boolean
+    workspaceUsersOnly?: boolean
   ) => {
     const datasource: DataFetchDatasource =
       dsType === "table"
@@ -156,7 +156,7 @@
             tableId: linkedTableId!,
           }
         : {
-            type: appUsersOnly ? "table" : dsType,
+            type: workspaceUsersOnly ? "table" : dsType,
             tableId: InternalTable.USER_METADATA,
           }
     return fetchData({
@@ -212,7 +212,7 @@
 
   const parseId = (id: string) => {
     // Normalise app table users to the global format.
-    if (datasourceType === "user" && appUsersOnly) {
+    if (datasourceType === "user" && workspaceUsersOnly) {
       return id.replace(`ro_${Constants.TableNames.USERS}_`, "")
     }
     return id

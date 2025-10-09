@@ -8376,8 +8376,8 @@
       },
       {
         "type": "boolean",
-        "label": "App users",
-        "key": "appUsersOnly",
+        "label": "Workspace users",
+        "key": "workspaceUsersOnly",
         "defaultValue": false
       },
       {
@@ -8498,8 +8498,8 @@
       },
       {
         "type": "boolean",
-        "label": "App users",
-        "key": "appUsersOnly",
+        "label": "Workspace users",
+        "key": "workspaceUsersOnly",
         "defaultValue": false
       },
       {
