@@ -455,48 +455,6 @@ export async function coreOutputProcessing(
           delete row[property]
         }
       }
-    } else if (column.type === FieldType.JSON) {
-      // Process JSON fields to ensure proper object structure for Handlebars
-      for (const row of rows) {
-        if (row[property] != null) {
-          try {
-            // If it's a string, parse it as JSON
-            if (typeof row[property] === "string") {
-              row[property] = JSON.parse(row[property])
-            }
-
-            // If it's an array, create the structure expected by the schema generator
-            if (Array.isArray(row[property])) {
-              const processedArray = row[property].map((item: any) => {
-                if (typeof item === 'object' && item !== null) {
-                  // Create a new plain object with own properties to ensure Handlebars can access them
-                  return JSON.parse(JSON.stringify(item))
-                }
-                return item
-              })
-
-              // Create a structure that matches what the schema generator expects
-              // The schema generator creates a "values" property for arrays
-              row[property] = {
-                values: processedArray
-              }
-
-              // Also ensure the values array has proper own properties for Handlebars
-              Object.defineProperty(row[property], 'values', {
-                value: processedArray,
-                writable: true,
-                enumerable: true,
-                configurable: true
-              })
-            } else if (typeof row[property] === 'object' && row[property] !== null) {
-              // For non-array objects, ensure it's a plain object with own properties
-              row[property] = JSON.parse(JSON.stringify(row[property]))
-            }
-          } catch (err) {
-            console.warn(`Failed to process JSON field ${property}:`, err)
-          }
-        }
-      }
     }
   }
 
