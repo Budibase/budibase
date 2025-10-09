@@ -87,7 +87,7 @@ export async function updateClientLibrary(appId: string) {
     const distFolder = path.dirname(clientPath)
     manifest = join(path.dirname(distFolder), "manifest.json")
     client = clientPath
-    clientNew = join(distFolder, "budibase-client.new.js")
+    clientNew = join(distFolder, "budibase-client.esm.js")
     const chunksDir = join(distFolder, "chunks")
     dependencies = fs
       .readdirSync(chunksDir)
@@ -97,7 +97,7 @@ export async function updateClientLibrary(appId: string) {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.new.js")
+    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.esm.js")
     const chunksDir = join(resolve(TOP_LEVEL_PATH, "client"), "chunks")
     dependencies = fs
       .readdirSync(chunksDir)
@@ -118,7 +118,7 @@ export async function updateClientLibrary(appId: string) {
   })
   const clientNewUpload = objectStore.streamUpload({
     bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.new.js"),
+    filename: join(appId, "budibase-client.esm.js"),
     stream: fs.createReadStream(clientNew),
   })
   let depUploads = []

@@ -14,8 +14,8 @@ const ignoredWarnings = [
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
-  const bundleVersion = process.env.BUNDLE_VERSION || "new"
-  const isModuleBuild = bundleVersion === "new"
+  const bundleVersion = process.env.BUNDLE_VERSION || "esm"
+  const isModuleBuild = bundleVersion === "esm"
 
   return {
     server: {
@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
         outDir: "dist",
         ...(isModuleBuild ? {} : { name: "budibase_client" }),
         fileName: () =>
-          isModuleBuild ? "budibase-client.new.js" : "budibase-client.js",
+          isModuleBuild ? "budibase-client.esm.js" : "budibase-client.js",
       },
       emptyOutDir: false,
       minify: isProduction,
@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
           entryFileNames: chunkInfo => {
             if (isModuleBuild) {
               return chunkInfo.isEntry
-                ? "budibase-client.new.js"
+                ? "budibase-client.esm.js"
                 : "chunks/[name]-[hash].js"
             }
             return "budibase-client.js"

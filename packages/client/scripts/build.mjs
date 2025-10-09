@@ -21,21 +21,21 @@ async function buildAll() {
   }
 
   console.log("Building new client...")
-  process.env.BUNDLE_VERSION = "new"
+  process.env.BUNDLE_VERSION = "esm"
   await build({
     ...config,
     build: {
       ...config.build,
       lib: {
         ...config.build.lib,
-        fileName: () => "budibase-client.new.js",
+        fileName: () => "budibase-client.esm.js",
       },
     },
     configFile: "./vite.config.mjs",
   })
 
   console.log("Building old client...")
-  process.env.BUNDLE_VERSION = "old"
+  process.env.BUNDLE_VERSION = "iife"
   await build({
     ...config,
     configFile: "./vite.config.mjs",

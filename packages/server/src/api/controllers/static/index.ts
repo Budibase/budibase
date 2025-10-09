@@ -403,7 +403,7 @@ export const serveClientLibrary = async function (
     if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
       return serveLocalFile(ctx, "budibase-client.js")
     } else {
-      return serveLocalFile(ctx, "budibase-client.new.js")
+      return serveLocalFile(ctx, "budibase-client.esm.js")
     }
   }
 }

@@ -8,7 +8,7 @@ import * as objectStore from "../objectStore"
 
 export async function clientLibraryPath(appId: string) {
   const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
+  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.esm.js`
   if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
     return oldClient
   } else {
