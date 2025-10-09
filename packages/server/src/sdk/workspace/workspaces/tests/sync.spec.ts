@@ -3,8 +3,22 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { context, events, roles } from "@budibase/backend-core"
 import { utils } from "@budibase/backend-core/tests"
 import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
-import { UserSyncProcessor } from "../../../../events/docUpdates/syncUsers"
+import {
+  UserSyncProcessor,
+  getUserSyncProcessor,
+} from "../../../../events/docUpdates/syncUsers"
 import { rawUserMetadata } from "../../../users/utils"
+import * as workspaceSync from "../sync"
+
+jest.mock("../sync", () => {
+  const actual = jest.requireActual("../sync")
+  return {
+    ...actual,
+    syncUsersAcrossWorkspaces: jest
+      .fn()
+      .mockImplementation(actual.syncUsersAcrossWorkspaces),
+  }
+})
 
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User
@@ -114,5 +128,27 @@ describe("app user/group sync", () => {
   it("should be able to handle builder users", async () => {
     await createUser("test3@example.com", {}, true)
     await checkEmail("test3@example.com")
+  })
+})
+
+describe("user sync batching", () => {
+  it("should batch waiting jobs into a single sync call", async () => {
+    const processor = getUserSyncProcessor()
+    const mockSync =
+      workspaceSync.syncUsersAcrossWorkspaces as jest.MockedFunction<
+        typeof workspaceSync.syncUsersAcrossWorkspaces
+      >
+
+    mockSync.mockClear()
+
+    await UserSyncProcessor.queue.getBullQueue().pause()
+    await processor.add(["batch-user-1"])
+    await processor.add(["batch-user-2"])
+    await processor.add(["batch-user-1"])
+    await UserSyncProcessor.queue.getBullQueue().resume()
+    await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
+
+    expect(mockSync).toHaveBeenCalledTimes(1)
+    expect(mockSync).toHaveBeenCalledWith(["batch-user-1", "batch-user-2"])
   })
 })
