@@ -9,16 +9,4 @@ export enum FeatureFlag {
   DIRECT_LOGIN_TO_ACCOUNT_PORTAL = "DIRECT_LOGIN_TO_ACCOUNT_PORTAL",
 }
 
-export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
-  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
-  [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.USE_DYNAMIC_LOADING]: true,
-
-  // Account-portal
-  [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
-
-  [FeatureFlag.DEBUG_UI]: false,
-  [FeatureFlag.DUPLICATE_APP]: false,
-}
-
-export type FeatureFlags = typeof FeatureFlagDefaults
+export type FeatureFlags = Record<FeatureFlag, boolean>
