@@ -268,6 +268,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
+        workspaceId: appId,
       }
 
       // Add custom app scripts if enabled

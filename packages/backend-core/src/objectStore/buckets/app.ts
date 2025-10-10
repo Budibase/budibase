@@ -43,11 +43,11 @@ export async function clientLibraryCDNUrl(appId: string, version: string) {
   }
 }
 
-export async function clientLibraryUrl(appId: string, version: string) {
-  return `/api/assets/client?${await getClientCacheKey(appId, version)}`
+export async function clientLibraryUrl(workspaceId: string, version: string) {
+  return `/api/assets/${workspaceId}/client?${await getClientCacheKey(workspaceId, version)}`
 }
 
-export async function getClientCacheKey(appId: string, version: string) {
+export async function getClientCacheKey(workspaceId: string, version: string) {
   let tenantId,
     qsParams: {
       appId: string
@@ -59,7 +59,7 @@ export async function getClientCacheKey(appId: string, version: string) {
     tenantId = getTenantId()
   } finally {
     qsParams = {
-      appId,
+      appId: workspaceId,
       version,
     }
   }

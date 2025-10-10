@@ -146,7 +146,7 @@
   <script
     id="budibase-client-script"
     type="module"
-    src={`/api/assets/client?${props.clientCacheKey}`}
+    src={`/api/assets/${props.workspaceId}/client?${props.clientCacheKey}`}
   ></script>
   <!-- Custom components need inserted after the core client library -->
   <!-- But before loadBudibase is called -->
