@@ -77,4 +77,16 @@
   div :global(h1) {
     font-size: 1.8em;
   }
+
+  /* Ensure text styling properties cascade to markdown content */
+  div :global(.markdown-viewer),
+  div :global(.markdown-viewer p),
+  div :global(.markdown-viewer span),
+  div :global(.markdown-viewer div) {
+    font-style: inherit;
+    font-weight: inherit;
+    text-decoration: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+  }
 </style>

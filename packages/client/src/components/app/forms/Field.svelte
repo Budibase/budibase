@@ -253,4 +253,17 @@
   .readonly {
     pointer-events: none;
   }
+
+  /* Ensure text styling properties cascade to form field content */
+  .spectrum-Form-item :global(.spectrum-Checkbox-label),
+  .spectrum-Form-item :global(.spectrum-FieldLabel),
+  .spectrum-Form-item :global(label),
+  .spectrum-Form-item :global(span),
+  .spectrum-Form-item :global(input) {
+    font-style: inherit;
+    font-weight: inherit;
+    text-decoration: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+  }
 </style>

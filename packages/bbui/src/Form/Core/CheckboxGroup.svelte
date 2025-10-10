@@ -87,4 +87,13 @@
   .icon :global(i) {
     font-size: 14px;
   }
+
+  /* Ensure text styling properties cascade to checkbox labels */
+  .spectrum-FieldGroup :global(.spectrum-Checkbox-label) {
+    font-style: inherit;
+    font-weight: inherit;
+    text-decoration: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+  }
 </style>
