@@ -44,21 +44,26 @@ describe("/backups", () => {
         })
       )
 
+      const encodeIfNeeded = (value: string) =>
+        opts.isEncrypted ? `${value}.enc` : value
       const expectedFiles = [
+        "budibase-client.esm.js",
         "budibase-client.js",
-        "budibase-client.new.js",
         "db.txt",
         "manifest.json",
-        "_dependencies/apexcharts.js",
-        "_dependencies/html5-qrcode.js",
-      ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`)
+      ].map(encodeIfNeeded)
       if (opts.includeRows) {
         expectedFiles.push(
           ...attachmentFileNames.sort().map(f => `attachments/${f}`)
         )
       }
 
-      expect(exportedFiles).toEqual(expectedFiles)
+      expect(exportedFiles).toEqual(expect.arrayContaining(expectedFiles))
+
+      const chunksRegex = opts.isEncrypted
+        ? /chunks\/.+-\w{8}\.js\.enc/
+        : /chunks\/.+-\w{8}\.js/
+      expect(exportedFiles).toContainEqual(expect.stringMatching(chunksRegex))
     }
 
     beforeEach(async () => {
