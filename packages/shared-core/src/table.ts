@@ -36,7 +36,7 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.BARCODEQR]: true,
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: true,
-  [FieldType.JSON]: true,
+  [FieldType.JSON]: false,
 
   [FieldType.FORMULA]: false,
   [FieldType.AI]: false,

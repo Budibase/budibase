@@ -154,6 +154,17 @@ export function generateColumnDefinition(config: {
   // check for an enum column and handle that separately.
   if (lowerCaseType.startsWith("enum")) {
     matchingTypes.push({ external: "enum", internal: FieldType.OPTIONS })
+  } else if (
+    lowerCaseType === "array" &&
+    userDefinedType &&
+    (userDefinedType.toLowerCase().includes("json") ||
+      userDefinedType.toLowerCase().includes("jsonb"))
+  ) {
+    // Handle PostgreSQL JSON array types specifically - treat as JSON rather than array
+    matchingTypes.push({
+      external: userDefinedType.toLowerCase(),
+      internal: FieldType.JSON,
+    })
   } else if (userDefinedType && userDefinedType in SQL_USER_DEFINED_TYPE_MAP) {
     foundType = SQL_USER_DEFINED_TYPE_MAP[userDefinedType]
   } else {
