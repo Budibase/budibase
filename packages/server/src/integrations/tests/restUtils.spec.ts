@@ -1,5 +1,5 @@
 import { getAttachmentHeaders } from "../utils/restUtils"
-import type { Headers } from "node-fetch"
+import type { Headers } from "undici"
 
 function headers(dispositionValue: string, contentType?: string) {
   return {
