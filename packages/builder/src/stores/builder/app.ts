@@ -108,28 +108,28 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncApp(app: Workspace) {
+  syncApp(workspace: Workspace) {
     this.update(state => ({
       ...state,
-      name: app.name,
-      appId: app.appId,
-      url: app.url || "",
-      libraries: app.componentLibraries,
-      version: app.version,
-      appInstance: app.instance,
-      revertableVersion: app.revertableVersion,
-      upgradableVersion: app.upgradableVersion,
-      usedPlugins: app.usedPlugins || [],
-      icon: app.icon,
+      name: workspace.name,
+      appId: workspace.appId,
+      url: workspace.url || "",
+      libraries: workspace.componentLibraries,
+      version: workspace.version,
+      appInstance: workspace.instance,
+      revertableVersion: workspace.revertableVersion,
+      upgradableVersion: workspace.upgradableVersion,
+      usedPlugins: workspace.usedPlugins || [],
+      icon: workspace.icon,
       features: {
         ...INITIAL_APP_META_STATE.features,
-        ...app.features,
+        ...workspace.features,
       },
       initialised: true,
-      automations: app.automations || {},
+      automations: workspace.automations || {},
       hasAppPackage: true,
-      pwa: app.pwa,
-      scripts: app.scripts || [],
+      pwa: workspace.pwa,
+      scripts: workspace.scripts || [],
     }))
   }
 

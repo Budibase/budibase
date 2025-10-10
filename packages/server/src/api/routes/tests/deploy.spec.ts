@@ -239,18 +239,18 @@ describe("/api/deploy", () => {
       await config.unpublish()
     })
 
-    function expectApp(app: WorkspaceApp) {
+    function expectApp(workspace: WorkspaceApp) {
       return {
         disabled: async (
           disabled: boolean | undefined,
           state: PublishResourceState
         ) => {
-          expect((await config.api.workspaceApp.find(app._id!)).disabled).toBe(
-            disabled
-          )
+          expect(
+            (await config.api.workspaceApp.find(workspace._id!)).disabled
+          ).toBe(disabled)
 
           const status = await config.api.deploy.publishStatus()
-          expect(status.workspaceApps[app._id!]).toEqual(
+          expect(status.workspaceApps[workspace._id!]).toEqual(
             expect.objectContaining({
               state,
             })
