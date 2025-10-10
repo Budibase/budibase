@@ -268,6 +268,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
+        workspaceId: appId,
       }
 
       // Add custom app scripts if enabled
@@ -403,7 +404,7 @@ export const serveClientLibrary = async function (
     if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
       return serveLocalFile(ctx, "budibase-client.js")
     } else {
-      return serveLocalFile(ctx, "budibase-client.new.js")
+      return serveLocalFile(ctx, "budibase-client.esm.js")
     }
   }
 }

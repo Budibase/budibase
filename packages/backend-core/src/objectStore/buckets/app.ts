@@ -8,7 +8,7 @@ import * as objectStore from "../objectStore"
 
 export async function clientLibraryPath(appId: string) {
   const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
+  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.esm.js`
   if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
     return oldClient
   } else {
@@ -20,7 +20,7 @@ export async function clientLibraryPath(appId: string) {
   }
 }
 export function client3rdPartyLibrary(appId: string, file: string) {
-  return `${objectStore.sanitizeKey(appId)}/_dependencies/${file}`
+  return `${objectStore.sanitizeKey(appId)}/${file}`
 }
 
 /**
@@ -43,11 +43,11 @@ export async function clientLibraryCDNUrl(appId: string, version: string) {
   }
 }
 
-export async function clientLibraryUrl(appId: string, version: string) {
-  return `/api/assets/client?${await getClientCacheKey(appId, version)}`
+export async function clientLibraryUrl(workspaceId: string, version: string) {
+  return `/api/assets/${workspaceId}/client?${await getClientCacheKey(workspaceId, version)}`
 }
 
-export async function getClientCacheKey(appId: string, version: string) {
+export async function getClientCacheKey(workspaceId: string, version: string) {
   let tenantId,
     qsParams: {
       appId: string
@@ -59,7 +59,7 @@ export async function getClientCacheKey(appId: string, version: string) {
     tenantId = getTenantId()
   } finally {
     qsParams = {
-      appId,
+      appId: workspaceId,
       version,
     }
   }

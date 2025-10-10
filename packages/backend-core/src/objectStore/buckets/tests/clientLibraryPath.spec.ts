@@ -51,13 +51,13 @@ describe("clientLibraryPath", () => {
 
       const result = await clientLibraryPath("app_123")
 
-      expect(result).toBe("app_123/budibase-client.new.js")
+      expect(result).toBe("app_123/budibase-client.esm.js")
       expect(mockIsEnabled).toHaveBeenCalledWith(
         FeatureFlag.USE_DYNAMIC_LOADING
       )
       expect(mockObjectExists).toHaveBeenCalledWith(
         "prod-budi-app-assets",
-        "app_123/budibase-client.new.js"
+        "app_123/budibase-client.esm.js"
       )
     })
 
@@ -72,7 +72,7 @@ describe("clientLibraryPath", () => {
       )
       expect(mockObjectExists).toHaveBeenCalledWith(
         "prod-budi-app-assets",
-        "app_123/budibase-client.new.js"
+        "app_123/budibase-client.esm.js"
       )
     })
   })

@@ -264,7 +264,28 @@
 
     // Pull definition and constructor
     const component = instance._component
-    constructor = componentStore.actions.getComponentConstructor(component)
+    const result = componentStore.actions.getComponentConstructor(component)
+    const isPromise = value => typeof value?.then === "function"
+    if (isPromise(result)) {
+      constructor = null
+      const currentInstanceKey = instanceKey
+      result
+        .then(ResolvedComponent => {
+          if (currentInstanceKey !== lastInstanceKey) {
+            return
+          }
+          constructor = ResolvedComponent
+        })
+        .catch(error => {
+          if (currentInstanceKey !== lastInstanceKey) {
+            return
+          }
+          console.error("Failed to resolve component constructor", error)
+          constructor = null
+        })
+    } else {
+      constructor = result
+    }
     definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
