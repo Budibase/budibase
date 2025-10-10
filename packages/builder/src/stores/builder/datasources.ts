@@ -300,6 +300,33 @@ export class DatasourceStore extends DerivedBudiStore<
     const info = await API.fetchInfoForDatasource(datasource)
     return info.tableNames || []
   }
+
+  async getViewNames(datasource: Datasource) {
+    try {
+      const info = await API.fetchViewInfoForDatasource(datasource)
+      return info.viewNames || []
+    } catch (error) {
+      // Views not supported for this datasource
+      return []
+    }
+  }
+
+  async createViewQuery(datasourceId: string, viewName: string | undefined) {
+    if (!viewName) return
+    const query = {
+      datasourceId,
+      name: viewName,
+      parameters: [],
+      fields: {
+        sql: `SELECT * FROM "${viewName}"`,
+      },
+      queryVerb: "read" as const,
+      transformer: null,
+      schema: {},
+      readable: true,
+    }
+    return await queries.save(datasourceId, query as any)
+  }
 }
 
 export const datasources = new DatasourceStore()

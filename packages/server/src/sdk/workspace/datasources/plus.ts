@@ -5,11 +5,13 @@ import {
   IntegrationBase,
   Schema,
   Table,
+  SourceName,
 } from "@budibase/types"
 import sdk from "../.."
 import { getIntegration } from "../../../integrations"
 import tableSdk from "../tables"
 import * as datasources from "./datasources"
+import { generateQueryID } from "../../../db/utils"
 
 function checkForSchemaErrors(schema: Record<string, Table>) {
   const errors: Record<string, string> = {}
@@ -58,6 +60,52 @@ export async function buildFilteredSchema(
       ...filteredSchema.errors,
       ...checkForSchemaErrors(filteredSchema.tables),
     },
+  }
+}
+
+async function createQueriesForViews(datasourceId: string) {
+  const db = context.getWorkspaceDB()
+  const datasource = await datasources.get(datasourceId)
+  const Integration = await getIntegration(datasource.source)
+  const connector = new Integration(datasource.config) as any
+
+  if (typeof connector.getViewNames === "function") {
+    const viewNames = await connector.getViewNames()
+
+    for (const viewName of viewNames) {
+      // Check if query already exists
+      const existingQueries = await db.allDocs({
+        include_docs: true,
+        startkey: `query_${datasourceId}_`,
+        endkey: `query_${datasourceId}_\ufff0`,
+      })
+
+      const existingQuery = existingQueries.rows.find(
+        (row: any) =>
+          row.doc?.name === viewName && row.doc?.datasourceId === datasourceId
+      )
+
+      if (!existingQuery) {
+        // Create a new query for the view
+        const queryId = generateQueryID(datasourceId)
+        const query = {
+          _id: queryId,
+          datasourceId,
+          name: viewName,
+          parameters: [],
+          fields: {
+            sql: `SELECT * FROM "${viewName}"`,
+          },
+          transformer: "",
+          schema: {},
+          readable: true,
+          queryVerb: "read" as const,
+          nullDefaultSupport: true,
+        }
+
+        await db.put(query)
+      }
+    }
   }
 }
 
@@ -113,6 +161,11 @@ export async function buildSchemaFromSource(
   }
 
   datasource.entities = tables
+
+  // Create queries for PostgreSQL views
+  if (datasource.source === SourceName.POSTGRES) {
+    await createQueriesForViews(datasourceId)
+  }
 
   datasources.setDefaultDisplayColumns(datasource)
   const dbResp = await db.put(tableSdk.populateExternalTableSchemas(datasource))

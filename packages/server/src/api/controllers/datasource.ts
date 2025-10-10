@@ -11,6 +11,8 @@ import {
   DynamicVariable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchDatasourceViewInfoRequest,
+  FetchDatasourceViewInfoResponse,
   FetchDatasourcesResponse,
   FetchExternalSchemaResponse,
   FieldType,
@@ -69,6 +71,24 @@ export async function information(
   const tableNames = await connector.getTableNames()
   ctx.body = {
     tableNames: tableNames.sort(),
+  }
+}
+
+export async function viewInformation(
+  ctx: UserCtx<FetchDatasourceViewInfoRequest, FetchDatasourceViewInfoResponse>
+) {
+  const { datasource } = ctx.request.body
+  const enrichedDatasource =
+    await sdk.datasources.getAndMergeDatasource(datasource)
+  const connector = (await sdk.datasources.getConnector(
+    enrichedDatasource
+  )) as DatasourcePlus
+  if (!connector.getViewNames) {
+    ctx.throw(400, "View name fetching not supported by datasource")
+  }
+  const viewNames = await connector.getViewNames()
+  ctx.body = {
+    viewNames: viewNames.sort(),
   }
 }
 
