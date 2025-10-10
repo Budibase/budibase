@@ -503,7 +503,7 @@ export class RestIntegration implements IntegrationBase {
         hasDispatcher: true,
         rejectUnauthorized: this.config.rejectUnauthorized,
       })
-      // @ts-ignore - ProxyAgent is compatible with Dispatcher but types don't align perfectly
+      // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
       input.dispatcher = proxyDispatcher
     } else if (this.config.rejectUnauthorized === false) {
       // No proxy, but need to disable TLS verification
