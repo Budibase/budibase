@@ -208,7 +208,7 @@ export enum Event {
   WORKSPACE_APP_DELETED = "workspace_app:deleted",
 }
 
-export const UserGroupSyncEvents: Event[] = [
+export const WorkspaceUserSyncEvents: Event[] = [
   Event.USER_CREATED,
   Event.USER_UPDATED,
   Event.USER_DELETED,
@@ -235,7 +235,7 @@ export const WorkspaceResourceEvents: Event[] = [
 ]
 
 export const AsyncEvents: Event[] = [
-  ...UserGroupSyncEvents,
+  ...WorkspaceUserSyncEvents,
   ...WorkspaceResourceEvents,
 ]
 
@@ -460,6 +460,7 @@ export type DocUpdateEvent = {
   id: string
   tenantId: string
   appId?: string
+  properties: any
 }
 
 export interface EventProcessor {

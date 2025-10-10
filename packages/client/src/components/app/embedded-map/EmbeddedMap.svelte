@@ -3,7 +3,7 @@
   import sanitizeHtml from "sanitize-html"
   import "leaflet/dist/leaflet.css"
   import { Helpers, Button } from "@budibase/bbui"
-  import { onMount, getContext } from "svelte"
+  import { onMount, onDestroy, getContext } from "svelte"
   import {
     FullScreenControl,
     LocationControl,
@@ -87,35 +87,39 @@
     draggable: false,
     alt: "Location Marker",
   }
+  // Zoom bounds
+  const minZoomLevel = 0
+  const maxZoomLevel = 18
+
   const mapOptions = {
     fullScreen: false,
     zoomControl: false,
     scrollWheelZoom: zoomEnabled,
-    minZoomLevel,
-    maxZoomLevel,
+    minZoom: minZoomLevel,
+    maxZoom: maxZoomLevel,
   }
   const fallbackCoordinates = [51.5072, -0.1276] //London
 
   let mapInstance
+  let mapContainerEl
   let mapMarkerGroup = new L.FeatureGroup()
   let candidateMarkerGroup = new L.FeatureGroup()
   let candidateMarkerPosition
   let mounted = false
   let initialMarkerZoomCompleted = false
-  let minZoomLevel = 0
-  let maxZoomLevel = 18
   let cachedDeviceCoordinates
+  let resizeObserver
+  let resizeTimer
 
   $: validRows = getValidRows(dataProvider?.rows, latitudeKey, longitudeKey)
   $: safeZoomLevel = parseZoomLevel(zoomLevel)
+  $: hasExplicitZoom = zoomLevel != null && zoomLevel !== ""
   $: defaultCoordinates = parseDefaultLocation(defaultLocation)
-  $: initMap(tileURL, mapAttribution, safeZoomLevel)
+  // Only re-init when tile settings change
+  $: initMap(tileURL, mapAttribution)
   $: zoomControlUpdated(mapInstance, zoomEnabled)
   $: locationControlUpdated(mapInstance, locationEnabled)
   $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
-  $: width = $component.styles.normal.width
-  $: height = $component.styles.normal.height
-  $: width, height, mapInstance?.invalidateSize()
   $: defaultCoordinates, resetView()
   $: addMapMarkers(
     mapInstance,
@@ -177,10 +181,13 @@
       return
     }
     if (mapMarkerGroup.getLayers().length) {
-      mapInstance.setZoom(0)
-      mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
-        paddingTopLeft: [0, 24],
-      })
+      const bounds = mapMarkerGroup.getBounds()
+      if (hasExplicitZoom) {
+        const center = bounds.getCenter()
+        mapInstance.setView(center, safeZoomLevel)
+      } else {
+        mapInstance.fitBounds(bounds, { paddingTopLeft: [0, 24] })
+      }
     } else {
       mapInstance.setView(defaultCoordinates, safeZoomLevel)
     }
@@ -274,7 +281,7 @@
     return text || latitude + "," + longitude
   }
 
-  const initMap = (tileURL, attribution, zoom) => {
+  const initMap = (tileURL, attribution) => {
     if (!mounted) {
       return
     }
@@ -288,7 +295,7 @@
       candidateMarkerGroup.addTo(mapInstance)
 
       // Add attribution
-      const cleanAttribution = sanitizeHtml(attribution, {
+      const cleanAttribution = sanitizeHtml(attribution || "", {
         allowedTags: ["a"],
         allowedAttributes: {
           a: ["href", "target"],
@@ -296,7 +303,6 @@
       })
       L.tileLayer(tileURL, {
         attribution: "&copy; " + cleanAttribution,
-        zoom,
       }).addTo(mapInstance)
 
       // Add click handler
@@ -304,6 +310,11 @@
 
       // Reset view
       resetView()
+
+      // Ensure map size is correct after initial render
+      mapInstance.whenReady(() => {
+        mapInstance.invalidateSize()
+      })
     } catch (e) {
       console.error("There was a problem with the map", e)
     }
@@ -349,7 +360,23 @@
 
   onMount(() => {
     mounted = true
-    initMap(tileURL, mapAttribution, safeZoomLevel)
+    initMap(tileURL, mapAttribution)
+
+    // Watch for container size changes (handles grid/flex layout resizes)
+    if (typeof ResizeObserver !== "undefined" && mapContainerEl) {
+      resizeObserver = new ResizeObserver(() => {
+        clearTimeout(resizeTimer)
+        resizeTimer = setTimeout(() => {
+          mapInstance?.invalidateSize()
+        }, 150)
+      })
+      resizeObserver.observe(mapContainerEl)
+    }
+  })
+
+  onDestroy(() => {
+    resizeObserver?.disconnect()
+    clearTimeout(resizeTimer)
   })
 </script>
 
@@ -358,7 +385,11 @@
     <div>{error}</div>
   {/if}
 
-  <div id={embeddedMapId} class="embedded embedded-map" />
+  <div
+    id={embeddedMapId}
+    class="embedded embedded-map"
+    bind:this={mapContainerEl}
+  />
 
   {#if candidateMarkerPosition}
     <div class="button-container">
