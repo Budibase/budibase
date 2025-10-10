@@ -148,8 +148,10 @@
   --spectrum-global-dimension-font-size-1300: 60px !important;
   --spectrum-alias-font-size-default: 14px !important;
 }
+/* Do not force font-style with !important — this prevents component/custom CSS (e.g. `font-style: italic`) from applying.
+   Keep a normal baseline but allow authors and components to override when needed. */
 * {
-  font-style: normal !important;
+  font-style: normal;
 }
 
 /* Generic styles */
