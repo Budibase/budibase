@@ -1,0 +1,184 @@
+<script lang="ts">
+  import {
+    getSmoothStepPath,
+    BaseEdge,
+    getStraightPath,
+    useSvelteFlow,
+    type Position,
+  } from "@xyflow/svelte"
+  import { getContext } from "svelte"
+  import { type Writable } from "svelte/store"
+  import { type LayoutDirection } from "@budibase/types"
+  import { ActionStepID } from "@/constants/backend/automations"
+  import {
+    ViewMode,
+    type EdgeData,
+    type BranchEdgeData,
+    type FlowBlockContext,
+  } from "@/types/automations"
+  import { selectedAutomation, automationStore } from "@/stores/builder"
+  import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
+  import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
+  import type { DragView } from "../FlowChartDnD"
+
+  export let data: EdgeData
+  export let sourceX: number
+  export let sourceY: number
+  export let targetX: number
+  export let targetY: number
+  export let sourcePosition: Position
+  export let targetPosition: Position
+  export let target: string
+
+  $: viewMode = $automationStore.viewMode as ViewMode
+  $: block = data?.block
+  $: direction = (data?.direction || "TB") as LayoutDirection
+  $: passedPathTo = data?.pathTo
+  $: automation = $selectedAutomation?.data
+
+  const view = getContext<Writable<DragView>>("draggableView")
+  const flow = useSvelteFlow()
+
+  /*
+  Need a type guard here because there can be different properties
+  coming in here depending on if it's a branch edge or not.  
+  */
+  $: isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
+    "isBranchEdge" in d && d.isBranchEdge === true
+
+  $: basePath = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    borderRadius: 12,
+  })
+  $: labelX = basePath[1]
+  $: labelY = basePath[2]
+
+  $: isBranchTarget = target?.startsWith("branch-")
+  $: isAnchorTarget = target?.startsWith("anchor-")
+  $: isSubflowEdge = data.isSubflowEdge === true
+  $: path = isAnchorTarget
+    ? getStraightPath({
+        sourceX,
+        sourceY,
+        targetX: labelX,
+        targetY: labelY,
+      })
+    : basePath
+
+  $: blockId = resolveBlockId(data?.block as FlowBlockContext | undefined)
+  $: blockRef = blockId ? $selectedAutomation?.blockRefs?.[blockId] : undefined
+  $: sourcePathForDrop = passedPathTo || blockRef?.pathTo
+
+  $: collectBlockExists =
+    viewMode === ViewMode.EDITOR && blockRef && $selectedAutomation?.data
+      ? automationStore.actions
+          .getPathSteps(blockRef.pathTo, $selectedAutomation.data)
+          .some(step => step.stepId === ActionStepID.COLLECT)
+      : false
+  $: hideEdge = viewMode === ViewMode.EDITOR && collectBlockExists
+  $: isPrimaryBranchEdge = isBranchEdgeData(data) && data.isPrimaryEdge
+
+  $: showEdgeActions =
+    viewMode === ViewMode.EDITOR &&
+    !isBranchTarget &&
+    !$view?.dragging &&
+    !isSubflowEdge
+
+  $: showEdgeDrop =
+    viewMode === ViewMode.EDITOR &&
+    !isBranchTarget &&
+    $view?.dragging &&
+    !isSubflowEdge
+
+  $: showPreBranchActions =
+    viewMode === ViewMode.EDITOR &&
+    isBranchTarget &&
+    isPrimaryBranchEdge &&
+    !$view?.dragging
+
+  $: showPreBranchDrop =
+    viewMode === ViewMode.EDITOR &&
+    isBranchTarget &&
+    isPrimaryBranchEdge &&
+    $view?.dragging
+
+  // For TB we keep it vertically centered under the source;
+  // for LR we center horizontally and align to the source Y.
+  $: preBranchLabelX =
+    direction === "LR"
+      ? Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+      : (sourceX ?? 0)
+  $: preBranchLabelY =
+    direction === "LR"
+      ? (sourceY ?? 0)
+      : Math.round(((sourceY ?? 0) + (targetY ?? 0)) / 2)
+
+  const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
+    if (!ctx) {
+      return undefined
+    }
+    if ("branchNode" in ctx && ctx.branchNode) {
+      return ctx.branchStepId
+    }
+    return ctx.id
+  }
+
+  const handleBranch = () => {
+    const targetPath = blockRef?.pathTo
+    if (targetPath && automation) {
+      automationStore.actions.branchAutomation(targetPath, automation)
+    }
+  }
+
+  const handleAddBranch = () => {
+    if (!isBranchEdgeData(data)) return
+    const targetRef = $selectedAutomation?.blockRefs?.[data.branchStepId]
+    if (targetRef && automation) {
+      automationStore.actions.branchAutomation(targetRef.pathTo, automation)
+    }
+    flow.fitView()
+  }
+</script>
+
+{#if !hideEdge}
+  <BaseEdge path={path[0]} />
+{/if}
+
+<!-- Branch edge -->
+{#if isBranchEdgeData(data)}
+  <BranchEdgeLabels
+    {data}
+    {labelX}
+    {labelY}
+    {preBranchLabelX}
+    {preBranchLabelY}
+    {showEdgeActions}
+    {showEdgeDrop}
+    {showPreBranchActions}
+    {showPreBranchDrop}
+    {collectBlockExists}
+    {sourcePathForDrop}
+    {block}
+    {handleBranch}
+    {handleAddBranch}
+    {viewMode}
+    {isPrimaryBranchEdge}
+  />
+  <!-- Standard and Loop edges -->
+{:else}
+  <StandardEdgeLabel
+    {labelX}
+    {labelY}
+    {showEdgeActions}
+    {showEdgeDrop}
+    {collectBlockExists}
+    {sourcePathForDrop}
+    {block}
+    {handleBranch}
+  />
+{/if}

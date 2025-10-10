@@ -9,6 +9,7 @@ export interface BlockPath {
   stepIdx: number
   branchIdx: number
   branchStepId: string
+  loopStepId?: string
   id: string
 }
 
@@ -17,6 +18,10 @@ export interface BlockRef {
   looped?: string
   pathTo: BlockPath[]
   terminating?: boolean
+  isLoopV2Child?: boolean
+  insertIntoLoopV2?: boolean
+  loopStepId?: string
+  loopChildInsertIndex?: number
 }
 
 export enum BlockDefinitionTypes {

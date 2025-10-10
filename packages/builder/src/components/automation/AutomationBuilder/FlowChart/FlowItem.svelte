@@ -17,7 +17,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import { type DragView } from "./FlowChartDnD"
+  import { type DragView } from "./FlowCanvas/FlowChartDnD"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
