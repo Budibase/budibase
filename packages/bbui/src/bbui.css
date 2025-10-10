@@ -148,10 +148,6 @@
   --spectrum-global-dimension-font-size-1300: 60px !important;
   --spectrum-alias-font-size-default: 14px !important;
 }
-* {
-  font-style: normal !important;
-}
-
 /* Generic styles */
 a {
   text-decoration: none;
