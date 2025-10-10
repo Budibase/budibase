@@ -28,6 +28,7 @@ import {
   FilterableRowTriggers,
   RowTriggers,
   SelectedAutomationState,
+  ViewMode,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
@@ -45,6 +46,7 @@ import {
   AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AutomationStepResult,
   AutomationStepInputs,
   AutomationStepType,
   AutomationTrigger,
@@ -83,6 +85,7 @@ import {
   UIAutomation,
   UILogicalOperator,
   WebhookTriggerOutputs,
+  AutomationLog,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -99,6 +102,7 @@ const initialAutomationState: AutomationStoreState = {
     ACTION: {},
   },
   selectedAutomationId: null,
+  viewMode: ViewMode.EDITOR,
 }
 
 const getFinalDefinitions = (
@@ -123,6 +127,12 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
+  setViewMode: (mode: ViewMode) => {
+    store.update(state => ({
+      ...state,
+      viewMode: mode,
+    }))
+  },
   /**
    * @param {Automation} auto
    * @param {BlockRef} blockRef
@@ -891,6 +901,69 @@ const automationActions = (store: AutomationStore) => ({
       })
     }
 
+    if (pathSteps.length > 0) {
+      const previousStep = pathSteps[pathSteps.length - 1]
+      const previousStepIndex = pathSteps.length - 1
+      const previousSchema =
+        cloneDeep(previousStep?.schema?.outputs?.properties) ?? {}
+
+      const isCodeStep =
+        previousStep.stepId === AutomationActionStepId.EXECUTE_SCRIPT ||
+        previousStep.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
+
+      Object.entries(previousSchema).forEach(([name, value]) => {
+        if (!name) return
+
+        const runtimeBinding = store.actions.determineRuntimeBinding(
+          name,
+          previousStepIndex,
+          false,
+          automation,
+          currentBlock,
+          pathSteps
+        )
+
+        if (!runtimeBinding) return
+
+        const previousRuntimeBinding = runtimeBinding
+          .replace(new RegExp(`^steps\\.${previousStep.id}\\.`), "previous.")
+          .replace(
+            new RegExp(`^steps\\["${previousStep.id}"\\]\\.`),
+            "previous."
+          )
+
+        bindings.push({
+          readableBinding: `Previous step.${name}`,
+          runtimeBinding: previousRuntimeBinding,
+          type: value.type,
+          description: value.description,
+          icon: previousStep.icon || "brackets-square",
+          category: "Previous step",
+          display: {
+            type: value.type,
+            name: `previous.${name}`,
+            rank: -1,
+          },
+        })
+      })
+
+      if (isCodeStep && previousSchema.value) {
+        bindings.push({
+          readableBinding: "Previous step.value",
+          runtimeBinding: "previous.value",
+          type: previousSchema.value.type,
+          description: "The output value from the previous code step",
+          icon: previousStep.icon || "code",
+          category: "Previous step",
+          display: {
+            type: previousSchema.value.type,
+            name: "previous.value",
+            rank: -2,
+          },
+        })
+      }
+    }
+
     // Remove loop items
     if (!block.looped) {
       bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
@@ -1297,7 +1370,7 @@ const automationActions = (store: AutomationStore) => ({
     })
 
     // Trigger offset when inserting
-    const rootIdx = Math.max(insertPoint.stepIdx - 1, 0)
+    const rootIdx = insertPoint.stepIdx - 1
     const insertIdx = atRoot ? rootIdx : insertPoint.stepIdx
 
     // Check if the branch point is a on a branch step
@@ -1344,7 +1417,6 @@ const automationActions = (store: AutomationStore) => ({
 
     // Add the new branch to the end.
     cache.push(newBranch)
-
     try {
       await store.actions.save(newAutomation)
     } catch (e) {
@@ -1967,7 +2039,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param block
    * @param newName
    */
-  updateBlockTitle: async (block: AutomationStep, newName: string) => {
+  updateBlockTitle: async (
+    block: AutomationStep | AutomationTrigger,
+    newName: string
+  ) => {
     if (newName.trim().length === 0) {
       await automationStore.actions.deleteAutomationName(block.id)
     } else {
@@ -2097,7 +2172,10 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openLogPanel: (log: any, stepData: any) => {
+  openLogPanel: (
+    log: AutomationLog,
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) => {
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,

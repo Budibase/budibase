@@ -1,4 +1,4 @@
-import { User, UserStatus, BulkUserCreated } from "@budibase/types"
+import { BulkUserCreated, User, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
@@ -341,6 +341,63 @@ describe("UserDB", () => {
           expect(result.unsuccessful).toHaveLength(0)
         })
       })
+    })
+  })
+
+  describe("buildUser", () => {
+    const tenantId = config.getTenantId()
+
+    beforeEach(() => {
+      jest.resetAllMocks()
+      features.isSSOEnforced.mockResolvedValue(false)
+    })
+
+    it("reuses the existing password when unchanged", async () => {
+      const existingPassword = "existing-hash"
+      const dbUser = structures.users.user({
+        _id: "user_existing",
+        password: existingPassword,
+        tenantId,
+      })
+      const updatedUser = {
+        ...dbUser,
+        firstName: generator.first(),
+        password: existingPassword,
+      }
+
+      const preventSpy = jest.spyOn(UserDB, "isPreventPasswordActions")
+
+      const builtUser = await UserDB.buildUser(
+        updatedUser,
+        undefined,
+        tenantId,
+        dbUser
+      )
+
+      expect(builtUser.password).toEqual(existingPassword)
+      expect(preventSpy).not.toHaveBeenCalled()
+    })
+
+    it("checks password permissions when the password changes", async () => {
+      const dbUser = structures.users.user({
+        _id: "user_existing",
+        password: "existing-hash",
+        tenantId,
+      })
+      const updatedUser = {
+        ...dbUser,
+        password: "ValidPassword123!",
+      }
+
+      const preventSpy = jest
+        .spyOn(UserDB, "isPreventPasswordActions")
+        .mockResolvedValue(true)
+
+      await expect(
+        UserDB.buildUser(updatedUser, undefined, tenantId, dbUser)
+      ).rejects.toThrow("Password change is disabled for this user")
+
+      expect(preventSpy).toHaveBeenCalled()
     })
   })
 })
