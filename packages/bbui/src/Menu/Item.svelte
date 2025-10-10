@@ -40,6 +40,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <li
   on:click={disabled ? null : onClick}
+  on:auxclick
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"

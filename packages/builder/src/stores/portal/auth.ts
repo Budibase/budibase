@@ -3,6 +3,7 @@ import { API } from "@/api"
 import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
+import { reset as resetBuilderStores } from "@/stores/builder"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -137,6 +138,9 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     this.setPostLogout()
     this.setUser()
     await this.setInitInfo({})
+    // App info needs to be cleared on logout.
+    // Invalid app context will cause init failures for users logging back in.
+    resetBuilderStores()
   }
 
   async updateSelf(fields: UpdateSelfRequest) {

@@ -6,7 +6,7 @@ import { derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 
-interface PortalAppsStore {
+export interface PortalAppsStore {
   apps: StoreApp[]
   sortBy?: string
 }
@@ -66,6 +66,9 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   }
 
   async load() {
+    this.update(state => ({
+      ...state,
+    }))
     const json = await API.getApps()
     if (Array.isArray(json)) {
       // Merge apps into one sensible list
@@ -176,29 +179,20 @@ export const enrichedApps = derived(
 
     if ($sortBy === "status") {
       return enrichedApps.sort((a, b) => {
-        if (a.favourite === b.favourite) {
-          if (a.status === b.status) {
-            return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
-          }
-          return a.status === AppStatus.DEPLOYED ? -1 : 1
+        if (a.status === b.status) {
+          return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
         }
-        return a.favourite ? -1 : 1
+        return a.status === AppStatus.DEPLOYED ? -1 : 1
       })
     } else if ($sortBy === "updated") {
       return enrichedApps?.sort((a, b) => {
-        if (a.favourite === b.favourite) {
-          const aUpdated = a.updatedAt || "9999"
-          const bUpdated = b.updatedAt || "9999"
-          return aUpdated < bUpdated ? 1 : -1
-        }
-        return a.favourite ? -1 : 1
+        const aUpdated = a.updatedAt || "9999"
+        const bUpdated = b.updatedAt || "9999"
+        return aUpdated < bUpdated ? 1 : -1
       })
     } else {
       return enrichedApps?.sort((a, b) => {
-        if (a.favourite === b.favourite) {
-          return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
-        }
-        return a.favourite ? -1 : 1
+        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
       })
     }
   }

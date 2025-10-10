@@ -39,6 +39,7 @@ export interface Route {
   icon?: string | RouteIcon
   new?: boolean
   access?: () => boolean
+  error?: () => boolean // Could possibly add in text or actions here?
   href?: string | RouteHREF
   keys?: string[] // e.g path/to/:userId > ["userId"]
   group?: string
@@ -98,6 +99,7 @@ export const flatten = (
               path: `${currentPath}/${r.path}`,
               new: r.new,
               title: r.title,
+              error: r.error,
             }))
           : []
 
