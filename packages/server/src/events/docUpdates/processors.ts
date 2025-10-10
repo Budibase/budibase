@@ -1,18 +1,14 @@
+import { docUpdates } from "@budibase/backend-core"
 import userGroupProcessor from "./syncUsers"
 import workspaceResourceProcessor from "./workspaceFavourites"
-import { docUpdates } from "@budibase/backend-core"
 
-export type UpdateCallback = (docId: string) => void
 let started = false
 
-export function init(updateCb?: UpdateCallback) {
+export function init() {
   if (started) {
     return
   }
-  const processors = [
-    userGroupProcessor(updateCb),
-    workspaceResourceProcessor(updateCb),
-  ]
+  const processors = [userGroupProcessor(), workspaceResourceProcessor()]
   docUpdates.init(processors)
   started = true
 }
