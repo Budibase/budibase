@@ -1,8 +1,8 @@
-import { EventProcessor } from "../types"
-import { Event, Identity, DocUpdateEvent } from "@budibase/types"
+import { DocUpdateEvent, Event, Identity } from "@budibase/types"
 import { doInTenant } from "../../../context"
-import { getDocumentId } from "../../documentId"
 import { shutdown } from "../../asyncEvents"
+import { getDocumentId } from "../../documentId"
+import { EventProcessor } from "../types"
 
 export type Processor = (update: DocUpdateEvent) => Promise<void>
 export type ProcessorMap = { events: Event[]; processor: Processor }[]
@@ -27,6 +27,7 @@ export default class DocumentUpdateProcessor implements EventProcessor {
             id: docId,
             tenantId,
             appId: properties.appId,
+            properties,
           })
         })
       }
