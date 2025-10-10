@@ -901,6 +901,69 @@ const automationActions = (store: AutomationStore) => ({
       })
     }
 
+    if (pathSteps.length > 0) {
+      const previousStep = pathSteps[pathSteps.length - 1]
+      const previousStepIndex = pathSteps.length - 1
+      const previousSchema =
+        cloneDeep(previousStep?.schema?.outputs?.properties) ?? {}
+
+      const isCodeStep =
+        previousStep.stepId === AutomationActionStepId.EXECUTE_SCRIPT ||
+        previousStep.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
+
+      Object.entries(previousSchema).forEach(([name, value]) => {
+        if (!name) return
+
+        const runtimeBinding = store.actions.determineRuntimeBinding(
+          name,
+          previousStepIndex,
+          false,
+          automation,
+          currentBlock,
+          pathSteps
+        )
+
+        if (!runtimeBinding) return
+
+        const previousRuntimeBinding = runtimeBinding
+          .replace(new RegExp(`^steps\\.${previousStep.id}\\.`), "previous.")
+          .replace(
+            new RegExp(`^steps\\["${previousStep.id}"\\]\\.`),
+            "previous."
+          )
+
+        bindings.push({
+          readableBinding: `Previous step.${name}`,
+          runtimeBinding: previousRuntimeBinding,
+          type: value.type,
+          description: value.description,
+          icon: previousStep.icon || "brackets-square",
+          category: "Previous step",
+          display: {
+            type: value.type,
+            name: `previous.${name}`,
+            rank: -1,
+          },
+        })
+      })
+
+      if (isCodeStep && previousSchema.value) {
+        bindings.push({
+          readableBinding: "Previous step.value",
+          runtimeBinding: "previous.value",
+          type: previousSchema.value.type,
+          description: "The output value from the previous code step",
+          icon: previousStep.icon || "code",
+          category: "Previous step",
+          display: {
+            type: previousSchema.value.type,
+            name: "previous.value",
+            rank: -2,
+          },
+        })
+      }
+    }
+
     // Remove loop items
     if (!block.looped) {
       bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
