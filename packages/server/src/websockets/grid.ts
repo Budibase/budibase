@@ -12,7 +12,7 @@ import { userAgent } from "koa-useragent"
 import { Socket } from "socket.io"
 import { getSourceId } from "../api/controllers/row/utils"
 import { authorizedMiddleware as authorized } from "../middleware/authorized"
-import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import { currentWorkspaceMiddleware as currentWorkspace } from "../middleware/currentWorkspace"
 import sdk from "../sdk"
 import { createContext, runMiddlewares } from "./middleware"
 import { BaseSocket } from "./websocket"
@@ -80,7 +80,7 @@ export default class GridSocket extends BaseSocket {
         auth.buildAuthMiddleware([], {
           publicAllowed: true,
         }),
-        currentApp,
+        currentWorkspace,
         authorized(PermissionType.TABLE, PermissionLevel.READ),
       ]
 
