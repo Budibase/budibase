@@ -1786,6 +1786,81 @@ if (descriptions.length) {
                 ])
               )
             })
+
+            isInternal &&
+              it("can group by static formula fields", async () => {
+                let table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      label: {
+                        name: "label",
+                        type: FieldType.STRING,
+                      },
+                      staticFormula: {
+                        name: "staticFormula",
+                        type: FieldType.FORMULA,
+                        formulaType: FormulaType.STATIC,
+                        responseType: FieldType.STRING,
+                        formula: "{{ [label] }}",
+                      },
+                    },
+                  })
+                )
+
+                table = await config.api.table.save({
+                  ...table,
+                  schema: {
+                    ...table.schema,
+
+                    staticFormula: {
+                      name: "staticFormula",
+                      type: FieldType.FORMULA,
+                      formulaType: FormulaType.STATIC,
+                      responseType: FieldType.STRING,
+                      formula: "{{ [label] }}",
+                    },
+                  },
+                })
+
+                await config.api.row.save(table._id!, { label: "Group A" })
+                await config.api.row.save(table._id!, { label: "Group A" })
+                await config.api.row.save(table._id!, { label: "Group B" })
+
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  primaryDisplay: "staticFormula",
+                  schema: {
+                    labelCount: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      field: "staticFormula",
+                    },
+                    label: {
+                      visible: false,
+                    },
+                    staticFormula: {
+                      visible: true,
+                    },
+                  },
+                })
+
+                const { rows } = await config.api.row.search(view.id)
+                expect(rows).toHaveLength(2)
+                expect(rows).toEqual(
+                  expect.arrayContaining([
+                    expect.objectContaining({
+                      staticFormula: "Group A",
+                      labelCount: 2,
+                    }),
+                    expect.objectContaining({
+                      staticFormula: "Group B",
+                      labelCount: 1,
+                    }),
+                  ])
+                )
+              })
           })
         })
 
