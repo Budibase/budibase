@@ -109,12 +109,12 @@ describe("migrations", () => {
     it("should trigger migration when there are future migrations based on the current version", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getDevWorkspaceId()
+      const workspaceId = config.getDevWorkspaceId()
 
       // Set app to first migration
-      await config.doInContext(appId, async () => {
+      await config.doInContext(workspaceId, async () => {
         await updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+          workspaceId,
           version: "20231211101320_test",
         })
       })
@@ -122,23 +122,26 @@ describe("migrations", () => {
       const mockNext = jest.fn()
       const ctx = { response: { set: jest.fn() } } as any
 
-      await config.doInContext(appId, () =>
-        checkMissingMigrations(ctx, mockNext, appId)
+      await config.doInContext(workspaceId, () =>
+        checkMissingMigrations(ctx, mockNext, workspaceId)
       )
 
-      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(ctx.response.set).toHaveBeenCalledWith(
+        Header.MIGRATING_APP,
+        workspaceId
+      )
       expect(mockNext).toHaveBeenCalled()
     })
 
     it("should not trigger migration when current version is latest", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getDevWorkspaceId()
+      const workspaceId = config.getDevWorkspaceId()
 
       // Set app to latest migration
-      await config.doInContext(appId, async () => {
+      await config.doInContext(workspaceId, async () => {
         await updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+          workspaceId,
           version: "20231211101340_test3",
         })
       })
@@ -146,8 +149,8 @@ describe("migrations", () => {
       const mockNext = jest.fn()
       const ctx = { response: { set: jest.fn() } } as any
 
-      await config.doInContext(appId, () =>
-        checkMissingMigrations(ctx, mockNext, appId)
+      await config.doInContext(workspaceId, () =>
+        checkMissingMigrations(ctx, mockNext, workspaceId)
       )
 
       expect(ctx.response.set).not.toHaveBeenCalled()
@@ -157,12 +160,12 @@ describe("migrations", () => {
     it("should trigger migration when current version not found in array", async () => {
       const config = setup.getConfig()
       await config.init()
-      const appId = config.getDevWorkspaceId()
+      const workspaceId = config.getDevWorkspaceId()
 
       // Set app to non-existent migration
-      await config.doInContext(appId, async () => {
+      await config.doInContext(workspaceId, async () => {
         await updateWorkspaceMigrationMetadata({
-          workspaceId: appId,
+          workspaceId,
           version: "nonexistent_migration",
         })
       })
@@ -170,11 +173,14 @@ describe("migrations", () => {
       const mockNext = jest.fn()
       const ctx = { response: { set: jest.fn() } } as any
 
-      await config.doInContext(appId, () =>
-        checkMissingMigrations(ctx, mockNext, appId)
+      await config.doInContext(workspaceId, () =>
+        checkMissingMigrations(ctx, mockNext, workspaceId)
       )
 
-      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(ctx.response.set).toHaveBeenCalledWith(
+        Header.MIGRATING_APP,
+        workspaceId
+      )
       expect(mockNext).toHaveBeenCalled()
     })
   })

@@ -174,6 +174,17 @@ export function canGroupBy(type: FieldType) {
   return GroupByTypes.includes(type)
 }
 
+export function isStaticFormula(schema: FieldSchema) {
+  return (
+    schema.type === FieldType.FORMULA &&
+    schema.formulaType === FormulaType.STATIC
+  )
+}
+
+export function canGroupBySchema(schema: FieldSchema) {
+  return canGroupBy(schema.type) || isStaticFormula(schema)
+}
+
 export interface RowAttachment {
   size: number
   name: string

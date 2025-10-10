@@ -45,7 +45,7 @@ function recaptchaError() {
 
 describe("/recaptcha", () => {
   let config = setup.getConfig()
-  let app: Workspace
+  let workspace: Workspace
 
   beforeAll(async () => {
     await config.init()
@@ -58,7 +58,7 @@ describe("/recaptcha", () => {
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
     mocks.licenses.useRecaptcha()
-    app = await config.newTenant()
+    workspace = await config.newTenant()
   })
 
   afterEach(() => {
@@ -136,9 +136,9 @@ describe("/recaptcha", () => {
     })
 
     async function setRecaptchaEnabled(value: boolean) {
-      app.recaptchaEnabled = value
-      await config.api.workspace.update(app.appId, app)
-      await config.api.workspace.publish(app.appId)
+      workspace.recaptchaEnabled = value
+      await config.api.workspace.update(workspace.appId, workspace)
+      await config.api.workspace.publish(workspace.appId)
     }
 
     it("should return 498 when recaptcha enabled but no cookie present", async () => {
