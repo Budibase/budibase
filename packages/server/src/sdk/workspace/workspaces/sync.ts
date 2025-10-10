@@ -1,5 +1,6 @@
 import { context, db as dbCore, logging, roles } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
+import { utils } from "@budibase/shared-core"
 import { ContextUser, User, UserGroup } from "@budibase/types"
 import sdk from "../.."
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
@@ -12,17 +13,17 @@ function userSyncEnabled() {
   return !env.DISABLE_USER_SYNC
 }
 
-async function syncUsersToApp(
-  appId: string,
+async function syncUsersToWorkspace(
+  workspaceId: string,
   users: (User | DeletedUser)[],
   groups: UserGroup[]
 ) {
-  if (!(await dbCore.dbExists(appId))) {
+  if (!(await dbCore.dbExists(workspaceId))) {
     return
   }
-  await context.doInWorkspaceContext(appId, async () => {
+  await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
-    for (let user of users) {
+    for (const user of users) {
       let ctxUser = user as ContextUser
       let deletedUser = false
       const metadataId = generateUserMetadataID(user._id!)
@@ -32,7 +33,7 @@ async function syncUsersToApp(
 
       // make sure role is correct
       if (!deletedUser) {
-        ctxUser = await processUser(ctxUser, { appId, groups })
+        ctxUser = await processUser(ctxUser, { appId: workspaceId, groups })
       }
       let roleId = ctxUser.roleId
       if (roleId === roles.BUILTIN_ROLE_IDS.PUBLIC) {
@@ -47,7 +48,7 @@ async function syncUsersToApp(
           throw err
         }
         // no metadata and user is to be deleted, can skip
-        // no role - user isn't in app anyway
+        // no role - user isn't in workspace anyway
         if (!roleId) {
           continue
         } else if (!deletedUser) {
@@ -65,9 +66,9 @@ async function syncUsersToApp(
         continue
       }
 
-      // assign the roleId for the metadata doc
+      // assign the roleId for the ctxUser doc
       if (roleId) {
-        metadata.roleId = roleId
+        ctxUser.roleId = roleId
       }
 
       let combined = sdk.users.combineMetadataAndUser(ctxUser, metadata)
@@ -79,7 +80,7 @@ async function syncUsersToApp(
   })
 }
 
-export async function syncUsersToAllWorkspaces(userIds: string[]) {
+export async function syncUsersAcrossWorkspaces(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
   const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
@@ -93,20 +94,31 @@ export async function syncUsersToAllWorkspaces(userIds: string[]) {
     }
   }
   const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
-  let promises = []
-  for (const devId of devWorkspaceIds) {
-    const prodId = dbCore.getProdWorkspaceID(devId)
-    for (const workspaceId of [prodId, devId]) {
-      promises.push(syncUsersToApp(workspaceId, finalUsers, groups))
-    }
-  }
+  const workspaceIdsToCheck = devWorkspaceIds.flatMap(devId => [
+    devId,
+    dbCore.getProdWorkspaceID(devId),
+  ])
+  let promises: Promise<void>[] = []
+  await utils.parallelForeach(
+    workspaceIdsToCheck,
+    async id => {
+      try {
+        const syncAction = syncUsersToWorkspace(id, finalUsers, groups)
+        promises.push(syncAction)
+        await syncAction
+      } catch {
+        // Don't throw, promises checks will be check under
+      }
+    },
+    10
+  )
   const resp = await Promise.allSettled(promises)
   const failed = resp.filter(promise => promise.status === "rejected")
   const reasons = failed
     .map(fail => (fail as PromiseRejectedResult).reason)
     .filter(reason => !dbCore.isDocumentConflictError(reason))
   if (reasons.length > 0) {
-    logging.logWarn("Failed to sync users to apps", reasons)
+    logging.logWarn("Failed to sync users to workspaces", reasons)
   }
 }
 
