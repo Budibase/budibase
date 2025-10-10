@@ -4,6 +4,7 @@ import { AutomationData } from "@budibase/types"
 import { createBullBoard } from "@bull-board/api"
 import { BullAdapter } from "@bull-board/api/bullAdapter"
 import { KoaAdapter } from "@bull-board/koa"
+import { UserSyncProcessor } from "../events/docUpdates/syncUsers"
 import * as automation from "../threads/automation"
 import { getAppMigrationQueue } from "../workspaceMigrations/queue"
 
@@ -38,6 +39,8 @@ export async function init() {
   if (appMigrationQueue) {
     queues.push(new BullAdapter(appMigrationQueue.getBullQueue()))
   }
+
+  queues.push(new BullAdapter(UserSyncProcessor.queue.getBullQueue()))
 
   const serverAdapter = new KoaAdapter()
   createBullBoard({ queues, serverAdapter })
