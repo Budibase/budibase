@@ -1,4 +1,6 @@
 import type Nano from "@budibase/nano"
+import { ReadStream } from "fs"
+import { Writable } from "stream"
 import {
   AllDocsResponse,
   AnyDocument,
@@ -6,9 +8,8 @@ import {
   RowValue,
   SqlQueryBinding,
   ViewTemplateOpts,
+  WithDocMetadata,
 } from "../"
-import { Writable } from "stream"
-import { ReadStream } from "fs"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -129,7 +130,7 @@ export interface Database {
   getMultiple<T extends Document>(
     ids?: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }
-  ): Promise<T[]>
+  ): Promise<WithDocMetadata<T>[]>
   remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
   remove(idOrDoc: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
   bulkRemove(

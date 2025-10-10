@@ -21,7 +21,7 @@ export function UserGroup(): UserGroupType {
   return {
     color: generator.color(),
     icon: generator.word(),
-    name: generator.word(),
+    name: generator.guid(),
     roles: roles,
     users: [],
   }
