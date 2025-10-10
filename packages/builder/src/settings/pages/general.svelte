@@ -12,6 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -99,12 +100,12 @@
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">Client version</Heading>
-    {#if $admin.usingLocalComponentLibs}
+    {#if $admin.isDev && !$featureFlags.DEV_USE_CLIENT_FROM_STORAGE}
       <Body size="S">
         You're running the latest client version from your file system, as
         you're in developer mode.
         <br />
-        Use the env var DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
+        Use the flag DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
       </Body>
     {:else if updateAvailable}
       <Body size="S">

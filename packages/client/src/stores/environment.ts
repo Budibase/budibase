@@ -14,7 +14,6 @@ const initialState: EnvironmentState = {
   isDev: false,
   maintenance: [],
   loaded: false,
-  serveDevClientFromStorage: false,
 }
 
 const createEnvironmentStore = () => {

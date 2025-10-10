@@ -33,7 +33,7 @@ export const getComponentLibraryManifest = async (library: string) => {
   const appId = context.getWorkspaceId()
   const filename = "manifest.json"
 
-  if (shouldServeLocally()) {
+  if (await shouldServeLocally()) {
     const paths = [
       join(TOP_LEVEL_PATH, "packages/client", filename),
       join(process.cwd(), "client", filename),
