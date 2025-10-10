@@ -35,7 +35,7 @@
       // Go to new app page if no apps exists
       if (
         !$appsStore.apps.length &&
-        sdk.users.hasBuilderPermissions($auth.user)
+        sdk.users.hasAdminPermissions($auth.user)
       ) {
         $redirect("./onboarding")
       }

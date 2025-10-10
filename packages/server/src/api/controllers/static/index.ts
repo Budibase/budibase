@@ -182,14 +182,14 @@ export async function processPWAZip(ctx: UserCtx) {
 }
 
 const getAppScriptHTML = (
-  app: Workspace,
+  workspace: Workspace,
   location: "Head" | "Body",
   nonce: string
 ) => {
-  if (!app.scripts?.length) {
+  if (!workspace.scripts?.length) {
     return ""
   }
-  return app.scripts
+  return workspace.scripts
     .filter(script => script.location === location && script.html?.length)
     .map(script => script.html)
     .join("\n")

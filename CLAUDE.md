@@ -28,7 +28,7 @@
 - Variables: camelCase, prefix unused with `_`
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
-- Types: Use `interface` for objects, `type` for unions/primitives
+- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
 - Only comment when it's really necessary to explain an unclear behaviour.
@@ -47,8 +47,8 @@
 - When building tables, datasources, queries and various other Budibase resources check for functions like `basicTable`
   found in `packages/server/src/tests/utilities/structures.ts` - use these to create a basic table, you can provide
   extended configuration if required through the `extra` prop.
-- Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case - 
-  this can be used to access the test API under `new TestConfiguration().api`, a list of functions and 
+- Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case -
+  this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
 
 ## Pull requests
