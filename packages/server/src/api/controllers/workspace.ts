@@ -108,9 +108,9 @@ function checkWorkspaceUrl(
   currentAppId?: string
 ) {
   if (currentAppId) {
-    apps = apps.filter((app: any) => app.appId !== currentAppId)
+    apps = apps.filter(app => app.appId !== currentAppId)
   }
-  if (apps.some((app: any) => app.url === url)) {
+  if (apps.some(app => app.url === url)) {
     ctx.throw(400, "App URL is already in use.")
   }
 }
