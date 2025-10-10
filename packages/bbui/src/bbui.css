@@ -126,9 +126,7 @@
   --spectrum-alias-body-text-font-family: var(--font-sans) !important;
   --spectrum-global-font-family-base: var(--font-sans) !important;
   --spectrum-global-font-line-height-small: 1.4 !important;
-  --spectrum-alias-text-color-disabled: var(
-    --spectrum-global-color-gray-600
-  ) !important;
+  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600) !important;
   --spectrum-global-dimension-font-size-25: 9px !important;
   --spectrum-global-dimension-font-size-50: 11px !important;
   --spectrum-global-dimension-font-size-75: 12px !important;
@@ -148,7 +146,7 @@
   --spectrum-global-dimension-font-size-1300: 60px !important;
   --spectrum-alias-font-size-default: 14px !important;
 }
- 
+
 
 /* Generic styles */
 a {
@@ -168,6 +166,7 @@ a {
   --spectrum-global-color-magenta-100: #530329;
   --translucent-grey: rgba(255, 255, 255, 0.1);
 }
+
 .spectrum--dark {
   --drop-shadow: rgba(0, 0, 0, 0.3);
   --spectrum-global-color-red-100: #7b0000;
@@ -180,6 +179,7 @@ a {
   --spectrum-global-color-magenta-100: #76003a;
   --translucent-grey: rgba(255, 255, 255, 0.065);
 }
+
 .spectrum--light,
 .spectrum--lightest {
   --drop-shadow: rgba(0, 0, 0, 0.075);
