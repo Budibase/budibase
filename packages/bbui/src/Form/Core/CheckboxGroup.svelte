@@ -32,8 +32,12 @@
     }
   }
 
-  $: allSelected = options.length > 0 && options.every(option => value.includes(getOptionValue(option)))
-  $: noneSelected = options.length === 0 || options.every(option => !value.includes(getOptionValue(option)))
+  $: allSelected =
+    options.length > 0 &&
+    options.every(option => value.includes(getOptionValue(option)))
+  $: noneSelected =
+    options.length === 0 ||
+    options.every(option => !value.includes(getOptionValue(option)))
   $: indeterminate = !allSelected && !noneSelected
 
   const toggleSelectAll = () => {
@@ -52,7 +56,7 @@
   {#if showSelectAll && options && Array.isArray(options) && options.length > 0}
     <div
       title={selectAllText}
-      class="spectrum-Checkbox spectrum-FieldGroup-item select-all"
+      class="spectrum-Checkbox spectrum-FieldGroup-item select-all-checkbox"
       class:readonly
     >
       <label
@@ -66,7 +70,7 @@
           {disabled}
         />
         <span class="spectrum-Checkbox-box">
-          <span class="icon" class:checked={allSelected}>
+          <span class="icon" class:checked={allSelected || indeterminate}>
             <Icon
               name={indeterminate ? "minus" : "check"}
               weight="bold"
@@ -133,13 +137,25 @@
   .icon :global(i) {
     font-size: 14px;
   }
-  .select-all {
-    background: var(--spectrum-global-color-gray-100);
-    border-radius: 4px;
-    padding: 4px 8px;
+  .select-all-checkbox {
     margin-bottom: 8px;
+    padding: 0;
+    background: none !important;
   }
-  .select-all:hover {
-    background: var(--spectrum-global-color-gray-200);
+  .select-all-checkbox:hover {
+    background: none !important;
+  }
+  .select-all-checkbox:focus-within {
+    background: none !important;
+  }
+  .select-all-checkbox .spectrum-Checkbox {
+    padding: 0;
+    background: none !important;
+  }
+  .select-all-checkbox .spectrum-Checkbox-input {
+    margin: 0;
+  }
+  .select-all-checkbox label {
+    background: none !important;
   }
 </style>
