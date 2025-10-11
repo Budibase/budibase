@@ -96,6 +96,8 @@
         {placeholder}
         {options}
         {autocomplete}
+        {showSelectAll}
+        {selectAllText}
       />
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup
