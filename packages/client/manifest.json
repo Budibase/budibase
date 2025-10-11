@@ -4115,11 +4115,7 @@
         "type": "boolean",
         "label": "Show Select All",
         "key": "showSelectAll",
-        "defaultValue": false,
-        "dependsOn": {
-          "setting": "optionsType",
-          "value": "checkbox"
-        }
+        "defaultValue": false
       },
       {
         "type": "text",
