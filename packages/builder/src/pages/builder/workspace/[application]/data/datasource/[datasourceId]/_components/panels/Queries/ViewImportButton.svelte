@@ -5,7 +5,7 @@
   export let datasource
   let viewImportModal
 
-  $: isPostgres = datasource.source === "POSTGRESQL"
+  $: isPostgres = datasource.source === "POSTGRES"
 </script>
 
 {#if isPostgres}

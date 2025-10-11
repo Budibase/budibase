@@ -37,7 +37,8 @@ export interface FetchDatasourceViewInfoRequest {
 }
 
 export interface FetchDatasourceViewInfoResponse {
-  viewNames: string[]
+  views: { name: string; definition: string }[]
+  error?: string
 }
 
 export interface UpdateDatasourceRequest extends Datasource {}

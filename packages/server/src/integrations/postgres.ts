@@ -184,8 +184,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   `
 
   VIEWS_SQL = () => `
-  SELECT pg_class.relname as view_name,
-         pg_namespace.nspname as table_schema
+  SELECT DISTINCT pg_class.relname as view_name,
+         pg_namespace.nspname as table_schema,
+         pg_get_viewdef(pg_class.oid) as definition
   FROM pg_class
   JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
   WHERE pg_namespace.nspname = ANY(current_schemas(false))
@@ -254,7 +255,18 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 
   async openConnection() {
-    await this.client.connect()
+    if (this.open) {
+      return
+    }
+    try {
+      await this.client.connect()
+    } catch (error) {
+      if ((error as Error).message.includes("already been connected")) {
+        // Already connected, continue
+      } else {
+        throw error
+      }
+    }
     if (!this.config.schema) {
       this.config.schema = "public"
     }
@@ -428,12 +440,18 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async getViewNames() {
+  async getViews() {
     try {
       await this.openConnection()
       const viewsResponse = await this.client.query(this.VIEWS_SQL())
-      const names = viewsResponse.rows.map(row => row.view_name)
-      return [...new Set(names)]
+
+      const views: { name: string; definition: string }[] =
+        viewsResponse.rows.map(row => ({
+          name: row.view_name,
+          definition: row.definition || "Definition not found",
+        }))
+
+      return views
     } finally {
       await this.closeConnection()
     }

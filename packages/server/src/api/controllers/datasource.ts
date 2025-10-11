@@ -78,17 +78,28 @@ export async function viewInformation(
   ctx: UserCtx<FetchDatasourceViewInfoRequest, FetchDatasourceViewInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource =
-    await sdk.datasources.getAndMergeDatasource(datasource)
-  const connector = (await sdk.datasources.getConnector(
-    enrichedDatasource
-  )) as DatasourcePlus
-  if (!connector.getViewNames) {
-    ctx.throw(400, "View name fetching not supported by datasource")
+  let views: { name: string; definition: string }[] = []
+  let error: string | undefined
+
+  try {
+    const enrichedDatasource =
+      await sdk.datasources.getAndMergeDatasource(datasource)
+    const connector = (await sdk.datasources.getConnector(
+      enrichedDatasource
+    )) as DatasourcePlus
+
+    if (connector.getViews) {
+      views = await connector.getViews()
+    } else {
+      error = "View fetching not supported by datasource"
+    }
+  } catch (err) {
+    error = (err as Error).message || "Unknown error"
   }
-  const viewNames = await connector.getViewNames()
+
   ctx.body = {
-    viewNames: viewNames.sort(),
+    views: views.sort((a, b) => a.name.localeCompare(b.name)),
+    error,
   }
 }
 

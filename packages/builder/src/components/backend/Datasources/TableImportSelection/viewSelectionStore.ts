@@ -51,7 +51,7 @@ export const createViewSelectionStore = (datasource: Datasource) => {
 
       // Create new queries
       for (const viewName of viewsToCreate) {
-        await (datasources as any).createViewQuery(datasource._id, viewName)
+        await (datasources as any).createViewQuery(datasource, viewName)
       }
 
       // Delete unselected queries

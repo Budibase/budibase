@@ -304,28 +304,40 @@ export class DatasourceStore extends DerivedBudiStore<
   async getViewNames(datasource: Datasource) {
     try {
       const info = await API.fetchViewInfoForDatasource(datasource)
-      return info.viewNames || []
+      return info.views?.map(v => v.name) || []
     } catch (error) {
       // Views not supported for this datasource
       return []
     }
   }
 
-  async createViewQuery(datasourceId: string, viewName: string | undefined) {
+  async createViewQuery(datasource: Datasource, viewName: string | undefined) {
     if (!viewName) return
-    const query = {
-      datasourceId,
-      name: viewName,
-      parameters: [],
-      fields: {
-        sql: `SELECT * FROM "${viewName}"`,
-      },
-      queryVerb: "read" as const,
-      transformer: null,
-      schema: {},
-      readable: true,
+    try {
+      const info = await API.fetchViewInfoForDatasource(datasource)
+      if (info.error) {
+        console.error("View definitions error:", info.error)
+        return
+      }
+      const view = info.views?.find(v => v.name === viewName)
+      const sql = view?.definition || "Definition not found"
+      const query = {
+        datasourceId: datasource._id!,
+        name: viewName,
+        parameters: [],
+        fields: {
+          sql,
+        },
+        queryVerb: "read" as const,
+        transformer: null,
+        schema: {},
+        readable: true,
+      }
+      return await queries.save(datasource._id!, query as any)
+    } catch (error) {
+      console.error("API error fetching view definitions:", error)
+      return
     }
-    return await queries.save(datasourceId, query as any)
   }
 }
 
