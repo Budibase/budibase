@@ -32,6 +32,15 @@ export interface FetchDatasourceInfoResponse {
   tableNames: string[]
 }
 
+export interface FetchDatasourceViewInfoRequest {
+  datasource: Datasource
+}
+
+export interface FetchDatasourceViewInfoResponse {
+  views: { name: string; definition: string }[]
+  error?: string
+}
+
 export interface UpdateDatasourceRequest extends Datasource {}
 
 export interface BuildSchemaFromSourceRequest {
