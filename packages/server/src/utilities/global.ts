@@ -21,44 +21,48 @@ export async function processUser(
   }
   user = cloneDeep(user)
   delete user.password
-  const appId = opts.appId || context.getWorkspaceId()
-  if (!appId) {
+  const workspaceId = opts.appId || context.getWorkspaceId()
+  if (!workspaceId) {
     throw new Error("Unable to process user without app ID")
   }
   // if in a multi-tenancy environment and in wrong tenant make sure roles are never updated
-  if (env.MULTI_TENANCY && appId && !tenancy.isUserInAppTenant(appId, user)) {
+  if (
+    env.MULTI_TENANCY &&
+    workspaceId &&
+    !tenancy.isUserInWorkspaceTenant(workspaceId, user)
+  ) {
     user = users.removePortalUserPermissions(user)
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
     return user
   }
   let groupList: UserGroup[] = []
-  if (appId && user?.userGroups?.length) {
+  if (workspaceId && user?.userGroups?.length) {
     groupList = opts.groups
       ? opts.groups
       : await groups.getBulk(user.userGroups)
   }
   // check if a group provides builder access
   const builderAppIds = await groups.getGroupBuilderAppIds(user, {
-    appId,
+    appId: workspaceId,
     groups: groupList,
   })
-  if (builderAppIds.length && !users.isBuilder(user, appId)) {
+  if (builderAppIds.length && !users.isBuilder(user, workspaceId)) {
     const existingApps = user.builder?.apps || []
     user.builder = {
       apps: [...new Set(existingApps.concat(builderAppIds))],
     }
   }
   // builders are always admins within the app
-  if (users.isBuilder(user, appId)) {
+  if (users.isBuilder(user, workspaceId)) {
     user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
   }
   // try to get the role from the user list
-  if (!user.roleId && appId && user.roles) {
-    user.roleId = user.roles[dbCore.getProdWorkspaceID(appId)]
+  if (!user.roleId && workspaceId && user.roles) {
+    user.roleId = user.roles[dbCore.getProdWorkspaceID(workspaceId)]
   }
   // try to get the role from the group list
   if (!user.roleId && groupList) {
-    user.roleId = await groups.getGroupRoleId(user, appId, {
+    user.roleId = await groups.getGroupRoleId(user, workspaceId, {
       groups: groupList,
     })
   }
