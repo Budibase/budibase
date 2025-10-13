@@ -36,7 +36,7 @@ export function isSchema(schema: any): schema is TableSchema {
   )
 }
 
-export function isRows(rows: any): rows is Rows {
+export function isRows(rows: Rows): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 

@@ -17,14 +17,14 @@ import { Response, default as fetch, type RequestInit } from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 
-interface Request {
+interface Request<TBody = Record<string, unknown>> {
   ctx?: Ctx
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
-  headers?: { [key: string]: string }
-  body?: { [key: string]: any }
+  headers?: Record<string, string>
+  body?: TBody
 }
 
-export function createRequest(request: Request): RequestInit {
+export function createRequest<TBody>(request: Request<TBody>): RequestInit {
   const headers: Record<string, string> = {}
   const requestInit: RequestInit = {
     method: request.method,
@@ -131,7 +131,7 @@ export async function sendSmtpEmail({
   }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
-    createRequest({ method: "POST", body: request })
+    createRequest<SendEmailRequest>({ method: "POST", body: request })
   )
   return (await checkResponse(response, "send email")) as SendEmailResponse
 }

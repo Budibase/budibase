@@ -191,7 +191,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
       target: prodDb.name,
     })
     await replication.replicate({
-      filter: (doc: any) => {
+      filter: doc => {
         return doc._id && doc._id.startsWith("role_")
       },
     })
