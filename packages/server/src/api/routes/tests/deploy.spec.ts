@@ -1,6 +1,13 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { constants, db as dbCore } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { Automation, PublishResourceState, WorkspaceApp } from "@budibase/types"
+import {
+  Automation,
+  FieldType,
+  FormulaType,
+  PublishResourceState,
+  WorkspaceApp,
+} from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
@@ -427,5 +434,58 @@ describe("/api/deploy", () => {
         PublishResourceState.DISABLED
       )
     })
+  })
+
+  it("updates production rows with new static formulas when published", async () => {
+    const amountFieldName = "amount"
+    const tableDefinition = basicTable(undefined, {
+      schema: {
+        [amountFieldName]: {
+          name: amountFieldName,
+          type: FieldType.NUMBER,
+          constraints: {},
+        },
+      },
+    })
+
+    const table = await config.api.table.save(tableDefinition)
+
+    // Initial publish so a production workspace exists
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    // Create a row directly in production to simulate live data
+    const productionRow = await config.withHeaders(
+      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      async () =>
+        await config.api.row.save(table._id!, {
+          tableId: table._id!,
+          name: "Prod row",
+          description: "Prod description",
+          [amountFieldName]: 5,
+        })
+    )
+
+    const formulaFieldName = "amountPlusOne"
+    const formula = "{{ add amount 1 }}"
+
+    const updatedTable = cloneDeep(table)
+    updatedTable.schema[formulaFieldName] = {
+      name: formulaFieldName,
+      type: FieldType.FORMULA,
+      formula,
+      formulaType: FormulaType.STATIC,
+      responseType: FieldType.NUMBER,
+    }
+
+    await config.api.table.save(updatedTable)
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const prodRowAfterPublish = await config.withHeaders(
+      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      async () => await config.api.row.get(table._id!, productionRow._id!)
+    )
+
+    expect(prodRowAfterPublish[formulaFieldName]).toBe(6)
   })
 })
