@@ -87,7 +87,7 @@
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  const { getViewport, setViewport, fitView } = useSvelteFlow()
+  const { getViewport, setViewport } = useSvelteFlow()
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -159,9 +159,8 @@
     edges.set(laidOut.edges)
   }
 
-  // When nodes are available and we haven't applied our custom viewport yet, align the top
-  $: if ($nodes?.length && !initialViewportApplied) {
-    fitView({ maxZoom: 1 })
+  $: if ($nodes?.length && !initialViewportApplied && paneEl) {
+    focusOnTrigger()
     initialViewportApplied = true
   }
 
@@ -169,6 +168,35 @@
   $: hasUnpublishedChanges =
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
+
+  // Keep the trigger focused on load and when changing layout
+  const focusOnTrigger = () => {
+    if (!paneEl || $nodes.length === 0) {
+      return
+    }
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const nodeWidth = 320
+    const nodeHeight = 150
+    const nodeOffset = 100
+
+    let x, y
+
+    // These assume the trigger is at x=0, y=0
+    if (layoutDirection === "LR") {
+      // Center vertically with a slight left offset
+      const paneHeight = paneRect.height
+      x = nodeOffset
+      y = paneHeight / 2 - nodeHeight / 2
+    } else {
+      // Vertical mode. Center horizontally, top offset
+      const paneWidth = paneRect.width
+      x = paneWidth / 2 - nodeWidth / 2
+      y = nodeOffset
+    }
+
+    setViewport({ x, y, zoom: 1 }, { duration: 0 })
+  }
 
   const refresh = () => {
     // Get all processed block references
@@ -199,7 +227,7 @@
         ...automation,
         layoutDirection,
       })
-      fitView({ maxZoom: 1 })
+      focusOnTrigger()
     } catch (error) {
       notifications.error("Unable to save layout direction")
     }
