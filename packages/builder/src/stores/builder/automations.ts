@@ -2348,7 +2348,7 @@ const automationActions = (store: AutomationStore) => ({
       )
     }
 
-    await store.actions.fetch()
+    store.actions.replace(response.automation._id!, response.automation)
     store.actions.select(response.automation._id!)
     return response.automation
   },
