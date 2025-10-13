@@ -101,6 +101,47 @@
     }
   }
 
+  // When duplicating a step, especially a Loop V2 container, we need
+  // regenerate IDs for the step and all nested children including branch children
+  // to avoid duplicate node keys in the Svelte Flow graph.
+  const cloneStepWithNewIds = (step: AutomationStep): AutomationStep => {
+    const base: AutomationStep = {
+      ...step,
+      id: generate(),
+    }
+
+    // Recurse into Loop V2 children
+    if (isLoopV2Step(base)) {
+      const children = base.inputs?.children || []
+      const newChildren = children.map(child => cloneStepWithNewIds(child))
+      base.inputs = {
+        ...(base.inputs || {}),
+        children: newChildren,
+      }
+      return base
+    }
+
+    // Recurse into Branch step children
+    if (isBranchStep(base)) {
+      const branches = base.inputs?.branches || []
+      const childrenMap = base.inputs?.children || {}
+      const newChildrenMap: Record<string, AutomationStep[]> = {}
+      branches.forEach(branch => {
+        const laneChildren = childrenMap?.[branch.id] || []
+        newChildrenMap[branch.id] = laneChildren.map(child =>
+          cloneStepWithNewIds(child)
+        )
+      })
+      base.inputs = {
+        ...(base.inputs || {}),
+        children: newChildrenMap,
+      }
+      return base
+    }
+
+    return base
+  }
+
   const fetchPermissions = async (automationId?: string) => {
     if (!automationId) {
       return
@@ -132,7 +173,7 @@
     if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
       return false
     }
-    const children = (loopNode.inputs?.children || []) as AutomationStep[]
+    const children = loopNode.inputs?.children || []
     if (childIndex !== 0) return false
     const nextSibling = children?.[1]
     return nextSibling?.stepId === AutomationActionStepId.BRANCH
@@ -208,10 +249,8 @@
             if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
               return
             }
-            const duplicatedBlock = {
-              ...$memoBlock,
-              id: generate(),
-            }
+            // Deep-duplicate the selected step and re-id any nested children
+            const duplicatedBlock = cloneStepWithNewIds($memoBlock)
             const newName = getNewStepName($memoAutomation, duplicatedBlock)
             duplicatedBlock.name = newName
 
