@@ -247,7 +247,9 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           direction: internalDir,
         })
       )
-      clusterBottomY = Math.max(clusterBottomY, anchorY + deps.ySpacing)
+      const spacing =
+        mode === BranchMode.SUBFLOW ? visuals.laneYSpacing : deps.ySpacing
+      clusterBottomY = Math.max(clusterBottomY, anchorY + spacing)
     }
   })
 
@@ -496,8 +498,13 @@ export const renderLoopV2Container = (
     const lastChild = children[children.length - 1]
     const lastRef = deps.blockRefs?.[lastChild.id]
     const exitAnchorId = `anchor-${baseId}-loop-${lastChild.id}`
+    // Place exit anchor at container bottom to ensure edges flow downward
+    const exitAnchorY = containerHeight - paddingBottom
     deps.newNodes.push(
-      anchorNode(exitAnchorId, internalDir, baseId, { x: baseX, y: innerY })
+      anchorNode(exitAnchorId, internalDir, baseId, {
+        x: baseX,
+        y: exitAnchorY,
+      })
     )
     deps.newEdges.push(
       edgeLoopAddItem(lastChild.id, exitAnchorId, {
