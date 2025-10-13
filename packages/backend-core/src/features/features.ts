@@ -237,9 +237,6 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_AGENTS]: false,
   [FeatureFlag.USE_DYNAMIC_LOADING]: true,
 
-  // Account-portal
-  [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
-
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.DUPLICATE_APP]: false,
