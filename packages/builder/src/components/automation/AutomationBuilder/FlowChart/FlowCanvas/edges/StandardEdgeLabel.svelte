@@ -12,30 +12,36 @@
   export let sourcePathForDrop: FlowBlockPath | undefined
   export let block: FlowBlockContext | undefined
   export let handleBranch: () => void
+  // Orientation-aware dropzone sizing/offset in LR
+  export let dzWidth: number | undefined
+  export let dzOffsetY: number = 0
 </script>
 
 <EdgeLabelRenderer>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div
-    class="add-item-label nodrag nopan"
-    style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
-  >
-    {#if showEdgeDrop && !collectBlockExists}
-      <DragZone path={sourcePathForDrop} variant="edge" />
-    {/if}
-    {#if !collectBlockExists}
-      {#if showEdgeActions}
-        <div
-          class="actions-stack"
-          on:mousedown|stopPropagation
-          on:click|stopPropagation
-        >
-          <FlowItemActions {block} on:branch={handleBranch} />
-        </div>
+  {#key `${labelX}-${labelY}-${showEdgeDrop}`}
+    <div
+      class="add-item-label nodrag nopan"
+      style="transform:translate(-50%, -50%) translate({labelX}px,{labelY +
+        (showEdgeDrop ? dzOffsetY : 0)}px);"
+    >
+      {#if showEdgeDrop && !collectBlockExists}
+        <DragZone path={sourcePathForDrop} variant="edge" width={dzWidth} />
       {/if}
-    {/if}
-  </div>
+      {#if !collectBlockExists}
+        {#if showEdgeActions}
+          <div
+            class="actions-stack"
+            on:mousedown|stopPropagation
+            on:click|stopPropagation
+          >
+            <FlowItemActions {block} on:branch={handleBranch} />
+          </div>
+        {/if}
+      {/if}
+    </div>
+  {/key}
 </EdgeLabelRenderer>
 
 <style>

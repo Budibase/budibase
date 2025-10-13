@@ -123,6 +123,21 @@
     isPrimaryBranchEdge &&
     $view?.dragging
 
+  // --- Dropzone sizing & offsets for LR to reduce clutter ---
+  const clamp = (v: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, v))
+
+  $: isLR = direction === "LR"
+  $: dx = Math.abs((targetX ?? 0) - (sourceX ?? 0))
+  $: dzWidth = isLR ? clamp(Math.round(dx - 140), 160, 320) : 320
+  $: baseOffset = isLR ? -18 : 0
+  $: nudge = isLR ? ((Math.round(sourceX + targetX) % 3) - 1) * 6 : 0
+  $: dzOffsetY = baseOffset + nudge
+
+  // Pre-branch label sizing/offset
+  $: preDzWidth = isLR ? clamp(Math.round(dx - 160), 160, 300) : 320
+  $: preDzOffsetY = isLR ? -24 + nudge : 0
+
   // For TB we keep it vertically centered under the source;
   // for LR we center horizontally and align to the source Y.
   $: preBranchLabelX =
@@ -184,6 +199,10 @@
     {handleAddBranch}
     {viewMode}
     {isPrimaryBranchEdge}
+    edgeDzWidth={dzWidth}
+    edgeDzOffsetY={dzOffsetY}
+    {preDzWidth}
+    {preDzOffsetY}
   />
   <!-- Standard and Loop edges -->
 {:else}
@@ -196,5 +215,7 @@
     {sourcePathForDrop}
     {block}
     {handleBranch}
+    {dzWidth}
+    {dzOffsetY}
   />
 {/if}

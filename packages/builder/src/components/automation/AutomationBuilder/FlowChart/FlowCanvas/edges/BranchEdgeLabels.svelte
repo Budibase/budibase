@@ -27,61 +27,76 @@
   export let handleAddBranch: () => void
   export let viewMode: ViewMode
   export let isPrimaryBranchEdge: boolean
+  // LR layout sizing/offsets
+  export let edgeDzWidth: number | undefined
+  export let edgeDzOffsetY: number = 0
+  export let preDzWidth: number | undefined
+  export let preDzOffsetY: number = 0
 </script>
 
 <!-- Standard edge label (between steps) -->
 <EdgeLabelRenderer>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div
-    class="add-item-label nodrag nopan"
-    style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
-  >
-    {#if showEdgeDrop && !collectBlockExists}
-      <DragZone path={sourcePathForDrop} variant="edge" />
-    {/if}
-    {#if !collectBlockExists}
-      {#if showEdgeActions}
-        <div
-          class="actions-stack"
-          on:mousedown|stopPropagation
-          on:click|stopPropagation
-        >
-          <FlowItemActions {block} on:branch={handleBranch} />
-        </div>
+  {#key `${labelX}-${labelY}-${showEdgeDrop}`}
+    <div
+      class="add-item-label nodrag nopan"
+      style="transform:translate(-50%, -50%) translate({labelX}px,{labelY +
+        (showEdgeDrop ? edgeDzOffsetY : 0)}px);"
+    >
+      {#if showEdgeDrop && !collectBlockExists}
+        <DragZone path={sourcePathForDrop} variant="edge" width={edgeDzWidth} />
       {/if}
-    {/if}
-  </div>
+      {#if !collectBlockExists}
+        {#if showEdgeActions}
+          <div
+            class="actions-stack"
+            on:mousedown|stopPropagation
+            on:click|stopPropagation
+          >
+            <FlowItemActions {block} on:branch={handleBranch} />
+          </div>
+        {/if}
+      {/if}
+    </div>
+  {/key}
 </EdgeLabelRenderer>
 
 <!-- Pre-branch label (above branch fan-out on primary branch edge) -->
 {#if !collectBlockExists && (showPreBranchActions || showPreBranchDrop)}
   <EdgeLabelRenderer>
-    <div
-      class="add-item-label nodrag nopan"
-      style="transform:translate(-50%, -50%) translate({preBranchLabelX}px,{preBranchLabelY}px);"
-    >
-      {#if showPreBranchDrop}
-        <DragZone path={sourcePathForDrop} variant="edge" />
-      {/if}
-      <div class="actions-stack">
-        <FlowItemActions {block} hideBranch />
-
-        {#if isPrimaryBranchEdge}
-          {#if $selectedAutomation?.blockRefs?.[data.branchStepId]}
-            <div class="branch-controls">
-              <ActionButton
-                icon="plus-circle"
-                disabled={viewMode === ViewMode.LOGS}
-                on:click={handleAddBranch}
-              >
-                Add branch
-              </ActionButton>
-            </div>
-          {/if}
+    {#key `${preBranchLabelX}-${preBranchLabelY}-${showPreBranchDrop}`}
+      <div
+        class="add-item-label nodrag nopan"
+        style="transform:translate(-50%, -50%) translate({preBranchLabelX}px,{preBranchLabelY +
+          (showPreBranchDrop ? preDzOffsetY : 0)}px);"
+      >
+        {#if showPreBranchDrop}
+          <DragZone
+            path={sourcePathForDrop}
+            variant="edge"
+            width={preDzWidth}
+          />
         {/if}
+        <div class="actions-stack">
+          <FlowItemActions {block} hideBranch />
+
+          {#if isPrimaryBranchEdge}
+            {#if $selectedAutomation?.blockRefs?.[data.branchStepId]}
+              <div class="branch-controls">
+                <ActionButton
+                  icon="plus-circle"
+                  disabled={viewMode === ViewMode.LOGS}
+                  on:click={handleAddBranch}
+                >
+                  Add branch
+                </ActionButton>
+              </div>
+            {/if}
+          {/if}
+        </div>
       </div>
-    </div>
+    {/key}
   </EdgeLabelRenderer>
 {/if}
 

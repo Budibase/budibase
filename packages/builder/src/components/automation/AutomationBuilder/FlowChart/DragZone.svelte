@@ -1,18 +1,23 @@
-<script>
+<script lang="ts">
   import { getContext, onMount } from "svelte"
+  import { type Writable } from "svelte/store"
   import { generate } from "shortid"
+  import type { DragView } from "./FlowCanvas/FlowChartDnD"
 
-  export let path
+  export let path: any
   export let variant = "inline"
+  // Optional explicit sizing for edge variant (used to improve LR layout)
+  export let width: number | undefined = undefined
+  export let height: number | undefined = undefined
 
-  let dropEle
+  let dropEle: HTMLDivElement
   let dzid = generate()
 
-  const view = getContext("draggableView")
+  const view = getContext<Writable<DragView>>("draggableView")
 
   onMount(() => {
     // Always return up-to-date values
-    view.update(state => {
+    view.update((state: DragView) => {
       return {
         ...state,
         dropzones: {
@@ -35,6 +40,11 @@
   class="drag-zone"
   class:edge={variant === "edge"}
   class:drag-over={$view?.droptarget === dzid}
+  style={variant === "edge" && (width || height)
+    ? `width: ${width ? Math.round(width) + "px" : "auto"}; height: ${
+        height ? Math.round(height) + "px" : "auto"
+      };`
+    : undefined}
 >
   <span class="move-to">Move to</span>
 </div>
@@ -54,9 +64,10 @@
   }
   /* Floating variant used on edges */
   .drag-zone.edge {
-    min-width: 320px;
+    /* Allow width/height to be overridden inline for LR layout */
+    min-width: 160px;
     width: 320px;
-    min-height: 56px;
+    min-height: 48px;
     height: 56px;
     display: flex;
     justify-content: center;
