@@ -26,7 +26,9 @@ export const TYPE_TRANSFORM_MAP: Record<
     ""?: null | []
     true?: true
     false?: false
-    parse?: (input: string | Date) => string | undefined | {}
+    parse?: (
+      input: string | string[] | { _id: unknown }[] | Date
+    ) => string | undefined | {}
   }
 > = {
   [FieldType.LINK]: {
@@ -37,7 +39,10 @@ export const TYPE_TRANSFORM_MAP: Record<
     [undefined]: undefined,
     parse: link => {
       if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map(el => (el && el._id ? el._id : el))
+        return link.map(el => {
+          const objEl = el as { _id: unknown }
+          return objEl && objEl._id ? objEl._id : el
+        })
       }
       if (typeof link === "string") {
         return [link]
@@ -132,7 +137,7 @@ export const TYPE_TRANSFORM_MAP: Record<
         // system expects UTC dates.
         let parsed = new Date(`${input}Z`)
         if (isNaN(parsed.getTime())) {
-          parsed = new Date(input)
+          parsed = new Date(input as string)
           if (isNaN(parsed.getTime())) {
             throw new Error(`Invalid date value: "${input}"`)
           }

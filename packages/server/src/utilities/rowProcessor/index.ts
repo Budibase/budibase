@@ -167,7 +167,7 @@ async function processDefaultValues(table: Table, row: Row) {
  * @param type The type fo coerce to
  * @returns The coerced value
  */
-export function coerce(value: unknown, type: FieldType) {
+export function coerce(value: string | Date | string[], type: FieldType) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return value
@@ -177,7 +177,6 @@ export function coerce(value: unknown, type: FieldType) {
     // @ts-ignore
     return TYPE_TRANSFORM_MAP[type][value]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
-    // @ts-ignore
     return TYPE_TRANSFORM_MAP[type].parse(value)
   }
 
