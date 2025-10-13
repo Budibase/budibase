@@ -10,7 +10,7 @@
   export let showEdgeDrop: boolean
   export let collectBlockExists: boolean
   export let sourcePathForDrop: FlowBlockPath | undefined
-  export let block: FlowBlockContext
+  export let block: FlowBlockContext | undefined
   export let handleBranch: () => void
 </script>
 

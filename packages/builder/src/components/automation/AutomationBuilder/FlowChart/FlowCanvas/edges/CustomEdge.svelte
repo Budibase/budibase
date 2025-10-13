@@ -30,14 +30,30 @@
   export let targetPosition: Position
   export let target: string
 
+  let block: FlowBlockContext | undefined
   $: viewMode = $automationStore.viewMode as ViewMode
-  $: block = data?.block
+  $: block = deriveBlockContext(data)
   $: direction = (data?.direction || "TB") as LayoutDirection
   $: passedPathTo = data?.pathTo
   $: automation = $selectedAutomation?.data
 
   const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
+
+  const deriveBlockContext = (
+    edgeData: EdgeData | undefined
+  ): FlowBlockContext | undefined => {
+    if (edgeData && "loopStepId" in edgeData) {
+      const loopChildInsertIndex = edgeData.loopChildInsertIndex
+      return {
+        ...edgeData.block,
+        insertIntoLoopV2: true,
+        loopStepId: edgeData.loopStepId,
+        ...(loopChildInsertIndex !== undefined ? { loopChildInsertIndex } : {}),
+      } as any
+    }
+    return edgeData?.block
+  }
 
   /*
   Need a type guard here because there can be different properties

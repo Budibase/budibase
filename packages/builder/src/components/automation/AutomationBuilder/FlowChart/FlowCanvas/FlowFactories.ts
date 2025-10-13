@@ -110,6 +110,9 @@ export const edgeBranchAddItem = (
     branchesCount: number
     isPrimaryEdge: boolean
     pathTo?: BlockPath[]
+    isSubflowEdge?: boolean
+    loopStepId?: string
+    loopChildInsertIndex?: number
   }
 ): FlowEdge => {
   const data: BranchEdgeData = {
@@ -120,7 +123,12 @@ export const edgeBranchAddItem = (
     branchesCount: ctx.branchesCount,
     block: ctx.block,
     direction: ctx.direction,
+    ...(ctx.isSubflowEdge ? { isSubflowEdge: true } : {}),
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
+    ...(ctx.loopStepId ? { loopStepId: ctx.loopStepId } : {}),
+    ...(typeof ctx.loopChildInsertIndex === "number"
+      ? { loopChildInsertIndex: ctx.loopChildInsertIndex }
+      : {}),
   }
   return {
     id: `edge-${source}-${target}`,
@@ -147,6 +155,7 @@ export const edgeLoopAddItem = (
     direction: ctx.direction,
     loopStepId: ctx.loopStepId,
     loopChildInsertIndex: ctx.loopChildInsertIndex,
+    insertIntoLoopV2: true,
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
   }
   return {

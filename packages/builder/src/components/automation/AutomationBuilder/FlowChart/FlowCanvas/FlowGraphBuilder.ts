@@ -87,10 +87,15 @@ interface PlaceBranchClusterArgs {
   mode: BranchMode
   parentId?: string
   visuals: LaneVisuals
+  loopContext?: {
+    loopStepId: string
+    loopChildInsertIndex: number
+  }
 }
 
 const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
-  const { step, source, coords, deps, mode, parentId, visuals } = args
+  const { step, source, coords, deps, mode, parentId, visuals, loopContext } =
+    args
   const baseId = step.id
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
@@ -150,6 +155,13 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         branchIdx: bIdx,
         branchesCount: branches.length,
         pathTo: source.pathTo,
+        isSubflowEdge: mode === BranchMode.SUBFLOW,
+        ...(loopContext
+          ? {
+              loopStepId: loopContext.loopStepId,
+              loopChildInsertIndex: loopContext.loopChildInsertIndex,
+            }
+          : {}),
       })
     )
 
@@ -447,6 +459,11 @@ export const renderLoopV2Container = (
       return
     }
 
+    const loopContext = {
+      loopStepId: loopStep.id,
+      loopChildInsertIndex: cIdx,
+    }
+
     if (lastLinearChild) {
       const prevRef = deps.blockRefs?.[lastLinearChild.id]
       placeBranchCluster({
@@ -467,6 +484,7 @@ export const renderLoopV2Container = (
           anchorWidth: STEP.width,
           containerWidth,
         },
+        loopContext,
       })
     } else {
       placeBranchCluster({
@@ -483,6 +501,7 @@ export const renderLoopV2Container = (
           anchorWidth: STEP.width,
           containerWidth,
         },
+        loopContext,
       })
     }
 

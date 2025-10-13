@@ -327,10 +327,13 @@ export interface BranchEdgeData extends BaseEdgeData {
   branchStepId: string
   branchIdx: number
   branchesCount: number
+  loopStepId?: string
+  loopChildInsertIndex?: number
+  insertIntoLoopV2?: true
 }
 
 export interface LoopEdgeData extends BaseEdgeData {
-  insertIntoLoopV2?: true
+  insertIntoLoopV2?: boolean
   loopStepId: string
   loopChildInsertIndex: number
 }
