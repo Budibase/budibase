@@ -53,7 +53,12 @@
   ]
 
   // If adding inside a Loop V2 subflow, disallow Branch, Collect and any Loop steps
-  $: insideLoopV2 = Boolean(block?.insertIntoLoopV2 || blockRef?.isLoopV2Child)
+  // Only treat this as a loop-subflow insertion when the edge/toolbar explicitly
+  // marks it (i.e. when we are inserting between loop children or at the exit
+  // anchor). Being merely a child of a loop (isLoopV2Child) should not switch
+  // to the subflow insertion path, otherwise clicks inside branch lanes would
+  // incorrectly try to append to the loop's top-level children array.
+  $: insideLoopV2 = block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
     typeof block?.loopChildInsertIndex === "number"

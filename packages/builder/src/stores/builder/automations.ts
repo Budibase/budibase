@@ -1491,58 +1491,57 @@ const automationActions = (store: AutomationStore) => ({
 
   /**
    * Append a new block inside a Loop V2 subflow's children array.
-   * The loop is identified by its block id.
+   *
+   * Notes:
+   * - `loopId` should be the id of the Loop V2 container. However in some
+   *   cases callers may pass the id of a child that lives inside the loop.
+   *   To make this resilient, we detect this and resolve the parent loop
+   *   via the last hop's `loopStepId` from the child's `pathTo`.
    */
   addBlockToLoopChildren: async (
     loopId: string,
     block: AutomationStep,
     insertIndex?: number
-  ) => {
+  ): Promise<boolean> => {
     const automation = get(selectedAutomation)?.data
-    if (!automation) {
-      return
-    }
+    if (!automation) return false
 
-    const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
-    if (!loopRef) {
-      console.error("Loop reference not found for id", loopId)
-      return
-    }
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    const originalRef = blockRefs[loopId]
+    if (!originalRef) return false
 
-    let newAutomation = cloneDeep(automation)
+    const resolveLoopRef = () => {
+      let ref = originalRef
+      let node = automationStore.actions.getBlockByRef(automation, ref)
 
-    // Traverse to the loop node using its recorded path
-    const steps = [
-      newAutomation.definition.trigger,
-      ...newAutomation.definition.steps,
-    ]
-
-    let cache: any
-    loopRef.pathTo.forEach(
-      (path: BlockPath, idx: number, array: BlockPath[]) => {
-        const { stepIdx, branchIdx } = path
-        const final = idx === array.length - 1
-
-        if (!cache) {
-          cache = steps[stepIdx]
-          return
-        }
-        if (Number.isInteger(branchIdx)) {
-          const branchId = cache.inputs.branches[branchIdx].id
-          const children = cache.inputs.children[branchId]
-          cache = final ? children[stepIdx] : children[stepIdx]
-        }
+      if (!node || node.stepId !== AutomationActionStepId.LOOP_V2) {
+        const parentLoopId = originalRef.pathTo?.at(-1)?.loopStepId
+        if (!parentLoopId) return null
+        const parentRef = blockRefs[parentLoopId]
+        if (!parentRef) return null
+        ref = parentRef
+        node = automationStore.actions.getBlockByRef(automation, ref)
       }
-    )
 
-    const loopNode = cache?.stepId ? cache : steps.find(s => s.id === loopId)
-
-    if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
-      console.error("Target is not a Loop V2 node")
-      return
+      if (!node || node.stepId !== AutomationActionStepId.LOOP_V2) {
+        return null
+      }
+      return { ref }
     }
 
-    const children: AutomationStep[] = loopNode.inputs?.children || []
+    const resolved = resolveLoopRef()
+    if (!resolved) return false
+
+    // Mutate a copy of the automation, update loop children and persist via updateStep
+    const newAutomation = cloneDeep(automation)
+    const editableLoopNode = automationStore.actions.getBlockByRef(
+      newAutomation,
+      resolved.ref
+    ) as AutomationStep | undefined
+
+    if (!editableLoopNode || !isLoopV2Step(editableLoopNode)) return false
+
+    const children: AutomationStep[] = editableLoopNode.inputs?.children || []
     const targetIndex = Math.max(
       0,
       Math.min(
@@ -1550,17 +1549,25 @@ const automationActions = (store: AutomationStore) => ({
         children.length
       )
     )
-    children.splice(targetIndex, 0, block)
-    loopNode.inputs = {
-      ...(loopNode.inputs || {}),
-      children,
+    const updatedChildren = children.slice()
+    updatedChildren.splice(targetIndex, 0, block)
+
+    editableLoopNode.inputs = {
+      ...(editableLoopNode.inputs || {}),
+      children: updatedChildren,
     }
 
     try {
-      await store.actions.save(newAutomation)
-    } catch (e) {
+      const updated = automationStore.actions.updateStep(
+        resolved.ref.pathTo,
+        newAutomation,
+        editableLoopNode
+      )
+      await store.actions.save(updated)
+      return true
+    } catch (_e) {
       notifications.error("Error adding subflow step")
-      console.error("Error adding subflow step ", e)
+      return false
     }
   },
 
