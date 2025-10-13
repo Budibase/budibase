@@ -23,26 +23,6 @@ export function client3rdPartyLibrary(appId: string, file: string) {
   return `${objectStore.sanitizeKey(appId)}/${file}`
 }
 
-/**
- * Previously we used to serve the client library directly from Cloudfront, however
- * due to issues with the domain we were unable to continue doing this - keeping
- * incase we are able to switch back to CDN path again in future.
- */
-export async function clientLibraryCDNUrl(appId: string, version: string) {
-  let file = await clientLibraryPath(appId)
-  if (env.CLOUDFRONT_CDN) {
-    // append app version to bust the cache
-    if (version) {
-      file += `?v=${version}`
-    }
-    // don't need to use presigned for client with cloudfront
-    // file is public
-    return cloudfront.getUrl(file)
-  } else {
-    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
-  }
-}
-
 export async function clientLibraryUrl(workspaceId: string, version: string) {
   return `/api/assets/${workspaceId}/client?${await getClientCacheKey(workspaceId, version)}`
 }
