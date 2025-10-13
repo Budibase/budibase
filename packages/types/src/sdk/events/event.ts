@@ -211,7 +211,7 @@ export enum Event {
   RESOURCE_COPIED_TO_WORKSPACE = "resource:copied_to_workspace",
 }
 
-export const UserGroupSyncEvents: Event[] = [
+export const WorkspaceUserSyncEvents: Event[] = [
   Event.USER_CREATED,
   Event.USER_UPDATED,
   Event.USER_DELETED,
@@ -238,7 +238,7 @@ export const WorkspaceResourceEvents: Event[] = [
 ]
 
 export const AsyncEvents: Event[] = [
-  ...UserGroupSyncEvents,
+  ...WorkspaceUserSyncEvents,
   ...WorkspaceResourceEvents,
 ]
 
@@ -465,6 +465,7 @@ export type DocUpdateEvent = {
   id: string
   tenantId: string
   appId?: string
+  properties: any
 }
 
 export interface EventProcessor {

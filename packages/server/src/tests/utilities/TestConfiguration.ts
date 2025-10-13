@@ -60,6 +60,7 @@ import {
   TableSourceType,
   User,
   UserCtx,
+  UserGroup,
   View,
   Webhook,
   WithRequired,
@@ -375,6 +376,17 @@ export default class TestConfiguration {
         _id: id,
         _rev: rev,
         ...baseGroup,
+      }
+    })
+  }
+
+  async updateGroup(group: UserGroup) {
+    return context.doInTenant(this.tenantId!, async () => {
+      const { id, rev } = await pro.sdk.groups.save(group)
+      return {
+        _id: id,
+        _rev: rev,
+        ...group,
       }
     })
   }
