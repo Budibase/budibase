@@ -25,7 +25,7 @@ export const SUBFLOW = {
   ySpacing: 240,
   childHeight: 120,
   paddingTop: 90,
-  paddingBottom: 90,
+  paddingBottom: 56,
   internalSpacing: 48,
   stepWidth: 320,
 }
