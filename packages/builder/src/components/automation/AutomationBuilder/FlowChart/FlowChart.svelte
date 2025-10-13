@@ -175,6 +175,8 @@
       return
     }
 
+    const triggerNode = $nodes[0]
+
     const paneRect = paneEl.getBoundingClientRect()
     const nodeWidth = 320
     const nodeHeight = 150
@@ -186,13 +188,13 @@
     if (layoutDirection === "LR") {
       // Center vertically with a slight left offset
       const paneHeight = paneRect.height
-      x = nodeOffset
-      y = paneHeight / 2 - nodeHeight / 2
+      x = nodeOffset - triggerNode.position.x
+      y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
     } else {
       // Vertical mode. Center horizontally, top offset
       const paneWidth = paneRect.width
-      x = paneWidth / 2 - nodeWidth / 2
-      y = nodeOffset
+      x = paneWidth / 2 - triggerNode.position.x - nodeWidth / 2
+      y = nodeOffset - triggerNode.position.y
     }
 
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
