@@ -27,6 +27,7 @@ export interface GroupDeletedEvent extends BaseEvent {
 export interface GroupUsersAddedEvent extends BaseEvent {
   count: number
   groupId: string
+  userIds: string[]
   viaScim?: boolean
   audited: {
     name: string
@@ -36,6 +37,7 @@ export interface GroupUsersAddedEvent extends BaseEvent {
 export interface GroupUsersDeletedEvent extends BaseEvent {
   count: number
   groupId: string
+  userIds: string[]
   viaScim?: boolean
   audited: {
     name: string

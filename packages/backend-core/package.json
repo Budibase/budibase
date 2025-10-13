@@ -73,7 +73,8 @@
     "rotating-file-stream": "3.1.0",
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "^7.5.4",
-    "tar-fs": "2.1.2",
+    "tar-fs": "2.1.4",
+    "undici": "^7.16.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

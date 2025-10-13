@@ -4893,6 +4893,7 @@
       "width": 400,
       "height": 60
     },
+    "requiredAncestors": ["form"],
     "settings": [
       {
         "type": "field/signature_single",
