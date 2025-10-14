@@ -1,10 +1,13 @@
-import { get, writable, derived } from "svelte/store"
+import "./styles"
+
 import Manifest from "manifest.json"
+import { derived, get, writable } from "svelte/store"
+import Router from "../components/Router.svelte"
 import { findComponentById, findComponentPathById } from "../utils/components"
+import { builderStore } from "./builder"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
-import { builderStore } from "./builder"
-import Router from "../components/Router.svelte"
+
 import componentLoaders from "../components/app/componentLoaders.js"
 import { ScreenslotID, ScreenslotType } from "../constants"
 
