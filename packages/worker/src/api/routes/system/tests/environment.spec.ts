@@ -29,7 +29,6 @@ describe("/api/system/environment", () => {
         baseUrl: "http://localhost:10000",
         offlineMode: false,
         maintenance: [],
-        serveDevClientFromStorage: false,
       })
     })
 
@@ -44,7 +43,6 @@ describe("/api/system/environment", () => {
           baseUrl: "http://localhost:10000",
           offlineMode: false,
           maintenance: [],
-          serveDevClientFromStorage: false,
         })
       })
     })
