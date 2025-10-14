@@ -3,6 +3,7 @@ import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Automation,
   ContextUser,
+  Ctx,
   Datasource,
   Role,
   Screen,
@@ -31,7 +32,7 @@ export default class BuilderSocket extends BaseSocket {
       const sessions = await this.getRoomSessions(appId)
 
       // Track collaboration usage by unique users
-      let userIdMap: any = {}
+      let userIdMap: Record<string, boolean> = {}
       sessions?.forEach(session => {
         if (session._id) {
           userIdMap[session._id] = true
@@ -102,14 +103,14 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  emitRoleUpdate(ctx: any, role: Role) {
+  emitRoleUpdate(ctx: Ctx, role: Role) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.RoleChange, {
       id: role._id,
       role,
     })
   }
 
-  emitRoleDeletion(ctx: any, role: Role) {
+  emitRoleDeletion(ctx: Ctx, role: Role) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.RoleChange, {
       id: role._id,
       role: null,
@@ -117,7 +118,7 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   emitWorkspaceAppUpdate(
-    ctx: any,
+    ctx: Ctx,
     workspaceApp: WorkspaceApp,
     options?: EmitOptions
   ) {
@@ -134,7 +135,7 @@ export default class BuilderSocket extends BaseSocket {
     gridSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
   }
 
-  emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {
+  emitTableUpdate(ctx: Ctx, table: Table, options?: EmitOptions) {
     if (table.sourceId == null || table.sourceId === "") {
       throw new Error("Table sourceId is not set")
     }
@@ -152,7 +153,7 @@ export default class BuilderSocket extends BaseSocket {
     gridSocket?.emitTableUpdate(ctx, table)
   }
 
-  emitTableDeletion(ctx: any, table: Table) {
+  emitTableDeletion(ctx: Ctx, table: Table) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
       id: table._id,
       table: null,
@@ -160,62 +161,62 @@ export default class BuilderSocket extends BaseSocket {
     gridSocket?.emitTableDeletion(ctx, table)
   }
 
-  emitDatasourceUpdate(ctx: any, datasource: Datasource) {
+  emitDatasourceUpdate(ctx: Ctx, datasource: Datasource) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
       id: datasource._id,
       datasource,
     })
   }
 
-  emitDatasourceDeletion(ctx: any, id: string) {
+  emitDatasourceDeletion(ctx: Ctx, id: string) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
       id,
       datasource: null,
     })
   }
 
-  emitScreenUpdate(ctx: any, screen: Screen) {
+  emitScreenUpdate(ctx: Ctx, screen: Screen) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
       id: screen._id,
       screen,
     })
   }
 
-  emitScreenDeletion(ctx: any, id: string) {
+  emitScreenDeletion(ctx: Ctx, id: string) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
       id,
       screen: null,
     })
   }
 
-  emitAppMetadataUpdate(ctx: any, metadata: Partial<Workspace>) {
+  emitAppMetadataUpdate(ctx: Ctx, metadata: Partial<Workspace>) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppMetadataChange, {
       metadata,
     })
   }
 
-  emitAppPublish(ctx: any) {
+  emitAppPublish(ctx: Ctx) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
       published: true,
       user: ctx.user,
     })
   }
 
-  emitAppUnpublish(ctx: any) {
+  emitAppUnpublish(ctx: Ctx) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
       published: false,
       user: ctx.user,
     })
   }
 
-  emitAutomationUpdate(ctx: any, automation: Automation) {
+  emitAutomationUpdate(ctx: Ctx, automation: Automation) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
       id: automation._id,
       automation,
     })
   }
 
-  emitAutomationDeletion(ctx: any, id: string) {
+  emitAutomationDeletion(ctx: Ctx, id: string) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
       id,
       automation: null,

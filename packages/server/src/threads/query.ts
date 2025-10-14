@@ -262,7 +262,7 @@ class QueryRunner {
       throw new Error("No refresh token found for authenticated user")
     }
 
-    const resp: any = await auth.refreshOAuthToken(
+    const resp = await auth.refreshOAuthToken(
       oauth2.refreshToken,
       providerType,
       configId

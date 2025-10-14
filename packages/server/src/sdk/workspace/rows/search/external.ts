@@ -133,7 +133,7 @@ export async function search(
         key => source.schema?.[key].visible !== false
       )
     const allowedFields = [...visibleFields, ...PROTECTED_EXTERNAL_COLUMNS]
-    processed = processed.map((r: any) => pick(r, allowedFields))
+    processed = processed.map(r => pick(r, allowedFields))
 
     // need wrapper object for bookmarks etc when paginating
     const response: SearchResponse<Row> = { rows: processed, hasNextPage }

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
+import { RowSearchParams, SortOrder } from "@budibase/types"
 
 export default [
   newTool({
@@ -93,8 +94,8 @@ export default [
         .describe("Sort configuration"),
       limit: z.number().optional().describe("Maximum number of results"),
     }),
-    handler: async ({ tableId, query, sort, limit }) => {
-      const searchParams: any = {
+    handler: async ({ tableId, query = {}, sort, limit }) => {
+      const searchParams: RowSearchParams = {
         tableId,
         query,
         limit,
@@ -102,7 +103,9 @@ export default [
       if (sort) {
         searchParams.sort = sort.column
         searchParams.sortOrder =
-          sort.order === "ascending" ? "ascending" : "descending"
+          sort.order === SortOrder.ASCENDING
+            ? SortOrder.ASCENDING
+            : SortOrder.DESCENDING
       }
 
       const rows = await sdk.rows.search(searchParams)
