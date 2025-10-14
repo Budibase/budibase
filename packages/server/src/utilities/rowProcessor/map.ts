@@ -103,7 +103,7 @@ export const TYPE_TRANSFORM_MAP: Record<
     "": null,
     //@ts-ignore
     [null]: null,
-    //@ts-ignore
+    //@ts-expect-error
     [undefined]: undefined,
     parse: (n: unknown) => {
       const parsed = parseFloat(n as string)
