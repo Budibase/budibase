@@ -198,8 +198,8 @@ const getAppScriptHTML = (
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   // No app ID found, cannot serve - return message instead
-  const appId = context.getWorkspaceId()
-  if (!appId) {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
     ctx.body = "No content found - requires app ID"
     return
   }
@@ -207,7 +207,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
-    isWorkspaceFullyMigrated(appId),
+    isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
     configs.getRecaptchaConfig(),
   ])
@@ -230,7 +230,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
-    const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
+    const manifestUrl = hasPWA ? `/api/apps/${workspaceId}/manifest.json` : ""
     const addAppScripts =
       ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
       false
@@ -265,7 +265,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
-        workspaceId: appId,
+        workspaceId,
       }
 
       // Add custom app scripts if enabled
@@ -317,7 +317,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
-        appId,
+        appId: workspaceId,
         embedded: bbHeaderEmbed,
         nonce: ctx.state.nonce,
       })
