@@ -842,13 +842,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "TableSelectColumn",
+            "barIcon": "rows-plus-bottom",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "TableSelectRow",
+            "barIcon": "columns-plus-right",
             "barTitle": "Row layout"
           }
         ],
@@ -4893,6 +4893,7 @@
       "width": 400,
       "height": 60
     },
+    "requiredAncestors": ["form"],
     "settings": [
       {
         "type": "field/signature_single",
