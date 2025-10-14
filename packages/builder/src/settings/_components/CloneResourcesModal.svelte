@@ -62,9 +62,7 @@
     [ResourceType.SCREEN]: [],
   }
 
-  $: workspaces = $appsStore.apps.filter(a => a.devId !== $appStore.appId)
-
-  function onShow() {}
+  $: otherWorkspaces = $appsStore.apps.filter(a => a.devId !== $appStore.appId)
 
   async function onConfirm() {
     await API.resource
@@ -106,7 +104,7 @@
   $: resourceTypesToDisplay = {
     [ResourceType.WORKSPACE_APP]: {
       displayName: "Apps",
-      data: $workspaceAppStore.workspaceApps.map(a => mapToDataType(a)),
+      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
@@ -205,14 +203,14 @@
 
     for (const type of Object.keys(selectedResources)) {
       const castedType = type as ResourceType
-      const undirectlySelected = new Set(
+      const indirectlySelected = new Set(
         selectedResources[castedType].filter(x => !x.direct).map(x => x._id)
       )
 
       if (resourceTypesToDisplay[castedType]?.data.length) {
         resourceTypesToDisplay[castedType].data = resourceTypesToDisplay[
           castedType
-        ].data.map(x => ({ ...x, __disabled: undirectlySelected.has(x._id) }))
+        ].data.map(x => ({ ...x, __disabled: indirectlySelected.has(x._id) }))
       }
     }
   }
@@ -245,7 +243,6 @@
 
 <Modal
   bind:this={modal}
-  on:show={onShow}
   on:hide
   on:hide={() => {
     isOpen = false
@@ -261,7 +258,7 @@
     <p class="workspace-selection-label">Select the destination workspace:</p>
     <Select
       bind:value={toWorkspaceId}
-      options={workspaces}
+      options={otherWorkspaces}
       getOptionLabel={w => w.name.trim()}
       getOptionValue={w => w.devId}
       getOptionIcon={() => undefined}
