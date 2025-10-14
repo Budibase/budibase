@@ -1,7 +1,10 @@
 import { context, db, objectStore } from "@budibase/backend-core"
 import { FieldType, Row, Table, TableSourceType } from "@budibase/types"
 import * as uuid from "uuid"
-import { DEFAULT_BB_DATASOURCE_ID, ObjectStoreBuckets } from "../../../constants"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  ObjectStoreBuckets,
+} from "../../../constants"
 import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = ObjectStoreBuckets.APPS
