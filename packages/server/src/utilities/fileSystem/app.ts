@@ -2,6 +2,7 @@ import { context, objectStore } from "@budibase/backend-core"
 import fs from "fs"
 import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
+import env from "../../environment"
 import { budibaseTempDir } from "../budibaseDir"
 import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
 import { TOP_LEVEL_PATH } from "./filesystem"
@@ -14,6 +15,9 @@ export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
  * @return once promise completes app resources should be ready in object store.
  */
 export const uploadAppFiles = async (appId: string) => {
+  if (env.isTest()) {
+    return
+  }
   await updateClientLibrary(appId)
 }
 
