@@ -16,7 +16,7 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { admin, featureFlags } from "@/stores/portal"
+  import { featureFlags } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -260,7 +260,7 @@
   </HeroBanner>
 
   <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
-    {#if updateAvailable && $isOnlyUser && !$admin.usingLocalComponentLibs}
+    {#if updateAvailable && $isOnlyUser}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="update-version" on:click={versionModal.show}>
