@@ -25,7 +25,7 @@ describe("clientLibraryPath", () => {
     jest.clearAllMocks()
   })
 
-  describe("when USE_DYNAMIC_LOADING is disabled", () => {
+  describe("when ESM_CLIENT is disabled", () => {
     beforeEach(() => {
       mockIsEnabled.mockResolvedValue(false)
     })
@@ -34,14 +34,12 @@ describe("clientLibraryPath", () => {
       const result = await clientLibraryPath("app_123")
 
       expect(result).toBe("app_123/budibase-client.js")
-      expect(mockIsEnabled).toHaveBeenCalledWith(
-        FeatureFlag.USE_DYNAMIC_LOADING
-      )
+      expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.ESM_CLIENT)
       expect(mockObjectExists).not.toHaveBeenCalled()
     })
   })
 
-  describe("when USE_DYNAMIC_LOADING is enabled", () => {
+  describe("when ESM_CLIENT is enabled", () => {
     beforeAll(() => {
       mockIsEnabled.mockResolvedValue(true)
     })
@@ -52,9 +50,7 @@ describe("clientLibraryPath", () => {
       const result = await clientLibraryPath("app_123")
 
       expect(result).toBe("app_123/budibase-client.esm.js")
-      expect(mockIsEnabled).toHaveBeenCalledWith(
-        FeatureFlag.USE_DYNAMIC_LOADING
-      )
+      expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.ESM_CLIENT)
       expect(mockObjectExists).toHaveBeenCalledWith(
         "prod-budi-app-assets",
         "app_123/budibase-client.esm.js"
@@ -67,9 +63,7 @@ describe("clientLibraryPath", () => {
       const result = await clientLibraryPath("app_123")
 
       expect(result).toBe("app_123/budibase-client.js")
-      expect(mockIsEnabled).toHaveBeenCalledWith(
-        FeatureFlag.USE_DYNAMIC_LOADING
-      )
+      expect(mockIsEnabled).toHaveBeenCalledWith(FeatureFlag.ESM_CLIENT)
       expect(mockObjectExists).toHaveBeenCalledWith(
         "prod-budi-app-assets",
         "app_123/budibase-client.esm.js"

@@ -9,7 +9,7 @@ import * as objectStore from "../objectStore"
 export async function clientLibraryPath(appId: string) {
   const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
   const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.esm.js`
-  if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+  if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
     return oldClient
   } else {
     const newClientExists = await objectStore.objectExists(
@@ -44,7 +44,7 @@ export async function getClientCacheKey(version: string) {
   if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
     qsParams.tenantId = tenantId
   }
-  qsParams.dynamic = await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING)
+  qsParams.dynamic = await features.isEnabled(FeatureFlag.ESM_CLIENT)
   return qs.encode(qsParams)
 }
 

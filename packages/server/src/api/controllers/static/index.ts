@@ -401,7 +401,7 @@ export const serveClientLibrary = async function (
     ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
   } else {
-    if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+    if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
       return serveLocalFile(ctx, "budibase-client.js")
     } else {
       return serveLocalFile(ctx, "budibase-client.esm.js")

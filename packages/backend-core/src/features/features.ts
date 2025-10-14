@@ -235,7 +235,7 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.USE_DYNAMIC_LOADING]: true,
+  [FeatureFlag.ESM_CLIENT]: false,
 
   // Account-portal
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,

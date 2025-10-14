@@ -31,7 +31,7 @@ describe("app", () => {
 
       beforeAll(() => {
         cleanup = features.testutils.setFeatureFlags("default", {
-          USE_DYNAMIC_LOADING: useNewBundle,
+          ESM_CLIENT: useNewBundle,
         })
       })
 
@@ -70,7 +70,7 @@ describe("app", () => {
       beforeAll(() => {
         testEnv.multiTenant()
         cleanup = features.testutils.setFeatureFlags(tenantId, {
-          USE_DYNAMIC_LOADING: useNewBundle,
+          ESM_CLIENT: useNewBundle,
         })
       })
 
