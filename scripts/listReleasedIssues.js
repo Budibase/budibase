@@ -6,9 +6,16 @@ const releasesUrl = `https://github.com/${owner}/${repo}/releases`
 const issueUrl = `https://github.com/${owner}/${repo}/issues`
 const repoPath = `${owner}/${repo}`
 const escapedRepoPath = repoPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-const hrefPattern = new RegExp(`href="(?:https://github\\.com/)?${escapedRepoPath}/(?:issues|pull)/(\\d+)"`, "gi")
-const dataUrlPattern = new RegExp(`data-url="https://github\\.com/${escapedRepoPath}/issues/(\\d+)"`, "gi")
-const mentionPattern = /<a class="user-mention[^>]*href="https:\/\/github\.com\/([^"/]+)"/i
+const hrefPattern = new RegExp(
+  `href="(?:https://github\\.com/)?${escapedRepoPath}/(?:issues|pull)/(\\d+)"`,
+  "gi"
+)
+const dataUrlPattern = new RegExp(
+  `data-url="https://github\\.com/${escapedRepoPath}/issues/(\\d+)"`,
+  "gi"
+)
+const mentionPattern =
+  /<a class="user-mention[^>]*href="https:\/\/github\.com\/([^"/]+)"/i
 const userAgent = "budibase-scripts/listReleasedIssues"
 
 const ownerMap = new Map([
@@ -17,10 +24,14 @@ const ownerMap = new Map([
   ["PClmnt", "Peter"],
   ["deanhannigan", "Dean"],
   ["adrinr", "Adria"],
+  ["melohagan", "Mel"],
+  ["calexiou", "Christos"],
 ])
 
 if (typeof fetch !== "function") {
-  console.error("This script requires Node.js v18 or newer with global fetch support")
+  console.error(
+    "This script requires Node.js v18 or newer with global fetch support"
+  )
   process.exit(1)
 }
 
@@ -30,19 +41,22 @@ const fetchText = async url => {
   const response = await fetch(url, {
     headers: {
       "User-Agent": userAgent,
-      Accept: "text/html"
-    }
+      Accept: "text/html",
+    },
   })
 
   if (response.status === 429) {
-    const retryAfter = Number.parseInt(response.headers.get("retry-after") ?? "0", 10) || 5
+    const retryAfter =
+      Number.parseInt(response.headers.get("retry-after") ?? "0", 10) || 5
     await sleep(retryAfter * 1000)
     return fetchText(url)
   }
 
   if (!response.ok) {
     const body = await response.text().catch(() => "<unable to read body>")
-    throw new Error(`Request failed with ${response.status} ${response.statusText}\nURL: ${url}\nBody: ${body}`)
+    throw new Error(
+      `Request failed with ${response.status} ${response.statusText}\nURL: ${url}\nBody: ${body}`
+    )
   }
 
   return response.text()
@@ -57,11 +71,18 @@ const decodeHtml = html =>
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
 
-const stripHtml = html => decodeHtml(html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).trim()
+const stripHtml = html =>
+  decodeHtml(html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).trim()
 
 const getWeekBounds = now => {
   const current = now ?? new Date()
-  const todayUtc = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate()))
+  const todayUtc = new Date(
+    Date.UTC(
+      current.getUTCFullYear(),
+      current.getUTCMonth(),
+      current.getUTCDate()
+    )
+  )
   const day = todayUtc.getUTCDay()
   const daysSinceMonday = (day + 6) % 7
 
@@ -109,24 +130,35 @@ const extractOwner = (html, fallbackText) => {
 }
 
 const parseReleaseSections = html => {
-  const sections = html.match(/<section aria-labelledby="hd-[^"]+">[\s\S]*?<\/section>/g) ?? []
+  const sections =
+    html.match(/<section aria-labelledby="hd-[^"]+">[\s\S]*?<\/section>/g) ?? []
   return sections.map(section => {
-    const nameMatch = section.match(/<h2 class="sr-only" id="hd-[^"]+">([\s\S]*?)<\/h2>/)
+    const nameMatch = section.match(
+      /<h2 class="sr-only" id="hd-[^"]+">([\s\S]*?)<\/h2>/
+    )
     const name = nameMatch ? stripHtml(nameMatch[1]) : "Unknown release"
 
-    const publishedMatch = section.match(/<relative-time[^>]*datetime="([^"]+)"/)
+    const publishedMatch = section.match(
+      /<relative-time[^>]*datetime="([^"]+)"/
+    )
     const publishedAt = publishedMatch ? new Date(publishedMatch[1]) : null
 
-    const bodyMatch = section.match(/<div[^>]*class="markdown-body[^"]*"[^>]*>([\s\S]*?)<\/div>/)
+    const bodyMatch = section.match(
+      /<div[^>]*class="markdown-body[^"]*"[^>]*>([\s\S]*?)<\/div>/
+    )
     const bodyHtml = bodyMatch ? bodyMatch[1] : ""
 
-    const listItems = [...bodyHtml.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(match => match[1])
+    const listItems = [...bodyHtml.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(
+      match => match[1]
+    )
 
     const entries = listItems.map(itemHtml => {
       const text = stripHtml(itemHtml)
       const numbers = extractNumbers(itemHtml)
       const firstLinkMatch = itemHtml.match(hrefPattern)
-      const primaryUrl = firstLinkMatch ? firstLinkMatch[0].match(/href="([^"]+)"/)?.[1] ?? null : null
+      const primaryUrl = firstLinkMatch
+        ? (firstLinkMatch[0].match(/href="([^"]+)"/)?.[1] ?? null)
+        : null
       const owner = extractOwner(itemHtml, text)
 
       let title = text
@@ -141,13 +173,13 @@ const parseReleaseSections = html => {
         numbers,
         primaryUrl,
         owner,
-        publishedAt
+        publishedAt,
       }
     })
 
     return {
       publishedAt,
-      entries
+      entries,
     }
   })
 }
@@ -208,9 +240,14 @@ const mapOwner = ownerLogin => ownerMap.get(ownerLogin) ?? ownerLogin
 const main = async () => {
   const { startOfLastWeek, startOfThisWeek } = getWeekBounds()
 
-  console.log(`Gathering releases published between ${startOfLastWeek.toISOString()} and ${startOfThisWeek.toISOString()}`)
+  console.log(
+    `Gathering releases published between ${startOfLastWeek.toISOString()} and ${startOfThisWeek.toISOString()}`
+  )
 
-  const releases = await collectReleases({ since: startOfLastWeek, until: startOfThisWeek })
+  const releases = await collectReleases({
+    since: startOfLastWeek,
+    until: startOfThisWeek,
+  })
 
   if (releases.length === 0) {
     console.log("No releases were published last week.")
@@ -227,7 +264,7 @@ const main = async () => {
           title: entry.title,
           url: entry.primaryUrl ?? `${issueUrl}/${number}`,
           owner: entry.owner,
-          publishedAt: entry.publishedAt
+          publishedAt: entry.publishedAt,
         })
       })
     })
@@ -240,10 +277,14 @@ const main = async () => {
     }
   })
 
-  const sortedRows = Array.from(uniqueRows.values()).sort((a, b) => a.publishedAt - b.publishedAt || a.number - b.number)
+  const sortedRows = Array.from(uniqueRows.values()).sort(
+    (a, b) => a.publishedAt - b.publishedAt || a.number - b.number
+  )
 
   if (sortedRows.length === 0) {
-    console.log("No issue or pull request references were found in last week's release notes.")
+    console.log(
+      "No issue or pull request references were found in last week's release notes."
+    )
     return
   }
 
