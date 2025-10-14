@@ -1,7 +1,7 @@
 import { sql } from "@budibase/backend-core"
 import { FieldType } from "@budibase/types"
 
-const parseArrayString = (value: any) => {
+const parseArrayString = (value: string | unknown) => {
   if (typeof value === "string") {
     if (value === "") {
       return []
@@ -20,16 +20,29 @@ const parseArrayString = (value: any) => {
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
-export const TYPE_TRANSFORM_MAP: any = {
+export const TYPE_TRANSFORM_MAP: Record<
+  FieldType,
+  {
+    ""?: null | []
+    true?: true
+    false?: false
+    parse?: (
+      input: string | string[] | { _id: unknown }[] | Date
+    ) => string | undefined | {}
+  }
+> = {
   [FieldType.LINK]: {
     "": [],
     //@ts-ignore
     [null]: [],
     //@ts-ignore
     [undefined]: undefined,
-    parse: (link: any) => {
+    parse: link => {
       if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map(el => (el && el._id ? el._id : el))
+        return link.map(el => {
+          const objEl = el as { _id: unknown }
+          return objEl && objEl._id ? objEl._id : el
+        })
       }
       if (typeof link === "string") {
         return [link]
@@ -90,10 +103,10 @@ export const TYPE_TRANSFORM_MAP: any = {
     "": null,
     //@ts-ignore
     [null]: null,
-    //@ts-ignore
+    //@ts-expect-error
     [undefined]: undefined,
-    parse: (n: any) => {
-      const parsed = parseFloat(n)
+    parse: (n: unknown) => {
+      const parsed = parseFloat(n as string)
       if (isNaN(parsed)) {
         throw new Error(`Invalid number value "${n}"`)
       }
@@ -113,20 +126,20 @@ export const TYPE_TRANSFORM_MAP: any = {
     [null]: null,
     //@ts-ignore
     [undefined]: undefined,
-    parse: (date: any) => {
-      if (date instanceof Date) {
-        return date.toISOString()
-      } else if (typeof date === "string" && sql.utils.isValidTime(date)) {
-        return date
+    parse: input => {
+      if (input instanceof Date) {
+        return input.toISOString()
+      } else if (typeof input === "string" && sql.utils.isValidTime(input)) {
+        return input
       } else {
         // Date strings can come in without timezone info. In this case we want
         // to make sure we're parsing them in as UTC because the rest of the
         // system expects UTC dates.
-        let parsed = new Date(`${date}Z`)
+        let parsed = new Date(`${input}Z`)
         if (isNaN(parsed.getTime())) {
-          parsed = new Date(date)
+          parsed = new Date(input as string)
           if (isNaN(parsed.getTime())) {
-            throw new Error(`Invalid date value: "${date}"`)
+            throw new Error(`Invalid date value: "${input}"`)
           }
         }
         return parsed.toISOString()
@@ -156,8 +169,11 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: () => undefined,
   },
   [FieldType.JSON]: {
-    parse: (input: any) => {
+    parse: input => {
       try {
+        if (typeof input !== "string") {
+          throw new Error("input was not a string")
+        }
         if (input === "") {
           return undefined
         }
@@ -167,4 +183,8 @@ export const TYPE_TRANSFORM_MAP: any = {
       }
     },
   },
+  [FieldType.AI]: {},
+  [FieldType.BB_REFERENCE_SINGLE]: {},
+  [FieldType.SIGNATURE_SINGLE]: {},
+  [FieldType.INTERNAL]: {},
 }

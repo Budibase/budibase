@@ -12,7 +12,9 @@ import {
   DeploymentDoc,
   DeploymentProgressResponse,
   DeploymentStatus,
+  FieldType,
   FetchDeploymentResponse,
+  FormulaType,
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
@@ -29,6 +31,7 @@ import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
+import { updateAllFormulasInTable } from "../row/staticFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -53,7 +56,7 @@ async function checkAllDeployments(
   return { updated, deployments }
 }
 
-async function storeDeploymentHistory(deployment: any) {
+async function storeDeploymentHistory(deployment: Deployment) {
   const deploymentJSON = deployment.getJSON()
   const db = context.getWorkspaceDB()
 
@@ -82,7 +85,7 @@ async function storeDeploymentHistory(deployment: any) {
   return deployment
 }
 
-async function initDeployedApp(prodAppId: any) {
+async function initDeployedApp(prodAppId: string) {
   const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
@@ -116,6 +119,22 @@ async function initDeployedApp(prodAppId: any) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const tables = await sdk.tables.getAllInternalTables()
+    for (const table of tables) {
+      const hasStaticFormula = Object.values(table.schema).some(
+        column =>
+          column?.type === FieldType.FORMULA &&
+          column.formulaType === FormulaType.STATIC
+      )
+      if (hasStaticFormula) {
+        await updateAllFormulasInTable(table)
+      }
+    }
   })
 }
 
@@ -296,6 +315,7 @@ export const publishWorkspace = async function (
       await db.put(appDoc)
       await cache.workspace.invalidateWorkspaceMetadata(prodId)
       await initDeployedApp(prodId)
+      await syncStaticFormulasToProduction(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc
