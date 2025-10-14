@@ -54,7 +54,7 @@ function stepSuccess(
   if (step.isLegacyLoop) {
     outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
 
-    const legacyChild: any = (step as LoopV2Step)?.inputs?.children?.[0]
+    const legacyChild = (step as LoopV2Step)?.inputs?.children?.[0]
     const legacyId = legacyChild?.id || step.id
     const legacyStepId = legacyChild?.stepId || step.stepId
     const legacyInputs = inputs || legacyChild?.inputs || step.inputs

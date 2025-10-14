@@ -39,7 +39,7 @@ export interface PluginSchema {
   [key: string]: any
 }
 
-interface Package {
+export interface Package {
   name: string
   version: string
   description: string

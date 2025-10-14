@@ -73,7 +73,7 @@ function processQueries(ctx: Ctx) {
   }
 }
 
-export default async (ctx: Ctx, next: any) => {
+export default async (ctx: Ctx, next: () => Promise<void>) => {
   if (!ctx.body || noResponse(ctx) || isAttachment(ctx)) {
     return await next()
   }
