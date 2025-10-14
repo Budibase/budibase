@@ -366,6 +366,7 @@
         nodesDraggable={false}
         minZoom={0.4}
         maxZoom={1}
+        deleteKey={null}
       >
         <FlowControls
           historyStore={automationHistoryStore}
