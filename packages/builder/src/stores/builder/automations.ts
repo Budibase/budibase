@@ -1938,7 +1938,11 @@ const automationActions = (store: AutomationStore) => ({
     const loopId: string | undefined = lastHop?.loopStepId
     const isInsideBranch = Number.isInteger(lastHop?.branchIdx)
 
-    if (loopId != null && typeof lastHop?.stepIdx === "number" && !isInsideBranch) {
+    if (
+      loopId != null &&
+      typeof lastHop?.stepIdx === "number" &&
+      !isInsideBranch
+    ) {
       let newAutomation = cloneDeep(automation)
       try {
         const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
