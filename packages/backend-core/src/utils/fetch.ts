@@ -22,17 +22,28 @@ function createProxyDispatcher(options?: {
     return undefined
   }
 
+  const rejectUnauthorized = options?.rejectUnauthorized
+
   console.log("[fetch] Creating ProxyAgent", {
     proxyUrl,
-    rejectUnauthorized: options?.rejectUnauthorized,
+    rejectUnauthorized,
   })
 
-  return new ProxyAgent({
+  const proxyConfig: any = {
     uri: proxyUrl,
     requestTls: {
-      rejectUnauthorized: options?.rejectUnauthorized ?? true,
+      rejectUnauthorized,
     },
-  })
+  }
+
+  // Only configure proxyTls if the proxy itself uses HTTPS
+  if (proxyUrl.startsWith("https://")) {
+    proxyConfig.proxyTls = {
+      rejectUnauthorized,
+    }
+  }
+
+  return new ProxyAgent(proxyConfig)
 }
 
 let cachedDispatcher: ProxyAgent | undefined | null = null

@@ -32,6 +32,7 @@ import type {
   Response as NodeFetchResponse,
   RequestInit as NodeFetchRequestInit,
 } from "node-fetch"
+import environment from "../environment"
 
 const coreFields = {
   path: {
@@ -494,18 +495,26 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Configure dispatcher for proxy and/or TLS settings
+    const rejectUnauthorized = environment.REST_REJECT_UNAUTHORIZED === "false"
+
     const proxyDispatcher = getProxyDispatcher({
-      rejectUnauthorized: this.config.rejectUnauthorized,
+      rejectUnauthorized,
     })
     if (proxyDispatcher) {
       console.log("[rest integration] Using proxy for request", {
         url,
         hasDispatcher: true,
-        rejectUnauthorized: this.config.rejectUnauthorized,
+        isHttpsUrl: url.startsWith("https://"),
+        rejectUnauthorized,
+        configRejectUnauthorized: this.config.rejectUnauthorized,
+        proxyUri:
+          process.env.GLOBAL_AGENT_HTTPS_PROXY ||
+          process.env.GLOBAL_AGENT_HTTP_PROXY ||
+          process.env.HTTPS_PROXY ||
+          process.env.HTTP_PROXY,
       })
-      // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
       input.dispatcher = proxyDispatcher
-    } else if (this.config.rejectUnauthorized === false) {
+    } else if (rejectUnauthorized === false) {
       // No proxy, but need to disable TLS verification
       const agent = new Agent({
         connect: {
@@ -532,7 +541,24 @@ export class RestIntegration implements IntegrationBase {
         cause: err.cause?.message,
         code: err.cause?.code,
         hasDispatcher: !!input.dispatcher,
+        isHttpsUrl: url.startsWith("https://"),
+        rejectUnauthorized,
       })
+      if (
+        err.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
+        err.cause?.code === "CERT_UNTRUSTED" ||
+        err.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
+      ) {
+        throw new Error(
+          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${err.message}`
+        )
+      }
+
+      if (err.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+        throw new Error(
+          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${err.message}`
+        )
+      }
       throw err
     }
     if (
