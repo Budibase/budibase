@@ -10,7 +10,7 @@ import { ProxyAgent } from "undici"
  */
 function createProxyDispatcher(options?: {
   rejectUnauthorized?: boolean
-}): ProxyAgent | undefined {
+}): ProxyAgent | boolean {
   const httpProxy =
     process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY
   const httpsProxy =
@@ -19,17 +19,24 @@ function createProxyDispatcher(options?: {
   const proxyUrl = httpsProxy || httpProxy
 
   if (!proxyUrl) {
-    return undefined
+    return false
   }
 
-  const rejectUnauthorized = options?.rejectUnauthorized
+  const rejectUnauthorized =
+    options?.rejectUnauthorized !== undefined
+      ? options?.rejectUnauthorized
+      : true
 
   console.log("[fetch] Creating ProxyAgent", {
     proxyUrl,
     rejectUnauthorized,
   })
 
-  const proxyConfig: any = {
+  const proxyConfig: {
+    uri: string
+    requestTls: { rejectUnauthorized?: boolean }
+    proxyTls?: { rejectUnauthorized?: boolean }
+  } = {
     uri: proxyUrl,
     requestTls: {
       rejectUnauthorized,
@@ -46,7 +53,7 @@ function createProxyDispatcher(options?: {
   return new ProxyAgent(proxyConfig)
 }
 
-let cachedDispatcher: ProxyAgent | undefined | null = null
+let cachedDispatcher: ProxyAgent | boolean | null = null
 
 /**
  * Get or create a cached proxy dispatcher.
@@ -56,14 +63,21 @@ let cachedDispatcher: ProxyAgent | undefined | null = null
  */
 export function getProxyDispatcher(options?: {
   rejectUnauthorized?: boolean
-}): ProxyAgent | undefined {
+}): ProxyAgent | boolean {
   // Don't cache if custom options are provided
   if (options) {
-    return createProxyDispatcher(options)
+    return createProxyDispatcher(options) || false
   }
 
   if (cachedDispatcher === null) {
     cachedDispatcher = createProxyDispatcher()
   }
-  return cachedDispatcher || undefined
+  return cachedDispatcher || false
+}
+
+/**
+ * Reset the cached proxy dispatcher. Used for testing.
+ */
+export function resetProxyDispatcherCache(): void {
+  cachedDispatcher = null
 }

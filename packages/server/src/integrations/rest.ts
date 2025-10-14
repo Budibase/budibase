@@ -495,7 +495,7 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Configure dispatcher for proxy and/or TLS settings
-    const rejectUnauthorized = environment.REST_REJECT_UNAUTHORIZED === "false"
+    const rejectUnauthorized = environment.REST_REJECT_UNAUTHORIZED
 
     const proxyDispatcher = getProxyDispatcher({
       rejectUnauthorized,
@@ -513,8 +513,9 @@ export class RestIntegration implements IntegrationBase {
           process.env.HTTPS_PROXY ||
           process.env.HTTP_PROXY,
       })
+      // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
       input.dispatcher = proxyDispatcher
-    } else if (rejectUnauthorized === false) {
+    } else if (rejectUnauthorized) {
       // No proxy, but need to disable TLS verification
       const agent = new Agent({
         connect: {

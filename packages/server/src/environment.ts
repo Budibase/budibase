@@ -142,7 +142,7 @@ const environment = {
     parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
   SKIP_MIGRATION_LOCKS_IN_TESTS:
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
-  REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED,
+  REST_REJECT_UNAUTHORIZED: (process.env.REST_REJECT_UNAUTHORIZED || true) as boolean,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
