@@ -18,7 +18,17 @@ function createProxyDispatcher(options?: {
 
   const proxyUrl = httpsProxy || httpProxy
 
-  if (!proxyUrl) {
+  if (!proxyUrl || !proxyUrl.trim()) {
+    return false
+  }
+
+  const trimmedProxyUrl = proxyUrl.trim()
+
+  // Validate URL format
+  try {
+    new URL(trimmedProxyUrl)
+  } catch (error) {
+    console.log("[fetch] Invalid proxy URL format:", proxyUrl)
     return false
   }
 
@@ -28,7 +38,7 @@ function createProxyDispatcher(options?: {
       : true
 
   console.log("[fetch] Creating ProxyAgent", {
-    proxyUrl,
+    proxyUrl: trimmedProxyUrl,
     rejectUnauthorized,
   })
 
@@ -37,20 +47,25 @@ function createProxyDispatcher(options?: {
     requestTls: { rejectUnauthorized?: boolean }
     proxyTls?: { rejectUnauthorized?: boolean }
   } = {
-    uri: proxyUrl,
+    uri: trimmedProxyUrl,
     requestTls: {
       rejectUnauthorized,
     },
   }
 
   // Only configure proxyTls if the proxy itself uses HTTPS
-  if (proxyUrl.startsWith("https://")) {
+  if (trimmedProxyUrl.startsWith("https://")) {
     proxyConfig.proxyTls = {
       rejectUnauthorized,
     }
   }
 
-  return new ProxyAgent(proxyConfig)
+  try {
+    return new ProxyAgent(proxyConfig)
+  } catch (error) {
+    console.log("[fetch] Failed to create ProxyAgent:", error)
+    return false
+  }
 }
 
 let cachedDispatcher: ProxyAgent | boolean | null = null

@@ -183,8 +183,8 @@ describe("fetch utilities", () => {
         expect(result).toBe(false)
       })
 
-      it("should handle proxy URLs with different protocols", () => {
-        process.env.HTTP_PROXY = "socks5://proxy.example.com:1080"
+      it("should handle HTTPS proxy URLs", () => {
+        process.env.HTTPS_PROXY = "https://secure-proxy.example.com:8443"
 
         const result = getProxyDispatcher()
 
