@@ -53,23 +53,25 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[workspaceApp._id!]).toEqual([
-        {
-          id: screen._id,
-          name: screen.name,
-          type: ResourceType.SCREEN,
-        },
-        {
-          id: datasource._id,
-          name: datasource.name,
-          type: ResourceType.DATASOURCE,
-        },
-        {
-          id: query._id,
-          name: query.name,
-          type: ResourceType.QUERY,
-        },
-      ])
+      expect(result.body.resources[workspaceApp._id!]).toEqual({
+        dependencies: [
+          {
+            id: screen._id,
+            name: screen.name,
+            type: ResourceType.SCREEN,
+          },
+          {
+            id: datasource._id,
+            name: datasource.name,
+            type: ResourceType.DATASOURCE,
+          },
+          {
+            id: query._id,
+            name: query.name,
+            type: ResourceType.QUERY,
+          },
+        ],
+      })
     })
 
     it("should check screens for datasource usage", async () => {
@@ -91,18 +93,20 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[screen.workspaceAppId!]).toEqual([
-        {
-          id: screen._id,
-          name: screen.name,
-          type: ResourceType.SCREEN,
-        },
-        {
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        },
-      ])
+      expect(result.body.resources[screen.workspaceAppId!]).toEqual({
+        dependencies: [
+          {
+            id: screen._id,
+            name: screen.name,
+            type: ResourceType.SCREEN,
+          },
+          {
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          },
+        ],
+      })
     })
 
     it("should check automations for datasource usage", async () => {
@@ -114,18 +118,20 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[automation._id!]).toEqual([
-        {
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        },
-        {
-          id: automation._id,
-          name: automation.name,
-          type: ResourceType.AUTOMATION,
-        },
-      ])
+      expect(result.body.resources[automation._id!]).toEqual({
+        dependencies: [
+          {
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          },
+          {
+            id: automation._id,
+            name: automation.name,
+            type: ResourceType.AUTOMATION,
+          },
+        ],
+      })
     })
 
     it("should include row actions and their automations when referenced by an automation", async () => {
@@ -136,33 +142,35 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[rowAction.automationId]).toEqual([
-        {
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        },
-        {
-          id: rowAction.automationId,
-          name: "Row action usage",
-          type: ResourceType.AUTOMATION,
-        },
-        {
-          id: generateRowActionsID(table._id!),
-          name: rowAction.name,
-          type: ResourceType.ROW_ACTION,
-        },
-      ])
+      expect(result.body.resources[rowAction.automationId]).toEqual({
+        dependencies: [
+          {
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          },
+          {
+            id: rowAction.automationId,
+            name: "Row action usage",
+            type: ResourceType.AUTOMATION,
+          },
+          {
+            id: generateRowActionsID(table._id!),
+            name: rowAction.name,
+            type: ResourceType.ROW_ACTION,
+          },
+        ],
+      })
 
-      expect(
-        result.body.dependencies[generateRowActionsID(table._id!)]
-      ).toEqual([
-        {
-          id: rowAction.automationId,
-          name: rowAction.name,
-          type: ResourceType.AUTOMATION,
-        },
-      ])
+      expect(result.body.resources[generateRowActionsID(table._id!)]).toEqual({
+        dependencies: [
+          {
+            id: rowAction.automationId,
+            name: rowAction.name,
+            type: ResourceType.AUTOMATION,
+          },
+        ],
+      })
     })
 
     it("should not detect datasource when for internal tables", async () => {
@@ -170,13 +178,15 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[table._id!]).toEqual([
-        {
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        },
-      ])
+      expect(result.body.resources[table._id!]).toEqual({
+        dependencies: [
+          {
+            id: table._id,
+            name: table.name,
+            type: ResourceType.TABLE,
+          },
+        ],
+      })
     })
 
     it("should detect datasource when for rest queries", async () => {
@@ -185,18 +195,20 @@ describe("/api/resources/usage", () => {
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.dependencies[query._id!]).toEqual([
-        {
-          id: datasource._id,
-          name: datasource.name,
-          type: ResourceType.DATASOURCE,
-        },
-        {
-          id: query._id,
-          name: query.name,
-          type: ResourceType.QUERY,
-        },
-      ])
+      expect(result.body.resources[query._id!]).toEqual({
+        dependencies: [
+          {
+            id: datasource._id,
+            name: datasource.name,
+            type: ResourceType.DATASOURCE,
+          },
+          {
+            id: query._id,
+            name: query.name,
+            type: ResourceType.QUERY,
+          },
+        ],
+      })
     })
   })
 
@@ -297,9 +309,11 @@ describe("/api/resources/usage", () => {
       )
     }
 
-    const collectResourceIds = async (id: string): Promise<string[]> => {
+    const collectDependantResourceIds = async (
+      id: string
+    ): Promise<string[]> => {
       const usage = await config.api.resource.getResourceDependencies()
-      return [id, ...usage.body.dependencies[id].map(r => r.id)]
+      return [id, ...usage.body.resources[id].dependencies.map(r => r.id)]
     }
 
     const validateWorkspace = async (
@@ -389,7 +403,7 @@ describe("/api/resources/usage", () => {
       const table = await createInternalTable({ name: "Duplicated table" })
       const app = await createApp(createScreenWithDataprovider(table._id!))
 
-      const resourcesToCopy = await collectResourceIds(app.id)
+      const resourcesToCopy = await collectDependantResourceIds(app.id)
 
       const duplicatedToWorkspaceSpy = jest.spyOn(
         events.resource,
@@ -445,7 +459,7 @@ describe("/api/resources/usage", () => {
         name: `Destination ${generator.natural()}`,
       })
 
-      const resourcesToCopy = await collectResourceIds(basicApp.id)
+      const resourcesToCopy = await collectDependantResourceIds(basicApp.id)
       expect(resourcesToCopy).toEqual([
         basicApp.id,
         ...basicApp.screens.map(s => s._id!),
@@ -469,7 +483,9 @@ describe("/api/resources/usage", () => {
         createScreenWithDataprovider(table._id!)
       )
 
-      const resourcesToCopy = await collectResourceIds(appWithTableUsages.id)
+      const resourcesToCopy = await collectDependantResourceIds(
+        appWithTableUsages.id
+      )
       expect(resourcesToCopy).toEqual([
         appWithTableUsages.id,
         ...appWithTableUsages.screens.map(s => s._id!),
@@ -494,7 +510,7 @@ describe("/api/resources/usage", () => {
 
       const app2 = await createApp(createScreenWithDataprovider(table._id!))
 
-      const firstResources = await collectResourceIds(app1.id)
+      const firstResources = await collectDependantResourceIds(app1.id)
       expect(firstResources).toEqual([
         app1.id,
         ...app1.screens.map(s => s._id!),
@@ -508,7 +524,7 @@ describe("/api/resources/usage", () => {
         tables: [table],
       })
 
-      const secondResources = await collectResourceIds(app2.id)
+      const secondResources = await collectDependantResourceIds(app2.id)
       expect(secondResources).toEqual([
         app2.id,
         ...app2.screens.map(s => s._id!),
@@ -538,7 +554,7 @@ describe("/api/resources/usage", () => {
         createScreenWithDataprovider(table1._id!)
       )
 
-      const resourcesToCopy = await collectResourceIds(app.id)
+      const resourcesToCopy = await collectDependantResourceIds(app.id)
       await duplicateResources(resourcesToCopy, newWorkspace.appId)
       await validateWorkspace(newWorkspace.appId, {
         apps: [app.app],
@@ -567,7 +583,7 @@ describe("/api/resources/usage", () => {
 
       const app = await createApp(createScreenWithDataprovider(mainTable._id!))
 
-      const resourcesToCopy = await collectResourceIds(app.id)
+      const resourcesToCopy = await collectDependantResourceIds(app.id)
       expect(resourcesToCopy).toEqual([
         app.id,
         ...app.screens.map(s => s._id),
@@ -604,7 +620,7 @@ describe("/api/resources/usage", () => {
 
       const app = await createApp(createScreenWithRowActionUsage(rowAction))
 
-      const resourcesToCopy = await collectResourceIds(app.id)
+      const resourcesToCopy = await collectDependantResourceIds(app.id)
       expect(resourcesToCopy).toEqual([
         app.id,
         ...app.screens.map(s => s._id!),
@@ -644,7 +660,7 @@ describe("/api/resources/usage", () => {
       )
       const app = await createApp(screenWithDatasourceDependency)
 
-      const resourcesToCopy = await collectResourceIds(app.id)
+      const resourcesToCopy = await collectDependantResourceIds(app.id)
       expect(resourcesToCopy).toEqual([
         app.id,
         ...app.screens.map(s => s._id),
@@ -709,7 +725,7 @@ describe("/api/resources/usage", () => {
 
       const basicApp = await createApp(basicScreen())
 
-      const resourcesToCopy = await collectResourceIds(basicApp.id)
+      const resourcesToCopy = await collectDependantResourceIds(basicApp.id)
       await duplicateResources(resourcesToCopy, newWorkspace.appId)
 
       const error = await duplicateResources(

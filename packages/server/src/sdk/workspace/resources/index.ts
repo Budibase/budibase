@@ -16,13 +16,13 @@ import {
 } from "@budibase/types"
 import sdk from "../.."
 
-export async function getDependencies(): Promise<
-  Record<string, UsedResource[]>
+export async function getResourcesInfo(): Promise<
+  Record<string, { dependencies: UsedResource[] }>
 > {
   const automations = await sdk.automations.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
 
-  const dependencies: Record<string, UsedResource[]> = {}
+  const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
   const baseSearchTargets: {
     id: string
     idToSearch: string
@@ -112,13 +112,15 @@ export async function getDependencies(): Promise<
     possibleUsages: AnyDocument
   ) => {
     const json = JSON.stringify(possibleUsages)
-    dependencies[forResource] ??= []
+    dependencies[forResource] ??= { dependencies: [] }
     for (const search of baseSearchTargets) {
       if (
         json.includes(search.idToSearch) &&
-        !dependencies[forResource].find(resource => resource.id === search.id)
+        !dependencies[forResource].dependencies.find(
+          resource => resource.id === search.id
+        )
       ) {
-        dependencies[forResource].push({
+        dependencies[forResource].dependencies.push({
           id: search.id,
           name: search.name,
           type: search.type,
@@ -126,9 +128,12 @@ export async function getDependencies(): Promise<
 
         const toAdd = [
           ...(search.extraDependencies || []),
-          ...(dependencies[search.id] || []),
-        ].filter(({ id }) => !dependencies[forResource].some(r => r.id === id))
-        dependencies[forResource].push(...toAdd)
+          ...(dependencies[search.id]?.dependencies || []),
+        ].filter(
+          ({ id }) =>
+            !dependencies[forResource].dependencies.some(r => r.id === id)
+        )
+        dependencies[forResource].dependencies.push(...toAdd)
       }
     }
   }
@@ -164,8 +169,8 @@ export async function getDependencies(): Promise<
 
   for (const workspaceApp of workspaceApps) {
     const screens = workspaceAppScreens[workspaceApp._id!] || []
-    dependencies[workspaceApp._id!] ??= []
-    dependencies[workspaceApp._id!].push(
+    dependencies[workspaceApp._id!] ??= { dependencies: [] }
+    dependencies[workspaceApp._id!].dependencies.push(
       ...screens.map(s => ({
         id: s._id!,
         name: s.name!,
@@ -179,7 +184,7 @@ export async function getDependencies(): Promise<
   }
 
   for (const rowActionResource of Object.values(dependencies)
-    .flatMap(r => r)
+    .flatMap(r => r.dependencies)
     .filter(r => r.type === ResourceType.ROW_ACTION)) {
     const rowAction = rowActions.find(ra => ra._id === rowActionResource.id)
     if (!rowAction) {
@@ -188,7 +193,7 @@ export async function getDependencies(): Promise<
 
     for (const action of Object.values(rowAction.actions)) {
       if (
-        dependencies[rowActionResource.id]?.some(
+        dependencies[rowActionResource.id]?.dependencies.some(
           r => r.id === action.automationId
         )
       ) {
@@ -198,8 +203,8 @@ export async function getDependencies(): Promise<
       if (!automation) {
         continue
       }
-      dependencies[rowActionResource.id] ??= []
-      dependencies[rowActionResource.id].push({
+      dependencies[rowActionResource.id] ??= { dependencies: [] }
+      dependencies[rowActionResource.id].dependencies.push({
         id: automation._id,
         name: automation.name,
         type: ResourceType.AUTOMATION,

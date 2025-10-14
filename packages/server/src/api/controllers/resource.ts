@@ -9,7 +9,7 @@ export async function getResourceDependencies(
   ctx: UserCtx<void, ResourceDependenciesResponse>
 ) {
   ctx.body = {
-    dependencies: await sdk.resources.getDependencies(),
+    resources: await sdk.resources.getResourcesInfo(),
   }
 }
 

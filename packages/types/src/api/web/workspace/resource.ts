@@ -20,7 +20,7 @@ export interface UsedResource {
 }
 
 export interface ResourceDependenciesResponse {
-  dependencies: Record<string, UsedResource[]>
+  resources: Record<string, { dependencies: UsedResource[] }>
 }
 
 export interface DuplicateResourceToWorkspaceRequest {

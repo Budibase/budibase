@@ -6,7 +6,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface ResourceEndpoints {
-  getResourceDependencies: () => Promise<ResourceDependenciesResponse>
+  getResourcesInfo: () => Promise<ResourceDependenciesResponse>
   duplicateResourceToWorkspace: (
     request: DuplicateResourceToWorkspaceRequest
   ) => Promise<DuplicateResourceToWorkspaceResponse>
@@ -15,9 +15,9 @@ export interface ResourceEndpoints {
 export const buildResourceEndpoints = (
   API: BaseAPIClient
 ): ResourceEndpoints => ({
-  getResourceDependencies: async () => {
+  getResourcesInfo: async () => {
     return await API.get<ResourceDependenciesResponse>({
-      url: `/api/resources/dependencies`,
+      url: `/api/resources`,
     })
   },
 

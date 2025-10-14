@@ -10,7 +10,7 @@ export class ResourceAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<{ body: ResourceDependenciesResponse }> => {
     const result = await this._get<ResourceDependenciesResponse>(
-      `/api/resources/dependencies`,
+      `/api/resources`,
       {
         expectations,
       }

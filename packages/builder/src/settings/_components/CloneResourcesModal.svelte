@@ -149,13 +149,13 @@
 
   $: isOpen &&
     API.resource
-      .getResourceDependencies()
+      .getResourcesInfo()
       .then(res => {
-        dependantResources = Object.entries(res.dependencies).reduce<
+        dependantResources = Object.entries(res.resources).reduce<
           typeof dependantResources
         >((acc, [id, resources]) => {
           acc[id] = {}
-          for (const resource of resources) {
+          for (const resource of resources.dependencies) {
             acc[id][resource.type] = [
               ...(acc[id][resource.type] || []),
               resource,
