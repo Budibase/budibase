@@ -282,7 +282,7 @@ export async function squashLinks<T = Row[] | Row>(
         row[column] = await coreOutputProcessing(relatedTable, row[column])
       }
       row[column] = row[column].map((link: Row) => {
-        const obj: any = { _id: link._id }
+        const obj: Record<string, unknown> = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, relatedTable)
 
         if (viewSchema[column]?.columns) {

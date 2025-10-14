@@ -7,7 +7,7 @@ export enum AppType {
 }
 
 export function middleware({ appType }: { appType?: AppType } = {}) {
-  return (ctx: Ctx, next: any) => {
+  return (ctx: Ctx, next: () => Promise<void>) => {
     const workspaceId = ctx.appId
     if (
       appType === AppType.DEV &&
