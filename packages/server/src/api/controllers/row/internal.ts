@@ -55,7 +55,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   // need to build up full patch fields before coerce
-  let combinedRow: any = cloneDeep(oldRow)
+  let combinedRow = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
     if (!table.schema[key]) continue
     combinedRow[key] = inputs[key]

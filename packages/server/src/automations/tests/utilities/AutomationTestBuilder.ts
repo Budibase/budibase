@@ -37,10 +37,10 @@ type BranchConfig = {
 
 type LoopConfig = {
   option: LoopStepType
-  binding: any
+  binding: unknown
   steps: StepBuilderFunction
   iterations?: number
-  failure?: any
+  failure?: string
   resultOptions?: {
     storeFullResults?: boolean
     summarizeOnly?: boolean

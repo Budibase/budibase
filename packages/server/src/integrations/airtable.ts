@@ -7,7 +7,7 @@ import {
   QueryType,
 } from "@budibase/types"
 
-import Airtable from "airtable"
+import Airtable, { FieldSet } from "airtable"
 
 interface AirtableConfig {
   apiKey: string
@@ -117,7 +117,7 @@ class AirtableIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: { table: any; json: any }) {
+  async create(query: { table: string; json: FieldSet }) {
     const { table, json } = query
 
     try {
@@ -132,7 +132,7 @@ class AirtableIntegration implements IntegrationBase {
     }
   }
 
-  async read(query: { table: any; numRecords: any; view: any }) {
+  async read(query: { table: string; numRecords: number; view: string }) {
     try {
       const records = await this.client(query.table)
         .select({ maxRecords: query.numRecords || 10, view: query.view })
@@ -145,7 +145,7 @@ class AirtableIntegration implements IntegrationBase {
     }
   }
 
-  async update(query: { table: any; id: any; json: any }) {
+  async update(query: { table: string; id: string; json: FieldSet }) {
     const { table, id, json } = query
 
     try {
@@ -161,7 +161,7 @@ class AirtableIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: { table: any; ids: any }) {
+  async delete(query: { table: string; ids: string | string }) {
     try {
       return await this.client(query.table).destroy(query.ids)
     } catch (err) {

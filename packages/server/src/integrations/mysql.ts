@@ -100,7 +100,7 @@ const SCHEMA: Integration = {
   },
 }
 
-const defaultTypeCasting = function (field: any, next: any) {
+const defaultTypeCasting = function (field: any, next: () => void) {
   if (
     field.type == "DATETIME" ||
     field.type === "DATE" ||
@@ -210,7 +210,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     if (!schema) {
       return
     }
-    this.config.typeCast = function (field: any, next: any) {
+    this.config.typeCast = function (field: any, next: () => void) {
       if (schema[field.name]?.name === field.name) {
         if (["LONGLONG", "NEWDECIMAL", "DECIMAL"].includes(field.type)) {
           if (schema[field.name]?.type === "number") {
