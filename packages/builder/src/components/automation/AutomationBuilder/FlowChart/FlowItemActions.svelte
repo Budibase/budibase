@@ -14,15 +14,15 @@
   const checkIsInsideBranchInLoop = (blockRef) => {
     if (!blockRef?.pathTo) return false
 
-    let hasLoop = false
-    let hasBranch = false
-
+    // Only hide branch button if we're in a branch lane that's directly inside a loop
+    // This is indicated by a hop that has BOTH loopStepId and branchIdx
     for (const hop of blockRef.pathTo) {
-      if (hop.loopStepId) hasLoop = true
-      if (Number.isInteger(hop.branchIdx)) hasBranch = true
+      if (hop.loopStepId && Number.isInteger(hop.branchIdx)) {
+        return true
+      }
     }
 
-    return hasLoop && hasBranch
+    return false
   }
 </script>
 
