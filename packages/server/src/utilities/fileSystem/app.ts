@@ -1,4 +1,4 @@
-import { context, objectStore } from "@budibase/backend-core"
+import { context, env, objectStore } from "@budibase/backend-core"
 import fs from "fs"
 import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
@@ -14,6 +14,10 @@ export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
  * @return once promise completes app resources should be ready in object store.
  */
 export const uploadAppFiles = async (appId: string) => {
+  if (env.isTest()) {
+    // We don't need the real data on tests, and parallel workspace creation is making all tests really slow
+    return
+  }
   await updateClientLibrary(appId)
 }
 
