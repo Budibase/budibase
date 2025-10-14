@@ -65,7 +65,7 @@ export const loadHandlebarsFile = (path: PathLike) => {
  * @param contents the contents of the file which is to be returned from the API.
  * @return the read stream which can be put into the koa context body.
  */
-export const apiFileReturn = (contents: any) => {
+export const apiFileReturn = (contents: string | NodeJS.ArrayBufferView) => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, contents)
   return fs.createReadStream(path)
@@ -92,7 +92,9 @@ export const storeTempFile = (
  * Utility function for getting a file read stream - a simple in memory buffered read
  * stream doesn't work for pouchdb.
  */
-export const stringToFileStream = (contents: any) => {
+export const stringToFileStream = (
+  contents: string | NodeJS.ArrayBufferView
+) => {
   const path = storeTempFile(contents)
   return fs.createReadStream(path)
 }
@@ -101,7 +103,7 @@ export const stringToFileStream = (contents: any) => {
  * Creates a temp file and returns it from the API.
  * @param fileContents the contents to be returned in file.
  */
-export const sendTempFile = (fileContents: any) => {
+export const sendTempFile = (fileContents: string | NodeJS.ArrayBufferView) => {
   const path = storeTempFile(fileContents)
   return fs.createReadStream(path)
 }
@@ -115,7 +117,7 @@ export const readFileSync = (filepath: PathLike, options = "utf8") => {
   return fs.readFileSync(filepath, options)
 }
 
-export const createTempFolder = (item: any) => {
+export const createTempFolder = (item: string) => {
   const path = join(budibaseTempDir(), item)
   try {
     // remove old tmp directories automatically - don't combine
@@ -140,7 +142,10 @@ export const extractTarball = async (fromFilePath: string, toPath: string) => {
 /**
  * Find for a file recursively from start path applying filter, return first match
  */
-export const findFileRec = (startPath: PathLike, filter: string): any => {
+export const findFileRec = (
+  startPath: PathLike,
+  filter: string
+): string | undefined => {
   if (!fs.existsSync(startPath)) {
     return
   }

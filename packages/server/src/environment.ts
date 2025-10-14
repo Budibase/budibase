@@ -143,6 +143,7 @@ const environment = {
   SKIP_MIGRATION_LOCKS_IN_TESTS:
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED ?? true,
+  UPLOAD_APPS_FILES_ON_TEST: process.env.UPLOAD_APPS_FILES_ON_TEST,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

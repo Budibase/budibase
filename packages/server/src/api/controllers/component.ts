@@ -16,7 +16,7 @@ export async function fetchAppComponentDefinitions(
     const app = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
 
     let componentManifests = await Promise.all(
-      app.componentLibraries.map(async (library: any) => {
+      app.componentLibraries.map(async library => {
         let manifest = await getComponentLibraryManifest(library)
         return {
           manifest,
