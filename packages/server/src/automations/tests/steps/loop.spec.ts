@@ -1171,13 +1171,15 @@ describe("Loop Automations", () => {
             return [
               builder.branch({
                 takeA: {
-                  steps: b => b.serverLog({ text: "Branch A {{loop.currentItem}}" }),
+                  steps: b =>
+                    b.serverLog({ text: "Branch A {{loop.currentItem}}" }),
                   condition: {
                     equal: { "{{ literal loop.currentItem }}": 1 },
                   },
                 },
                 takeB: {
-                  steps: b => b.serverLog({ text: "Branch B {{loop.currentItem}}" }),
+                  steps: b =>
+                    b.serverLog({ text: "Branch B {{loop.currentItem}}" }),
                   condition: {
                     notEqual: { "{{ literal loop.currentItem }}": 1 },
                   },

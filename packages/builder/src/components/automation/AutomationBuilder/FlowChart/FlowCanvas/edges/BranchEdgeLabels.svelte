@@ -1,9 +1,7 @@
 <script lang="ts">
   import { EdgeLabelRenderer } from "@xyflow/svelte"
-  import { ActionButton } from "@budibase/bbui"
-  import { selectedAutomation } from "@/stores/builder"
+  import type { ViewMode } from "@/types/automations"
   import {
-    ViewMode,
     type BranchEdgeData,
     type FlowBlockContext,
     type FlowBlockPath,
@@ -79,21 +77,14 @@
           />
         {/if}
         <div class="actions-stack">
-          <FlowItemActions {block} hideBranch />
-
-          {#if isPrimaryBranchEdge}
-            {#if $selectedAutomation?.blockRefs?.[data.branchStepId]}
-              <div class="branch-controls">
-                <ActionButton
-                  icon="plus-circle"
-                  disabled={viewMode === ViewMode.LOGS}
-                  on:click={handleAddBranch}
-                >
-                  Add branch
-                </ActionButton>
-              </div>
-            {/if}
-          {/if}
+          <FlowItemActions
+            {block}
+            hideBranch
+            showAddBranch={isPrimaryBranchEdge}
+            branchStepId={data.branchStepId}
+            {viewMode}
+            on:addBranch={handleAddBranch}
+          />
         </div>
       </div>
     {/key}
@@ -113,9 +104,5 @@
     align-items: center;
     gap: 20px;
     pointer-events: all;
-  }
-  .branch-controls :global(.spectrum-ActionButton) {
-    margin-top: 4px;
-    cursor: pointer;
   }
 </style>
