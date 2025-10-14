@@ -5,8 +5,8 @@ const options = {
   host: "smtp.ethereal.email",
   secure: false,
   auth: {
-    user: "seamus99@ethereal.email",
-    pass: "5ghVteZAqj6jkKJF9R",
+    user: "irma.stehr61@ethereal.email",
+    pass: "qrpvnHWBqPEKPfFytS",
   },
 }
 
