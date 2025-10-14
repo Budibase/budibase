@@ -35,6 +35,12 @@ export default defineConfig(({ mode }) => {
         output: {
           chunkFileNames: "chunks/[name]-[hash].js",
         },
+        onwarn(warning, warn) {
+          if (warning.code === "CYCLIC_CROSS_CHUNK_REEXPORT") {
+            throw new Error(warning.message)
+          }
+          warn(warning) // keep the default behaviour for everything else
+        },
       },
     },
     plugins: [
