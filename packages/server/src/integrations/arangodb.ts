@@ -97,7 +97,7 @@ class ArangoDBIntegration implements IntegrationBase {
     return response
   }
 
-  async read(query: { sql: any }) {
+  async read(query: { sql: string }) {
     try {
       const result = await this.client.query(query.sql)
       return result.all()
@@ -110,7 +110,7 @@ class ArangoDBIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: { json: any }) {
+  async create(query: { json: string }) {
     const clc = this.client.collection(this.config.collection)
     try {
       const result = await this.client.query(

@@ -6,7 +6,7 @@ import { auth, Header, redis } from "@budibase/backend-core"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { getSocketPubSubClients } from "../utilities/redis"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
-import { SocketSession } from "@budibase/types"
+import { Ctx, SocketSession } from "@budibase/types"
 import { v4 as uuid } from "uuid"
 import { createContext, runMiddlewares } from "./middleware"
 
@@ -271,14 +271,14 @@ export class BaseSocket {
   }
 
   // Emit an event to all sockets
-  emit(event: string, payload: any) {
+  emit(event: string, payload: unknown) {
     this.io.sockets.emit(event, payload)
   }
 
   // Emit an event to everyone in a room, including metadata of whom
   // the originator of the request was
   emitToRoom(
-    ctx: any,
+    ctx: Ctx,
     room: string | string[],
     event: string,
     payload: any,
