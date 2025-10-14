@@ -24,13 +24,12 @@ export function client3rdPartyLibrary(appId: string, file: string) {
 }
 
 export async function clientLibraryUrl(workspaceId: string, version: string) {
-  return `/api/assets/${workspaceId}/client?${await getClientCacheKey(workspaceId, version)}`
+  return `/api/assets/${workspaceId}/client?${await getClientCacheKey(version)}`
 }
 
-export async function getClientCacheKey(workspaceId: string, version: string) {
+export async function getClientCacheKey(version: string) {
   let tenantId,
     qsParams: {
-      appId: string
       version: string
       tenantId?: string
       dynamic?: boolean
@@ -39,7 +38,6 @@ export async function getClientCacheKey(workspaceId: string, version: string) {
     tenantId = getTenantId()
   } finally {
     qsParams = {
-      appId: workspaceId,
       version,
     }
   }
