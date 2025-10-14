@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
         entry: "src/index.ts",
         formats: isModuleBuild ? ["es"] : ["iife"],
         outDir: "dist",
-        ...(isModuleBuild ? {} : { name: "budibase_client" }),
+        name: "budibase_client",
         fileName: () =>
           isModuleBuild ? "budibase-client.esm.js" : "budibase-client.js",
       },
