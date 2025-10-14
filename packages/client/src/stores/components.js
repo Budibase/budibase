@@ -8,7 +8,7 @@ import { builderStore } from "./builder"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 
-import componentLoaders from "../components/app/componentLoaders.js"
+import * as AppComponents from "../components/app/index.js"
 import { ScreenslotID, ScreenslotType } from "../constants"
 
 export const BudibasePrefix = "@budibase/standard-components/"
@@ -149,7 +149,7 @@ const createComponentStore = () => {
         return builtInComponentPromises.get(name)
       }
 
-      const loader = componentLoaders[name]
+      const loader = AppComponents[name]
       if (!loader) {
         console.warn(`Component loader missing for ${name}`)
         return null
