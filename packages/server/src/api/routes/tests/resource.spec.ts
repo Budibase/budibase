@@ -718,7 +718,7 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("throws when copying the same resources twice", async () => {
+    it("does not throw when copying the same resources twice", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
       })
@@ -728,14 +728,8 @@ describe("/api/resources/usage", () => {
       const resourcesToCopy = await collectDependantResourceIds(basicApp.id)
       await duplicateResources(resourcesToCopy, newWorkspace.appId)
 
-      const error = await duplicateResources(
-        resourcesToCopy,
-        newWorkspace.appId,
-        { status: 400 }
-      )
-      expect(error.body).toMatchObject({
-        message: "No resources left to copy",
-        status: 400,
+      await duplicateResources(resourcesToCopy, newWorkspace.appId, {
+        status: 204,
       })
     })
   })
