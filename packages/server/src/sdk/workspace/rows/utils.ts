@@ -142,7 +142,7 @@ export function cleanExportRows(
   let cleanRows = [...rows]
 
   const relationships = Object.entries(schema)
-    .filter((entry: any[]) => entry[1].type === FieldType.LINK)
+    .filter(entry => entry[1].type === FieldType.LINK)
     .map(entry => entry[0])
 
   relationships.forEach(column => {
