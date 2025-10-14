@@ -1,6 +1,7 @@
+// @ts-nocheck
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 module ArangoMock {
-  const arangodb: any = {}
+  const arangodb = {}
 
   arangodb.Database = function () {
     this.query = jest.fn(() => ({
@@ -10,7 +11,6 @@ module ArangoMock {
     this.close = jest.fn()
   }
 
-  // @ts-ignore
   arangodb.aql = (strings, ...args) => {
     let str = strings.join("{}")
 

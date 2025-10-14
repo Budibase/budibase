@@ -111,7 +111,6 @@ describe("admin store", () => {
           disableAccountPortal: true,
           accountPortalUrl: "url",
           isDev: true,
-          usingLocalComponentLibs: true,
         })
       })
     })
@@ -191,62 +190,6 @@ describe("admin store", () => {
           foo: "foo",
           loaded: true,
         })
-      })
-    })
-
-    describe("usingLocalComponentLibs calculation", () => {
-      it("should set usingLocalComponentLibs to true when isDev=true and serveDevClientFromStorage=false", async ctx => {
-        API.getEnvironment.mockReturnValue({
-          multiTenancy: false,
-          cloud: false,
-          disableAccountPortal: false,
-          accountPortalUrl: "",
-          isDev: true,
-          serveDevClientFromStorage: false,
-        })
-
-        await ctx.returnedStore.init()
-
-        expect(
-          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
-            .usingLocalComponentLibs
-        ).toBe(true)
-      })
-
-      it("should set usingLocalComponentLibs to false when isDev=false", async ctx => {
-        API.getEnvironment.mockReturnValue({
-          multiTenancy: false,
-          cloud: false,
-          disableAccountPortal: false,
-          accountPortalUrl: "",
-          isDev: false,
-          serveDevClientFromStorage: false,
-        })
-
-        await ctx.returnedStore.init()
-
-        expect(
-          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
-            .usingLocalComponentLibs
-        ).toBe(false)
-      })
-
-      it("should set usingLocalComponentLibs to false when isDev=true but serveDevClientFromStorage=true", async ctx => {
-        API.getEnvironment.mockReturnValue({
-          multiTenancy: false,
-          cloud: false,
-          disableAccountPortal: false,
-          accountPortalUrl: "",
-          isDev: true,
-          serveDevClientFromStorage: true,
-        })
-
-        await ctx.returnedStore.init()
-
-        expect(
-          ctx.writableReturn.update.calls[1][0]({ foo: "foo" })
-            .usingLocalComponentLibs
-        ).toBe(false)
       })
     })
   })

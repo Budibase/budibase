@@ -49,10 +49,6 @@ export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
     passwordMinLength: env.PASSWORD_MIN_LENGTH,
-    serveDevClientFromStorage:
-      env.DEV_USE_CLIENT_FROM_STORAGE !== undefined
-        ? !!env.DEV_USE_CLIENT_FROM_STORAGE
-        : false,
   }
 
   if (env.SELF_HOSTED) {

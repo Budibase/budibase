@@ -3,7 +3,7 @@ import { UserCtx } from "@budibase/types"
 
 export async function ensureTenantAppOwnershipMiddleware(
   ctx: UserCtx,
-  next: any
+  next: () => Promise<void> | void
 ) {
   const appId = await utils.getAppIdFromCtx(ctx)
   if (!appId) {

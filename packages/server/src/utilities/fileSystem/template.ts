@@ -8,7 +8,10 @@ import { objectStore } from "@budibase/backend-core"
  * @param template The template object retrieved from the Koa context object.
  * @returns Returns an fs read stream which can be loaded into the database.
  */
-export const getTemplateStream = async (template: any) => {
+export const getTemplateStream = async (template: {
+  file: { path: string }
+  key: string
+}) => {
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else {
