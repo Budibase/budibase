@@ -495,8 +495,7 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Configure dispatcher for proxy and/or TLS settings
-    const rejectUnauthorized = environment.REST_REJECT_UNAUTHORIZED
-
+    const rejectUnauthorized = environment.REST_REJECT_UNAUTHORIZED === "0"
     const proxyDispatcher = getProxyDispatcher({
       rejectUnauthorized,
     })
@@ -522,7 +521,6 @@ export class RestIntegration implements IntegrationBase {
           rejectUnauthorized: false,
         },
       })
-      // @ts-ignore - Agent is compatible with Dispatcher but types don't align perfectly
       input.dispatcher = agent
     }
 
