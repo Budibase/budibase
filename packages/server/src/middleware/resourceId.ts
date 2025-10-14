@@ -26,7 +26,7 @@ export class ResourceIdGetter {
     const parameter = this.parameter,
       main = this.main,
       sub = this.sub
-    return (ctx: Ctx, next: any) => {
+    return (ctx: Ctx, next: () => void) => {
       // @ts-ignore
       const request = ctx.request[parameter] || ctx[parameter]
       if (request == null) {

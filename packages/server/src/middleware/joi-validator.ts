@@ -3,7 +3,7 @@ import { Ctx } from "@budibase/types"
 
 function validate(schema: Joi.Schema, property: string) {
   // Return a Koa middleware function
-  return (ctx: Ctx, next: any) => {
+  return (ctx: Ctx, next: () => Promise<void>) => {
     if (!schema) {
       return next()
     }
@@ -25,7 +25,6 @@ function validate(schema: Joi.Schema, property: string) {
     const { error } = schema.validate(params)
     if (error) {
       ctx.throw(400, `Invalid ${property} - ${error.message}`)
-      return
     }
     return next()
   }

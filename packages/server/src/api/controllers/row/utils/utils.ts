@@ -173,16 +173,16 @@ export function isUserMetadataTable(tableId: string) {
 }
 
 export async function enrichArrayContext(
-  fields: any[],
+  fields: Record<string, unknown>[],
   inputs = {},
   helpers = true
-): Promise<any[]> {
+): Promise<Record<string, any>[]> {
   const map: Record<string, any> = {}
   for (let index in fields) {
     map[index] = fields[index]
   }
   const output = await enrichSearchContext(map, inputs, helpers)
-  const outputArray: any[] = []
+  const outputArray = []
   for (let [key, value] of Object.entries(output)) {
     outputArray[parseInt(key)] = value
   }
@@ -194,7 +194,7 @@ export async function enrichSearchContext(
   inputs = {},
   helpers = true
 ): Promise<Record<string, any>> {
-  const enrichedQuery: Record<string, any> = {}
+  const enrichedQuery: Record<string, unknown> = {}
   if (!fields || !inputs) {
     return enrichedQuery
   }
