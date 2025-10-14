@@ -168,6 +168,9 @@
     const childIndex: number | undefined = lastHop?.stepIdx
     if (!parentLoopId || !Number.isInteger(childIndex)) return false
 
+    // If this step is inside a branch lane, don't cascade delete
+    if (Number.isInteger(lastHop.branchIdx)) return false
+
     const loopRef = $selectedAutomation?.blockRefs?.[parentLoopId]
     const loopNode = automationStore.actions.getBlockByRef(automation, loopRef)
     if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
