@@ -108,7 +108,7 @@
       type: ResourceType.WORKSPACE_APP,
     },
     [ResourceType.TABLE]: {
-      displayName: "Tables",
+      displayName: "BB tables",
       data: $tables.list
         .filter(
           t =>
