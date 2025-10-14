@@ -7,12 +7,11 @@ import {
   Table,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../constants"
-import { getRowParams } from "../../db/utils"
 
 export class AttachmentCleanup {
   static async coreCleanup(
     fileListFn: () => string[] | Promise<string[]>,
-    opts: { tableId?: string; schema?: Table["schema"] } = {}
+    opts: { tableId?: string; schema?: Table["schema"]; rowId?: string } = {}
   ): Promise<void> {
     let files = await Promise.resolve(fileListFn())
     if (files.length === 0) {
@@ -24,7 +23,11 @@ export class AttachmentCleanup {
       const prodAppId = dbCore.getProdWorkspaceID(appId!)
       const exists = await dbCore.dbExists(prodAppId)
       if (exists) {
+        if (!opts.rowId) {
+          return
+        }
         files = await AttachmentCleanup.excludeFilesUsedInProd(
+          opts.rowId,
           files,
           prodAppId,
           opts
@@ -39,6 +42,7 @@ export class AttachmentCleanup {
   }
 
   private static async excludeFilesUsedInProd(
+    rowId: string,
     files: string[],
     prodAppId: string,
     opts: { tableId?: string; schema?: Table["schema"] }
@@ -49,26 +53,19 @@ export class AttachmentCleanup {
     }
 
     const prodDb = dbCore.getDB(prodAppId)
-    const response = await prodDb.allDocs(
-      getRowParams(tableId, null, {
-        include_docs: true,
-      })
-    )
-
+    const response = await prodDb.tryGet(rowId)
     const usedKeys = new Set<string>()
-    for (const result of response.rows) {
-      if (!result.doc) {
-        continue
-      }
+    if (!response) {
+      return files
+    }
 
-      const row = result.doc as Row
-      for (const [key, column] of Object.entries(schema)) {
-        const columnKeys = AttachmentCleanup.extractAttachmentKeys(
-          column.type,
-          row[key]
-        )
-        columnKeys.forEach(value => usedKeys.add(value))
-      }
+    const row = response as Row
+    for (const [key, column] of Object.entries(schema)) {
+      const columnKeys = AttachmentCleanup.extractAttachmentKeys(
+        column.type,
+        row[key]
+      )
+      columnKeys.forEach(value => usedKeys.add(value))
     }
 
     return files.filter(file => !usedKeys.has(file))
@@ -151,35 +148,35 @@ export class AttachmentCleanup {
   }
 
   static async rowDelete(table: Table, rows: Row[]) {
-    return AttachmentCleanup.coreCleanup(
-      () => {
-        let files: string[] = []
-        for (let [key, schema] of Object.entries(table.schema)) {
-          if (
-            schema.type !== FieldType.ATTACHMENTS &&
-            schema.type !== FieldType.ATTACHMENT_SINGLE &&
-            schema.type !== FieldType.SIGNATURE_SINGLE
-          ) {
-            continue
-          }
-
-          rows.forEach(row => {
+    for (const row of rows) {
+      await AttachmentCleanup.coreCleanup(
+        () => {
+          let files: string[] = []
+          for (let [key, schema] of Object.entries(table.schema)) {
+            if (
+              schema.type !== FieldType.ATTACHMENTS &&
+              schema.type !== FieldType.ATTACHMENT_SINGLE &&
+              schema.type !== FieldType.SIGNATURE_SINGLE
+            ) {
+              continue
+            }
             files = files.concat(
               AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
             )
-          })
+          }
+          return files
+        },
+        {
+          tableId: table._id,
+          schema: table.schema,
+          rowId: row._id,
         }
-        return files
-      },
-      {
-        tableId: table._id,
-        schema: table.schema,
-      }
-    )
+      )
+    }
   }
 
-  static rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
-    return AttachmentCleanup.coreCleanup(
+  static async rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
+    await AttachmentCleanup.coreCleanup(
       () => {
         let files: string[] = []
         for (let [key, schema] of Object.entries(table.schema)) {
@@ -208,6 +205,7 @@ export class AttachmentCleanup {
       {
         tableId: table._id,
         schema: table.schema,
+        rowId: opts.row._id,
       }
     )
   }
