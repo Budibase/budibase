@@ -6,9 +6,9 @@ import * as features from "../../features"
 import * as cloudfront from "../cloudfront"
 import * as objectStore from "../objectStore"
 
-export async function clientLibraryPath(appId: string) {
-  const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.esm.js`
+export async function clientLibraryPath(workspaceId: string) {
+  const oldClient = `${objectStore.sanitizeKey(workspaceId)}/budibase-client.js`
+  const newClient = `${objectStore.sanitizeKey(workspaceId)}/budibase-client.esm.js`
   if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
     return oldClient
   } else {
@@ -19,8 +19,8 @@ export async function clientLibraryPath(appId: string) {
     return newClientExists ? newClient : oldClient
   }
 }
-export function client3rdPartyLibrary(appId: string, file: string) {
-  return `${objectStore.sanitizeKey(appId)}/${file}`
+export function client3rdPartyLibrary(workspaceId: string, file: string) {
+  return `${objectStore.sanitizeKey(workspaceId)}/${file}`
 }
 
 export async function clientLibraryUrl(workspaceId: string, version: string) {

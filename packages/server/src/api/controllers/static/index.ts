@@ -383,17 +383,17 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
+  const workspaceId = context.getWorkspaceId()
 
-  if (!appId) {
-    ctx.throw(400, "No app ID provided - cannot fetch client library.")
+  if (!workspaceId) {
+    ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
   }
 
   const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      await objectStore.clientLibraryPath(appId!)
+      await objectStore.clientLibraryPath(workspaceId!)
     )
     ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
@@ -409,13 +409,16 @@ export const serveClientLibrary = async function (
 export const serve3rdPartyFile = async function (ctx: Ctx) {
   const { file } = ctx.params
 
-  const appId = context.getWorkspaceId()
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
+  }
 
   const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream, contentType } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      objectStore.client3rdPartyLibrary(appId!, file)
+      objectStore.client3rdPartyLibrary(workspaceId, file)
     )
 
     if (contentType) {
