@@ -4,8 +4,6 @@ The `manifest.json` file exports the definitions of all components available in 
 of the client library. The manifest is used by the builder to correctly display components and
 their settings, and know how to correctly interact with them.
 
-
-
 ### Component Definitions
 
 The object key is the name of the component, as exported by `index.js`.
@@ -30,13 +28,12 @@ the setting, so it's important that this field is correct. The valid options are
 - **boolean** - A boolean field
 - **number** - A numeric text field
 - **detailURL** - A URL to a page which displays details about a row.
-Exclusively used for grids which link to row details.
-
+  Exclusively used for grids which link to row details.
 
 The available fields in each setting definition are:
 
 - **type** - the type of field which determines which component the builder will use
-to display the setting
+  to display the setting
 - **key** - the key of this setting in the component
 - **label** - the label displayed in the builder
 - **defaultValue** - the default value of the setting

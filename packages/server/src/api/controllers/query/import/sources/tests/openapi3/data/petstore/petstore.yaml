@@ -58,7 +58,7 @@ paths:
               "$ref": "#/components/schemas/Pet"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/xml:
@@ -67,11 +67,11 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Pet"
-        '400':
+        "400":
           description: Invalid ID supplied
-        '404':
+        "404":
           description: Pet not found
-        '405':
+        "405":
           description: Validation exception
       security:
         - petstore_auth:
@@ -97,7 +97,7 @@ paths:
               "$ref": "#/components/schemas/Pet"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/xml:
@@ -106,7 +106,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Pet"
-        '405':
+        "405":
           description: Invalid input
       security:
         - petstore_auth:
@@ -133,7 +133,7 @@ paths:
               - pending
               - sold
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/xml:
@@ -146,7 +146,7 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Pet"
-        '400':
+        "400":
           description: Invalid status value
       security:
         - petstore_auth:
@@ -157,7 +157,8 @@ paths:
       tags:
         - pet
       summary: Finds Pets by tags
-      description: Multiple tags can be provided with comma separated strings. Use
+      description:
+        Multiple tags can be provided with comma separated strings. Use
         tag1, tag2, tag3 for testing.
       operationId: findPetsByTags
       parameters:
@@ -171,7 +172,7 @@ paths:
             items:
               type: string
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/xml:
@@ -184,7 +185,7 @@ paths:
                 type: array
                 items:
                   "$ref": "#/components/schemas/Pet"
-        '400':
+        "400":
           description: Invalid tag value
       security:
         - petstore_auth:
@@ -206,7 +207,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/xml:
@@ -215,9 +216,9 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Pet"
-        '400':
+        "400":
           description: Invalid ID supplied
-        '404':
+        "404":
           description: Pet not found
       security:
         - api_key: []
@@ -228,7 +229,7 @@ paths:
       tags:
         - pet
       summary: Updates a pet in the store with form data
-      description: ''
+      description: ""
       operationId: updatePetWithForm
       parameters:
         - name: petId
@@ -249,7 +250,7 @@ paths:
           schema:
             type: string
       responses:
-        '405':
+        "405":
           description: Invalid input
       security:
         - petstore_auth:
@@ -259,12 +260,12 @@ paths:
       tags:
         - pet
       summary: Deletes a pet
-      description: ''
+      description: ""
       operationId: deletePet
       parameters:
         - name: api_key
           in: header
-          description: ''
+          description: ""
           required: false
           schema:
             type: string
@@ -276,7 +277,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '400':
+        "400":
           description: Invalid pet value
       security:
         - petstore_auth:
@@ -287,7 +288,7 @@ paths:
       tags:
         - pet
       summary: uploads an image
-      description: ''
+      description: ""
       operationId: uploadFile
       parameters:
         - name: petId
@@ -310,7 +311,7 @@ paths:
               type: string
               format: binary
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -328,7 +329,7 @@ paths:
       description: Returns a map of status codes to quantities
       operationId: getInventory
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -358,20 +359,21 @@ paths:
             schema:
               "$ref": "#/components/schemas/Order"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Order"
-        '405':
+        "405":
           description: Invalid input
   "/store/order/{orderId}":
     get:
       tags:
         - store
       summary: Find purchase order by ID
-      description: For valid response try integer IDs with value <= 5 or > 10. Other
+      description:
+        For valid response try integer IDs with value <= 5 or > 10. Other
         values will generate exceptions.
       operationId: getOrderById
       parameters:
@@ -383,7 +385,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/xml:
@@ -392,15 +394,16 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Order"
-        '400':
+        "400":
           description: Invalid ID supplied
-        '404':
+        "404":
           description: Order not found
     delete:
       tags:
         - store
       summary: Delete purchase order by ID
-      description: For valid response try integer IDs with value < 1000. Anything
+      description:
+        For valid response try integer IDs with value < 1000. Anything
         above 1000 or nonintegers will generate API errors
       operationId: deleteOrder
       parameters:
@@ -412,9 +415,9 @@ paths:
             type: integer
             format: int64
       responses:
-        '400':
+        "400":
           description: Invalid ID supplied
-        '404':
+        "404":
           description: Order not found
   "/user":
     post:
@@ -460,7 +463,7 @@ paths:
               items:
                 "$ref": "#/components/schemas/User"
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/xml:
@@ -476,7 +479,7 @@ paths:
       tags:
         - user
       summary: Logs user into the system
-      description: ''
+      description: ""
       operationId: loginUser
       parameters:
         - name: username
@@ -492,7 +495,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: successful operation
           headers:
             X-Rate-Limit:
@@ -512,14 +515,14 @@ paths:
             application/json:
               schema:
                 type: string
-        '400':
+        "400":
           description: Invalid username/password supplied
   "/user/logout":
     get:
       tags:
         - user
       summary: Logs out current logged in user session
-      description: ''
+      description: ""
       operationId: logoutUser
       parameters: []
       responses:
@@ -530,17 +533,17 @@ paths:
       tags:
         - user
       summary: Get user by user name
-      description: ''
+      description: ""
       operationId: getUserByName
       parameters:
         - name: username
           in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
+          description: "The name that needs to be fetched. Use user1 for testing. "
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/xml:
@@ -549,9 +552,9 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/User"
-        '400':
+        "400":
           description: Invalid username supplied
-        '404':
+        "404":
           description: User not found
     put:
       tags:
@@ -595,9 +598,9 @@ paths:
           schema:
             type: string
       responses:
-        '400':
+        "400":
           description: Invalid username supplied
-        '404':
+        "404":
           description: User not found
 components:
   schemas:
@@ -664,7 +667,7 @@ components:
           example: CA
         zip:
           type: string
-          example: '94301'
+          example: "94301"
       xml:
         name: address
     Category:
@@ -700,10 +703,10 @@ components:
           example: john@email.com
         password:
           type: string
-          example: '12345'
+          example: "12345"
         phone:
           type: string
-          example: '12345'
+          example: "12345"
         userStatus:
           type: integer
           description: User Status
