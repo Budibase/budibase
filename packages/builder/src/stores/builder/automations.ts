@@ -697,7 +697,7 @@ const automationActions = (store: AutomationStore) => ({
         const valid =
           entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
           entry?.inputs?.key &&
-          (id !== selectedNodeId || entry.looped) &&
+          (id !== selectedNodeId || entry.looped || entry.isLoopV2Child) &&
           !cache.has(entry.inputs.key)
 
         // Multiple blocks can reference the same state fields.
