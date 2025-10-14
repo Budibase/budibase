@@ -240,6 +240,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.DUPLICATE_APP]: false,
+  [FeatureFlag.COPY_RESOURCES_BETWEEN_WORKSPACES]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 
