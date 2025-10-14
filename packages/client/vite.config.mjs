@@ -14,8 +14,7 @@ const ignoredWarnings = [
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
-  const bundleVersion = process.env.BUNDLE_VERSION || "esm"
-  const isModuleBuild = bundleVersion === "esm"
+  const isModuleBuild = process.env.BUNDLE_VERSION === "esm"
 
   return {
     server: {
@@ -34,24 +33,7 @@ export default defineConfig(({ mode }) => {
       minify: isProduction,
       rollupOptions: {
         output: {
-          inlineDynamicImports: !isModuleBuild,
-          entryFileNames: chunkInfo => {
-            if (isModuleBuild) {
-              return chunkInfo.isEntry
-                ? "budibase-client.esm.js"
-                : "chunks/[name]-[hash].js"
-            }
-            return "budibase-client.js"
-          },
-          chunkFileNames: isModuleBuild ? "chunks/[name]-[hash].js" : undefined,
-          assetFileNames: isModuleBuild
-            ? assetInfo => {
-                if (assetInfo.name && assetInfo.name.endsWith(".css")) {
-                  return "chunks/[name]-[hash][extname]"
-                }
-                return "assets/[name]-[hash][extname]"
-              }
-            : undefined,
+          chunkFileNames: "chunks/[name]-[hash].js",
         },
       },
     },
