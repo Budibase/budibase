@@ -56,7 +56,7 @@ async function checkAllDeployments(
   return { updated, deployments }
 }
 
-async function storeDeploymentHistory(deployment: any) {
+async function storeDeploymentHistory(deployment: Deployment) {
   const deploymentJSON = deployment.getJSON()
   const db = context.getWorkspaceDB()
 
@@ -85,7 +85,7 @@ async function storeDeploymentHistory(deployment: any) {
   return deployment
 }
 
-async function initDeployedApp(prodAppId: any) {
+async function initDeployedApp(prodAppId: string) {
   const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
