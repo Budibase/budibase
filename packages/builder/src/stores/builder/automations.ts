@@ -1668,11 +1668,11 @@ const automationActions = (store: AutomationStore) => ({
 
     // Compute the index relative to the resolved container
     const insertIdx = atRoot
-      ? Math.max(insertPoint.stepIdx - 1, 0)
+      ? insertPoint.stepIdx - 1
       : insertPoint.stepIdx
 
     // Case 1: user clicked above an existing Branch step — append a branch
-    if (container[insertIdx]?.stepId === AutomationActionStepId.BRANCH) {
+    if (insertIdx >= 0 && container[insertIdx]?.stepId === AutomationActionStepId.BRANCH) {
       const branchNode = container[insertIdx] as BranchStep
       const branches = branchNode.inputs.branches
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
