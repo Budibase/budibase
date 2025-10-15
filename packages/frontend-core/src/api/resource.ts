@@ -1,23 +1,35 @@
-import { ResourceUsageRequest, ResourceUsageResponse } from "@budibase/types"
+import {
+  DuplicateResourceToWorkspaceRequest,
+  DuplicateResourceToWorkspaceResponse,
+  ResourceDependenciesResponse,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ResourceEndpoints {
-  searchForUsage: (body: {
-    automationIds?: string[]
-    workspaceAppIds?: string[]
-  }) => Promise<ResourceUsageResponse>
+  getResourcesInfo: () => Promise<ResourceDependenciesResponse>
+  duplicateResourceToWorkspace: (
+    request: DuplicateResourceToWorkspaceRequest
+  ) => Promise<DuplicateResourceToWorkspaceResponse>
 }
 
 export const buildResourceEndpoints = (
   API: BaseAPIClient
 ): ResourceEndpoints => ({
-  searchForUsage: async (body: {
-    automationIds?: string[]
-    workspaceAppIds?: string[]
-  }) => {
-    return await API.post<ResourceUsageRequest, ResourceUsageResponse>({
-      url: `/api/resources/usage`,
-      body,
+  getResourcesInfo: async () => {
+    return await API.get<ResourceDependenciesResponse>({
+      url: `/api/resources`,
+    })
+  },
+
+  duplicateResourceToWorkspace: async (
+    request: DuplicateResourceToWorkspaceRequest
+  ) => {
+    return await API.post<
+      DuplicateResourceToWorkspaceRequest,
+      DuplicateResourceToWorkspaceResponse
+    >({
+      url: `/api/resources/duplicate`,
+      body: request,
     })
   },
 })

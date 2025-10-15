@@ -842,13 +842,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "TableSelectColumn",
+            "barIcon": "rows-plus-bottom",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "TableSelectRow",
+            "barIcon": "columns-plus-right",
             "barTitle": "Row layout"
           }
         ],
@@ -8377,6 +8377,12 @@
       },
       {
         "type": "boolean",
+        "label": "Workspace users",
+        "key": "workspaceUsersOnly",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -8490,6 +8496,12 @@
         "label": "Search",
         "key": "autocomplete",
         "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Workspace users",
+        "key": "workspaceUsersOnly",
+        "defaultValue": false
       },
       {
         "type": "boolean",

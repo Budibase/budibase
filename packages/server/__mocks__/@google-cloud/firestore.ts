@@ -1,6 +1,7 @@
+// @ts-nocheck
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 module FirebaseMock {
-  const firebase: any = {}
+  const firebase = {}
 
   firebase.Firestore = function () {
     this.get = jest.fn(() => [

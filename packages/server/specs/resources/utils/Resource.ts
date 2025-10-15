@@ -1,9 +1,11 @@
+// any is required as the real examples are very deeply nested
 type Example = {
   [key: string]: {
     [key: string]: any
   }
 }
 
+// any is required as the real schema are very deeply nested
 type Schema = {
   [key: string]: {
     [key: string]: any
