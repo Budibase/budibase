@@ -243,13 +243,16 @@
       >
         Delete
       </ActionButton>
-      {#if $memoBlock && !isBranchStep($memoBlock) && !blockRef?.isLoopV2Child}
+      {#if $memoBlock && !isBranchStep($memoBlock) && !isLoopV2Step($memoBlock) && !blockRef?.isLoopV2Child}
         <ActionButton
           quiet
           noPadding
           icon="copy"
           on:click={async () => {
             if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
+              return
+            }
+            if (isLoopV2Step($memoBlock)) {
               return
             }
             // Deep-duplicate the selected step and re-id any nested children

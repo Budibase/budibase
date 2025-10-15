@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from "svelte"
+  import { getContext, onDestroy, onMount } from "svelte"
   import { type Writable } from "svelte/store"
   import { generate } from "shortid"
   import type { DragView } from "./FlowCanvas/FlowChartDnD"
@@ -10,7 +10,7 @@
   export let width: number | undefined = undefined
   export let height: number | undefined = undefined
 
-  let dropEle: HTMLDivElement
+  let dropEle: HTMLDivElement | null = null
   let dzid = generate()
 
   const view = getContext<Writable<DragView>>("draggableView")
@@ -24,12 +24,20 @@
           ...(state.dropzones || {}),
           [dzid]: {
             get dims() {
-              return dropEle.getBoundingClientRect()
+              return dropEle ? dropEle.getBoundingClientRect() : new DOMRect()
             },
             path,
           },
         },
       }
+    })
+  })
+
+  onDestroy(() => {
+    view.update((state: DragView) => {
+      const { [dzid]: _removed, ...remaining } = state.dropzones
+      const droptarget = state.droptarget === dzid ? null : state.droptarget
+      return { ...state, dropzones: remaining, droptarget }
     })
   })
 </script>
