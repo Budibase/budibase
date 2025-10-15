@@ -70,6 +70,20 @@ const computeLaneCenters = (
   )
 }
 
+const resolveBlockPath = (
+  block: FlowBlockContext | undefined,
+  deps: GraphBuildDeps
+): FlowBlockPath | undefined => {
+  if (!block) {
+    return undefined
+  }
+  if ("branchNode" in block && block.branchNode) {
+    return block.pathTo
+  }
+  const ref = block?.id ? deps.blockRefs?.[block.id] : undefined
+  return (ref?.pathTo as FlowBlockPath | undefined) || undefined
+}
+
 const pushAnchor = (
   id: string,
   y: number,
@@ -81,7 +95,7 @@ const pushAnchor = (
 
 interface PlaceBranchClusterArgs {
   step: BranchStep
-  source: { id: string; block: FlowBlockContext; pathTo?: BlockPath[] }
+  source: { id: string; block: FlowBlockContext; pathTo?: FlowBlockPath }
   coords: { y: number }
   deps: GraphBuildDeps
   mode: BranchMode
@@ -174,7 +188,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
       {
         branchIdx: bIdx,
         branchStepId: baseId,
-        stepIdx: childSteps.length - 1,
+        stepIdx: -1,
       },
     ]
     const branchBlockRef: BranchFlowContext = {
@@ -201,14 +215,19 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
         : coords.y + deps.ySpacing
       if (!chainResult?.branched) {
         const terminalId = `anchor-${chainResult ? chainResult.lastNodeId : branchNodeId}`
+        const terminalBlock = chainResult
+          ? chainResult.lastNodeBlock
+          : branchBlockRef
+        const terminalPath = resolveBlockPath(terminalBlock, deps)
         pushAnchor(terminalId, bottomY, deps)
         deps.newEdges.push(
           edgeAddItem(
             chainResult ? chainResult.lastNodeId : branchNodeId,
             terminalId,
             {
-              block: chainResult ? chainResult.lastNodeBlock : branchBlockRef,
+              block: terminalBlock,
               direction: deps.direction,
+              ...(terminalPath ? { pathTo: terminalPath } : {}),
             }
           )
         )
@@ -234,10 +253,12 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
             y: laneY,
           })
         )
+        const prevPath = resolveBlockPath(prevBlock, deps)
         deps.newEdges.push(
           edgeAddItem(prevId, child.id, {
             block: prevBlock,
             direction: internalDir,
+            ...(prevPath ? { pathTo: prevPath } : {}),
           })
         )
         prevId = child.id
@@ -253,10 +274,12 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           y: anchorY,
         })
       )
+      const anchorSourcePath = resolveBlockPath(prevBlock, deps)
       deps.newEdges.push(
         edgeAddItem(prevId, anchorId, {
           block: prevBlock,
           direction: internalDir,
+          ...(anchorSourcePath ? { pathTo: anchorSourcePath } : {}),
         })
       )
       const spacing =
@@ -306,10 +329,12 @@ export const renderChain = (
     if (isLoopV2 && "schema" in step) {
       const pos = { x: baseX, y: currentY }
       const loopResult = renderLoopV2Container(step, pos.x, pos.y, deps)
+      const sourcePath = resolveBlockPath(lastNodeBlock, deps)
       deps.newEdges.push(
         edgeAddItem(lastNodeId, step.id, {
           block: lastNodeBlock,
           direction: deps.direction,
+          ...(sourcePath ? { pathTo: sourcePath } : {}),
         })
       )
       lastNodeId = step.id
@@ -324,10 +349,12 @@ export const renderChain = (
         y: currentY,
       })
     )
+    const sourcePath = resolveBlockPath(lastNodeBlock, deps)
     deps.newEdges.push(
       edgeAddItem(lastNodeId, step.id, {
         block: lastNodeBlock,
         direction: deps.direction,
+        ...(sourcePath ? { pathTo: sourcePath } : {}),
       })
     )
     lastNodeId = step.id
@@ -348,7 +375,11 @@ export const renderBranches = (
 ): number => {
   const result = placeBranchCluster({
     step: branchStep as BranchStep,
-    source: { id: sourceNodeId, block: sourceBlock },
+    source: {
+      id: sourceNodeId,
+      block: sourceBlock,
+      pathTo: resolveBlockPath(sourceBlock, deps),
+    },
     coords: { y: startY },
     deps,
     mode: BranchMode.TOPLEVEL,
@@ -489,7 +520,11 @@ export const renderLoopV2Container = (
     } else {
       placeBranchCluster({
         step: child,
-        source: { id: child.id, block: child },
+        source: {
+          id: child.id,
+          block: child,
+          pathTo: resolveBlockPath(child, deps),
+        },
         coords: { y: innerY },
         deps,
         mode: BranchMode.SUBFLOW,

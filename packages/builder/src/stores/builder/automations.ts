@@ -296,10 +296,46 @@ const automationActions = (store: AutomationStore) => ({
     let offsetStepIdx = true
     // If dropping in a branch-step dropzone you need to find
     // the updated parent step route then add the branch details again
-    if (pathEnd?.branchStepId) {
+    if (pathEnd?.branchStepId && !pathEnd?.id) {
       const branchStepRef = newRefs[pathEnd.branchStepId]
+      if (!branchStepRef?.pathTo) {
+        return
+      }
+
+      const branchStep = store.actions.getBlockByRef(
+        newAutomation,
+        branchStepRef
+      )
+
+      let insertIdx = 0
+      const branchIdx = pathEnd.branchIdx
+      if (
+        Number.isInteger(branchIdx) &&
+        branchStep &&
+        isBranchStep(branchStep)
+      ) {
+        const branchDef = branchStep.inputs?.branches?.[branchIdx]
+        const branchId = branchDef?.id
+        const children = branchId
+          ? branchStep.inputs?.children?.[branchId] || []
+          : []
+        if (typeof pathEnd.stepIdx === "number") {
+          if (pathEnd.stepIdx < 0) {
+            insertIdx = 0
+          } else {
+            insertIdx = Math.min(pathEnd.stepIdx + 1, children.length)
+          }
+        } else {
+          insertIdx = children.length
+        }
+      }
+
       finalPath = cloneDeep(branchStepRef.pathTo)
-      finalPath.push(cloneDeep(pathEnd))
+      finalPath.push({
+        branchIdx: pathEnd.branchIdx,
+        branchStepId: pathEnd.branchStepId,
+        stepIdx: insertIdx,
+      } as any)
       offsetStepIdx = false
     } else {
       // Place the target 1 after the drop

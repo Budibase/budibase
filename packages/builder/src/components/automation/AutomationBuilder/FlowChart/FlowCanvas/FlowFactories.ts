@@ -3,6 +3,7 @@ import type {
   BaseEdgeData,
   BranchEdgeData,
   FlowBlockContext,
+  FlowBlockPath,
   LoopEdgeData,
   StepNodeData,
   AutomationBlock,
@@ -82,7 +83,7 @@ export const edgeAddItem = (
   ctx: {
     block: FlowBlockContext
     direction?: LayoutDirection
-    pathTo?: BlockPath[]
+    pathTo?: FlowBlockPath
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
@@ -109,7 +110,7 @@ export const edgeBranchAddItem = (
     branchIdx: number
     branchesCount: number
     isPrimaryEdge: boolean
-    pathTo?: BlockPath[]
+    pathTo?: FlowBlockPath
     isSubflowEdge?: boolean
     loopStepId?: string
     loopChildInsertIndex?: number
