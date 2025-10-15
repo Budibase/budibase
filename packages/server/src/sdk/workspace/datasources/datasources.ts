@@ -21,7 +21,6 @@ import {
   DocumentType,
   generateDatasourceID,
   getDatasourceParams,
-  getDatasourcePlusParams,
   getTableParams,
 } from "../../../db/utils"
 import {
@@ -304,7 +303,7 @@ export async function getExternalDatasources(): Promise<Datasource[]> {
   const db = context.getWorkspaceDB()
 
   let dsResponse = await db.allDocs<Datasource>(
-    getDatasourcePlusParams(undefined, {
+    getDatasourceParams(undefined, {
       include_docs: true,
     })
   )
