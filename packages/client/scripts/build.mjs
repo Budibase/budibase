@@ -1,18 +1,11 @@
 #!/usr/bin/env node
 
-import { rmSync } from "fs"
 import { build } from "vite"
 
 const isWatch = process.argv.includes("--watch")
 const isDev = process.argv.includes("--dev")
 
 async function buildAll() {
-  try {
-    rmSync("dist", { recursive: true, force: true })
-  } catch (e) {
-    // Directory might not exist
-  }
-
   const config = {
     build: {
       watch: isWatch ? {} : false,
