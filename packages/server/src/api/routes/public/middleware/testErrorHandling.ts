@@ -6,7 +6,7 @@ export default () => {
     throw new Error("This middleware is only for testing")
   }
 
-  return async (ctx: Ctx, next: any) => {
+  return async (ctx: Ctx, next: () => Promise<void>) => {
     try {
       await next()
     } catch (err: any) {

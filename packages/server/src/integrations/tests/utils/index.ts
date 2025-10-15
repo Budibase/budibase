@@ -1,16 +1,16 @@
-import "./images"
-import { Datasource, SourceName } from "@budibase/types"
-import * as postgres from "./postgres"
-import * as mongodb from "./mongodb"
-import * as mysql from "./mysql"
-import * as mssql from "./mssql"
-import * as mariadb from "./mariadb"
-import * as oracle from "./oracle"
-import * as elasticsearch from "./elasticsearch"
-import * as dynamodb from "./dynamodb"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import { Datasource, SourceName } from "@budibase/types"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as dynamodb from "./dynamodb"
+import * as elasticsearch from "./elasticsearch"
+import "./images"
+import * as mariadb from "./mariadb"
+import * as mongodb from "./mongodb"
+import * as mssql from "./mssql"
+import * as mysql from "./mysql"
+import * as oracle from "./oracle"
+import * as postgres from "./postgres"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 
@@ -169,6 +169,7 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
       DatabaseName.MARIADB,
       DatabaseName.MYSQL,
       DatabaseName.POSTGRES,
+      DatabaseName.POSTGRES_LEGACY,
       DatabaseName.SQL_SERVER,
       DatabaseName.ORACLE,
     ].includes(dbName),

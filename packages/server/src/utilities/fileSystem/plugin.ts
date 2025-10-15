@@ -1,4 +1,4 @@
-import { Plugin, PluginUpload } from "@budibase/types"
+import { Package, Plugin, PluginSchema, PluginUpload } from "@budibase/types"
 import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
@@ -11,8 +11,8 @@ const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
 export const getPluginMetadata = async (
   path: string
 ): Promise<PluginUpload> => {
-  let pkg: any
-  let schema: any
+  let pkg: Package
+  let schema: PluginSchema
   try {
     pkg = JSON.parse(fs.readFileSync(join(path, "package.json"), "utf8"))
     schema = JSON.parse(fs.readFileSync(join(path, "schema.json"), "utf8"))

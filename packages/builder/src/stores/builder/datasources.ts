@@ -1,22 +1,22 @@
-import { derived, get, Readable, Writable } from "svelte/store"
-import {
-  DEFAULT_BB_DATASOURCE_ID,
-  BUDIBASE_INTERNAL_DB_ID,
-} from "@/constants/backend"
-import { tables } from "./tables"
-import { queries } from "./queries"
 import { API } from "@/api"
+import { TableNames } from "@/constants"
 import {
-  DatasourceFeature,
+  BUDIBASE_INTERNAL_DB_ID,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "@/constants/backend"
+import { DerivedBudiStore } from "@/stores/BudiStore"
+import {
   Datasource,
-  Table,
+  DatasourceFeature,
   Integration,
-  UIIntegration,
   SourceName,
+  Table,
+  UIIntegration,
   UIInternalDatasource,
 } from "@budibase/types"
-import { TableNames } from "@/constants"
-import { DerivedBudiStore } from "@/stores/BudiStore"
+import { derived, get, Readable, Writable } from "svelte/store"
+import { queries } from "./queries"
+import { tables } from "./tables"
 
 class TableImportError extends Error {
   errors: Record<string, string>

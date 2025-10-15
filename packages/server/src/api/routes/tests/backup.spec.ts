@@ -6,6 +6,7 @@ import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import tar from "tar"
 import tk from "timekeeper"
+import { withEnv } from "../../../environment"
 import sdk from "../../../sdk"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -15,14 +16,14 @@ mocks.licenses.useBackups()
 describe("/backups", () => {
   let config = setup.getConfig()
 
-  afterAll(async () => {
+  afterAll(() => {
     setup.afterAll()
   })
 
   beforeEach(async () => {
     tk.reset()
     jest.clearAllMocks()
-    await config.init()
+    await withEnv({ UPLOAD_APPS_FILES_ON_TEST: "1" }, () => config.init())
   })
 
   describe("/api/backups/export", () => {
