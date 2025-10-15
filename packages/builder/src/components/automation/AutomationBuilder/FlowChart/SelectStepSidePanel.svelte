@@ -52,12 +52,6 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  // If adding inside a Loop V2 subflow, disallow Branch, Collect and any Loop steps
-  // Only treat this as a loop-subflow insertion when the edge/toolbar explicitly
-  // marks it (i.e. when we are inserting between loop children or at the exit
-  // anchor). Being merely a child of a loop (isLoopV2Child) should not switch
-  // to the subflow insertion path, otherwise clicks inside branch lanes would
-  // incorrectly try to append to the loop's top-level children array.
   $: insideLoopV2 = block?.insertIntoLoopV2
   $: loopStepId = block?.loopStepId || block?.id
   $: loopChildInsertIndex =
@@ -78,6 +72,16 @@
     if (!block?.branchNode) return undefined
 
     const branchContext = block as BranchFlowContext
+    if (branchContext.pathTo && branchContext.pathTo.length >= 2) {
+      const lastHop = branchContext.pathTo[branchContext.pathTo.length - 1]
+      if (
+        lastHop.branchStepId === branchContext.branchStepId &&
+        typeof lastHop.stepIdx === "number"
+      ) {
+        return branchContext.pathTo
+      }
+    }
+
     const automationData = $selectedAutomation?.data
     const branchRef =
       $selectedAutomation.blockRefs?.[branchContext.branchStepId]

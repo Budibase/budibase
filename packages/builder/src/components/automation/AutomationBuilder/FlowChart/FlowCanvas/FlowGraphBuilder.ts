@@ -7,7 +7,6 @@ import {
   type LayoutDirection,
   type LoopV2Step,
   BlockRef,
-  BlockPath,
 } from "@budibase/types"
 import type { AutomationBlock, LoopV2NodeData } from "@/types/automations"
 import type {
