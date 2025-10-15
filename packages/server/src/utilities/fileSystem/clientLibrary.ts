@@ -106,40 +106,32 @@ export async function updateClientLibrary(appId: string) {
   }
 
   // Upload latest manifest and client library
-  const manifestUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json"),
-    stream: fs.createReadStream(manifest),
-  })
-  const clientUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js"),
-    stream: fs.createReadStream(client),
-  })
-  const clientNewUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.esm.js"),
-    stream: fs.createReadStream(clientNew),
-  })
-  let depUploads = []
-  for (const dependency of dependencies) {
-    depUploads.push(
-      objectStore.streamUpload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: join(appId, "chunks", path.basename(dependency)),
-        stream: fs.createReadStream(dependency),
-      })
-    )
-  }
+  const files = [
+    {
+      filename: join(appId, "manifest.json"),
+      stream: fs.createReadStream(manifest),
+    },
+    {
+      filename: join(appId, "budibase-client.js"),
+      stream: fs.createReadStream(client),
+    },
+    {
+      filename: join(appId, "budibase-client.esm.js"),
+      stream: fs.createReadStream(clientNew),
+    },
+    ...dependencies.map(dependency => ({
+      filename: join(appId, "chunks", path.basename(dependency)),
+      stream: fs.createReadStream(dependency),
+    })),
+  ]
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
-
   await Promise.all([
-    manifestUpload,
-    clientUpload,
+    objectStore.streamUploadMany({
+      bucket: ObjectStoreBuckets.APPS,
+      files,
+    }),
     manifestSrc,
-    ...depUploads,
-    clientNewUpload,
   ])
 
   return JSON.parse(await manifestSrc)
