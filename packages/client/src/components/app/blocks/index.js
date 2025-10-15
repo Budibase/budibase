@@ -1,6 +1,6 @@
-export { default as cardsblock } from "./CardsBlock.svelte"
-export { default as repeaterblock } from "./RepeaterBlock.svelte"
-export { default as formblock } from "./form/FormBlock.svelte"
-export { default as chartblock } from "./ChartBlock.svelte"
-export { default as rowexplorer } from "./RowExplorer.svelte"
-export { default as multistepformblock } from "./MultiStepFormblock.svelte"
+export const cardsblock = () => import("./CardsBlock.svelte")
+export const repeaterblock = () => import("./RepeaterBlock.svelte")
+export const formblock = () => import("./form/FormBlock.svelte")
+export const chartblock = () => import("./ChartBlock.svelte")
+export const rowexplorer = () => import("./RowExplorer.svelte")
+export const multistepformblock = () => import("./MultiStepFormblock.svelte")

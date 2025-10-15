@@ -1,2 +1,2 @@
-export { default as pdf } from "./PDF.svelte"
-export { default as pdftable } from "./PDFTable.svelte"
+export const pdf = () => import("./PDF.svelte")
+export const pdftable = () => import("./PDFTable.svelte")
