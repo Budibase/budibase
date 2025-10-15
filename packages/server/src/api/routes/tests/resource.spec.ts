@@ -300,6 +300,7 @@ describe("/api/resources/usage", () => {
         typeof config.api.resource.duplicateResourceToWorkspace
       >[1]
     ) => {
+      tk.freeze(new Date())
       return await config.api.resource.duplicateResourceToWorkspace(
         {
           resources,
@@ -330,6 +331,12 @@ describe("/api/resources/usage", () => {
     ) => {
       const sortById = (a: AnyDocument, b: AnyDocument) =>
         a._id!.localeCompare(b._id!)
+      const copiedMetadata = (doc: AnyDocument) => ({
+        ...doc,
+        _rev: expect.stringMatching(/^1-\w+/),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
 
       await config.withHeaders({ [Header.APP_ID]: workspaceId }, async () => {
         const { workspaceApps: resultingWorkspaceApps } =
@@ -375,8 +382,8 @@ describe("/api/resources/usage", () => {
         )
 
         const { automations } = await config.api.automation.fetch()
-        expect(automations.map(automation => automation._id!).sort()).toEqual(
-          (expected.automations || []).map(a => a._id!).sort()
+        expect(automations.sort(sortById)).toEqual(
+          (expected.automations || []).map(copiedMetadata).sort(sortById)
         )
 
         for (const rowActionExpectation of expected.rowActions || []) {
@@ -634,7 +641,9 @@ describe("/api/resources/usage", () => {
         apps: [app.app],
         screens: app.screens,
         tables: [table],
-        automations: [rowActionAutomation],
+        automations: [
+          { ...rowActionAutomation, appId: newWorkspace.appId, disabled: true },
+        ],
         rowActions: [
           {
             tableId: table._id!,
@@ -723,9 +732,8 @@ describe("/api/resources/usage", () => {
         name: `Destination ${generator.natural()}`,
       })
 
-      const table = await createInternalTable()
       const { automation } = await createAutomationBuilder(config)
-        .onRowSaved({ tableId: table._id! })
+        .onCron({ cron: "* * * * *" })
         .save({ disabled: false })
 
       expect(automation.disabled).toBe(false)
@@ -733,15 +741,11 @@ describe("/api/resources/usage", () => {
       const resourcesToCopy = await collectDependantResourceIds(automation._id!)
       await duplicateResources(resourcesToCopy, newWorkspace.appId)
 
-      await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
-        async () => {
-          const duplicatedAutomation = await config.api.automation.get(
-            automation._id!
-          )
-          expect(duplicatedAutomation.disabled).toBe(true)
-        }
-      )
+      await validateWorkspace(newWorkspace.appId, {
+        automations: [
+          { ...automation, disabled: true, appId: newWorkspace.appId },
+        ],
+      })
     })
 
     it("disables duplicated apps in the destination workspace", async () => {
@@ -749,7 +753,7 @@ describe("/api/resources/usage", () => {
         name: `Destination ${generator.natural()}`,
       })
 
-      const { app } = await createApp(basicScreen())
+      const { app, screens } = await createApp(basicScreen())
       const { isDefault, ...appToUpdate } = app
       expect(
         (
@@ -764,13 +768,10 @@ describe("/api/resources/usage", () => {
 
       await duplicateResources(resourcesToCopy, newWorkspace.appId)
 
-      await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
-        async () => {
-          const duplicatedApp = await config.api.workspaceApp.find(app._id)
-          expect(duplicatedApp.disabled).toBe(true)
-        }
-      )
+      await validateWorkspace(newWorkspace.appId, {
+        apps: [{ ...app, disabled: true }],
+        screens,
+      })
     })
 
     it("does not throw when copying the same resources twice", async () => {

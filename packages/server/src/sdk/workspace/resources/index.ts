@@ -296,8 +296,11 @@ export async function duplicateResourcesToWorkspace(
       delete sanitizedDoc._rev
       delete sanitizedDoc.createdAt
       delete sanitizedDoc.updatedAt
-      if (isAutomation(doc) || isWorkspaceApp(doc)) {
+      if (isAutomation(sanitizedDoc) || isWorkspaceApp(sanitizedDoc)) {
         sanitizedDoc.disabled = true
+      }
+      if (isAutomation(sanitizedDoc)) {
+        sanitizedDoc.appId = toWorkspace
       }
       return sanitizedDoc
     })
