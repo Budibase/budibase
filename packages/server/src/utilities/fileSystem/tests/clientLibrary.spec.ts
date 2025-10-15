@@ -25,6 +25,7 @@ jest.mock("fs", () => ({
   promises: {
     readFile: jest.fn(),
   },
+  readdirSync: jest.fn(),
 }))
 
 jest.mock("../../../environment", () => ({
@@ -161,9 +162,17 @@ describe("clientLibrary", () => {
       mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
       mockedFs.createReadStream.mockReturnValueOnce("stream5" as any)
 
+      mockedFs.readdirSync.mockReturnValueOnce([
+        "chunk1.js",
+        "notJs.txt",
+        "chunk2.js",
+      ] as any)
+
       mockedEnv.isDev.mockReturnValue(isDev)
 
       const result = await updateClientLibrary(testAppId)
+
+      expect(mockedFs.readdirSync).toHaveBeenCalledTimes(1)
 
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(5)
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
@@ -178,17 +187,17 @@ describe("clientLibrary", () => {
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/budibase-client.new.js",
+        filename: "app_123/budibase-client.esm.js",
         stream: "stream3",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/_dependencies/apexcharts.js",
+        filename: "app_123/chunks/chunk1.js",
         stream: "stream4",
       })
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/_dependencies/html5-qrcode.js",
+        filename: "app_123/chunks/chunk2.js",
         stream: "stream5",
       })
       expect(result).toEqual({ version: "1.0.0" })
