@@ -801,5 +801,30 @@ describe("/api/resources/usage", () => {
         status: 204,
       })
     })
+
+    it("does not modify the docs on the source workspace", async () => {
+      const basicApp = await createApp(basicScreen())
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const resourcesToCopy = await collectDependantResourceIds(basicApp.id)
+      expect(resourcesToCopy).toEqual([
+        basicApp.id,
+        ...basicApp.screens.map(s => s._id!),
+      ])
+
+      const workspaceDb = db.getDB(config.getDevWorkspaceId())
+      const prevDocs = await workspaceDb.allDocs({
+        include_docs: true,
+      })
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      const latestDocs = await workspaceDb.allDocs({
+        include_docs: true,
+      })
+      expect(latestDocs).toEqual(prevDocs)
+    })
   })
 })
