@@ -258,7 +258,7 @@
     <p class="workspace-selection-label">Select the destination workspace:</p>
     <Select
       bind:value={toWorkspaceId}
-      options={otherWorkspaces}
+      options={otherWorkspaces.sort((a, b) => a.name.localeCompare(b.name))}
       getOptionLabel={w => w.name.trim()}
       getOptionValue={w => w.devId}
       getOptionIcon={() => undefined}
