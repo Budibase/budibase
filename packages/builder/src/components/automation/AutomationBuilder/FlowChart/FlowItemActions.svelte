@@ -50,6 +50,20 @@
       size="S"
     />
   {/if}
+  {#if canShowAddBranch}
+    <Icon
+      hoverable
+      name="git-branch"
+      weight="fill"
+      on:click={() => {
+        dispatch("addBranch")
+      }}
+      tooltipType={TooltipType.Info}
+      tooltipPosition={TooltipPosition.Right}
+      tooltip={"Add branch"}
+      size="S"
+    />
+  {/if}
   <Icon
     hoverable
     name="plus-circle"
@@ -62,20 +76,6 @@
     tooltip={"Add a step"}
     size="S"
   />
-  {#if canShowAddBranch}
-    <Icon
-      hoverable
-      name="copy"
-      weight="fill"
-      on:click={() => {
-        dispatch("addBranch")
-      }}
-      tooltipType={TooltipType.Info}
-      tooltipPosition={TooltipPosition.Right}
-      tooltip={"Add branch"}
-      size="S"
-    />
-  {/if}
 </div>
 
 <style>
