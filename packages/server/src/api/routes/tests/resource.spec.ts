@@ -1,4 +1,4 @@
-import { events } from "@budibase/backend-core"
+import { db, events } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -332,6 +332,7 @@ describe("/api/resources/usage", () => {
       const sortById = (a: AnyDocument, b: AnyDocument) =>
         a._id!.localeCompare(b._id!)
       const copiedMetadata = (doc: AnyDocument) => ({
+        fromWorkspace: config.getDevWorkspaceId(),
         ...doc,
         _rev: expect.stringMatching(/^1-\w+/),
         createdAt: new Date().toISOString(),
@@ -347,15 +348,10 @@ describe("/api/resources/usage", () => {
         )
 
         const screens = await config.api.screen.list()
-        const normaliseScreen = (screen: Screen) => ({
-          _id: screen._id,
-          name: screen.name,
-          workspaceAppId: screen.workspaceAppId,
-        })
-        expect(screens.sort(sortById).map(normaliseScreen)).toEqual(
+        expect(screens.sort(sortById).map(copiedMetadata)).toEqual(
           (expected.screens || [])
-            .sort((a, b) => a._id!.localeCompare(b._id!))
-            .map(normaliseScreen)
+            .sort(sortById)
+            .map(s => copiedMetadata({ ...s, pluginAdded: undefined }))
         )
 
         const tables = await config.api.table.fetch()
@@ -377,13 +373,30 @@ describe("/api/resources/usage", () => {
         expect(actualDatasourceIds).toEqual(expectedDatasourceIds)
 
         const queries = await config.api.query.fetch()
-        expect(queries.map(query => query._id!).sort()).toEqual(
-          (expected.queries || []).map(q => q._id!).sort()
+        expect(queries.sort()).toEqual(
+          (expected.queries || []).map(copiedMetadata).sort()
         )
 
         const { automations } = await config.api.automation.fetch()
         expect(automations.sort(sortById)).toEqual(
-          (expected.automations || []).map(copiedMetadata).sort(sortById)
+          (expected.automations || [])
+            // Automation sdk trims fields such as fromWorkspace
+            .map(a => copiedMetadata({ ...a, fromWorkspace: undefined }))
+            .sort(sortById)
+        )
+
+        const workspaceDb = db.getDB(db.getDevWorkspaceID(workspaceId), {
+          skip_setup: true,
+        })
+        expect(
+          await workspaceDb.getMultiple(automations.map(a => a._id!))
+        ).toEqual(
+          automations.map(a =>
+            expect.objectContaining({
+              _id: a._id,
+              fromWorkspace: config.getDevWorkspaceId(),
+            })
+          )
         )
 
         for (const rowActionExpectation of expected.rowActions || []) {
