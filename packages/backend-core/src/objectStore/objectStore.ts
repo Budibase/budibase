@@ -59,6 +59,17 @@ export type StreamUploadParams = BaseUploadParams & {
   stream?: StreamTypes
 }
 
+export type StreamUploadManyParams = {
+  bucket: string
+  files: Array<
+    {
+      filename: string
+      stream: StreamTypes
+    } & Pick<BaseUploadParams, "type" | "extra">
+  >
+  ttl?: number
+}
+
 const CONTENT_TYPE_MAP: any = {
   txt: "text/plain",
   html: "text/html",
@@ -302,6 +313,64 @@ export async function streamUpload({
       ...details,
       ContentLength: headDetails.ContentLength,
     }
+  })
+}
+
+export async function streamUploadMany({
+  bucket: bucketName,
+  files,
+  ttl,
+}: StreamUploadManyParams) {
+  return await tracer.trace("streamUploadMany", async span => {
+    span.addTags({
+      bucketName,
+      ttl,
+      fileCount: files.length,
+    })
+
+    if (!files.length) {
+      return []
+    }
+
+    const bucket = sanitizeBucket(bucketName)
+    const client = ObjectStore()
+    const bucketCreated = await createBucketIfNotExists(client, bucket)
+
+    span.addTags({
+      bucketCreated: bucketCreated.created,
+      bucketExists: bucketCreated.exists,
+    })
+
+    if (ttl && bucketCreated.created) {
+      let ttlConfig = bucketTTLConfig(bucket, ttl)
+      await client.putBucketLifecycleConfiguration(ttlConfig)
+    }
+
+    const uploads = files.map(file => {
+      if (!file.stream) {
+        throw new Error("Stream to upload is invalid/undefined")
+      }
+      const extension = file.filename.split(".").pop()
+      let contentType = file.type
+      if (!contentType) {
+        contentType = extension
+          ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+          : CONTENT_TYPE_MAP.txt
+      }
+
+      const params = {
+        Bucket: bucket,
+        Key: sanitizeKey(file.filename),
+        Body: file.stream,
+        ContentType: contentType,
+        ...(file.extra ?? {}),
+      }
+
+      const upload = new Upload({ client, params })
+      return upload.done()
+    })
+
+    return Promise.all(uploads)
   })
 }
 
