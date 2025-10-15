@@ -1,27 +1,22 @@
 import {
-  ResourceUsageRequest,
-  ResourceUsageResponse,
-  ResourceType,
+  DuplicateResourceToWorkspaceRequest,
+  ResourceDependenciesResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function searchForResourceUsage(
-  ctx: UserCtx<ResourceUsageRequest, ResourceUsageResponse>
+export async function getResourceDependencies(
+  ctx: UserCtx<void, ResourceDependenciesResponse>
 ) {
-  const { workspaceAppIds, automationIds } = ctx.request.body
-
-  if (!workspaceAppIds?.length && !automationIds?.length) {
-    ctx.throw(400, "No workspace apps or automations specified.")
-  }
-
   ctx.body = {
-    resources: await sdk.resources.searchForUsages(
-      [ResourceType.TABLE, ResourceType.DATASOURCE],
-      {
-        automationIds,
-        workspaceAppIds,
-      }
-    ),
+    resources: await sdk.resources.getResourcesInfo(),
   }
+}
+
+export async function duplicateResourceToWorkspace(
+  ctx: UserCtx<DuplicateResourceToWorkspaceRequest, void>
+) {
+  const { toWorkspace, resources } = ctx.request.body
+  await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace)
+  ctx.status = 204
 }

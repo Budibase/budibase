@@ -232,3 +232,10 @@ export type BlockStatus = {
   type: BlockStatusType
   source?: BlockStatusSource
 }
+
+export interface RowAction {
+  id: string
+  name: string
+  tableId: string
+  allowedSources?: string[]
+}
