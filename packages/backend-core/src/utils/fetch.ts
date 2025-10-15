@@ -10,7 +10,7 @@ import { ProxyAgent } from "undici"
  */
 function createProxyDispatcher(options?: {
   rejectUnauthorized?: boolean
-}): ProxyAgent | undefined {
+}): ProxyAgent | boolean {
   const httpProxy =
     process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY
   const httpsProxy =
@@ -18,24 +18,57 @@ function createProxyDispatcher(options?: {
 
   const proxyUrl = httpsProxy || httpProxy
 
-  if (!proxyUrl) {
-    return undefined
+  if (!proxyUrl || !proxyUrl.trim()) {
+    return false
   }
 
+  const trimmedProxyUrl = proxyUrl.trim()
+
+  // Validate URL format
+  try {
+    new URL(trimmedProxyUrl)
+  } catch (error) {
+    console.log("[fetch] Invalid proxy URL format:", proxyUrl)
+    return false
+  }
+
+  const rejectUnauthorized =
+    options?.rejectUnauthorized !== undefined
+      ? options?.rejectUnauthorized
+      : true
+
   console.log("[fetch] Creating ProxyAgent", {
-    proxyUrl,
-    rejectUnauthorized: options?.rejectUnauthorized,
+    proxyUrl: trimmedProxyUrl,
+    rejectUnauthorized,
   })
 
-  return new ProxyAgent({
-    uri: proxyUrl,
+  const proxyConfig: {
+    uri: string
+    requestTls: { rejectUnauthorized?: boolean }
+    proxyTls?: { rejectUnauthorized?: boolean }
+  } = {
+    uri: trimmedProxyUrl,
     requestTls: {
-      rejectUnauthorized: options?.rejectUnauthorized ?? true,
+      rejectUnauthorized,
     },
-  })
+  }
+
+  // Only configure proxyTls if the proxy itself uses HTTPS
+  if (trimmedProxyUrl.startsWith("https://")) {
+    proxyConfig.proxyTls = {
+      rejectUnauthorized,
+    }
+  }
+
+  try {
+    return new ProxyAgent(proxyConfig)
+  } catch (error) {
+    console.log("[fetch] Failed to create ProxyAgent:", error)
+    return false
+  }
 }
 
-let cachedDispatcher: ProxyAgent | undefined | null = null
+let cachedDispatcher: ProxyAgent | boolean | null = null
 
 /**
  * Get or create a cached proxy dispatcher.
@@ -45,14 +78,21 @@ let cachedDispatcher: ProxyAgent | undefined | null = null
  */
 export function getProxyDispatcher(options?: {
   rejectUnauthorized?: boolean
-}): ProxyAgent | undefined {
+}): ProxyAgent | boolean {
   // Don't cache if custom options are provided
   if (options) {
-    return createProxyDispatcher(options)
+    return createProxyDispatcher(options) || false
   }
 
   if (cachedDispatcher === null) {
     cachedDispatcher = createProxyDispatcher()
   }
-  return cachedDispatcher || undefined
+  return cachedDispatcher || false
+}
+
+/**
+ * Reset the cached proxy dispatcher. Used for testing.
+ */
+export function resetProxyDispatcherCache(): void {
+  cachedDispatcher = null
 }
