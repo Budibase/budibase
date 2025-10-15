@@ -718,6 +718,61 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("disables duplicated automations in the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable()
+      const { automation } = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .save({ disabled: false })
+
+      expect(automation.disabled).toBe(false)
+
+      const resourcesToCopy = await collectDependantResourceIds(automation._id!)
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const duplicatedAutomation = await config.api.automation.get(
+            automation._id!
+          )
+          expect(duplicatedAutomation.disabled).toBe(true)
+        }
+      )
+    })
+
+    it("disables duplicated apps in the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const { app } = await createApp(basicScreen())
+      const { isDefault, ...appToUpdate } = app
+      expect(
+        (
+          await config.api.workspaceApp.update({
+            ...appToUpdate,
+            disabled: false,
+          })
+        ).workspaceApp.disabled
+      ).toEqual(false)
+
+      const resourcesToCopy = await collectDependantResourceIds(app._id)
+
+      await duplicateResources(resourcesToCopy, newWorkspace.appId)
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const duplicatedApp = await config.api.workspaceApp.find(app._id)
+          expect(duplicatedApp.disabled).toBe(true)
+        }
+      )
+    })
+
     it("does not throw when copying the same resources twice", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,

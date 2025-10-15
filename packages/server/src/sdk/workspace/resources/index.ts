@@ -226,6 +226,39 @@ async function getDestinationDb(toWorkspace: string) {
   return destinationDb
 }
 
+const resourceTypeIdPrefixes: Record<ResourceType, string> = {
+  [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
+  [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
+  [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
+  [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
+  [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
+  [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
+  [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),
+}
+
+function getResourceType(id: string): ResourceType | undefined {
+  const type = Object.entries(resourceTypeIdPrefixes).find(([_, idPrefix]) =>
+    id.startsWith(idPrefix)
+  )?.[0] as ResourceType | undefined
+  return type
+}
+
+function isAutomation(doc: AnyDocument): doc is Automation {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.AUTOMATION
+}
+
+function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.WORKSPACE_APP
+}
+
 export async function duplicateResourcesToWorkspace(
   resources: string[],
   toWorkspace: string
@@ -263,6 +296,9 @@ export async function duplicateResourcesToWorkspace(
       delete sanitizedDoc._rev
       delete sanitizedDoc.createdAt
       delete sanitizedDoc.updatedAt
+      if (isAutomation(doc) || isWorkspaceApp(doc)) {
+        sanitizedDoc.disabled = true
+      }
       return sanitizedDoc
     })
   )
@@ -274,22 +310,9 @@ export async function duplicateResourcesToWorkspace(
     async () => (await sdk.workspaces.metadata.tryGet())?.name || toWorkspace
   )
 
-  const resourceTypeIdPrefixes: Record<ResourceType, string> = {
-    [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
-    [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
-    [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
-    [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
-    [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
-    [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
-    [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),
-  }
-
   for (const doc of documentToCopy) {
     let name: string, displayType: string
-    const type: ResourceType | "Unknown" =
-      (Object.entries(resourceTypeIdPrefixes).find(([_, idPrefix]) =>
-        doc._id.startsWith(idPrefix)
-      )?.[0] as ResourceType) ?? "Unknown"
+    const type = getResourceType(doc._id)
 
     switch (type) {
       case ResourceType.AUTOMATION:
@@ -320,6 +343,8 @@ export async function duplicateResourcesToWorkspace(
         name = (doc as WorkspaceApp).name
         displayType = "App"
         break
+      case undefined:
+        throw new Error("Resource type could not be infered")
       default:
         throw utils.unreachable(type)
     }
