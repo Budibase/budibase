@@ -318,3 +318,10 @@ export function isAIColumn(column: FieldSchema): column is AIFieldMetadata {
 export function generateRowActionsID(tableId: string) {
   return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
 }
+
+export function extractTableIdFromRowActionsID(rowActionIds: string) {
+  return rowActionIds.replace(
+    new RegExp(`^${DocumentType.ROW_ACTIONS}${SEPARATOR}`),
+    ""
+  )
+}

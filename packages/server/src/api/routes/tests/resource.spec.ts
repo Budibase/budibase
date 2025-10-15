@@ -150,14 +150,14 @@ describe("/api/resources/usage", () => {
             type: ResourceType.TABLE,
           },
           {
-            id: rowAction.automationId,
-            name: "Row action usage",
-            type: ResourceType.AUTOMATION,
-          },
-          {
             id: generateRowActionsID(table._id!),
             name: rowAction.name,
             type: ResourceType.ROW_ACTION,
+          },
+          {
+            id: rowAction.automationId,
+            name: "Row action usage",
+            type: ResourceType.AUTOMATION,
           },
         ],
       })
@@ -187,6 +187,50 @@ describe("/api/resources/usage", () => {
           },
         ],
       })
+    })
+
+    it("should include row actions and their automations when checking a table", async () => {
+      const table = await config.api.table.save(basicTable())
+      const anotherTable = await config.api.table.save(basicTable())
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Table row action",
+      })
+      const rowAction2 = await config.api.rowAction.save(table._id!, {
+        name: "Table row action 2",
+      })
+      const _anotherRowAction = await config.api.rowAction.save(
+        anotherTable._id!,
+        {
+          name: "Table row action 3",
+        }
+      )
+
+      const result = await config.api.resource.getResourceDependencies()
+      const tableDependencies =
+        result.body.resources[table._id!].dependencies ?? []
+
+      expect(tableDependencies).toEqual([
+        {
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+        },
+        {
+          id: generateRowActionsID(table._id!),
+          name: rowAction.name,
+          type: ResourceType.ROW_ACTION,
+        },
+        {
+          id: rowAction.automationId,
+          name: rowAction.name,
+          type: ResourceType.AUTOMATION,
+        },
+        {
+          id: rowAction2.automationId,
+          name: rowAction2.name,
+          type: ResourceType.AUTOMATION,
+        },
+      ])
     })
 
     it("should detect datasource when for rest queries", async () => {

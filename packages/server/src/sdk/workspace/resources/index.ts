@@ -15,6 +15,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
+import { extractTableIdFromRowActionsID } from "../../../db/utils"
 
 export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
@@ -23,28 +24,28 @@ export async function getResourcesInfo(): Promise<
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
-  const baseSearchTargets: {
+  interface BaseSearchTarget {
     id: string
     idToSearch: string
     name: string
     type: ResourceType
     extraDependencies?: {
       id: string
-
       name: string
       type: ResourceType
     }[]
-  }[] = []
+  }
+  const baseSearchTargets: BaseSearchTarget[] = []
 
-  // keep tables as may be used later
   const internalTables = await sdk.tables.getAllInternalTables()
+  const rowActions = await sdk.rowActions.getAll()
+
   baseSearchTargets.push(
     ...internalTables.map(table => ({
       id: table._id!,
       idToSearch: table._id!,
       name: table.name!,
       type: ResourceType.TABLE,
-      doc: table,
     }))
   )
 
@@ -52,57 +53,59 @@ export async function getResourcesInfo(): Promise<
   baseSearchTargets.push(
     ...datasources
       .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
-      .map(datasource => ({
+      .map<BaseSearchTarget>(datasource => ({
         id: datasource._id!,
         idToSearch: datasource._id!,
         name: datasource.name!,
         type: ResourceType.DATASOURCE,
-        doc: datasource,
       }))
   )
 
   baseSearchTargets.push(
-    ...automations.map(automation => ({
+    ...automations.map<BaseSearchTarget>(automation => ({
       id: automation._id!,
       idToSearch: automation._id!,
       name: automation.name!,
       type: ResourceType.AUTOMATION,
-      doc: automation,
     }))
   )
 
   const queries = await sdk.queries.fetch()
   baseSearchTargets.push(
-    ...queries.map(query => ({
+    ...queries.map<BaseSearchTarget>(query => ({
       id: query._id!,
       idToSearch: query._id!,
       name: query.name!,
       type: ResourceType.QUERY,
-      doc: query,
     }))
   )
 
-  const rowActions = await sdk.rowActions.getAll()
   if (rowActions.length) {
     const rowActionNames = await sdk.rowActions.getNames(
       Object.values(rowActions).flatMap(ra => Object.values(ra.actions))
     )
 
     for (const ra of rowActions) {
-      for (const [id, action] of Object.entries(ra.actions)) {
-        baseSearchTargets.push({
-          id: ra._id,
-          idToSearch: id,
-          name: rowActionNames[action.automationId],
-          type: ResourceType.ROW_ACTION,
-          extraDependencies: automations
+      const rowActionAutomations = Object.entries(ra.actions).flatMap(
+        ([_id, action]) =>
+          automations
             .filter(a => a._id === action.automationId)
             .map(a => ({
               id: a._id!,
               name: a.name!,
               type: ResourceType.AUTOMATION,
-            })),
-        })
+            }))
+      )
+      for (const [id, action] of Object.entries(ra.actions)) {
+        for (const idToSearch of [id, extractTableIdFromRowActionsID(ra._id)]) {
+          baseSearchTargets.push({
+            id: ra._id,
+            idToSearch,
+            name: rowActionNames[action.automationId],
+            type: ResourceType.ROW_ACTION,
+            extraDependencies: rowActionAutomations,
+          })
+        }
       }
     }
   }
