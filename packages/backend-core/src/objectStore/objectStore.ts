@@ -321,6 +321,7 @@ export async function streamUploadMany({
   files,
   ttl,
 }: StreamUploadManyParams) {
+  const MAX_CONCURRENCY = 10
   return await tracer.trace("streamUploadMany", async span => {
     span.addTags({
       bucketName,
@@ -346,31 +347,38 @@ export async function streamUploadMany({
       await client.putBucketLifecycleConfiguration(ttlConfig)
     }
 
-    const uploads = files.map(file => {
-      if (!file.stream) {
-        throw new Error("Stream to upload is invalid/undefined")
-      }
-      const extension = file.filename.split(".").pop()
-      let contentType = file.type
-      if (!contentType) {
-        contentType = extension
-          ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-          : CONTENT_TYPE_MAP.txt
-      }
+    const indexedFiles = files.map((file, index) => ({ ...file, index }))
+    const uploadResults = new Array(files.length)
 
-      const params = {
-        Bucket: bucket,
-        Key: sanitizeKey(file.filename),
-        Body: file.stream,
-        ContentType: contentType,
-        ...(file.extra ?? {}),
-      }
+    await utils.parallelForeach(
+      indexedFiles,
+      async file => {
+        if (!file.stream) {
+          throw new Error("Stream to upload is invalid/undefined")
+        }
+        const extension = file.filename.split(".").pop()
+        let contentType = file.type
+        if (!contentType) {
+          contentType = extension
+            ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+            : CONTENT_TYPE_MAP.txt
+        }
 
-      const upload = new Upload({ client, params })
-      return upload.done()
-    })
+        const params = {
+          Bucket: bucket,
+          Key: sanitizeKey(file.filename),
+          Body: file.stream,
+          ContentType: contentType,
+          ...(file.extra ?? {}),
+        }
 
-    return Promise.all(uploads)
+        const upload = new Upload({ client, params })
+        uploadResults[file.index] = await upload.done()
+      },
+      MAX_CONCURRENCY
+    )
+
+    return uploadResults
   })
 }
 

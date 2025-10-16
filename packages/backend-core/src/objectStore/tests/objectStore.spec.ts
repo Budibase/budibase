@@ -320,24 +320,30 @@ describe("objectStore", () => {
       })
 
       expect(mockUpload).toHaveBeenCalledTimes(2)
-      expect(mockUpload).toHaveBeenNthCalledWith(1, {
-        client: expect.any(Object),
-        params: {
-          Bucket: "test-bucket",
-          Key: "app_123/budibase-client.js",
-          Body: jsStream,
-          ContentType: "application/javascript",
-        },
-      })
-      expect(mockUpload).toHaveBeenNthCalledWith(2, {
-        client: expect.any(Object),
-        params: {
-          Bucket: "test-bucket",
-          Key: "app_123/manifest.json",
-          Body: jsonStream,
-          ContentType: "application/json",
-        },
-      })
+      expect(mockUpload.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            client: expect.any(Object),
+            params: {
+              Bucket: "test-bucket",
+              Key: "app_123/budibase-client.js",
+              Body: jsStream,
+              ContentType: "application/javascript",
+            },
+          }),
+        ],
+        [
+          expect.objectContaining({
+            client: expect.any(Object),
+            params: {
+              Bucket: "test-bucket",
+              Key: "app_123/manifest.json",
+              Body: jsonStream,
+              ContentType: "application/json",
+            },
+          }),
+        ],
+      ])
     })
 
     it("should preserve extra parameters when provided", async () => {
