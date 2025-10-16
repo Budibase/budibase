@@ -17,6 +17,7 @@ import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
+import * as getRow from "./steps/getRow"
 import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
@@ -61,6 +62,7 @@ const ACTION_IMPLS: ActionImplType = {
   DELAY: delay.run,
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
+  GET_ROW: getRow.run,
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   OPENAI: openai.run,
@@ -96,6 +98,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   DELAY: automations.steps.delay.definition,
   FILTER: automations.steps.filter.definition,
   QUERY_ROWS: automations.steps.queryRows.definition,
+  GET_ROW: automations.steps.getRow.definition,
   LOOP: automations.steps.loop.definition,
   COLLECT: automations.steps.collect.definition,
   TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,

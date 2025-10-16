@@ -74,6 +74,7 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   API_REQUEST = "API_REQUEST",
   QUERY_ROWS = "QUERY_ROWS",
+  GET_ROW = "GET_ROW",
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",

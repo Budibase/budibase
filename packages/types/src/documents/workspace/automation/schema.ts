@@ -26,6 +26,8 @@ import {
   FilterStepOutputs,
   QueryRowsStepInputs,
   QueryRowsStepOutputs,
+  GetRowStepInputs,
+  GetRowStepOutputs,
   SmtpEmailStepInputs,
   ServerLogStepInputs,
   ServerLogStepOutputs,
@@ -120,6 +122,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.QUERY_ROWS]: ActionImplementation<
     QueryRowsStepInputs,
     QueryRowsStepOutputs
+  >
+  [AutomationActionStepId.GET_ROW]: ActionImplementation<
+    GetRowStepInputs,
+    GetRowStepOutputs
   >
   [AutomationActionStepId.SEND_EMAIL_SMTP]: ActionImplementation<
     SmtpEmailStepInputs,
@@ -244,6 +250,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                     ? FilterStepInputs
                     : T extends AutomationActionStepId.QUERY_ROWS
                       ? QueryRowsStepInputs
+                      : T extends AutomationActionStepId.GET_ROW
+                        ? GetRowStepInputs
                       : T extends AutomationActionStepId.SEND_EMAIL_SMTP
                         ? SmtpEmailStepInputs
                         : T extends AutomationActionStepId.SERVER_LOG
@@ -311,6 +319,8 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                     ? FilterStepOutputs
                     : T extends AutomationActionStepId.QUERY_ROWS
                       ? QueryRowsStepOutputs
+                      : T extends AutomationActionStepId.GET_ROW
+                        ? GetRowStepOutputs
                       : T extends AutomationActionStepId.SEND_EMAIL_SMTP
                         ? BaseAutomationOutputs
                         : T extends AutomationActionStepId.SERVER_LOG
@@ -386,6 +396,7 @@ export type FilterStep = AutomationStepSchema<AutomationActionStepId.FILTER>
 
 export type QueryRowsStep =
   AutomationStepSchema<AutomationActionStepId.QUERY_ROWS>
+  | AutomationStepSchema<AutomationActionStepId.GET_ROW>
 
 export type SendEmailSmtpStep =
   AutomationStepSchema<AutomationActionStepId.SEND_EMAIL_SMTP>
