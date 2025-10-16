@@ -361,7 +361,7 @@ export async function streamUpload({
     })
 
     span.addTags({ contentType, contentLength: headDetails.ContentLength })
-    return details
+    return { ...details, ContentLength: headDetails.ContentLength }
   })
 }
 
