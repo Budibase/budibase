@@ -26,7 +26,7 @@
 
 <ModalContent
   {title}
-  cancelText="Skip"
+  cancelText="Cancel"
   size="L"
   {confirmText}
   onConfirm={() => store.importSelectedViews(onComplete)}

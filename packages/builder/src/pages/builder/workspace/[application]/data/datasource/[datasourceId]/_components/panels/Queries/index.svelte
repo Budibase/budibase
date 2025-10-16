@@ -65,6 +65,6 @@
 <style>
   .controls {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-m);
   }
 </style>

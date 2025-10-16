@@ -302,16 +302,11 @@ export class DatasourceStore extends DerivedBudiStore<
   }
 
   async getViewNames(datasource: Datasource) {
-    try {
-      const info = await API.fetchViewInfoForDatasource(datasource)
-      return info.views?.map(v => v.name) || []
-    } catch (error) {
-      // Views not supported for this datasource
-      return []
-    }
+    const info = await API.fetchViewInfoForDatasource(datasource)
+    return info.views?.map(v => v.name) || []
   }
 
-  async createViewQuery(datasource: Datasource, viewName: string | undefined) {
+  async createViewQuery(datasource: Datasource, viewName: string) {
     if (!viewName) return
     try {
       const info = await API.fetchViewInfoForDatasource(datasource)
@@ -321,7 +316,7 @@ export class DatasourceStore extends DerivedBudiStore<
       }
       const view = info.views?.find(v => v.name === viewName)
       const sql =
-        "SELECT * FROM " + view?.name + " OFFSET {{ offset }} LIMIT {{ limit }}"
+        "SELECT * FROM " + viewName + " OFFSET {{ offset }} LIMIT {{ limit }}"
       const query = {
         datasourceId: datasource._id!,
         name: viewName,
@@ -337,7 +332,7 @@ export class DatasourceStore extends DerivedBudiStore<
         schema: {},
         readable: true,
       }
-      return await queries.save(datasource._id!, query as any)
+      return await queries.save(datasource._id!, query)
     } catch (error) {
       console.error("API error fetching view definitions:", error)
       return

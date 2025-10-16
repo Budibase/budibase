@@ -44,19 +44,9 @@ export const createViewSelectionStore = (datasource: Datasource) => {
         viewName => !existingQueries.some(query => query.name === viewName)
       )
 
-      // Find queries to delete (queries exist but view not selected)
-      const queriesToDelete = existingQueries.filter(
-        query => !selectedViews.some(viewName => viewName === query.name)
-      )
-
       // Create new queries
       for (const viewName of viewsToCreate) {
-        await (datasources as any).createViewQuery(datasource, viewName)
-      }
-
-      // Delete unselected queries
-      for (const query of queriesToDelete) {
-        await queries.delete(query)
+        await datasources.createViewQuery(datasource, viewName)
       }
 
       await queries.fetch()

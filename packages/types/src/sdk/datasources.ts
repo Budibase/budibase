@@ -216,5 +216,5 @@ export interface DatasourcePlus extends IntegrationBase {
     filter?: string[]
   ): Promise<Schema>
   getTableNames(): Promise<string[]>
-  getViews?(): Promise<{ name: string; definition: string }[]>
+  getViews?(): Promise<string[]>
 }
