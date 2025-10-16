@@ -73,4 +73,25 @@ describe("Get row automation step", () => {
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.row).toBeNull()
   })
+
+  it("returns the first row when onEmptyFilter is RETURN_ALL and filters are empty", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .getRow(
+        {
+          tableId: table._id!,
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          filters: {},
+          "filters-def": [],
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+        },
+        { stepName: "Get row with empty filters, returning all" }
+      )
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.row).toBeDefined()
+    expect(result.steps[0].outputs.row?.name).toBe(NAME)
+  })
 })
