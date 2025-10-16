@@ -34,6 +34,12 @@ const STATE = {
 }
 export const SIGNED_FILE_PREFIX = "/files/signed"
 
+type BucketContext = {
+  client: ReturnType<typeof ObjectStore>
+  bucket: string
+  bucketCreated: Awaited<ReturnType<typeof createBucketIfNotExists>>
+}
+
 type ListParams = {
   ContinuationToken?: string
 }
@@ -189,6 +195,82 @@ export async function createBucketIfNotExists(
     }
   }
 }
+
+const resolveContentType = (filename: string, type?: string | null) => {
+  if (type) {
+    return type
+  }
+  const extension = filename.split(".").pop()
+  return extension
+    ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+    : CONTENT_TYPE_MAP.txt
+}
+
+const initialiseBucket = async (
+  bucketName: string,
+  ttl?: number,
+  span?: any
+): Promise<BucketContext> => {
+  const bucket = sanitizeBucket(bucketName)
+  const client = ObjectStore()
+  const bucketCreated = await createBucketIfNotExists(client, bucket)
+
+  span?.addTags({
+    bucketCreated: bucketCreated.created,
+    bucketExists: bucketCreated.exists,
+  })
+
+  if (ttl && bucketCreated.created) {
+    let ttlConfig = bucketTTLConfig(bucket, ttl)
+    await client.putBucketLifecycleConfiguration(ttlConfig)
+  }
+
+  return {
+    bucket,
+    client,
+    bucketCreated,
+  }
+}
+
+type StreamUploadInternalOptions = {
+  client: ReturnType<typeof ObjectStore>
+  bucket: string
+  filename: string
+  stream?: StreamTypes
+  type?: string | null
+  extra?: any
+}
+
+const streamUploadInternal = async ({
+  client,
+  bucket,
+  filename,
+  stream,
+  type,
+  extra,
+}: StreamUploadInternalOptions) => {
+  if (!stream) {
+    throw new Error("Stream to upload is invalid/undefined")
+  }
+
+  const contentType = resolveContentType(filename, type)
+  const key = sanitizeKey(filename)
+  const params = {
+    Bucket: bucket,
+    Key: key,
+    Body: stream,
+    ContentType: contentType,
+    ...(extra ?? {}),
+  }
+
+  const upload = new Upload({ client, params })
+  const details = await upload.done()
+
+  return {
+    details,
+    contentType,
+  }
+}
 /**
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).
@@ -265,54 +347,27 @@ export async function streamUpload({
       ttl,
     })
 
-    if (!stream) {
-      throw new Error("Stream to upload is invalid/undefined")
-    }
     const extension = filename.split(".").pop()
-    const objectStore = ObjectStore()
-    const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+    span.addTags({ extension })
 
-    span.addTags({
-      bucketCreated: bucketCreated.created,
-      bucketExists: bucketCreated.exists,
-      extension,
+    const { bucket, client } = await initialiseBucket(bucketName, ttl, span)
+
+    const headDetails = await client.headObject({
+      Bucket: bucket,
+      Key: sanitizeKey(filename),
     })
 
-    if (ttl && bucketCreated.created) {
-      let ttlConfig = bucketTTLConfig(bucketName, ttl)
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig)
-    }
-
-    let contentType = type
-    if (!contentType) {
-      contentType = extension
-        ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-        : CONTENT_TYPE_MAP.txt
-    }
-
-    span.addTags({ contentType })
-
-    const bucket = sanitizeBucket(bucketName),
-      objKey = sanitizeKey(filename)
-    const params = {
-      Bucket: bucket,
-      Key: objKey,
-      Body: stream,
-      ContentType: contentType,
-      ...extra,
-    }
-
-    const upload = new Upload({ client: objectStore, params })
-    const details = await upload.done()
-    const headDetails = await objectStore.headObject({
-      Bucket: bucket,
-      Key: objKey,
+    const { details, contentType } = await streamUploadInternal({
+      client,
+      bucket,
+      filename,
+      stream,
+      type,
+      extra,
     })
-    span.addTags({ contentLength: headDetails.ContentLength })
-    return {
-      ...details,
-      ContentLength: headDetails.ContentLength,
-    }
+
+    span.addTags({ contentType, contentLength: headDetails.ContentLength })
+    return details
   })
 }
 
@@ -333,19 +388,7 @@ export async function streamUploadMany({
       return []
     }
 
-    const bucket = sanitizeBucket(bucketName)
-    const client = ObjectStore()
-    const bucketCreated = await createBucketIfNotExists(client, bucket)
-
-    span.addTags({
-      bucketCreated: bucketCreated.created,
-      bucketExists: bucketCreated.exists,
-    })
-
-    if (ttl && bucketCreated.created) {
-      let ttlConfig = bucketTTLConfig(bucket, ttl)
-      await client.putBucketLifecycleConfiguration(ttlConfig)
-    }
+    const { bucket, client } = await initialiseBucket(bucketName, ttl, span)
 
     const indexedFiles = files.map((file, index) => ({ ...file, index }))
     const uploadResults = new Array(files.length)
@@ -353,27 +396,15 @@ export async function streamUploadMany({
     await utils.parallelForeach(
       indexedFiles,
       async file => {
-        if (!file.stream) {
-          throw new Error("Stream to upload is invalid/undefined")
-        }
-        const extension = file.filename.split(".").pop()
-        let contentType = file.type
-        if (!contentType) {
-          contentType = extension
-            ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-            : CONTENT_TYPE_MAP.txt
-        }
-
-        const params = {
-          Bucket: bucket,
-          Key: sanitizeKey(file.filename),
-          Body: file.stream,
-          ContentType: contentType,
-          ...(file.extra ?? {}),
-        }
-
-        const upload = new Upload({ client, params })
-        uploadResults[file.index] = await upload.done()
+        const { details } = await streamUploadInternal({
+          client,
+          bucket,
+          filename: file.filename,
+          stream: file.stream,
+          type: file.type,
+          extra: file.extra,
+        })
+        uploadResults[file.index] = details
       },
       MAX_CONCURRENCY
     )
