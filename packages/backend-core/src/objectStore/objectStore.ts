@@ -34,12 +34,6 @@ const STATE = {
 }
 export const SIGNED_FILE_PREFIX = "/files/signed"
 
-type BucketContext = {
-  client: ReturnType<typeof ObjectStore>
-  bucket: string
-  bucketCreated: Awaited<ReturnType<typeof createBucketIfNotExists>>
-}
-
 type ListParams = {
   ContinuationToken?: string
 }
@@ -210,7 +204,7 @@ const initialiseBucket = async (
   bucketName: string,
   ttl?: number,
   span?: any
-): Promise<BucketContext> => {
+) => {
   const bucket = sanitizeBucket(bucketName)
   const client = ObjectStore()
   const bucketCreated = await createBucketIfNotExists(client, bucket)
