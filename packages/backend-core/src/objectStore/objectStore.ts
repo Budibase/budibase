@@ -202,14 +202,14 @@ const resolveContentType = (filename: string, type?: string | null) => {
 
 const initialiseBucket = async (
   bucketName: string,
-  ttl?: number,
-  span?: any
+  ttl: number | undefined,
+  span: tracer.Span
 ) => {
   const bucket = sanitizeBucket(bucketName)
   const client = ObjectStore()
   const bucketCreated = await createBucketIfNotExists(client, bucket)
 
-  span?.addTags({
+  span.addTags({
     bucketCreated: bucketCreated.created,
     bucketExists: bucketCreated.exists,
   })
