@@ -1,7 +1,7 @@
 import { Upload } from "@aws-sdk/lib-storage"
 import { PassThrough } from "stream"
 import { structures } from "../../../tests"
-import { streamUpload, upload } from "../objectStore"
+import { streamUpload, streamUploadMany, upload } from "../objectStore"
 
 // Get mock instances
 const mockUpload = Upload as jest.MockedClass<typeof Upload>
@@ -301,6 +301,75 @@ describe("objectStore", () => {
           Key: "config.backup.json",
           Body: mockStream,
           ContentType: "application/json",
+        },
+      })
+    })
+  })
+
+  describe("streamUploadMany", () => {
+    it("should upload each file with inferred content type", async () => {
+      const jsStream = new PassThrough()
+      const jsonStream = new PassThrough()
+
+      await streamUploadMany({
+        bucket: "test-bucket",
+        files: [
+          { filename: "app_123/budibase-client.js", stream: jsStream },
+          { filename: "app_123/manifest.json", stream: jsonStream },
+        ],
+      })
+
+      expect(mockUpload).toHaveBeenCalledTimes(2)
+      expect(mockUpload.mock.calls).toEqual([
+        [
+          expect.objectContaining({
+            client: expect.any(Object),
+            params: {
+              Bucket: "test-bucket",
+              Key: "app_123/budibase-client.js",
+              Body: jsStream,
+              ContentType: "application/javascript",
+            },
+          }),
+        ],
+        [
+          expect.objectContaining({
+            client: expect.any(Object),
+            params: {
+              Bucket: "test-bucket",
+              Key: "app_123/manifest.json",
+              Body: jsonStream,
+              ContentType: "application/json",
+            },
+          }),
+        ],
+      ])
+    })
+
+    it("should preserve extra parameters when provided", async () => {
+      const stream = new PassThrough()
+
+      await streamUploadMany({
+        bucket: "test-bucket",
+        files: [
+          {
+            filename: "app_123/chunks/chunk.js",
+            stream,
+            extra: {
+              CacheControl: "max-age=3600",
+            },
+          },
+        ],
+      })
+
+      expect(mockUpload).toHaveBeenCalledWith({
+        client: expect.any(Object),
+        params: {
+          Bucket: "test-bucket",
+          Key: "app_123/chunks/chunk.js",
+          Body: stream,
+          ContentType: "application/javascript",
+          CacheControl: "max-age=3600",
         },
       })
     })
