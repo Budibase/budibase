@@ -536,6 +536,12 @@ export function isLoopStep(
   return step.stepId === AutomationActionStepId.LOOP
 }
 
+export function isLoopV2Step(
+  step: AutomationStep | AutomationTrigger
+): step is LoopV2Step {
+  return step.stepId === AutomationActionStepId.LOOP_V2
+}
+
 export function isActionStep(
   step: AutomationStep | AutomationTrigger
 ): step is AutomationStep {

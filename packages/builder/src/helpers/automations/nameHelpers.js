@@ -102,6 +102,13 @@ export const getNewStepName = (automation, step) => {
           count += countExistingSteps(branchSteps)
         })
       }
+      if (
+        currentStep.stepId === AutomationActionStepId.LOOP_V2 &&
+        currentStep.inputs &&
+        Array.isArray(currentStep.inputs.children)
+      ) {
+        count += countExistingSteps(currentStep.inputs.children)
+      }
       return count
     }, 0)
   }
