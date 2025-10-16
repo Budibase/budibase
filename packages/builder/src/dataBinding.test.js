@@ -56,7 +56,10 @@ function createBuilderStores() {
 
 vi.mock("@/stores/builder", () => createBuilderStores().module)
 
-import { tables as tablesStore, queries as queriesStore } from "@/stores/builder"
+import {
+  tables as tablesStore,
+  queries as queriesStore,
+} from "@/stores/builder"
 
 const getTablesStore = () => tablesStore
 const getQueriesStore = () => queriesStore
