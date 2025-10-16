@@ -54,7 +54,7 @@ function createBuilderStores() {
   }
 }
 
-var builderStores
+let builderStores
 
 vi.mock("@/stores/builder", () => {
   builderStores = createBuilderStores()
@@ -222,10 +222,7 @@ describe("Builder dataBinding", () => {
         ],
       })
 
-      const jsonArraySpy = vi.spyOn(
-        JSONUtils,
-        "getJSONArrayDatasourceSchema"
-      )
+      const jsonArraySpy = vi.spyOn(JSONUtils, "getJSONArrayDatasourceSchema")
 
       const datasource = {
         type: "jsonarray",
