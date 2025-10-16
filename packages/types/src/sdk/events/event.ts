@@ -206,6 +206,9 @@ export enum Event {
   WORKSPACE_APP_CREATED = "workspace_app:created",
   WORKSPACE_APP_UPDATED = "workspace_app:updated",
   WORKSPACE_APP_DELETED = "workspace_app:deleted",
+
+  // GENERIC
+  RESOURCE_COPIED_TO_WORKSPACE = "resource:copied_to_workspace",
 }
 
 export const WorkspaceUserSyncEvents: Event[] = [
@@ -436,6 +439,8 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.WORKSPACE_APP_CREATED]: undefined,
   [Event.WORKSPACE_APP_DELETED]: undefined,
   [Event.WORKSPACE_APP_UPDATED]: undefined,
+
+  [Event.RESOURCE_COPIED_TO_WORKSPACE]: `{{ resource.type }} copied to workspace`,
 }
 
 // properties added at the final stage of the event pipeline

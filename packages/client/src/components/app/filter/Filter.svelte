@@ -24,7 +24,8 @@
   import { QueryUtils, fetchData, memo } from "@budibase/frontend-core"
   import FilterButton from "./FilterButton.svelte"
   import { onDestroy } from "svelte"
-  import { uiStateStore, componentStore } from "@/stores"
+  import { uiStateStore } from "@/stores"
+  import { componentStore } from "@/stores/components"
   import { onMount, setContext } from "svelte"
   import { writable } from "svelte/store"
 

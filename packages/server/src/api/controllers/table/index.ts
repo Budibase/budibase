@@ -138,6 +138,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (isCreate) {
     savedTable = await sdk.tables.create(table, rows, ctx.user._id)
     savedTable = await sdk.tables.enrichViewSchemas(savedTable)
+    savedTable = await processTable(savedTable)
     await events.table.created(savedTable)
   } else {
     const api = pickApi({ table })
@@ -146,6 +147,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
       renaming
     )
     savedTable = updatedTable
+    savedTable = await processTable(savedTable)
 
     if (oldTable) {
       await events.table.updated(oldTable, savedTable)
@@ -159,9 +161,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
-  ctx.body = savedTable
 
-  savedTable = await processTable(savedTable)
+  ctx.body = savedTable
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

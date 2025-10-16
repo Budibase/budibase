@@ -1,14 +1,20 @@
-import { get, writable, derived } from "svelte/store"
+import "./styles"
+
 import Manifest from "manifest.json"
+import { derived, get, writable } from "svelte/store"
+import Router from "../components/Router.svelte"
 import { findComponentById, findComponentPathById } from "../utils/components"
+import { builderStore } from "./builder"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
-import { builderStore } from "./builder"
-import Router from "../components/Router.svelte"
+
 import * as AppComponents from "../components/app/index.js"
 import { ScreenslotID, ScreenslotType } from "../constants"
 
 export const BudibasePrefix = "@budibase/standard-components/"
+
+const builtInComponentCache = new Map()
+const builtInComponentPromises = new Map()
 
 const createComponentStore = () => {
   const store = writable({
@@ -134,7 +140,38 @@ const createComponentStore = () => {
     if (type.startsWith(BudibasePrefix)) {
       const split = type.split("/")
       const name = split[split.length - 1]
-      return AppComponents[name]
+
+      if (builtInComponentCache.has(name)) {
+        return builtInComponentCache.get(name)
+      }
+
+      if (builtInComponentPromises.has(name)) {
+        return builtInComponentPromises.get(name)
+      }
+
+      const loader = AppComponents[name]
+      if (!loader) {
+        console.warn(`Component loader missing for ${name}`)
+        return null
+      }
+
+      const promise = loader()
+        .then(module => {
+          const Component = module?.default ?? null
+          if (Component) {
+            builtInComponentCache.set(name, Component)
+          }
+          builtInComponentPromises.delete(name)
+          return Component
+        })
+        .catch(error => {
+          builtInComponentPromises.delete(name)
+          console.error(`Failed to load component ${name}`, error)
+          return null
+        })
+
+      builtInComponentPromises.set(name, promise)
+      return promise
     }
 
     // Handle custom components

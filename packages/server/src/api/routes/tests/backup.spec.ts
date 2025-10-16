@@ -6,6 +6,7 @@ import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import tar from "tar"
 import tk from "timekeeper"
+import { withEnv } from "../../../environment"
 import sdk from "../../../sdk"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -15,14 +16,14 @@ mocks.licenses.useBackups()
 describe("/backups", () => {
   let config = setup.getConfig()
 
-  afterAll(async () => {
+  afterAll(() => {
     setup.afterAll()
   })
 
   beforeEach(async () => {
     tk.reset()
     jest.clearAllMocks()
-    await config.init()
+    await withEnv({ UPLOAD_APPS_FILES_ON_TEST: "1" }, () => config.init())
   })
 
   describe("/api/backups/export", () => {
@@ -44,21 +45,26 @@ describe("/backups", () => {
         })
       )
 
+      const encodeIfNeeded = (value: string) =>
+        opts.isEncrypted ? `${value}.enc` : value
       const expectedFiles = [
+        "budibase-client.esm.js",
         "budibase-client.js",
-        "budibase-client.new.js",
         "db.txt",
         "manifest.json",
-        "_dependencies/apexcharts.js",
-        "_dependencies/html5-qrcode.js",
-      ].map(x => `${x}${opts.isEncrypted ? ".enc" : ""}`)
+      ].map(encodeIfNeeded)
       if (opts.includeRows) {
         expectedFiles.push(
           ...attachmentFileNames.sort().map(f => `attachments/${f}`)
         )
       }
 
-      expect(exportedFiles).toEqual(expectedFiles)
+      expect(exportedFiles).toEqual(expect.arrayContaining(expectedFiles))
+
+      const chunksRegex = opts.isEncrypted
+        ? /chunks\/.+-\w{8}\.js\.enc/
+        : /chunks\/.+-\w{8}\.js/
+      expect(exportedFiles).toContainEqual(expect.stringMatching(chunksRegex))
     }
 
     beforeEach(async () => {
