@@ -7,6 +7,7 @@ jest.mock("@budibase/backend-core", () => {
       listAllObjects: jest.fn(),
       retrieveToTmp: jest.fn().mockResolvedValue("/tmp/file"),
       streamUpload: jest.fn(),
+      streamUploadMany: jest.fn().mockResolvedValue([]),
       upload: jest.fn(),
       deleteFile: jest.fn(),
       getReadStream: jest.fn(),
@@ -174,31 +175,31 @@ describe("clientLibrary", () => {
 
       expect(mockedFs.readdirSync).toHaveBeenCalledTimes(1)
 
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(5)
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+      expect(mockedObjectStore.streamUploadMany).toHaveBeenCalledTimes(1)
+      expect(mockedObjectStore.streamUploadMany).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/manifest.json",
-        stream: "stream1",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/budibase-client.js",
-        stream: "stream2",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/budibase-client.esm.js",
-        stream: "stream3",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/chunks/chunk1.js",
-        stream: "stream4",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/chunks/chunk2.js",
-        stream: "stream5",
+        files: [
+          {
+            filename: "app_123/manifest.json",
+            stream: "stream1",
+          },
+          {
+            filename: "app_123/budibase-client.js",
+            stream: "stream2",
+          },
+          {
+            filename: "app_123/budibase-client.esm.js",
+            stream: "stream3",
+          },
+          {
+            filename: "app_123/chunks/chunk1.js",
+            stream: "stream4",
+          },
+          {
+            filename: "app_123/chunks/chunk2.js",
+            stream: "stream5",
+          },
+        ],
       })
       expect(result).toEqual({ version: "1.0.0" })
     })
