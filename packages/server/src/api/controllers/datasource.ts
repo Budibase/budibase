@@ -88,8 +88,8 @@ export async function viewInformation(
       enrichedDatasource
     )) as DatasourcePlus
 
-    if (connector.getViews) {
-      views = await connector.getViews()
+    if (connector.getViewNames) {
+      views = await connector.getViewNames()
     } else {
       error = "View fetching not supported by datasource"
     }

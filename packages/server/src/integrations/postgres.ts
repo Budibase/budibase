@@ -440,7 +440,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async getViews() {
+  async getViewNames() {
     try {
       await this.openConnection()
       const viewsResponse = await this.client.query(this.VIEWS_SQL())

@@ -307,7 +307,6 @@ export class DatasourceStore extends DerivedBudiStore<
   }
 
   async createViewQuery(datasource: Datasource, viewName: string) {
-    if (!viewName) return
     try {
       const info = await API.fetchViewInfoForDatasource(datasource)
       if (info.error) {
@@ -316,7 +315,9 @@ export class DatasourceStore extends DerivedBudiStore<
       }
       const view = info.views?.find(v => v.name === viewName)
       const sql =
-        "SELECT * FROM " + viewName + " OFFSET {{ offset }} LIMIT {{ limit }}"
+        "SELECT * FROM " +
+        viewName +
+        " \nOFFSET {{ offset }} \nLIMIT {{ limit }}"
       const query = {
         datasourceId: datasource._id!,
         name: viewName,
