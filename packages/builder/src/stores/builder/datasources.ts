@@ -320,11 +320,15 @@ export class DatasourceStore extends DerivedBudiStore<
         return
       }
       const view = info.views?.find(v => v.name === viewName)
-      const sql = view?.definition || "Definition not found"
+      const sql =
+        "SELECT * FROM " + view?.name + " OFFSET {{ offset }} LIMIT {{ limit }}"
       const query = {
         datasourceId: datasource._id!,
         name: viewName,
-        parameters: [],
+        parameters: [
+          { name: "offset", default: "0" },
+          { name: "limit", default: "100" },
+        ],
         fields: {
           sql,
         },
