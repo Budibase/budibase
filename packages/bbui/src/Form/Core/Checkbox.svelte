@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { Icon } from "@budibase/bbui"
   import "@spectrum-css/checkbox/dist/index-vars.css"
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
   import type { ChangeEventHandler } from "svelte/elements"
-  import { Icon } from "@budibase/bbui"
 
   export let value = false
   export let id: string | undefined = undefined
@@ -22,8 +22,9 @@
 </script>
 
 <label
-  class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
-  class:checked={value || indeterminate}
+  class="spectrum-Checkbox {sizeClass}"
+  class:spectrum-Checkbox--emphasized={!disabled}
+  class:is-disabled={disabled}
   class:readonly
 >
   <input

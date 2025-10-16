@@ -1,1 +1,1 @@
-export { default as dynamicfilter } from "./DynamicFilter.svelte"
+export const dynamicfilter = () => import("./DynamicFilter.svelte")

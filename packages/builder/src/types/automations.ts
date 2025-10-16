@@ -339,3 +339,9 @@ export interface LoopEdgeData extends BaseEdgeData {
 }
 
 export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData
+export interface RowAction {
+  id: string
+  name: string
+  tableId: string
+  allowedSources?: string[]
+}
