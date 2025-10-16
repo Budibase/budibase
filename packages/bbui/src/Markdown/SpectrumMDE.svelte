@@ -1,7 +1,7 @@
 <script lang="ts">
-  import EasyMDE from "easymde"
+  import type EasyMDE from "easymde"
   import "easymde/dist/easymde.min.css"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
 
   export let height: string | null = null
   export let scroll: boolean = true
@@ -13,8 +13,9 @@
 
   let element: HTMLTextAreaElement | undefined = undefined
 
-  onMount(() => {
+  onMount(async () => {
     height = height || "200px"
+    const { default: EasyMDE } = await import("easymde")
     mde = new EasyMDE({
       element,
       spellChecker: false,
@@ -24,11 +25,10 @@
       minHeight: scroll ? undefined : height,
       ...easyMDEOptions,
     })
+  })
 
-    // Revert the editor when we unmount
-    return () => {
-      mde?.toTextArea()
-    }
+  onDestroy(() => {
+    mde?.toTextArea()
   })
 
   $: styleString = getStyleString(fullScreenOffset)

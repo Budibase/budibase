@@ -1,59 +1,48 @@
-import "@spectrum-css/vars/dist/spectrum-global.css"
-import "@spectrum-css/vars/dist/spectrum-medium.css"
-import "@spectrum-css/vars/dist/spectrum-large.css"
-import "@spectrum-css/vars/dist/spectrum-darkest.css"
-import "@spectrum-css/vars/dist/spectrum-dark.css"
-import "@spectrum-css/vars/dist/spectrum-light.css"
-import "@spectrum-css/vars/dist/spectrum-lightest.css"
-import "@budibase/frontend-core/src/themes/nord.css"
-import "@budibase/frontend-core/src/themes/midnight.css"
-import "@spectrum-css/page/dist/index-vars.css"
-
 // Non user-facing components
-export { default as Placeholder } from "./Placeholder.svelte"
+export const Placeholder = () => import("./Placeholder.svelte")
 
 // User facing components
-export { default as container } from "./container/Container.svelte"
-export { default as dataprovider } from "./DataProvider.svelte"
-export { default as divider } from "./Divider.svelte"
-export { default as screenslot } from "./ScreenSlot.svelte"
-export { default as button } from "./Button.svelte"
-export { default as buttongroup } from "./ButtonGroup.svelte"
-export { default as repeater } from "./Repeater.svelte"
-export { default as layout } from "./Layout.svelte"
-export { default as link } from "./Link.svelte"
-export { default as image } from "./Image.svelte"
-export { default as embed } from "./Embed.svelte"
-export { default as icon } from "./Icon.svelte"
-export { default as iconphosphor } from "./IconV2.svelte"
-export { default as backgroundimage } from "./BackgroundImage.svelte"
-export { default as daterangepicker } from "./DateRangePicker.svelte"
-export { default as cardstat } from "./CardStat.svelte"
-export { default as spectrumcard } from "./SpectrumCard.svelte"
-export { default as tag } from "./Tag.svelte"
-export { default as embeddedmap } from "./embedded-map/EmbeddedMap.svelte"
-export { default as sidepanel } from "./SidePanel.svelte"
-export { default as modal } from "./Modal.svelte"
-export { default as gridblock } from "./GridBlock.svelte"
-export { default as textv2 } from "./Text.svelte"
-export { default as filter } from "./filter/Filter.svelte"
-export { default as accordion } from "./Accordion.svelte"
-export { default as singlerowprovider } from "./SingleRowProvider.svelte"
-export { default as codegenerator } from "./CodeGenerator.svelte"
-export * from "./charts"
-export * from "./forms"
+export const container = () => import("./container/Container.svelte")
+export const dataprovider = () => import("./DataProvider.svelte")
+export const divider = () => import("./Divider.svelte")
+export const screenslot = () => import("./ScreenSlot.svelte")
+export const button = () => import("./Button.svelte")
+export const buttongroup = () => import("./ButtonGroup.svelte")
+export const repeater = () => import("./Repeater.svelte")
+export const layout = () => import("./Layout.svelte")
+export const link = () => import("./Link.svelte")
+export const image = () => import("./Image.svelte")
+export const embed = () => import("./Embed.svelte")
+export const icon = () => import("./Icon.svelte")
+export const iconphosphor = () => import("./IconV2.svelte")
+export const backgroundimage = () => import("./BackgroundImage.svelte")
+export const daterangepicker = () => import("./DateRangePicker.svelte")
+export const cardstat = () => import("./CardStat.svelte")
+export const spectrumcard = () => import("./SpectrumCard.svelte")
+export const tag = () => import("./Tag.svelte")
+export const embeddedmap = () => import("./embedded-map/EmbeddedMap.svelte")
+export const sidepanel = () => import("./SidePanel.svelte")
+export const modal = () => import("./Modal.svelte")
+export const gridblock = () => import("./GridBlock.svelte")
+export const textv2 = () => import("./Text.svelte")
+export const filter = () => import("./filter/Filter.svelte")
+export const accordion = () => import("./Accordion.svelte")
+export const singlerowprovider = () => import("./SingleRowProvider.svelte")
+export const codegenerator = () => import("./CodeGenerator.svelte")
 export * from "./blocks"
+export * from "./charts"
 export * from "./dynamic-filter"
+export * from "./forms"
 export * from "./pdf"
 
 // Deprecated component left for compatibility in old apps
 export * from "./deprecated/table"
-export { default as tableblock } from "./deprecated/TableBlock.svelte"
-export { default as navigation } from "./deprecated/Navigation.svelte"
-export { default as cardhorizontal } from "./deprecated/CardHorizontal.svelte"
-export { default as stackedlist } from "./deprecated/StackedList.svelte"
-export { default as card } from "./deprecated/Card.svelte"
-export { default as section } from "./deprecated/Section.svelte"
-export { default as text } from "./deprecated/Text.svelte"
-export { default as heading } from "./deprecated/Heading.svelte"
-export { default as markdownviewer } from "./deprecated/MarkdownViewer.svelte"
+export const tableblock = () => import("./deprecated/TableBlock.svelte")
+export const navigation = () => import("./deprecated/Navigation.svelte")
+export const cardhorizontal = () => import("./deprecated/CardHorizontal.svelte")
+export const stackedlist = () => import("./deprecated/StackedList.svelte")
+export const card = () => import("./deprecated/Card.svelte")
+export const section = () => import("./deprecated/Section.svelte")
+export const text = () => import("./deprecated/Text.svelte")
+export const heading = () => import("./deprecated/Heading.svelte")
+export const markdownviewer = () => import("./deprecated/MarkdownViewer.svelte")

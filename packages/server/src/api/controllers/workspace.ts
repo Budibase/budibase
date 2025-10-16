@@ -340,7 +340,6 @@ export async function fetchAppPackage(
   )
 
   const clientCacheKey = await objectStore.getClientCacheKey(
-    ctx.params.appId,
     application.version
   )
 
