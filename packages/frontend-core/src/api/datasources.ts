@@ -127,7 +127,7 @@ export const buildDatasourceEndpoints = (
   },
 
   /**
-   * Fetch view names and definitions available within the datasource, for filtering out undesired views
+   * Fetch view names and definitions available within the datasource
    */
   fetchViewInfoForDatasource: async (datasource: Datasource) => {
     return await API.post<
