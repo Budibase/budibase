@@ -14,9 +14,9 @@
   import {
     PublishResourceState,
     AutomationStatus,
-    AutomationActionStepId,
     type UIAutomation,
     type LayoutDirection,
+    type BlockRef,
   } from "@budibase/types"
   import {
     automationStore,
@@ -26,31 +26,29 @@
     deploymentStore,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
-  import { ViewMode } from "@/types/automations"
+  import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    renderBranches,
+    buildTopLevelGraph,
     dagreLayoutAutomation,
     type GraphBuildDeps,
-    type AutomationBlock,
-    type AutomationBlockRefMap,
   } from "./AutomationStepHelpers"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { createFlowChartDnD } from "./FlowChartDnD"
+  import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
-  import NodeWrapper from "./NodeWrapper.svelte"
-  import CustomEdge from "./CustomEdge.svelte"
-  import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
-  import AnchorNode from "./AnchorNode.svelte"
+  import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
+  import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
+  import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
+  import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
+  import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
 
   import {
     SvelteFlow,
     Background,
     BackgroundVariant,
-    MiniMap,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -68,6 +66,7 @@
     "step-node": NodeWrapper as any,
     "branch-node": BranchNodeWrapper as any,
     "anchor-node": AnchorNode as any,
+    "loop-subflow-node": LoopV2Node as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": CustomEdge as any,
@@ -75,7 +74,7 @@
 
   let testDataModal: Modal
   let confirmDeleteDialog
-  let blockRefs: AutomationBlockRefMap = {}
+  let blockRefs: Record<string, BlockRef> = {}
   let prodErrors: number = 0
   let paneEl: HTMLDivElement | null = null
   let changingStatus = false
@@ -87,7 +86,7 @@
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  const { getViewport, setViewport, fitView } = useSvelteFlow()
+  const { getViewport, setViewport } = useSvelteFlow()
 
   // DnD helper and context stores
   const dnd = createFlowChartDnD({
@@ -137,111 +136,30 @@
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
 
-    // helper to get or create position
-    const ensurePosition = (_id: string, fallback: { x: number; y: number }) =>
-      fallback
-
     const deps: GraphBuildDeps = {
-      ensurePosition,
       xSpacing,
       ySpacing,
       blockRefs,
-      testDataModal,
       newNodes,
       newEdges,
       direction,
     }
 
-    // Build linear chain of top-level steps first
-    blocks.forEach((block: AutomationBlock, idx: number) => {
-      const isTrigger = idx === 0
-      const baseId = block.id
-      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
-      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
-
-      // Branch fan-out
-      if (isBranchStep) {
-        const sourceForBranches = !isTrigger ? blocks[idx - 1].id : baseId
-        const sourceBlock = !isTrigger ? blocks[idx - 1] : block
-        renderBranches(
-          block,
-          sourceForBranches,
-          sourceBlock,
-          pos.x,
-          pos.y + ySpacing,
-          deps
-        )
-        return
-      }
-
-      newNodes.push({
-        id: baseId,
-        type: "step-node",
-        data: {
-          testDataModal,
-          block,
-          isTopLevel: true,
-          direction,
-        },
-        position: pos,
-      })
-
-      if (!isTrigger) {
-        const prevId = blocks[idx - 1].id
-        newEdges.push({
-          id: `edge-${prevId}-${baseId}`,
-          type: "add-item",
-          source: prevId,
-          target: baseId,
-          data: {
-            block: blocks[idx - 1],
-            direction,
-            pathTo: blockRefs?.[prevId]?.pathTo,
-          },
-        })
-      }
-
-      // Add a terminal anchor so the FlowItemActions appears on an edge when there is no next node
-      if (blocks.length === 1 || idx === blocks.length - 1) {
-        const terminalId = `anchor-${baseId}`
-        const terminalPos = ensurePosition(terminalId, {
-          x: pos.x,
-          y: pos.y + ySpacing,
-        })
-        newNodes.push({
-          id: terminalId,
-          type: "anchor-node",
-          data: { direction },
-          position: terminalPos,
-        })
-
-        newEdges.push({
-          id: `edge-${baseId}-${terminalId}`,
-          type: "add-item",
-          source: baseId,
-          target: terminalId,
-          data: {
-            block,
-            direction,
-            pathTo: blockRefs?.[baseId]?.pathTo,
-          },
-        })
-      }
-    })
+    // Build graph via helpers
+    buildTopLevelGraph(blocks, deps)
 
     // Run Dagre layout with selected direction
     const laidOut = dagreLayoutAutomation(
       { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 150, nodesep: 300 }
+      { rankdir: direction, ranksep: 100, nodesep: 100, compactLoops: true }
     )
 
     nodes.set(laidOut.nodes)
     edges.set(laidOut.edges)
   }
 
-  // When nodes are available and we haven't applied our custom viewport yet, align the top
-  $: if ($nodes?.length && !initialViewportApplied) {
-    fitView({ maxZoom: 1 })
+  $: if ($nodes?.length && !initialViewportApplied && paneEl) {
+    focusOnTrigger()
     initialViewportApplied = true
   }
 
@@ -250,9 +168,40 @@
     $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
+  // Keep the trigger focused on load and when changing layout
+  const focusOnTrigger = () => {
+    if (!paneEl || $nodes.length === 0) {
+      return
+    }
+
+    const triggerNode = $nodes[0]
+
+    const paneRect = paneEl.getBoundingClientRect()
+    const nodeWidth = 320
+    const nodeHeight = 150
+    const nodeOffset = 100
+
+    let x, y
+
+    // These assume the trigger is at x=0, y=0
+    if (layoutDirection === "LR") {
+      // Center vertically with a slight left offset
+      const paneHeight = paneRect.height
+      x = nodeOffset - triggerNode.position.x
+      y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
+    } else {
+      // Vertical mode. Center horizontally, top offset
+      const paneWidth = paneRect.width
+      x = paneWidth / 2 - triggerNode.position.x - nodeWidth / 2
+      y = nodeOffset - triggerNode.position.y
+    }
+
+    setViewport({ x, y, zoom: 1 }, { duration: 0 })
+  }
+
   const refresh = () => {
     // Get all processed block references
-    blockRefs = $selectedAutomation.blockRefs as AutomationBlockRefMap
+    blockRefs = $selectedAutomation.blockRefs
   }
 
   const deleteAutomation = async () => {
@@ -279,7 +228,7 @@
         ...automation,
         layoutDirection,
       })
-      fitView()
+      focusOnTrigger()
     } catch (error) {
       notifications.error("Unable to save layout direction")
     }
@@ -416,6 +365,8 @@
         nodesDraggable={false}
         minZoom={0.4}
         maxZoom={1}
+        deleteKey={null}
+        proOptions={{ hideAttribution: true }}
       >
         <FlowControls
           historyStore={automationHistoryStore}
@@ -423,7 +374,6 @@
           onChangeDirection={saveDirectionChange}
         />
         <Background variant={BackgroundVariant.Dots} gap={25} />
-        <MiniMap />
       </SvelteFlow>
     </div>
   </div>
@@ -502,6 +452,11 @@
   .root {
     height: 100%;
     width: 100%;
+  }
+
+  .root :global(.svelte-flow__edgelabel-renderer) {
+    z-index: 4;
+    pointer-events: none;
   }
 
   .root :global(.block) {

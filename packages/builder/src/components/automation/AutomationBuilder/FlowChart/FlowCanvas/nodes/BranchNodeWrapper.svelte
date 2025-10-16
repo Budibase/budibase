@@ -1,24 +1,23 @@
 <script lang="ts">
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import { ViewMode } from "@/types/automations"
+  import { ViewMode, type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
-  import { enrichLog } from "./AutomationStepHelpers"
+  import { enrichLog } from "../../AutomationStepHelpers"
   import {
     type AutomationStepResult,
     type AutomationTriggerResult,
     type LayoutDirection,
   } from "@budibase/types"
 
-  export let data
+  export let data: BranchNodeData
 
   // unwrap data passed from SvelteFlow
   $: block = data.block
-  // branch object is available as data.branch but not needed here
   $: branchIdx = data.branchIdx
   $: viewMode = $automationStore.viewMode as ViewMode
   $: automation = $selectedAutomation?.data
-  $: direction = (data?.direction || "TB") as LayoutDirection
+  $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
 
   // Handle step selection in logs mode (open details panel)
