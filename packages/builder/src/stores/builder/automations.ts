@@ -57,7 +57,6 @@ import {
   BlockDefinitions,
   BlockDefinitionTypes,
   BlockPath,
-  BlockRef,
   Branch,
   BranchStep,
   EmptyFilterOption,
@@ -86,6 +85,8 @@ import {
   UILogicalOperator,
   WebhookTriggerOutputs,
   AutomationLog,
+  BlockRef,
+  isLoopV2Step,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -291,19 +292,65 @@ const automationActions = (store: AutomationStore) => ({
     const newRefs: Record<string, any> = {}
     store.actions.traverse(newRefs, newAutomation)
 
-    let finalPath
+    let finalPath: BlockPath[] = []
+    let offsetStepIdx = true
     // If dropping in a branch-step dropzone you need to find
     // the updated parent step route then add the branch details again
-    if (pathEnd?.branchStepId) {
+    if (pathEnd?.branchStepId && !pathEnd?.id) {
       const branchStepRef = newRefs[pathEnd.branchStepId]
-      finalPath = branchStepRef.pathTo
-      finalPath.push(pathEnd)
+      if (!branchStepRef?.pathTo) {
+        return
+      }
+
+      const branchStep = store.actions.getBlockByRef(
+        newAutomation,
+        branchStepRef
+      )
+
+      let insertIdx = 0
+      const branchIdx = pathEnd.branchIdx
+      if (
+        Number.isInteger(branchIdx) &&
+        branchStep &&
+        isBranchStep(branchStep)
+      ) {
+        const branchDef = branchStep.inputs?.branches?.[branchIdx]
+        const branchId = branchDef?.id
+        const children = branchId
+          ? branchStep.inputs?.children?.[branchId] || []
+          : []
+        if (typeof pathEnd.stepIdx === "number") {
+          if (pathEnd.stepIdx < 0) {
+            insertIdx = 0
+          } else {
+            insertIdx = Math.min(pathEnd.stepIdx + 1, children.length)
+          }
+        } else {
+          insertIdx = children.length
+        }
+      }
+
+      finalPath = cloneDeep(branchStepRef.pathTo)
+      finalPath.push({
+        branchIdx: pathEnd.branchIdx,
+        branchStepId: pathEnd.branchStepId,
+        stepIdx: insertIdx,
+      } as any)
+      offsetStepIdx = false
     } else {
       // Place the target 1 after the drop
       if (pathEnd?.id) {
-        finalPath = newRefs[pathEnd.id].pathTo
+        const targetRef = newRefs[pathEnd.id]
+        finalPath = cloneDeep(targetRef.pathTo)
+      } else if (destPath?.length) {
+        finalPath = cloneDeep(destPath)
       }
-      finalPath.at(-1).stepIdx += 1
+    }
+
+    if (offsetStepIdx) {
+      const lastHop = finalPath.at(-1)
+      if (!lastHop) return
+      lastHop.stepIdx += 1
     }
 
     // Uses the updated tree refs to resolve the new position
@@ -342,12 +389,20 @@ const automationActions = (store: AutomationStore) => ({
     let cache: any
     pathTo.forEach((path, pathIdx, array) => {
       const final = pathIdx === array.length - 1
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
 
-      const deleteCore = (steps: AutomationStep[], idx: number) => {
+      const deleteCore = (
+        steps: AutomationStep[],
+        idx: number,
+        extraIds?: string[]
+      ) => {
         const targetBlock = steps[idx]
         // By default, include the id of the target block
         const idsToDelete = [targetBlock.id]
+        // Include any caller-specified extra ids to delete atomically
+        if (Array.isArray(extraIds) && extraIds.length) {
+          idsToDelete.push(...extraIds)
+        }
         const blocksDeleted: AutomationStep[] = []
 
         // If deleting a looped block, ensure all related block references are
@@ -403,6 +458,19 @@ const automationActions = (store: AutomationStore) => ({
         } else {
           cache = currentBlock
         }
+        return
+      }
+
+      if (loopStepId) {
+        const children = (cache.inputs.children || []) as AutomationStep[]
+        const currentBlock = children[stepIdx]
+
+        if (final) {
+          cache = deleteCore(children, stepIdx)
+        } else {
+          cache = currentBlock
+        }
+        return
       }
     })
 
@@ -442,6 +510,15 @@ const automationActions = (store: AutomationStore) => ({
         looped: block.id,
       }
     }
+
+    // Loop V2 child flag so the UI can restrict actions
+    const lastHop: any = pathTo?.at(-1)
+    if (lastHop && lastHop.loopStepId) {
+      blocks[block.id] = {
+        ...blocks[block.id],
+        isLoopV2Child: true,
+      }
+    }
   },
 
   /**
@@ -462,7 +539,7 @@ const automationActions = (store: AutomationStore) => ({
 
     let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       let last: AutomationStep | AutomationTrigger | undefined = result.length
         ? result[result.length - 1]
         : undefined
@@ -478,7 +555,21 @@ const automationActions = (store: AutomationStore) => ({
         const children = branch.inputs?.children?.[branchId] ?? []
 
         const stepChildren = children.slice(0, stepIdx + 1)
-        // Preceeding steps.
+        result = result.concat(stepChildren)
+        return
+      }
+
+      // Handle Loop V2 child traversal
+      if (loopStepId && last) {
+        const candidate =
+          last.id === loopStepId ? last : result.find(b => b.id === loopStepId)
+
+        if (!candidate || !isLoopV2Step(candidate)) {
+          return
+        }
+
+        const children = candidate.inputs.children ?? []
+        const stepChildren = children.slice(0, stepIdx + 1)
         result = result.concat(stepChildren)
       }
     })
@@ -518,7 +609,7 @@ const automationActions = (store: AutomationStore) => ({
 
     let cache: any = null
     pathWay.forEach((path, idx, array) => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       let final = idx === array.length - 1
 
       if (!cache) {
@@ -534,6 +625,17 @@ const automationActions = (store: AutomationStore) => ({
       if (Number.isInteger(branchIdx)) {
         const branchId = cache.inputs.branches[branchIdx].id
         const children = cache.inputs.children[branchId]
+        if (final) {
+          finalise(children, stepIdx, update)
+        } else {
+          cache = children[stepIdx]
+        }
+        return
+      }
+
+      // Handle Loop V2 children inside a subflow
+      if (loopStepId) {
+        const children = (cache.inputs.children || []) as AutomationStep[]
         if (final) {
           finalise(children, stepIdx, update)
         } else {
@@ -631,7 +733,7 @@ const automationActions = (store: AutomationStore) => ({
         const valid =
           entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
           entry?.inputs?.key &&
-          (id !== selectedNodeId || entry.looped) &&
+          (id !== selectedNodeId || entry.looped || entry.isLoopV2Child) &&
           !cache.has(entry.inputs.key)
 
         // Multiple blocks can reference the same state fields.
@@ -660,7 +762,7 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @param {Object} automation
    */
-  traverse: (blockRefs: Record<string, any>, automation: Automation) => {
+  traverse: (blockRefs: Record<string, BlockRef>, automation: Automation) => {
     let blocks: (AutomationStep | AutomationTrigger)[] = []
     if (!automation || !blockRefs) {
       return
@@ -675,12 +777,14 @@ const automationActions = (store: AutomationStore) => ({
       pathTo: Array<any> | null,
       stepIdx: number,
       branchIdx: number | null,
-      terminating: boolean
+      terminating: boolean,
+      loopContext?: string
     ) => {
       const pathToCurrentNode = [
         ...(pathTo || []),
         {
           ...(Number.isInteger(branchIdx) ? { branchIdx } : {}),
+          ...(loopContext ? { loopStepId: loopContext } : {}),
           stepIdx,
           id: block.id,
         },
@@ -694,12 +798,36 @@ const automationActions = (store: AutomationStore) => ({
           children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
-              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+              treeTraverse(
+                bBlock,
+                pathToCurrentNode,
+                sIdx,
+                bIdx,
+                ended,
+                loopContext
+              )
             }
           )
         })
 
         terminating = terminating && !branches.length
+      }
+
+      // Traverse children of Loop V2 subflow
+      if (block.stepId === AutomationActionStepId.LOOP_V2) {
+        const children: AutomationStep[] = block.inputs?.children || []
+        children.forEach((child, cIdx) => {
+          const isChildTerminating = cIdx === children.length - 1
+          // For the child we continue with the current path, injecting loop context
+          treeTraverse(
+            child,
+            pathToCurrentNode,
+            cIdx,
+            null,
+            isChildTerminating,
+            block.id
+          )
+        })
       }
 
       store.actions.registerBlock(
@@ -712,7 +840,7 @@ const automationActions = (store: AutomationStore) => ({
 
     // Traverse the entire tree.
     blocks.forEach((block, idx, array) => {
-      treeTraverse(block, null, idx, null, array.length - 1 === idx)
+      treeTraverse(block, null, idx, null, array.length - 1 === idx, undefined)
     })
     return blockRefs
   },
@@ -748,7 +876,8 @@ const automationActions = (store: AutomationStore) => ({
       idx: number,
       isLoopBlock: boolean,
       pathBlock: AutomationStep | AutomationTrigger,
-      bindingName: string
+      bindingName: string,
+      opts?: { displayName?: string; readableChildName?: string }
     ) => {
       if (!name) return
 
@@ -779,8 +908,24 @@ const automationActions = (store: AutomationStore) => ({
       )
 
       const isStep = !isLoopBlock && idx !== 0
-      const defaultReadable =
-        bindingName && isStep ? `steps.${bindingName}.${name}` : runtimeBinding
+      // Readable text shown to users. For loop outputs, use the loop's name.
+      // For items drill-downs, prefer the child step name.
+      let defaultReadable: string
+      if (isLoopBlock) {
+        // Keep currentItem readable when inside the loop
+        if (name === "currentItem") {
+          defaultReadable = "loop.currentItem"
+        } else if (name?.startsWith?.("items.") && opts?.readableChildName) {
+          defaultReadable = `steps.${bindingName}.items.${opts.readableChildName}`
+        } else {
+          defaultReadable = `steps.${bindingName}.${name}`
+        }
+      } else {
+        defaultReadable =
+          bindingName && isStep
+            ? `steps.${bindingName}.${name}`
+            : runtimeBinding
+      }
 
       // Check if the schema matches any column types.
       const column = Object.values(COLUMNS).find(
@@ -796,6 +941,7 @@ const automationActions = (store: AutomationStore) => ({
       // Shown in the bindable menus
       const displayType = ignoreColumnType ? schema.type : column?.name
 
+      const displayName = opts?.displayName || name
       bindings.push({
         readableBinding: readableBinding || defaultReadable,
         runtimeBinding,
@@ -805,7 +951,7 @@ const automationActions = (store: AutomationStore) => ({
         category: categoryName,
         display: {
           type: displayType,
-          name,
+          name: displayName,
           rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
         },
       })
@@ -815,26 +961,37 @@ const automationActions = (store: AutomationStore) => ({
 
     for (let blockIdx = 0; blockIdx < pathSteps.length; blockIdx++) {
       const pathBlock = pathSteps[blockIdx]
-      const bindingName =
+      let bindingName =
         automation.definition.stepNames?.[pathBlock.id] || pathBlock.name
 
       let schema = cloneDeep(pathBlock?.schema?.outputs?.properties) ?? {}
+      // Treat both legacy LOOP and LOOP_V2 container as a loop block
       let isLoopBlock = false
       if (pathBlock.blockToLoop) {
         isLoopBlock =
           pathBlock.stepId === ActionStepID.LOOP &&
           pathBlock.blockToLoop in blocks
       }
-
-      if (isLoopBlock && loopBlockCount == 0) {
-        schema = {
-          currentItem: {
-            type: AutomationIOType.STRING,
-            description: "the item currently being executed",
-          },
-        }
+      if (pathBlock.stepId === AutomationActionStepId.LOOP_V2) {
+        isLoopBlock = true
       }
 
+      // Only inject currentItem for steps INSIDE the loop
+      // - legacy: when selected block is the looped step
+      // - v2: when selected block is a child of the loop subflow
+      if (isLoopBlock && loopBlockCount == 0) {
+        const insideV2 = Boolean(block?.isLoopV2Child)
+        const isLegacyLoop = pathBlock.stepId === ActionStepID.LOOP
+        const shouldShowCurrentItem = isLegacyLoop || insideV2
+        if (shouldShowCurrentItem) {
+          schema = {
+            currentItem: {
+              type: AutomationIOType.STRING,
+              description: "the item currently being executed",
+            },
+          }
+        }
+      }
       const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
@@ -885,6 +1042,36 @@ const automationActions = (store: AutomationStore) => ({
           schema = cloneDeep(loopBlock.schema?.outputs?.properties)
         } else {
           console.error("Loop block missing.")
+        }
+      }
+
+      // For Loop V2 blocks, when selecting a step AFTER the loop, expose
+      // per-child drilldowns under items.
+      const targetInsideLoopV2 = Boolean(block?.isLoopV2Child)
+      if (
+        pathBlock.stepId === AutomationActionStepId.LOOP_V2 &&
+        !targetInsideLoopV2
+      ) {
+        const children: AutomationStep[] = pathBlock.inputs?.children || []
+        for (const child of children) {
+          const childName =
+            automation.definition.stepNames?.[child.id] || child.name
+          addBinding(
+            `items.${child.id}`,
+            {
+              type: AutomationIOType.ARRAY,
+              description: `Per-iteration results for ${childName}. Index into [i].outputs.<prop>.`,
+            },
+            icon,
+            blockIdx,
+            isLoopBlock,
+            pathBlock,
+            bindingName,
+            {
+              displayName: `Items › ${childName}`,
+              readableChildName: childName,
+            }
+          )
         }
       }
 
@@ -964,8 +1151,21 @@ const automationActions = (store: AutomationStore) => ({
       }
     }
 
+    // Remove currentItem when not inside a loop, but keep loop outputs
+    const insideLegacyLoop = Boolean(block?.looped)
+    const insideLoopV2 = Boolean(block?.isLoopV2Child)
+    if (!insideLegacyLoop && !insideLoopV2) {
+      bindings = bindings.filter(
+        x =>
+          !(
+            x.runtimeBinding?.startsWith?.("loop.currentItem") ||
+            x.readableBinding?.startsWith?.("loop.currentItem")
+          )
+      )
+    }
+
     // Remove loop items
-    if (!block.looped) {
+    if (!insideLegacyLoop && !insideLoopV2) {
       bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
@@ -1011,8 +1211,6 @@ const automationActions = (store: AutomationStore) => ({
     currentBlock: AutomationStep | AutomationTrigger | undefined,
     pathSteps: (AutomationStep | AutomationTrigger)[]
   ) => {
-    let runtimeName: string
-
     // Legacy support for EXECUTE_SCRIPT steps
     const isJSScript =
       currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
@@ -1041,26 +1239,33 @@ const automationActions = (store: AutomationStore) => ({
     /* End special cases for generating custom schemas based on triggers */
 
     if (isLoopBlock) {
-      runtimeName = `loop.${name}`
-    } else if (idx === 0) {
-      runtimeName = `trigger.[${name}]`
-    } else if (isJSScript) {
-      const stepId = pathSteps[idx].id
+      if (name === "currentItem") {
+        return "loop.currentItem"
+      }
+
+      // For legacy loops, outputs are stored under the looped child step id
+      const loopStep = pathSteps[idx]
+      const legacyLoopChildId = loopStep?.blockToLoop
+      const stepId = legacyLoopChildId || loopStep?.id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
         return
       }
-      runtimeName = `steps["${stepId}"].${name}`
-    } else {
-      const stepId = pathSteps[idx].id
-      if (!stepId) {
-        notifications.error("Error generating binding: Step ID not found.")
-        return
-      }
-      runtimeName = `steps.${stepId}.${name}`
+      return isJSScript
+        ? `steps["${stepId}"].${name}`
+        : `steps.${stepId}.${name}`
     }
 
-    return runtimeName
+    if (idx === 0) {
+      return `trigger.[${name}]`
+    }
+
+    const stepId = pathSteps[idx]?.id
+    if (!stepId) {
+      notifications.error("Error generating binding: Step ID not found.")
+      return
+    }
+    return isJSScript ? `steps["${stepId}"].${name}` : `steps.${stepId}.${name}`
   },
 
   determineCategoryName: (
@@ -1070,7 +1275,7 @@ const automationActions = (store: AutomationStore) => ({
     loopBlockCount: number
   ) => {
     if (idx === 0) return "Trigger outputs"
-    if (isLoopBlock) return "Loop Outputs"
+    if (isLoopBlock) return `${bindingName || "Loop"} outputs`
     return bindingName
       ? `${bindingName} outputs`
       : `Step ${idx - loopBlockCount} outputs`
@@ -1294,6 +1499,21 @@ const automationActions = (store: AutomationStore) => ({
         } else {
           cache = children[stepIdx]
         }
+        return
+      }
+
+      // Handle Loop V2 children inside a subflow
+      if (
+        !Array.isArray(cache) &&
+        cache.stepId === AutomationActionStepId.LOOP_V2
+      ) {
+        const children = cache.inputs?.children || []
+        if (final) {
+          insertBlock(children, stepIdx)
+          cache = children
+        } else {
+          cache = children[stepIdx]
+        }
       }
     })
 
@@ -1302,6 +1522,88 @@ const automationActions = (store: AutomationStore) => ({
     } catch (e) {
       notifications.error("Error adding automation block")
       console.error("Automation adding block ", e)
+    }
+  },
+
+  /**
+   * Append a new block inside a Loop V2 subflow's children array.
+   *
+   * Notes:
+   * - `loopId` should be the id of the Loop V2 container. However in some
+   *   cases callers may pass the id of a child that lives inside the loop.
+   *   To make this resilient, we detect this and resolve the parent loop
+   *   via the last hop's `loopStepId` from the child's `pathTo`.
+   */
+  addBlockToLoopChildren: async (
+    loopId: string,
+    block: AutomationStep,
+    insertIndex?: number
+  ): Promise<boolean> => {
+    const automation = get(selectedAutomation)?.data
+    if (!automation) return false
+
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    const originalRef = blockRefs[loopId]
+    if (!originalRef) return false
+
+    const resolveLoopRef = () => {
+      let ref = originalRef
+      let node = automationStore.actions.getBlockByRef(automation, ref)
+
+      if (!node || node.stepId !== AutomationActionStepId.LOOP_V2) {
+        const parentLoopId = originalRef.pathTo?.at(-1)?.loopStepId
+        if (!parentLoopId) return null
+        const parentRef = blockRefs[parentLoopId]
+        if (!parentRef) return null
+        ref = parentRef
+        node = automationStore.actions.getBlockByRef(automation, ref)
+      }
+
+      if (!node || node.stepId !== AutomationActionStepId.LOOP_V2) {
+        return null
+      }
+      return { ref }
+    }
+
+    const resolved = resolveLoopRef()
+    if (!resolved) return false
+
+    // Mutate a copy of the automation, update loop children and persist via updateStep
+    const newAutomation = cloneDeep(automation)
+    const editableLoopNode = automationStore.actions.getBlockByRef(
+      newAutomation,
+      resolved.ref
+    ) as AutomationStep | undefined
+
+    if (!editableLoopNode || !isLoopV2Step(editableLoopNode)) return false
+
+    const children: AutomationStep[] = editableLoopNode.inputs?.children || []
+    const targetIndex = Math.max(
+      0,
+      Math.min(
+        typeof insertIndex === "number" ? insertIndex : children.length,
+        children.length
+      )
+    )
+    const updatedChildren = children.slice()
+    updatedChildren.splice(targetIndex, 0, block)
+
+    editableLoopNode.inputs = {
+      ...(editableLoopNode.inputs || {}),
+      children: updatedChildren,
+    }
+
+    try {
+      const updated = automationStore.actions.updateStep(
+        resolved.ref.pathTo,
+        newAutomation,
+        editableLoopNode
+      )
+      await store.actions.save(updated)
+      return true
+    } catch (_e) {
+      notifications.error("Error adding subflow step")
+      return false
     }
   },
 
@@ -1331,60 +1633,91 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Array<Object>} path - the insertion point on the tree.
    * @param {Object} automation - the target automation to update.
    */
-  branchAutomation: async (path: Array<any>, automation: Automation) => {
+  branchAutomation: async (path: Array<BlockPath>, automation: Automation) => {
     const insertPoint = path.at(-1)
+    if (!insertPoint) {
+      return
+    }
     let newAutomation = cloneDeep(automation)
-    let cache: any
+
+    // Build utilities
+    const createBranch = (name: string): Branch => ({
+      name,
+      ...store.actions.generateDefaultConditions(),
+      id: generate(),
+    })
+
+    // Traverse the path and resolve the array (container) that holds the
+    // siblings of the insertion point, accounting for branches and Loop V2 subflows.
+    let container: AutomationStep[] = newAutomation.definition.steps
+    let current: AutomationStep | AutomationTrigger | undefined = undefined
     let atRoot = false
 
-    // Generate a default empty branch
-    const createBranch = (name: string) => {
-      return {
-        name,
-        ...store.actions.generateDefaultConditions(),
-        id: generate(),
-      }
-    }
+    path.forEach((hop: BlockPath, idx: number, path: BlockPath[]) => {
+      const final = idx === path.length - 1
+      const { stepIdx, branchIdx, loopStepId } = hop
 
-    path.forEach((path, pathIdx, array) => {
-      const { stepIdx, branchIdx } = path
-      const final = pathIdx === array.length - 1
-
-      if (!cache) {
+      // First hop from the root
+      if (idx === 0) {
         if (final) {
-          cache = newAutomation.definition.steps
+          // Insert at the root level (top-level chain after trigger)
           atRoot = true
-        } else {
-          // Initial trigger offset
-          cache = newAutomation.definition.steps[stepIdx - 1]
+          return
+        }
+        current = newAutomation.definition.steps[Math.max(stepIdx - 1, 0)]
+        return
+      }
+
+      // Inside a branch lane
+      if (Number.isInteger(branchIdx)) {
+        if (current && isBranchStep(current)) {
+          const branchId = current.inputs.branches[branchIdx].id
+          const children = current.inputs.children?.[branchId] ?? []
+          if (final) {
+            container = children
+          } else {
+            current = children[stepIdx]
+          }
+          return
         }
       }
 
-      if (Number.isInteger(branchIdx)) {
-        const branchId = cache.inputs.branches[branchIdx].id
-        const children = cache.inputs.children[branchId]
+      // Inside a Loop V2 subflow
+      if (loopStepId) {
+        if (current && isLoopV2Step(current)) {
+          const children = current.inputs.children ?? []
+          if (final) {
+            container = children
+          } else {
+            current = children[stepIdx]
+          }
+          return
+        }
+      }
 
-        // return all step siblings
-        cache = final ? children : children[stepIdx]
+      if (final) {
+        container = newAutomation.definition.steps
+      } else {
+        current = newAutomation.definition.steps[Math.max(stepIdx - 1, 0)]
       }
     })
 
-    // Trigger offset when inserting
-    const rootIdx = insertPoint.stepIdx - 1
-    const insertIdx = atRoot ? rootIdx : insertPoint.stepIdx
+    // Compute the index relative to the resolved container
+    const insertIdx = atRoot ? insertPoint.stepIdx - 1 : insertPoint.stepIdx
 
-    // Check if the branch point is a on a branch step
-    // Create an empty branch instead and append it
-    if (cache[insertIdx]?.stepId == "BRANCH") {
-      let branches = cache[insertIdx].inputs.branches
+    // Case 1: user clicked above an existing Branch step — append a branch
+    if (
+      insertIdx >= 0 &&
+      container[insertIdx]?.stepId === AutomationActionStepId.BRANCH
+    ) {
+      const branchNode = container[insertIdx] as BranchStep
+      const branches = branchNode.inputs.branches
       const branchEntry = createBranch(`Branch ${branches.length + 1}`)
-
-      // Splice the branch entry in
       branches.splice(branches.length, 0, branchEntry)
-
-      // Add default children entry for the new branch
-      cache[insertIdx].inputs.children[branchEntry.id] = []
-
+      branchNode.inputs.children = {
+        ...(branchNode.inputs.children || {}),
+        [branchEntry.id]: [],
+      }
       try {
         await store.actions.save(newAutomation)
       } catch (e) {
@@ -1394,29 +1727,27 @@ const automationActions = (store: AutomationStore) => ({
       return
     }
 
-    // Creating a new branch block
     const newBranch = store.actions.generateBranchBlock()
 
     // Default branch node count is 2. Build 2 default entries
-    newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) => {
-      return createBranch(`Branch ${idx + 1}`)
-    })
+    newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) =>
+      createBranch(`Branch ${idx + 1}`)
+    )
 
     // Init the branch children. Shift all steps following the new branch step
     // into the 0th branch.
     newBranch.inputs.children = newBranch.inputs.branches.reduce(
       (acc: Record<string, AutomationStep[]>, branch: Branch, idx: number) => {
-        acc[branch.id] = idx == 0 ? cache.slice(insertIdx + 1) : []
+        acc[branch.id] = idx === 0 ? container.slice(insertIdx + 1) : []
         return acc
       },
       {}
     )
 
-    // Purge siblings that were branched
-    cache.splice(insertIdx + 1)
+    // Truncate container after the insertion point and push the new branch
+    container.splice(insertIdx + 1)
+    container.push(newBranch)
 
-    // Add the new branch to the end.
-    cache.push(newBranch)
     try {
       await store.actions.save(newAutomation)
     } catch (e) {
@@ -1503,62 +1834,91 @@ const automationActions = (store: AutomationStore) => ({
    */
   deleteBranch: async (path: Array<any>, automation: Automation) => {
     let newAutomation = cloneDeep(automation)
-    let cache: any = []
+    let cache: Array<{ node: any; context: AutomationStep[] }> = []
 
     path.forEach((path, pathIdx, array) => {
-      const { stepIdx, branchIdx } = path
+      const { stepIdx, branchIdx, loopStepId } = path
       const final = pathIdx === array.length - 1
 
-      // The first poi
+      // Initialise traversal at root level (after trigger)
       if (!cache.length) {
         if (final) {
-          cache = newAutomation.definition.steps
           return
         }
-        // Trigger offset
+        const stepsWithTrigger = [
+          newAutomation.definition.trigger,
+          ...newAutomation.definition.steps,
+        ]
+        const rootNode = stepsWithTrigger[stepIdx]
         cache = [
           {
-            node: newAutomation.definition.steps[stepIdx - 1],
+            node: rootNode,
             context: newAutomation.definition.steps,
           },
         ]
+        return
       }
 
       const current = cache.at(-1)
 
+      // Traverse into Loop V2 subflow children when present
+      if (loopStepId) {
+        let loopNode = current?.node
+        if (!loopNode || loopNode.id !== loopStepId) {
+          loopNode = current?.context?.find((n: any) => n?.id === loopStepId)
+        }
+
+        if (loopNode && isLoopV2Step(loopNode)) {
+          const children = (loopNode.inputs?.children || []) as AutomationStep[]
+          if (final) {
+            cache.push({ node: children[stepIdx], context: children })
+          } else {
+            cache.push({ node: children[stepIdx], context: children })
+          }
+          return
+        }
+      }
+
+      // Traverse into branch children
       if (Number.isInteger(branchIdx)) {
-        // data.inputs.branches.length
-        const branchId = current.node.inputs.branches[branchIdx].id
-        const children = current.node.inputs.children[branchId]
+        const branchHost = current?.node
+        const branches = branchHost?.inputs?.branches
+        const childrenMap = branchHost?.inputs?.children
+
+        const branchId = branches[branchIdx]?.id
+        const children = childrenMap[branchId] as AutomationStep[]
 
         if (final) {
-          // 2 is the minimum amount of nodes on a branch
-          const minBranches = current.node.inputs.branches.length == 2
+          // 2 is the minimum number of branches on a branch node
+          const minBranches = branches.length === 2
 
-          // Delete the target branch and its contents.
-          current.node.inputs.branches.splice(branchIdx, 1)
-          delete current.node.inputs.children[branchId]
+          // Delete the target branch and its contents
+          branchHost.inputs.branches.splice(branchIdx, 1)
+          delete branchHost.inputs.children[branchId]
 
-          // If deleting with only 2 branches, the entire branch step
-          // will be deleted, with its contents placed onto the parent.
           if (minBranches) {
-            const lastBranchId = current.node.inputs.branches[0].id
-            const lastBranchContent = current.node.inputs.children[lastBranchId]
+            const lastBranchId = branchHost.inputs.branches[0].id
+            const lastBranchContent = branchHost.inputs.children[lastBranchId]
 
             // Take the remaining branch and push all children onto the context
-            const parentContext = cache.at(-1).context
+            const parentContext: AutomationStep[] = current?.context
+              ? current.context
+              : newAutomation.definition.steps
 
-            // Remove the branch node.
-            parentContext.pop()
-
-            // Splice in the remaining branch content into the parent.
-            parentContext.splice(parentContext.length, 0, ...lastBranchContent)
+            // Find and remove the branch host from its parent context
+            const hostIndex = parentContext.findIndex(
+              n => n.id === branchHost.id
+            )
+            if (hostIndex !== -1) {
+              // Remove the branch node and splice in remaining content
+              parentContext.splice(hostIndex, 1, ...lastBranchContent)
+            }
           }
 
           return
         }
 
-        cache.push({ node: children[stepIdx], context: children })
+        cache.push({ node: children?.[stepIdx], context: children || [] })
       }
     })
 
@@ -1609,6 +1969,41 @@ const automationActions = (store: AutomationStore) => ({
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
+    }
+
+    const lastHop: BlockPath | undefined = pathTo?.at(-1)
+    const loopId: string | undefined = lastHop?.loopStepId
+    const isInsideBranch = Number.isInteger(lastHop?.branchIdx)
+
+    if (
+      loopId != null &&
+      typeof lastHop?.stepIdx === "number" &&
+      !isInsideBranch
+    ) {
+      let newAutomation = cloneDeep(automation)
+      try {
+        const loopRef = get(selectedAutomation)?.blockRefs?.[loopId]
+        const loopNode = store.actions.getBlockByRef(newAutomation, loopRef)
+
+        if (loopNode && loopNode.stepId === AutomationActionStepId.LOOP_V2) {
+          const children: AutomationStep[] = (
+            loopNode.inputs?.children || []
+          ).slice()
+
+          children.splice(lastHop.stepIdx, 1)
+          if (
+            children[lastHop.stepIdx]?.stepId === AutomationActionStepId.BRANCH
+          ) {
+            children.splice(lastHop.stepIdx, 1)
+          }
+
+          loopNode.inputs = { ...(loopNode.inputs || {}), children }
+          await store.actions.save(newAutomation)
+          return
+        }
+      } catch (e) {
+        console.error("Loop V2 cascade delete fallback", e)
+      }
     }
 
     const { newAutomation } = store.actions.deleteBlock(pathTo, automation)
@@ -2002,7 +2397,7 @@ const automationActions = (store: AutomationStore) => ({
       )
     }
 
-    await store.actions.fetch()
+    store.actions.replace(response.automation._id!, response.automation)
     store.actions.select(response.automation._id!)
     return response.automation
   },
@@ -2108,12 +2503,61 @@ const automationActions = (store: AutomationStore) => ({
    * @returns
    */
   removeLooping: async (blockRef?: BlockRef) => {
-    if (!blockRef?.looped) {
+    if (!blockRef) {
       return
     }
-    let loopBlockRef = get(selectedAutomation).blockRefs[blockRef.looped]
-    if (loopBlockRef) {
-      await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    const automation = get(selectedAutomation)?.data
+
+    // Legacy LOOP: referenced via `looped`
+    if (blockRef.looped) {
+      const loopBlockRef = blockRefs[blockRef.looped]
+      if (loopBlockRef) {
+        await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
+      }
+      return
+    }
+
+    // Loop V2 unwrap: only when parent loop has exactly one child (the target)
+    const lastHop: any = blockRef.pathTo?.at(-1)
+    const parentLoopId: string | undefined = lastHop?.loopStepId
+    if (!automation || !parentLoopId) {
+      return
+    }
+
+    const loopRef = blockRefs[parentLoopId]
+    if (!loopRef) {
+      return
+    }
+
+    try {
+      const loopNode = automationStore.actions.getBlockByRef(
+        automation,
+        loopRef
+      )
+      if (!loopNode || loopNode.stepId !== AutomationActionStepId.LOOP_V2) {
+        console.error("Parent is not a Loop V2 node")
+        return
+      }
+
+      const children = (loopNode.inputs?.children || []).slice()
+      if (children.length !== 1) {
+        notifications.info(
+          "Stop Looping is only available when the loop contains a single step."
+        )
+        return
+      }
+
+      const updated = automationStore.actions.updateStep(
+        loopRef.pathTo,
+        automation,
+        cloneDeep(children[0])
+      )
+      await automationStore.actions.save(updated)
+      await automationStore.actions.selectNode(children[0].id)
+    } catch (e) {
+      notifications.error("Error removing loop from step")
+      console.error("Error unwrapping from Loop V2", e)
     }
   },
 
@@ -2140,6 +2584,57 @@ const automationActions = (store: AutomationStore) => ({
       loopBlock,
       blockRef.pathTo
     )
+  },
+
+  /**
+   * Wrap the target step in a Loop V2 container and move the step into
+   * the loop's children as the first child.
+   * @param blockRef The step to wrap
+   */
+  wrapStepInLoopV2: async (blockRef?: BlockRef) => {
+    if (!blockRef) {
+      return
+    }
+    const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return
+    }
+
+    try {
+      const pathSteps = automationStore.actions.getPathSteps(
+        blockRef.pathTo,
+        automation
+      )
+      const targetStep = pathSteps.at(-1)
+      if (!targetStep || Array.isArray(targetStep)) {
+        console.error("Invalid target step for Loop V2 wrap")
+        return
+      }
+
+      const loopDefinition = get(store).blockDefinitions.ACTION.LOOP_V2
+      const loopBlock = automationStore.actions.constructBlock(
+        BlockDefinitionTypes.ACTION,
+        AutomationActionStepId.LOOP_V2,
+        loopDefinition
+      )
+
+      loopBlock.inputs = {
+        ...(loopBlock.inputs || {}),
+        children: [cloneDeep(targetStep)],
+      }
+
+      const updated = automationStore.actions.updateStep(
+        blockRef.pathTo,
+        automation,
+        loopBlock
+      )
+
+      await automationStore.actions.save(updated)
+      await automationStore.actions.selectNode(targetStep.id)
+    } catch (e) {
+      notifications.error("Error wrapping step in Loop")
+      console.error("Error wrapping step in Loop V2", e)
+    }
   },
 
   /**
