@@ -17,7 +17,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import { type DragView } from "./FlowChartDnD"
+  import { type DragView } from "./FlowCanvas/FlowChartDnD"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -44,6 +44,10 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
+  $: blockRef = block?.id
+    ? $selectedAutomation?.blockRefs?.[block.id]
+    : undefined
+  $: isInsideLoop = blockRef?.pathTo?.some(hop => hop.loopStepId) ?? false
 
   $: triggerInfo = (() => {
     const automationData = $selectedAutomation.data
@@ -115,7 +119,7 @@
   }
 
   function onHandleMouseDown(e: MouseEvent) {
-    if (isTrigger) {
+    if (isTrigger || isInsideLoop) {
       e.preventDefault()
       return
     }
@@ -153,7 +157,7 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
-    class:draggable
+    class:draggable={draggable && !isInsideLoop}
     class:selected
     class:unexecuted
   >
@@ -176,7 +180,7 @@
             {viewMode}
           />
         </div>
-        {#if draggable}
+        {#if draggable && !isInsideLoop}
           <div
             class="handle"
             class:grabbing={dragging}

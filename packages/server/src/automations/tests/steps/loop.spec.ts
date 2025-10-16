@@ -1162,5 +1162,55 @@ describe("Loop Automations", () => {
       expect(logResults).toHaveLength(1)
       expect(logResults[0].outputs.message).toContain("Processed: process")
     })
+
+    it("sanitizes branch results in loop items", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.branch({
+                takeA: {
+                  steps: b =>
+                    b.serverLog({ text: "Branch A {{loop.currentItem}}" }),
+                  condition: {
+                    equal: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+                takeB: {
+                  steps: b =>
+                    b.serverLog({ text: "Branch B {{loop.currentItem}}" }),
+                  condition: {
+                    notEqual: { "{{ literal loop.currentItem }}": 1 },
+                  },
+                },
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1],
+        })
+        .test({ fields: {} })
+
+      const loopOutputs = steps[0].outputs
+      const items = getLoopItems(loopOutputs)
+      const branchKey = Object.keys(items).find(
+        key => items[key][0]?.stepId === AutomationActionStepId.BRANCH
+      )
+
+      expect(branchKey).toBeDefined()
+      const first = items[branchKey!][0]
+
+      // Inputs should be stripped
+      expect(first.inputs).toEqual({})
+
+      // Only expose success/status/branchName
+      expect(Object.keys(first.outputs).sort()).toEqual([
+        "branchName",
+        "status",
+        "success",
+      ])
+      expect(first.outputs.branchName).toBe("takeA")
+    })
   })
 })

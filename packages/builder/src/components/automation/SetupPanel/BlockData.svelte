@@ -252,6 +252,7 @@
   }
 
   $: parsedContext = parseContext(context, blockRef)
+  $: isLoopChild = blockRef?.pathTo?.some(path => path.loopStepId)
 </script>
 
 <div class="tabs">
@@ -286,9 +287,17 @@
       />
     {:else if testResults && !blockResults}
       <div class="content">
-        <span class="info">
-          This step was not executed as part of the test run
-        </span>
+        {#if isLoopChild}
+          <span class="info">
+            This step was executed, but outputs are not exposed for individual
+            steps inside loops. Click the loop node to view loop outputs, or use
+            the State block to expose specific data.
+          </span>
+        {:else}
+          <span class="info">
+            This step was not executed as part of the test run
+          </span>
+        {/if}
       </div>
     {:else}
       <div class="content">

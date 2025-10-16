@@ -1,5 +1,5 @@
 <script lang="ts">
-  import FlowItem from "./FlowItem.svelte"
+  import FlowItem from "../../FlowItem.svelte"
   import { ViewMode } from "@/types/automations"
   import {
     AutomationActionStepId,
