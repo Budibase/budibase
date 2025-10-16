@@ -2,6 +2,10 @@ import { Document } from "../document"
 import { SourceName } from "../../sdk"
 import { Table } from "./table"
 
+export interface DatasourceUIMetadata {
+  iconUrl?: string
+}
+
 export interface Datasource extends Document {
   type: string
   name?: string
@@ -15,6 +19,7 @@ export interface Datasource extends Document {
   isSQL?: boolean
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
+  uiMetadata?: DatasourceUIMetadata
 }
 
 export enum RestAuthType {
