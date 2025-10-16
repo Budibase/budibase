@@ -8,60 +8,109 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Carbone.io",
+      name: "Microsoft Teams",
       description:
-        "Document generation API for creating PDFs, Word docs, and more from templates",
-      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/carbone.io/1.2.0/openapi.yaml",
-      icon: "/builder/assets/rest-template-icons/carbone.png",
-    },
-    {
-      name: "Jira",
-      description:
-        "Issue tracking and project management API for agile development teams",
-      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
-      icon: "/builder/assets/rest-template-icons/jira.svg",
-    },
-    {
-      name: "Wikimedia",
-      description:
-        "Wikipedia and Wikimedia projects API for accessing content and metadata",
-      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/wikimedia.org/1.0.0/swagger.yaml",
-      icon: "/builder/assets/rest-template-icons/wikimedia.png",
-    },
-    {
-      name: "Twilio",
-      description:
-        "Communications API for SMS, voice, video, and messaging services",
-      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/twilio.com/api/1.55.0/openapi.yaml",
-      icon: "/builder/assets/rest-template-icons/twilio.svg",
+        "Microsoft Graph endpoints for Teams channels, chats, and meeting workflows",
+      url: "https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/microsoft-teams.svg",
     },
     {
       name: "Stripe",
       description:
-        "Secure payment processing, subscriptions and financial data management",
+        "Secure payment processing, subscriptions, billing, and reporting APIs",
       url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
       icon: "/builder/assets/rest-template-icons/stripe.svg",
     },
     {
+      name: "BambooHR",
+      description:
+        "HRIS platform for employee records, time off, and performance management",
+      url: "https://raw.githubusercontent.com/kevinoid/bamboohr-openapi/main/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/bamboohr.svg",
+    },
+    {
+      name: "Gmail",
+      description:
+        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
+      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/gmail.svg",
+    },
+    {
       name: "Salesforce",
       description:
-        "CRM data management, lead tracking, and customer relationship automation",
+        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
       url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
-      icon: "/builder/assets/rest-template-icons/salesforce.png",
+      icon: "/builder/assets/rest-template-icons/salesforce.svg",
+    },
+    {
+      name: "Box",
+      description:
+        "Cloud content management for files, folders, collaboration, and metadata",
+      url: "https://raw.githubusercontent.com/speakeasy-sdks/box-sdks/main/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/box.svg",
+    },
+    {
+      name: "NetSuite",
+      description:
+        "ERP platform covering finance, inventory, and record management REST APIs",
+      url: "https://raw.githubusercontent.com/philip-denys/netsuite-rest-api-v1/master/ns-restapi-v1.yaml",
+      icon: "/builder/assets/rest-template-icons/netsuite.svg",
+    },
+    {
+      name: "n8n",
+      description:
+        "n8n public API for managing workflows, executions, credentials, and users",
+      url: "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/cli/src/public-api/v1/openapi.yml",
+      icon: "/builder/assets/rest-template-icons/n8n.svg",
+    },
+    {
+      name: "Jira",
+      description:
+        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
+      url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
+      icon: "/builder/assets/rest-template-icons/jira.svg",
+    },
+    {
+      name: "GitHub",
+      description:
+        "GitHub REST API for repositories, issues, pull requests, and actions",
+      url: "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.yaml",
+      icon: "/builder/assets/rest-template-icons/github.svg",
+    },
+    {
+      name: "GitLab",
+      description:
+        "GitLab REST API for groups, projects, pipelines, and DevOps automation",
+      url: "https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi.yaml",
+      icon: "/builder/assets/rest-template-icons/gitlab.svg",
     },
     {
       name: "Zendesk",
       description:
-        "Customer support ticket management, user data, and service analytics",
+        "Zendesk Service API for tickets, users, help center, and support workflows",
       url: "https://developer.zendesk.com/zendesk/oas.yaml",
-      icon: "/builder/assets/rest-template-icons/zendesk.png",
+      icon: "/builder/assets/rest-template-icons/zendesk.svg",
     },
     {
-      name: "Intercom",
+      name: "PagerDuty",
       description:
-        "Customer messaging, user engagement, and support conversation management",
-      url: "https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/refs/heads/main/descriptions/2.14/api.intercom.io.yaml",
-      icon: "/builder/assets/rest-template-icons/intercom.svg",
+        "PagerDuty REST resources for services, incidents, and incident automation",
+      url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/pagerduty/v00.00.00000/services/services.yaml",
+      icon: "/builder/assets/rest-template-icons/pagerduty.svg",
+    },
+    {
+      name: "Okta",
+      description:
+        "Okta management API for directories, authentication, and lifecycle automation",
+      url: "https://raw.githubusercontent.com/okta/okta-management-openapi-spec/master/dist/current/management-oneOfInheritance.yaml",
+      icon: "/builder/assets/rest-template-icons/okta.svg",
+    },
+    {
+      name: "Datadog Metrics",
+      description:
+        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
+      url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
+      icon: "/builder/assets/rest-template-icons/datadog.svg",
     },
   ],
 }
