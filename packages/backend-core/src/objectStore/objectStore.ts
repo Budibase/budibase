@@ -346,11 +346,6 @@ export async function streamUpload({
 
     const { bucket, client } = await initialiseBucket(bucketName, ttl, span)
 
-    const headDetails = await client.headObject({
-      Bucket: bucket,
-      Key: sanitizeKey(filename),
-    })
-
     const { details, contentType } = await streamUploadInternal({
       client,
       bucket,
@@ -358,6 +353,11 @@ export async function streamUpload({
       stream,
       type,
       extra,
+    })
+
+    const headDetails = await client.headObject({
+      Bucket: bucket,
+      Key: sanitizeKey(filename),
     })
 
     span.addTags({ contentType, contentLength: headDetails.ContentLength })
