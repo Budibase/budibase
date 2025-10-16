@@ -54,15 +54,12 @@ function createBuilderStores() {
   }
 }
 
-let builderStores
+vi.mock("@/stores/builder", () => createBuilderStores().module)
 
-vi.mock("@/stores/builder", () => {
-  builderStores = createBuilderStores()
-  return builderStores.module
-})
+import { tables as tablesStore, queries as queriesStore } from "@/stores/builder"
 
-const getTablesStore = () => builderStores.tables
-const getQueriesStore = () => builderStores.queries
+const getTablesStore = () => tablesStore
+const getQueriesStore = () => queriesStore
 
 describe("Builder dataBinding", () => {
   beforeEach(() => {
