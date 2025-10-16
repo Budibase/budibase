@@ -44,9 +44,6 @@ if (typeof window !== "undefined") {
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
-// @ts-ignore
-import * as internal from "svelte/internal"
-window.svelte_internal = internal
 window.svelte = svelte
 
 // Extend global window scope
@@ -80,7 +77,6 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
-    svelte_internal: typeof internal
     INIT_TIME: number
   }
 }

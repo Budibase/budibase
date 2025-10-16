@@ -274,7 +274,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
       }
 
-      const { head, html, css } = AppComponent.render({ props })
+      // `css` deprecated. CSS elements now included in `head`
+      const { head, html } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
@@ -316,7 +317,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       ctx.body = await processString(appHbs, {
         head: `${head}${extraHead}`,
         body: html,
-        css: `:root{${themeVariables}} ${css.code}`,
+        css: `:root{${themeVariables}}`,
         appId,
         embedded: bbHeaderEmbed,
         nonce: ctx.state.nonce,

@@ -3,6 +3,8 @@ import { svelte } from "@sveltejs/vite-plugin-svelte"
 import path from "path"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
 
+const ignoredWarnings = ["element_invalid_self_closing_tag"]
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
   return {
@@ -16,6 +18,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       svelte({
         emitCss: true,
+        onwarn: (warning, handler) => {
+          // Ignore some warnings
+          if (!ignoredWarnings.includes(warning.code)) {
+            handler(warning)
+          }
+        },
       }),
       cssInjectedByJsPlugin(),
     ],

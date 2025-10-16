@@ -11,6 +11,7 @@ const ignoredWarnings = [
   "module-script-reactive-declaration",
   "a11y-no-onchange",
   "a11y-click-events-have-key-events",
+  "element_invalid_self_closing_tag",
 ]
 
 const copyFonts = dest =>
@@ -70,10 +71,10 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
     },
     plugins: [
-      typescript({ outDir: "../server/builder/dist" }),
+      // typescript({ outDir: "../server/builder/dist" }),
       svelte({
-        hot: !isProduction,
         emitCss: true,
+        hot: !isProduction, // Enable HMR in development
         onwarn: (warning, handler) => {
           // Ignore some warnings
           if (!ignoredWarnings.includes(warning.code)) {
@@ -92,11 +93,25 @@ export default defineConfig(({ mode }) => {
       ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
-      exclude: ["@roxi/routify", "fsevents"],
+      exclude: ["@roxi/routify", "fsevents", "svelte"],
     },
     resolve: {
-      conditions: mode === "test" ? ["browser"] : [],
-      dedupe: ["@roxi/routify"],
+      // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts#L60
+      // ['module', 'browser', 'node', DEV_PROD_CONDITION]
+
+      // Recent change in BB
+      // conditions: mode === "test" ? ["browser"] : []
+
+      // Minimal for svelte 5 in v4 compatibility mode
+      conditions: ["browser"],
+      // "svelte" may be required for processing raw svelte files?
+
+      // Seems correct
+      // conditions: !isProduction
+      //   ? ["svelte", "development", "browser", "default"]
+      //   : ["svelte", "production", "browser", "default"],
+
+      dedupe: ["@roxi/routify", "svelte"],
       alias: {
         "@budibase/types": path.resolve(__dirname, "../types/src"),
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),

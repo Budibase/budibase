@@ -19,6 +19,8 @@
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
 
+  $goto
+
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"

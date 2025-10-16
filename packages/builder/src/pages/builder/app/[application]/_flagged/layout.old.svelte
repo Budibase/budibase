@@ -28,6 +28,8 @@
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
 
+  $goto
+
   export let application
 
   let promise = getPackage()

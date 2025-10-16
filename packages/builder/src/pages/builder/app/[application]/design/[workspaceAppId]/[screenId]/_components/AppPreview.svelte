@@ -21,7 +21,7 @@
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
-
+  $goto
   let iframe
   let layout
   let screen

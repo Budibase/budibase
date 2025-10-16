@@ -32,7 +32,11 @@ const svelteCompilePlugin = {
         )
         const { js } = compile(preprocessed.code, {
           css: "injected",
-          generate: "ssr",
+          generate: "server", // server? https://svelte.dev/docs/svelte/svelte-compiler#ModuleCompileOptions
+          runes: false,
+          compatibility: {
+            componentApi: 4,
+          },
         })
 
         return {
@@ -71,6 +75,7 @@ async function runBuild(entry, outfile) {
     minify: !isDev,
     sourcemap: tsconfigPathPluginContent.compilerOptions.sourceMap,
     tsconfig,
+    // conditions: ["svelte", "browser"], // REVIEW THIS
     plugins: [
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
@@ -78,6 +83,7 @@ async function runBuild(entry, outfile) {
         allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
       }),
     ],
+    // loader: { ".png": "file" }, // REVIEW THIS
     preserveSymlinks: true,
     metafile: true,
     external: [

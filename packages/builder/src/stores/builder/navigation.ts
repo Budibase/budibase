@@ -134,4 +134,26 @@ export class NavigationStore extends DerivedBudiStore<
   }
 }
 
-export const navigationStore = new NavigationStore()
+// export const navigationStore = new NavigationStore()
+
+let _navigationStore: NavigationStore | null = null
+
+// This could be swish
+function getStore() {
+  if (!_navigationStore) {
+    console.log("Lazy initializing NavigationStore...??")
+    _navigationStore = new NavigationStore()
+  }
+  return _navigationStore
+}
+
+export const navigationStore = new Proxy({} as NavigationStore, {
+  get(target, prop) {
+    const store = getStore()
+    const value = (store as any)[prop]
+    if (typeof value === "function") {
+      return value.bind(store)
+    }
+    return value
+  },
+})

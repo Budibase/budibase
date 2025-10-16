@@ -10,6 +10,8 @@
   import FavouriteAppButton from "@/pages/builder/portal/apps/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
+  $goto
+
   export let app
   export let lockedAction
 

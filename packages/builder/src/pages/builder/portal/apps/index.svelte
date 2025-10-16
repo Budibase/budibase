@@ -38,6 +38,8 @@
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import { BannerType } from "@/constants/banners"
 
+  $goto
+
   let creationModal
   let appLimitModal
   let accountLockedModal

@@ -16,6 +16,7 @@
   import { TableNames } from "@/constants"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
+  $goto
 
   export let searchTerm
   let toggledDatasources = {}
