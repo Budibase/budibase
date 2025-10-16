@@ -1,5 +1,5 @@
 <script>
-  import { Divider, Layout } from "@budibase/bbui"
+  import { Divider, Layout, StatusLight } from "@budibase/bbui"
   import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import { bb } from "@/stores/bb"
   import NewPill from "@/components/common/NewPill.svelte"
@@ -22,10 +22,18 @@
           <div
             class="nav-tab"
             class:match={nav.path === route.path}
+            class:error={nav.error?.()}
             on:click={() => bb.settings(nav.path)}
           >
             {nav.title}
-            {#if nav.new}
+            {#if nav.error?.()}
+              <span class="indicator">
+                <StatusLight
+                  color={"var(--spectrum-global-color-static-red-600)"}
+                  size="M"
+                />
+              </span>
+            {:else if route.new}
               <NewPill />
             {/if}
           </div>
@@ -83,6 +91,7 @@
     padding: var(--spacing-l);
   }
   .nav-tab {
+    position: relative;
     display: flex;
     cursor: pointer;
     align-items: center;
@@ -91,6 +100,13 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 14px;
   }
+
+  .nav-tab.error .indicator {
+    position: absolute;
+    right: -12px;
+    top: -5px;
+  }
+
   .nav-tab:hover {
     color: var(--spectrum-global-color-gray-900);
     cursor: default;

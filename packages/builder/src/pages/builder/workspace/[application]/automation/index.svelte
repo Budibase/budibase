@@ -10,6 +10,7 @@
   import { capitalise, durationFromNow } from "@/helpers"
   import { getTriggerFriendlyName } from "@/helpers/automations"
   import {
+    appStore,
     automationStore,
     contextMenuStore,
     workspaceFavouriteStore,
@@ -25,13 +26,15 @@
     type ModalAPI,
     notifications,
     TooltipPosition,
+    StatusLight,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState, WorkspaceResource } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
+  import { appsStore } from "@/stores/portal"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -62,6 +65,7 @@
   ]
 
   $: favourites = workspaceFavouriteStore.lookup
+  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
 
   async function deleteAutomation() {
     if (!selectedAutomation) {
@@ -247,9 +251,17 @@
       on:contextmenu={e => openContextMenu(e, automation)}
       class:active={showHighlight && selectedAutomation === automation}
     >
-      <Body size="S" color="var(--spectrum-global-color-gray-900)"
-        >{automation.name}</Body
-      >
+      <Body size="S" color="var(--spectrum-global-color-gray-900)">
+        <div class="auto-name">
+          {automation.name}
+          {#if automation._id && targetApp?.automationErrors?.[automation._id]}
+            <StatusLight
+              color="var(--spectrum-global-color-static-red-600)"
+              size="M"
+            />
+          {/if}
+        </div>
+      </Body>
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
         <PublishStatusBadge
@@ -319,6 +331,10 @@
 {/if}
 
 <style>
+  .auto-name {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
   .automations-index {
     background: var(--background);
     flex: 1 1 auto;

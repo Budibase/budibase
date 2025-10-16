@@ -23,7 +23,7 @@
   import { auth } from "@/stores/portal/auth"
   import { admin } from "@/stores/portal/admin"
   import { routeActions } from "@/settings/pages"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
 
   const schema = {
     name: {

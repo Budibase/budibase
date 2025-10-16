@@ -19,7 +19,7 @@
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
 
   import SnippetDrawer from "./SnippetDrawer.svelte"
-  import UpgradeButton from "@/pages/builder/portal/_components/UpgradeButton.svelte"
+  import UpgradeButton from "@/pages/builder/_components/UpgradeButton.svelte"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void = () => {}
   export let addBinding: (_binding: EnrichedBinding) => void = () => {}
