@@ -49,7 +49,6 @@
     SvelteFlow,
     Background,
     BackgroundVariant,
-    MiniMap,
     useSvelteFlow,
     type Node as FlowNode,
     type Edge as FlowEdge,
@@ -367,6 +366,7 @@
         minZoom={0.4}
         maxZoom={1}
         deleteKey={null}
+        proOptions={{ hideAttribution: true }}
       >
         <FlowControls
           historyStore={automationHistoryStore}
@@ -374,7 +374,6 @@
           onChangeDirection={saveDirectionChange}
         />
         <Background variant={BackgroundVariant.Dots} gap={25} />
-        <MiniMap />
       </SvelteFlow>
     </div>
   </div>

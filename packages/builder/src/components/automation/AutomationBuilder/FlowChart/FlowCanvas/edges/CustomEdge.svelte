@@ -77,6 +77,12 @@
   $: isBranchTarget = target?.startsWith("branch-")
   $: isAnchorTarget = target?.startsWith("anchor-")
   $: isSubflowEdge = data.isSubflowEdge === true
+
+  $: if (isAnchorTarget && direction === "LR") {
+    labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+    labelY = sourceY ?? 0
+  }
+
   $: path = isAnchorTarget
     ? getStraightPath({
         sourceX,
