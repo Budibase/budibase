@@ -9,6 +9,7 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
 
   // Function to get available forms for builder settings
   export const getAvailableForms = () => {
@@ -160,6 +161,73 @@
   // Get detailed information about the selected form directly from the form prop
   $: selectedFormDetails = form ? getComponentDetails(form) : null
 
+  // Determine the provider key used by the form's context (forms inside blocks use "<blockId>-form")
+  $: providerKey = (() => {
+    if (!selectedFormDetails?.formAnalysis?.type) {
+      return form
+    }
+    return selectedFormDetails.formAnalysis.type === "Form"
+      ? selectedFormDetails.id
+      : `${selectedFormDetails.id}-form`
+  })()
+
+  // Subscribe to the selected form's data context to track step + validation
+  let formDataStore = derived(context, $ctx =>
+    providerKey ? $ctx?.[providerKey] : null
+  )
+  $: formDataStore = derived(context, $ctx =>
+    providerKey ? $ctx?.[providerKey] : null
+  )
+
+  // Expose current step and its validity from the form context
+  $: currentStep = $formDataStore?.__currentStep || 1
+  $: currentStepValid =
+    $formDataStore?.__currentStepValid !== undefined
+      ? $formDataStore.__currentStepValid
+      : true
+
+  // Track per-step statuses: "incomplete" | "current" | "valid" | "invalid"
+  let stepStatuses: Array<"incomplete" | "current" | "valid" | "invalid"> = []
+  let lastStep: number | null = null
+
+  // Reset statuses when form or step count changes
+  $: {
+    const stepCount = selectedFormDetails?.formAnalysis?.stepCount || 0
+    if (stepCount && stepStatuses.length !== stepCount) {
+      stepStatuses = Array(stepCount).fill("incomplete")
+      lastStep = null
+    }
+  }
+
+  // When step changes forward, mark previous step as valid (passed validation)
+  $: if (
+    stepStatuses.length > 0 &&
+    currentStep != null &&
+    currentStep >= 1 &&
+    currentStep <= stepStatuses.length
+  ) {
+    if (lastStep != null && currentStep !== lastStep) {
+      if (currentStep > lastStep && lastStep - 1 in stepStatuses) {
+        stepStatuses[lastStep - 1] = "valid"
+      }
+    }
+    lastStep = currentStep
+  }
+
+  // Reflect current step validity live
+  $: if (
+    stepStatuses.length > 0 &&
+    currentStep >= 1 &&
+    currentStep <= stepStatuses.length
+  ) {
+    stepStatuses = stepStatuses.map((status, idx) => {
+      if (idx === currentStep - 1) {
+        return currentStepValid ? "current" : "invalid"
+      }
+      return status === "current" ? "incomplete" : status
+    })
+  }
+
   // Get step customizations or use defaults
   $: getStepCustomization = stepIndex => {
     const stepKey = `step${stepIndex + 1}`
@@ -170,6 +238,7 @@
       completedColor: stepConfig?.completedColor || "#22c55e",
       currentColor: stepConfig?.currentColor || "#3b82f6",
       incompleteColor: stepConfig?.incompleteColor || "#94a3b8",
+      errorColor: stepConfig?.errorColor || "#ef4444",
     }
   }
 </script>
@@ -187,11 +256,18 @@
           <div class="steps-container">
             {#each selectedFormDetails.formAnalysis.steps as step, index}
               {@const customization = getStepCustomization(index)}
+              {@const status = stepStatuses[index] || "incomplete"}
               <div class="step-indicator">
                 <div class="step-icon-container">
                   <i
                     class="{customization.icon} ri-xl step-icon"
-                    style="color: {customization.incompleteColor};"
+                    style="color: {status === 'valid'
+                      ? customization.completedColor
+                      : status === 'current'
+                      ? customization.currentColor
+                      : status === 'invalid'
+                      ? customization.errorColor
+                      : customization.incompleteColor};"
                   ></i>
                 </div>
                 <div class="step-info">
