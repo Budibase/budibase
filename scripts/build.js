@@ -49,7 +49,14 @@ const svelteCompilePlugin = {
           resolveDir: dir,
         }
       } catch (e) {
-        return { errors: [JSON.stringify(e)] }
+        return {
+          errors: [
+            {
+              text: e && e.message ? e.message : String(e),
+              detail: e,
+            },
+          ],
+        }
       }
     })
   },
