@@ -1302,15 +1302,16 @@ class InternalBuilder {
     return false
   }
 
-  private findSortablePrimaryKey(primaryKey: string[]): string | undefined {
-    for (const key of primaryKey) {
-      const schema = this.getFieldSchema(key)
-      if (this.isUnsortableField(schema)) {
-        continue
+  private findSortablePrimaryKey(
+    primaryKey: Array<string | undefined>
+  ): string | undefined {
+    return primaryKey.find(key => {
+      if (key == null) {
+        return false
       }
-      return key ?? undefined
-    }
-    return undefined
+      const schema = this.getFieldSchema(key)
+      return !this.isUnsortableField(schema)
+    })
   }
 
   tableNameWithSchema(
