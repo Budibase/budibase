@@ -61,7 +61,7 @@ function addDebugInformation(messages: Message[]) {
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
 ) {
-  const model = await ai.getLLMOrThrow()
+  const model = await ai.getLLMOrThrow(true)
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
 
@@ -133,7 +133,7 @@ export async function agentChat(
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const model = await ai.getLLMOrThrow()
+  const model = await ai.getLLMOrThrow(true)
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
 

@@ -12,7 +12,6 @@ export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .post("/api/agent/chat", chatAgentValidator(), ai.agentChat)
-  .post("/api/agent/chat", ai.agentChat)
   .post("/api/agent/chat/stream", ai.agentChatStream)
   .delete("/api/agent/history/:historyId", ai.remove)
   .get("/api/agent/history", ai.fetchHistory)
