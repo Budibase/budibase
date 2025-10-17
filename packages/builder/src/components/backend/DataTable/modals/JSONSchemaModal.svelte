@@ -42,11 +42,7 @@
     isPlainObject(value) && ("type" in value || "schema" in value)
 
   const unpackSchemaValue = value => {
-    if (
-      isPlainObject(value) &&
-      "schema" in value &&
-      ("type" in value || isPlainObject(value.schema))
-    ) {
+    if (isSchemaEntry(value)) {
       return {
         wrapper: value,
         map: value.schema || {},
