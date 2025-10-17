@@ -1,16 +1,16 @@
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
+  AIFieldMetadata,
   DatabaseQueryOpts,
   Datasource,
   DocumentType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  LinkDocument,
   RelationshipFieldMetadata,
   SourceName,
   VirtualDocumentType,
-  LinkDocument,
-  AIFieldMetadata,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -19,7 +19,7 @@ const newid = utils.newid
 
 type Optional = string | null
 
-export const enum AppStatus {
+export const enum WorkspaceStatus {
   DEV = "development",
   ALL = "all",
   DEPLOYED = "published",
@@ -35,10 +35,10 @@ export const BudibaseInternalDB: Datasource = {
 
 export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
-export const APP_PREFIX = dbCore.APP_PREFIX
-export const APP_DEV_PREFIX = dbCore.APP_DEV_PREFIX
-export const isDevAppID = dbCore.isDevAppID
-export const isProdAppID = dbCore.isProdAppID
+export const WORKSPACE_PREFIX = dbCore.WORKSPACE_PREFIX
+export const WORKSPACE_DEV_PREFIX = dbCore.WORKSPACE_DEV_PREFIX
+export const isDevWorkspaceID = dbCore.isDevWorkspaceID
+export const isProdWorkspaceID = dbCore.isProdWorkspaceID
 export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
@@ -46,8 +46,8 @@ export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
-export const generateAppID = dbCore.generateAppID
-export const generateDevAppID = dbCore.getDevelopmentAppID
+export const generateWorkspaceID = dbCore.generateWorkspaceID
+export const getDevWorkspaceID = dbCore.getDevWorkspaceID
 export const generateRoleID = dbCore.generateRoleID
 export const getRoleParams = dbCore.getRoleParams
 export const getQueryIndex = dbCore.getQueryIndex
@@ -77,10 +77,7 @@ export function generateTableID() {
 /**
  * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
  */
-export function getAutomationParams(
-  automationId?: Optional,
-  otherProps: any = {}
-) {
+export function getAutomationParams(automationId?: Optional, otherProps = {}) {
   return getDocParams(DocumentType.AUTOMATION, automationId, otherProps)
 }
 
@@ -125,10 +122,10 @@ function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
 }
 
 /**
- * Gets all the link docs document from the current app db.
+ * Gets all the link docs document from the current workspace db.
  */
 export async function allLinkDocs() {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   const response = await db.allDocs<LinkDocument>(
     getLinkParams({
@@ -149,7 +146,7 @@ export function generateLayoutID(id?: string) {
 /**
  * Gets parameters for retrieving layout, this is a utility function for the getDocParams function.
  */
-export function getLayoutParams(layoutId?: Optional, otherProps: any = {}) {
+export function getLayoutParams(layoutId?: Optional, otherProps = {}) {
   return getDocParams(DocumentType.LAYOUT, layoutId, otherProps)
 }
 
@@ -164,7 +161,7 @@ export function generateScreenID() {
 /**
  * Gets parameters for retrieving screens, this is a utility function for the getDocParams function.
  */
-export function getScreenParams(screenId?: Optional, otherProps: any = {}) {
+export function getScreenParams(screenId?: Optional, otherProps = {}) {
   return getDocParams(DocumentType.SCREEN, screenId, otherProps)
 }
 
@@ -179,7 +176,7 @@ export function generateWebhookID() {
 /**
  * Gets parameters for retrieving a webhook, this is a utility function for the getDocParams function.
  */
-export function getWebhookParams(webhookId?: Optional, otherProps: any = {}) {
+export function getWebhookParams(webhookId?: Optional, otherProps = {}) {
   return getDocParams(DocumentType.WEBHOOK, webhookId, otherProps)
 }
 
@@ -196,10 +193,7 @@ export function generateDatasourceID({ plus = false } = {}) {
 /**
  * Gets parameters for retrieving a datasource, this is a utility function for the getDocParams function.
  */
-export function getDatasourceParams(
-  datasourceId?: Optional,
-  otherProps: any = {}
-) {
+export function getDatasourceParams(datasourceId?: Optional, otherProps = {}) {
   return getDocParams(DocumentType.DATASOURCE, datasourceId, otherProps)
 }
 
@@ -229,9 +223,9 @@ export function generateAutomationMetadataID(automationId: string) {
 }
 
 /**
- * Retrieve all automation metadata in an app database.
+ * Retrieve all automation metadata in a workspace database.
  */
-export function getAutomationMetadataParams(otherProps: any = {}) {
+export function getAutomationMetadataParams(otherProps = {}) {
   return getDocParams(DocumentType.AUTOMATION_METADATA, null, otherProps)
 }
 
@@ -323,4 +317,11 @@ export function isAIColumn(column: FieldSchema): column is AIFieldMetadata {
  */
 export function generateRowActionsID(tableId: string) {
   return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
+}
+
+export function extractTableIdFromRowActionsID(rowActionIds: string) {
+  return rowActionIds.replace(
+    new RegExp(`^${DocumentType.ROW_ACTIONS}${SEPARATOR}`),
+    ""
+  )
 }

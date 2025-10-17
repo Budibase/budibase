@@ -1,6 +1,6 @@
-import { newTool } from "@budibase/types"
 import { Octokit } from "@octokit/rest"
 import { z } from "zod"
+import { newTool } from ".."
 
 export class GitHubClient {
   private octokit: Octokit
@@ -189,7 +189,7 @@ export class GitHubClient {
           state,
           labels,
         }) => {
-          const updateData: any = {}
+          const updateData: Record<string, unknown> = {}
           if (title) updateData.title = title
           if (body) {
             // Ensure proper formatting by converting escaped newlines to actual newlines

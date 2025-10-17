@@ -1,6 +1,7 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
   import {
     CookieUtils,
@@ -13,6 +14,7 @@
   import ContextMenu from "@/components/ContextMenu.svelte"
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
   import { Modal, notifications } from "@budibase/bbui"
+  import SettingsModal from "@/components/settings/SettingsModal.svelte"
 
   // Workaround for Routify 2 + Svelte 5 compatibility
   // See: https://github.com/roxiness/routify/issues/563
@@ -22,6 +24,7 @@
 
   let loaded = false
   let commandPaletteModal
+  let settingsModal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -187,6 +190,9 @@
     }
   }
 </script>
+
+<!-- Global settings modal -->
+<SettingsModal bind:this={settingsModal} on:hide={() => bb.hideSettings()} />
 
 <!--Portal branding overrides -->
 <Branding />

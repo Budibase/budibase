@@ -1,17 +1,17 @@
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
-  App,
-  AppFeatures,
-  AppIcon,
   AppScript,
   AutomationSettings,
   Plugin,
   PWAManifest,
-  UpdateAppRequest,
+  UpdateWorkspaceRequest,
+  Workspace,
+  WorkspaceFeatures,
+  WorkspaceIcon,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { initialise, navigationStore, workspaceAppStore } from "."
+import { BudiStore } from "../BudiStore"
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -31,14 +31,14 @@ interface TypeSupportPresets {
   [key: string]: any
 }
 
-interface AppMetaState {
+export interface AppMetaState {
   appId: string
   name: string
   url: string
   libraries: string[]
   clientFeatures: ClientFeatures
   typeSupportPresets: TypeSupportPresets
-  features: AppFeatures
+  features: WorkspaceFeatures
   clientLibPath: string
   hasLock: boolean
   appInstance: { _id: string } | null
@@ -50,7 +50,7 @@ interface AppMetaState {
   version?: string
   revertableVersion?: string
   upgradableVersion?: string
-  icon?: AppIcon
+  icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
 }
@@ -108,33 +108,33 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncApp(app: App) {
+  syncApp(workspace: Workspace) {
     this.update(state => ({
       ...state,
-      name: app.name,
-      appId: app.appId,
-      url: app.url || "",
-      libraries: app.componentLibraries,
-      version: app.version,
-      appInstance: app.instance,
-      revertableVersion: app.revertableVersion,
-      upgradableVersion: app.upgradableVersion,
-      usedPlugins: app.usedPlugins || [],
-      icon: app.icon,
+      name: workspace.name,
+      appId: workspace.appId,
+      url: workspace.url || "",
+      libraries: workspace.componentLibraries,
+      version: workspace.version,
+      appInstance: workspace.instance,
+      revertableVersion: workspace.revertableVersion,
+      upgradableVersion: workspace.upgradableVersion,
+      usedPlugins: workspace.usedPlugins || [],
+      icon: workspace.icon,
       features: {
         ...INITIAL_APP_META_STATE.features,
-        ...app.features,
+        ...workspace.features,
       },
       initialised: true,
-      automations: app.automations || {},
+      automations: workspace.automations || {},
       hasAppPackage: true,
-      pwa: app.pwa,
-      scripts: app.scripts || [],
+      pwa: workspace.pwa,
+      scripts: workspace.scripts || [],
     }))
   }
 
   syncAppPackage(pkg: {
-    application: App
+    application: Workspace
     clientLibPath: string
     hasLock: boolean
   }) {
@@ -172,13 +172,13 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateAppRequest) {
+  async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
     this.syncApp(app)
   }
 
   // Returned from socket
-  syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }) {
+  syncMetadata(metadata: { name: string; url: string; icon?: WorkspaceIcon }) {
     const { name, url, icon } = metadata
     this.update(state => ({
       ...state,

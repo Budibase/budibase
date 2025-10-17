@@ -1,6 +1,6 @@
 <script lang="ts">
   import { setContext } from "svelte"
-  import clickOutside from "../Actions/click_outside"
+  import clickOutside from "../Actions/clickOutside"
 
   export let wide: boolean = false
   export let narrow: boolean = false

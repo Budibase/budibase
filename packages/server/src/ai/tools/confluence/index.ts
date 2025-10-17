@@ -1,6 +1,6 @@
-import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
+import { newTool } from ".."
 import env from "../../../environment"
 
 export class ConfluenceClient {
@@ -206,7 +206,7 @@ export class ConfluenceClient {
             .replace(/\\n/g, "\n")
             .replace(/\\r\\n/g, "\n")
 
-          const body: any = {
+          const body: Record<string, unknown> = {
             spaceId: space_id,
             status,
             title,

@@ -1,155 +1,155 @@
-import { publishEvent } from "../events"
 import {
-  Event,
-  App,
-  AppCreatedEvent,
-  AppUpdatedEvent,
-  AppDeletedEvent,
-  AppPublishedEvent,
-  AppUnpublishedEvent,
-  AppFileImportedEvent,
-  AppTemplateImportedEvent,
-  AppVersionUpdatedEvent,
   AppVersionRevertedEvent,
-  AppRevertedEvent,
-  AppExportedEvent,
-  AppDuplicatedEvent,
+  AppVersionUpdatedEvent,
+  Event,
+  Workspace,
+  WorkspaceCreatedEvent,
+  WorkspaceDeletedEvent,
+  WorkspaceDuplicatedEvent,
+  WorkspaceExportedEvent,
+  WorkspaceFileImportedEvent,
+  WorkspacePublishedEvent,
+  WorkspaceRevertedEvent,
+  WorkspaceTemplateImportedEvent,
+  WorkspaceUnpublishedEvent,
+  WorkspaceUpdatedEvent,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
-const created = async (app: App, timestamp?: string | number) => {
-  const properties: AppCreatedEvent = {
-    appId: app.appId,
-    version: app.version,
+const created = async (workspace: Workspace, timestamp?: string | number) => {
+  const properties: WorkspaceCreatedEvent = {
+    appId: workspace.appId,
+    version: workspace.version,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_CREATED, properties, timestamp)
+  await publishEvent(Event.WORKSPACE_CREATED, properties, timestamp)
 }
 
-async function updated(app: App) {
-  const properties: AppUpdatedEvent = {
-    appId: app.appId,
-    version: app.version,
+async function updated(workspace: Workspace) {
+  const properties: WorkspaceUpdatedEvent = {
+    appId: workspace.appId,
+    version: workspace.version,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_UPDATED, properties)
+  await publishEvent(Event.WORKSPACE_UPDATED, properties)
 }
 
-async function deleted(app: App) {
-  const properties: AppDeletedEvent = {
-    appId: app.appId,
+async function deleted(workspace: Workspace) {
+  const properties: WorkspaceDeletedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_DELETED, properties)
+  await publishEvent(Event.WORKSPACE_DELETED, properties)
 }
 
-async function published(app: App, timestamp?: string | number) {
-  const properties: AppPublishedEvent = {
-    appId: app.appId,
+async function published(workspace: Workspace, timestamp?: string | number) {
+  const properties: WorkspacePublishedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_PUBLISHED, properties, timestamp)
+  await publishEvent(Event.WORKSPACE_PUBLISHED, properties, timestamp)
 }
 
-async function unpublished(app: App) {
-  const properties: AppUnpublishedEvent = {
-    appId: app.appId,
+async function unpublished(workspace: Workspace) {
+  const properties: WorkspaceUnpublishedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_UNPUBLISHED, properties)
+  await publishEvent(Event.WORKSPACE_UNPUBLISHED, properties)
 }
 
-async function fileImported(app: App) {
-  const properties: AppFileImportedEvent = {
-    appId: app.appId,
+async function fileImported(workspace: Workspace) {
+  const properties: WorkspaceFileImportedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_FILE_IMPORTED, properties)
+  await publishEvent(Event.WORKSPACE_FILE_IMPORTED, properties)
 }
 
-async function duplicated(app: App, duplicateAppId: string) {
-  const properties: AppDuplicatedEvent = {
+async function duplicated(workspace: Workspace, duplicateAppId: string) {
+  const properties: WorkspaceDuplicatedEvent = {
     duplicateAppId,
-    appId: app.appId,
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_DUPLICATED, properties)
+  await publishEvent(Event.WORKSPACE_DUPLICATED, properties)
 }
 
-async function templateImported(app: App, templateKey: string) {
-  const properties: AppTemplateImportedEvent = {
-    appId: app.appId,
+async function templateImported(workspace: Workspace, templateKey: string) {
+  const properties: WorkspaceTemplateImportedEvent = {
+    appId: workspace.appId,
     templateKey,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_TEMPLATE_IMPORTED, properties)
+  await publishEvent(Event.WORKSPACE_TEMPLATE_IMPORTED, properties)
 }
 
 async function versionUpdated(
-  app: App,
+  workspace: Workspace,
   currentVersion: string,
   updatedToVersion: string
 ) {
   const properties: AppVersionUpdatedEvent = {
-    appId: app.appId,
+    appId: workspace.appId,
     currentVersion,
     updatedToVersion,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_VERSION_UPDATED, properties)
+  await publishEvent(Event.WORKSPACE_APP_VERSION_UPDATED, properties)
 }
 
 async function versionReverted(
-  app: App,
+  workspace: Workspace,
   currentVersion: string,
   revertedToVersion: string
 ) {
   const properties: AppVersionRevertedEvent = {
-    appId: app.appId,
+    appId: workspace.appId,
     currentVersion,
     revertedToVersion,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_VERSION_REVERTED, properties)
+  await publishEvent(Event.WORKSPACE_APP_VERSION_REVERTED, properties)
 }
 
-async function reverted(app: App) {
-  const properties: AppRevertedEvent = {
-    appId: app.appId,
+async function reverted(workspace: Workspace) {
+  const properties: WorkspaceRevertedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_REVERTED, properties)
+  await publishEvent(Event.WORKSPACE_REVERTED, properties)
 }
 
-async function exported(app: App) {
-  const properties: AppExportedEvent = {
-    appId: app.appId,
+async function exported(workspace: Workspace) {
+  const properties: WorkspaceExportedEvent = {
+    appId: workspace.appId,
     audited: {
-      name: app.name,
+      name: workspace.name,
     },
   }
-  await publishEvent(Event.APP_EXPORTED, properties)
+  await publishEvent(Event.WORKSPACE_EXPORTED, properties)
 }
 
 export default {

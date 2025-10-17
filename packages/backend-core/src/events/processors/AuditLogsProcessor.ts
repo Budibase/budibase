@@ -1,16 +1,16 @@
 import {
+  AuditLogFn,
+  AuditLogQueueEvent,
   Event,
+  HostInfo,
   Identity,
   IdentityType,
-  AuditLogQueueEvent,
-  AuditLogFn,
-  HostInfo,
 } from "@budibase/types"
-import { EventProcessor } from "./types"
-import { getAppId, doInTenant, getTenantId } from "../../context"
+import { doInTenant, getTenantId, getWorkspaceId } from "../../context"
+import env from "../../environment"
 import { BudibaseQueue, JobQueue } from "../../queue"
 import { isAudited } from "../../utils"
-import env from "../../environment"
+import { EventProcessor } from "./types"
 
 export default class AuditLogsProcessor implements EventProcessor {
   static auditLogsEnabled = false
@@ -76,7 +76,7 @@ export default class AuditLogsProcessor implements EventProcessor {
         opts: {
           userId,
           timestamp,
-          appId: getAppId(),
+          appId: getWorkspaceId(),
           hostInfo: identity.hostInfo,
         },
         tenantId: getTenantId(),

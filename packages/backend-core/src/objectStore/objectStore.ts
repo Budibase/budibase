@@ -1,31 +1,32 @@
 const sanitize = require("sanitize-s3-objectkey")
 
 import {
+  _Object,
+  GetObjectCommand,
   HeadObjectCommandOutput,
   PutObjectCommandInput,
   S3,
   S3ClientConfig,
-  GetObjectCommand,
   _Object as S3Object,
 } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import stream, { Readable } from "stream"
-import fetch from "node-fetch"
-import tar from "tar-fs"
-import zlib from "zlib"
-import { join } from "path"
-import fs, { PathLike, ReadStream } from "fs"
-import env from "../environment"
-import { bucketTTLConfig, budibaseTempDir } from "./utils"
-import { v4 } from "uuid"
-import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
-import fsp from "fs/promises"
-import { ReadableStream } from "stream/web"
+import { utils } from "@budibase/shared-core"
 import { NodeJsClient } from "@smithy/types"
 import tracer from "dd-trace"
+import fs, { PathLike, ReadStream } from "fs"
+import fsp from "fs/promises"
+import fetch from "node-fetch"
+import { join } from "path"
+import stream, { Readable } from "stream"
 import { pipeline } from "stream/promises"
-import { utils } from "@budibase/shared-core"
+import { ReadableStream } from "stream/web"
+import tar from "tar-fs"
+import { v4 } from "uuid"
+import zlib from "zlib"
+import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
+import env from "../environment"
+import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
 // use this as a temporary store of buckets that are being created
 const STATE = {
@@ -58,6 +59,17 @@ export type StreamUploadParams = BaseUploadParams & {
   stream?: StreamTypes
 }
 
+export type StreamUploadManyParams = {
+  bucket: string
+  files: Array<
+    {
+      filename: string
+      stream: StreamTypes
+    } & Pick<BaseUploadParams, "type" | "extra">
+  >
+  ttl?: number
+}
+
 const CONTENT_TYPE_MAP: any = {
   txt: "text/plain",
   html: "text/html",
@@ -83,7 +95,7 @@ export function sanitizeKey(input: string): string {
 
 // simply handles the dev app to app conversion
 export function sanitizeBucket(input: string): string {
-  return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
+  return input.replace(new RegExp(WORKSPACE_DEV_PREFIX, "g"), WORKSPACE_PREFIX)
 }
 
 /**
@@ -155,9 +167,16 @@ export async function createBucketIfNotExists(
       return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        promises[bucketName] = client.createBucket({
-          Bucket: bucketName,
-        })
+        promises[bucketName] = client
+          .createBucket({
+            Bucket: bucketName,
+          })
+          .catch((err: any) => {
+            // bucket was created in the meantime by another process
+            if (err.Code !== "BucketAlreadyOwnedByYou") {
+              throw err
+            }
+          })
 
         await promises[bucketName]
         delete promises[bucketName]
@@ -168,6 +187,82 @@ export async function createBucketIfNotExists(
     } else {
       throw new Error("Unable to write to object store bucket.")
     }
+  }
+}
+
+const resolveContentType = (filename: string, type?: string | null) => {
+  if (type) {
+    return type
+  }
+  const extension = filename.split(".").pop()
+  return extension
+    ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+    : CONTENT_TYPE_MAP.txt
+}
+
+const initialiseBucket = async (
+  bucketName: string,
+  ttl: number | undefined,
+  span: tracer.Span
+) => {
+  const bucket = sanitizeBucket(bucketName)
+  const client = ObjectStore()
+  const bucketCreated = await createBucketIfNotExists(client, bucket)
+
+  span.addTags({
+    bucketCreated: bucketCreated.created,
+    bucketExists: bucketCreated.exists,
+  })
+
+  if (ttl && bucketCreated.created) {
+    let ttlConfig = bucketTTLConfig(bucket, ttl)
+    await client.putBucketLifecycleConfiguration(ttlConfig)
+  }
+
+  return {
+    bucket,
+    client,
+    bucketCreated,
+  }
+}
+
+type StreamUploadInternalOptions = {
+  client: ReturnType<typeof ObjectStore>
+  bucket: string
+  filename: string
+  stream?: StreamTypes
+  type?: string | null
+  extra?: any
+}
+
+const streamUploadInternal = async ({
+  client,
+  bucket,
+  filename,
+  stream,
+  type,
+  extra,
+}: StreamUploadInternalOptions) => {
+  if (!stream) {
+    throw new Error("Stream to upload is invalid/undefined")
+  }
+
+  const contentType = resolveContentType(filename, type)
+  const key = sanitizeKey(filename)
+  const params = {
+    Bucket: bucket,
+    Key: key,
+    Body: stream,
+    ContentType: contentType,
+    ...(extra ?? {}),
+  }
+
+  const upload = new Upload({ client, params })
+  const details = await upload.done()
+
+  return {
+    details,
+    contentType,
   }
 }
 /**
@@ -246,67 +341,69 @@ export async function streamUpload({
       ttl,
     })
 
-    if (!stream) {
-      throw new Error("Stream to upload is invalid/undefined")
-    }
     const extension = filename.split(".").pop()
-    const objectStore = ObjectStore()
-    const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+    span.addTags({ extension })
 
+    const { bucket, client } = await initialiseBucket(bucketName, ttl, span)
+
+    const { details, contentType } = await streamUploadInternal({
+      client,
+      bucket,
+      filename,
+      stream,
+      type,
+      extra,
+    })
+
+    const headDetails = await client.headObject({
+      Bucket: bucket,
+      Key: sanitizeKey(filename),
+    })
+
+    span.addTags({ contentType, contentLength: headDetails.ContentLength })
+    return { ...details, ContentLength: headDetails.ContentLength }
+  })
+}
+
+export async function streamUploadMany({
+  bucket: bucketName,
+  files,
+  ttl,
+}: StreamUploadManyParams) {
+  const MAX_CONCURRENCY = 10
+  return await tracer.trace("streamUploadMany", async span => {
     span.addTags({
-      bucketCreated: bucketCreated.created,
-      bucketExists: bucketCreated.exists,
-      extension,
+      bucketName,
+      ttl,
+      fileCount: files.length,
     })
 
-    if (ttl && bucketCreated.created) {
-      let ttlConfig = bucketTTLConfig(bucketName, ttl)
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig)
+    if (!files.length) {
+      return []
     }
 
-    // Set content type for certain known extensions
-    if (filename?.endsWith(".js")) {
-      extra = {
-        ...extra,
-        ContentType: "application/javascript",
-      }
-    } else if (filename?.endsWith(".svg")) {
-      extra = {
-        ...extra,
-        ContentType: "image",
-      }
-    }
+    const { bucket, client } = await initialiseBucket(bucketName, ttl, span)
 
-    let contentType = type
-    if (!contentType) {
-      contentType = extension
-        ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-        : CONTENT_TYPE_MAP.txt
-    }
+    const indexedFiles = files.map((file, index) => ({ ...file, index }))
+    const uploadResults = new Array(files.length)
 
-    span.addTags({ contentType })
+    await utils.parallelForeach(
+      indexedFiles,
+      async file => {
+        const { details } = await streamUploadInternal({
+          client,
+          bucket,
+          filename: file.filename,
+          stream: file.stream,
+          type: file.type,
+          extra: file.extra,
+        })
+        uploadResults[file.index] = details
+      },
+      MAX_CONCURRENCY
+    )
 
-    const bucket = sanitizeBucket(bucketName),
-      objKey = sanitizeKey(filename)
-    const params = {
-      Bucket: bucket,
-      Key: objKey,
-      Body: stream,
-      ContentType: contentType,
-      ...extra,
-    }
-
-    const upload = new Upload({ client: objectStore, params })
-    const details = await upload.done()
-    const headDetails = await objectStore.headObject({
-      Bucket: bucket,
-      Key: objKey,
-    })
-    span.addTags({ contentLength: headDetails.ContentLength })
-    return {
-      ...details,
-      ContentLength: headDetails.ContentLength,
-    }
+    return uploadResults
   })
 }
 
@@ -380,6 +477,22 @@ export async function* listAllObjects(
   } while (isTruncated && token)
 }
 
+export async function getAllFiles(bucketName: string, path: string) {
+  const objects: Record<string, _Object> = {}
+  await utils.parallelForeach(
+    listAllObjects(bucketName, path),
+    async file => {
+      if (!file.Key) {
+        throw new Error("file.Key must be defined")
+      }
+
+      objects[file.Key] = file
+    },
+    5
+  )
+  return objects
+}
+
 /**
  * Generate a presigned url with a default TTL of 1 hour
  */
@@ -433,7 +546,11 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
   })
 }
 
-export async function retrieveDirectory(bucketName: string, path: string) {
+export async function retrieveDirectory(
+  bucketName: string,
+  path: string,
+  toExclude?: RegExp[]
+) {
   return await tracer.trace("retrieveDirectory", async span => {
     span.addTags({ bucketName, path })
 
@@ -444,11 +561,16 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     await utils.parallelForeach(
       listAllObjects(bucketName, path),
       async object => {
+        const { Key } = object
+        if (!Key || toExclude?.some(x => x.test(Key))) {
+          return
+        }
+
         numObjects++
         await tracer.trace("retrieveDirectory.object", async span => {
           const filename = object.Key!
           span.addTags({ filename })
-          const stream = await getReadStream(bucketName, filename)
+          const { stream } = await getReadStream(bucketName, filename)
           const possiblePath = filename.split("/")
           const dirs = possiblePath.slice(0, possiblePath.length - 1)
           const possibleDir = join(writePath, ...dirs)
@@ -600,7 +722,7 @@ export async function downloadTarball(
 export async function getReadStream(
   bucketName: string,
   path: string
-): Promise<Readable> {
+): Promise<{ stream: Readable; contentLength?: number; contentType?: string }> {
   return await tracer.trace("getReadStream", async span => {
     bucketName = sanitizeBucket(bucketName)
     path = sanitizeKey(path)
@@ -618,7 +740,12 @@ export async function getReadStream(
       contentLength: response.ContentLength,
       contentType: response.ContentType,
     })
-    return response.Body
+    return {
+      stream: response.Body,
+
+      contentLength: response.ContentLength,
+      contentType: response.ContentType,
+    }
   })
 }
 
@@ -639,6 +766,32 @@ export async function getObjectMetadata(
     return await client.headObject(params)
   } catch (err: any) {
     throw new Error("Unable to retrieve metadata from object")
+  }
+}
+
+export async function objectExists(
+  bucket: string,
+  path: string
+): Promise<boolean> {
+  bucket = sanitizeBucket(bucket)
+  path = sanitizeKey(path)
+
+  const client = ObjectStore()
+  const params = {
+    Bucket: bucket,
+    Key: path,
+  }
+
+  try {
+    await client.headObject(params)
+    return true
+  } catch (err: any) {
+    const statusCode = err.statusCode || err.$response?.statusCode
+    if (statusCode === 404) {
+      return false
+    }
+    // Re-throw non-404 errors (access denied, network issues, etc.)
+    throw err
   }
 }
 

@@ -2,7 +2,9 @@ import { Ctx } from "@budibase/types"
 import mapping from "../../../controllers/public/mapping"
 
 enum Resource {
+  /** @deprecated this has been replaced by workspace */
   APPLICATION = "applications",
+  WORKSPACE = "workspaces",
   TABLES = "tables",
   VIEWS = "views",
   ROWS = "rows",
@@ -71,7 +73,7 @@ function processQueries(ctx: Ctx) {
   }
 }
 
-export default async (ctx: Ctx, next: any) => {
+export default async (ctx: Ctx, next: () => Promise<void>) => {
   if (!ctx.body || noResponse(ctx) || isAttachment(ctx)) {
     return await next()
   }
@@ -81,6 +83,7 @@ export default async (ctx: Ctx, next: any) => {
 
   switch (urlParts[0]) {
     case Resource.APPLICATION:
+    case Resource.WORKSPACE:
       body = processApplications(ctx)
       break
     case Resource.TABLES:

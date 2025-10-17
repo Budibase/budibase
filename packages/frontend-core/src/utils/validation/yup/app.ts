@@ -1,37 +1,47 @@
-import { string, mixed } from "yup"
-import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
-import { App } from "@budibase/types"
+import { Workspace } from "@budibase/types"
+import { mixed, string } from "yup"
 import { ValidationStore } from "."
-import { Helpers } from "@budibase/bbui"
+import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
+
+interface ValidationContext {
+  workspaces: Workspace[]
+  currentWorkspace?: Workspace
+}
+
+const defaultContext = {
+  workspaces: [],
+}
 
 export const name = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] },
-  appOrWorkspace: "app" | "workspace"
+  { workspaces, currentWorkspace }: ValidationContext = defaultContext
 ) => {
   validation.addValidator(
     "name",
     string()
       .trim()
-      .required(`Your ${appOrWorkspace} must have a name`)
+      .required(`Your workspace must have a name`)
       .matches(
         APP_NAME_REGEX,
-        `${Helpers.capitalise(appOrWorkspace)} name must be letters, numbers and spaces only`
+        "Workspace name must be letters, numbers and spaces only"
       )
       .test(
         "non-existing-app-name",
-        `Another ${appOrWorkspace} with the same name already exists`,
+        "Another workspace with the same name already exists",
         value => {
           if (!value) {
             // exit early, above validator will fail
             return true
           }
-          return !apps
-            .filter(app => {
-              return app.appId !== currentApp?.appId
+          return !workspaces
+            .filter(workspace => {
+              return workspace.appId !== currentWorkspace?.appId
             })
-            .map(app => app.name)
-            .some(appName => appName.toLowerCase() === value.toLowerCase())
+            .map(workspace => workspace.name)
+            .some(
+              workspaceName =>
+                workspaceName.toLowerCase() === value.toLowerCase()
+            )
         }
       )
   )
@@ -39,34 +49,35 @@ export const name = (
 
 export const url = (
   validation: ValidationStore,
-  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] },
-  appOrWorkspace: "app" | "workspace"
+  { workspaces, currentWorkspace }: ValidationContext = defaultContext
 ) => {
   validation.addValidator(
     "url",
     string()
       .trim()
       .nullable()
-      .required(`Your ${appOrWorkspace} must have a url`)
+      .required(`Your workspace must have a url`)
       .matches(APP_URL_REGEX, "Please enter a valid url")
       .test(
         "non-existing-app-url",
-        `Another ${appOrWorkspace} with the same URL already exists`,
+        `Another workspace with the same URL already exists`,
         value => {
           if (!value) {
             return true
           }
-          if (currentApp) {
-            // filter out the current app if present
-            apps = apps.filter(app => app.appId !== currentApp.appId)
+          if (currentWorkspace) {
+            // filter out the current workspace if present
+            workspaces = workspaces.filter(
+              workspace => workspace.appId !== currentWorkspace.appId
+            )
           }
-          return !apps
-            .map(app => app.url)
-            .some(appUrl => {
+          return !workspaces
+            .map(workspace => workspace.url)
+            .some(workspaceUrl => {
               const url =
-                appUrl?.[0] === "/"
-                  ? appUrl.substring(1, appUrl.length)
-                  : appUrl
+                workspaceUrl?.[0] === "/"
+                  ? workspaceUrl.substring(1, workspaceUrl.length)
+                  : workspaceUrl
               return url?.toLowerCase() === value.toLowerCase()
             })
         }

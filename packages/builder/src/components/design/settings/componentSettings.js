@@ -8,6 +8,7 @@ import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor
 import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
 import { IconSelect } from "./controls/IconSelect"
+import { PhosphorIconSelect } from "./controls/PhosphorIconSelect"
 import FieldSelect from "./controls/FieldSelect.svelte"
 import SortableFieldSelect from "./controls/SortableFieldSelect.svelte"
 import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
@@ -33,6 +34,7 @@ import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
+import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
 
@@ -52,6 +54,7 @@ const componentMap = {
   table: TableSelect,
   color: ColorPicker,
   icon: IconSelect,
+  phosphorIcon: PhosphorIconSelect,
   field: FieldSelect,
   multifield: MultiFieldSelect,
   searchfield: SearchFieldSelect,
@@ -73,6 +76,7 @@ const componentMap = {
   "columns/toplevel": TopLevelColumnEditor,
   "columns/grid": GridColumnEditor,
   tableConditions: TableConditionEditor,
+  buttonConditions: ButtonConditionEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,

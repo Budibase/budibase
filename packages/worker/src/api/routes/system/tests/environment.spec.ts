@@ -1,5 +1,5 @@
-import { TestConfiguration } from "../../../../tests"
 import { withEnv } from "../../../../environment"
+import { TestConfiguration } from "../../../../tests"
 
 jest.unmock("node-fetch")
 

@@ -1,3 +1,6 @@
+import { context, db, events, roles, setEnv } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
   ArrayOperator,
@@ -9,6 +12,7 @@ import {
   EmptyFilterOption,
   FieldSchema,
   FieldType,
+  FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
   JsonTypes,
@@ -35,15 +39,11 @@ import {
   ViewV2,
   ViewV2Schema,
   ViewV2Type,
-  FormulaType,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
-import { quotas } from "@budibase/pro"
-import { context, db, events, roles, setEnv } from "@budibase/backend-core"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -1423,7 +1423,7 @@ if (descriptions.length) {
               const tableToUpdate = await config.api.table.get(table._id!)
               ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible =
                 false
-              await db.getDB(config.appId!).put(tableToUpdate)
+              await db.getDB(config.devWorkspaceId!).put(tableToUpdate)
 
               view = await config.api.viewV2.get(view.id)
               await config.api.viewV2.update(
@@ -1786,6 +1786,81 @@ if (descriptions.length) {
                 ])
               )
             })
+
+            isInternal &&
+              it("can group by static formula fields", async () => {
+                let table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      label: {
+                        name: "label",
+                        type: FieldType.STRING,
+                      },
+                      staticFormula: {
+                        name: "staticFormula",
+                        type: FieldType.FORMULA,
+                        formulaType: FormulaType.STATIC,
+                        responseType: FieldType.STRING,
+                        formula: "{{ [label] }}",
+                      },
+                    },
+                  })
+                )
+
+                table = await config.api.table.save({
+                  ...table,
+                  schema: {
+                    ...table.schema,
+
+                    staticFormula: {
+                      name: "staticFormula",
+                      type: FieldType.FORMULA,
+                      formulaType: FormulaType.STATIC,
+                      responseType: FieldType.STRING,
+                      formula: "{{ [label] }}",
+                    },
+                  },
+                })
+
+                await config.api.row.save(table._id!, { label: "Group A" })
+                await config.api.row.save(table._id!, { label: "Group A" })
+                await config.api.row.save(table._id!, { label: "Group B" })
+
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  primaryDisplay: "staticFormula",
+                  schema: {
+                    labelCount: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      field: "staticFormula",
+                    },
+                    label: {
+                      visible: false,
+                    },
+                    staticFormula: {
+                      visible: true,
+                    },
+                  },
+                })
+
+                const { rows } = await config.api.row.search(view.id)
+                expect(rows).toHaveLength(2)
+                expect(rows).toEqual(
+                  expect.arrayContaining([
+                    expect.objectContaining({
+                      staticFormula: "Group A",
+                      labelCount: 2,
+                    }),
+                    expect.objectContaining({
+                      staticFormula: "Group B",
+                      labelCount: 1,
+                    }),
+                  ])
+                )
+              })
           })
         })
 
@@ -1818,7 +1893,7 @@ if (descriptions.length) {
 
             expect(events.view.deleted).toHaveBeenCalledWith(
               expect.objectContaining({ name: first.name, id: first.id }),
-              config.appId
+              config.devWorkspaceId
             )
           })
         })
@@ -1970,23 +2045,26 @@ if (descriptions.length) {
             const rawView = table.views![res.name] as ViewV2
             delete rawView.queryUI
 
-            await context.doInAppContext(config.getAppId(), async () => {
-              const db = context.getAppDB()
+            await context.doInWorkspaceContext(
+              config.getDevWorkspaceId(),
+              async () => {
+                const db = context.getWorkspaceDB()
 
-              if (!rawDatasource) {
-                await db.put(table)
-              } else {
-                const ds = await config.api.datasource.get(datasource!._id!)
-                ds.entities![table.name] = table
-                const updatedDs = {
-                  ...rawDatasource,
-                  _id: ds._id,
-                  _rev: ds._rev,
-                  entities: ds.entities,
+                if (!rawDatasource) {
+                  await db.put(table)
+                } else {
+                  const ds = await config.api.datasource.get(datasource!._id!)
+                  ds.entities![table.name] = table
+                  const updatedDs = {
+                    ...rawDatasource,
+                    _id: ds._id,
+                    _rev: ds._rev,
+                    entities: ds.entities,
+                  }
+                  await db.put(updatedDs)
                 }
-                await db.put(updatedDs)
               }
-            })
+            )
 
             const view = await getDelegate(res)
             const expected: UISearchFilter = {

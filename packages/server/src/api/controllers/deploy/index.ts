@@ -1,36 +1,37 @@
-import Deployment from "./Deployment"
 import {
+  cache,
   context,
   db as dbCore,
-  events,
-  cache,
   errors,
-  features,
+  events,
 } from "@budibase/backend-core"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import { backups } from "@budibase/pro"
+import {
+  Automation,
+  BackupTrigger,
+  DeploymentDoc,
+  DeploymentProgressResponse,
+  DeploymentStatus,
+  FieldType,
+  FetchDeploymentResponse,
+  FormulaType,
+  PublishStatusResponse,
+  PublishWorkspaceRequest,
+  PublishWorkspaceResponse,
+  UserCtx,
+} from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronTrigger,
 } from "../../../automations/utils"
-import { backups } from "@budibase/pro"
-import {
-  AppBackupTrigger,
-  DeploymentDoc,
-  FetchDeploymentResponse,
-  PublishAppResponse,
-  UserCtx,
-  DeploymentStatus,
-  DeploymentProgressResponse,
-  Automation,
-  PublishAppRequest,
-  PublishStatusResponse,
-  FeatureFlag,
-} from "@budibase/types"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
+import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { doInMigrationLock } from "../../../appMigrations"
-import env from "../../../environment"
+import { doInMigrationLock } from "../../../workspaceMigrations"
+import Deployment from "./Deployment"
+import { updateAllFormulasInTable } from "../row/staticFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -55,9 +56,9 @@ async function checkAllDeployments(
   return { updated, deployments }
 }
 
-async function storeDeploymentHistory(deployment: any) {
+async function storeDeploymentHistory(deployment: Deployment) {
   const deploymentJSON = deployment.getJSON()
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   let deploymentDoc
   try {
@@ -84,8 +85,8 @@ async function storeDeploymentHistory(deployment: any) {
   return deployment
 }
 
-async function initDeployedApp(prodAppId: any) {
-  const db = context.getProdAppDB()
+async function initDeployedApp(prodAppId: string) {
+  const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
     await db.allDocs<Automation>(
@@ -116,8 +117,24 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
+  await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const tables = await sdk.tables.getAllInternalTables()
+    for (const table of tables) {
+      const hasStaticFormula = Object.values(table.schema).some(
+        column =>
+          column?.type === FieldType.FORMULA &&
+          column.formulaType === FormulaType.STATIC
+      )
+      if (hasStaticFormula) {
+        await updateAllFormulasInTable(table)
+      }
+    }
   })
 }
 
@@ -125,7 +142,7 @@ export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(deploymentDoc)
     if (updated) {
@@ -143,7 +160,7 @@ export async function deploymentProgress(
   ctx: UserCtx<void, DeploymentProgressResponse>
 ) {
   try {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
     if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
       ctx.throw(404, "No deployment found")
@@ -167,8 +184,8 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-export const publishApp = async function (
-  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
+export const publishWorkspace = async function (
+  ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
   if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
     throw new errors.NotImplementedError(
@@ -194,20 +211,17 @@ export const publishApp = async function (
     }
   }
 
-  const appId = context.getAppId()!
+  const appId = context.getWorkspaceId()!
 
   // Wrap the entire publish operation in migration lock to prevent race conditions
   const result = await doInMigrationLock(appId, async () => {
     let app
     let replication
     try {
-      const devAppId = dbCore.getDevelopmentAppID(appId)
-      const productionAppId = dbCore.getProdAppID(appId)
+      const devId = dbCore.getDevWorkspaceID(appId)
+      const prodId = dbCore.getProdWorkspaceID(appId)
 
-      if (
-        (await features.isEnabled(FeatureFlag.WORKSPACES)) &&
-        !(await sdk.applications.isAppPublished(productionAppId))
-      ) {
+      if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -227,25 +241,21 @@ export const publishApp = async function (
         }
       }
 
-      const isPublished = await sdk.applications.isAppPublished(productionAppId)
+      const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
-        await backups.triggerAppBackup(
-          productionAppId,
-          AppBackupTrigger.PUBLISH,
-          {
-            createdBy: ctx.user._id,
-          }
-        )
+        await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
+          createdBy: ctx.user._id,
+        })
       }
       const config = {
-        source: devAppId,
-        target: productionAppId,
+        source: devId,
+        target: prodId,
       }
       replication = new dbCore.Replication(config)
-      const devDb = context.getDevAppDB()
+      const devDb = context.getDevWorkspaceDB()
       await devDb.compact()
       await replication.replicate(
         replication.appReplicateOpts({
@@ -258,8 +268,8 @@ export const publishApp = async function (
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
-      const db = context.getProdAppDB()
-      const appDoc = await sdk.applications.metadata.tryGet({
+      const db = context.getProdWorkspaceDB()
+      const appDoc = await sdk.workspaces.metadata.tryGet({
         production: false,
       })
       if (!appDoc) {
@@ -267,7 +277,7 @@ export const publishApp = async function (
           "Unable to publish - cannot retrieve development app metadata"
         )
       }
-      const prodAppDoc = await sdk.applications.metadata.tryGet({
+      const prodAppDoc = await sdk.workspaces.metadata.tryGet({
         production: true,
       })
       if (prodAppDoc) {
@@ -278,8 +288,8 @@ export const publishApp = async function (
 
       // switch to production app ID
       deployment.appUrl = appDoc.url
-      appDoc.appId = productionAppId
-      appDoc.instance._id = productionAppId
+      appDoc.appId = prodId
+      appDoc.instance._id = prodId
       const [automations, workspaceApps, tables] = await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
@@ -303,8 +313,9 @@ export const publishApp = async function (
       // remove automation errors if they exist
       delete appDoc.automationErrors
       await db.put(appDoc)
-      await cache.app.invalidateAppMetadata(productionAppId)
-      await initDeployedApp(productionAppId)
+      await cache.workspace.invalidateWorkspaceMetadata(prodId)
+      await initDeployedApp(prodId)
+      await syncStaticFormulasToProduction(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

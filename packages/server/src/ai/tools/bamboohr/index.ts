@@ -1,7 +1,7 @@
-import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
 import env from "../../../environment"
+import { newTool } from ".."
 
 export class BambooHRClient {
   private apiKey: string
@@ -28,7 +28,10 @@ export class BambooHRClient {
   /**
    * Make API request to BambooHR API
    */
-  private async makeRequest(endpoint: string, options: any = {}): Promise<any> {
+  private async makeRequest(
+    endpoint: string,
+    options = { headers: {} }
+  ): Promise<any> {
     const url = `${this.baseUrl}${endpoint}`
 
     const response = await fetch(url, {

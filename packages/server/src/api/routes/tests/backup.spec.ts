@@ -1,64 +1,199 @@
-import { mocks } from "@budibase/backend-core/tests"
+import { context, events } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { DocumentType, Workspace } from "@budibase/types"
+import path from "path"
+import { Readable } from "stream"
+import { pipeline } from "stream/promises"
+import tar from "tar"
 import tk from "timekeeper"
-import * as setup from "./utilities"
-import { events } from "@budibase/backend-core"
+import { withEnv } from "../../../environment"
 import sdk from "../../../sdk"
+import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { context } from "@budibase/backend-core"
-import { DocumentType, App } from "@budibase/types"
 
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
   let config = setup.getConfig()
 
-  afterAll(async () => {
+  afterAll(() => {
     setup.afterAll()
   })
 
   beforeEach(async () => {
     tk.reset()
-    await config.init()
+    jest.clearAllMocks()
+    await withEnv({ UPLOAD_APPS_FILES_ON_TEST: "1" }, () => config.init())
   })
 
   describe("/api/backups/export", () => {
-    it("should be able to export app", async () => {
-      const body = await config.api.backup.exportBasicBackup(config.getAppId()!)
+    let attachmentFileNames: string[] = []
+
+    async function checkExportContent(
+      buffer: Buffer,
+      opts: { includeRows: boolean; isEncrypted: boolean }
+    ) {
+      const exportedFiles: string[] = []
+      await pipeline(
+        Readable.from(buffer),
+        tar.list({
+          onentry: entry => {
+            if (entry.type !== "Directory") {
+              exportedFiles.push(entry.path)
+            }
+          },
+        })
+      )
+
+      const encodeIfNeeded = (value: string) =>
+        opts.isEncrypted ? `${value}.enc` : value
+      const expectedFiles = [
+        "budibase-client.esm.js",
+        "budibase-client.js",
+        "db.txt",
+        "manifest.json",
+      ].map(encodeIfNeeded)
+      if (opts.includeRows) {
+        expectedFiles.push(
+          ...attachmentFileNames.sort().map(f => `attachments/${f}`)
+        )
+      }
+
+      expect(exportedFiles).toEqual(expect.arrayContaining(expectedFiles))
+
+      const chunksRegex = opts.isEncrypted
+        ? /chunks\/.+-\w{8}\.js\.enc/
+        : /chunks\/.+-\w{8}\.js/
+      expect(exportedFiles).toContainEqual(expect.stringMatching(chunksRegex))
+    }
+
+    beforeEach(async () => {
+      const table = await config.api.table.save(
+        setup.structures.basicTableWithAttachmentField()
+      )
+      const [attachment1, attachment2, attachment3] = await Promise.all(
+        Array.from({ length: 3 }).map(async (_, i) => {
+          const [result] = await config.api.attachment.upload(
+            table._id!,
+            `${i}.txt`,
+            Buffer.from(generator.paragraph())
+          )
+          return result
+        })
+      )
+
+      attachmentFileNames = [
+        path.basename(attachment1.key),
+        path.basename(attachment2.key),
+        path.basename(attachment3.key),
+      ]
+
+      await config.api.row.save(table._id!, {
+        single_file_attachment: attachment1,
+        file_attachment: [attachment2, attachment3],
+      })
+    })
+
+    it("should be able to export a workspace with rows", async () => {
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId()
+      )
       expect(body instanceof Buffer).toBe(true)
       expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, { includeRows: true, isEncrypted: false })
+    })
+
+    it("should be able to export a workspace without rows", async () => {
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        {
+          excludeRows: true,
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, { includeRows: false, isEncrypted: false })
     })
 
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
         method: "POST",
-        url: `/api/backups/export?appId=${config.getAppId()}`,
+        url: `/api/backups/export?appId=${config.getDevWorkspaceId()}`,
       })
     })
 
-    it("should infer the app name from the app", async () => {
+    it("should infer the export name from the workspace", async () => {
+      tk.freeze(mocks.date.MOCK_DATE)
+      await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        undefined,
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
+          },
+        }
+      )
+    })
+
+    it("should be able to export a workspace with encryption and rows", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
-      await config.api.backup.exportBasicBackup(config.getAppId()!, {
-        headers: {
-          "content-disposition": `attachment; filename="${
-            config.getApp().name
-          }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
-        },
-      })
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        { excludeRows: false, encryptPassword: "abcde" },
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.enc.tar.gz"`,
+          },
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, { isEncrypted: true, includeRows: true })
+    })
+
+    it("should be able to export a workspace with encryption excluding rows", async () => {
+      tk.freeze(mocks.date.MOCK_DATE)
+
+      const body = await config.api.backup.exportBasicBackup(
+        config.getDevWorkspaceId(),
+        { excludeRows: true, encryptPassword: "abcde" },
+        {
+          headers: {
+            "content-disposition": `attachment; filename="${
+              config.getDevWorkspace().name
+            }-export-${mocks.date.MOCK_DATE.getTime()}.enc.tar.gz"`,
+          },
+        }
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
+
+      await checkExportContent(body, { isEncrypted: true, includeRows: false })
     })
   })
 
-  describe("/api/backups/import", () => {
-    it("should be able to import an app", async () => {
-      const appId = config.getAppId()!
+  describe("/api/apps/{appId}/backups/{backupId}/import", () => {
+    it("should be able to import a workspace", async () => {
+      const workspaceId = config.getDevWorkspaceId()
       const automation = await config.createAutomation()
-      await config.createAutomationLog(automation, appId)
+      await config.createAutomationLog(automation, workspaceId)
       await config.createScreen()
-      const exportRes = await config.api.backup.createBackup(appId)
+      const exportRes = await config.api.backup.createBackup(workspaceId)
       expect(exportRes.backupId).toBeDefined()
-      await config.api.backup.waitForBackupToComplete(appId, exportRes.backupId)
-      await config.api.backup.importBackup(appId, exportRes.backupId)
+      await config.api.backup.waitForBackupToComplete(
+        workspaceId,
+        exportRes.backupId
+      )
+      await config.api.backup.importBackup(workspaceId, exportRes.backupId)
     })
   })
 
@@ -66,7 +201,9 @@ describe("/backups", () => {
     it("should be able to calculate the backup statistics", async () => {
       await config.createAutomation()
       await config.createScreen()
-      let res = await sdk.backups.calculateBackupStats(config.getAppId()!)
+      let res = await sdk.backups.calculateBackupStats(
+        config.getDevWorkspaceId()
+      )
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
       expect(res.screens).toEqual(1)
@@ -74,13 +211,15 @@ describe("/backups", () => {
   })
 
   describe("backup error tracking", () => {
-    it("should track backup failures in app metadata", async () => {
-      const appId = config.getAppId()!
+    it("should track backup failures in workspace metadata", async () => {
+      const workspaceId = config.getDevWorkspaceId()
 
       // First manually add a backup error to simulate a failure
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
 
         // Add backup error manually to test the structure
         metadata.backupErrors = {
@@ -89,7 +228,9 @@ describe("/backups", () => {
         await db.put(metadata)
 
         // Now verify the structure
-        const updatedMetadata = await db.get<App>(DocumentType.APP_METADATA)
+        const updatedMetadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         expect(updatedMetadata.backupErrors).toBeDefined()
         expect(updatedMetadata.backupErrors).toEqual({
           "backup-123": ["Backup export failed: Test error"],
@@ -97,13 +238,15 @@ describe("/backups", () => {
       })
     })
 
-    it("should be able to clear backup errors from app metadata", async () => {
-      const appId = config.getAppId()!
+    it("should be able to clear backup errors from workspace metadata", async () => {
+      const workspaceId = config.getDevWorkspaceId()
 
-      // First set up backup errors in app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      // First set up backup errors in workspace metadata
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         metadata.backupErrors = {
           "backup-123": ["Backup export failed: Test error"],
           "backup-456": ["Another backup error"],
@@ -113,15 +256,17 @@ describe("/backups", () => {
 
       // This test should fail initially since we haven't implemented the clear endpoint yet
       const response = await config.api.backup.clearBackupErrors(
-        appId,
+        workspaceId,
         "backup-123"
       )
       expect(response.message).toEqual("Backup errors cleared.")
 
-      // Verify the specific error was removed from app metadata
-      await context.doInAppContext(appId, async () => {
-        const db = context.getProdAppDB()
-        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+      // Verify the specific error was removed from workspace metadata
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        const db = context.getProdWorkspaceDB()
+        const metadata = await db.get<Workspace>(
+          DocumentType.WORKSPACE_METADATA
+        )
         expect(metadata.backupErrors).toEqual({
           "backup-456": ["Another backup error"],
         })

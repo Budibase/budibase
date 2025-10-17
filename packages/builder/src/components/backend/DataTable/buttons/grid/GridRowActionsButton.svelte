@@ -38,7 +38,9 @@
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
     return ({ automationId }) => {
-      return $url(`/builder/app/${$appStore.appId}/automation/${automationId}`)
+      return $url(
+        `/builder/workspace/${$appStore.appId}/automation/${automationId}`
+      )
     }
   })
 

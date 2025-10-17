@@ -112,6 +112,32 @@ export interface paths {
     /** Based on view properties (currently only name) search for views. */
     post: operations["viewSearch"];
   };
+  "/workspaces": {
+    post: operations["workspaceCreate"];
+  };
+  "/workspaces/{workspaceId}": {
+    get: operations["workspaceGetById"];
+    put: operations["workspaceUpdate"];
+    delete: operations["workspaceDestroy"];
+  };
+  "/workspaces/{workspaceId}/publish": {
+    post: operations["workspacePublish"];
+  };
+  "/workspaces/{workspaceId}/unpublish": {
+    post: operations["workspaceUnpublish"];
+  };
+  "/workspaces/{workspaceId}/import": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["workspaceImport"];
+  };
+  "/workspaces/{workspaceId}/export": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["workspaceExport"];
+  };
+  "/workspaces/search": {
+    /** Based on workspace properties (currently only name) search for workspaces. */
+    post: operations["workspaceSearch"];
+  };
 }
 
 export interface components {
@@ -122,7 +148,38 @@ export interface components {
       /** @description The URL by which the app is accessed, this must be URL encoded. */
       url?: string;
     };
+    workspace: {
+      /** @description The name of the app. */
+      name: string;
+      /** @description The URL by which the app is accessed, this must be URL encoded. */
+      url?: string;
+    };
     applicationOutput: {
+      data: {
+        /** @description The name of the app. */
+        name: string;
+        /** @description The URL by which the app is accessed, this must be URL encoded. */
+        url: string;
+        /** @description The ID of the app. */
+        _id: string;
+        /**
+         * @description The status of the app, stating it if is the development or published version.
+         * @enum {string}
+         */
+        status: "development" | "published";
+        /** @description States when the app was created, will be constant. Stored in ISO format. */
+        createdAt: string;
+        /** @description States the last time the app was updated - stored in ISO format. */
+        updatedAt: string;
+        /** @description States the version of the Budibase client this app is currently based on. */
+        version: string;
+        /** @description In a multi-tenant environment this will state the tenant this app is within. */
+        tenantId?: string;
+        /** @description The user this app is currently being built by. */
+        lockedBy?: { [key: string]: unknown };
+      };
+    };
+    workspaceOutput: {
       data: {
         /** @description The name of the app. */
         name: string;
@@ -172,6 +229,31 @@ export interface components {
         lockedBy?: { [key: string]: unknown };
       }[];
     };
+    workspaceSearch: {
+      data: {
+        /** @description The name of the app. */
+        name: string;
+        /** @description The URL by which the app is accessed, this must be URL encoded. */
+        url: string;
+        /** @description The ID of the app. */
+        _id: string;
+        /**
+         * @description The status of the app, stating it if is the development or published version.
+         * @enum {string}
+         */
+        status: "development" | "published";
+        /** @description States when the app was created, will be constant. Stored in ISO format. */
+        createdAt: string;
+        /** @description States the last time the app was updated - stored in ISO format. */
+        updatedAt: string;
+        /** @description States the version of the Budibase client this app is currently based on. */
+        version: string;
+        /** @description In a multi-tenant environment this will state the tenant this app is within. */
+        tenantId?: string;
+        /** @description The user this app is currently being built by. */
+        lockedBy?: { [key: string]: unknown };
+      }[];
+    };
     deploymentOutput: {
       data: {
         /** @description The ID of the app. */
@@ -186,6 +268,12 @@ export interface components {
       };
     };
     appExport: {
+      /** @description An optional password used to encrypt the export. */
+      encryptPassword: string;
+      /** @description Set whether the internal table rows should be excluded from the export. */
+      excludeRows: boolean;
+    };
+    workspaceExport: {
       /** @description An optional password used to encrypt the export. */
       encryptPassword: string;
       /** @description Set whether the internal table rows should be excluded from the export. */
@@ -294,7 +382,7 @@ export interface components {
             }
           | {
               /**
-               * @description Defines the type of the column
+               * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                * @enum {string}
                */
               type?:
@@ -425,7 +513,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column
+                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                  * @enum {string}
                  */
                 type?:
@@ -558,7 +646,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column
+                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                  * @enum {string}
                  */
                 type?:
@@ -1321,20 +1409,22 @@ export interface components {
     };
   };
   parameters: {
-    /** @description The ID of the table which this request is targeting. */
-    tableId: string;
-    /** @description The ID of the view which this request is targeting. */
-    viewId: string;
-    /** @description The ID of the row which this request is targeting. */
-    rowId: string;
     /** @description The ID of the app which this request is targeting. */
     appId: string;
     /** @description The ID of the app which this request is targeting. */
     appIdUrl: string;
     /** @description The ID of the query which this request is targeting. */
     queryId: string;
+    /** @description The ID of the row which this request is targeting. */
+    rowId: string;
+    /** @description The ID of the table which this request is targeting. */
+    tableId: string;
     /** @description The ID of the user which this request is targeting. */
     userId: string;
+    /** @description The ID of the view which this request is targeting. */
+    viewId: string;
+    /** @description The ID of the workspace which this request is targeting. */
+    workspaceId: string;
   };
 }
 
@@ -2045,6 +2135,166 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["viewSearch"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  workspaceCreate: {
+    responses: {
+      /** Returns the created workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspace"];
+      };
+    };
+  };
+  workspaceGetById: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the retrieved workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+  };
+  workspaceUpdate: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the updated workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspace"];
+      };
+    };
+  };
+  workspaceDestroy: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the deleted workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+  };
+  workspacePublish: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the deployment object. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["deploymentOutput"];
+        };
+      };
+    };
+  };
+  workspaceUnpublish: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** The workspace was published successfully. */
+      204: never;
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  workspaceImport: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Workspace has been updated. */
+      204: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Password for the file if it is encrypted. */
+          encryptedPassword?: string;
+          /**
+           * Format: binary
+           * @description The export to import.
+           */
+          file: string;
+        };
+      };
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  workspaceExport: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** A gzip tarball containing the workspace export, encrypted if password provided. */
+      200: {
+        content: {
+          "application/gzip": string;
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspaceExport"];
+      };
+    };
+  };
+  /** Based on workspace properties (currently only name) search for workspaces. */
+  workspaceSearch: {
+    responses: {
+      /** Returns the workspaces that were found based on the search parameters. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceSearch"];
         };
       };
     };

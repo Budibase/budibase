@@ -1,9 +1,9 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import { join, resolve } from "path"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
-import { join, resolve } from "path"
 
 const TOP_LEVEL_PATH =
   process.env.TOP_LEVEL_PATH ||
@@ -32,7 +32,6 @@ const DEFAULTS = {
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
   JS_RUNNER_MEMORY_LIMIT: 64,
-  USE_LOCAL_COMPONENT_LIBS: coreEnv.isDev() || coreEnv.isTest(),
   RECAPTCHA_SESSION_SECONDS: 1800,
   AUTOMATION_MAX_NESTED_LOOPS: 3,
   AUTOMATION_MAX_STORED_LOOP_RESULTS: 50,
@@ -119,7 +118,7 @@ const environment = {
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   DISABLE_RATE_LIMITING: process.env.DISABLE_RATE_LIMITING,
-  DISABLE_APP_MIGRATIONS: process.env.SKIP_APP_MIGRATIONS || false,
+  DISABLE_WORKSPACE_MIGRATIONS: process.env.SKIP_WORKSPACE_MIGRATIONS || false,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
@@ -139,10 +138,12 @@ const environment = {
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
-  USE_LOCAL_COMPONENT_LIBS:
-    process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
   SYNC_MIGRATION_CHECKS_MS:
     parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
+  SKIP_MIGRATION_LOCKS_IN_TESTS:
+    process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
+  REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED ?? true,
+  UPLOAD_APPS_FILES_ON_TEST: process.env.UPLOAD_APPS_FILES_ON_TEST,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

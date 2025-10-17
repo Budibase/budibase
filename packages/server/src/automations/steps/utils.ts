@@ -1,6 +1,7 @@
 import { ContextEmitter } from "@budibase/types"
+import { Response } from "node-fetch"
 
-export async function getFetchResponse(fetched: any) {
+export async function getFetchResponse(fetched: Response) {
   let status = fetched.status,
     message
   const contentType = fetched.headers.get("content-type")
@@ -29,7 +30,7 @@ export function buildCtx(
     appId,
     user: opts.user || { appId },
     eventEmitter: emitter,
-    throw: (code: string, error: any) => {
+    throw: (_code: string, error: any) => {
       throw error
     },
   }

@@ -219,4 +219,11 @@ export default [
       ],
     },
   },
+  {
+    files: ["packages/client/scripts/**/*"],
+
+    rules: {
+      "no-console": "off",
+    },
+  },
 ]

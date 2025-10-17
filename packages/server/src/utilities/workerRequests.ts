@@ -1,31 +1,30 @@
-import { Response, default as fetch, type RequestInit } from "node-fetch"
-import env from "../environment"
-import { checkSlashesInUrl } from "./index"
 import {
-  db as dbCore,
   constants,
-  tenancy,
-  logging,
   env as coreEnv,
+  logging,
+  tenancy,
 } from "@budibase/backend-core"
 import {
   Ctx,
-  User,
-  EmailInvite,
   EmailAttachment,
-  SendEmailResponse,
-  SendEmailRequest,
+  EmailInvite,
   EmailTemplatePurpose,
+  SendEmailRequest,
+  SendEmailResponse,
+  User,
 } from "@budibase/types"
+import { Response, default as fetch, type RequestInit } from "node-fetch"
+import env from "../environment"
+import { checkSlashesInUrl } from "./index"
 
-interface Request {
+interface Request<TBody = Record<string, unknown>> {
   ctx?: Ctx
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
-  headers?: { [key: string]: string }
-  body?: { [key: string]: any }
+  headers?: Record<string, string>
+  body?: TBody
 }
 
-export function createRequest(request: Request): RequestInit {
+export function createRequest<TBody>(request: Request<TBody>): RequestInit {
   const headers: Record<string, string> = {}
   const requestInit: RequestInit = {
     method: request.method,
@@ -132,15 +131,14 @@ export async function sendSmtpEmail({
   }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
-    createRequest({ method: "POST", body: request })
+    createRequest<SendEmailRequest>({ method: "POST", body: request })
   )
   return (await checkResponse(response, "send email")) as SendEmailResponse
 }
 
-export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
-  const prodAppId = dbCore.getProdAppID(appId)
+export async function removeWorkspaceFromUserRoles(ctx: Ctx, appId: string) {
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${appId}`),
     createRequest({
       ctx,
       method: "DELETE",

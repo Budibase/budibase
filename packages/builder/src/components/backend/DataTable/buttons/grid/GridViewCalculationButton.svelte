@@ -9,11 +9,11 @@
   import {
     CalculationType,
     canGroupBy,
-    FieldType,
     isNumeric,
     isNumericStaticFormula,
+    isStaticFormula,
   } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -107,8 +107,7 @@
         // Only allow numeric columns for most calculation types
         if (
           self.type !== CalculationType.COUNT &&
-          !isNumeric(fieldSchema.type) &&
-          fieldSchema.responseType !== FieldType.NUMBER
+          !isNumeric(fieldSchema.type)
         ) {
           return false
         }
@@ -130,8 +129,7 @@
         if (fieldSchema.calculationType) {
           return false
         }
-        // Don't allow complex types
-        return canGroupBy(fieldSchema.type)
+        return canGroupBy(fieldSchema.type) || isStaticFormula(fieldSchema)
       })
       .map(([field]) => field)
   }

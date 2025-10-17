@@ -80,7 +80,9 @@ async function runBuild(entry, outfile) {
     entryPoints: [entry],
     bundle: true,
     minify: !isDev,
+    keepNames: true,
     sourcemap: tsconfigPathPluginContent.compilerOptions.sourceMap,
+    sourcesContent: false,
     tsconfig,
     // conditions: ["svelte", "browser"], // REVIEW THIS
     plugins: [

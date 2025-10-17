@@ -1,6 +1,6 @@
 import { API } from "@/api"
+import { SearchWorkspaceBackupsRequest } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
-import { SearchAppBackupsRequest } from "@budibase/types"
 
 interface BackupState {
   selectedBackup?: string
@@ -18,7 +18,7 @@ export class BackupStore extends BudiStore<BackupState> {
     })
   }
 
-  async searchBackups(appId: string, opts: SearchAppBackupsRequest) {
+  async searchBackups(appId: string, opts: SearchWorkspaceBackupsRequest) {
     return API.searchBackups(appId, opts)
   }
 

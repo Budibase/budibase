@@ -1,8 +1,8 @@
-import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
-import env from "../../../environment"
 import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
-import nodeFetch from "node-fetch"
 import { helpers } from "@budibase/shared-core"
+import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
+import nodeFetch from "node-fetch"
+import env from "../../../environment"
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {

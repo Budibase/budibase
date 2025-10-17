@@ -1,21 +1,27 @@
 import {
+  type Automation,
   type AutomationStep,
   type AutomationStepInputs,
+  type AutomationStepResult,
   type AutomationTrigger,
   type AutomationTriggerInputs,
+  type AutomationTriggerResult,
   type BaseIOStructure,
-  type UISearchFilter,
-  type TestAutomationResponse,
-  type AppSelfResponse,
-  type Automation,
   type BlockDefinitions,
+  type BlockPath,
   type BlockRef,
+  type SelfResponse,
+  type TestAutomationResponse,
+  type UISearchFilter,
   AutomationActionStepId,
-  AutomationTriggerStepId,
   AutomationCustomIOType,
   AutomationIOType,
   AutomationLog,
+  AutomationTriggerStepId,
   UIAutomation,
+  Branch,
+  LayoutDirection,
+  LoopV2Step,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -115,6 +121,47 @@ export const FilterableRowTriggers = [
   AutomationTriggerStepId.ROW_SAVED,
 ]
 
+export type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
+
+export type ReconstructedBlock = AutomationLogStep & {
+  name: string
+  icon: string
+}
+
+export type AutomationBlock =
+  | AutomationStep
+  | AutomationTrigger
+  | ReconstructedBlock
+
+type AutomationBlockContext = AutomationBlock & { branchNode?: false }
+
+export type BranchPathEntry = Partial<BlockPath> & {
+  branchIdx: number
+  branchStepId: string
+  stepIdx?: number
+}
+
+export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
+
+export interface BranchFlowContext {
+  branchNode: true
+  pathTo: FlowBlockPath
+  branchIdx: number
+  branchStepId: string
+}
+
+export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+
+export type AutomationBlockRef = BlockRef & {
+  stepId?: string
+  name?: string
+  looped?: string
+  blockToLoop?: string
+  inputs?: Record<string, unknown>
+}
+
+export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
+
 /**
  * Used to define how to represent automation setting
  * forms
@@ -135,7 +182,7 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   showTestModal: boolean
   blockDefinitions: BlockDefinitions
   selectedAutomationId: string | null
-  appSelf?: AppSelfResponse
+  appSelf?: SelfResponse
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
@@ -143,13 +190,14 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedLogStepData?: any
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean
+  viewMode: ViewMode
 }
 
 export interface DerivedAutomationStoreState
   extends AutomationStoreState<UIAutomation> {}
 
 export interface SelectedAutomationState {
-  data?: Automation
+  data?: UIAutomation
   blockRefs: Record<string, BlockRef>
 }
 
@@ -230,4 +278,70 @@ export type BlockStatus = {
   message: string
   type: BlockStatusType
   source?: BlockStatusSource
+}
+
+/**
+ * SvelteFlow Node Data Types
+ */
+export interface StepNodeData {
+  block: AutomationBlock
+  direction?: LayoutDirection
+  [key: string]: unknown
+}
+
+export interface BranchNodeData {
+  block: AutomationBlock
+  branch: Branch
+  branchIdx: number
+  direction?: LayoutDirection
+  [key: string]: unknown
+}
+
+export interface LoopV2NodeData {
+  block: LoopV2Step
+  direction?: LayoutDirection
+  containerHeight: number
+  containerWidth: number
+  [key: string]: unknown
+}
+
+export interface AnchorNodeData {
+  direction?: LayoutDirection
+  [key: string]: unknown
+}
+
+/**
+ * SvelteFlow Edge Data Types
+ */
+export interface BaseEdgeData {
+  block: FlowBlockContext
+  direction?: LayoutDirection
+  pathTo?: FlowBlockPath
+  isSubflowEdge?: boolean
+  [key: string]: unknown
+}
+
+export interface BranchEdgeData extends BaseEdgeData {
+  isBranchEdge: true
+  isPrimaryEdge: boolean
+  branchStepId: string
+  branchIdx: number
+  branchesCount: number
+  loopStepId?: string
+  loopChildInsertIndex?: number
+  insertIntoLoopV2?: true
+}
+
+export interface LoopEdgeData extends BaseEdgeData {
+  insertIntoLoopV2?: boolean
+  loopStepId: string
+  loopChildInsertIndex: number
+}
+
+export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData
+export interface RowAction {
+  id: string
+  name: string
+  tableId: string
+  allowedSources?: string[]
 }

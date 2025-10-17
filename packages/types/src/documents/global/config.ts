@@ -28,7 +28,6 @@ export interface SettingsBrandingConfig {
   faviconUrl?: string
   faviconUrlEtag?: string
   emailBrandingEnabled?: boolean
-  testimonialsEnabled?: boolean
   platformTitle?: string
   loginHeading?: string
   loginButton?: string
@@ -46,6 +45,7 @@ export interface SettingsInnerConfig {
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
+  createdVersion?: string
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}

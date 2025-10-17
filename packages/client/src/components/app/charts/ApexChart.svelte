@@ -1,7 +1,6 @@
 <script>
-  import { getContext } from "svelte"
-  import ApexCharts from "apexcharts"
   import { Icon } from "@budibase/bbui"
+  import { getContext } from "svelte"
   import { cloneDeep } from "./utils"
 
   const { styleable, builderStore } = getContext("sdk")
@@ -30,6 +29,9 @@
   const renderChart = async newChartElement => {
     try {
       await chart?.destroy()
+
+      const { default: ApexCharts } = await import("apexcharts")
+
       chart = new ApexCharts(newChartElement, optionsCopy)
       currentType = optionsCopy?.xaxis?.type
       await chart.render()

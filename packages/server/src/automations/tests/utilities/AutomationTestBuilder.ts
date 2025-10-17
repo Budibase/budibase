@@ -1,6 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
-import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
-import { TRIGGER_DEFINITIONS } from "../../triggers"
+import { automations } from "@budibase/shared-core"
 import {
   Automation,
   AutomationActionStepId,
@@ -21,8 +19,10 @@ import {
   TriggerAutomationRequest,
   TriggerAutomationResponse,
 } from "@budibase/types"
+import { v4 as uuidv4 } from "uuid"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { automations } from "@budibase/shared-core"
+import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
+import { TRIGGER_DEFINITIONS } from "../../triggers"
 
 type StepBuilderFunction = <TStep extends AutomationTriggerStepId>(
   stepBuilder: BranchStepBuilder<TStep>
@@ -37,10 +37,10 @@ type BranchConfig = {
 
 type LoopConfig = {
   option: LoopStepType
-  binding: any
+  binding: unknown
   steps: StepBuilderFunction
   iterations?: number
-  failure?: any
+  failure?: string
   resultOptions?: {
     storeFullResults?: boolean
     summarizeOnly?: boolean
@@ -221,7 +221,7 @@ class StepBuilder<
       },
       disabled: opts?.disabled,
       type: "automation",
-      appId: this.config.getAppId(),
+      appId: this.config.getDevWorkspaceId(),
     }
   }
 
@@ -278,14 +278,14 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
   async trigger(
     request: TriggerAutomationRequest
   ): Promise<TriggerAutomationResponse> {
-    if (!this.config.prodAppId) {
+    if (!this.config.prodWorkspaceId) {
       throw new Error(
-        "Automations can only be triggered in a production app context, call config.api.application.publish()"
+        "Automations can only be triggered in a production workspace context, call config.api.workspace.publish()"
       )
     }
-    // Because you can only trigger automations in a production app context, we
+    // Because you can only trigger automations in a production workspace context, we
     // wrap the trigger call to make tests a bit cleaner. If you really want to
-    // test triggering an automation in a dev app context, you can use the
+    // test triggering an automation in a dev workspace context, you can use the
     // automation API directly.
     return await this.config.withProdApp(async () => {
       try {
@@ -298,7 +298,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
           throw new Error(
             `Automation with ID ${
               this.automation._id
-            } not found in app ${this.config.getAppId()}. You may have forgotten to call config.api.application.publish().`,
+            } not found in app ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
             { cause: e }
           )
         } else {

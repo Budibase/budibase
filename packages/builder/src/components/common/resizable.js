@@ -1,9 +1,12 @@
+import { builderStore } from "@/stores/builder"
+
 const getResizeActions = (
   cssProperty,
   mouseMoveEventProperty,
   elementProperty,
   initialValue,
-  setValue = () => {}
+  setValue = () => {},
+  onResizeStart = () => {}
 ) => {
   let element = null
 
@@ -36,6 +39,9 @@ const getResizeActions = (
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
 
+      // Re-enable text selection via builderStore
+      builderStore.setResizingPanel(false)
+
       element.style.removeProperty("transition") // remove temporary transition override
       for (let item of document.getElementsByTagName("iframe")) {
         item.style.removeProperty("pointer-events")
@@ -61,6 +67,9 @@ const getResizeActions = (
       ) {
         return
       }
+
+      builderStore.setResizingPanel(true)
+      onResizeStart()
 
       element.style.transition = `${cssProperty} 0ms` // temporarily override any height transitions
 
@@ -107,13 +116,15 @@ export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
 
 export const getHorizontalResizeActions = (
   initialValue,
-  setValue = () => {}
+  setValue = () => {},
+  onResizeStart = () => {}
 ) => {
   return getResizeActions(
     "width",
     "pageX",
     "clientWidth",
     initialValue,
-    setValue
+    setValue,
+    onResizeStart
   )
 }

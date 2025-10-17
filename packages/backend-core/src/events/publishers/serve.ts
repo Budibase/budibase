@@ -1,11 +1,11 @@
-import { publishEvent } from "../events"
 import {
-  App,
-  BuilderServedEvent,
-  Event,
   AppPreviewServedEvent,
   AppServedEvent,
+  BuilderServedEvent,
+  Event,
+  Workspace,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function servedBuilder(timezone: string) {
   const properties: BuilderServedEvent = {
@@ -15,22 +15,22 @@ async function servedBuilder(timezone: string) {
 }
 
 async function servedApp(
-  app: App,
+  workspace: Workspace,
   timezone: string,
   embed?: boolean | undefined
 ) {
   const properties: AppServedEvent = {
-    appVersion: app.version,
+    appVersion: workspace.version,
     timezone,
     embed: embed === true,
   }
   await publishEvent(Event.SERVED_APP, properties)
 }
 
-async function servedAppPreview(app: App, timezone: string) {
+async function servedAppPreview(workspace: Workspace, timezone: string) {
   const properties: AppPreviewServedEvent = {
-    appId: app.appId,
-    appVersion: app.version,
+    appId: workspace.appId,
+    appVersion: workspace.version,
     timezone,
   }
   await publishEvent(Event.SERVED_APP_PREVIEW, properties)

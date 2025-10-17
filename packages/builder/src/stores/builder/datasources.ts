@@ -1,22 +1,22 @@
-import { derived, get, Readable, Writable } from "svelte/store"
-import {
-  DEFAULT_BB_DATASOURCE_ID,
-  BUDIBASE_INTERNAL_DB_ID,
-} from "@/constants/backend"
-import { tables } from "./tables"
-import { queries } from "./queries"
 import { API } from "@/api"
+import { TableNames } from "@/constants"
 import {
-  DatasourceFeature,
+  BUDIBASE_INTERNAL_DB_ID,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "@/constants/backend"
+import { DerivedBudiStore } from "@/stores/BudiStore"
+import {
   Datasource,
-  Table,
+  DatasourceFeature,
   Integration,
-  UIIntegration,
   SourceName,
+  Table,
+  UIIntegration,
   UIInternalDatasource,
 } from "@budibase/types"
-import { TableNames } from "@/constants"
-import { DerivedBudiStore } from "@/stores/BudiStore"
+import { derived, get, Readable, Writable } from "svelte/store"
+import { queries } from "./queries"
+import { tables } from "./tables"
 
 class TableImportError extends Error {
   errors: Record<string, string>
@@ -299,6 +299,40 @@ export class DatasourceStore extends DerivedBudiStore<
   async getTableNames(datasource: Datasource) {
     const info = await API.fetchInfoForDatasource(datasource)
     return info.tableNames || []
+  }
+
+  async getViewNames(datasource: Datasource) {
+    const info = await API.fetchViewInfoForDatasource(datasource)
+    return info.views || []
+  }
+
+  async createViewQuery(datasource: Datasource, viewName: string) {
+    try {
+      const sql =
+        "SELECT * FROM " +
+        viewName +
+        " \nOFFSET {{ offset }} \nLIMIT {{ limit }}"
+
+      const query = {
+        datasourceId: datasource._id!,
+        name: viewName,
+        parameters: [
+          { name: "offset", default: "0" },
+          { name: "limit", default: "100" },
+        ],
+        fields: {
+          sql,
+        },
+        queryVerb: "read" as const,
+        transformer: null,
+        schema: {},
+        readable: true,
+      }
+      return await queries.save(datasource._id!, query)
+    } catch (error) {
+      console.error("API error fetching view definitions:", error)
+      return
+    }
   }
 }
 

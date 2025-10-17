@@ -184,6 +184,10 @@
     padding: 0 var(--spacing-xl) 0 calc(var(--spacing-xl) - 4px);
     gap: 8px;
   }
+  .property-control > :global(*) {
+    min-width: 0;
+    overflow: hidden;
+  }
   .property-control :global(.spectrum-FieldLabel) {
     white-space: normal;
   }

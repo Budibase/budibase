@@ -1,29 +1,30 @@
+import { context, objectStore } from "@budibase/backend-core"
 import {
   decodeJSBinding,
-  isJSBinding,
   encodeJSBinding,
+  isJSBinding,
 } from "@budibase/string-templates"
-import sdk from "../sdk"
 import {
   Automation,
   AutomationActionStepId,
   AutomationAttachment,
   AutomationStep,
   AutomationStepResult,
+  AutomationStepResultOutputs,
   AutomationStepStatus,
   BaseIOStructure,
   BranchStep,
   FieldSchema,
   FieldType,
+  LoopStorage,
   LoopV2Step,
   Row,
-  LoopStorage,
 } from "@budibase/types"
-import { objectStore, context } from "@budibase/backend-core"
-import * as uuid from "uuid"
+import { cloneDeep, isPlainObject } from "lodash"
 import path from "path"
-import { isPlainObject, cloneDeep } from "lodash"
+import * as uuid from "uuid"
 import env from "../environment"
+import sdk from "../sdk"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -175,7 +176,7 @@ export async function sendAutomationAttachmentsToStorage(
   return row
 }
 async function generateAttachmentRow(attachment: AutomationAttachment) {
-  const prodAppId = context.getProdAppId()
+  const prodAppId = context.getProdWorkspaceId()
 
   async function uploadToS3(
     extension: string,
@@ -387,8 +388,29 @@ export function processStandardResult(
   result: AutomationStepResult,
   iteration: number
 ): void {
+  let toStore: AutomationStepResult = result
+  if (result.stepId === AutomationActionStepId.BRANCH) {
+    const outputs = result.outputs || ({} as any)
+    const sanitizedOutputs: AutomationStepResultOutputs = {
+      success: outputs.success === false ? false : true,
+    }
+    if (outputs.status !== undefined) {
+      sanitizedOutputs.status = outputs.status
+    }
+    if (outputs.branchName !== undefined) {
+      sanitizedOutputs.branchName = outputs.branchName
+    }
+
+    toStore = {
+      id: result.id,
+      stepId: result.stepId,
+      inputs: {},
+      outputs: sanitizedOutputs,
+    }
+  }
+
   storage.summary.totalProcessed++
-  if (result.outputs.success) {
+  if (toStore.outputs.success) {
     storage.summary.successCount++
   } else {
     storage.summary.failureCount++
@@ -396,22 +418,26 @@ export function processStandardResult(
       storage.summary.firstFailure = {
         iteration,
         error:
-          result.outputs.response ||
-          result.outputs.error ||
-          result.outputs.response?.message ||
+          toStore.outputs.response ||
+          toStore.outputs.error ||
+          toStore.outputs.response?.message ||
           "Unknown error",
       }
     }
   }
 
-  if (result.outputs.summary) {
-    storage.nestedSummaries[result.id].push(result.outputs.summary)
+  if (toStore.outputs.summary) {
+    storage.nestedSummaries[toStore.id].push(toStore.outputs.summary)
   }
 
-  storage.results[result.id].push(result)
+  if (!storage.results[toStore.id]) {
+    storage.results[toStore.id] = []
+  }
+
+  storage.results[toStore.id].push(toStore)
   // If we exceed max, remove the oldest
-  if (storage.results[result.id].length > storage.maxStoredResults) {
-    storage.results[result.id].shift()
+  if (storage.results[toStore.id].length > storage.maxStoredResults) {
+    storage.results[toStore.id].shift()
   }
 }
 

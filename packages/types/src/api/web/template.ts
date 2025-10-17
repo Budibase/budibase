@@ -1,5 +1,5 @@
 export enum TemplateType {
-  APP = "app",
+  WORKSPACE = "app",
 }
 
 export interface TemplateMetadata {

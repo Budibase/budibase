@@ -1,5 +1,3 @@
-import { getQueryParams, getTableParams } from "../../db/utils"
-import { invalidateCachedVariable } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
@@ -8,29 +6,33 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  DeleteDatasourceResponse,
   Document,
+  DynamicVariable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchDatasourceViewInfoRequest,
+  FetchDatasourceViewInfoResponse,
+  FetchDatasourcesResponse,
+  FetchExternalSchemaResponse,
   FieldType,
+  FindDatasourcesResponse,
   RelationshipFieldMetadata,
+  RowValue,
   SourceName,
+  Table,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
-  Table,
-  RowValue,
-  DynamicVariable,
-  FetchDatasourcesResponse,
-  FindDatasourcesResponse,
-  DeleteDatasourceResponse,
-  FetchExternalSchemaResponse,
 } from "@budibase/types"
-import sdk from "../../sdk"
-import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
-import { processTable } from "../../sdk/app/tables/getters"
+import { getQueryParams, getTableParams } from "../../db/utils"
+import sdk from "../../sdk"
+import { processTable } from "../../sdk/workspace/tables/getters"
+import { invalidateCachedVariable } from "../../threads/utils"
+import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()
@@ -69,6 +71,35 @@ export async function information(
   const tableNames = await connector.getTableNames()
   ctx.body = {
     tableNames: tableNames.sort(),
+  }
+}
+
+export async function viewInformation(
+  ctx: UserCtx<FetchDatasourceViewInfoRequest, FetchDatasourceViewInfoResponse>
+) {
+  const { datasource } = ctx.request.body
+  let views: string[] = []
+  let error: string | undefined
+
+  try {
+    const enrichedDatasource =
+      await sdk.datasources.getAndMergeDatasource(datasource)
+    const connector = (await sdk.datasources.getConnector(
+      enrichedDatasource
+    )) as DatasourcePlus
+
+    if (connector.getViewNames) {
+      views = await connector.getViewNames()
+    } else {
+      error = "View fetching not supported by datasource"
+    }
+  } catch (err) {
+    error = (err as Error).message || "Unknown error"
+  }
+
+  ctx.body = {
+    views: views.sort(),
+    error,
   }
 }
 
@@ -129,7 +160,7 @@ async function invalidateVariables(
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasourceId = ctx.params.datasourceId
   const baseDatasource = await sdk.datasources.get(datasourceId)
   await invalidateVariables(baseDatasource, ctx.request.body)
@@ -213,7 +244,7 @@ export async function save(
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
 
   // Get all internal tables
   const internalTables = await db.allDocs<Table>(
@@ -257,7 +288,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const datasourceId = ctx.params.datasourceId
 
   const datasource = await sdk.datasources.get(datasourceId)

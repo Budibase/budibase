@@ -652,18 +652,16 @@ export async function buildDefaultDocs() {
   )
 
   // Build one link doc for each employee/job
-  const jobEmployeeLinks = employeeData.rows.map(
-    (employee: any, index: any) => {
-      return new LinkDocument(
-        employeeData.table._id!,
-        "Jobs",
-        employeeData.rows[index]._id!,
-        jobData.table._id!,
-        "Assigned",
-        jobData.rows[index]._id!
-      )
-    }
-  )
+  const jobEmployeeLinks = employeeData.rows.map((_employee, index) => {
+    return new LinkDocument(
+      employeeData.table._id!,
+      "Jobs",
+      employeeData.rows[index]._id!,
+      jobData.table._id!,
+      "Assigned",
+      jobData.rows[index]._id!
+    )
+  })
 
   const dataSource = {
     ...defaultDatasource,

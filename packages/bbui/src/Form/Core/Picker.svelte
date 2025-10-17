@@ -4,20 +4,20 @@
 </script>
 
 <script lang="ts">
+  import "@spectrum-css/menu/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
   import { createEventDispatcher, onDestroy } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Search from "./Search.svelte"
+  import clickOutside from "../../Actions/clickOutside"
   import Icon from "../../Icon/Icon.svelte"
-  import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Popover from "../../Popover/Popover.svelte"
-  import Tags from "../../Tags/Tags.svelte"
-  import Tag from "../../Tags/Tag.svelte"
   import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+  import StatusLight from "../../StatusLight/StatusLight.svelte"
+  import Tag from "../../Tags/Tag.svelte"
+  import Tags from "../../Tags/Tags.svelte"
   import AbsTooltip from "../../Tooltip/AbsTooltip.svelte"
   import { PopoverAlignment } from "../../constants"
+  import Search from "./Search.svelte"
 
   export let id: string | undefined = undefined
   export let disabled: boolean = false
@@ -152,7 +152,7 @@
       </span>
     {:else}
       <span class="option-extra icon field-icon">
-        <img src={fieldIcon} alt="icon" style="height: 15px; width: auto;" />
+        <img class="icon-dims" src={fieldIcon} alt="icon" />
       </span>
     {/if}
   {/if}
@@ -235,9 +235,9 @@
               <span class="option-extra icon">
                 {#if useOptionIconImage}
                   <img
+                    class="icon-dims"
                     src={getOptionIcon(option, idx)}
                     alt="icon"
-                    style="height: 15px; width: auto;"
                   />
                 {:else}
                   <Icon
@@ -301,6 +301,10 @@
 </Popover>
 
 <style>
+  .icon-dims {
+    height: 15px;
+    width: auto;
+  }
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;

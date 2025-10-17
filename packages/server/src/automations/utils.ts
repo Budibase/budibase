@@ -1,20 +1,21 @@
-import { Thread, ThreadType } from "../threads"
-import { automationQueue } from "./bullboard"
-import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
-import { getAutomationMetadataParams } from "../db/utils"
 import { quotas } from "@budibase/pro"
+import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import {
   Automation,
   AutomationJob,
   CronTriggerInputs,
   isCronTrigger,
   MetadataType,
+  TestAutomationRequest,
 } from "@budibase/types"
-import { automationsEnabled } from "../features"
-import { helpers, REBOOT_CRON } from "@budibase/shared-core"
-import tracer from "dd-trace"
 import { JobId } from "bull"
+import tracer from "dd-trace"
+import { getAutomationMetadataParams } from "../db/utils"
+import { automationsEnabled } from "../features"
+import { Thread, ThreadType } from "../threads"
+import { updateEntityMetadata } from "../utilities"
+import { automationQueue } from "./bullboard"
 
 let Runner: Thread
 if (automationsEnabled()) {
@@ -36,11 +37,11 @@ function loggingArgs(job: AutomationJob) {
 
 export async function processEvent(job: AutomationJob) {
   return tracer.trace("processEvent", async span => {
-    const appId = job.data.event.appId!
+    const workspaceId = job.data.event.appId!
     const automationId = job.data.automation._id!
 
     span.addTags({
-      appId,
+      appId: workspaceId,
       automationId,
       job: {
         id: job.id,
@@ -87,18 +88,21 @@ export async function processEvent(job: AutomationJob) {
       }
     }
 
-    return await context.doInAutomationContext({ appId, automationId, task })
+    return await context.doInAutomationContext({
+      workspaceId,
+      automationId,
+      task,
+    })
   })
 }
 
 export async function updateTestHistory(
-  appId: any,
-  automation: any,
-  history: any
+  automation: Automation,
+  history: TestAutomationRequest & { occurredAt: number }
 ) {
   return updateEntityMetadata(
     MetadataType.AUTOMATION_TEST_HISTORY,
-    automation._id,
+    automation._id as string,
     (metadata: any) => {
       if (metadata && Array.isArray(metadata.history)) {
         metadata.history.push(history)
@@ -113,7 +117,7 @@ export async function updateTestHistory(
 }
 
 // end the repetition and the job itself
-export async function disableAllCrons(appId: any) {
+export async function disableAllCrons(appId: string) {
   const promises = []
   const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {
@@ -141,7 +145,7 @@ export async function disableCronById(jobId: JobId) {
 }
 
 export async function clearMetadata() {
-  const db = context.getProdAppDB()
+  const db = context.getProdWorkspaceDB()
   const automationMetadata = (
     await db.allDocs(
       getAutomationMetadataParams({
@@ -200,8 +204,8 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id.toString()
-    // can't use getAppDB here as this is likely to be called from dev app,
-    // but this call could be for dev app or prod app, need to just use what
+    // can't use getWorkspaceDB here as this is likely to be called from dev workspace,
+    // but this call could be for dev workspace or prod workspace, need to just use what
     // was passed in
     await dbCore.doWithDB(appId, async db => {
       const response = await db.put(automation)

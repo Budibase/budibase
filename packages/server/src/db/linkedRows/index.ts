@@ -1,20 +1,5 @@
-import LinkController from "./LinkController"
-import {
-  getLinkDocuments,
-  getLinkedTable,
-  getLinkedTableIDs,
-  getRelatedTableForField,
-  getUniqueByProp,
-} from "./linkUtils"
-import flatten from "lodash/flatten"
-import { USER_METDATA_PREFIX } from "../utils"
-import partition from "lodash/partition"
-import { getGlobalUsersFromMetadata } from "../../utilities/global"
-import {
-  coreOutputProcessing,
-  processFormulas,
-} from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import {
   ContextUser,
   EventType,
@@ -26,10 +11,25 @@ import {
   ViewV2,
   ViewV2Schema,
 } from "@budibase/types"
+import flatten from "lodash/flatten"
+import partition from "lodash/partition"
 import sdk from "../../sdk"
-import { helpers } from "@budibase/shared-core"
+import { getGlobalUsersFromMetadata } from "../../utilities/global"
+import {
+  coreOutputProcessing,
+  processFormulas,
+} from "../../utilities/rowProcessor"
+import { USER_METDATA_PREFIX } from "../utils"
+import LinkController from "./LinkController"
+import {
+  getLinkDocuments,
+  getLinkedTable,
+  getLinkedTableIDs,
+  getRelatedTableForField,
+  getUniqueByProp,
+} from "./linkUtils"
 
-export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
+export { createLinkView, getLinkDocuments, IncludeDocs } from "./linkUtils"
 
 const INVALID_DISPLAY_COLUMN_TYPE = [
   FieldType.LINK,
@@ -80,7 +80,7 @@ async function getLinksForRows(rows: Row[]): Promise<LinkDocumentValue[]> {
 
 async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   // create DBs
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
   let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
@@ -282,7 +282,7 @@ export async function squashLinks<T = Row[] | Row>(
         row[column] = await coreOutputProcessing(relatedTable, row[column])
       }
       row[column] = row[column].map((link: Row) => {
-        const obj: any = { _id: link._id }
+        const obj: Record<string, unknown> = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, relatedTable)
 
         if (viewSchema[column]?.columns) {

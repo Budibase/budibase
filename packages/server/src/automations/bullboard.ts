@@ -1,16 +1,17 @@
+import { queue } from "@budibase/backend-core"
+import { backups } from "@budibase/pro"
+import { AutomationData } from "@budibase/types"
+import { createBullBoard } from "@bull-board/api"
 import { BullAdapter } from "@bull-board/api/bullAdapter"
 import { KoaAdapter } from "@bull-board/koa"
-import { queue } from "@budibase/backend-core"
+import { UserSyncProcessor } from "../events/docUpdates/syncUsers"
 import * as automation from "../threads/automation"
-import { backups } from "@budibase/pro"
-import { getAppMigrationQueue } from "../appMigrations/queue"
-import { createBullBoard } from "@bull-board/api"
-import { AutomationData } from "@budibase/types"
+import { getAppMigrationQueue } from "../workspaceMigrations/queue"
 
 export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
   {
-    removeStalledCb: automation.removeStalled,
+    removeStalledCb: job => automation.removeStalled(job),
     jobTags: (job: AutomationData) => {
       return {
         "automation.id": job.automation._id,
@@ -38,6 +39,8 @@ export async function init() {
   if (appMigrationQueue) {
     queues.push(new BullAdapter(appMigrationQueue.getBullQueue()))
   }
+
+  queues.push(new BullAdapter(UserSyncProcessor.queue.getBullQueue()))
 
   const serverAdapter = new KoaAdapter()
   createBullBoard({ queues, serverAdapter })

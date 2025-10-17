@@ -5,5 +5,5 @@
   // See: https://github.com/roxiness/routify/issues/563
   $redirect
 
-  $redirect("./apps")
+  $redirect("./workspaces")
 </script>

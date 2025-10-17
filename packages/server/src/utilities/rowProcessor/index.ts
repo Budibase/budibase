@@ -1,5 +1,3 @@
-import * as linkRows from "../../db/linkedRows"
-import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
@@ -7,8 +5,14 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { InternalTables } from "../../db/utils"
-import { TYPE_TRANSFORM_MAP } from "./map"
+import {
+  helpers,
+  isExternalColumnName,
+  isInternalColumnName,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
 import {
   AutoFieldSubType,
   FieldType,
@@ -21,28 +25,24 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
+  getTableFromSource,
+  isUserMetadataTable,
+} from "../../api/controllers/row/utils"
+import * as linkRows from "../../db/linkedRows"
+import { InternalTables } from "../../db/utils"
+import { isExternalTableID } from "../../integrations/utils"
+import sdk from "../../sdk"
+import {
   processInputBBReference,
   processInputBBReferences,
   processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
-import { isExternalTableID } from "../../integrations/utils"
-import {
-  helpers,
-  isExternalColumnName,
-  isInternalColumnName,
-  PROTECTED_EXTERNAL_COLUMNS,
-  PROTECTED_INTERNAL_COLUMNS,
-} from "@budibase/shared-core"
-import { processStringSync } from "@budibase/string-templates"
-import {
-  getTableFromSource,
-  isUserMetadataTable,
-} from "../../api/controllers/row/utils"
-import sdk from "../../sdk"
+import { TYPE_TRANSFORM_MAP } from "./map"
+import { fixAutoColumnSubType, processFormulas } from "./utils"
 
-export * from "./utils"
 export * from "./attachments"
+export * from "./utils"
 
 type AutoColumnProcessingOpts = {
   reprocessing?: boolean
@@ -113,7 +113,7 @@ export async function processAutoColumn(
   }
 
   if (tableMutated) {
-    const db = context.getAppDB()
+    const db = context.getWorkspaceDB()
     const resp = await db.put(table)
     table._rev = resp.rev
   }
@@ -167,17 +167,16 @@ async function processDefaultValues(table: Table, row: Row) {
  * @param type The type fo coerce to
  * @returns The coerced value
  */
-export function coerce(value: unknown, type: string) {
+export function coerce(value: string | Date | string[], type: FieldType) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return value
   }
   // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value)) {
+  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value as PropertyKey)) {
     // @ts-ignore
     return TYPE_TRANSFORM_MAP[type][value]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
-    // @ts-ignore
     return TYPE_TRANSFORM_MAP[type].parse(value)
   }
 

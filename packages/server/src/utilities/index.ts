@@ -1,10 +1,11 @@
 export * from "./fileUtils"
-import env from "../environment"
+export * from "./fetch"
 import { context } from "@budibase/backend-core"
-import { generateMetadataID } from "../db/utils"
 import { Document } from "@budibase/types"
 import dayjs from "dayjs"
 import customParseFormat from "dayjs/plugin/customParseFormat"
+import { generateMetadataID } from "../db/utils"
+import env from "../environment"
 
 dayjs.extend(customParseFormat)
 
@@ -38,7 +39,7 @@ export function isDate(str: string) {
   return false
 }
 
-export function removeFromArray(array: any[], element: any) {
+export function removeFromArray(array: unknown[], element: unknown) {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)
@@ -61,7 +62,7 @@ export async function updateEntityMetadata(
   entityId: string,
   updateFn: (metadata: Document) => Document
 ) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = generateMetadataID(type, entityId)
   const metadata = updateFn((await db.tryGet(id)) || {})
   metadata._id = id
@@ -78,7 +79,7 @@ export async function saveEntityMetadata(
 }
 
 export async function deleteEntityMetadata(type: string, entityId: string) {
-  const db = context.getAppDB()
+  const db = context.getWorkspaceDB()
   const id = generateMetadataID(type, entityId)
   const metadata = await db.tryGet(id)
   if (!metadata) {

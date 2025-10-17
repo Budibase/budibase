@@ -1,16 +1,16 @@
-import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { get } from "svelte/store"
 import Analytics from "../../analytics"
+import { BudiStore } from "../BudiStore"
+import { auth } from "./auth"
 
-interface AdminState extends GetEnvironmentResponse {
+export interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
@@ -20,9 +20,9 @@ export class AdminStore extends BudiStore<AdminState> {
   constructor() {
     super({
       loaded: false,
+      isDev: false,
       multiTenancy: false,
       cloud: false,
-      isDev: false,
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
@@ -48,15 +48,16 @@ export class AdminStore extends BudiStore<AdminState> {
   async getEnvironment() {
     const environment = await API.getEnvironment()
     this.update(store => {
+      store.isDev = environment.isDev
       store.multiTenancy = environment.multiTenancy
       store.cloud = environment.cloud
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
-      store.isDev = environment.isDev
       store.baseUrl = environment.baseUrl
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
       store.passwordMinLength = environment.passwordMinLength
+
       return store
     })
   }

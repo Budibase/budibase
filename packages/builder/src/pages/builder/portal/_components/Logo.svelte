@@ -13,7 +13,7 @@
 <img
   src={$organisation.logoUrl || Logo}
   alt="Budibase Logo"
-  on:click={() => $goto("./apps")}
+  on:click={() => $goto("./workspaces")}
 />
 
 <style>

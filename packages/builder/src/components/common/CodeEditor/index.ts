@@ -1,7 +1,12 @@
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
-import { EditorModesMap, Helper, Snippet } from "@budibase/types"
+import {
+  EditorModesMap,
+  EnrichedBinding,
+  Helper,
+  Snippet,
+} from "@budibase/types"
 import { CompletionContext } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
 import { BindingCompletion, BindingCompletionOption } from "@/types"
@@ -19,6 +24,9 @@ export const EditorModes: EditorModesMap = {
   },
   Text: {
     name: "text/html",
+  },
+  HTML: {
+    name: "html",
   },
 }
 
@@ -52,7 +60,7 @@ const toSpectrumIcon = (name: string) => {
 }
 
 const buildSectionHeader = (
-  type: string,
+  type: string | null,
   sectionName: string,
   icon: string,
   rank: number
@@ -72,7 +80,7 @@ const buildSectionHeader = (
 
 const helpersToCompletion = (
   helpers: Record<string, Helper>,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const helperSection = buildSectionHeader("helper", "Helpers", "Code", 99)
 
@@ -99,7 +107,7 @@ const helpersToCompletion = (
 }
 
 export const getHelperCompletions = (mode: {
-  name: "javascript" | "handlebars"
+  name: "javascript" | "handlebars" | "html"
 }): BindingCompletionOption[] => {
   // TODO: manifest needs to be properly typed
   const manifest: any = getManifest()
@@ -236,10 +244,7 @@ function setAutocomplete(
   }
 }
 
-const buildBindingInfoNode = (binding: {
-  valueHTML: string
-  value: string | null
-}) => {
+const buildBindingInfoNode = (binding: EnrichedBinding) => {
   if (!binding.valueHTML || binding.value == null) {
     return null
   }
@@ -268,6 +273,21 @@ export const hbInsert = (
   }
 
   return parsedInsert
+}
+
+export const htmlInsert = (
+  value: string,
+  from: number,
+  to: number,
+  text: string
+) => {
+  const left = from ? value.substring(0, from) : ""
+  const right = to ? value.substring(to) : ""
+
+  const leftPrefix = left.includes("{{") ? "" : "{{"
+  const rightPrefix = right.includes("}}") ? "" : "}}"
+
+  return `${leftPrefix} ${text} ${rightPrefix}`
 }
 
 export function jsInsert(
@@ -309,7 +329,7 @@ const insertBinding = (
   from: number,
   to: number,
   text: string,
-  mode: { name: "javascript" | "handlebars" },
+  mode: { name: "javascript" | "handlebars" | "html" },
   type: AutocompleteType
 ) => {
   let parsedInsert
@@ -321,6 +341,8 @@ const insertBinding = (
     })
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
+  } else if (mode.name === "html") {
+    parsedInsert = htmlInsert(view.state.doc?.toString(), from, to, text)
   } else {
     console.warn("Unsupported")
     return
@@ -348,13 +370,12 @@ const insertBinding = (
   })
 }
 
-// TODO: typing in this function isn't great
 export const bindingsToCompletions = (
-  bindings: any,
-  mode: { name: "javascript" | "handlebars" }
+  bindings: EnrichedBinding[] | undefined,
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
-  const categoryMeta = bindings?.reduce((acc: any, ele: any) => {
+  const categoryMeta = bindings?.reduce((acc: any, ele: EnrichedBinding) => {
     acc[ele.category] = acc[ele.category] || {}
 
     if (ele.icon) {
@@ -372,8 +393,7 @@ export const bindingsToCompletions = (
     const { icon, rank } = categoryMeta[catKey] || {}
 
     const bindingSectionHeader = buildSectionHeader(
-      // @ts-ignore something wrong with this - logically this should be dictionary
-      bindingByCategory.type,
+      null,
       catKey,
       icon || "",
       typeof rank == "number" ? rank : 1

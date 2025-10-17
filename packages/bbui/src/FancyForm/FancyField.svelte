@@ -1,20 +1,20 @@
-<script>
-  import Icon from "../Icon/Icon.svelte"
+<script lang="ts" generics="V">
   import { getContext, onMount } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
   import ErrorMessage from "./ErrorMessage.svelte"
 
-  export let disabled = false
-  export let error = null
-  export let focused = false
-  export let clickable = false
-  export let validate
-  export let value
-  export let ref
-  export let autoHeight
-  export let compact = false
+  export let disabled: boolean = false
+  export let error: string | null = null
+  export let focused: boolean = false
+  export let clickable: boolean = false
+  export let validate: ((_value: V | undefined) => string | null) | null
+  export let value: V | undefined
+  export let ref: HTMLDivElement | undefined = undefined
+  export let autoHeight: boolean | undefined = undefined
+  export let compact: boolean = false
 
   const formContext = getContext("fancy-form")
-  const id = Math.random()
+  const id = Math.random().toString()
   const API = {
     validate: () => {
       if (validate) {

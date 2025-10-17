@@ -1,14 +1,14 @@
 <script>
-  import { Body, Button, Icon } from "@budibase/bbui"
-  import { processStringSync } from "@budibase/string-templates"
+  import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
+  import { contextMenuStore } from "@/stores/builder"
   import { auth } from "@/stores/portal"
   import { goto as gotoStore } from "@roxi/routify"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
+  import { processStringSync } from "@budibase/string-templates"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-  import FavouriteAppButton from "@/pages/builder/portal/apps/_components/FavouriteAppButton.svelte"
-  import { contextMenuStore } from "@/stores/builder"
 
   // Workaround for Routify 2 + Svelte 5 compatibility
   // See: https://github.com/roxiness/routify/issues/563
@@ -38,16 +38,16 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../app/${app.devId}`)
+    goto && goto(`../../workspace/${app.devId}`)
   }
 
   const goToOverview = () => {
-    goto && goto(`../../app/${app.devId}/settings`)
+    goto && goto(`../../workspace/${app.devId}/settings`)
   }
 
   const goToApp = () => {
     if (app.deployed && app.url) {
-      window.open(`/app${app.url}`, "_blank")
+      window.open(`/app${app.url}${app.defaultWorkspaceAppUrl}`, "_blank")
     }
   }
 

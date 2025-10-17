@@ -2,7 +2,7 @@
   import { Input, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { appsStore, featureFlags } from "@/stores/portal"
+  import { appsStore } from "@/stores/portal"
   import { API } from "@/api"
 
   // Workaround for Routify 2 + Svelte 5 compatibility
@@ -16,8 +16,6 @@
   }
 
   let deleting = false
-
-  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   export const show = () => {
     deletionModal.show()
@@ -56,7 +54,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ConfirmDialog
   bind:this={deletionModal}
-  title={`Delete ${appOrWorkspace}`}
+  title={`Delete workspace`}
   okText="Delete"
   onOk={deleteApp}
   onCancel={() => (deletionConfirmationAppName = null)}
@@ -68,7 +66,7 @@
   </span>?
 
   <br />
-  Please enter the {appOrWorkspace} name below to confirm.
+  Please enter the workspace name below to confirm.
   <br /><br />
   <Input bind:value={deletionConfirmationAppName} placeholder={appName} />
 </ConfirmDialog>

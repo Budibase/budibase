@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
-  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, notifications, Tabs, Tab, ActionButton } from "@budibase/bbui"
   import {
     organisation,
     auth,
@@ -18,6 +18,7 @@
   import { sdk } from "@budibase/shared-core"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
+  import { bb } from "@/stores/bb"
 
   // Workaround for Routify 2 + Svelte 5 compatibility
   // See: https://github.com/roxiness/routify/issues/563
@@ -97,6 +98,11 @@
         </div>
         <div class="desktop">
           <UpgradeButton />
+        </div>
+        <div class="desktop">
+          <ActionButton quiet on:click={() => bb.settings()} icon="gear">
+            Settings
+          </ActionButton>
         </div>
         <div class="dropdown">
           <UserDropdown />

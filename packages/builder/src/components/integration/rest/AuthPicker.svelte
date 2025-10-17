@@ -13,6 +13,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { RestAuthType } from "@budibase/types"
   import { onMount } from "svelte"
+  import { bb } from "@/stores/bb"
 
   // Workaround for Routify 2 + Svelte 5 compatibility
   // See: https://github.com/roxiness/routify/issues/563
@@ -39,12 +40,12 @@
 
   function addBasicConfiguration() {
     $goto(
-      `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
+      `/builder/workspace/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
     )
   }
 
   function addOAuth2Configuration() {
-    $goto(`/builder/app/${$appStore.appId}/settings/oauth2`)
+    bb.settings("/general/oauth2")
   }
 
   function selectConfiguration(id: string, type?: RestAuthType) {
