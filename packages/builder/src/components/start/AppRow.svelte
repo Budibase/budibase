@@ -2,7 +2,7 @@
   import { Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
@@ -12,7 +12,10 @@
 
   // Workaround for Routify 2 + Svelte 5 compatibility
   // See: https://github.com/roxiness/routify/issues/563
-  $goto
+  // Initialize Routify store and derive callable function
+  $gotoStore
+  let goto
+  $: goto = $gotoStore
 
   export let app
   export let lockedAction
@@ -35,11 +38,11 @@
   }
 
   const goToBuilder = () => {
-    $goto(`../../app/${app.devId}`)
+    goto && goto(`../../app/${app.devId}`)
   }
 
   const goToOverview = () => {
-    $goto(`../../app/${app.devId}/settings`)
+    goto && goto(`../../app/${app.devId}/settings`)
   }
 
   const goToApp = () => {
@@ -70,9 +73,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-  class:contextMenuOpen
+  class:contextMenuOpen={contextMenuOpen}
   class="app-row"
-  class:unclickable
+  class:unclickable={unclickable}
   class:favourite={app.favourite}
   on:click={lockedAction || handleDefaultClick}
   on:contextmenu={openContextMenu}
@@ -133,10 +136,10 @@
     </div>
 
     <div class="favourite-icon">
-      <FavouriteAppButton {app} noWrap />
+      <FavouriteAppButton app={app} noWrap />
     </div>
   </div>
-  <AppContextMenuModals {app} bind:this={appContextMenuModals} />
+  <AppContextMenuModals app={app} bind:this={appContextMenuModals} />
 </div>
 
 <style>
