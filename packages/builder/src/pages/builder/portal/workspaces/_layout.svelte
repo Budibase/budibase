@@ -12,6 +12,8 @@
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
 
+  $redirect
+
   // Don't block loading if we've already hydrated state
   let loaded = !!$appsStore.apps?.length
 

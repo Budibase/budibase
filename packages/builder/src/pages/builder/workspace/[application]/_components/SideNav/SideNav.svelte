@@ -45,6 +45,9 @@
   import { bb } from "@/stores/bb"
   import { buildLiveUrl } from "@/helpers/urls"
 
+  $goto
+  $url
+
   type ResourceLinkFn = (_id: string) => string
 
   interface UIFavouriteResource {
@@ -265,7 +268,7 @@
 </script>
 
 <div class="nav_wrapper">
-  <div class="nav_spacer" class:pinned={$pinned} />
+  <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
     class:pinned={$pinned}

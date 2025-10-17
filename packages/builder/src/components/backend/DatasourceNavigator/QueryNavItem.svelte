@@ -17,6 +17,9 @@
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import { WorkspaceResource } from "@budibase/types"
 
+  $goto
+  $isActive
+
   export let datasource
   export let query
 

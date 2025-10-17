@@ -19,6 +19,8 @@
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
+  $goto
+
   export let groupId
   export let readonly
   export let isScimGroup

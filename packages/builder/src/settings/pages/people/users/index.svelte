@@ -57,6 +57,8 @@
     access: number
   }
 
+  $goto
+
   const fetch = fetchData({
     API,
     datasource: {

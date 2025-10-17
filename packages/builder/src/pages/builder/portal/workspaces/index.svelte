@@ -37,6 +37,8 @@
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import { BannerType } from "@/constants/banners"
 
+  $goto
+
   let creationModal
   let appLimitModal
   let accountLockedModal
@@ -397,7 +399,7 @@
 
         <div class="app-table">
           {#each filteredApps as app (app.appId)}
-            <AppRow {app} lockedAction={usersLimitLockAction} />
+            <AppRow app={app} lockedAction={usersLimitLockAction} />
           {/each}
         </div>
       </Layout>

@@ -300,7 +300,7 @@
               class="mobile-click-handler"
               class:visible={mobileOpen}
               on:click={() => (mobileOpen = false)}
-            />
+           ></div>
             {#if enrichedNavItems.length}
               <div class="links" class:visible={mobileOpen}>
                 {#each enrichedNavItems as navItem}
@@ -373,7 +373,7 @@
       />
     </div>
   </div>
-  <div class="modal-container" />
+  <div class="modal-container"></div>
 </div>
 
 <style>

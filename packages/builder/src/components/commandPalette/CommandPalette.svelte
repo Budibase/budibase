@@ -26,6 +26,10 @@
   import { ThemeOptions } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
 
+  $goto
+  $isActive
+  $params
+
   const modalContext = getContext(Context.Modal)
 
   let search

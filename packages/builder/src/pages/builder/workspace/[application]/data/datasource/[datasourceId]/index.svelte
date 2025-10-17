@@ -16,6 +16,8 @@
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
 
+  $params
+
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
 

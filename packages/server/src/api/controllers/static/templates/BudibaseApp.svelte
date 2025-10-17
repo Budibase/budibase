@@ -129,7 +129,7 @@
       </h2>
     {:else}
       <h2>We couldn't find that application</h2>
-      <p />
+      <p></p>
     {/if}
   </div>
   {#if props.recaptchaKey}

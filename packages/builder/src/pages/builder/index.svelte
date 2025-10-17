@@ -3,6 +3,8 @@
   import { auth } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
+  $redirect
+
   auth.checkQueryString()
 
   $: {

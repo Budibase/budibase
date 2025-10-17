@@ -20,6 +20,11 @@
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
 
+  $goto
+  $isActive
+  $redirect
+  $url
+
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"

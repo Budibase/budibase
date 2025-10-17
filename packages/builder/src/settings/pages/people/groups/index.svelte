@@ -21,6 +21,8 @@
   import { routeActions } from "@/settings/pages"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
 
+  $goto
+
   const DefaultGroup = {
     name: "",
     icon: "users",

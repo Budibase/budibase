@@ -17,6 +17,11 @@
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
 
+  $goto
+  $isActive
+  $params
+  $goto
+
   export let searchTerm
   let toggledDatasources = {}
 

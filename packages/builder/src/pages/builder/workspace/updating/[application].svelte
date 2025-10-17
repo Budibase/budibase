@@ -4,6 +4,9 @@
 
   import { API } from "@/api"
 
+  $params
+  $redirect
+
   async function isMigrationDone() {
     const response = await API.getMigrationStatus()
     return response.migrated

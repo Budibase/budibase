@@ -98,7 +98,7 @@
 <div bind:this={buttonAnchor}>
   <ActionButton fullWidth on:click={onDropdownShow}>
     {#if value}
-      <i class="ph ph-{value}" style="margin-right: 8px;" />
+      <i class="ph ph-{value}" style="margin-right: 8px;"></i>
     {/if}
     {displayValue}
   </ActionButton>
@@ -123,7 +123,7 @@
             class:disabled={currentPage === 1}
             role="button"
             tabindex="0"
-          />
+         ></i>
           <span>{pagerText}</span>
           <i
             on:click={() => pageClick("next")}
@@ -132,7 +132,7 @@
             class:disabled={currentPage === totalPages}
             role="button"
             tabindex="0"
-          />
+         ></i>
         </div>
       </div>
     {/if}
@@ -150,7 +150,7 @@
               on:keypress={e => e.key === "Enter" && select(icon)}
             >
               <div class="icon-preview">
-                <i class="ph ph-{icon}" />
+                <i class="ph ph-{icon}"></i>
               </div>
               <div class="icon-label">{icon}</div>
             </div>

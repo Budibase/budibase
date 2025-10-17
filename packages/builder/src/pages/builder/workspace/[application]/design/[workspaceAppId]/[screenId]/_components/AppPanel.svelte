@@ -54,7 +54,7 @@
 
 {#if selectedWorkspaceApp}
   <div class="app-panel">
-    <div class="drawer-container" />
+    <div class="drawer-container"></div>
     <div class="header">
       <div class="header-left">
         <div class="workspace-info">

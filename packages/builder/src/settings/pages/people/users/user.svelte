@@ -37,6 +37,9 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
 
+  $goto
+  $url
+
   export let userId
 
   const routing = getContext("routing")

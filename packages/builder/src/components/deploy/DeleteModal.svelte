@@ -5,6 +5,8 @@
   import { appsStore } from "@/stores/portal"
   import { API } from "@/api"
 
+  $goto
+
   export let appId
   export let appName
   export let onDeleteSuccess = () => {

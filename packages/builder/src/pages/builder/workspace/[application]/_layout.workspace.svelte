@@ -16,6 +16,8 @@
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
+  $redirect
+
   export let application
 
   let promise = getPackage(application)
@@ -47,7 +49,7 @@
   <SideNav />
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
-    <div class="loading" />
+    <div class="loading"></div>
   {:then _}
     <div class="body">
       <slot />

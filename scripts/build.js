@@ -32,7 +32,11 @@ const svelteCompilePlugin = {
         )
         const { js } = compile(preprocessed.code, {
           css: "injected",
-          generate: "ssr",
+          generate: "server", // server? https://svelte.dev/docs/svelte/svelte-compiler#ModuleCompileOptions
+          runes: false,
+          compatibility: {
+            componentApi: 4,
+          },
         })
 
         return {
@@ -45,7 +49,14 @@ const svelteCompilePlugin = {
           resolveDir: dir,
         }
       } catch (e) {
-        return { errors: [JSON.stringify(e)] }
+        return {
+          errors: [
+            {
+              text: e && e.message ? e.message : String(e),
+              detail: e,
+            },
+          ],
+        }
       }
     })
   },
@@ -73,6 +84,7 @@ async function runBuild(entry, outfile) {
     sourcemap: tsconfigPathPluginContent.compilerOptions.sourceMap,
     sourcesContent: false,
     tsconfig,
+    // conditions: ["svelte", "browser"], // REVIEW THIS
     plugins: [
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
@@ -80,6 +92,7 @@ async function runBuild(entry, outfile) {
         allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
       }),
     ],
+    // loader: { ".png": "file" }, // REVIEW THIS
     preserveSymlinks: true,
     metafile: true,
     external: [

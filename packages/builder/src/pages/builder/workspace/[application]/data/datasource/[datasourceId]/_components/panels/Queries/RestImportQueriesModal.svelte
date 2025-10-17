@@ -16,6 +16,8 @@
   import { writable } from "svelte/store"
   import type { Datasource } from "@budibase/types"
 
+  $goto
+
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
   export let createDatasource = false

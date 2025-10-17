@@ -276,7 +276,7 @@
                   {bindings}
                   disabled
                 />
-                <div />
+                <div></div>
               </div>
             {/each}
           </div>

@@ -24,6 +24,8 @@
   import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
 
+  $goto
+
   const imageExtensions = [
     ".png",
     ".tiff",

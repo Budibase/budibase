@@ -4,6 +4,8 @@
   import { goto } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
+  $goto
+
   export let datasource
 
   let name = ""

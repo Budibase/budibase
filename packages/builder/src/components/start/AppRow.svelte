@@ -2,13 +2,18 @@
   import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
   import { auth } from "@/stores/portal"
+  import { goto as gotoStore } from "@roxi/routify"
   import { Body, Button, Icon } from "@budibase/bbui"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import { goto } from "@roxi/routify"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
+
+  // Initialize Routify store and derive callable function
+  $gotoStore
+  let goto
+  $: goto = $gotoStore
 
   export let app
   export let lockedAction
@@ -31,11 +36,11 @@
   }
 
   const goToBuilder = () => {
-    $goto(`../../workspace/${app.devId}`)
+    goto && goto(`../../workspace/${app.devId}`)
   }
 
   const goToOverview = () => {
-    $goto(`../../workspace/${app.devId}/settings`)
+    goto && goto(`../../workspace/${app.devId}/settings`)
   }
 
   const goToApp = () => {
@@ -66,9 +71,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-  class:contextMenuOpen
+  class:contextMenuOpen={contextMenuOpen}
   class="app-row"
-  class:unclickable
+  class:unclickable={unclickable}
   class:favourite={app.favourite}
   on:click={lockedAction || handleDefaultClick}
   on:contextmenu={openContextMenu}
@@ -129,10 +134,10 @@
     </div>
 
     <div class="favourite-icon">
-      <FavouriteAppButton {app} noWrap />
+      <FavouriteAppButton app={app} noWrap />
     </div>
   </div>
-  <AppContextMenuModals {app} bind:this={appContextMenuModals} />
+  <AppContextMenuModals app={app} bind:this={appContextMenuModals} />
 </div>
 
 <style>

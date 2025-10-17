@@ -1,4 +1,4 @@
-const { vitePreprocess } = require("@sveltejs/vite-plugin-svelte")
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte"
 
 const config = {
   preprocess: vitePreprocess({ script: true }),
@@ -7,7 +7,8 @@ const config = {
     compatibility: {
       componentApi: 4,
     },
+    hmr: true, // Explicitly enable HMR in Svelte 5 compiler
   },
 }
 
-module.exports = config
+export default config
