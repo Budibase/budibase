@@ -1304,9 +1304,6 @@ class InternalBuilder {
 
   private findSortablePrimaryKey(primaryKey: string[]): string | undefined {
     for (const key of primaryKey) {
-      if (key == null) {
-        continue
-      }
       const schema = this.getFieldSchema(key)
       if (this.isUnsortableField(schema)) {
         continue
