@@ -12,8 +12,6 @@
   import type { PopoverAPI } from "@budibase/bbui"
   import { url } from "@roxi/routify"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $url
 
   export let icon: string

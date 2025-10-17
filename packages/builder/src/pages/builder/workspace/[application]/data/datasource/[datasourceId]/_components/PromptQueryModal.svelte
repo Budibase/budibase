@@ -2,8 +2,6 @@
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
   $params
 

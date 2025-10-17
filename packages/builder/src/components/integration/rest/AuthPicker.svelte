@@ -15,8 +15,6 @@
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   type Config = { label: string; value: string }

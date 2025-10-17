@@ -36,8 +36,6 @@
   import Spaceman from "assets/bb-space-man.svg"
   import { onMount } from "svelte"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto // manually initialize the helper
 
   let loaded: boolean = false

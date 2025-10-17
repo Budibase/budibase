@@ -10,8 +10,6 @@
   import { params } from "@roxi/routify"
   import { debounce } from "lodash"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $params
 
   export let componentInstance = {}

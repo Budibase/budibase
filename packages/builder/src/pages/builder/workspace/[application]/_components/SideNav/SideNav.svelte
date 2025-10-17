@@ -45,8 +45,6 @@
   import { bb } from "@/stores/bb"
   import { buildLiveUrl } from "@/helpers/urls"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
   $url
 

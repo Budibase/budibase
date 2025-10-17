@@ -16,8 +16,6 @@
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $params
 
   let selectedPanel = $params.tab ?? null

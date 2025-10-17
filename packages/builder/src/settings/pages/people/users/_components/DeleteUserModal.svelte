@@ -3,8 +3,6 @@
   import { Body, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let user

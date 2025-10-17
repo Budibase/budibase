@@ -22,8 +22,6 @@
   import { onDestroy, onMount } from "svelte"
   import { get } from "svelte/store"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
   $isActive
   $goto

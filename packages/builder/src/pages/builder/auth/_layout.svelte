@@ -3,8 +3,6 @@
   import { redirect } from "@roxi/routify"
   import { CookieUtils } from "@budibase/frontend-core"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $redirect
 
   // If already authenticated, redirect away from the auth section.

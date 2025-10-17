@@ -12,8 +12,6 @@
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "@/stores/selectors"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let loading = false

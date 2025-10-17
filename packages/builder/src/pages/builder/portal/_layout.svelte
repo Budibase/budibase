@@ -20,8 +20,6 @@
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
   $isActive
   $redirect

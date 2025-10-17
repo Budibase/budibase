@@ -14,8 +14,6 @@
   import { get } from "svelte/store"
   import { onMount } from "svelte"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""

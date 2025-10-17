@@ -14,8 +14,6 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   let email = ""

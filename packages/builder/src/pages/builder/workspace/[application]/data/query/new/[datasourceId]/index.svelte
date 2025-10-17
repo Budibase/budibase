@@ -5,8 +5,6 @@
   import { IntegrationTypes } from "@/constants/backend"
   import { datasources } from "@/stores/builder"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $params
   $redirect
 

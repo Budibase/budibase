@@ -10,8 +10,6 @@
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   // Initialize Routify store and derive callable function
   $gotoStore
   let goto

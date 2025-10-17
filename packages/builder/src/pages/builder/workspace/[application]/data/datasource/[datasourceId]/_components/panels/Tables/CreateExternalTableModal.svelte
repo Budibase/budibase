@@ -4,8 +4,6 @@
   import { goto } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let datasource

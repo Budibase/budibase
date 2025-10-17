@@ -12,8 +12,6 @@
   import { viewsV2 } from "@/stores/builder"
   import { ViewV2Type } from "@budibase/types"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let table

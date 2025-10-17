@@ -32,15 +32,14 @@
   })
 </script>
 
-<span>hello </span>
-<div class="banner-container" />
+<div class="banner-container"></div>
 
-<Router {routes} config={{ queryHandler }} />
+<Router routes={routes} config={{ queryHandler }} />
 <BannerDisplay />
 <NotificationDisplay />
 <LicensingOverlays />
 
-<div class="modal-container" />
+<div class="modal-container"></div>
 
 <style>
   .modal-container {

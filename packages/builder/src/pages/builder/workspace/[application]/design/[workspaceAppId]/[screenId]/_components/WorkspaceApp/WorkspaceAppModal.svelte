@@ -20,8 +20,6 @@
   import type { ZodType } from "zod"
   import { z } from "zod"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let workspaceApp: UIWorkspaceApp | null = null

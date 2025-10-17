@@ -17,8 +17,6 @@
   import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
-  // Workaround for Routify 2 + Svelte 5 compatibility
-  // See: https://github.com/roxiness/routify/issues/563
   $goto
   $params
 
