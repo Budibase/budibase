@@ -63,8 +63,8 @@
     display: flex;
     margin-right: 8px;
     flex-shrink: 0;
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
   }
 
   .icon img {
