@@ -159,7 +159,9 @@
   })
 
   // Get detailed information about the selected form directly from the form prop
-  $: selectedFormDetails = form ? getComponentDetails(form) : null
+  // Depend on $screenStore so builder updates (like adding steps) recompute details
+  $: selectedFormDetails =
+    form && $screenStore ? getComponentDetails(form) : null
 
   // Determine the provider key used by the form's context (forms inside blocks use "<blockId>-form")
   $: providerKey = (() => {
@@ -264,10 +266,10 @@
                     style="color: {status === 'valid'
                       ? customization.completedColor
                       : status === 'current'
-                      ? customization.currentColor
-                      : status === 'invalid'
-                      ? customization.errorColor
-                      : customization.incompleteColor};"
+                        ? customization.currentColor
+                        : status === 'invalid'
+                          ? customization.errorColor
+                          : customization.incompleteColor};"
                   ></i>
                 </div>
                 <div class="step-info">
@@ -281,38 +283,6 @@
               </div>
             {/each}
           </div>
-        </div>
-
-        <div class="form-summary">
-          <div class="info-row">
-            <span class="label">Type:</span>
-            <span class="value">{selectedFormDetails.formAnalysis.type}</span>
-          </div>
-
-          <div class="info-row">
-            <span class="label">Total Steps:</span>
-            <span class="value"
-              >{selectedFormDetails.formAnalysis.stepCount}</span
-            >
-          </div>
-
-          {#if selectedFormDetails.formAnalysis.dataSource}
-            <div class="info-row">
-              <span class="label">Data Source:</span>
-              <span class="value"
-                >{selectedFormDetails.formAnalysis.dataSource}</span
-              >
-            </div>
-          {/if}
-
-          {#if selectedFormDetails.formAnalysis.actionType}
-            <div class="info-row">
-              <span class="label">Action:</span>
-              <span class="value"
-                >{selectedFormDetails.formAnalysis.actionType}</span
-              >
-            </div>
-          {/if}
         </div>
       {:else}
         <div class="no-steps">
@@ -351,9 +321,6 @@
 <style>
   .form-tracker {
     padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background: #fafafa;
   }
 
   .form-title {

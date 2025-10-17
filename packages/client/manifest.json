@@ -8899,6 +8899,12 @@
         "placeholder": "Select a form to track"
       },
       {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "placeholder": "Title"
+      },
+      {
         "type": "formStepCustomization",
         "label": "Step Customization",
         "key": "stepCustomization",
