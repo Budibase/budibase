@@ -2,21 +2,20 @@
   import { Layout } from "@budibase/bbui"
   import DatasourceNavigator from "@/components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "@/components/design/Panel.svelte"
-  import { isActive, redirect, goto, params } from "@roxi/routify"
+  import { isActive, redirect, goto } from "@roxi/routify"
   import { datasources, builderStore } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
-  import { onMount, onDestroy, setContext } from "svelte"
   import { IntegrationTypes } from "@/constants/backend"
+  import { onMount, onDestroy } from "svelte"
 
   let searchValue
   let maxWidth = window.innerWidth / 3
   let panelWidth = 260
 
-  // Load persisted panel width from localStorage
   const loadPanelWidth = () => {
-    const saved = localStorage.getItem("datasource-panel-width")
+    const saved = localStorage.getItem("api-panel-width")
     if (saved) {
       const width = parseInt(saved, 10)
       if (width && width > 100 && width < window.innerWidth) {
@@ -31,14 +30,6 @@
 
   let gridDispatch = null
 
-  // Function to be called by child components to register grid dispatch
-  const registerGridDispatch = dispatch => {
-    gridDispatch = dispatch
-  }
-
-  // Make registerGridDispatch available to child components
-  setContext("data-layout", { registerGridDispatch })
-
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     panelWidth,
     width => {
@@ -50,14 +41,12 @@
         }
       }
 
-      // Save the width to localStorage
       if (width) {
-        localStorage.setItem("datasource-panel-width", width.toString())
+        localStorage.setItem("api-panel-width", width.toString())
         panelWidth = width
       }
     },
     () => {
-      // Callback for when resize starts - close any open popovers
       if (gridDispatch) {
         gridDispatch("close-edit-column", {})
       }
@@ -73,11 +62,13 @@
     window.removeEventListener("resize", updateMaxWidth)
   })
 
+  $: restDatasources = ($datasources.list || []).filter(
+    datasource => datasource.source === IntegrationTypes.REST
+  )
+  $: hasRestDatasources = restDatasources.length > 0
+
   $: {
-    // If we ever don't have any data other than the users table, prompt the
-    // user to add some
-    // Don't redirect if setting up google sheets, or we lose the query parameter
-    if (!$datasources.hasData && !$params["?continue_google_setup"]) {
+    if (!hasRestDatasources && !$isActive("./new")) {
       $redirect("./new")
     }
   }
@@ -85,15 +76,16 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
-  <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
+  <TopBar icon="globe-hemisphere-west" breadcrumbs={[{ text: "APIs" }]}
+  ></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <div class="panel-container" style="width: {panelWidth}px;" use:resizable>
         <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
           <span class="panel-title-content" slot="panel-title-content">
             <NavHeader
-              title="Sources"
-              placeholder="Search for sources"
+              title="APIs"
+              placeholder="Search APIs"
               bind:value={searchValue}
               onAdd={() => $goto("./new")}
             />
@@ -102,7 +94,9 @@
             <DatasourceNavigator
               searchTerm={searchValue}
               datasourceFilter={datasource =>
-                datasource.source !== IntegrationTypes.REST}
+                datasource.source === IntegrationTypes.REST}
+              showAppUsers={false}
+              showManageRoles={false}
             />
           </Layout>
         </Panel>

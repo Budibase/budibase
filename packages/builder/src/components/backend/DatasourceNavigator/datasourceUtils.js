@@ -99,14 +99,20 @@ export const enrichDatasources = (
   views,
   viewsV2,
   toggledDatasources,
-  searchTerm
+  searchTerm,
+  datasourceFilter = () => true
 ) => {
   if (!datasources?.list?.length) {
     return []
   }
 
-  const onlySource = datasources.list.length === 1
-  return datasources.list.map(datasource => {
+  const datasourceList = datasources.list.filter(datasourceFilter)
+  if (!datasourceList.length) {
+    return []
+  }
+
+  const onlySource = datasourceList.length === 1
+  return datasourceList.map(datasource => {
     const selected =
       isActive("./datasource") &&
       datasources.selectedDatasourceId === datasource._id
