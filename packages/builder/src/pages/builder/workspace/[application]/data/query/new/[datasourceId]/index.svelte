@@ -13,6 +13,11 @@
   }
   $: isRestQuery = datasource?.source === IntegrationTypes.REST
   $: query = buildNewQuery(isRestQuery)
+  $: {
+    if (isRestQuery) {
+      $redirect(`../../../../apis/query/new/${$params.datasourceId}`)
+    }
+  }
 
   const buildNewQuery = isRestQuery => {
     let query = {

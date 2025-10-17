@@ -161,7 +161,9 @@
 
           const entry: UIFavouriteResource = {
             name: resource.name,
-            icon: isRestQuery ? "globe" : ResourceIcons[favourite.resourceType],
+            icon: isRestQuery
+              ? "globe-hemisphere-west"
+              : ResourceIcons[favourite.resourceType],
           }
 
           if (favourite.resourceType === WorkspaceResource.WORKSPACE_APP) {
@@ -190,8 +192,13 @@
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${appPrefix}/automation/${id}`,
-      [WorkspaceResource.DATASOURCE]: (id: string) =>
-        `${appPrefix}/data/datasource/${id}`,
+      [WorkspaceResource.DATASOURCE]: (id: string) => {
+        const datasourceMap = get(datasourceLookup) || {}
+        const datasource = datasourceMap[id]
+        const basePath =
+          datasource?.source === IntegrationTypes.REST ? "apis" : "data"
+        return `${appPrefix}/${basePath}/datasource/${id}`
+      },
       [WorkspaceResource.TABLE]: (id: string) =>
         `${appPrefix}/data/table/${id}`,
       [WorkspaceResource.WORKSPACE_APP]: (id: string) => {
@@ -204,8 +211,17 @@
         }
         return `${appPrefix}/design/${wsa.screens[0]?._id}`
       },
-      [WorkspaceResource.QUERY]: (id: string) =>
-        `${appPrefix}/data/query/${id}`,
+      [WorkspaceResource.QUERY]: (id: string) => {
+        const queriesStore = get(queries)
+        const datasourceMap = get(datasourceLookup) || {}
+        const query = queriesStore.list?.find(q => q._id === id)
+        const datasource = query?.datasourceId
+          ? datasourceMap[query.datasourceId]
+          : undefined
+        const basePath =
+          datasource?.source === IntegrationTypes.REST ? "apis" : "data"
+        return `${appPrefix}/${basePath}/query/${id}`
+      },
       [WorkspaceResource.VIEW]: (id: string) => {
         const view = $viewsV2.list.find(v => v.id === id)
         return `${appPrefix}/data/table/${view?.tableId}/${id}`
@@ -309,6 +325,13 @@
             icon="database"
             text="Data"
             url={$url("./data")}
+            {collapsed}
+            on:click={keepCollapsed}
+          />
+          <SideNavLink
+            icon="globe-hemisphere-west"
+            text="APIs"
+            url={$url("./apis")}
             {collapsed}
             on:click={keepCollapsed}
           />
