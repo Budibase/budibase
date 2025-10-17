@@ -9,10 +9,12 @@
     roles,
     dataEnvironmentStore,
     dataAPI,
+    deploymentStore,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import { Grid, gridClipboard } from "@budibase/frontend-core"
+  import type { Store as GridStore } from "@budibase/frontend-core/src/components/grid/stores"
   import GridAddColumnModal from "@/components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "@/components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -29,6 +31,7 @@
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { getContext } from "svelte"
   import {
     DataEnvironmentMode,
     type Table,
@@ -36,9 +39,28 @@
     type Datasource,
     type UIDatasource,
     type UIInternalDatasource,
+    FieldType,
+    FormulaType,
   } from "@budibase/types"
 
   let generateButton: GridGenerateButton
+  let grid: Grid
+  let gridContext: GridStore | undefined
+  let lastPublishCount = 0
+
+  const dataLayoutContext = getContext("data-layout") as {
+    registerGridDispatch?: Function
+  }
+
+  // Register grid dispatch with data layout when grid is ready
+  $: {
+    if (grid) {
+      gridContext = grid.getContext()
+      if (dataLayoutContext?.registerGridDispatch) {
+        dataLayoutContext.registerGridDispatch(gridContext.dispatch)
+      }
+    }
+  }
 
   $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -81,6 +103,11 @@
     isInternal || tableDatasource?.usesEnvironmentVariables
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: hasStaticFormulas = Object.values($tables.selected?.schema || {}).some(
+    field =>
+      field.type === FieldType.FORMULA &&
+      field.formulaType === FormulaType.STATIC
+  )
   $: externalClipboardData = {
     clipboard: gridClipboard,
     tableId: id,
@@ -104,6 +131,20 @@
           notifications.success("Row action triggered successfully")
         },
       }))
+  }
+
+  $: {
+    const publishCount = $deploymentStore.publishCount
+    if (publishCount > lastPublishCount) {
+      lastPublishCount = publishCount
+      if (
+        $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION &&
+        hasStaticFormulas &&
+        gridContext?.rows?.actions?.refreshData
+      ) {
+        gridContext.rows.actions.refreshData().catch(() => {})
+      }
+    }
   }
 
   const relationshipSupport = (
@@ -158,6 +199,7 @@
   <!-- re-render the grid if the data environment changes -->
   {#key $dataEnvironmentStore.mode}
     <Grid
+      bind:this={grid}
       API={$dataAPI}
       {darkMode}
       datasource={gridDatasource}

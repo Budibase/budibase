@@ -55,7 +55,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   // need to build up full patch fields before coerce
-  let combinedRow: any = cloneDeep(oldRow)
+  let combinedRow = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
     if (!table.schema[key]) continue
     combinedRow[key] = inputs[key]
@@ -203,7 +203,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const linkVals = links as LinkDocumentValue[]
 
   // look up the actual rows based on the ids
-  let linkedRows = await db.getMultiple<Row>(
+  let linkedRows: Row[] = await db.getMultiple<Row>(
     linkVals.map(linkVal => linkVal.id),
     { allowMissing: true }
   )

@@ -36,7 +36,7 @@ export function isSchema(schema: any): schema is TableSchema {
   )
 }
 
-export function isRows(rows: any): rows is Rows {
+export function isRows(rows: Rows): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
@@ -241,7 +241,7 @@ export function parse(rows: Rows, table: Table): Rows {
 }
 
 function isValidBBReference(
-  data: any,
+  data: string,
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
   subtype: BBReferenceFieldSubType,
   isRequired: boolean
@@ -276,15 +276,15 @@ function isValidBBReference(
   }
 }
 
-function parseJsonExport<T>(value: any) {
+function parseJsonExport<TReturn = unknown>(value: string): TReturn {
   if (typeof value !== "string") {
-    return value
+    return value as TReturn
   }
 
   try {
     const parsed = JSON.parse(value)
 
-    return parsed as T
+    return parsed as TReturn
   } catch (e: any) {
     if (
       e.message.startsWith("Expected property name or '}' in JSON at position ")
@@ -296,7 +296,7 @@ function parseJsonExport<T>(value: any) {
       // exported data and stored it, hoping to be able to restore it later, so
       // we leave this in place to support that.
       const parsed = JSON.parse(value.replace(/'/g, '"'))
-      return parsed as T
+      return parsed as TReturn
     }
 
     // It is not valid JSON

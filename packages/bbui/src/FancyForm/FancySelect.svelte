@@ -1,34 +1,44 @@
-<script>
+<script lang="ts" generics="O extends Record<string, any> | string">
   import { createEventDispatcher } from "svelte"
-  import FancyField from "./FancyField.svelte"
-  import Icon from "../Icon/Icon.svelte"
-  import FancyFieldLabel from "./FancyFieldLabel.svelte"
-  import StatusLight from "../StatusLight/StatusLight.svelte"
   import Picker from "../Form/Core/Picker.svelte"
+  import Icon from "../Icon/Icon.svelte"
+  import StatusLight from "../StatusLight/StatusLight.svelte"
+  import FancyField from "./FancyField.svelte"
+  import FancyFieldLabel from "./FancyFieldLabel.svelte"
 
-  export let label
-  export let value
-  export let disabled = false
-  export let error = null
-  export let validate = null
-  export let options = []
-  export let footer = null
-  export let isOptionEnabled = () => true
-  export let getOptionLabel = option => extractProperty(option, "label")
-  export let getOptionValue = option => extractProperty(option, "value")
-  export let getOptionSubtitle = option => extractProperty(option, "subtitle")
-  export let getOptionColour = () => null
+  export let label: string | undefined
+  export let value: string | undefined
+  export let disabled: boolean = false
+  export let error: string | null = null
+  export let validate: ((_value: string | undefined) => string) | null = null
+  export let options: O[] = []
+  export let footer: string | undefined = undefined
+  export let isOptionEnabled = (_option: O) => true
+  export let getOptionLabel = (option: O, _index?: number) =>
+    extractProperty(option, "label")
+  export let getOptionValue = (option: O, _index?: number) =>
+    extractProperty(option, "value")
+  export let getOptionSubtitle = (option: O) =>
+    extractProperty(option, "subtitle")
+  export let getOptionColour: (
+    _option: O,
+    _index?: number
+  ) => string | null = () => null
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: string | undefined }>()
 
   let open = false
-  let wrapper
+  let wrapper: HTMLDivElement
 
   $: placeholder = !value
   $: selectedLabel = getSelectedLabel(value)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
-  const getFieldAttribute = (getAttribute, value, options) => {
+  const getFieldAttribute = (
+    getAttribute: (_option: O, _index?: number) => string | null,
+    value: string | undefined,
+    options: O[]
+  ) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
@@ -38,14 +48,14 @@
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
-  const extractProperty = (value, property) => {
+  const extractProperty = (value: O, property: string): string => {
     if (value && typeof value === "object") {
       return value[property]
     }
     return value
   }
 
-  const onChange = newValue => {
+  const onChange = (newValue: string | undefined) => {
     dispatch("change", newValue)
     value = newValue
     if (validate) {
@@ -54,7 +64,7 @@
     open = false
   }
 
-  const getSelectedLabel = value => {
+  const getSelectedLabel = (value: string | undefined) => {
     if (!value || !options?.length) {
       return ""
     }
@@ -97,9 +107,7 @@
 <div id="picker-wrapper">
   <Picker
     customAnchor={wrapper}
-    onlyPopover={true}
     bind:open
-    {error}
     {disabled}
     {options}
     {footer}
@@ -109,7 +117,7 @@
     {getOptionColour}
     {isOptionEnabled}
     isPlaceholder={value == null || value === ""}
-    placeholderOption={placeholder === false ? null : placeholder}
+    placeholderOption={placeholder === false ? undefined : placeholder}
     onSelectOption={onChange}
     isOptionSelected={option => option === value}
   />

@@ -1,21 +1,22 @@
 import { UserCtx } from "@budibase/types"
-import { getWorkspaceId } from "../context"
 import env from "../environment"
 import { hasBuilderPermissions, isAdmin, isBuilder } from "../users"
+import { getAppIdFromCtx } from "../utils"
 
 export async function builderOrAdmin(ctx: UserCtx, next: any) {
-  const appId = getWorkspaceId()
-  const builderFn =
-    env.isWorker() || !appId
-      ? hasBuilderPermissions
-      : env.isApps()
-        ? isBuilder
-        : undefined
-  if (!builderFn) {
-    throw new Error("Service name unknown - middleware inactive.")
+  if (ctx.internal || isAdmin(ctx.user)) {
+    return next()
   }
-  if (!ctx.internal && !builderFn(ctx.user, appId) && !isAdmin(ctx.user)) {
+
+  const workspaceId = await getAppIdFromCtx(ctx)
+
+  if (!workspaceId && !env.isWorker()) {
+    ctx.throw(403, "This request required a workspace id.")
+  } else if (!workspaceId && !hasBuilderPermissions(ctx.user)) {
     ctx.throw(403, "Admin/Builder user only endpoint.")
+  } else if (workspaceId && !isBuilder(ctx.user, workspaceId)) {
+    ctx.throw(403, "Workspace Admin/Builder user only endpoint.")
   }
+
   return next()
 }

@@ -42,7 +42,7 @@ export function triggerCron(message: Job<AutomationData>) {
   getTestQueue().manualTrigger(message.id)
 }
 
-export async function runInProd(fn: any) {
+export async function runInProd(fn: () => unknown) {
   env._set("NODE_ENV", "production")
   let error
   try {

@@ -1,17 +1,19 @@
 <script>
+  import { appStore, initialise } from "@/stores/builder"
   import {
-    Modal,
-    notifications,
-    ModalContent,
     Body,
     Button,
-    StatusLight,
     Link,
+    Modal,
+    ModalContent,
+    notifications,
+    ProgressCircle,
+    StatusLight,
   } from "@budibase/bbui"
-  import { appStore, initialise } from "@/stores/builder"
 
   import { API } from "@/api"
   import { ChangelogURL } from "@/constants"
+  import { admin } from "@/stores/portal"
 
   export function show() {
     updateModal.show()
@@ -28,9 +30,10 @@
 
   $: appId = $appStore.appId
   $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
+    ($appStore.upgradableVersion &&
+      $appStore.version &&
+      $appStore.upgradableVersion !== $appStore.version) ||
+    $admin.isDev
   $: revertAvailable = $appStore.revertableVersion != null
 
   const refreshAppPackage = async () => {
@@ -58,7 +61,9 @@
     updateModal.hide()
   }
 
+  let reverting = false
   const revert = async () => {
+    reverting = true
     try {
       await API.revertAppClientVersion(appId)
 
@@ -69,6 +74,8 @@
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
+    } finally {
+      reverting = false
     }
     updateModal.hide()
   }
@@ -87,7 +94,13 @@
   >
     <div slot="footer">
       {#if revertAvailable}
-        <Button quiet secondary on:click={revert}>Revert</Button>
+        <Button quiet secondary on:click={revert} disabled={reverting}>
+          {#if reverting}
+            <ProgressCircle overBackground={true} size="S" />
+          {:else}
+            Revert
+          {/if}
+        </Button>
       {/if}
     </div>
     {#if updateAvailable}

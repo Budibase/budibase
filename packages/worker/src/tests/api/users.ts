@@ -1,14 +1,14 @@
+import { generator } from "@budibase/backend-core/tests"
 import {
-  BulkUserResponse,
   BulkUserRequest,
-  InviteUsersRequest,
-  User,
+  BulkUserResponse,
   CreateAdminUserRequest,
-  SearchFilters,
+  InviteUsersRequest,
   InviteUsersResponse,
+  SearchFilters,
+  User,
 } from "@budibase/types"
 import structures from "../structures"
-import { generator } from "@budibase/backend-core/tests"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class UserAPI extends TestAPI {
@@ -179,22 +179,6 @@ export class UserAPI extends TestAPI {
       .expect(opts?.status ? opts.status : 200)
   }
 
-  grantBuilderToApp = (userId: string, appId: string, statusCode = 200) => {
-    return this.request
-      .post(`/api/global/users/${userId}/app/${appId}/builder`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(statusCode)
-  }
-
-  revokeBuilderFromApp = (userId: string, appId: string) => {
-    return this.request
-      .delete(`/api/global/users/${userId}/app/${appId}/builder`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
-
   onboardUser = async (
     req: InviteUsersRequest
   ): Promise<InviteUsersResponse> => {
@@ -225,6 +209,45 @@ export class UserAPI extends TestAPI {
       .put(`/api/global/users/tenant/owner`)
       .send({ newAccountEmail, originalEmail, tenantIds })
       .set(this.config.internalAPIHeaders())
+      .expect(status)
+  }
+
+  addWorkspaceIdToInvite = (code: string, role: string, status = 200) => {
+    return this.request
+      .post(`/api/global/users/invite/${code}/${role}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  removeWorkspaceIdFromInvite = (code: string, status = 200) => {
+    return this.request
+      .delete(`/api/global/users/invite/${code}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  addUserToWorkspace = (
+    userId: string,
+    _rev: string,
+    role: string,
+    status = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/${userId}/permission/${role}`)
+      .send({ _rev })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  removeUserFromWorkspace = (userId: string, _rev: string, status = 200) => {
+    return this.request
+      .delete(`/api/global/users/${userId}/permission`)
+      .send({ _rev })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
       .expect(status)
   }
 }

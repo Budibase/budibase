@@ -2274,7 +2274,7 @@ if (descriptions.length) {
       describe("attachments and signatures", () => {
         function generateAttachment(value: string) {
           return {
-            key: `${config.getAppId()}/attachments/${value}`,
+            key: `${config.getDevWorkspaceId()}/attachments/${value}`,
           }
         }
         const newCsv = () => `${uuid.v4()}.csv`
@@ -2301,20 +2301,23 @@ if (descriptions.length) {
           const row = await config.api.row.save(testTable._id!, draftRow)
 
           await withEnv({ SELF_HOSTED: "true" }, async () => {
-            return context.doInWorkspaceContext(config.getAppId(), async () => {
-              const enriched: Row[] = await outputProcessing(testTable, [row])
-              const [targetRow] = enriched
-              const attachmentEntries = Array.isArray(targetRow[field])
-                ? targetRow[field]
-                : [targetRow[field]]
+            return context.doInWorkspaceContext(
+              config.getDevWorkspaceId(),
+              async () => {
+                const enriched: Row[] = await outputProcessing(testTable, [row])
+                const [targetRow] = enriched
+                const attachmentEntries = Array.isArray(targetRow[field])
+                  ? targetRow[field]
+                  : [targetRow[field]]
 
-              for (const entry of attachmentEntries) {
-                const attachmentId = entry.key.split("/").pop()
-                expect(entry.url.split("?")[0]).toBe(
-                  `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-                )
+                for (const entry of attachmentEntries) {
+                  const attachmentId = entry.key.split("/").pop()
+                  expect(entry.url.split("?")[0]).toBe(
+                    `/files/signed/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/${attachmentId}`
+                  )
+                }
               }
-            })
+            )
           })
           return { row, table: testTable }
         }

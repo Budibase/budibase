@@ -32,7 +32,7 @@ export const createContext = (
     },
     cookies: new Cookies(socket.request, res),
     get: (field: string) => socket.request.headers?.[field] as string,
-    throw: (...params: any[]) => {
+    throw: (...params: string[]) => {
       // Throw has a bunch of different signatures, so we'll just stringify
       // whatever params we get given
       throw new Error(

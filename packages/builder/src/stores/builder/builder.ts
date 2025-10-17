@@ -45,13 +45,13 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.setResizingPanel = this.setResizingPanel.bind(this)
   }
 
-  init(app: Workspace) {
-    if (!app?.appId) {
+  init(workspace: Workspace) {
+    if (!workspace?.appId) {
       console.error("BuilderStore: No appId supplied for websocket")
       return
     }
     if (!this.websocket) {
-      this.websocket = createBuilderWebsocket(app.appId)
+      this.websocket = createBuilderWebsocket(workspace.appId)
     }
   }
 

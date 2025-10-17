@@ -12,7 +12,9 @@ import {
   DeploymentDoc,
   DeploymentProgressResponse,
   DeploymentStatus,
+  FieldType,
   FetchDeploymentResponse,
+  FormulaType,
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
@@ -29,6 +31,7 @@ import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
+import { updateAllFormulasInTable } from "../row/staticFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -53,7 +56,7 @@ async function checkAllDeployments(
   return { updated, deployments }
 }
 
-async function storeDeploymentHistory(deployment: any) {
+async function storeDeploymentHistory(deployment: Deployment) {
   const deploymentJSON = deployment.getJSON()
   const db = context.getWorkspaceDB()
 
@@ -82,7 +85,7 @@ async function storeDeploymentHistory(deployment: any) {
   return deployment
 }
 
-async function initDeployedApp(prodAppId: any) {
+async function initDeployedApp(prodAppId: string) {
   const db = context.getProdWorkspaceDB()
   console.log("Reading automation docs")
   const automations = (
@@ -114,8 +117,24 @@ async function initDeployedApp(prodAppId: any) {
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevWorkspaceID(prodAppId), {
+  await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const tables = await sdk.tables.getAllInternalTables()
+    for (const table of tables) {
+      const hasStaticFormula = Object.values(table.schema).some(
+        column =>
+          column?.type === FieldType.FORMULA &&
+          column.formulaType === FormulaType.STATIC
+      )
+      if (hasStaticFormula) {
+        await updateAllFormulasInTable(table)
+      }
+    }
   })
 }
 
@@ -165,7 +184,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-export const publishApp = async function (
+export const publishWorkspace = async function (
   ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
   if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
@@ -202,7 +221,7 @@ export const publishApp = async function (
       const devId = dbCore.getDevWorkspaceID(appId)
       const prodId = dbCore.getProdWorkspaceID(appId)
 
-      if (!(await sdk.applications.isAppPublished(prodId))) {
+      if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
@@ -222,7 +241,7 @@ export const publishApp = async function (
         }
       }
 
-      const isPublished = await sdk.applications.isAppPublished(prodId)
+      const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
@@ -250,7 +269,7 @@ export const publishApp = async function (
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
       const db = context.getProdWorkspaceDB()
-      const appDoc = await sdk.applications.metadata.tryGet({
+      const appDoc = await sdk.workspaces.metadata.tryGet({
         production: false,
       })
       if (!appDoc) {
@@ -258,7 +277,7 @@ export const publishApp = async function (
           "Unable to publish - cannot retrieve development app metadata"
         )
       }
-      const prodAppDoc = await sdk.applications.metadata.tryGet({
+      const prodAppDoc = await sdk.workspaces.metadata.tryGet({
         production: true,
       })
       if (prodAppDoc) {
@@ -296,6 +315,7 @@ export const publishApp = async function (
       await db.put(appDoc)
       await cache.workspace.invalidateWorkspaceMetadata(prodId)
       await initDeployedApp(prodId)
+      await syncStaticFormulasToProduction(prodId)
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

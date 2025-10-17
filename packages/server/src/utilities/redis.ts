@@ -2,6 +2,7 @@ import { redis, RedisClient, utils } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import { ContextUser } from "@budibase/types"
 import env from "../environment"
+import Redis, { Cluster } from "ioredis"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
@@ -16,7 +17,7 @@ let devAppClient: RedisClient,
 
 // We need to maintain a duplicate client for socket.io pub/sub
 let socketClient: RedisClient
-let socketSubClient: any
+let socketSubClient: Redis | Cluster
 
 // We init this as we want to keep the connection open all the time
 // reduces the performance hit

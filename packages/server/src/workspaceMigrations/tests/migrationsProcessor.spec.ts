@@ -1,6 +1,6 @@
 import { context, Header } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
-import { AppMigration } from ".."
+import { WorkspaceMigration } from ".."
 import * as setup from "../../api/routes/tests/utilities"
 import { setEnv, withEnv } from "../../environment"
 import sdk from "../../sdk"
@@ -8,8 +8,8 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { MIGRATIONS } from "../migrations"
 import { processMigrations } from "../migrationsProcessor"
 import {
-  getAppMigrationVersion,
-  updateAppMigrationMetadata,
+  getWorkspaceMigrationVerions,
+  updateWorkspaceMigrationMetadata,
 } from "../workspaceMigrationMetadata"
 
 function generateMigrationId() {
@@ -31,23 +31,30 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await config.newTenant()
   })
 
-  async function runMigrations(migrations: AppMigration[]) {
-    const fromAppId = fromProd ? config.getProdAppId() : config.getAppId()
+  async function runMigrations(migrations: WorkspaceMigration[]) {
+    const fromAppId = fromProd
+      ? config.getProdWorkspaceId()
+      : config.getDevWorkspaceId()
     await config.doInContext(fromAppId, () =>
       processMigrations(fromAppId, migrations)
     )
   }
 
   async function expectMigrationVersion(expectedVersion: string) {
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+    for (const appId of [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]) {
       expect(
-        await config.doInContext(appId, () => getAppMigrationVersion(appId))
+        await config.doInContext(appId, () =>
+          getWorkspaceMigrationVerions(appId)
+        )
       ).toBe(expectedVersion)
     }
   }
 
   it("running migrations will update the latest applied migration", async () => {
-    const testMigrations: AppMigration[] = [
+    const testMigrations: WorkspaceMigration[] = [
       { id: generateMigrationId(), func: async () => {} },
       { id: generateMigrationId(), func: async () => {} },
       { id: generateMigrationId(), func: async () => {} },
@@ -62,13 +69,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     const executionOrder: string[] = []
     let syncCallCount = 0
 
-    jest.spyOn(sdk.applications, "syncApp").mockImplementation(async () => {
+    jest.spyOn(sdk.workspaces, "syncWorkspace").mockImplementation(async () => {
       syncCallCount++
       executionOrder.push(`sync-${syncCallCount}`)
       return undefined as any
     })
 
-    const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+    const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
       (_, i) => ({
         id: generateMigrationId(),
         func: async () => {
@@ -83,47 +90,49 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     await expectMigrationVersion(testMigrations[2].id)
 
     expect(executionOrder).toEqual([
-      `${config.getProdAppId()}-migration-1`,
+      `${config.getProdWorkspaceId()}-migration-1`,
       "sync-1",
-      `${config.getAppId()}-migration-1`,
-      `${config.getProdAppId()}-migration-2`,
+      `${config.getDevWorkspaceId()}-migration-1`,
+      `${config.getProdWorkspaceId()}-migration-2`,
       "sync-2",
-      `${config.getAppId()}-migration-2`,
-      `${config.getProdAppId()}-migration-3`,
+      `${config.getDevWorkspaceId()}-migration-2`,
+      `${config.getProdWorkspaceId()}-migration-3`,
       "sync-3",
-      `${config.getAppId()}-migration-3`,
+      `${config.getDevWorkspaceId()}-migration-3`,
     ])
   })
 
   it("runs all the migrations in doInAppMigrationContext", async () => {
     let migrationCallPerApp: Record<string, number> = {}
 
-    const testMigrations = Array.from({ length: 3 }).map<AppMigration>(_ => ({
-      id: generateMigrationId(),
-      func: async () => {
-        expect(context.getCurrentContext()?.isMigrating).toBe(true)
-        migrationCallPerApp[context.getWorkspaceId()!] ??= 0
-        migrationCallPerApp[context.getWorkspaceId()!]++
-      },
-    }))
+    const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
+      _ => ({
+        id: generateMigrationId(),
+        func: async () => {
+          expect(context.getCurrentContext()?.isMigrating).toBe(true)
+          migrationCallPerApp[context.getWorkspaceId()!] ??= 0
+          migrationCallPerApp[context.getWorkspaceId()!]++
+        },
+      })
+    )
 
     await runMigrations(testMigrations)
 
     expect(Object.keys(migrationCallPerApp)).toEqual([
-      config.getProdAppId(),
-      config.getAppId(),
+      config.getProdWorkspaceId(),
+      config.getDevWorkspaceId(),
     ])
-    expect(migrationCallPerApp[config.getAppId()]).toBe(3)
-    expect(migrationCallPerApp[config.getProdAppId()]).toBe(3)
+    expect(migrationCallPerApp[config.getDevWorkspaceId()]).toBe(3)
+    expect(migrationCallPerApp[config.getProdWorkspaceId()]).toBe(3)
   })
 
   it("no context can be initialised within a migration", async () => {
-    const testMigrations: AppMigration[] = [
+    const testMigrations: WorkspaceMigration[] = [
       {
         id: generateMigrationId(),
         func: async () => {
           await context.doInWorkspaceMigrationContext(
-            config.getAppId(),
+            config.getDevWorkspaceId(),
             () => {}
           )
         },
@@ -138,7 +147,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("array index-based migration processing", () => {
     it("should run migrations in correct order based on array position", async () => {
       const executionOrder: string[] = []
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: `migration_a`,
           func: async () => {
@@ -165,18 +174,18 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
-        `${config.getProdAppId()} - 3`,
-        `${config.getAppId()} - 3`,
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
+        `${config.getProdWorkspaceId()} - 3`,
+        `${config.getDevWorkspaceId()} - 3`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
       ])
     })
 
     it("should skip migrations that come before current version in array", async () => {
       const executionOrder: string[] = []
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
@@ -199,10 +208,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
-        await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+      for (const workspaceId of [
+        config.getDevWorkspaceId(),
+        config.getProdWorkspaceId(),
+      ]) {
+        await config.doInContext(workspaceId, async () => {
+          await updateWorkspaceMigrationMetadata({
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
@@ -211,16 +223,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
-        `${config.getProdAppId()} - 3`,
-        `${config.getAppId()} - 3`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
+        `${config.getProdWorkspaceId()} - 3`,
+        `${config.getDevWorkspaceId()} - 3`,
       ])
     })
 
     it("should handle when current version is not found in migrations array", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -230,11 +242,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const appId = config.getAppId()
-      await config.doInContext(appId, async () => {
+      const workspaceId = config.getDevWorkspaceId()
+      await config.doInContext(workspaceId, async () => {
         // Set a version that doesn't exist in the migrations array
-        await updateAppMigrationMetadata({
-          appId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: workspaceId,
           version: "nonexistent_version",
         })
       })
@@ -243,16 +255,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       // Should run all migrations
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
-        `${config.getProdAppId()} - 2`,
-        `${config.getAppId()} - 2`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
+        `${config.getProdWorkspaceId()} - 2`,
+        `${config.getDevWorkspaceId()} - 2`,
       ])
     })
 
     it("should not run any migrations when current version is the last in array", async () => {
       const executionOrder: number[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -277,7 +289,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("disabled migrations", () => {
     it("should stop processing when encountering a disabled migration", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -292,14 +304,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       // Should only run the first migration, then stop at the disabled one
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()} - 1`,
-        `${config.getAppId()} - 1`,
+        `${config.getProdWorkspaceId()} - 1`,
+        `${config.getDevWorkspaceId()} - 1`,
       ])
     })
 
     it("should not run any migrations if the first pending migration is disabled", async () => {
       const executionOrder: number[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -309,7 +321,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       )
       testMigrations[0].disabled = true
 
-      const appId = config.getAppId()
+      const appId = config.getDevWorkspaceId()
 
       await config.doInContext(appId, () =>
         processMigrations(appId, testMigrations)
@@ -321,14 +333,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   describe("published workspace handling", () => {
-    let spySyncApp: jest.SpyInstance
+    let spySyncWorkspace: jest.SpyInstance
 
     beforeEach(() => {
-      spySyncApp = jest.spyOn(sdk.applications, "syncApp")
+      spySyncWorkspace = jest.spyOn(sdk.workspaces, "syncWorkspace")
     })
 
     it("should sync dev workspace after migrating published workspace", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
@@ -345,24 +357,27 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
-        await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+      for (const workspaceId of [
+        config.getDevWorkspaceId(),
+        config.getProdWorkspaceId(),
+      ]) {
+        await config.doInContext(workspaceId, async () => {
+          await updateWorkspaceMigrationMetadata({
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
       }
-      spySyncApp.mockClear()
+      spySyncWorkspace.mockClear()
 
       await runMigrations(testMigrations)
 
-      expect(spySyncApp).toHaveBeenCalledTimes(2)
-      expect(spySyncApp).toHaveBeenCalledWith(config.getAppId())
+      expect(spySyncWorkspace).toHaveBeenCalledTimes(2)
+      expect(spySyncWorkspace).toHaveBeenCalledWith(config.getDevWorkspaceId())
     })
 
     it("should update migration metadata for both prod and dev workspaces", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {},
@@ -379,7 +394,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     !fromProd &&
       it("should migrate dev workspace when workspace is not published", async () => {
         const executionOrder: string[] = []
-        const testMigrations: AppMigration[] = [
+        const testMigrations: WorkspaceMigration[] = [
           {
             id: generateMigrationId(),
             func: async () => {
@@ -389,10 +404,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         ]
 
-        spySyncApp.mockClear()
+        spySyncWorkspace.mockClear()
         await config.unpublish()
 
-        const devAppId = config.getAppId()
+        const devAppId = config.getDevWorkspaceId()
 
         await config.doInContext(devAppId, () =>
           processMigrations(devAppId, testMigrations)
@@ -400,65 +415,65 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
         expect(executionOrder).toHaveLength(1)
         expect(executionOrder[0]).toBe(devAppId)
-        expect(spySyncApp).not.toHaveBeenCalled()
+        expect(spySyncWorkspace).not.toHaveBeenCalled()
       })
   })
 
   !fromProd &&
     describe("non-published workspace handling", () => {
-      let mockSyncApp: jest.SpyInstance
+      let mockSyncWorkspace: jest.SpyInstance
 
       beforeEach(async () => {
-        mockSyncApp = jest.spyOn(sdk.applications, "syncApp")
+        mockSyncWorkspace = jest.spyOn(sdk.workspaces, "syncWorkspace")
         await config.unpublish()
       })
 
       it("should sync only dev workspace", async () => {
         const executionOrder: string[] = []
-        const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
-          (_, i) => ({
-            id: generateMigrationId(),
-            func: async () => {
-              const db = context.getWorkspaceDB()
-              executionOrder.push(`migration ${i + 1} - ${db.name}`)
-            },
-          })
-        )
+        const testMigrations = Array.from({
+          length: 3,
+        }).map<WorkspaceMigration>((_, i) => ({
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getWorkspaceDB()
+            executionOrder.push(`migration ${i + 1} - ${db.name}`)
+          },
+        }))
 
-        const appId = config.getAppId()
-        await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
+        const workspaceId = config.getDevWorkspaceId()
+        await config.doInContext(workspaceId, async () => {
+          await updateWorkspaceMigrationMetadata({
+            workspaceId,
             version: testMigrations[0].id,
           })
         })
 
-        mockSyncApp.mockClear()
+        mockSyncWorkspace.mockClear()
 
         await runMigrations(testMigrations)
 
         expect(executionOrder).toEqual([
-          `migration 2 - ${config.getAppId()}`,
-          `migration 3 - ${config.getAppId()}`,
+          `migration 2 - ${config.getDevWorkspaceId()}`,
+          `migration 3 - ${config.getDevWorkspaceId()}`,
         ])
-        expect(mockSyncApp).not.toHaveBeenCalled()
+        expect(mockSyncWorkspace).not.toHaveBeenCalled()
       })
     })
 
   describe("resilience and recovery", () => {
     it("should not update migration version if migration function fails", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: jest
             .fn()
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getProdAppId())
+              expect(db.name).toBe(config.getProdWorkspaceId())
             })
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getAppId())
+              expect(db.name).toBe(config.getDevWorkspaceId())
               throw new Error("Migration failed")
             }),
         },
@@ -479,18 +494,18 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     })
 
     it("should recover if migration function runs on prod but fails in dev", async () => {
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: generateMigrationId(),
           func: jest
             .fn()
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getProdAppId())
+              expect(db.name).toBe(config.getProdWorkspaceId())
             })
             .mockImplementationOnce(() => {
               const db = context.getWorkspaceDB()
-              expect(db.name).toBe(config.getAppId())
+              expect(db.name).toBe(config.getDevWorkspaceId())
               throw new Error("Migration failed")
             }),
         },
@@ -518,7 +533,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       const migration1Id = generateMigrationId()
       const migration2Id = generateMigrationId()
 
-      const testMigrations: AppMigration[] = [
+      const testMigrations: WorkspaceMigration[] = [
         {
           id: migration1Id,
           func: async () => {
@@ -532,7 +547,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
             const db = context.getWorkspaceDB()
             attemptCount[db.name] ??= 0
             attemptCount[db.name]++
-            if (db.name === config.getAppId() && attemptCount[db.name] === 1) {
+            if (
+              db.name === config.getDevWorkspaceId() &&
+              attemptCount[db.name] === 1
+            ) {
               executionOrder.push(
                 `${db.name}-migration-2-attempt-${attemptCount[db.name]}-error`
               )
@@ -566,15 +584,15 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       )
 
       expect(migration1Runs).toEqual([
-        `${config.getProdAppId()}-migration-1`,
-        `${config.getAppId()}-migration-1`,
+        `${config.getProdWorkspaceId()}-migration-1`,
+        `${config.getDevWorkspaceId()}-migration-1`,
       ])
 
       expect(migration2Runs).toEqual([
-        `${config.getProdAppId()}-migration-2-attempt-1-success`,
-        `${config.getAppId()}-migration-2-attempt-1-error`,
-        `${config.getProdAppId()}-migration-2-attempt-2-success`,
-        `${config.getAppId()}-migration-2-attempt-2-success`,
+        `${config.getProdWorkspaceId()}-migration-2-attempt-1-success`,
+        `${config.getDevWorkspaceId()}-migration-2-attempt-1-error`,
+        `${config.getProdWorkspaceId()}-migration-2-attempt-2-success`,
+        `${config.getDevWorkspaceId()}-migration-2-attempt-2-success`,
       ])
     })
   })
@@ -582,7 +600,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   describe("out-of-sync migration handling", () => {
     it("should handle dev migration version ahead of prod", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 3 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 3 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -592,19 +610,19 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(prodAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: prodAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: prodAppId,
           version: testMigrations[0].id,
         })
       })
 
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[1].id,
         })
       })
@@ -620,14 +638,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should end up on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[2].id)
       }
     })
 
     it("should handle prod migration version ahead of dev", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 4 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 4 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -637,19 +657,19 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         })
       )
 
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[0].id,
         })
       })
 
       await config.doInContext(prodAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: prodAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: prodAppId,
           version: testMigrations[2].id,
         })
       })
@@ -666,14 +686,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should end up on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[testMigrations.length - 1].id)
       }
     })
 
     it("should only run migrations needed by each workspace individually", async () => {
       const executionOrder: string[] = []
-      const testMigrations = Array.from({ length: 2 }).map<AppMigration>(
+      const testMigrations = Array.from({ length: 2 }).map<WorkspaceMigration>(
         (_, i) => ({
           id: generateMigrationId(),
           func: async () => {
@@ -682,13 +704,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         })
       )
-      const prodAppId = config.getProdAppId()
-      const devAppId = config.getAppId()
+      const prodAppId = config.getProdWorkspaceId()
+      const devAppId = config.getDevWorkspaceId()
 
       // Set dev app to already be on the latest migration, prod app needs both
       await config.doInContext(devAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: devAppId,
+        await updateWorkspaceMigrationMetadata({
+          workspaceId: devAppId,
           version: testMigrations[1].id,
         })
       })
@@ -704,14 +726,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Both apps should be on the latest migration
       for (const appId of [devAppId, prodAppId]) {
         expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          await config.doInContext(appId, () =>
+            getWorkspaceMigrationVerions(appId)
+          )
         ).toBe(testMigrations[1].id)
       }
     })
   })
 
   describe("via middleware", () => {
-    it("should properly handle syncApp context when triggered via API", async () => {
+    it("should properly handle syncWorkspace context when triggered via API", async () => {
       await expectMigrationVersion(MIGRATIONS[MIGRATIONS.length - 1].id)
 
       const executionOrder: string[] = []
@@ -729,14 +753,18 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           SYNC_MIGRATION_CHECKS_MS: 1000,
         },
         () =>
-          config.withApp(fromProd ? config.getProdApp() : config.getApp(), () =>
-            config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
+          config.withApp(
+            fromProd ? config.getProdWorkspace() : config.getDevWorkspace(),
+            () =>
+              config.api.user.fetch({
+                headersNotPresent: [Header.MIGRATING_APP],
+              })
           )
       )
 
       expect(executionOrder).toEqual([
-        `${config.getProdAppId()}-via-middleware`,
-        `${config.getAppId()}-via-middleware`,
+        `${config.getProdWorkspaceId()}-via-middleware`,
+        `${config.getDevWorkspaceId()}-via-middleware`,
       ])
     })
   })

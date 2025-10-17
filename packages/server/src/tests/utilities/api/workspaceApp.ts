@@ -55,4 +55,16 @@ export class WorkspaceAppAPI extends TestAPI {
       }
     )
   }
+
+  duplicate = async (id: string, expectations?: Expectations) => {
+    return await this._post<InsertWorkspaceAppResponse>(
+      `/api/workspaceApp/${id}/duplicate`,
+      {
+        expectations: {
+          status: 201,
+          ...expectations,
+        },
+      }
+    )
+  }
 }

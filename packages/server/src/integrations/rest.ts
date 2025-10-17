@@ -12,10 +12,7 @@ import {
   RestQueryFields as RestQuery,
 } from "@budibase/types"
 import get from "lodash/get"
-import * as https from "https"
 import qs from "querystring"
-import type { Response, RequestInit } from "node-fetch"
-import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
@@ -28,6 +25,14 @@ import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
+import { getProxyDispatcher } from "../utilities"
+import { fetch, Response, RequestInit, Agent } from "undici"
+import nodeFetch from "node-fetch"
+import type {
+  Response as NodeFetchResponse,
+  RequestInit as NodeFetchRequestInit,
+} from "node-fetch"
+import environment from "../environment"
 
 const coreFields = {
   path: {
@@ -147,7 +152,7 @@ export class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(
-    response: Response,
+    response: Response | NodeFetchResponse,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
     let data: any[] | string | undefined,
@@ -215,9 +220,9 @@ export class RestIntegration implements IntegrationBase {
 
     const size = formatBytes(contentLength || "0")
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
-    headers = response.headers.raw()
-    for (let [key, value] of Object.entries(headers)) {
-      headers[key] = Array.isArray(value) ? value[0] : value
+    // converts headers to plain object
+    for (const [key, value] of response.headers.entries()) {
+      headers[key] = value
     }
 
     // Check if a pagination cursor exists in the response
@@ -472,12 +477,6 @@ export class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
-    if (this.config.rejectUnauthorized == false) {
-      input.agent = new https.Agent({
-        rejectUnauthorized: false,
-      })
-    }
-
     // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
       // NOTE(samwho): it seems like this code doesn't actually work because it requires
@@ -494,7 +493,73 @@ export class RestIntegration implements IntegrationBase {
     if (await blacklist.isBlacklisted(url)) {
       throw new Error("Cannot connect to URL.")
     }
-    const response = await fetch(url, input)
+
+    // Configure dispatcher for proxy and/or TLS settings
+    const rejectUnauthorized = !!environment.REST_REJECT_UNAUTHORIZED
+    const proxyDispatcher = getProxyDispatcher({
+      rejectUnauthorized,
+    })
+    if (proxyDispatcher) {
+      console.log("[rest integration] Using proxy for request", {
+        url,
+        hasDispatcher: true,
+        isHttpsUrl: url.startsWith("https://"),
+        rejectUnauthorized,
+        configRejectUnauthorized: this.config.rejectUnauthorized,
+        proxyUri:
+          process.env.GLOBAL_AGENT_HTTPS_PROXY ||
+          process.env.GLOBAL_AGENT_HTTP_PROXY ||
+          process.env.HTTPS_PROXY ||
+          process.env.HTTP_PROXY,
+      })
+      // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
+      input.dispatcher = proxyDispatcher
+    } else if (rejectUnauthorized) {
+      // No proxy, but need to disable TLS verification
+      const agent = new Agent({
+        connect: {
+          rejectUnauthorized: false,
+        },
+      })
+      input.dispatcher = agent
+    }
+
+    let response: Response | NodeFetchResponse
+    try {
+      // Use node-fetch in test environment for nock compatibility
+      if (process.env.NODE_ENV === "jest") {
+        const { dispatcher, ...nodeFetchInput } = input
+        response = await nodeFetch(url, nodeFetchInput as NodeFetchRequestInit)
+      } else {
+        response = await fetch(url, input)
+      }
+    } catch (err: any) {
+      console.log("[rest integration] Fetch error details", {
+        url,
+        error: err.message,
+        cause: err.cause?.message,
+        code: err.cause?.code,
+        hasDispatcher: !!input.dispatcher,
+        isHttpsUrl: url.startsWith("https://"),
+        rejectUnauthorized,
+      })
+      if (
+        err.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
+        err.cause?.code === "CERT_UNTRUSTED" ||
+        err.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
+      ) {
+        throw new Error(
+          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${err.message}`
+        )
+      }
+
+      if (err.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+        throw new Error(
+          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${err.message}`
+        )
+      }
+      throw err
+    }
     if (
       response.status === 401 &&
       authConfigType === RestAuthType.OAUTH2 &&

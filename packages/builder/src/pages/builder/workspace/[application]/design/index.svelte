@@ -6,6 +6,7 @@
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
+  import { buildLiveUrl } from "@/helpers/urls"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
@@ -15,7 +16,7 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { admin } from "@/stores/portal"
+  import { featureFlags } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -50,6 +51,8 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+
+  $: canDuplicate = $featureFlags.DUPLICATE_APP
 
   const filters: {
     label: string
@@ -92,7 +95,44 @@
     }
   }
 
+  const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
+    if (
+      !workspaceApp ||
+      workspaceApp.publishStatus?.state !== PublishResourceState.PUBLISHED ||
+      workspaceApp.disabled
+    ) {
+      return null
+    }
+
+    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+
+    return liveUrl || null
+  }
+
+  const openLiveWorkspaceApp = (liveUrl: string | null) => {
+    if (!liveUrl || typeof window === "undefined") {
+      return
+    }
+    window.open(liveUrl, "_blank")
+  }
+
+  let isDuplicating = false
+
+  const duplicateWorkspaceApp = async (workspaceAppId: string) => {
+    isDuplicating = true
+
+    try {
+      await workspaceAppStore.duplicate(workspaceAppId)
+    } catch (e) {
+      notifications.error("Failed to duplicate app")
+    } finally {
+      isDuplicating = false
+    }
+    await appStore.refresh()
+  }
+
   const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
+    const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
@@ -110,13 +150,26 @@
       },
     }
 
-    return [
+    const commands: {
+      icon: string
+      name: string
+      visible: boolean
+      callback: () => void
+      disabled?: boolean
+    }[] = [
       {
         icon: "pencil",
         name: "Edit",
         visible: true,
         callback: () => workspaceAppModal.show(),
       },
+      {
+        icon: "globe-simple",
+        name: "View live app",
+        visible: !!liveUrl,
+        callback: () => openLiveWorkspaceApp(liveUrl),
+      },
+
       pause,
       {
         icon: "trash",
@@ -124,7 +177,17 @@
         visible: true,
         callback: () => confirmDeleteDialog.show(),
       },
+      {
+        icon: "copy",
+        name: "Duplicate",
+        visible: canDuplicate,
+        disabled: isDuplicating,
+        callback: () =>
+          !isDuplicating && duplicateWorkspaceApp(workspaceApp._id as string),
+      },
     ]
+
+    return commands
   }
 
   const openContextMenu = (e: MouseEvent, workspaceApp: UIWorkspaceApp) => {
@@ -197,7 +260,7 @@
   </HeroBanner>
 
   <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
-    {#if updateAvailable && $isOnlyUser && !$admin.usingLocalComponentLibs}
+    {#if updateAvailable && $isOnlyUser}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="update-version" on:click={versionModal.show}>

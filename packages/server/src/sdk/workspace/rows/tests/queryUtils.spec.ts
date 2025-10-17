@@ -4,9 +4,9 @@ import {
   SearchFilters,
   Table,
 } from "@budibase/types"
-import { getQueryableFields, validateFilters } from "../queryUtils"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { getQueryableFields, validateFilters } from "../queryUtils"
 
 describe("query utils", () => {
   describe("validateFilters", () => {
@@ -189,7 +189,7 @@ describe("query utils", () => {
         },
       })
 
-      const result = await config.doInContext(config.appId, () => {
+      const result = await config.doInContext(config.devWorkspaceId, () => {
         return getQueryableFields(table)
       })
       expect(result).toEqual([
@@ -228,7 +228,7 @@ describe("query utils", () => {
         },
       })
 
-      const result = await config.doInContext(config.appId, () => {
+      const result = await config.doInContext(config.devWorkspaceId, () => {
         return getQueryableFields(table)
       })
       expect(result).toEqual([
@@ -266,7 +266,7 @@ describe("query utils", () => {
         },
       })
 
-      const result = await config.doInContext(config.appId, () => {
+      const result = await config.doInContext(config.devWorkspaceId, () => {
         return getQueryableFields(table)
       })
       expect(result).toEqual(["_id", "name"])
@@ -334,7 +334,7 @@ describe("query utils", () => {
         })
 
         it("includes nested relationship fields from main table", async () => {
-          const result = await config.doInContext(config.appId, () => {
+          const result = await config.doInContext(config.devWorkspaceId, () => {
             return getQueryableFields(table)
           })
           expect(result).toEqual([
@@ -355,7 +355,7 @@ describe("query utils", () => {
         })
 
         it("includes nested relationship fields from aux 1 table", async () => {
-          const result = await config.doInContext(config.appId, () => {
+          const result = await config.doInContext(config.devWorkspaceId, () => {
             return getQueryableFields(aux1)
           })
           expect(result).toEqual([
@@ -381,7 +381,7 @@ describe("query utils", () => {
         })
 
         it("includes nested relationship fields from aux 2 table", async () => {
-          const result = await config.doInContext(config.appId, () => {
+          const result = await config.doInContext(config.devWorkspaceId, () => {
             return getQueryableFields(aux2)
           })
           expect(result).toEqual([
@@ -439,7 +439,7 @@ describe("query utils", () => {
         })
 
         it("includes nested relationship fields from main table", async () => {
-          const result = await config.doInContext(config.appId, () => {
+          const result = await config.doInContext(config.devWorkspaceId, () => {
             return getQueryableFields(table)
           })
           expect(result).toEqual([
@@ -455,7 +455,7 @@ describe("query utils", () => {
         })
 
         it("includes nested relationship fields from aux table", async () => {
-          const result = await config.doInContext(config.appId, () => {
+          const result = await config.doInContext(config.devWorkspaceId, () => {
             return getQueryableFields(aux)
           })
           expect(result).toEqual([

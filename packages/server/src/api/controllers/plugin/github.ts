@@ -4,7 +4,7 @@ import { downloadUnzipTarball } from "./utils"
 
 export async function request(
   url: string,
-  headers: { [key: string]: string },
+  headers: Record<string, string> = {},
   err: string
 ) {
   const response = await fetch(url, { headers })
@@ -30,7 +30,9 @@ export async function githubUpload(url: string, name = "", token = "") {
     "https://github.com/",
     "https://api.github.com/repos/"
   )
-  const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+  const headers: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {}
   const pluginDetails = await request(
     githubApiUrl,
     headers,
