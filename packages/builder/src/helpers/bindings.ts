@@ -59,6 +59,12 @@ export function extractJSONArrayFields(bindings: UIBinding[]) {
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding, tableId } = binding
       const { name, type, prefixKeys, subtype } = binding.fieldSchema!
+      let dataFetchType = type
+      if (dataFetchType === "json" && subtype === "array") {
+        dataFetchType = "jsonarray"
+      } else {
+        dataFetchType = "queryarray"
+      }
       return {
         providerId,
         label: readableBinding,
@@ -66,7 +72,7 @@ export function extractJSONArrayFields(bindings: UIBinding[]) {
         fieldType: type,
         tableId,
         prefixKeys,
-        type: type === "jsonarray" ? "jsonarray" : "queryarray",
+        type: dataFetchType,
         subtype,
         value: `{{ literal ${runtimeBinding} }}`,
       }

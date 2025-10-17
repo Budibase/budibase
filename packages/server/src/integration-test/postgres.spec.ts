@@ -1,6 +1,7 @@
 import {
   Datasource,
   FieldType,
+  SortOrder,
   Table,
   StringFieldSubType,
 } from "@budibase/types"
@@ -307,6 +308,103 @@ if (mainDescriptions.length) {
           expect(table?.schema.tags.type).toBe(FieldType.STRING)
           expect(table?.schema.tags.subtype).toBe(StringFieldSubType.ARRAY)
           expect(table?.schema.tags.externalType).toBe("ARRAY")
+        })
+      })
+
+      describe("json column sorting behaviour", () => {
+        let tableName: string
+        let table: Table
+
+        beforeAll(async () => {
+          tableName = `jsonsort_${generator
+            .guid()
+            .replaceAll("-", "")
+            .substring(0, 12)}`
+
+          await client.schema.createTable(tableName, table => {
+            table.integer("id").primary()
+            table.jsonb("payload")
+            table.string("label")
+          })
+
+          const response = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+          table = response.datasource.entities![tableName]
+        })
+
+        afterAll(async () => {
+          await client.schema.dropTableIfExists(tableName)
+        })
+
+        it("ignores sort directives targeting json columns", async () => {
+          expect(table).toBeDefined()
+          expect(table?.schema.payload.type).toBe(FieldType.JSON)
+
+          await config.api.row.bulkImport(table._id!, {
+            rows: [
+              { id: 3, label: "gamma", payload: { rank: 3 } },
+              { id: 1, label: "alpha", payload: { rank: 1 } },
+              { id: 2, label: "beta", payload: { rank: 2 } },
+            ],
+          })
+
+          const { rows } = await config.api.row.search(table._id!, {
+            sort: "payload",
+            sortOrder: SortOrder.DESCENDING,
+          })
+
+          expect(rows.map(row => row.id)).toEqual([1, 2, 3])
+          expect(rows.map(row => row.label)).toEqual(["alpha", "beta", "gamma"])
+        })
+      })
+
+      describe("json primary key fallbacks", () => {
+        let tableName: string
+        let table: Table
+
+        beforeAll(async () => {
+          tableName = `jsonprimary_${generator
+            .guid()
+            .replaceAll("-", "")
+            .substring(0, 12)}`
+
+          await client.raw(`
+        CREATE TABLE ${tableName} (
+          payload jsonb NOT NULL,
+          ref text NOT NULL,
+          description text,
+          PRIMARY KEY (payload, ref)
+        )
+      `)
+
+          const response = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+          table = response.datasource.entities![tableName]
+        })
+
+        afterAll(async () => {
+          await client.schema.dropTableIfExists(tableName)
+        })
+
+        it("uses the first sortable column in a composite primary key", async () => {
+          expect(table).toBeDefined()
+          expect(table?.schema.payload.type).toBe(FieldType.JSON)
+          expect(table?.primary?.[0]).toBe("payload")
+          expect(table?.primary?.[1]).toBe("ref")
+
+          await config.api.row.bulkImport(table._id!, {
+            rows: [
+              { payload: { rank: 3 }, ref: "c", description: "third" },
+              { payload: { rank: 1 }, ref: "a", description: "first" },
+              { payload: { rank: 2 }, ref: "b", description: "second" },
+            ],
+          })
+
+          const { rows } = await config.api.row.search(table._id!)
+
+          expect(rows.map(row => row.ref)).toEqual(["a", "b", "c"])
         })
       })
     }

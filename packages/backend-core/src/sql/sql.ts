@@ -1245,6 +1245,10 @@ class InternalBuilder {
     }
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
+        const fieldSchema = this.getFieldSchema(key)
+        if (this.isUnsortableField(fieldSchema)) {
+          continue
+        }
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
@@ -1280,13 +1284,34 @@ class InternalBuilder {
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
-    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
-      if (primaryKey[0] === undefined) {
+    if (!hasAggregations) {
+      const primarySortKey = this.findSortablePrimaryKey(primaryKey)
+      if (primarySortKey && (!sort || sort[primarySortKey] === undefined)) {
+        query = query.orderBy(`${aliased}.${primarySortKey}`)
+      } else if (!primarySortKey && (!sort || Object.keys(sort).length === 0)) {
         throw new Error(`Primary key not found for table ${this.table.name}`)
       }
-      query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query
+  }
+
+  private isUnsortableField(schema: FieldSchema | undefined): boolean {
+    if (schema?.type === FieldType.JSON) {
+      return true
+    }
+    return false
+  }
+
+  private findSortablePrimaryKey(
+    primaryKey: Array<string | undefined>
+  ): string | undefined {
+    return primaryKey.find(key => {
+      if (key == null) {
+        return false
+      }
+      const schema = this.getFieldSchema(key)
+      return !this.isUnsortableField(schema)
+    })
   }
 
   tableNameWithSchema(
