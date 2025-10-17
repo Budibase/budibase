@@ -132,6 +132,7 @@
         <IntegrationIcon
           integrationType={restIntegration.name}
           schema={restIntegration}
+          size="24"
         />
       </DatasourceOption>
     </div>
