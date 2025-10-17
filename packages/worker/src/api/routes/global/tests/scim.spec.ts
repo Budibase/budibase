@@ -1210,6 +1210,61 @@ describe("scim", () => {
           const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
           expect(persistedGroup).toEqual(expectedScimGroup)
         })
+
+        it("succeeds when removing a member that no longer exists", async () => {
+          const userToRemove = users[6]
+
+          // ensure the user is a member first
+          await patchScimGroup({
+            id: group.id,
+            body: {
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+              Operations: [
+                {
+                  op: "Add",
+                  path: "members",
+                  value: [
+                    {
+                      $ref: null,
+                      value: userToRemove.id,
+                    },
+                  ],
+                },
+              ],
+            },
+          })
+
+          // deleting the user simulates Azure holding on to a stale reference
+          await config.api.users.deleteUser(userToRemove.id)
+
+          const groupBeforeRemoval = await config.api.scimGroupsAPI.find(
+            group.id
+          )
+
+          const response = await patchScimGroup({
+            id: group.id,
+            body: {
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+              Operations: [
+                {
+                  op: "Remove",
+                  path: "members",
+                  value: [
+                    {
+                      $ref: null,
+                      value: userToRemove.id,
+                    },
+                  ],
+                },
+              ],
+            },
+          })
+
+          expect(response).toEqual(groupBeforeRemoval)
+
+          const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+          expect(persistedGroup).toEqual(groupBeforeRemoval)
+        })
       })
     })
   })
