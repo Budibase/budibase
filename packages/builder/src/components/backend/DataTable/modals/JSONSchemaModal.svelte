@@ -12,6 +12,7 @@
     ActionButton,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
+  import { isPlainObject } from "lodash"
   import { FIELDS } from "@/constants/backend"
   import { generate } from "@/helpers/schemaGenerator"
   import { JsonFieldSubType } from "@budibase/types"
@@ -36,9 +37,6 @@
     { label: "Array", value: FIELDS.ARRAY.type },
   ]
   let invalid = false
-
-  const isPlainObject = value =>
-    value != null && typeof value === "object" && !Array.isArray(value)
 
   const isSchemaEntry = value =>
     isPlainObject(value) && ("type" in value || "schema" in value)
