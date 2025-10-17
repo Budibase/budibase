@@ -10,6 +10,7 @@
     BudibaseAI: BudibaseAILogo,
     OpenAI: OpenAILogo,
     AzureOpenAI: AzureOpenAILogo,
+    Chat: OpenAILogo,
   }
 
   export let config: ProviderConfig

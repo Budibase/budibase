@@ -42,6 +42,16 @@ export const ProviderDetails: Partial<Record<AIProvider, AIProviderDetails>> = {
     },
     models: Models,
   },
+  Chat: {
+    defaultConfig: {
+      name: "Chat",
+      provider: "Chat",
+      active: false,
+      isDefault: false,
+      baseUrl: "",
+    },
+    models: [],
+  },
 }
 
 export const ConfigMap = {
@@ -62,6 +72,9 @@ export const ConfigMap = {
     baseUrl: "",
   },
   Custom: {
+    baseUrl: "",
+  },
+  Chat: {
     baseUrl: "",
   },
 }

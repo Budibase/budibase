@@ -40,9 +40,13 @@
   let modalProvider: AIProvider
   let modalConfig: ProviderConfig
   let providerNames: AIProvider[]
+
+  let providers: { provider: AIProvider; config: ProviderConfig }[]
+  let chatProviders: { provider: AIProvider; config: ProviderConfig }[]
   let hasLicenseKey: boolean
 
   $: isCloud = $admin.cloud
+  $: chatEnabled = true // TODO
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -52,6 +56,16 @@
         config: getProviderConfig(provider).config,
       }))
     : []
+
+  $: chatProviders =
+    chatEnabled && aiConfig
+      ? [
+          {
+            provider: "Chat",
+            config: getProviderConfig("Chat").config,
+          },
+        ]
+      : []
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -230,6 +244,24 @@
         </div>
       {/if}
     </div>
+
+    {#if chatEnabled}
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Chat configurations</div>
+        </div>
+
+        <div class="ai-list">
+          {#each chatProviders as { provider, config } (provider)}
+            <AIConfigTile
+              {config}
+              editHandler={() => handleEnable(provider)}
+              disableHandler={() => disableProvider(provider)}
+            />
+          {/each}
+        </div>
+      </div>
+    {/if}
   </Layout>
 {/if}
 
@@ -304,6 +336,18 @@
     font-weight: 600;
     font-size: 16px;
     color: var(--ink);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+  }
+
+  .section-header .section-title {
+    margin-bottom: 0;
   }
 
   .disabled-title {

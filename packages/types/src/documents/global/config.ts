@@ -120,6 +120,7 @@ export type AIProvider =
   | "TogetherAI"
   | "Custom"
   | "BudibaseAI"
+  | "Chat"
 
 export interface ProviderConfig {
   provider: AIProvider

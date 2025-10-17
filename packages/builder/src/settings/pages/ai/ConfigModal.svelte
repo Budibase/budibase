@@ -56,7 +56,12 @@
     />
   </div>
 
-  {#if config.provider !== "AzureOpenAI"}
+  {#if config.provider === "Chat"}
+    <div class="form-row">
+      <Label size="M">Model</Label>
+      <Input bind:value={config.defaultModel} />
+    </div>
+  {:else if config.provider !== "AzureOpenAI"}
     <div class="form-row">
       <Label size="M">Default Model</Label>
       <Select
