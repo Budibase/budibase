@@ -1296,10 +1296,7 @@ class InternalBuilder {
   }
 
   private isUnsortableField(schema: FieldSchema | undefined): boolean {
-    if (!schema) {
-      return false
-    }
-    if (schema.type === FieldType.JSON) {
+    if (schema?.type === FieldType.JSON) {
       return true
     }
     return false
