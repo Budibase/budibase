@@ -163,6 +163,7 @@
       items: actions.filter(([k]) =>
         [
           AutomationActionStepId.CREATE_ROW,
+          AutomationActionStepId.GET_ROW,
           AutomationActionStepId.UPDATE_ROW,
           AutomationActionStepId.DELETE_ROW,
           AutomationActionStepId.QUERY_ROWS,

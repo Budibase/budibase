@@ -17,6 +17,7 @@ import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
+import * as getRow from "./steps/getRow"
 import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
@@ -50,8 +51,10 @@ type ActionImplType = ActionImplementations<
 const ACTION_IMPLS: ActionImplType = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
+  GET_ROW: getRow.run,
   UPDATE_ROW: updateRow.run,
   DELETE_ROW: deleteRow.run,
+  QUERY_ROWS: queryRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_SCRIPT_V2: executeScriptV2.run,
@@ -60,7 +63,6 @@ const ACTION_IMPLS: ActionImplType = {
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
   FILTER: filter.run,
-  QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   OPENAI: openai.run,
@@ -85,8 +87,10 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
 > = {
   SEND_EMAIL_SMTP: automations.steps.sendSmtpEmail.definition,
   CREATE_ROW: automations.steps.createRow.definition,
+  GET_ROW: automations.steps.getRow.definition,
   UPDATE_ROW: automations.steps.updateRow.definition,
   DELETE_ROW: automations.steps.deleteRow.definition,
+  QUERY_ROWS: automations.steps.queryRows.definition,
   OUTGOING_WEBHOOK: automations.steps.outgoingWebhook.definition,
   EXECUTE_SCRIPT: automations.steps.executeScript.definition,
   EXECUTE_SCRIPT_V2: automations.steps.executeScriptV2.definition,
@@ -95,7 +99,6 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   SERVER_LOG: automations.steps.serverLog.definition,
   DELAY: automations.steps.delay.definition,
   FILTER: automations.steps.filter.definition,
-  QUERY_ROWS: automations.steps.queryRows.definition,
   LOOP: automations.steps.loop.definition,
   COLLECT: automations.steps.collect.definition,
   TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
