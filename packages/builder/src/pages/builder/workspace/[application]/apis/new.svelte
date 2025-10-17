@@ -11,6 +11,7 @@
     queries,
   } from "@/stores/builder"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { configFromIntegration } from "@/stores/selectors"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
   import type { RestTemplate } from "@budibase/types"
@@ -40,33 +41,53 @@
     externalDatasourceModal.show(restIntegration)
   }
 
-  const startTemplateImport = async (
+  const buildDatasourceName = (
     template: RestTemplate,
     spec: RestTemplate["specs"][number]
   ) => {
+    if (template.specs.length > 1 && spec.version) {
+      return `${template.name} (${spec.version})`
+    }
+    return template.name
+  }
+
+  const handleTemplateSelection = async (
+    template: RestTemplate,
+    spec: RestTemplate["specs"][number]
+  ) => {
+    if (!restIntegration) {
+      notifications.error("REST API integration is unavailable.")
+      return
+    }
+
     templateLoading = true
     try {
-      const response = await fetch(spec.url)
-      if (!response.ok) {
-        throw new Error("Unable to download specification")
+      const config = {
+        ...configFromIntegration(restIntegration),
+        url: spec.url,
       }
-      const specContent = await response.text()
 
-      const result = await queries.importQueries({
-        data: specContent,
-        datasource: {
-          type: "datasource",
-          source: IntegrationTypes.REST,
-          name: template.name,
-          config: {},
-        },
+      const datasource = await datasources.create({
+        integration: restIntegration,
+        config,
+        name: buildDatasourceName(template, spec),
+        uiMetadata: { iconUrl: template.icon },
       })
 
-      await datasources.fetch()
-      await queries.fetch()
+      if (!datasource?._id) {
+        throw new Error("Datasource identifier missing")
+      }
+
+      await queries.importQueries({
+        data: spec.url,
+        datasource,
+        datasourceId: datasource._id,
+      })
+
+      await Promise.all([datasources.fetch(), queries.fetch()])
 
       notifications.success(`${template.name} imported successfully`)
-      $goto(`./datasource/${result.datasourceId}`)
+      $goto(`./datasource/${datasource._id}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -83,7 +104,7 @@
     }
 
     if (template.specs.length === 1) {
-      startTemplateImport(template, template.specs[0])
+      handleTemplateSelection(template, template.specs[0])
       return
     }
 
@@ -96,7 +117,7 @@
     spec: RestTemplate["specs"][number]
   ) => {
     templateVersionModal?.hide()
-    await startTemplateImport(template, spec)
+    await handleTemplateSelection(template, spec)
   }
 
   const close = () => {
@@ -166,7 +187,9 @@
         {#each selectedTemplate.specs as spec (spec.version)}
           <button
             class="versionOption"
-            on:click={() => importTemplateVersion(selectedTemplate, spec)}
+            on:click={() =>
+              selectedTemplate && importTemplateVersion(selectedTemplate, spec)
+            }
             disabled={templateLoading}
           >
             <Body size="S">{spec.version}</Body>
