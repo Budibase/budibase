@@ -2,7 +2,7 @@
   import { Body, Label } from "@budibase/bbui"
 
   export let title
-  export let description
+  export let description = undefined
   export let disabled
 </script>
 
@@ -15,7 +15,9 @@
     </div>
     <Body>{title}</Body>
   </div>
-  <Label>{description}</Label>
+  {#if description}
+    <Label>{description}</Label>
+  {/if}
 </div>
 
 <style>

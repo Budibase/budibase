@@ -126,13 +126,12 @@
       <DatasourceOption
         on:click={openRestModal}
         title="Custom REST API"
-        description={restIntegration.type}
         disabled={templateDisabled}
       >
         <IntegrationIcon
           integrationType={restIntegration.name}
           schema={restIntegration}
-          size="24"
+          size="32"
         />
       </DatasourceOption>
     </div>
