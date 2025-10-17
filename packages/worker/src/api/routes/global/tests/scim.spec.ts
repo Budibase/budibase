@@ -1211,7 +1211,7 @@ describe("scim", () => {
           expect(persistedGroup).toEqual(expectedScimGroup)
         })
 
-        it("removing a member that no longer exists succeeds", async () => {
+        it("succeeds when removing a member that no longer exists", async () => {
           const userToRemove = users[6]
 
           // ensure the user is a member first
