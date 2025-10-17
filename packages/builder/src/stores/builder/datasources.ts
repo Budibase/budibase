@@ -300,6 +300,40 @@ export class DatasourceStore extends DerivedBudiStore<
     const info = await API.fetchInfoForDatasource(datasource)
     return info.tableNames || []
   }
+
+  async getViewNames(datasource: Datasource) {
+    const info = await API.fetchViewInfoForDatasource(datasource)
+    return info.views || []
+  }
+
+  async createViewQuery(datasource: Datasource, viewName: string) {
+    try {
+      const sql =
+        "SELECT * FROM " +
+        viewName +
+        " \nOFFSET {{ offset }} \nLIMIT {{ limit }}"
+
+      const query = {
+        datasourceId: datasource._id!,
+        name: viewName,
+        parameters: [
+          { name: "offset", default: "0" },
+          { name: "limit", default: "100" },
+        ],
+        fields: {
+          sql,
+        },
+        queryVerb: "read" as const,
+        transformer: null,
+        schema: {},
+        readable: true,
+      }
+      return await queries.save(datasource._id!, query)
+    } catch (error) {
+      console.error("API error fetching view definitions:", error)
+      return
+    }
+  }
 }
 
 export const datasources = new DatasourceStore()
