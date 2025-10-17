@@ -96,7 +96,7 @@
           {/if}
         </Button>
       </Layout>
-      <div />
+      <div></div>
     </Layout>
   </div>
 </div>

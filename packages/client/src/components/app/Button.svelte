@@ -83,7 +83,7 @@
     contenteditable={$component.editing && !icon}
   >
     {#if icon}
-      <i class="{iconClass} {size}" />
+      <i class="{iconClass} {size}"></i>
     {/if}
     {componentText}
   </button>

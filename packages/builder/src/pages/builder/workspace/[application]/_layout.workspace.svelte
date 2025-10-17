@@ -49,7 +49,7 @@
   <SideNav />
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
-    <div class="loading" />
+    <div class="loading"></div>
   {:then _}
     <div class="body">
       <slot />

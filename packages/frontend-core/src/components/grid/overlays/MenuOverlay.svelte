@@ -65,11 +65,11 @@
   }
 </script>
 
-<div bind:this={anchor} {style} class="menu-anchor" />
+<div bind:this={anchor} style={style} class="menu-anchor"></div>
 
 {#if $menu.visible}
   {#key style}
-    <GridPopover {anchor} on:close={menu.actions.close} maxHeight={null}>
+    <GridPopover anchor={anchor} on:close={menu.actions.close} maxHeight={null}>
       <Menu>
         {#if $menu.multiRowMode}
           <MenuItem

@@ -194,7 +194,7 @@
       </Tab>
       <Tab title="Preview">
         <div class="preview">
-          <iframe title="preview" srcdoc={previewContent} />
+          <iframe title="preview" srcdoc={previewContent}></iframe>
         </div>
       </Tab>
     </Tabs>

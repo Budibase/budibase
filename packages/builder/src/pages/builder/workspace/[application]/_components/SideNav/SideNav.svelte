@@ -268,7 +268,7 @@
 </script>
 
 <div class="nav_wrapper">
-  <div class="nav_spacer" class:pinned={$pinned} />
+  <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
     class:pinned={$pinned}

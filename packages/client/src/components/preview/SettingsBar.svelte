@@ -229,7 +229,7 @@
         active={gridHAlign === "stretch"}
         componentId={id}
       />
-      <div class="divider" />
+      <div class="divider"></div>
       <GridStylesButton
         style={gridVAlignVar}
         value="start"
@@ -262,7 +262,7 @@
         active={gridVAlign === "stretch"}
         componentId={id}
       />
-      <div class="divider" />
+      <div class="divider"></div>
     {/if}
     {#each settings as setting, idx}
       {#if setting.type === "select"}
@@ -303,7 +303,7 @@
         />
       {/if}
       {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
-        <div class="divider" />
+        <div class="divider"></div>
       {/if}
     {/each}
     {#if !isRoot}

@@ -43,7 +43,7 @@
     {/if}
   </div>
   <div class="divider">
-    <div class="dividerClickExtender" role="separator" use:resizableHandle />
+    <div class="dividerClickExtender" role="separator" use:resizableHandle></div>
   </div>
 </div>
 <ComponentKeyHandler />

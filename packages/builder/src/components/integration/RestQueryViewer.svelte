@@ -696,7 +696,7 @@
             </Layout>
           </Tab>
           <div class="auth-container">
-            <div />
+            <div></div>
             <!-- spacer -->
 
             <AuthPicker

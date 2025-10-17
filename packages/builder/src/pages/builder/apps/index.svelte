@@ -143,7 +143,7 @@
                     rel="noreferrer"
                     href={getUrl(app)}
                   >
-                    <div class="preview" use:gradient={{ seed: app.name }} />
+                    <div class="preview" use:gradient={{ seed: app.name }}></div>
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
                       <Body size="S">

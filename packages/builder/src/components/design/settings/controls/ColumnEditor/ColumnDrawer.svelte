@@ -92,11 +92,11 @@
       {#if columns?.length}
         <Layout noPadding gap="XS">
           <div class="column">
-            <div />
+            <div></div>
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
-            <div />
-            <div />
+            <div></div>
+            <div></div>
           </div>
           <div
             class="columns"

@@ -128,7 +128,7 @@
                     on:mouseenter={() => ($hoveredRowId = row._id)}
                   />
                 {:else}
-                  <div class="button-placeholder-collapsed" />
+                  <div class="button-placeholder-collapsed"></div>
                 {/if}
               {:else}
                 {#each rowButtons as button}
@@ -143,13 +143,13 @@
                     on:click={() => handleClick(button, row)}
                   >
                     {#if button.icon}
-                      <i class="{button.icon} S" />
+                      <i class="{button.icon} S"></i>
                     {/if}
                     {button.text || "Button"}
                   </Button>
                 {/each}
                 {#if rowButtons.length === 0}
-                  <div class="button-placeholder" />
+                  <div class="button-placeholder"></div>
                 {/if}
               {/if}
             </div>

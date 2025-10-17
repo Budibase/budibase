@@ -36,7 +36,7 @@
 
 <div class="wrapper">
   <Body>Human verification step required to continue.</Body>
-  <div id="recaptcha-container" />
+  <div id="recaptcha-container"></div>
   <div>
     <Button cta on:click={handleSubmit}>Submit</Button>
   </div>
