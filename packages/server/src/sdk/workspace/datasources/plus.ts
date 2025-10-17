@@ -5,7 +5,6 @@ import {
   IntegrationBase,
   Schema,
   Table,
-  SourceName,
 } from "@budibase/types"
 import sdk from "../.."
 import { getIntegration } from "../../../integrations"

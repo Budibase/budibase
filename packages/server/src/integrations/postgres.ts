@@ -445,11 +445,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       const viewsResponse = await this.client.query(this.VIEWS_SQL())
 
-      const views: { name: string; definition: string }[] =
-        viewsResponse.rows.map(row => ({
-          name: row.view_name,
-          definition: row.definition || "Definition not found",
-        }))
+      const views: string[] = viewsResponse.rows.map(row => row.view_name)
 
       return views
     } finally {

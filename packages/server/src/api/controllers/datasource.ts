@@ -78,7 +78,7 @@ export async function viewInformation(
   ctx: UserCtx<FetchDatasourceViewInfoRequest, FetchDatasourceViewInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  let views: { name: string; definition: string }[] = []
+  let views: string[] = []
   let error: string | undefined
 
   try {
@@ -98,7 +98,7 @@ export async function viewInformation(
   }
 
   ctx.body = {
-    views: views.sort((a, b) => a.name.localeCompare(b.name)),
+    views: views.sort(),
     error,
   }
 }
