@@ -7,6 +7,10 @@
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   let name: string = "My first app"
   let url: string = "my-first-app"
   let appId: string | null = null

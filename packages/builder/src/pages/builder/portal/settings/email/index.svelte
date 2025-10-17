@@ -19,6 +19,10 @@
   import { API } from "@/api"
   import { cloneDeep } from "lodash/fp"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   const ConfigTypes = {
     SMTP: "smtp",
   }

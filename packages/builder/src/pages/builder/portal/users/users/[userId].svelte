@@ -41,6 +41,11 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { capitalise } from "@/helpers"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $url
+
   export let userId
 
   $: groupSchema = {

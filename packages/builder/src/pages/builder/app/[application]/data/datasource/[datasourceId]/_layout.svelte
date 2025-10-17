@@ -5,6 +5,19 @@
   import { params } from "@roxi/routify"
   import { onDestroy } from "svelte"
 
+  // Extract stores from namespace for Svelte 5 compatibility
+  const { goto, url, redirect, isActive, page, layout } = routify
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $params
+  $url
+  $redirect
+  $isActive
+  $page
+  $layout
+
   $: datasourceId = $datasources.selectedDatasourceId
   $: builderStore.selectResource(datasourceId)
 

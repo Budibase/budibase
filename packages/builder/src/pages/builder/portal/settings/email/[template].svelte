@@ -16,6 +16,10 @@
   import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import type { Template, GlobalTemplateBinding } from "@budibase/types"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $url
+
   // QueryEditor component interface based on exposed methods
   interface QueryEditor {
     // eslint-disable-next-line no-unused-vars

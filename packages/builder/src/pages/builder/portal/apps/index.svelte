@@ -38,6 +38,10 @@
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import { BannerType } from "@/constants/banners"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   $goto
 
   let creationModal

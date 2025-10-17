@@ -19,7 +19,12 @@
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
   $goto
+  $isActive
+  $redirect
+  $url
 
   let loaded = false
   let mobileMenuVisible = false

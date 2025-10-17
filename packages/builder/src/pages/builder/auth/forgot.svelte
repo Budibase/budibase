@@ -15,6 +15,10 @@
   import { goto } from "@roxi/routify"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   let email = ""
   let form
   let error

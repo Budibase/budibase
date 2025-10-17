@@ -2,6 +2,10 @@
   import { Icon } from "@budibase/bbui"
   import { isActive } from "@roxi/routify"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $isActive
+
   export let text: string
   export let icon: string | undefined = undefined
   export let url: string | undefined = undefined

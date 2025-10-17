@@ -41,6 +41,11 @@
   import { derived, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $url
+
   type ResourceLinkFn = (_id: string) => string
 
   interface UIFavouriteResource {

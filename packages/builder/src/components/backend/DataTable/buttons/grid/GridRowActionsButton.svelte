@@ -16,6 +16,11 @@
   import { goto, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $url
+
   const { datasource } = getContext("grid")
 
   let popover

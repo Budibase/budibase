@@ -10,6 +10,8 @@
   import FavouriteAppButton from "@/pages/builder/portal/apps/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
   $goto
 
   export let app

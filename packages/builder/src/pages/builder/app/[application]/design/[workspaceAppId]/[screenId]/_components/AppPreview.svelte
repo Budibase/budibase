@@ -21,6 +21,11 @@
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $isActive
   $goto
   let iframe
   let layout

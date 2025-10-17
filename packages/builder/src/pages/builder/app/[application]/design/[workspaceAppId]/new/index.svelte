@@ -5,6 +5,10 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { params } from "@roxi/routify"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $params
+
   let newScreenModal: NewScreen
 
   $: workspaceAppId = $params.workspaceAppId

@@ -5,6 +5,11 @@
   import { isActive, goto } from "@roxi/routify"
   import { menu, features } from "@/stores/portal"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $isActive
+
   $: wide = $isActive("./users/index") || $isActive("./groups/index")
   $: pages = $menu.find(x => x.title === "Users")?.subPages || []
   $: !pages.length && $goto("../")

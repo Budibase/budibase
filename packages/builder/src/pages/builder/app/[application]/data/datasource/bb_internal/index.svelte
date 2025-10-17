@@ -11,6 +11,10 @@
   } from "@/constants/backend"
   import { TableNames } from "@/constants"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   let modal
 
   $: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)

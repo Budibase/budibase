@@ -14,6 +14,10 @@
   import { findComponentPath } from "@/helpers/components"
   import NewPill from "@/components/common/NewPill.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
   ghost.src =

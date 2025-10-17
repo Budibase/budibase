@@ -33,6 +33,11 @@
   import { configFromIntegration } from "@/stores/selectors"
   import { goto, params } from "@roxi/routify"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $params
+
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let block: AutomationStep | undefined = undefined
   export let context: AutomationContext | undefined

@@ -19,6 +19,10 @@
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   export let groupId
   export let readonly
   export let isScimGroup

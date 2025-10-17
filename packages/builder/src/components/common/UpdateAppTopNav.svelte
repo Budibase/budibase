@@ -2,6 +2,10 @@
   import { Icon } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { appStore } from "@/stores/builder"
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

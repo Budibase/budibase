@@ -15,6 +15,10 @@
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $redirect
+
   let diagnosticInfo = ""
 
   // Make sure page can't be visited directly in cloud

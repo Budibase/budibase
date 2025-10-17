@@ -9,6 +9,11 @@
   import { Icon } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $params
+
   export let app
 
   let opened

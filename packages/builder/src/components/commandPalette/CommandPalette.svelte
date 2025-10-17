@@ -26,6 +26,12 @@
   import { ThemeOptions } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $isActive
+  $params
+
   const modalContext = getContext(Context.Modal)
 
   let search

@@ -14,6 +14,12 @@
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
   import { Modal, notifications } from "@budibase/bbui"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $isActive
+  $params
+  $redirect
+
   let loaded = false
   let commandPaletteModal
 

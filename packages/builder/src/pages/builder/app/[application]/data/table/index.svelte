@@ -4,6 +4,10 @@
   import { redirect } from "@roxi/routify"
   import { TableNames } from "@/constants"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $redirect
+
   onMount(() => {
     if ($tables.selected) {
       $redirect(`./${$tables.selected._id}`)

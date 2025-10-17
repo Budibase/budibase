@@ -21,6 +21,10 @@
   import { onMount } from "svelte"
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   let loaded = false
   let form
   let errors = {}

@@ -12,6 +12,10 @@
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $redirect
+
   // Don't block loading if we've already hydrated state
   let loaded = !!$appsStore.apps?.length
 

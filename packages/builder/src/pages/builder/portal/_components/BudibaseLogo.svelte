@@ -1,6 +1,10 @@
 <script>
   import Logo from "assets/bb-emblem.svg"
   import { goto } from "@roxi/routify"
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->

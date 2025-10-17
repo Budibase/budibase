@@ -33,6 +33,10 @@
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import NoResults from "../../_components/NoResults.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $url
+
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">

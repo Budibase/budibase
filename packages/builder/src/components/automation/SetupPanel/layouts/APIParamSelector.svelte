@@ -22,6 +22,11 @@
   import { type AutomationContext } from "@/stores/builder/automations"
   import { runtimeToReadableBinding } from "@/dataBinding"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $params
+
   const dispatch = createEventDispatcher()
 
   type QueryWithIcon = Query & { icon: string }

@@ -3,6 +3,11 @@
   import { tables, datasources } from "@/stores/builder"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $url
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,

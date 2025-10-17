@@ -3,6 +3,10 @@
   import { goto } from "@roxi/routify"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   let modal
   let promptUpload = false
 

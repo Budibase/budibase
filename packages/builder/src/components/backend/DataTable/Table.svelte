@@ -8,6 +8,11 @@
   import { createEventDispatcher } from "svelte"
   import { canBeSortColumn } from "@budibase/frontend-core"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $params
+
   export let schema = {}
   export let data = []
   export let tableId

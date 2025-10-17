@@ -7,6 +7,10 @@
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   export let datasource
 
   $: queryList = $queries.list.filter(

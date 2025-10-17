@@ -3,6 +3,10 @@
   import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
+
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
 </script>
 
 {#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}

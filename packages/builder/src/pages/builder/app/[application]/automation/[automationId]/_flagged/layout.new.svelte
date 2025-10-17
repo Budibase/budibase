@@ -13,6 +13,18 @@
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+
+  const { goto, params, url, redirect, isActive, page, layout } = routify
+  $goto
+  $params
+  $url
+  $redirect
+  $isActive
+  $page
+  $layout
+
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
   $: builderStore.selectResource(automationId)

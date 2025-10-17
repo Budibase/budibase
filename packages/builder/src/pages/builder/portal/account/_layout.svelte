@@ -4,6 +4,11 @@
   import { Content, SideNav, SideNavItem } from "@/components/portal/page"
   import { menu } from "@/stores/portal"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+  $isActive
+
   $: wide = $isActive("./auditLogs")
   $: pages = $menu.find(x => x.title === "Account")?.subPages || []
   $: !pages.length && $goto("../")

@@ -2,6 +2,11 @@
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Body, Modal, ModalContent } from "@budibase/bbui"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $beforeUrlChange
+  $goto
+
   export let checkIsModified = () => {}
   export let attemptSave = () => {}
   let modal

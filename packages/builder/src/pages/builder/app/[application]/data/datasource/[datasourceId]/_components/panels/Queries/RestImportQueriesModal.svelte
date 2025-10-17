@@ -16,6 +16,10 @@
   import { writable } from "svelte/store"
   import type { Datasource } from "@budibase/types"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
   export let createDatasource = false

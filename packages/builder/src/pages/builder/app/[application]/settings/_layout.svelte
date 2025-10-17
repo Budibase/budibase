@@ -5,6 +5,11 @@
   import { Page, Layout } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $isActive
+  $url
+
   $: workspaceAppsEnabled = $featureFlags.WORKSPACES
 </script>
 

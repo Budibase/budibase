@@ -13,6 +13,10 @@
   import { goto } from "@roxi/routify"
   import { automationStore } from "@/stores/builder"
 
+  // Workaround for Routify 2 + Svelte 5 compatibility
+  // See: https://github.com/roxiness/routify/issues/563
+  $goto
+
   export let history
   export let appId
   export let close
