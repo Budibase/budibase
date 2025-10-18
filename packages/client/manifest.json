@@ -4112,6 +4112,22 @@
         }
       },
       {
+        "type": "boolean",
+        "label": "Show Select All",
+        "key": "showSelectAll",
+        "defaultValue": false
+      },
+      {
+        "type": "text",
+        "label": "Select All Text",
+        "key": "selectAllText",
+        "defaultValue": "Select all",
+        "dependsOn": {
+          "setting": "showSelectAll",
+          "value": true
+        }
+      },
+      {
         "type": "select",
         "label": "Options source",
         "key": "optionsSource",

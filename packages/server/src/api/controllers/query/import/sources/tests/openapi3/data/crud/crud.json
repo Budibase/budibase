@@ -18,9 +18,7 @@
   "paths": {
     "/entities": {
       "post": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "createEntity",
         "requestBody": {
           "content": {
@@ -45,9 +43,7 @@
         }
       },
       "get": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "getEntities",
         "parameters": [
           {
@@ -78,9 +74,7 @@
         }
       ],
       "get": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "getEntity",
         "responses": {
           "200": {
@@ -96,9 +90,7 @@
         }
       },
       "put": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "updateEntity",
         "requestBody": {
           "content": {
@@ -123,9 +115,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "patchEntity",
         "requestBody": {
           "content": {
@@ -150,9 +140,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "parameters": [
           {
             "$ref": "#/components/parameters/APIKeyParameter"
@@ -178,10 +166,10 @@
         "in": "path",
         "required": true
       },
-     "PageParameter": {
-       "schema": {
-         "type": "integer",
-         "format": "int32"
+      "PageParameter": {
+        "schema": {
+          "type": "integer",
+          "format": "int32"
         },
         "name": "page",
         "in": "query",
@@ -242,12 +230,12 @@
           "type": "type"
         }
       },
-      "Entities" : {
+      "Entities": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/Entity"
         }
       }
-      }
+    }
   }
 }

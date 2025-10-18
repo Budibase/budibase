@@ -27,27 +27,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ActivateLicenseKeyRequest'
+              $ref: "#/components/schemas/ActivateLicenseKeyRequest"
       responses:
-        '200':
+        "200":
           description: Success
     get:
       tags:
         - license
       summary: Get license key
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetLicenseKeyResponse'
+                $ref: "#/components/schemas/GetLicenseKeyResponse"
     delete:
       tags:
         - license
       summary: Delete license key
       responses:
-        '204':
+        "204":
           description: No content
   /api/global/license/offline:
     post:
@@ -59,27 +59,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ActivateOfflineLicenseTokenRequest'
+              $ref: "#/components/schemas/ActivateOfflineLicenseTokenRequest"
       responses:
-        '200':
+        "200":
           description: Success
     get:
       tags:
         - license
       summary: Get offline license
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetOfflineLicenseTokenResponse'
+                $ref: "#/components/schemas/GetOfflineLicenseTokenResponse"
     delete:
       tags:
         - license
       summary: Delete offline license
       responses:
-        '204':
+        "204":
           description: No content
   /api/global/license/offline/identifier:
     get:
@@ -87,12 +87,12 @@ paths:
         - license
       summary: Get offline identifier
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetOfflineIdentifierResponse'
+                $ref: "#/components/schemas/GetOfflineIdentifierResponse"
 
 components:
   schemas:

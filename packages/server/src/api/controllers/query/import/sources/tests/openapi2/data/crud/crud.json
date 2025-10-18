@@ -11,22 +11,14 @@
       "name": "entity"
     }
   ],
-  "schemes": [
-    "http"
-  ],
+  "schemes": ["http"],
   "paths": {
     "/entities": {
       "post": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "createEntity",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "$ref": "#/parameters/CreateEntity"
@@ -42,13 +34,9 @@
         }
       },
       "get": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "getEntities",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "$ref": "#/parameters/Page"
@@ -74,13 +62,9 @@
         }
       ],
       "get": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "getEntity",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -91,16 +75,10 @@
         }
       },
       "put": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "updateEntity",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "$ref": "#/parameters/Entity"
@@ -116,16 +94,10 @@
         }
       },
       "patch": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "operationId": "patchEntity",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "$ref": "#/parameters/Entity"
@@ -141,18 +113,14 @@
         }
       },
       "delete": {
-        "tags": [
-          "entity"
-        ],
+        "tags": ["entity"],
         "parameters": [
           {
             "$ref": "#/parameters/APIKey"
           }
         ],
         "operationId": "deleteEntity",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "responses": {
           "204": {
             "description": "successful operation"
@@ -235,7 +203,7 @@
         },
         {
           "$ref": "#/definitions/CreateEntity"
-        } 
+        }
       ],
       "example": {
         "id": 1,
@@ -243,7 +211,7 @@
         "type": "type"
       }
     },
-    "Entities" : {
+    "Entities": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/Entity"

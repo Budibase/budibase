@@ -20,7 +20,9 @@
   font-display: block;
 }
 
-.ph, .ph-bold, .ph-fill {
+.ph,
+.ph-bold,
+.ph-fill {
   speak: never;
   font-style: normal;
   font-weight: normal;

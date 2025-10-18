@@ -21,7 +21,7 @@ Request Details:
 Response:
   Error: Unable to connect to database
   Message: CouchDB connection refused at localhost:5984
-  
+
   Additional Details:
     code: DB_CONNECTION_FAILED
     timestamp: 2024-01-15T10:30:45.123Z
@@ -57,7 +57,7 @@ Request Details:
 Response:
   Error: Invalid API key
   Message: The provided API key is not valid for this application
-  
+
 Server Logs (Correlation ID: b58c4d32-9e0f-5023-c567-890123456789):
   [10:31:12.450] INFO  Incoming request (method=POST, endpoint=/api/applications/app_123/tables)
   [10:31:12.451] WARN  Invalid API key provided
@@ -101,7 +101,7 @@ Request Details:
 Response:
   Error: Automation execution failed
   Message: JavaScript execution error in step 'Calculate Total'
-  
+
   Stack Trace:
     TypeError: Cannot read property 'price' of undefined
       at calculateTotal (automation.js:45:23)
@@ -129,7 +129,7 @@ Server Logs (Correlation ID: d70e6f54-1g2b-7245-e789-012345678901):
 
 1. **Clear Error Summary**: Shows HTTP status code and message
 2. **Request Context**: Method, URL, and unique request ID for tracking
-3. **Formatted Response**: 
+3. **Formatted Response**:
    - Extracts common error fields (error, message, errors array)
    - Shows stack traces when available
    - Displays additional fields in a readable format

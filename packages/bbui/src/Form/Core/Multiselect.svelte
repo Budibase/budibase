@@ -24,12 +24,21 @@
   export let loading: boolean = false
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let showSelectAll = false
+  export let selectAllText = "Select all"
 
   const dispatch = createEventDispatcher()
 
   $: arrayValue = Array.isArray(value) ? value : [value].filter(x => !!x)
   $: selectedLookupMap = getSelectedLookupMap(arrayValue)
   $: optionLookupMap = getOptionLookupMap(options)
+  $: allSelected =
+    options.length > 0 &&
+    options.every(option => arrayValue.includes(getOptionValue(option)))
+  $: noneSelected =
+    options.length === 0 ||
+    options.every(option => !arrayValue.includes(getOptionValue(option)))
+  $: indeterminate = !allSelected && !noneSelected
 
   $: fieldText = getFieldText(arrayValue, optionLookupMap, placeholder)
   $: isOptionSelected = (optionValue: string) =>
@@ -101,6 +110,17 @@
       }
     }
   }
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      // Deselect all
+      dispatch("change", [])
+    } else {
+      // Select all
+      const allValues = options.map(option => getOptionValue(option))
+      dispatch("change", allValues)
+    }
+  }
 </script>
 
 <Picker
@@ -124,4 +144,9 @@
   {loading}
   {onOptionMouseenter}
   {onOptionMouseleave}
+  {showSelectAll}
+  {selectAllText}
+  {allSelected}
+  {indeterminate}
+  {toggleSelectAll}
 />

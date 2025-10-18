@@ -180,9 +180,7 @@
           "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
           "name": "Mike",
           "age": 30,
-          "relationship": [
-            "ro_ta_..."
-          ]
+          "relationship": ["ro_ta_..."]
         }
       },
       "row": {
@@ -601,9 +599,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "workspace": {
         "type": "object",
@@ -617,9 +613,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "applicationOutput": {
         "type": "object",
@@ -642,10 +636,7 @@
               "status": {
                 "description": "The status of the app, stating it if is the development or published version.",
                 "type": "string",
-                "enum": [
-                  "development",
-                  "published"
-                ]
+                "enum": ["development", "published"]
               },
               "createdAt": {
                 "description": "States when the app was created, will be constant. Stored in ISO format.",
@@ -679,9 +670,7 @@
             ]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "workspaceOutput": {
         "type": "object",
@@ -704,10 +693,7 @@
               "status": {
                 "description": "The status of the app, stating it if is the development or published version.",
                 "type": "string",
-                "enum": [
-                  "development",
-                  "published"
-                ]
+                "enum": ["development", "published"]
               },
               "createdAt": {
                 "description": "States when the app was created, will be constant. Stored in ISO format.",
@@ -741,9 +727,7 @@
             ]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "applicationSearch": {
         "type": "object",
@@ -768,10 +752,7 @@
                 "status": {
                   "description": "The status of the app, stating it if is the development or published version.",
                   "type": "string",
-                  "enum": [
-                    "development",
-                    "published"
-                  ]
+                  "enum": ["development", "published"]
                 },
                 "createdAt": {
                   "description": "States when the app was created, will be constant. Stored in ISO format.",
@@ -806,9 +787,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "workspaceSearch": {
         "type": "object",
@@ -833,10 +812,7 @@
                 "status": {
                   "description": "The status of the app, stating it if is the development or published version.",
                   "type": "string",
-                  "enum": [
-                    "development",
-                    "published"
-                  ]
+                  "enum": ["development", "published"]
                 },
                 "createdAt": {
                   "description": "States when the app was created, will be constant. Stored in ISO format.",
@@ -871,9 +847,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "deploymentOutput": {
         "type": "object",
@@ -888,26 +862,17 @@
               "status": {
                 "description": "Status of the deployment, whether it succeeded or failed",
                 "type": "string",
-                "enum": [
-                  "SUCCESS",
-                  "FAILURE"
-                ]
+                "enum": ["SUCCESS", "FAILURE"]
               },
               "appUrl": {
                 "description": "The URL of the published app",
                 "type": "string"
               }
             },
-            "required": [
-              "_id",
-              "status",
-              "appUrl"
-            ]
+            "required": ["_id", "status", "appUrl"]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "appExport": {
         "type": "object",
@@ -921,10 +886,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "encryptPassword",
-          "excludeRows"
-        ]
+        "required": ["encryptPassword", "excludeRows"]
       },
       "workspaceExport": {
         "type": "object",
@@ -938,10 +900,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "encryptPassword",
-          "excludeRows"
-        ]
+        "required": ["encryptPassword", "excludeRows"]
       },
       "row": {
         "description": "The row to be created/updated, based on the table schema.",
@@ -952,9 +911,7 @@
       },
       "searchOutput": {
         "type": "object",
-        "required": [
-          "data"
-        ],
+        "required": ["data"],
         "properties": {
           "data": {
             "description": "An array of rows, these will each contain an _id field which can be used to update or delete them.",
@@ -999,23 +956,15 @@
                 "type": "string"
               }
             },
-            "required": [
-              "tableId",
-              "_id"
-            ]
+            "required": ["tableId", "_id"]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "table": {
         "description": "The table to be created/updated.",
         "type": "object",
-        "required": [
-          "name",
-          "schema"
-        ],
+        "required": ["name", "schema"],
         "properties": {
           "name": {
             "description": "The name of the table.",
@@ -1034,9 +983,7 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": [
-                        "link"
-                      ],
+                      "enum": ["link"],
                       "description": "A relationship column."
                     },
                     "constraints": {
@@ -1092,11 +1039,7 @@
                     },
                     "relationshipType": {
                       "type": "string",
-                      "enum": [
-                        "one-to-many",
-                        "many-to-one",
-                        "many-to-many"
-                      ],
+                      "enum": ["one-to-many", "many-to-one", "many-to-many"],
                       "description": "Defines the type of relationship that this column will be used for."
                     },
                     "through": {
@@ -1122,9 +1065,7 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": [
-                        "formula"
-                      ],
+                      "enum": ["formula"],
                       "description": "A formula column."
                     },
                     "constraints": {
@@ -1176,10 +1117,7 @@
                     },
                     "formulaType": {
                       "type": "string",
-                      "enum": [
-                        "static",
-                        "dynamic"
-                      ],
+                      "enum": ["static", "dynamic"],
                       "description": "Defines whether this is a static or dynamic formula."
                     }
                   }
@@ -1267,11 +1205,7 @@
           "data": {
             "description": "The table to be created/updated.",
             "type": "object",
-            "required": [
-              "name",
-              "schema",
-              "_id"
-            ],
+            "required": ["name", "schema", "_id"],
             "properties": {
               "name": {
                 "description": "The name of the table.",
@@ -1290,9 +1224,7 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "link"
-                          ],
+                          "enum": ["link"],
                           "description": "A relationship column."
                         },
                         "constraints": {
@@ -1378,9 +1310,7 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "formula"
-                          ],
+                          "enum": ["formula"],
                           "description": "A formula column."
                         },
                         "constraints": {
@@ -1432,10 +1362,7 @@
                         },
                         "formulaType": {
                           "type": "string",
-                          "enum": [
-                            "static",
-                            "dynamic"
-                          ],
+                          "enum": ["static", "dynamic"],
                           "description": "Defines whether this is a static or dynamic formula."
                         }
                       }
@@ -1522,9 +1449,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "tableSearch": {
         "type": "object",
@@ -1534,11 +1459,7 @@
             "items": {
               "description": "The table to be created/updated.",
               "type": "object",
-              "required": [
-                "name",
-                "schema",
-                "_id"
-              ],
+              "required": ["name", "schema", "_id"],
               "properties": {
                 "name": {
                   "description": "The name of the table.",
@@ -1557,9 +1478,7 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": [
-                              "link"
-                            ],
+                            "enum": ["link"],
                             "description": "A relationship column."
                           },
                           "constraints": {
@@ -1645,9 +1564,7 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": [
-                              "formula"
-                            ],
+                            "enum": ["formula"],
                             "description": "A formula column."
                           },
                           "constraints": {
@@ -1699,10 +1616,7 @@
                           },
                           "formulaType": {
                             "type": "string",
-                            "enum": [
-                              "static",
-                              "dynamic"
-                            ],
+                            "enum": ["static", "dynamic"],
                             "description": "Defines whether this is a static or dynamic formula."
                           }
                         }
@@ -1790,9 +1704,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "executeQuery": {
         "description": "The parameters required for executing a query.",
@@ -1850,9 +1762,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "query": {
         "type": "object",
@@ -1878,12 +1788,7 @@
           },
           "queryVerb": {
             "description": "The verb that describes this query.",
-            "enum": [
-              "create",
-              "read",
-              "update",
-              "delete"
-            ]
+            "enum": ["create", "read", "update", "delete"]
           },
           "name": {
             "description": "The name of the query.",
@@ -1902,11 +1807,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "name",
-          "schema",
-          "_id"
-        ]
+        "required": ["name", "schema", "_id"]
       },
       "querySearch": {
         "type": "object",
@@ -1937,12 +1838,7 @@
                 },
                 "queryVerb": {
                   "description": "The verb that describes this query.",
-                  "enum": [
-                    "create",
-                    "read",
-                    "update",
-                    "delete"
-                  ]
+                  "enum": ["create", "read", "update", "delete"]
                 },
                 "name": {
                   "description": "The name of the query.",
@@ -1961,17 +1857,11 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "name",
-                "schema",
-                "_id"
-              ]
+              "required": ["name", "schema", "_id"]
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "user": {
         "type": "object",
@@ -1987,9 +1877,7 @@
           "status": {
             "description": "The status of the user, if they are active.",
             "type": "string",
-            "enum": [
-              "active"
-            ]
+            "enum": ["active"]
           },
           "firstName": {
             "description": "The first name of the user",
@@ -2032,9 +1920,7 @@
             }
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "userOutput": {
         "type": "object",
@@ -2053,9 +1939,7 @@
               "status": {
                 "description": "The status of the user, if they are active.",
                 "type": "string",
-                "enum": [
-                  "active"
-                ]
+                "enum": ["active"]
               },
               "firstName": {
                 "description": "The first name of the user",
@@ -2102,15 +1986,10 @@
                 "type": "string"
               }
             },
-            "required": [
-              "email",
-              "_id"
-            ]
+            "required": ["email", "_id"]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "userSearch": {
         "type": "object",
@@ -2131,9 +2010,7 @@
                 "status": {
                   "description": "The status of the user, if they are active.",
                   "type": "string",
-                  "enum": [
-                    "active"
-                  ]
+                  "enum": ["active"]
                 },
                 "firstName": {
                   "description": "The first name of the user",
@@ -2180,16 +2057,11 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "email",
-                "_id"
-              ]
+              "required": ["email", "_id"]
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "rowSearch": {
         "type": "object",
@@ -2254,30 +2126,21 @@
                 "type": "object",
                 "description": "Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.",
                 "example": {
-                  "arrayColumn": [
-                    "a",
-                    "b"
-                  ]
+                  "arrayColumn": ["a", "b"]
                 }
               },
               "notContains": {
                 "type": "object",
                 "description": "The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.",
                 "example": {
-                  "arrayColumn": [
-                    "a",
-                    "b"
-                  ]
+                  "arrayColumn": ["a", "b"]
                 }
               },
               "containsAny": {
                 "type": "object",
                 "description": "As with the contains search, only works on array column types and searches for any of the provided values when given an array.",
                 "example": {
-                  "arrayColumn": [
-                    "a",
-                    "b"
-                  ]
+                  "arrayColumn": ["a", "b"]
                 }
               }
             }
@@ -2307,10 +2170,7 @@
             "properties": {
               "order": {
                 "type": "string",
-                "enum": [
-                  "ascending",
-                  "descending"
-                ],
+                "enum": ["ascending", "descending"],
                 "description": "The order of the sort, by default this is ascending."
               },
               "column": {
@@ -2319,18 +2179,13 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "string",
-                  "number"
-                ],
+                "enum": ["string", "number"],
                 "description": "Defines whether the column should be treated as a string or as numbers when sorting."
               }
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       },
       "nameSearch": {
         "type": "object",
@@ -2340,9 +2195,7 @@
             "description": "The name to be used when searching - this will be used in a case insensitive starts with match."
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "rolesAssign": {
         "type": "object",
@@ -2356,9 +2209,7 @@
               }
             },
             "description": "Allow setting users to builders per app.",
-            "required": [
-              "appId"
-            ]
+            "required": ["appId"]
           },
           "builder": {
             "type": "boolean",
@@ -2381,10 +2232,7 @@
               }
             },
             "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
-            "required": [
-              "roleId",
-              "appId"
-            ]
+            "required": ["roleId", "appId"]
           },
           "userIds": {
             "description": "The user IDs to be updated to add/remove the specified roles.",
@@ -2394,9 +2242,7 @@
             }
           }
         },
-        "required": [
-          "userIds"
-        ]
+        "required": ["userIds"]
       },
       "rolesUnAssign": {
         "type": "object",
@@ -2410,9 +2256,7 @@
               }
             },
             "description": "Allow setting users to builders per app.",
-            "required": [
-              "appId"
-            ]
+            "required": ["appId"]
           },
           "builder": {
             "type": "boolean",
@@ -2435,10 +2279,7 @@
               }
             },
             "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
-            "required": [
-              "roleId",
-              "appId"
-            ]
+            "required": ["roleId", "appId"]
           },
           "userIds": {
             "description": "The user IDs to be updated to add/remove the specified roles.",
@@ -2448,9 +2289,7 @@
             }
           }
         },
-        "required": [
-          "userIds"
-        ]
+        "required": ["userIds"]
       },
       "rolesOutput": {
         "type": "object",
@@ -2466,23 +2305,15 @@
                 }
               }
             },
-            "required": [
-              "userIds"
-            ]
+            "required": ["userIds"]
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "view": {
         "description": "The view to be created/updated.",
         "type": "object",
-        "required": [
-          "name",
-          "schema",
-          "tableId"
-        ],
+        "required": ["name", "schema", "tableId"],
         "properties": {
           "name": {
             "description": "The name of the view.",
@@ -2495,9 +2326,7 @@
           "type": {
             "description": "The type of view - standard (empty value) or calculation.",
             "type": "string",
-            "enum": [
-              "calculation"
-            ]
+            "enum": ["calculation"]
           },
           "primaryDisplay": {
             "type": "string",
@@ -2510,18 +2339,12 @@
               "logicalOperator": {
                 "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                 "type": "string",
-                "enum": [
-                  "all",
-                  "any"
-                ]
+                "enum": ["all", "any"]
               },
               "onEmptyFilter": {
                 "description": "If no filters match, should the view return all rows, or no rows.",
                 "type": "string",
-                "enum": [
-                  "all",
-                  "none"
-                ]
+                "enum": ["all", "none"]
               },
               "groups": {
                 "description": "A grouping of filters to be applied.",
@@ -2532,10 +2355,7 @@
                     "logicalOperator": {
                       "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                       "type": "string",
-                      "enum": [
-                        "all",
-                        "any"
-                      ]
+                      "enum": ["all", "any"]
                     },
                     "filters": {
                       "description": "A list of filters to apply",
@@ -2596,10 +2416,7 @@
                           "logicalOperator": {
                             "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                             "type": "string",
-                            "enum": [
-                              "all",
-                              "any"
-                            ]
+                            "enum": ["all", "any"]
                           },
                           "filters": {
                             "description": "A list of filters to apply",
@@ -2661,9 +2478,7 @@
           },
           "sort": {
             "type": "object",
-            "required": [
-              "field"
-            ],
+            "required": ["field"],
             "properties": {
               "field": {
                 "type": "string",
@@ -2672,18 +2487,12 @@
               "order": {
                 "type": "string",
                 "description": "The order in which to sort.",
-                "enum": [
-                  "ascending",
-                  "descending"
-                ]
+                "enum": ["ascending", "descending"]
               },
               "type": {
                 "type": "string",
                 "description": "The type of sort to perform (by number, or by alphabetically).",
-                "enum": [
-                  "string",
-                  "number"
-                ]
+                "enum": ["string", "number"]
               }
             }
           },
@@ -2730,13 +2539,7 @@
                     "calculationType": {
                       "type": "string",
                       "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
-                      "enum": [
-                        "sum",
-                        "avg",
-                        "count",
-                        "min",
-                        "max"
-                      ]
+                      "enum": ["sum", "avg", "count", "min", "max"]
                     },
                     "field": {
                       "type": "string",
@@ -2759,12 +2562,7 @@
           "data": {
             "description": "The view to be created/updated.",
             "type": "object",
-            "required": [
-              "name",
-              "schema",
-              "tableId",
-              "id"
-            ],
+            "required": ["name", "schema", "tableId", "id"],
             "properties": {
               "name": {
                 "description": "The name of the view.",
@@ -2777,9 +2575,7 @@
               "type": {
                 "description": "The type of view - standard (empty value) or calculation.",
                 "type": "string",
-                "enum": [
-                  "calculation"
-                ]
+                "enum": ["calculation"]
               },
               "primaryDisplay": {
                 "type": "string",
@@ -2792,18 +2588,12 @@
                   "logicalOperator": {
                     "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                     "type": "string",
-                    "enum": [
-                      "all",
-                      "any"
-                    ]
+                    "enum": ["all", "any"]
                   },
                   "onEmptyFilter": {
                     "description": "If no filters match, should the view return all rows, or no rows.",
                     "type": "string",
-                    "enum": [
-                      "all",
-                      "none"
-                    ]
+                    "enum": ["all", "none"]
                   },
                   "groups": {
                     "description": "A grouping of filters to be applied.",
@@ -2814,10 +2604,7 @@
                         "logicalOperator": {
                           "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                           "type": "string",
-                          "enum": [
-                            "all",
-                            "any"
-                          ]
+                          "enum": ["all", "any"]
                         },
                         "filters": {
                           "description": "A list of filters to apply",
@@ -2878,10 +2665,7 @@
                               "logicalOperator": {
                                 "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                                 "type": "string",
-                                "enum": [
-                                  "all",
-                                  "any"
-                                ]
+                                "enum": ["all", "any"]
                               },
                               "filters": {
                                 "description": "A list of filters to apply",
@@ -2943,9 +2727,7 @@
               },
               "sort": {
                 "type": "object",
-                "required": [
-                  "field"
-                ],
+                "required": ["field"],
                 "properties": {
                   "field": {
                     "type": "string",
@@ -2954,18 +2736,12 @@
                   "order": {
                     "type": "string",
                     "description": "The order in which to sort.",
-                    "enum": [
-                      "ascending",
-                      "descending"
-                    ]
+                    "enum": ["ascending", "descending"]
                   },
                   "type": {
                     "type": "string",
                     "description": "The type of sort to perform (by number, or by alphabetically).",
-                    "enum": [
-                      "string",
-                      "number"
-                    ]
+                    "enum": ["string", "number"]
                   }
                 }
               },
@@ -3012,13 +2788,7 @@
                         "calculationType": {
                           "type": "string",
                           "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
-                          "enum": [
-                            "sum",
-                            "avg",
-                            "count",
-                            "min",
-                            "max"
-                          ]
+                          "enum": ["sum", "avg", "count", "min", "max"]
                         },
                         "field": {
                           "type": "string",
@@ -3040,9 +2810,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "viewSearch": {
         "type": "object",
@@ -3052,12 +2820,7 @@
             "items": {
               "description": "The view to be created/updated.",
               "type": "object",
-              "required": [
-                "name",
-                "schema",
-                "tableId",
-                "id"
-              ],
+              "required": ["name", "schema", "tableId", "id"],
               "properties": {
                 "name": {
                   "description": "The name of the view.",
@@ -3070,9 +2833,7 @@
                 "type": {
                   "description": "The type of view - standard (empty value) or calculation.",
                   "type": "string",
-                  "enum": [
-                    "calculation"
-                  ]
+                  "enum": ["calculation"]
                 },
                 "primaryDisplay": {
                   "type": "string",
@@ -3085,18 +2846,12 @@
                     "logicalOperator": {
                       "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                       "type": "string",
-                      "enum": [
-                        "all",
-                        "any"
-                      ]
+                      "enum": ["all", "any"]
                     },
                     "onEmptyFilter": {
                       "description": "If no filters match, should the view return all rows, or no rows.",
                       "type": "string",
-                      "enum": [
-                        "all",
-                        "none"
-                      ]
+                      "enum": ["all", "none"]
                     },
                     "groups": {
                       "description": "A grouping of filters to be applied.",
@@ -3107,10 +2862,7 @@
                           "logicalOperator": {
                             "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                             "type": "string",
-                            "enum": [
-                              "all",
-                              "any"
-                            ]
+                            "enum": ["all", "any"]
                           },
                           "filters": {
                             "description": "A list of filters to apply",
@@ -3171,10 +2923,7 @@
                                 "logicalOperator": {
                                   "description": "When using groups this defines whether all of the filters must match, or only one of them.",
                                   "type": "string",
-                                  "enum": [
-                                    "all",
-                                    "any"
-                                  ]
+                                  "enum": ["all", "any"]
                                 },
                                 "filters": {
                                   "description": "A list of filters to apply",
@@ -3236,9 +2985,7 @@
                 },
                 "sort": {
                   "type": "object",
-                  "required": [
-                    "field"
-                  ],
+                  "required": ["field"],
                   "properties": {
                     "field": {
                       "type": "string",
@@ -3247,18 +2994,12 @@
                     "order": {
                       "type": "string",
                       "description": "The order in which to sort.",
-                      "enum": [
-                        "ascending",
-                        "descending"
-                      ]
+                      "enum": ["ascending", "descending"]
                     },
                     "type": {
                       "type": "string",
                       "description": "The type of sort to perform (by number, or by alphabetically).",
-                      "enum": [
-                        "string",
-                        "number"
-                      ]
+                      "enum": ["string", "number"]
                     }
                   }
                 },
@@ -3305,13 +3046,7 @@
                           "calculationType": {
                             "type": "string",
                             "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
-                            "enum": [
-                              "sum",
-                              "avg",
-                              "count",
-                              "min",
-                              "max"
-                            ]
+                            "enum": ["sum", "avg", "count", "min", "max"]
                           },
                           "field": {
                             "type": "string",
@@ -3334,9 +3069,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       }
     }
   },
@@ -3351,9 +3084,7 @@
         "deprecated": true,
         "operationId": "appCreate",
         "summary": "Create an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -3393,9 +3124,7 @@
         "deprecated": true,
         "operationId": "appUpdate",
         "summary": "Update an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3433,9 +3162,7 @@
         "deprecated": true,
         "operationId": "appDestroy",
         "summary": "Delete an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3463,9 +3190,7 @@
         "deprecated": true,
         "operationId": "appGetById",
         "summary": "Retrieve an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3495,9 +3220,7 @@
         "deprecated": true,
         "operationId": "appUnpublish",
         "summary": "Unpublish an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3515,9 +3238,7 @@
         "deprecated": true,
         "operationId": "appPublish",
         "summary": "Publish an application",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3548,9 +3269,7 @@
         "operationId": "appImport",
         "summary": "Import an app to an existing app 🔒",
         "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3572,9 +3291,7 @@
                     "format": "binary"
                   }
                 },
-                "required": [
-                  "appExport"
-                ]
+                "required": ["appExport"]
               }
             }
           }
@@ -3592,9 +3309,7 @@
         "operationId": "appExport",
         "summary": "Export an app 🔒",
         "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appIdUrl"
@@ -3631,9 +3346,7 @@
         "operationId": "appSearch",
         "summary": "Search for applications",
         "description": "Based on application properties (currently only name) search for applications.",
-        "tags": [
-          "applications"
-        ],
+        "tags": ["applications"],
         "requestBody": {
           "required": true,
           "content": {
@@ -3668,9 +3381,7 @@
         "operationId": "metricsGet",
         "summary": "Retrieve Budibase tenant metrics",
         "description": "Output metrics in OpenMetrics format compatible with Prometheus",
-        "tags": [
-          "metrics"
-        ],
+        "tags": ["metrics"],
         "responses": {
           "200": {
             "description": "Returns tenant metrics.",
@@ -3695,9 +3406,7 @@
         "operationId": "queryExecute",
         "summary": "Execute a query",
         "description": "Queries which have been created within a Budibase app can be executed using this,",
-        "tags": [
-          "queries"
-        ],
+        "tags": ["queries"],
         "parameters": [
           {
             "$ref": "#/components/parameters/queryId"
@@ -3743,9 +3452,7 @@
         "operationId": "querySearch",
         "summary": "Search for queries",
         "description": "Based on query properties (currently only name) search for queries.",
-        "tags": [
-          "queries"
-        ],
+        "tags": ["queries"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -3785,9 +3492,7 @@
         "operationId": "roleAssign",
         "summary": "Assign a role to a list of users",
         "description": "This is a business/enterprise only endpoint",
-        "tags": [
-          "roles"
-        ],
+        "tags": ["roles"],
         "requestBody": {
           "required": true,
           "content": {
@@ -3817,9 +3522,7 @@
         "operationId": "roleUnAssign",
         "summary": "Un-assign a role from a list of users",
         "description": "This is a business/enterprise only endpoint",
-        "tags": [
-          "roles"
-        ],
+        "tags": ["roles"],
         "requestBody": {
           "required": true,
           "content": {
@@ -3849,9 +3552,7 @@
         "operationId": "rowCreate",
         "summary": "Create a row",
         "description": "Creates a row within the specified table.",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -3899,9 +3600,7 @@
         "operationId": "rowUpdate",
         "summary": "Update a row",
         "description": "Updates a row within the specified table.",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -3950,9 +3649,7 @@
         "operationId": "rowDestroy",
         "summary": "Delete a row",
         "description": "Deletes a row within the specified table.",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -3986,9 +3683,7 @@
         "operationId": "rowGetById",
         "summary": "Retrieve a row",
         "description": "This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint.",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -4023,9 +3718,7 @@
       "post": {
         "operationId": "rowSearch",
         "summary": "Search for rows",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -4067,9 +3760,7 @@
       "post": {
         "operationId": "rowViewSearch",
         "summary": "Search for rows in a view",
-        "tags": [
-          "rows"
-        ],
+        "tags": ["rows"],
         "parameters": [
           {
             "$ref": "#/components/parameters/viewId"
@@ -4112,9 +3803,7 @@
         "operationId": "tableCreate",
         "summary": "Create a table",
         "description": "Create a table, this could be internal or external.",
-        "tags": [
-          "tables"
-        ],
+        "tags": ["tables"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -4158,9 +3847,7 @@
         "operationId": "tableUpdate",
         "summary": "Update a table",
         "description": "Update a table, this could be internal or external.",
-        "tags": [
-          "tables"
-        ],
+        "tags": ["tables"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -4205,9 +3892,7 @@
         "operationId": "tableDestroy",
         "summary": "Delete a table",
         "description": "Delete a table, this could be internal or external.",
-        "tags": [
-          "tables"
-        ],
+        "tags": ["tables"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -4238,9 +3923,7 @@
         "operationId": "tableGetById",
         "summary": "Retrieve a table",
         "description": "Lookup a table, this could be internal or external.",
-        "tags": [
-          "tables"
-        ],
+        "tags": ["tables"],
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
@@ -4273,9 +3956,7 @@
         "operationId": "tableSearch",
         "summary": "Search for tables",
         "description": "Based on table properties (currently only name) search for tables. This could be an internal or an external table.",
-        "tags": [
-          "tables"
-        ],
+        "tags": ["tables"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -4314,9 +3995,7 @@
       "post": {
         "operationId": "userCreate",
         "summary": "Create a user",
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "requestBody": {
           "required": true,
           "content": {
@@ -4350,9 +4029,7 @@
       "put": {
         "operationId": "userUpdate",
         "summary": "Update a user",
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "parameters": [
           {
             "$ref": "#/components/parameters/userId"
@@ -4389,9 +4066,7 @@
       "delete": {
         "operationId": "userDestroy",
         "summary": "Delete a user",
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "parameters": [
           {
             "$ref": "#/components/parameters/userId"
@@ -4418,9 +4093,7 @@
       "get": {
         "operationId": "userGetById",
         "summary": "Retrieve a user",
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "parameters": [
           {
             "$ref": "#/components/parameters/userId"
@@ -4450,9 +4123,7 @@
         "operationId": "userSearch",
         "summary": "Search for users",
         "description": "Based on user properties (currently only name) search for users.",
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "requestBody": {
           "required": true,
           "content": {
@@ -4487,9 +4158,7 @@
         "operationId": "viewCreate",
         "summary": "Create a view",
         "description": "Create a view, this can be against an internal or external table.",
-        "tags": [
-          "views"
-        ],
+        "tags": ["views"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -4533,9 +4202,7 @@
         "operationId": "viewUpdate",
         "summary": "Update a view",
         "description": "Update a view, this can be against an internal or external table.",
-        "tags": [
-          "views"
-        ],
+        "tags": ["views"],
         "parameters": [
           {
             "$ref": "#/components/parameters/viewId"
@@ -4580,9 +4247,7 @@
         "operationId": "viewDestroy",
         "summary": "Delete a view",
         "description": "Delete a view, this can be against an internal or external table.",
-        "tags": [
-          "views"
-        ],
+        "tags": ["views"],
         "parameters": [
           {
             "$ref": "#/components/parameters/viewId"
@@ -4613,9 +4278,7 @@
         "operationId": "viewGetById",
         "summary": "Retrieve a view",
         "description": "Lookup a view, this could be internal or external.",
-        "tags": [
-          "views"
-        ],
+        "tags": ["views"],
         "parameters": [
           {
             "$ref": "#/components/parameters/viewId"
@@ -4648,9 +4311,7 @@
         "operationId": "viewSearch",
         "summary": "Search for views",
         "description": "Based on view properties (currently only name) search for views.",
-        "tags": [
-          "views"
-        ],
+        "tags": ["views"],
         "parameters": [
           {
             "$ref": "#/components/parameters/appId"
@@ -4689,9 +4350,7 @@
       "post": {
         "operationId": "workspaceCreate",
         "summary": "Create a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "requestBody": {
           "required": true,
           "content": {
@@ -4725,9 +4384,7 @@
       "put": {
         "operationId": "workspaceUpdate",
         "summary": "Update a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4764,9 +4421,7 @@
       "delete": {
         "operationId": "workspaceDestroy",
         "summary": "Delete a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4793,9 +4448,7 @@
       "get": {
         "operationId": "workspaceGetById",
         "summary": "Retrieve a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4824,9 +4477,7 @@
       "post": {
         "operationId": "workspacePublish",
         "summary": "Publish a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4855,9 +4506,7 @@
       "post": {
         "operationId": "workspaceUnpublish",
         "summary": "Unpublish a workspace",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4875,9 +4524,7 @@
         "operationId": "workspaceImport",
         "summary": "Import a workspace to an existing workspace 🔒",
         "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4899,9 +4546,7 @@
                     "format": "binary"
                   }
                 },
-                "required": [
-                  "file"
-                ]
+                "required": ["file"]
               }
             }
           }
@@ -4918,9 +4563,7 @@
         "operationId": "workspaceExport",
         "summary": "Export a workspace 🔒",
         "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
@@ -4956,9 +4599,7 @@
         "operationId": "workspaceSearch",
         "summary": "Search for workspaces",
         "description": "Based on workspace properties (currently only name) search for workspaces.",
-        "tags": [
-          "workspaces"
-        ],
+        "tags": ["workspaces"],
         "requestBody": {
           "required": true,
           "content": {
