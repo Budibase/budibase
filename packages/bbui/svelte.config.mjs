@@ -1,4 +1,4 @@
-const { vitePreprocess } = require("@sveltejs/vite-plugin-svelte")
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte"
 
 const config = {
   preprocess: vitePreprocess({ script: true }),
@@ -10,4 +10,4 @@ const config = {
   },
 }
 
-module.exports = config
+export default config
