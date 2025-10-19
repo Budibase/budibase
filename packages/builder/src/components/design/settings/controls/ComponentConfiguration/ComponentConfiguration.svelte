@@ -47,6 +47,14 @@
     componentDefinition?.name ||
     "component"
 
+  // Dispatch sanitized value if it differs from input to ensure proper instances
+  $: {
+    const sanitized = sanitizeValue(cachedValue)
+    if (sanitized && cachedValue && !isEqual(sanitized, cachedValue)) {
+      dispatch("change", sanitized)
+    }
+  }
+
   const sanitizeValue = val => {
     if (!Array.isArray(val)) {
       return null
@@ -81,10 +89,12 @@
     } else {
       newComponentList[componentIdx] = updatedComponent
     }
+    cachedValue = cloneDeep(newComponentList)
     dispatch("change", newComponentList)
   }
 
   const listUpdated = e => {
+    cachedValue = cloneDeep(e.detail)
     dispatch("change", [...e.detail])
   }
 
@@ -133,15 +143,16 @@
       _instanceName: `${componentFriendlyName} ${componentCount + 1}`,
     })
     if (newComponent) {
-      dispatch("change", [...componentList, newComponent])
+      const newList = [...componentList, newComponent]
+      cachedValue = cloneDeep(newList)
+      dispatch("change", newList)
     }
   }
 
   const removeComponent = id => {
-    dispatch(
-      "change",
-      componentList.filter(component => component._id !== id)
-    )
+    const newList = componentList.filter(component => component._id !== id)
+    cachedValue = cloneDeep(newList)
+    dispatch("change", newList)
   }
 </script>
 
