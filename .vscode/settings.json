@@ -33,5 +33,11 @@
     "typescript",
     "svelte"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "workbench.colorCustomizations": {
+    "terminal.background": "#00000000",
+    "activityBar.background": "#0C342A",
+    "titleBar.activeBackground": "#11493A",
+    "titleBar.activeForeground": "#F4FDFB"
+  }
 }
