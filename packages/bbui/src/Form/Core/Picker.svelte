@@ -66,7 +66,6 @@
   ) => void = () => {}
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
-  export let allSelected: boolean = false
   export let indeterminate: boolean = false
   export let toggleSelectAll: () => void = () => {}
 
