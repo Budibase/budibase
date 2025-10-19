@@ -1,17 +1,11 @@
-import { get, derived } from "svelte/store"
-import { BudiStore } from "@/stores/BudiStore"
-import { tables } from "./tables"
-import { viewsV2 } from "./viewsV2"
-import { automationStore } from "./automations"
 import { API } from "@/api"
 import { getSequentialName } from "@/helpers/duplicate"
-
-interface RowAction {
-  id: string
-  name: string
-  tableId: string
-  allowedSources?: string[]
-}
+import { BudiStore } from "@/stores/BudiStore"
+import { RowAction } from "@/types"
+import { derived, get } from "svelte/store"
+import { automationStore } from "./automations"
+import { tables } from "./tables"
+import { viewsV2 } from "./viewsV2"
 
 interface RowActionState {
   [tableId: string]: RowAction[]

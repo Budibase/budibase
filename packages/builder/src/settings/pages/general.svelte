@@ -25,6 +25,7 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
+  import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
 
   let versionModal: VersionModal
   let exportModal: Modal
@@ -33,6 +34,7 @@
   let unpublishModal: ConfirmDialog
   let revertModal: RevertModal
   let deleteModal: DeleteModal
+  let cloneResourcesModal: CloneResourcesModal
 
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
@@ -197,6 +199,19 @@
     <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider noMargin />
+  {#if $featureFlags.COPY_RESOURCES_BETWEEN_WORKSPACES}
+    <Layout noPadding gap="XS">
+      <Heading size="XS">Copy resources</Heading>
+      <Body size="S">Copy resources from this workspace to another one</Body>
+    </Layout>
+    <div class="row">
+      <Button secondary on:click={() => cloneResourcesModal.show()}>
+        Copy resources
+      </Button>
+      <CloneResourcesModal bind:this={cloneResourcesModal} />
+    </div>
+    <Divider noMargin />
+  {/if}
   <Layout noPadding gap="XS">
     <div class="row">
       <Heading size="S">Recaptcha</Heading>
