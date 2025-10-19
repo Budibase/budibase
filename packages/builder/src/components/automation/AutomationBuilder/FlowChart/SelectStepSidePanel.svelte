@@ -22,10 +22,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import NewPill from "@/components/common/NewPill.svelte"
-  import type {
-    BranchFlowContext,
-    FlowBlockPath,
-  } from "./AutomationStepHelpers"
+  import type { BranchFlowContext, FlowBlockPath } from "@/types/automations"
 
   export let block
   export let onClose = () => {}
@@ -55,10 +52,36 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
+  $: insideLoopV2 = block?.insertIntoLoopV2
+  $: loopStepId = block?.loopStepId || block?.id
+  $: loopChildInsertIndex =
+    typeof block?.loopChildInsertIndex === "number"
+      ? block.loopChildInsertIndex
+      : undefined
+  $: actions = actions.filter(([k]) =>
+    insideLoopV2
+      ? ![
+          AutomationActionStepId.BRANCH,
+          AutomationActionStepId.COLLECT,
+          AutomationActionStepId.LOOP,
+          AutomationActionStepId.LOOP_V2,
+        ].includes(k as AutomationActionStepId)
+      : true
+  )
   const resolveBranchAnchorPath = (): FlowBlockPath | undefined => {
     if (!block?.branchNode) return undefined
 
     const branchContext = block as BranchFlowContext
+    if (branchContext.pathTo && branchContext.pathTo.length >= 2) {
+      const lastHop = branchContext.pathTo[branchContext.pathTo.length - 1]
+      if (
+        lastHop.branchStepId === branchContext.branchStepId &&
+        typeof lastHop.stepIdx === "number"
+      ) {
+        return branchContext.pathTo
+      }
+    }
+
     const automationData = $selectedAutomation?.data
     const branchRef =
       $selectedAutomation.blockRefs?.[branchContext.branchStepId]
@@ -157,6 +180,7 @@
           AutomationActionStepId.BRANCH,
           AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           AutomationActionStepId.COLLECT,
+          AutomationActionStepId.LOOP_V2,
         ].includes(k as AutomationActionStepId)
       ),
     },
@@ -264,7 +288,15 @@
         action.stepId,
         action
       )
-      await automationStore.actions.addBlockToAutomation(newBlock, targetPath)
+      if (insideLoopV2 && loopStepId) {
+        await automationStore.actions.addBlockToLoopChildren(
+          loopStepId,
+          newBlock,
+          loopChildInsertIndex
+        )
+      } else {
+        await automationStore.actions.addBlockToAutomation(newBlock, targetPath)
+      }
 
       // Determine presence of the block before focusing
       const createdBlock = $selectedAutomation.blockRefs[newBlock.id]

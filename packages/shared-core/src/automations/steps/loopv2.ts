@@ -19,6 +19,7 @@ export const definition: AutomationStepDefinition = {
       properties: {
         children: {
           type: AutomationIOType.ARRAY,
+          title: "Input type",
         },
         binding: {
           type: AutomationIOType.STRING,
@@ -39,6 +40,18 @@ export const definition: AutomationStepDefinition = {
         success: {
           type: AutomationIOType.BOOLEAN,
           description: "Loop success",
+        },
+        iterations: {
+          type: AutomationIOType.NUMBER,
+          description: "The number of iterations executed",
+        },
+        items: {
+          type: AutomationIOType.JSON,
+          description: "Per-step iteration results",
+        },
+        summary: {
+          type: AutomationIOType.JSON,
+          description: "Loop summary including per-step counters",
         },
       },
       required: ["success"],

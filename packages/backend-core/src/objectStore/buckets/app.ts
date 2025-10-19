@@ -6,10 +6,10 @@ import * as features from "../../features"
 import * as cloudfront from "../cloudfront"
 import * as objectStore from "../objectStore"
 
-export async function clientLibraryPath(appId: string) {
-  const oldClient = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-  const newClient = `${objectStore.sanitizeKey(appId)}/budibase-client.new.js`
-  if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+export async function clientLibraryPath(workspaceId: string) {
+  const oldClient = `${objectStore.sanitizeKey(workspaceId)}/budibase-client.js`
+  const newClient = `${objectStore.sanitizeKey(workspaceId)}/budibase-client.esm.js`
+  if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
     return oldClient
   } else {
     const newClientExists = await objectStore.objectExists(
@@ -19,38 +19,17 @@ export async function clientLibraryPath(appId: string) {
     return newClientExists ? newClient : oldClient
   }
 }
-export function client3rdPartyLibrary(appId: string, file: string) {
-  return `${objectStore.sanitizeKey(appId)}/_dependencies/${file}`
+export function client3rdPartyLibrary(workspaceId: string, file: string) {
+  return `${objectStore.sanitizeKey(workspaceId)}/${file}`
 }
 
-/**
- * Previously we used to serve the client library directly from Cloudfront, however
- * due to issues with the domain we were unable to continue doing this - keeping
- * incase we are able to switch back to CDN path again in future.
- */
-export async function clientLibraryCDNUrl(appId: string, version: string) {
-  let file = await clientLibraryPath(appId)
-  if (env.CLOUDFRONT_CDN) {
-    // append app version to bust the cache
-    if (version) {
-      file += `?v=${version}`
-    }
-    // don't need to use presigned for client with cloudfront
-    // file is public
-    return cloudfront.getUrl(file)
-  } else {
-    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
-  }
+export async function clientLibraryUrl(workspaceId: string, version: string) {
+  return `/api/assets/${workspaceId}/client?${await getClientCacheKey(version)}`
 }
 
-export async function clientLibraryUrl(appId: string, version: string) {
-  return `/api/assets/client?${await getClientCacheKey(appId, version)}`
-}
-
-export async function getClientCacheKey(appId: string, version: string) {
+export async function getClientCacheKey(version: string) {
   let tenantId,
     qsParams: {
-      appId: string
       version: string
       tenantId?: string
       dynamic?: boolean
@@ -59,14 +38,13 @@ export async function getClientCacheKey(appId: string, version: string) {
     tenantId = getTenantId()
   } finally {
     qsParams = {
-      appId,
       version,
     }
   }
   if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
     qsParams.tenantId = tenantId
   }
-  qsParams.dynamic = await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING)
+  qsParams.dynamic = await features.isEnabled(FeatureFlag.ESM_CLIENT)
   return qs.encode(qsParams)
 }
 
