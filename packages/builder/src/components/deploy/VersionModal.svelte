@@ -7,6 +7,7 @@
     Modal,
     ModalContent,
     notifications,
+    ProgressCircle,
     StatusLight,
   } from "@budibase/bbui"
 
@@ -60,7 +61,9 @@
     updateModal.hide()
   }
 
+  let reverting = false
   const revert = async () => {
+    reverting = true
     try {
       await API.revertAppClientVersion(appId)
 
@@ -71,6 +74,8 @@
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
+    } finally {
+      reverting = false
     }
     updateModal.hide()
   }
@@ -89,7 +94,13 @@
   >
     <div slot="footer">
       {#if revertAvailable}
-        <Button quiet secondary on:click={revert}>Revert</Button>
+        <Button quiet secondary on:click={revert} disabled={reverting}>
+          {#if reverting}
+            <ProgressCircle overBackground={true} size="S" />
+          {:else}
+            Revert
+          {/if}
+        </Button>
       {/if}
     </div>
     {#if updateAvailable}
