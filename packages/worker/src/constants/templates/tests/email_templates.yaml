@@ -447,23 +447,27 @@ templates:
       <tr>
         <td align="center">
           <table class="email-content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-            <tr>
-              <td class="email-masthead">
-                <a href="{{ platformUrl }}" class="f-fallback email-masthead_name">
-                  {{ company }}
-                </a>
-              </td>
-            </tr>
+            {{#if enableEmailBranding}}
+              <tr>
+                <td class="email-masthead">
+                  <a href="{{ platformUrl }}" class="f-fallback email-masthead_name">
+                    {{ company }}
+                  </a>
+                </td>
+              </tr>
+            {{/if}}
             {{ body }}
-            <tr>
-              <table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
-                <tr>
-                  <td class="content-cell" align="center">
-                    <p class="f-fallback sub align-center">&copy; {{ currentYear }} {{ company }}. All rights reserved.</p>
-                  </td>
-                </tr>
-              </table>
-            </tr>
+            {{#if enableEmailBranding}}
+              <tr>
+                <table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td class="content-cell" align="center">
+                      <p class="f-fallback sub align-center">&copy; {{ currentYear }} {{ company }}. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </tr>
+            {{/if}}
           </table>
         </td>
       </tr>
