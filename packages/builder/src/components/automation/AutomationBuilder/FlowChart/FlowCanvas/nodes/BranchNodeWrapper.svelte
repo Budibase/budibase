@@ -20,7 +20,7 @@
   $: automation = $selectedAutomation?.data
   $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
-  $: isSubflow = Boolean(data?.isSubflow)
+  $: isSubflow = !!data?.isSubflow
   $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
   $: handleOffset =
     isHorizontal && isSubflow
