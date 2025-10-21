@@ -478,8 +478,9 @@ export const renderLoopV2Container = (
   const paddingBottom = SUBFLOW.paddingBottom
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
-  const lrGapForWidth = isLR ? 60 : 0
-  const lrSpacing = SUBFLOW.internalSpacing + (isLR ? 60 : 0)
+  const lrWidth = 60
+  const lrGapForWidth = isLR ? lrWidth : 0
+  const lrSpacing = SUBFLOW.internalSpacing + (isLR ? lrWidth : 0)
   const lrMinExit = lrSpacing + 20
 
   let dynamicHeight = paddingTop
