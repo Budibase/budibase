@@ -81,8 +81,16 @@
   borderRadius={roundedPopover ? "12px" : undefined}
   on:open
   on:close
-  on:mouseenter={openOnHover ? cancelHide : null}
-  on:mouseleave={openOnHover ? queueHide : null}
+  on:mouseenter={() => {
+    if (openOnHover) {
+      cancelHide()
+    }
+  }}
+  on:mouseleave={() => {
+    if (openOnHover) {
+      queueHide()
+    }
+  }}
   bind:open
 >
   <Menu>

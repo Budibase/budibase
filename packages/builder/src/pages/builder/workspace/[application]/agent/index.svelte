@@ -22,14 +22,16 @@
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
-  import { onDestroy, onMount, type ComponentType } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import Chatbox from "./Chatbox.svelte"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
   import GithubLogo from "./logos/Github.svelte"
 
-  const Logos: Record<string, ComponentType> = {
+  type LogoComponent = typeof BudibaseLogo
+
+  const Logos: Record<string, LogoComponent> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,
@@ -142,7 +144,7 @@
       await API.agentChatStream(
         updatedChat,
         $params.application,
-        chunk => {
+        (chunk: any) => {
           if (chunk.type === "content") {
             // Accumulate streaming content
             streamingContent += chunk.content || ""
@@ -479,7 +481,7 @@
 
     <div class="chat-wrapper">
       <div class="chat-area" bind:this={chatAreaElement}>
-        <Chatbox bind:chat {loading} />
+        <Chatbox bind:chat={chat} loading={loading} />
         <div class="input-wrapper">
           <textarea
             bind:value={inputValue}
@@ -488,7 +490,7 @@
             on:keydown={handleKeyDown}
             placeholder="Ask anything"
             disabled={loading}
-         ></textarea>
+          ></textarea>
         </div>
       </div>
     </div>
@@ -511,11 +513,13 @@
               hoverable
               on:click={backToToolsList}
             />
-            <svelte:component
-              this={Logos[selectedConfigToolSource.type]}
-              height="16"
-              width="16"
-            />
+            {#if Logos[selectedConfigToolSource.type]}
+              <svelte:component
+                this={Logos[selectedConfigToolSource.type]}
+                height="16"
+                width="16"
+              />
+            {/if}
             <Body size="S">
               {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
                 ?.name}
@@ -549,13 +553,17 @@
                   on:click={() => openToolsConfig(toolSource)}
                   on:contextmenu={menuCallback}
                 >
-                  <div class="tool-icon" slot="icon">
-                    <svelte:component
-                      this={Logos[toolSource.type]}
-                      height="16"
-                      width="16"
-                    />
-                  </div>
+                  <svelte:fragment slot="icon">
+                    {#if Logos[toolSource.type]}
+                      <div class="tool-icon">
+                        <svelte:component
+                          this={Logos[toolSource.type]}
+                          height="16"
+                          width="16"
+                        />
+                      </div>
+                    {/if}
+                  </svelte:fragment>
                   <Icon
                     on:click={menuCallback}
                     hoverable
@@ -765,13 +773,15 @@
       </Body>
       {#if toolSourceToDelete}
         <div class="tool-source-preview">
-          <div class="tool-icon">
-            <svelte:component
-              this={Logos[toolSourceToDelete.type]}
-              height="20"
-              width="20"
-            />
-          </div>
+          {#if Logos[toolSourceToDelete.type]}
+            <div class="tool-icon">
+              <svelte:component
+                this={Logos[toolSourceToDelete.type]}
+                height="20"
+                width="20"
+              />
+            </div>
+          {/if}
           <span class="tool-name">
             {ToolSources.find(ts => ts.type === toolSourceToDelete.type)?.name}
           </span>

@@ -1,5 +1,4 @@
-import { ComponentType } from "svelte"
-import { SvelteComponent } from "svelte"
+import type { Component } from "svelte"
 
 export interface Routing {
   params?: Record<string, any>
@@ -27,12 +26,12 @@ export const isSettingIcon = (
 
 export interface RouteIcon {
   props: Record<string, any>
-  comp: typeof SvelteComponent<any>
+  comp: Component<any>
 }
 
 export interface Route {
   path?: string
-  comp?: ComponentType | undefined
+  comp?: Component<any>
   routes?: Route[]
   section?: string
   title?: string
