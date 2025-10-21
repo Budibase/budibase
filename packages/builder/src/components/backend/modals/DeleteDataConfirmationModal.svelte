@@ -191,13 +191,15 @@
         {buildMessage(sourceType)}
         {#if affectedScreens.length > 0}
           <span class="screens">
-            {#each affectedScreens as item, idx}
-              <Link overBackground target="_blank" href={item.url}
-                >{item.text}{idx !== affectedScreens.length - 1
-                  ? ","
-                  : ""}</Link
-              >
-            {/each}
+            <ul class="screens-list">
+              {#each affectedScreens as item}
+                <li>
+                  <Link overBackground target="_blank" href={item.url}
+                    >{item.text}</Link
+                  >
+                </li>
+              {/each}
+            </ul>
           </span>
         {/if}
       </p>
@@ -215,6 +217,7 @@
   .warning {
     margin: 0;
     max-width: 100%;
+    overflow: hidden;
   }
 
   .screens {
