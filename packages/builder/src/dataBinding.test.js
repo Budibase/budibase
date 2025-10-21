@@ -3,15 +3,66 @@ import {
   runtimeToReadableBinding,
   readableToRuntimeBinding,
   updateReferencesInObject,
+  getSchemaForDatasource,
 } from "@/dataBinding"
+import { JSONUtils } from "@budibase/frontend-core"
+function createMockStore(initialValue) {
+  let value = initialValue
+  return {
+    subscribe: run => {
+      run(value)
+      return () => {}
+    },
+    set: newValue => {
+      value = newValue
+    },
+    update: updater => {
+      value = updater(value)
+    },
+    _value: () => value,
+  }
+}
 
-vi.mock("@/stores/builder", async () => {
+function createBuilderStores() {
   const workspaceAppStore = {}
+  const tables = createMockStore({ list: [] })
+  const queries = createMockStore({ list: [] })
+  const roles = createMockStore({ list: [] })
+  const screenStore = createMockStore({ screens: [] })
+  const appStore = createMockStore({})
+  const layoutStore = createMockStore({})
+  const selectedScreen = createMockStore(null)
+  const componentStore = {
+    getDefinition: () => null,
+    getComponentSettings: () => [],
+  }
 
   return {
-    workspaceAppStore,
+    module: {
+      workspaceAppStore,
+      tables,
+      queries,
+      roles,
+      screenStore,
+      appStore,
+      layoutStore,
+      selectedScreen,
+      componentStore,
+    },
+    tables,
+    queries,
   }
-})
+}
+
+vi.mock("@/stores/builder", () => createBuilderStores().module)
+
+import {
+  tables as tablesStore,
+  queries as queriesStore,
+} from "@/stores/builder"
+
+const getTablesStore = () => tablesStore
+const getQueriesStore = () => queriesStore
 
 describe("Builder dataBinding", () => {
   beforeEach(() => {
@@ -133,6 +184,106 @@ describe("Builder dataBinding", () => {
           "runtimeBinding"
         )
       ).toEqual(`{{ [foo].[baz] }}`)
+    })
+  })
+
+  describe("getSchemaForDatasource", () => {
+    const tableId = "table_1"
+    const fieldName = "jsonColumn"
+
+    beforeEach(() => {
+      getTablesStore().set({ list: [] })
+      getQueriesStore().set({ list: [] })
+    })
+
+    it("uses json field schema when it contains a nested schema", () => {
+      const tablesStore = getTablesStore()
+      const jsonFieldSchema = {
+        type: "json",
+        schema: {
+          first: { type: "string" },
+          nested: {
+            type: "json",
+            schema: {
+              deep: { type: "number" },
+            },
+          },
+        },
+      }
+
+      tablesStore.set({
+        list: [
+          {
+            _id: tableId,
+            schema: {
+              [fieldName]: jsonFieldSchema,
+            },
+          },
+        ],
+      })
+
+      const jsonArraySpy = vi.spyOn(JSONUtils, "getJSONArrayDatasourceSchema")
+
+      const datasource = {
+        type: "jsonarray",
+        tableId,
+        fieldName,
+        label: `${tableId}.${fieldName}`,
+      }
+
+      const { schema } = getSchemaForDatasource(null, datasource)
+
+      expect(jsonArraySpy).not.toHaveBeenCalled()
+      expect(schema.first).toMatchObject({ type: "string", name: "first" })
+      expect(schema.nested).toMatchObject({ type: "json", name: "nested" })
+      expect(schema["nested.deep"]).toMatchObject({
+        type: "number",
+        name: "nested.deep",
+      })
+
+      schema.first.type = "boolean"
+      expect(jsonFieldSchema.schema.first.type).toBe("string")
+
+      jsonArraySpy.mockRestore()
+    })
+
+    it("falls back to the JSON utility when no nested schema is provided", () => {
+      const tablesStore = getTablesStore()
+      const tableSchema = {
+        [fieldName]: {
+          type: "json",
+        },
+      }
+
+      tablesStore.set({
+        list: [
+          {
+            _id: tableId,
+            schema: tableSchema,
+          },
+        ],
+      })
+
+      const jsonArraySpy = vi
+        .spyOn(JSONUtils, "getJSONArrayDatasourceSchema")
+        .mockReturnValue({
+          value: { type: "string" },
+        })
+
+      const datasource = {
+        type: "jsonarray",
+        tableId,
+        fieldName,
+        label: `${tableId}.${fieldName}`,
+      }
+
+      const { schema } = getSchemaForDatasource(null, datasource)
+
+      expect(jsonArraySpy).toHaveBeenCalledWith(tableSchema, datasource)
+      expect(schema.value).toMatchObject({ type: "string", name: "value" })
+      expect(typeof schema.value.display.type).toBe("string")
+
+      jsonArraySpy.mockRestore()
     })
   })
 
