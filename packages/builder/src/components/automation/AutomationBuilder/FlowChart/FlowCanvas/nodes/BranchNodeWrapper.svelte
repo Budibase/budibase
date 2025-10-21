@@ -4,6 +4,7 @@
   import { ViewMode, type BranchNodeData } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
   import { enrichLog } from "../../AutomationStepHelpers"
+  import { STEP, SUBFLOW } from "../FlowGeometry"
   import {
     type AutomationStepResult,
     type AutomationTriggerResult,
@@ -19,6 +20,12 @@
   $: automation = $selectedAutomation?.data
   $: direction = (data.direction || "TB") as LayoutDirection
   $: isHorizontal = direction === "LR"
+  $: isSubflow = !!data?.isSubflow
+  $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
+  $: handleOffset =
+    isHorizontal && isSubflow
+      ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
+      : 0
 
   // Handle step selection in logs mode (open details panel)
   function handleStepSelect(
@@ -39,12 +46,15 @@
   }
 </script>
 
-<div style="position: relative;">
+<div class="branch-wrapper">
   <Handle
     isConnectable={false}
     class="custom-handle"
     type="target"
     position={isHorizontal ? Position.Left : Position.Top}
+    style={isHorizontal && isSubflow
+      ? `left: ${handleOffset - 3}px;`
+      : undefined}
   />
   <div class="branch-container">
     <BranchNode
@@ -60,5 +70,8 @@
     class="custom-handle"
     type="source"
     position={isHorizontal ? Position.Right : Position.Bottom}
+    style={isHorizontal && isSubflow
+      ? `right: ${handleOffset - 3}px;`
+      : undefined}
   />
 </div>

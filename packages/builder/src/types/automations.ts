@@ -294,6 +294,8 @@ export interface BranchNodeData {
   branch: Branch
   branchIdx: number
   direction?: LayoutDirection
+  isSubflow?: boolean
+  laneWidth?: number
   [key: string]: unknown
 }
 
