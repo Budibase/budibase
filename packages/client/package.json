@@ -8,9 +8,9 @@
   "svelte": "src/index.ts",
   "exports": {
     ".": {
+      "svelte": "./src/index.ts",
       "import": "./dist/budibase-client.js",
-      "require": "./dist/budibase-client.js",
-      "svelte": "./src/index.ts"
+      "require": "./dist/budibase-client.js"
     },
     "./package.json": "./package.json",
     "./manifest.json": "./manifest.json"

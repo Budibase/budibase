@@ -33,10 +33,6 @@ const svelteCompilePlugin = {
         const { js } = compile(preprocessed.code, {
           css: "injected",
           generate: "server", // server? https://svelte.dev/docs/svelte/svelte-compiler#ModuleCompileOptions
-          runes: false,
-          compatibility: {
-            componentApi: 4,
-          },
         })
 
         return {

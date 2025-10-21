@@ -6,10 +6,6 @@ module.exports = {
     const { js } = compile(sourceText, {
       css: "injected",
       generate: "server",
-      runes: false,
-      compatibility: {
-        componentApi: 4,
-      },
     })
     const { code } = transformSync(js.code, { babelrc: true })
     return { code: code }

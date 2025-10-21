@@ -101,13 +101,6 @@ export default defineConfig(({ mode }) => {
       exclude: ["@roxi/routify", "fsevents"],
     },
     resolve: {
-      // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts#L60
-      // ['module', 'browser', 'node', DEV_PROD_CONDITION]
-
-      // Recent change in BB
-      // conditions: mode === "test" ? ["browser"] : []
-
-      // Keep master behavior for tests, and enable Svelte-aware dev resolution otherwise
       conditions:
         mode === "test"
           ? ["browser"]

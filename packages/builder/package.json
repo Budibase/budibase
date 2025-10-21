@@ -13,10 +13,6 @@
     "test:watch": "vitest",
     "check:types": "yarn svelte-check"
   },
-  "routify": {
-    "routifyDir": ".routify",
-    "routesDir": "src/pages"
-  },
   "jest": {
     "globals": {
       "GLOBALS": {
