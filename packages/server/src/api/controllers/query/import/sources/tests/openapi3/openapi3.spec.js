@@ -1,5 +1,6 @@
 const fs = require("fs")
 const path = require("path")
+const SwaggerParser = require("@apidevtools/swagger-parser")
 
 const { OpenAPI3 } = require("../../openapi3")
 
@@ -17,6 +18,10 @@ describe("OpenAPI3 Import", () => {
     openapi3 = new OpenAPI3()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("validates unsupported data", async () => {
     let data
     let supported
@@ -30,6 +35,31 @@ describe("OpenAPI3 Import", () => {
     data = ""
     supported = await openapi3.isSupported(data)
     expect(supported).toBe(false)
+  })
+
+  it("falls back when validation fails", async () => {
+    const parseSpy = jest.spyOn(SwaggerParser, "parse")
+    const validateSpy = jest.spyOn(SwaggerParser, "validate")
+    const dereferenceSpy = jest.spyOn(SwaggerParser, "dereference")
+
+    const document = {
+      openapi: "3.0.0",
+      info: {},
+      paths: {},
+    }
+
+    parseSpy.mockResolvedValue(document)
+    validateSpy.mockRejectedValue(new Error("validation failed"))
+    const dereferenced = { ...document, dereferenced: true }
+    dereferenceSpy.mockResolvedValue(dereferenced)
+
+    const supported = await openapi3.isSupported("{}")
+    expect(supported).toBe(true)
+    expect(openapi3.document).toBe(dereferenced)
+
+    expect(parseSpy).toHaveBeenCalled()
+    expect(validateSpy).toHaveBeenCalled()
+    expect(dereferenceSpy).toHaveBeenCalled()
   })
 
   const runTests = async (filename, test, assertions) => {
