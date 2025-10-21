@@ -1,6 +1,6 @@
 import { ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
-import { OpenAPIV3 } from "openapi-types"
+import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 
@@ -25,8 +25,14 @@ const schemaNotRef = (
   return param !== undefined
 }
 
-const isOpenAPI3 = (document: any): document is OpenAPIV3.Document => {
-  return document.openapi.includes("3.0")
+const isOpenAPI3 = (
+  document: OpenAPI.Document
+): document is OpenAPIV3.Document => {
+  if (!("openapi" in document)) {
+    return false
+  }
+  const { openapi } = document as { openapi: string }
+  return openapi.startsWith("3.")
 }
 
 const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
@@ -87,7 +93,7 @@ export class OpenAPI3 extends OpenAPISource {
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
-      const document: any = await this.parseData(data)
+      const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
         return true
