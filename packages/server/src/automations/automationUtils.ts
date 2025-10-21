@@ -128,15 +128,7 @@ export function guardAttachment(
     return false
   }
   if (typeof attachmentObject !== "object") {
-    throw new Error(
-      `Attachments must be objects with both "url" and "filename" keys.`
-    )
-  }
-  if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
-    const providedKeys = Object.keys(attachmentObject).join(", ")
-    throw new Error(
-      `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
-    )
+    throw new Error(`Attachments must be objects.`)
   }
   return true
 }
