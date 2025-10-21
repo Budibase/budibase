@@ -229,7 +229,9 @@ export async function sendAutomationAttachmentsToStorage(
         guardAttachment(normalized)
       }
 
-      attachmentRows[prop] = normalized as any
+      attachmentRows[prop] = normalized as
+        | AutomationAttachment
+        | AutomationAttachment[]
     }
   }
 

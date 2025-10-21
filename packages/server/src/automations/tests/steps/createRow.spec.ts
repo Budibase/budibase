@@ -244,7 +244,6 @@ describe("test the create row action", () => {
     const presignedUrl = await uploadTestFile(filename)
     const attachmentJson = JSON.stringify([{ url: presignedUrl, filename }])
 
-    // Simulate binding producing a JSON string
     attachmentRow.file_attachment = attachmentJson as unknown as any
 
     const result = await createAutomationBuilder(config)
@@ -290,7 +289,6 @@ describe("test the create row action", () => {
 
     const filename = "test_binding_like.jpg"
     const presignedUrl = await uploadTestFile(filename)
-    // Simulate a value similar to what bindings can produce from an existing row
     const bindingLike = JSON.stringify({
       name: filename,
       url: presignedUrl,
