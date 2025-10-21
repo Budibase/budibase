@@ -67,6 +67,7 @@
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
   export let indeterminate: boolean = false
+  export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
 
   const dispatch = createEventDispatcher()
@@ -211,14 +212,16 @@
           on:click={toggleSelectAll}
         >
           <span class="spectrum-Menu-itemLabel">{selectAllText}</span>
-          <div class="check">
-            <Icon
-              name={indeterminate ? "minus" : "check"}
-              size="S"
-              weight="bold"
-              color="var(--spectrum-global-color-blue-500)"
-            />
-          </div>
+          {#if indeterminate || allSelected}
+            <div class="check select-all-check">
+              <Icon
+                name={indeterminate ? "minus" : "check"}
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
+            </div>
+          {/if}
         </li>
       {/if}
       {#if placeholderOption}
@@ -445,7 +448,7 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     margin-bottom: 4px;
   }
-  .select-all-item .check {
-    display: block !important;
+  .select-all-item .select-all-check {
+    display: block;
   }
 </style>

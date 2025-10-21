@@ -147,5 +147,6 @@
   {showSelectAll}
   {selectAllText}
   {indeterminate}
+  {allSelected}
   {toggleSelectAll}
 />
