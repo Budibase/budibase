@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Microsoft Teams",
-      description:
-        "Microsoft Graph endpoints for Teams channels, chats, and meeting workflows",
-      specs: [
-        {
-          version: "v1.0",
-          url: "https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/microsoft-teams.svg",
-    },
-    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
