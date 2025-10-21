@@ -28,12 +28,12 @@
   $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: state = $instance?.state
+  $: instanceSate = $instance?.state
   $: showBar =
     definition?.showSettingsBar !== false &&
     !$dndIsDragging &&
     definition &&
-    !$state?.errorState
+    !$instanceSate?.errorState
   $: settings = getBarSettings(component, definition)
   $: isRoot = id === $builderStore.screen?.props?._id
   $: showGridStyles =

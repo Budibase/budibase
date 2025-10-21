@@ -8,7 +8,7 @@
   const {
     renderedRows,
     hoveredRowId,
-    props,
+    gridProps,
     width,
     rows,
     focusedRow,
@@ -26,7 +26,7 @@
 
   let container
 
-  $: buttons = getButtons($props)
+  $: buttons = getButtons($gridProps)
   $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
@@ -116,11 +116,11 @@
               class="buttons"
               class:offset={$showVScrollbar && $showHScrollbar}
             >
-              {#if $props.buttonsCollapsed}
+              {#if $gridProps.buttonsCollapsed}
                 {#if rowButtons.length > 0}
                   <CollapsedButtonGroup
                     buttons={makeCollapsedButtons(rowButtons, row)}
-                    text={$props.buttonsCollapsedText || "Action"}
+                    text={$gridProps.buttonsCollapsedText || "Action"}
                     align="right"
                     offset={5}
                     size="S"

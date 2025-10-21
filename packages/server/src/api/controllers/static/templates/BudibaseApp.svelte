@@ -112,6 +112,7 @@
   {@html props.headAppScripts || ""}
 </svelte:head>
 
+<!-- eslint-disable-next-line svelte/no-raw-special-elements -->
 <body id="app">
   {#if props.showSkeletonLoader}
     <ClientAppSkeleton
