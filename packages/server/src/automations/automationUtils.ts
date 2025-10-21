@@ -122,15 +122,86 @@ export function getError(err: any) {
 }
 
 export function guardAttachment(attachmentObject: any) {
-  if (
-    attachmentObject &&
-    (!("url" in attachmentObject) || !("filename" in attachmentObject))
-  ) {
+  if (!attachmentObject) {
+    return
+  }
+  if (typeof attachmentObject !== "object") {
+    throw new Error(
+      `Attachments must be objects with both "url" and "filename" keys.`
+    )
+  }
+  if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
     const providedKeys = Object.keys(attachmentObject).join(", ")
     throw new Error(
       `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
     )
   }
+}
+
+function deriveFilenameFromUrl(url?: string) {
+  if (!url) return ""
+  try {
+    const pathname = url.startsWith("http") ? new URL(url).pathname : url
+    const parts = pathname.split("/")
+    return parts[parts.length - 1] || ""
+  } catch {
+    return ""
+  }
+}
+
+function normalizeSingleAttachment(input: any): AutomationAttachment | null {
+  if (input == null || input === "") {
+    return null
+  }
+
+  if (typeof input === "string") {
+    try {
+      const parsed = JSON.parse(input)
+      return normalizeSingleAttachment(parsed)
+    } catch {
+      return { url: input, filename: deriveFilenameFromUrl(input) }
+    }
+  }
+
+  if (typeof input !== "object") {
+    throw new Error(`Unsupported attachment value type: ${typeof input}`)
+  }
+
+  const url: string | undefined = input.url
+  if (!url) {
+    const providedKeys = Object.keys(input).join(", ")
+    throw new Error(
+      `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
+    )
+  }
+  const filename: string =
+    input.filename ?? input.name ?? deriveFilenameFromUrl(url)
+
+  return { url, filename }
+}
+
+function normalizeAttachmentValue(
+  value: any
+): AutomationAttachment | AutomationAttachment[] | null {
+  if (value == null) return null
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value)
+      return normalizeAttachmentValue(parsed)
+    } catch {
+      return normalizeSingleAttachment(value)
+    }
+  }
+
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map(item => normalizeSingleAttachment(item))
+      .filter(Boolean) as AutomationAttachment[]
+    return normalized
+  }
+
+  return normalizeSingleAttachment(value)
 }
 
 export async function sendAutomationAttachmentsToStorage(
@@ -150,12 +221,15 @@ export async function sendAutomationAttachmentsToStorage(
       schema?.type === FieldType.ATTACHMENT_SINGLE ||
       schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
-      if (Array.isArray(value)) {
-        value.forEach(item => guardAttachment(item))
-      } else {
-        guardAttachment(value)
+      const normalized = normalizeAttachmentValue(value)
+
+      if (Array.isArray(normalized)) {
+        normalized.forEach(item => guardAttachment(item))
+      } else if (normalized) {
+        guardAttachment(normalized)
       }
-      attachmentRows[prop] = value
+
+      attachmentRows[prop] = normalized as any
     }
   }
 
