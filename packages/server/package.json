@@ -130,7 +130,7 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^4.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
@@ -172,7 +172,7 @@
     "tsconfig-paths": "4.0.0",
     "undici": "^5.28.4",
     "yargs": "^17.7.2",
-    "zod": "^3.23.8"
+    "zod": "^4.1.12"
   },
   "resolutions": {
     "@budibase/pro": "npm:@budibase/pro@latest"
