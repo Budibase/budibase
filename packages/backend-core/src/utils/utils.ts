@@ -99,7 +99,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
     if (typeof values === "string") {
       values = [values]
     }
-    for (let value of values) {
+    for (const value of values) {
       checkWorkspaceId(value)
     }
   }
