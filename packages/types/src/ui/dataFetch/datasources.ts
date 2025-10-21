@@ -83,6 +83,7 @@ interface BaseFieldDatasource<
   type: TType
   tableId: string
   fieldType: "attachment" | "array"
+  fieldName: string
   value: string[] | Row[]
 }
 
