@@ -1,1 +1,1 @@
-export { default as table } from "./Table.svelte"
+export const table = () => import("./Table.svelte")

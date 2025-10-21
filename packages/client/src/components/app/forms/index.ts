@@ -1,22 +1,24 @@
-export { default as form } from "./Form.svelte"
-export { default as fieldgroup } from "./FieldGroup.svelte"
-export { default as stringfield } from "./StringField.svelte"
-export { default as numberfield } from "./NumberField.svelte"
-export { default as bigintfield } from "./BigIntField.svelte"
-export { default as optionsfield } from "./OptionsField.svelte"
-export { default as multifieldselect } from "./MultiFieldSelect.svelte"
-export { default as booleanfield } from "./BooleanField.svelte"
-export { default as longformfield } from "./LongFormField.svelte"
-export { default as datetimefield } from "./DateTimeField.svelte"
-export { default as attachmentfield } from "./AttachmentField.svelte"
-export { default as attachmentsinglefield } from "./AttachmentSingleField.svelte"
-export { default as relationshipfield } from "./RelationshipField.svelte"
-export { default as passwordfield } from "./PasswordField.svelte"
-export { default as formstep } from "./FormStep.svelte"
-export { default as jsonfield } from "./JSONField.svelte"
-export { default as s3upload } from "./S3Upload.svelte"
-export { default as codescanner } from "./CodeScannerField.svelte"
-export { default as signaturesinglefield } from "./SignatureField.svelte"
-export { default as bbreferencefield } from "./BBReferenceField.svelte"
-export { default as bbreferencesinglefield } from "./BBReferenceSingleField.svelte"
-export { default as ratingfield } from "./RatingField.svelte"
+export const form = () => import("./Form.svelte")
+export const fieldgroup = () => import("./FieldGroup.svelte")
+export const stringfield = () => import("./StringField.svelte")
+export const numberfield = () => import("./NumberField.svelte")
+export const bigintfield = () => import("./BigIntField.svelte")
+export const optionsfield = () => import("./OptionsField.svelte")
+export const multifieldselect = () => import("./MultiFieldSelect.svelte")
+export const booleanfield = () => import("./BooleanField.svelte")
+export const longformfield = () => import("./LongFormField.svelte")
+export const datetimefield = () => import("./DateTimeField.svelte")
+export const attachmentfield = () => import("./AttachmentField.svelte")
+export const attachmentsinglefield = () =>
+  import("./AttachmentSingleField.svelte")
+export const relationshipfield = () => import("./RelationshipField.svelte")
+export const passwordfield = () => import("./PasswordField.svelte")
+export const formstep = () => import("./FormStep.svelte")
+export const jsonfield = () => import("./JSONField.svelte")
+export const s3upload = () => import("./S3Upload.svelte")
+export const codescanner = () => import("./CodeScannerField.svelte")
+export const signaturesinglefield = () => import("./SignatureField.svelte")
+export const bbreferencefield = () => import("./BBReferenceField.svelte")
+export const bbreferencesinglefield = () =>
+  import("./BBReferenceSingleField.svelte")
+export const ratingfield = () => import("./RatingField.svelte")

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte"
   import "@spectrum-css/table/dist/index-vars.css"
+  import { createEventDispatcher, onMount } from "svelte"
+  import Checkbox from "../Form/Checkbox.svelte"
+  import { cloneDeep, deepGet } from "../helpers"
+  import Icon from "../Icon/Icon.svelte"
+  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
-  import { cloneDeep, deepGet } from "../helpers"
-  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
-  import Checkbox from "../Form/Checkbox.svelte"
-  import Icon from "../Icon/Icon.svelte"
 
   /**
    /**
@@ -199,6 +199,9 @@
   }
 
   const sortBy = (fieldSchema: Record<string, any>): void => {
+    if (disableSorting) {
+      return
+    }
     if (fieldSchema.sortable === false) {
       return
     }

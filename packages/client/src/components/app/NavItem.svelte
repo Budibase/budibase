@@ -2,7 +2,8 @@
   import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
   import { Icon } from "@budibase/bbui"
-  import { builderStore, screenStore } from "@/stores"
+  import { builderStore } from "@/stores"
+  import { screenStore } from "@/stores/screens"
 
   export let type
   export let url
