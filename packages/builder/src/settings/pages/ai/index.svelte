@@ -253,7 +253,7 @@
     {#if chatEnabled}
       <div class="section">
         <div class="section-header">
-          <div class="section-title">Chat configurations</div>
+          <div class="section-title">Chat configuration</div>
         </div>
 
         <div class="ai-list">

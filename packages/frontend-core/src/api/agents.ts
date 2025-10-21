@@ -58,6 +58,11 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       })
 
       if (!response.ok) {
+        const body = await response.json()
+
+        if (body.message) {
+          throw new Error(body.message)
+        }
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
