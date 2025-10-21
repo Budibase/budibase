@@ -349,22 +349,38 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async queryTableNames() {
-    const database = this.config.database
     const tablesResp: Record<string, string>[] = await this.internalQuery(
-      { sql: "SHOW TABLES;" },
+      {
+        sql: "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'",
+      },
       { connect: false }
     )
-    return tablesResp.map(
-      (obj: any) =>
-        obj[`Tables_in_${database}`] ||
-        obj[`Tables_in_${database.toLowerCase()}`]
-    )
+    return tablesResp.map((obj: any) => obj.TABLE_NAME)
   }
 
   async getTableNames() {
     await this.connect()
     try {
       return this.queryTableNames()
+    } finally {
+      await this.disconnect()
+    }
+  }
+
+  async queryViewNames() {
+    const viewsResp: Record<string, string>[] = await this.internalQuery(
+      {
+        sql: "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = DATABASE()",
+      },
+      { connect: false }
+    )
+    return viewsResp.map((obj: any) => obj.TABLE_NAME)
+  }
+
+  async getViewNames() {
+    await this.connect()
+    try {
+      return this.queryViewNames()
     } finally {
       await this.disconnect()
     }
