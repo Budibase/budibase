@@ -120,7 +120,7 @@
       class="spectrum-Tabs-selectionIndicator"
       class:emphasized
       style="width: {width}; height: {height}; left: {left}; top: {top};"
-   ></div>
+    ></div>
   {/if}
 </div>
 

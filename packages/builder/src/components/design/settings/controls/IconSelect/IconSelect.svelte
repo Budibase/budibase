@@ -163,12 +163,12 @@
         <i
           on:click={() => pageClick(false)}
           class="page-btn ri-arrow-left-line ri-sm"
-       ></i>
+        ></i>
         <span>{pagerText}</span>
         <i
           on:click={() => pageClick(true)}
           class="page-btn ri-arrow-right-line ri-sm"
-       ></i>
+        ></i>
       </div>
     </div>
     {#if pagedIcons.length > 0}

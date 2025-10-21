@@ -143,7 +143,6 @@ let _navigationStore: NavigationStore | null = null
 // This could be swish
 function getStore() {
   if (!_navigationStore) {
-    console.log("Lazy initializing NavigationStore...??")
     _navigationStore = new NavigationStore()
   }
   return _navigationStore

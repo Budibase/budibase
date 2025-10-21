@@ -26,7 +26,6 @@
   import { bb } from "@/stores/bb"
 
   $goto
-  $url
 
   export let groupId
 

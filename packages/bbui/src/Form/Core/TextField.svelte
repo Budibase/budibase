@@ -74,7 +74,9 @@
 
   $: autocompleteValue =
     typeof autocomplete === "boolean"
-      ? (autocomplete ? "on" : "off")
+      ? autocomplete
+        ? "on"
+        : "off"
       : autocomplete === null
         ? null
         : autocomplete

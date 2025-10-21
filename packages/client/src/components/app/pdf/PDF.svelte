@@ -102,7 +102,7 @@
               class="divider"
               class:last={idx === pageCount - 1}
               style={getDividerStyle(idx)}
-           ></div>
+            ></div>
           {/each}
         {/if}
         <div

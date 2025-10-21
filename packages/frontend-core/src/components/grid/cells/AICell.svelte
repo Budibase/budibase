@@ -57,7 +57,7 @@
       on:wheel|stopPropagation
       spellcheck="false"
       use:clickOutside={close}
-   ></textarea>
+    ></textarea>
   </GridPopover>
 {/if}
 

@@ -22,7 +22,7 @@
         {bindings}
         {block}
         {context}
-        on:change={(e: CustomEvent) => {
+        on:change={e => {
           if (config?.onChange) config.onChange(e)
         }}
       />
@@ -38,7 +38,7 @@
           {bindings}
           {block}
           {context}
-          on:change={(e: CustomEvent) => {
+          on:change={e => {
             if (config?.onChange) config.onChange(e)
           }}
         />

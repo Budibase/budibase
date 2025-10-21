@@ -178,7 +178,7 @@
         class="underlay"
         class:hidden={!$modal}
         transition:drawerFade|local
-     ></div>
+      ></div>
       <div
         class="drawer"
         class:stacked={depth > 0}

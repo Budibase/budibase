@@ -17,8 +17,6 @@
   import { type Readable } from "svelte/store"
   import { routeActions } from ".."
 
-  $url
-
   const routing: Readable<Routing> = getContext("routing")
 
   // QueryEditor component interface based on exposed methods

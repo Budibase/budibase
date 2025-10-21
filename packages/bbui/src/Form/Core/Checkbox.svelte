@@ -25,15 +25,15 @@
   class="spectrum-Checkbox {sizeClass}"
   class:spectrum-Checkbox--emphasized={!disabled}
   class:is-disabled={disabled}
-  class:readonly={readonly}
+  class:readonly
 >
   <input
     checked={value || indeterminate}
-    disabled={disabled}
+    {disabled}
     on:change={onChange}
     type="checkbox"
     class="spectrum-Checkbox-input"
-    id={id}
+    {id}
   />
   <span class="spectrum-Checkbox-box">
     {#if indeterminate}

@@ -481,7 +481,7 @@
 
     <div class="chat-wrapper">
       <div class="chat-area" bind:this={chatAreaElement}>
-        <Chatbox bind:chat={chat} loading={loading} />
+        <Chatbox bind:chat {loading} />
         <div class="input-wrapper">
           <textarea
             bind:value={inputValue}

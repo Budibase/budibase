@@ -123,7 +123,7 @@
             class:disabled={currentPage === 1}
             role="button"
             tabindex="0"
-         ></i>
+          ></i>
           <span>{pagerText}</span>
           <i
             on:click={() => pageClick("next")}
@@ -132,7 +132,7 @@
             class:disabled={currentPage === totalPages}
             role="button"
             tabindex="0"
-         ></i>
+          ></i>
         </div>
       </div>
     {/if}

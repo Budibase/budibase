@@ -119,7 +119,7 @@
         on:click={() => {
           removeField(idx)
         }}
-     ></i>
+      ></i>
     </div>
   {/each}
   <Button quiet secondary icon="plus" on:click={addField}>Add field</Button>

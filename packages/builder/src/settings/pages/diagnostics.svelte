@@ -11,8 +11,6 @@
   import { API } from "@/api"
   import { onMount } from "svelte"
 
-  $redirect
-
   let diagnosticInfo = ""
 
   async function fetchSystemDebugInfo() {

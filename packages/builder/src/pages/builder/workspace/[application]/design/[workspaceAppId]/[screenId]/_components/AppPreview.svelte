@@ -277,7 +277,7 @@
     bind:this={iframe}
     src={`/app/${$appStore.appId}/preview`}
     class:hidden={loading || error}
- ></iframe>
+  ></iframe>
   <div class="underlay"></div>
   <div
     class="add-component"

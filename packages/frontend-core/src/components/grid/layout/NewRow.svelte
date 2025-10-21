@@ -188,7 +188,10 @@
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
-    <div class="underlay sticky" transition:fade|local={{ duration: 130 }}></div>
+    <div
+      class="underlay sticky"
+      transition:fade|local={{ duration: 130 }}
+    ></div>
     <div class="underlay" transition:fade|local={{ duration: 130 }}></div>
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
       <div class="row">

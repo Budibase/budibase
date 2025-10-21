@@ -42,7 +42,7 @@
       style="width: {typeof value === 'number'
         ? value
         : 0}%; --duration: {duration}ms;"
-   ></div>
+    ></div>
   </div>
   <div class="spectrum-ProgressBar-label" hidden={false}></div>
 </div>

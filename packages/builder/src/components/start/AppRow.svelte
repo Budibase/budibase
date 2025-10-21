@@ -71,9 +71,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-  class:contextMenuOpen={contextMenuOpen}
+  class:contextMenuOpen
   class="app-row"
-  class:unclickable={unclickable}
+  class:unclickable
   class:favourite={app.favourite}
   on:click={lockedAction || handleDefaultClick}
   on:contextmenu={openContextMenu}
@@ -134,10 +134,10 @@
     </div>
 
     <div class="favourite-icon">
-      <FavouriteAppButton app={app} noWrap />
+      <FavouriteAppButton {app} noWrap />
     </div>
   </div>
-  <AppContextMenuModals app={app} bind:this={appContextMenuModals} />
+  <AppContextMenuModals {app} bind:this={appContextMenuModals} />
 </div>
 
 <style>

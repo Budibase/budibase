@@ -33,11 +33,6 @@
   import dayjs from "dayjs"
   import utc from "dayjs/plugin/utc"
 
-  interface $$Slots {
-    default: Record<string, never>
-    anchor: Record<string, never>
-  }
-
   dayjs.extend(utc)
 
   export const show = () => popover?.show()

@@ -25,7 +25,7 @@
     class="mobile-nav-underlay"
     transition:fade={{ duration: 130 }}
     on:click={close}
- ></div>
+  ></div>
 {/if}
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->

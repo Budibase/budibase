@@ -399,7 +399,7 @@
 
         <div class="app-table">
           {#each filteredApps as app (app.appId)}
-            <AppRow app={app} lockedAction={usersLimitLockAction} />
+            <AppRow {app} lockedAction={usersLimitLockAction} />
           {/each}
         </div>
       </Layout>

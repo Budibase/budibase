@@ -140,7 +140,7 @@
             class="background"
             in:fade={{ duration: 200 }}
             out:fade|local={{ duration: 200 }}
-         ></div>
+          ></div>
           <div
             class="modal-wrapper"
             on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
