@@ -4,6 +4,9 @@ import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 
+type ServerObject = OpenAPIV3.ServerObject
+type ServerVariableObject = OpenAPIV3.ServerVariableObject
+
 const parameterNotRef = (
   param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
 ): param is OpenAPIV3.ParameterObject => {
@@ -118,8 +121,11 @@ export class OpenAPI3 extends OpenAPISource {
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     let url: string | URL | undefined
+    let serverVariables: Record<string, ServerVariableObject> = {}
     if (this.document.servers?.length) {
-      url = this.document.servers[0].url
+      const server = this.document.servers[0] as ServerObject
+      url = server.url
+      serverVariables = server.variables || {}
       try {
         url = new URL(url)
       } catch (err) {
@@ -154,6 +160,17 @@ export class OpenAPI3 extends OpenAPISource {
         const headers: any = {}
         let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
+        const ensureParameter = (
+          paramName: string,
+          defaultValue = ""
+        ) => {
+          if (!parameters.some(parameter => parameter.name === paramName)) {
+            parameters.push({
+              name: paramName,
+              default: defaultValue,
+            })
+          }
+        }
         const mimeTypes = getMimeTypes(operation)
 
         if (mimeTypes.length > 0) {
@@ -188,12 +205,14 @@ export class OpenAPI3 extends OpenAPISource {
 
             // add the parameter if it can be bound in our config
             if (["query", "header", "path"].includes(param.in)) {
-              parameters.push({
-                name: param.name,
-                default: "",
-              })
+              ensureParameter(param.name)
             }
           }
+        }
+
+        for (let [variableName, variable] of Object.entries(serverVariables)) {
+          const defaultValue = variable?.default || ""
+          ensureParameter(variableName, defaultValue)
         }
 
         const query = this.constructQuery(
