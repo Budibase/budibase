@@ -2,24 +2,29 @@ import { ImportSource } from "."
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { OpenAPI } from "openapi-types"
 
-const yaml = require("js-yaml")
-
 export abstract class OpenAPISource extends ImportSource {
   parseData = async (data: string): Promise<OpenAPI.Document> => {
-    let json: OpenAPI.Document
-    try {
-      json = JSON.parse(data)
-    } catch (jsonErr) {
-      // couldn't parse json
-      // try to convert yaml -> json
-      try {
-        json = yaml.load(data)
-      } catch (yamlErr) {
-        // couldn't parse yaml
-        throw new Error("Could not parse JSON or YAML")
-      }
+    const baseOptions = {
+      resolve: {
+        external: false,
+      },
     }
 
-    return SwaggerParser.validate(json, {})
+    const document = (await SwaggerParser.parse(
+      data,
+      baseOptions
+    )) as OpenAPI.Document
+
+    try {
+      return (await SwaggerParser.validate(document)) as OpenAPI.Document
+    } catch (err) {
+      console.log(
+        `[OpenAPI Import] Schema validation failed, continuing without validation`
+      )
+      return (await SwaggerParser.dereference(
+        document,
+        baseOptions
+      )) as OpenAPI.Document
+    }
   }
 }
