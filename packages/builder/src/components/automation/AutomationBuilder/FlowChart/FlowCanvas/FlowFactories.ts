@@ -47,7 +47,14 @@ export const branchNode = (
   laneWidth?: number,
   position: { x: number; y: number } = { x: 0, y: 0 }
 ): FlowNode => {
-  const data = { block: step, branch, branchIdx, direction }
+  const data = {
+    block: step,
+    branch,
+    branchIdx,
+    direction,
+    ...(parentId ? { isSubflow: true } : {}),
+    ...(laneWidth ? { laneWidth } : {}),
+  }
   const node: FlowNode = {
     id,
     type: "branch-node",

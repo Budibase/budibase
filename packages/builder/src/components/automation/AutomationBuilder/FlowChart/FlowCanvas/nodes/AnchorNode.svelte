@@ -9,7 +9,7 @@
   $: isHorizontal = direction === "LR"
 </script>
 
-<div class="anchor">
+<div class="anchor" style={isHorizontal ? "width:1px" : undefined}>
   <Handle
     class="custom-handle"
     type="target"
