@@ -26,7 +26,6 @@ function recurse(schemaLevel = {}, objectLevel) {
   }
   for (let [key, value] of Object.entries(objectLevel)) {
     const type = typeof value
-    // check array first, since arrays are objects
     if (Array.isArray(value)) {
       const schema = recurse(schemaLevel[key], value[0])
       if (schema) {
