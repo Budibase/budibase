@@ -5,7 +5,13 @@
   import { derived, get } from "svelte/store"
 
   export let form
+  export let title
   export let stepCustomization = {}
+  export let icon: string | undefined
+  export let completedColor: string | undefined
+  export let currentColor: string | undefined
+  export let incompleteColor: string | undefined
+  export let errorColor: string | undefined
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -236,11 +242,12 @@
     const stepConfig = stepCustomization?.[stepKey]
 
     return {
-      icon: stepConfig?.icon || "ri-checkbox-circle-line",
-      completedColor: stepConfig?.completedColor || "#22c55e",
-      currentColor: stepConfig?.currentColor || "#3b82f6",
-      incompleteColor: stepConfig?.incompleteColor || "#94a3b8",
-      errorColor: stepConfig?.errorColor || "#ef4444",
+      icon: stepConfig?.icon || icon || "ri-checkbox-circle-line",
+      // Global colors take precedence over per-step defaults
+      completedColor: completedColor || stepConfig?.completedColor || "#22c55e",
+      currentColor: currentColor || stepConfig?.currentColor || "#3b82f6",
+      incompleteColor: incompleteColor || stepConfig?.incompleteColor || "#94a3b8",
+      errorColor: errorColor || stepConfig?.errorColor || "#ef4444",
     }
   }
 </script>
@@ -248,9 +255,7 @@
 <div use:styleable={$component.styles}>
   {#if form && selectedFormDetails}
     <div class="form-tracker">
-      <h3 class="form-title">
-        {selectedFormDetails.instanceName || `Form ${form.slice(-4)}`}
-      </h3>
+      <h3 class="form-title">{title || selectedFormDetails.instanceName}</h3>
 
       {#if selectedFormDetails.formAnalysis.stepCount > 0}
         <div class="step-progress-tracker">

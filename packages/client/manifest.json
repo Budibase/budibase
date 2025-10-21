@@ -8905,6 +8905,31 @@
         "placeholder": "Title"
       },
       {
+        "type": "icon",
+        "label": "Default Icon",
+        "key": "icon"
+      },
+      {
+        "type": "color",
+        "label": "Completed Color",
+        "key": "completedColor"
+      },
+      {
+        "type": "color",
+        "label": "Current Color",
+        "key": "currentColor"
+      },
+      {
+        "type": "color",
+        "label": "Incomplete Color",
+        "key": "incompleteColor"
+      },
+      {
+        "type": "color",
+        "label": "Error Color",
+        "key": "errorColor"
+      },
+      {
         "type": "formStepCustomization",
         "label": "Step Customization",
         "key": "stepCustomization",

@@ -14,19 +14,17 @@
   let isInitializing = false
   let steps = []
 
-  // Watch for form changes and get step information
+  // Watch for form changes and step count changes; recompute and initialize
   $: {
     const formId = componentInstance?.form
-
-    if (formId !== currentFormId && !isInitializing) {
+    const formDetails = getFormDetails()
+    const newSteps = formDetails?.steps || []
+    const changedForm = formId !== currentFormId
+    const countChanged = newSteps.length !== steps.length
+    if ((changedForm || countChanged) && !isInitializing) {
       currentFormId = formId
-      const formDetails = getFormDetails()
-      steps = formDetails?.steps || []
-      initializeStepCustomizations(steps.length)
-    } else if (formId === currentFormId && steps.length === 0) {
-      // Handle case where formId hasn't changed but we need to refresh steps
-      const formDetails = getFormDetails()
-      steps = formDetails?.steps || []
+      steps = newSteps
+      initializeStepCustomizations(newSteps.length)
     }
   }
 
@@ -109,11 +107,28 @@
   }
 
   function getDefaultValue(property) {
+    // Prefer component-level defaults if provided
+    if (property === "icon" && componentInstance?.icon) {
+      return componentInstance.icon
+    }
+    if (property === "completedColor" && componentInstance?.completedColor) {
+      return componentInstance.completedColor
+    }
+    if (property === "currentColor" && componentInstance?.currentColor) {
+      return componentInstance.currentColor
+    }
+    if (property === "incompleteColor" && componentInstance?.incompleteColor) {
+      return componentInstance.incompleteColor
+    }
+    if (property === "errorColor" && componentInstance?.errorColor) {
+      return componentInstance.errorColor
+    }
     const defaults = {
       icon: "ri-checkbox-circle-line",
       completedColor: "#22c55e",
       currentColor: "#3b82f6",
       incompleteColor: "#94a3b8",
+      errorColor: "#ef4444",
     }
     return defaults[property]
   }
@@ -141,6 +156,7 @@
       completedColor: getDefaultValue("completedColor"),
       currentColor: getDefaultValue("currentColor"),
       incompleteColor: getDefaultValue("incompleteColor"),
+      errorColor: getDefaultValue("errorColor"),
     }
 
     value = newValueObj
@@ -159,7 +175,10 @@
         key.startsWith("step")
       )
 
-      if (currentStepKeys.length !== expectedStepCount || expectedStepCount === 0) {
+      if (
+        currentStepKeys.length !== expectedStepCount ||
+        expectedStepCount === 0
+      ) {
         const newValueObj = {}
 
         // Only create entries for forms that have steps
@@ -191,10 +210,6 @@
       <div class="step-section">
         <div class="step-header">
           <h4>Step {step.stepNumber}: {step.title}</h4>
-          <Button size="S" secondary on:click={() => resetStep(index)}>
-            <Icon name="Refresh" />
-            Reset
-          </Button>
         </div>
 
         {#if step.description}
@@ -208,68 +223,6 @@
               value={getStepValue(index, "icon")}
               on:change={e => updateStepValue(index, "icon", e.detail)}
             />
-          </div>
-
-          <div class="setting-row">
-            <Label>Completed Color</Label>
-            <ColorPicker
-              value={getStepValue(index, "completedColor")}
-              on:change={e =>
-                updateStepValue(index, "completedColor", e.detail)}
-            />
-          </div>
-
-          <div class="setting-row">
-            <Label>Current Color</Label>
-            <ColorPicker
-              value={getStepValue(index, "currentColor")}
-              on:change={e => updateStepValue(index, "currentColor", e.detail)}
-            />
-          </div>
-
-          <div class="setting-row">
-            <Label>Incomplete Color</Label>
-            <ColorPicker
-              value={getStepValue(index, "incompleteColor")}
-              on:change={e =>
-                updateStepValue(index, "incompleteColor", e.detail)}
-            />
-          </div>
-
-          <div class="preview-row">
-            <Label>Preview</Label>
-            <div class="preview-icons">
-              <div class="preview-item">
-                <Icon
-                  name={getStepValue(index, "icon")
-                    .replace("ri-", "")
-                    .replace("-line", "")
-                    .replace("-fill", "")}
-                  color={getStepValue(index, "completedColor")}
-                />
-                <span>Completed</span>
-              </div>
-              <div class="preview-item">
-                <Icon
-                  name={getStepValue(index, "icon")
-                    .replace("ri-", "")
-                    .replace("-line", "")
-                    .replace("-fill", "")}
-                  color={getStepValue(index, "currentColor")}
-                />
-                <span>Current</span>
-              </div>
-              <div class="preview-item">
-                <Icon
-                  name={getStepValue(index, "icon")
-                    .replace("ri-", "")
-                    .replace("-line", "")
-                    .replace("-fill", "")}
-                  color={getStepValue(index, "incompleteColor")}
-                />
-                <span>Incomplete</span>
-              </div>
-            </div>
           </div>
         </div>
 
