@@ -127,9 +127,6 @@ export function guardAttachment(
   if (!attachmentObject) {
     return false
   }
-  if (typeof attachmentObject !== "object") {
-    throw new Error(`Attachments must be objects.`)
-  }
   return true
 }
 
@@ -146,10 +143,6 @@ function deriveFilenameFromUrl(url: string) {
 function normalizeSingleAttachment(
   input: string | AutomationAttachment
 ): AutomationAttachment | null {
-  if (input == null || input === "") {
-    return null
-  }
-
   if (typeof input === "string") {
     try {
       const parsed = JSON.parse(input)
