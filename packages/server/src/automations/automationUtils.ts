@@ -121,9 +121,11 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
-export function guardAttachment(attachmentObject: any) {
+export function guardAttachment(
+  attachmentObject?: object
+): attachmentObject is AutomationAttachment {
   if (!attachmentObject) {
-    return
+    return false
   }
   if (typeof attachmentObject !== "object") {
     throw new Error(
@@ -136,10 +138,10 @@ export function guardAttachment(attachmentObject: any) {
       `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
     )
   }
+  return true
 }
 
-function deriveFilenameFromUrl(url?: string) {
-  if (!url) return ""
+function deriveFilenameFromUrl(url: string) {
   try {
     const pathname = url.startsWith("http") ? new URL(url).pathname : url
     const parts = pathname.split("/")
@@ -149,7 +151,9 @@ function deriveFilenameFromUrl(url?: string) {
   }
 }
 
-function normalizeSingleAttachment(input: any): AutomationAttachment | null {
+function normalizeSingleAttachment(
+  input: string | AutomationAttachment
+): AutomationAttachment | null {
   if (input == null || input === "") {
     return null
   }
@@ -161,10 +165,6 @@ function normalizeSingleAttachment(input: any): AutomationAttachment | null {
     } catch {
       return { url: input, filename: deriveFilenameFromUrl(input) }
     }
-  }
-
-  if (typeof input !== "object") {
-    throw new Error(`Unsupported attachment value type: ${typeof input}`)
   }
 
   const url: string | undefined = input.url
@@ -181,7 +181,7 @@ function normalizeSingleAttachment(input: any): AutomationAttachment | null {
 }
 
 function normalizeAttachmentValue(
-  value: any
+  value: string | AutomationAttachment | AutomationAttachment[]
 ): AutomationAttachment | AutomationAttachment[] | null {
   if (value == null) return null
 
@@ -211,7 +211,7 @@ export async function sendAutomationAttachmentsToStorage(
   const table = await sdk.tables.getTable(tableId)
   const attachmentRows: Record<
     string,
-    AutomationAttachment[] | AutomationAttachment
+    AutomationAttachment[] | AutomationAttachment | null
   > = {}
 
   for (const [prop, value] of Object.entries(row)) {
@@ -229,9 +229,7 @@ export async function sendAutomationAttachmentsToStorage(
         guardAttachment(normalized)
       }
 
-      attachmentRows[prop] = normalized as
-        | AutomationAttachment
-        | AutomationAttachment[]
+      attachmentRows[prop] = normalized
     }
   }
 
