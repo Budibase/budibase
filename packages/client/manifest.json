@@ -8876,5 +8876,65 @@
         }
       ]
     }
+  },
+  "formblocktracker": {
+    "name": "Multi Step Form Block Tracker",
+    "icon": "dots-three-outline",
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
+    },
+    "styles": ["padding", "size", "background", "border", "shadow"],
+    "settings": [
+      {
+        "type": "formSelect",
+        "label": "Form",
+        "key": "form",
+        "placeholder": "Select a form to track"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "placeholder": "Title"
+      },
+      {
+        "type": "icon",
+        "label": "Default Icon",
+        "key": "icon"
+      },
+      {
+        "type": "color",
+        "label": "Completed Color",
+        "key": "completedColor"
+      },
+      {
+        "type": "color",
+        "label": "Current Color",
+        "key": "currentColor"
+      },
+      {
+        "type": "color",
+        "label": "Incomplete Color",
+        "key": "incompleteColor"
+      },
+      {
+        "type": "color",
+        "label": "Error Color",
+        "key": "errorColor"
+      },
+      {
+        "type": "formStepCustomization",
+        "label": "Step Customization",
+        "key": "stepCustomization",
+        "dependsOn": "form"
+      }
+    ]
   }
 }

@@ -76,7 +76,8 @@
       "signaturesinglefield",
       "bbreferencesinglefield",
       "bbreferencefield",
-      "ratingfield"
+      "ratingfield",
+      "formblocktracker"
     ]
   },
   {
