@@ -146,7 +146,6 @@
   {onOptionMouseleave}
   {showSelectAll}
   {selectAllText}
-  {allSelected}
   {indeterminate}
   {toggleSelectAll}
 />
