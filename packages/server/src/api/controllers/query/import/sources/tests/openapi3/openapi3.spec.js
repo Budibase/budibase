@@ -62,6 +62,60 @@ describe("OpenAPI3 Import", () => {
     expect(dereferenceSpy).toHaveBeenCalled()
   })
 
+  it("creates bindings for server variables", async () => {
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: {
+        title: "Server Variables",
+      },
+      servers: [
+        {
+          url: "https://{subdomain}.{domain}.com/api",
+          variables: {
+            subdomain: {
+              default: "example",
+            },
+            domain: {
+              default: "zendesk",
+            },
+          },
+        },
+      ],
+      paths: {
+        "/trigger_categories/jobs": {
+          post: {
+            operationId: "BatchOperateTriggerCategories",
+            responses: {
+              default: {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const supported = await openapi3.isSupported(spec)
+    expect(supported).toBe(true)
+
+    const [query] = await openapi3.getQueries("datasourceId")
+    expect(query.fields.path).toBe(
+      "https://{{subdomain}}.{{domain}}.com/api/trigger_categories/jobs"
+    )
+    expect(query.parameters).toEqual(
+      expect.arrayContaining([
+        {
+          name: "subdomain",
+          default: "example",
+        },
+        {
+          name: "domain",
+          default: "zendesk",
+        },
+      ])
+    )
+  })
+
   const runTests = async (filename, test, assertions) => {
     for (let extension of ["json", "yaml"]) {
       await test(filename, extension, assertions)
