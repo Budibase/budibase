@@ -113,8 +113,7 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
   const branches: Branch[] = step.inputs?.branches || []
   const childrenMap: Record<string, AutomationStep[]> =
     step.inputs?.children || {}
-  // Use the same orientation inside subflows as the global layout so
-  // that LR (horizontal) layouts render children left-to-right.
+
   const internalDir = (deps.direction || "TB") as LayoutDirection
   const isLR = internalDir === "LR"
 
@@ -128,7 +127,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
     coords.y +
     (mode === BranchMode.TOPLEVEL ? deps.ySpacing : visuals.laneYSpacing)
 
-  // Pre-calculate centering values for LR subflow mode
   const totalBranchesHeight =
     branches.length * BRANCH.height +
     Math.max(0, branches.length - 1) * visuals.gap
@@ -298,7 +296,6 @@ const placeBranchCluster = (args: PlaceBranchClusterArgs) => {
           })
         )
 
-        // Update cluster bottom to account for all vertically stacked and centered branches
         clusterBottomY = Math.max(
           clusterBottomY,
           stackStartY + totalBranchesHeight + visuals.laneYSpacing
@@ -481,8 +478,10 @@ export const renderLoopV2Container = (
   const paddingBottom = SUBFLOW.paddingBottom
   const internalSpacing = SUBFLOW.internalSpacing
   const childHeight = SUBFLOW.childHeight
+  const lrGapForWidth = isLR ? 60 : 0
+  const lrSpacing = SUBFLOW.internalSpacing + (isLR ? 60 : 0)
+  const lrMinExit = lrSpacing + 20
 
-  // For TB we stack vertically and grow height; for LR we grow width
   let dynamicHeight = paddingTop
   let maxFanoutWidth = SUBFLOW.stepWidth
   let linearWidth = 0
@@ -511,12 +510,11 @@ export const renderLoopV2Container = (
           totalBranchesHeight + internalSpacing * 2
         )
 
-        // Width grows by the widest branch lane (branch node + children)
         const maxChildrenWidth =
           maxLaneChildren * (SUBFLOW.stepWidth + internalSpacing)
         const branchLaneWidth =
           SUBFLOW.laneWidth + maxChildrenWidth + internalSpacing
-        linearWidth += branchLaneWidth + internalSpacing
+        linearWidth += branchLaneWidth + internalSpacing + lrGapForWidth
       } else {
         dynamicHeight +=
           BRANCH.height +
@@ -525,18 +523,20 @@ export const renderLoopV2Container = (
       }
     } else {
       if (isLR) {
-        linearWidth += SUBFLOW.stepWidth + internalSpacing
+        linearWidth += SUBFLOW.stepWidth + internalSpacing + lrGapForWidth
       } else {
         dynamicHeight += childHeight + internalSpacing
       }
     }
   }
+  if (isLR && linearWidth > 0) {
+    linearWidth -= lrGapForWidth
+  }
   dynamicHeight += paddingBottom
   if (isLR) {
-    // Ensure enough width for all horizontal children (with some padding)
     containerWidth = Math.max(
       containerWidth,
-      linearWidth + 80,
+      linearWidth + lrMinExit + 40,
       maxFanoutWidth + 80,
       SUBFLOW.laneWidth + 80
     )
