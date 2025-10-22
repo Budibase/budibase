@@ -30,6 +30,11 @@
 
   let gridDispatch = null
 
+  const sortByDatasourceName = (a, b) =>
+    (a.name || "").localeCompare(b.name || "", undefined, {
+      sensitivity: "base",
+    })
+
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     panelWidth,
     width => {
@@ -95,6 +100,7 @@
               searchTerm={searchValue}
               datasourceFilter={datasource =>
                 datasource.source === IntegrationTypes.REST}
+              datasourceSort={sortByDatasourceName}
               showAppUsers={false}
               showManageRoles={false}
             />
