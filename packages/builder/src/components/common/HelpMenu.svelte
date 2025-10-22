@@ -14,8 +14,6 @@
 
   export let align = "right"
 
-  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
-
   const openLink = url => {
     window.open(url, "_blank")
   }
@@ -64,14 +62,14 @@
   <MenuItem
     icon="envelope"
     on:click={() => {
-      if (premiumOrAboveLicense) {
+      if (!$licensing.isFreePlan) {
         openLink(SUPPORT_EMAIL)
         return
       }
       licensing.goToUpgradePage()
     }}
     on:auxclick={() => {
-      if (premiumOrAboveLicense) {
+      if (!$licensing.isFreePlan) {
         openLink(SUPPORT_EMAIL)
         return
       }
@@ -80,7 +78,7 @@
   >
     <div class="email-menu">
       Email
-      {#if !premiumOrAboveLicense}
+      {#if $licensing.isFreePlan}
         <Tags>
           <Tag icon="lock" emphasized>{Constants.PlanType.PREMIUM}</Tag>
         </Tags>
