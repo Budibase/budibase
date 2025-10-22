@@ -320,5 +320,103 @@ describe("OpenAPI3 Import", () => {
       }
       await runTests("crud", testBody, assertions)
     })
+
+    it("resolves referenced components", async () => {
+      const spec = JSON.stringify({
+        openapi: "3.0.0",
+        info: {
+          title: "Ref Resolution",
+        },
+        servers: [
+          {
+            url: "https://api.example.com",
+          },
+        ],
+        components: {
+          parameters: {
+            PathId: {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+              },
+            },
+            QueryLimit: {
+              name: "limit",
+              in: "query",
+              schema: {
+                type: "integer",
+              },
+            },
+          },
+          requestBodies: {
+            Widget: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    example: {
+                      name: "Widget",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        paths: {
+          "/widgets/{id}": {
+            parameters: [
+              {
+                $ref: "#/components/parameters/PathId",
+              },
+            ],
+            post: {
+              operationId: "UpdateWidget",
+              parameters: [
+                {
+                  $ref: "#/components/parameters/QueryLimit",
+                },
+              ],
+              requestBody: {
+                $ref: "#/components/requestBodies/Widget",
+              },
+              responses: {
+                default: {
+                  description: "ok",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi3.isSupported(spec)
+      expect(supported).toBe(true)
+      const [query] = await openapi3.getQueries("datasourceId")
+      expect(query.fields.path).toBe(
+        "https://api.example.com/widgets/{{id}}"
+      )
+      expect(query.fields.headers).toEqual({
+        "Content-Type": "application/json",
+      })
+      expect(JSON.parse(query.fields.requestBody)).toEqual({
+        name: "Widget",
+      })
+      expect(query.parameters).toEqual(
+        expect.arrayContaining([
+          {
+            name: "id",
+            default: "",
+          },
+          {
+            name: "limit",
+            default: "",
+          },
+        ])
+      )
+    })
   })
 })

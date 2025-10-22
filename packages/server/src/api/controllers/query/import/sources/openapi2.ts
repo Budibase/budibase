@@ -4,11 +4,14 @@ import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 
-const parameterNotRef = (
-  param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
-): param is OpenAPIV2.Parameter => {
-  // all refs are deferenced by parser library
-  return true
+const isReferenceObject = (
+  value: unknown
+): value is OpenAPIV2.ReferenceObject => {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    Object.prototype.hasOwnProperty.call(value, "$ref")
+  )
 }
 
 const isOpenAPI2 = (document: any): document is OpenAPIV2.Document => {
@@ -20,20 +23,6 @@ const isOpenAPI2 = (document: any): document is OpenAPIV2.Document => {
 }
 
 const methods: string[] = Object.values(OpenAPIV2.HttpMethods)
-
-const isOperation = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV2.OperationObject => {
-  return methods.includes(key)
-}
-
-const isParameter = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV2.Parameter => {
-  return !isOperation(key, pathItem)
-}
 
 /**
  * OpenAPI Version 2.0 - aka "Swagger"
@@ -54,6 +43,55 @@ export class OpenAPI2 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  private resolveRef<T>(ref: string): T | undefined {
+    if (!ref || !ref.startsWith("#/")) {
+      return undefined
+    }
+    const parts = ref
+      .slice(2)
+      .split("/")
+      .map(part => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+
+    let current: any = this.document
+    for (let part of parts) {
+      if (current == null || typeof current !== "object") {
+        return undefined
+      }
+      current = current[part]
+    }
+    return current as T | undefined
+  }
+
+  private resolveMaybeRef<T>(
+    value: T | OpenAPIV2.ReferenceObject | undefined
+  ): T | undefined {
+    if (!value) {
+      return undefined
+    }
+    if (isReferenceObject(value)) {
+      return this.resolveRef<T>(value.$ref)
+    }
+    return value as T
+  }
+
+  private normalizeParameters(
+    params:
+      | (OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject)[]
+      | undefined
+  ): OpenAPIV2.Parameter[] {
+    if (!Array.isArray(params)) {
+      return []
+    }
+    const resolved: OpenAPIV2.Parameter[] = []
+    for (let param of params) {
+      const normalized = this.resolveMaybeRef<OpenAPIV2.Parameter>(param)
+      if (normalized) {
+        resolved.push(normalized)
+      }
+    }
+    return resolved
   }
 
   getUrl = (): URL => {
@@ -79,76 +117,74 @@ export class OpenAPI2 extends OpenAPISource {
     const queries = []
 
     for (let [path, pathItem] of Object.entries(this.document.paths)) {
-      // parameters that apply to every operation in the path
-      let pathParams: OpenAPIV2.Parameter[] = []
+      if (!pathItem) {
+        continue
+      }
 
-      for (let [key, opOrParams] of Object.entries(pathItem)) {
-        if (isParameter(key, opOrParams)) {
-          const pathParameters = opOrParams as OpenAPIV2.Parameter[]
-          pathParams.push(...pathParameters)
+      const pathParameters = this.normalizeParameters(
+        (pathItem as OpenAPIV2.PathItemObject).parameters
+      )
+
+      for (let methodName of methods) {
+        const maybeOperation = (pathItem as Record<string, any>)[methodName]
+        if (!maybeOperation) {
           continue
         }
-        // can not be a parameter, must be an operation
-        const operation = opOrParams as OpenAPIV2.OperationObject
 
-        const methodName = key
         if (!this.isSupportedMethod(methodName)) {
           continue
         }
+        const operation = maybeOperation as OpenAPIV2.OperationObject
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = undefined
         const parameters: QueryParameter[] = []
+        let requestBody = undefined
 
         if (operation.consumes) {
           headers["Content-Type"] = operation.consumes[0]
         }
 
         // combine the path parameters with the operation parameters
-        const operationParams = operation.parameters || []
-        const allParams = [...pathParams, ...operationParams]
+        const operationParams = this.normalizeParameters(operation.parameters)
+        const allParams = [...pathParameters, ...operationParams]
 
         for (let param of allParams) {
-          if (parameterNotRef(param)) {
-            switch (param.in) {
-              case "query": {
-                let prefix = ""
-                if (queryString) {
-                  prefix = "&"
-                }
-                queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
-                break
+          switch (param.in) {
+            case "query": {
+              let prefix = ""
+              if (queryString) {
+                prefix = "&"
               }
-              case "header":
-                headers[param.name] = `{{${param.name}}}`
-                break
-              case "path":
-                // do nothing: param is already in the path
-                break
-              case "formData":
-                // future enhancement
-                break
-              case "body": {
-                // set the request body to the example provided
-                // future enhancement: generate an example from the schema
-                let bodyParam: OpenAPIV2.InBodyParameterObject =
-                  param as OpenAPIV2.InBodyParameterObject
-                if (param.schema.example) {
-                  const schema = bodyParam.schema as OpenAPIV2.SchemaObject
-                  requestBody = schema.example
-                }
-                break
-              }
+              queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
+              break
             }
+            case "header":
+              headers[param.name] = `{{${param.name}}}`
+              break
+            case "path":
+              // already represented in URL
+              break
+            case "formData":
+              // future enhancement
+              break
+            case "body": {
+              const bodyParam = param as OpenAPIV2.InBodyParameterObject
+              const schema = this.resolveMaybeRef<OpenAPIV2.SchemaObject>(
+                bodyParam.schema
+              )
+              if (schema?.example) {
+                requestBody = schema.example
+              }
+              break
+            }
+          }
 
-            // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
-              parameters.push({
-                name: param.name,
-                default: param.default || "",
-              })
-            }
+          if (["query", "header", "path"].includes(param.in)) {
+            parameters.push({
+              name: param.name,
+              default: param.default || "",
+            })
           }
         }
 
