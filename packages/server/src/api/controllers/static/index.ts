@@ -374,11 +374,15 @@ export const serveBuilderPreview = async function (
 }
 
 function serveLocalFile(ctx: Ctx, fileName: string) {
-  const tsPath = join(require.resolve("@budibase/client"), "..")
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  return send(ctx, fileName, {
-    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-  })
+  // Resolve via the package.json to avoid ESM/CJS export resolution issues
+  // with require.resolve on packages that mark "type":"module".
+  const pkgJsonPath = require.resolve("@budibase/client/package.json")
+  const pkgDir = path.dirname(pkgJsonPath)
+  const distFromPkg = join(pkgDir, "dist")
+  //normal falback
+  const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  const root = nodeModulesDist
+  return send(ctx, fileName, { root })
 }
 
 export const serveClientLibrary = async function (
