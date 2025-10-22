@@ -16,6 +16,8 @@
   export let readonly = false
   export let getOptionLabel = (option: O) => `${option}`
   export let getOptionValue = (option: O) => option as unknown as V
+  export let showSelectAll = false
+  export let selectAllText = "Select all"
 
   const dispatch = createEventDispatcher<{ change: V[] }>()
 
@@ -29,9 +31,55 @@
       )
     }
   }
+
+  $: allSelected =
+    options.length > 0 &&
+    options.every(option => value.includes(getOptionValue(option)))
+  $: noneSelected =
+    options.length === 0 ||
+    options.every(option => !value.includes(getOptionValue(option)))
+  $: indeterminate = !allSelected && !noneSelected
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      dispatch("change", [])
+    } else {
+      const allValues = options.map(option => getOptionValue(option))
+      dispatch("change", allValues)
+    }
+  }
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
+  {#if showSelectAll && options?.length > 0}
+    <div
+      title={selectAllText}
+      class="spectrum-Checkbox spectrum-FieldGroup-item select-all-checkbox"
+      class:readonly
+    >
+      <label
+        class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
+      >
+        <input
+          on:change={toggleSelectAll}
+          type="checkbox"
+          class="spectrum-Checkbox-input"
+          checked={allSelected}
+          {disabled}
+        />
+        <span class="spectrum-Checkbox-box">
+          <span class="icon" class:checked={allSelected || indeterminate}>
+            <Icon
+              name={indeterminate ? "minus" : "check"}
+              weight="bold"
+              color="var(--spectrum-global-color-gray-50)"
+            />
+          </span>
+        </span>
+        <span class="spectrum-Checkbox-label">{selectAllText}</span>
+      </label>
+    </div>
+  {/if}
   {#if options && Array.isArray(options)}
     {#each options as option}
       {@const optionValue = getOptionValue(option)}
@@ -86,5 +134,22 @@
   }
   .icon :global(i) {
     font-size: 14px;
+  }
+  .select-all-checkbox {
+    margin-bottom: 8px;
+    padding: 0;
+  }
+  .select-all-checkbox .spectrum-Checkbox {
+    padding: 0;
+  }
+  .select-all-checkbox .spectrum-Checkbox-input {
+    margin: 0;
+  }
+  .spectrum-FieldGroup .select-all-checkbox,
+  .spectrum-FieldGroup .select-all-checkbox:hover,
+  .spectrum-FieldGroup .select-all-checkbox:focus-within,
+  .spectrum-FieldGroup .select-all-checkbox .spectrum-Checkbox,
+  .spectrum-FieldGroup .select-all-checkbox label {
+    background: none !important;
   }
 </style>
