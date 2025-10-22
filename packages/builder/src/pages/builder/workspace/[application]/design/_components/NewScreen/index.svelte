@@ -27,7 +27,7 @@
   let title: string
   let rootModal: Modal
   let createScreenModal: CreateScreenModal
-  let cancelHandler: (e: CustomEvent<ModalCancelFrom>) => void = () => {}
+  let cancelHandler: (_e: CustomEvent<ModalCancelFrom>) => void = () => {}
   let selectedType: AutoScreenTypes | undefined
   let currentStepIndex: number
 

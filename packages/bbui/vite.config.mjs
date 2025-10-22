@@ -7,8 +7,6 @@ import { fileURLToPath } from "url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const ignoredWarnings = ["element_invalid_self_closing_tag"]
-
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
   return {
@@ -22,12 +20,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       svelte({
         emitCss: true,
-        onwarn: (warning, handler) => {
-          // Ignore some warnings
-          if (!ignoredWarnings.includes(warning.code)) {
-            handler(warning)
-          }
-        },
       }),
       cssInjectedByJsPlugin(),
     ],
