@@ -9,7 +9,6 @@
     BUDIBASE_UNIVERSITY_URL,
     SUPPORT_EMAIL,
   } from "@/constants"
-  import { isPremiumOrAbove } from "@/helpers/planTitle"
   import { Constants } from "@budibase/frontend-core"
 
   export let align = "right"
