@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Stripe",
-      description:
-        "Secure payment processing, subscriptions, billing, and reporting APIs",
-      specs: [
-        {
-          version: "2022-11-15",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/stripe.svg",
-    },
-    {
       name: "BambooHR",
       description:
         "HRIS platform for employee records, time off, and performance management",
@@ -30,30 +18,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: "/builder/assets/rest-template-icons/bamboohr.svg",
-    },
-    {
-      name: "Gmail",
-      description:
-        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gmail.svg",
-    },
-    {
-      name: "Salesforce",
-      description:
-        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
-      specs: [
-        {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/salesforce.svg",
     },
     {
       name: "Box",
@@ -68,28 +32,16 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/box.svg",
     },
     {
-      name: "NetSuite",
+      name: "Datadog Metrics",
       description:
-        "ERP platform covering finance, inventory, and record management REST APIs",
+        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/philip-denys/netsuite-rest-api-v1/master/ns-restapi-v1.yaml",
+          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/netsuite.svg",
-    },
-    {
-      name: "Jira",
-      description:
-        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/jira.svg",
+      icon: "/builder/assets/rest-template-icons/datadog.svg",
     },
     {
       name: "GitHub",
@@ -116,28 +68,40 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/gitlab.svg",
     },
     {
-      name: "Zendesk",
+      name: "Gmail",
       description:
-        "Zendesk Service API for tickets, users, help center, and support workflows",
+        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
       specs: [
         {
-          version: "latest",
-          url: "https://developer.zendesk.com/zendesk/oas.yaml",
+          version: "v1",
+          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/zendesk.svg",
+      icon: "/builder/assets/rest-template-icons/gmail.svg",
     },
     {
-      name: "PagerDuty",
+      name: "Jira",
       description:
-        "PagerDuty REST resources for services, incidents, and incident automation",
+        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
       specs: [
         {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/pagerduty/v00.00.00000/services/services.yaml",
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/pagerduty.svg",
+      icon: "/builder/assets/rest-template-icons/jira.svg",
+    },
+    {
+      name: "NetSuite",
+      description:
+        "ERP platform covering finance, inventory, and record management REST APIs",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/philip-denys/netsuite-rest-api-v1/master/ns-restapi-v1.yaml",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/netsuite.svg",
     },
     {
       name: "Okta",
@@ -152,16 +116,52 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/okta.svg",
     },
     {
-      name: "Datadog Metrics",
+      name: "PagerDuty",
       description:
-        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
+        "PagerDuty REST resources for services, incidents, and incident automation",
       specs: [
         {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
+          version: "latest",
+          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/pagerduty/v00.00.00000/services/services.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/datadog.svg",
+      icon: "/builder/assets/rest-template-icons/pagerduty.svg",
+    },
+    {
+      name: "Salesforce",
+      description:
+        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
+      specs: [
+        {
+          version: "2.0.1",
+          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/salesforce.svg",
+    },
+    {
+      name: "Stripe",
+      description:
+        "Secure payment processing, subscriptions, billing, and reporting APIs",
+      specs: [
+        {
+          version: "2022-11-15",
+          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/stripe.svg",
+    },
+    {
+      name: "Zendesk",
+      description:
+        "Zendesk Service API for tickets, users, help center, and support workflows",
+      specs: [
+        {
+          version: "latest",
+          url: "https://developer.zendesk.com/zendesk/oas.yaml",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/zendesk.svg",
     },
   ],
 }

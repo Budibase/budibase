@@ -64,6 +64,11 @@
     _e: MouseEvent,
     _option: any
   ) => void = () => {}
+  export let showSelectAll: boolean = false
+  export let selectAllText: string = "Select all"
+  export let indeterminate: boolean = false
+  export let allSelected: boolean = false
+  export let toggleSelectAll: () => void = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -198,6 +203,27 @@
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>
+      {#if showSelectAll && filteredOptions.length > 0}
+        <li
+          class="spectrum-Menu-item select-all-item"
+          role="option"
+          aria-selected="true"
+          tabindex="0"
+          on:click={toggleSelectAll}
+        >
+          <span class="spectrum-Menu-itemLabel">{selectAllText}</span>
+          {#if indeterminate || allSelected}
+            <div class="check select-all-check">
+              <Icon
+                name={indeterminate ? "minus" : "check"}
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
+            </div>
+          {/if}
+        </li>
+      {/if}
       {#if placeholderOption}
         <li
           class="spectrum-Menu-item placeholder"
@@ -416,5 +442,13 @@
     color: var(--spectrum-global-color-gray-600);
     display: block;
     margin-top: var(--spacing-s);
+  }
+
+  .select-all-item {
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    margin-bottom: 4px;
+  }
+  .select-all-item .select-all-check {
+    display: block;
   }
 </style>
