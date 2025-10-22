@@ -188,4 +188,52 @@ describe("Rest Importer", () => {
     }
     await runTest(testImportQueries, assertions)
   })
+
+  it("filters unsupported options methods", async () => {
+    const spec = JSON.stringify(
+      {
+        swagger: "2.0",
+        info: {
+          title: "Options Filter",
+        },
+        paths: {
+          "/files": {
+            options: {
+              operationId: "filesOptions",
+              responses: {
+                200: {
+                  description: "OK",
+                },
+              },
+            },
+            get: {
+              operationId: "filesGet",
+              responses: {
+                200: {
+                  description: "OK",
+                },
+              },
+            },
+          },
+        },
+      },
+      null,
+      2
+    )
+
+    await init(spec)
+    const datasource = await config.createDatasource()
+    const importResult = await restImporter.importQueries(datasource._id)
+
+    expect(importResult.errorQueries.length).toBe(0)
+    expect(importResult.queries.length).toBe(1)
+    expect(importResult.queries[0].queryVerb).toBe("read")
+    expect(events.query.imported).toHaveBeenCalledTimes(1)
+    expect(events.query.imported).toHaveBeenCalledWith(
+      datasource,
+      "openapi2.0",
+      1
+    )
+    jest.clearAllMocks()
+  })
 })

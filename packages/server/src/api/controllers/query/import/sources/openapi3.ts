@@ -155,6 +155,9 @@ export class OpenAPI3 extends OpenAPISource {
         const operation = opOrParams as OpenAPIV3.OperationObject
 
         const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}

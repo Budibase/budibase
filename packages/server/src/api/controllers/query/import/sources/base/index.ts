@@ -27,6 +27,21 @@ export abstract class ImportSource {
     return value.replace(/\{([^{}]+)\}/g, "{{$1}}")
   }
 
+  protected normalizeMethod = (method?: string): string | undefined => {
+    if (!method) {
+      return undefined
+    }
+    return method.toLowerCase()
+  }
+
+  protected isSupportedMethod = (method: string): boolean => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      return false
+    }
+    return Object.prototype.hasOwnProperty.call(MethodToVerb, normalized)
+  }
+
   constructQuery = (
     datasourceId: string,
     name: string,
@@ -81,7 +96,11 @@ export abstract class ImportSource {
   }
 
   verbFromMethod = (method: string) => {
-    const verb = (<any>MethodToVerb)[method]
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      throw new Error(`Unsupported method: ${method}`)
+    }
+    const verb = (MethodToVerb as Record<string, string>)[normalized]
     if (!verb) {
       throw new Error(`Unsupported method: ${method}`)
     }
