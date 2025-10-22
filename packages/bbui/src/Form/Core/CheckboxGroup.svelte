@@ -42,10 +42,8 @@
 
   const toggleSelectAll = () => {
     if (allSelected) {
-      // Deselect all
       dispatch("change", [])
     } else {
-      // Select all
       const allValues = options.map(option => getOptionValue(option))
       dispatch("change", allValues)
     }
@@ -53,7 +51,7 @@
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
-  {#if showSelectAll && options && Array.isArray(options) && options.length > 0}
+  {#if showSelectAll && options?.length > 0}
     <div
       title={selectAllText}
       class="spectrum-Checkbox spectrum-FieldGroup-item select-all-checkbox"
@@ -140,22 +138,18 @@
   .select-all-checkbox {
     margin-bottom: 8px;
     padding: 0;
-    background: none !important;
-  }
-  .select-all-checkbox:hover {
-    background: none !important;
-  }
-  .select-all-checkbox:focus-within {
-    background: none !important;
   }
   .select-all-checkbox .spectrum-Checkbox {
     padding: 0;
-    background: none !important;
   }
   .select-all-checkbox .spectrum-Checkbox-input {
     margin: 0;
   }
-  .select-all-checkbox label {
+  .spectrum-FieldGroup .select-all-checkbox,
+  .spectrum-FieldGroup .select-all-checkbox:hover,
+  .spectrum-FieldGroup .select-all-checkbox:focus-within,
+  .spectrum-FieldGroup .select-all-checkbox .spectrum-Checkbox,
+  .spectrum-FieldGroup .select-all-checkbox label {
     background: none !important;
   }
 </style>
