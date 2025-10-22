@@ -16,7 +16,8 @@
 
   let viewSelectionModal
 
-  $: supportsViews = datasource.source === "POSTGRES"
+  $: supportsViews =
+    datasource.source === "POSTGRES" || datasource.source === "MYSQL"
 </script>
 
 {#if supportsViews}
