@@ -188,8 +188,7 @@
           <button
             class="versionOption"
             on:click={() =>
-              selectedTemplate && importTemplateVersion(selectedTemplate, spec)
-            }
+              selectedTemplate && importTemplateVersion(selectedTemplate, spec)}
             disabled={templateLoading}
           >
             <Body size="S">{spec.version}</Body>
