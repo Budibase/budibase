@@ -179,3 +179,27 @@ export function toMap<TKey extends keyof TItem, TItem extends {}>(
     return result
   }, {})
 }
+
+const resolveWorkspaceName = (name: string) => {
+  return name ? name.trim() : null
+}
+
+const resolveWorkspaceUrl = (name: string) => {
+  let parsedName
+  const resolvedName = resolveWorkspaceName(name)
+  parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+  const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+  return encodeURI(parsedUrl)
+}
+
+export const nameToUrl = (workspaceName: string) => {
+  let resolvedUrl = resolveWorkspaceUrl(workspaceName)
+  return tidyUrl(resolvedUrl)
+}
+
+const tidyUrl = (url: string | null) => {
+  if (url && !url.startsWith("/")) {
+    url = `/${url}`
+  }
+  return url === "" ? null : url
+}
