@@ -4,6 +4,7 @@ import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
 import { reset as resetBuilderStores } from "@/stores/builder"
+import { CookieUtils, Constants } from "@budibase/frontend-core"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -134,10 +135,25 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   }
 
   async logout() {
+    // Save current URL as return URL before logging out, unless we're on auth pages
+    const currentPath = window.location.pathname
+    const isAuthPage = currentPath.includes("/auth") ||
+                       currentPath.includes("/invite") ||
+                       currentPath.includes("/admin")
+
+    if (!isAuthPage && !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)) {
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, currentPath)
+    }
+
     await API.logOut()
     this.setPostLogout()
     this.setUser()
-    await this.setInitInfo({})
+    try {
+      await this.setInitInfo({})
+    } catch (error) {
+      // Ignore errors clearing init info after logout
+      // User is already logged out, this is just cleanup
+    }
     // App info needs to be cleared on logout.
     // Invalid app context will cause init failures for users logging back in.
     resetBuilderStores()

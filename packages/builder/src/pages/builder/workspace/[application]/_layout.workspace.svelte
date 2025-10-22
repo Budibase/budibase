@@ -58,7 +58,7 @@
     <div class="body">
       <div class="init page-error">
         <Layout gap={"S"} alignContent={"center"} justifyItems={"center"}>
-          <Heading size={"L"}>Ooops...</Heading>
+          <Heading size={"L"}>Oops...</Heading>
           <Body size={"S"}>There was a problem initialising the workspace</Body>
           <div class="error-message">
             {error?.message || "Something went wrong."}

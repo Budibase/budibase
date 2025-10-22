@@ -1,21 +1,20 @@
 <script>
   import { ActionMenu, MenuItem, Tags, Tag } from "@budibase/bbui"
   import { licensing } from "@/stores/portal"
-  import { ChangelogURL } from "@/constants"
+  import {
+    CHANGELOG_URL,
+    DOCUMENTATION_URL,
+    GITHUB_DISCUSSIONS_URL,
+    DISCORD_URL,
+    BUDIBASE_UNIVERSITY_URL,
+    SUPPORT_EMAIL,
+  } from "@/constants"
   import { isPremiumOrAbove } from "@/helpers/planTitle"
   import { Constants } from "@budibase/frontend-core"
 
   export let align = "right"
 
   $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
-
-  const DISCORD_URL = "https://discord.com/invite/ZepTmGbtfF"
-  const DOCUMENTATION_URL = "https://docs.budibase.com/docs"
-  const GITHUB_DISCUSSIONS_URL =
-    "https://github.com/Budibase/budibase/discussions"
-  const BUDIBASE_UNIVERSITY_URL =
-    "https://vimeo.com/showcase/budibase-university"
-  const SUPPORT_EMAIL = "mailto:support@budibase.com"
 
   const openLink = url => {
     window.open(url, "_blank")
@@ -36,8 +35,8 @@
   </MenuItem>
   <MenuItem
     icon="list-bullets"
-    on:click={() => openLink(ChangelogURL)}
-    on:auxclick={() => openLink(ChangelogURL)}
+    on:click={() => openLink(CHANGELOG_URL)}
+    on:auxclick={() => openLink(CHANGELOG_URL)}
   >
     Changelog
   </MenuItem>

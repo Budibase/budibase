@@ -10,8 +10,8 @@
   } from "@budibase/bbui"
   import { initialise, builderStore, reset } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, admin, auth } from "@/stores/portal"
-  import { onMount } from "svelte"
+  import { appsStore, auth } from "@/stores/portal"
+  import { onMount, createEventDispatcher } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
@@ -19,6 +19,9 @@
   import { sdk } from "@budibase/shared-core"
   import type { AppTemplate } from "@/types"
 
+  export let redirectOnCreate = true
+
+  const dispatch = createEventDispatcher()
   const values = writable<{
     name: string
     url: string | null
@@ -136,10 +139,14 @@
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
       }
-      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
+
+      if (!redirectOnCreate) {
+        dispatch("created", createdApp)
+        return
+      }
 
       // Clear out the app context in the bulder
       reset()
@@ -151,12 +158,6 @@
       builderStore.appCreated(true)
 
       await initialise(pkg)
-
-      // Update checklist - in case first app
-      await admin.init()
-
-      // Create user
-      await auth.setInitInfo({})
 
       if (!sdk.users.isBuilder($auth.user, createdApp?.appId)) {
         // Refresh for access to created applications

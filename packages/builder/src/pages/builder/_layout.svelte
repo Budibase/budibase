@@ -58,6 +58,10 @@
     ? () => accountLockedModal.show()
     : null
 
+  const isOnPreLoginPage = () => {
+    return $isActive("./auth") || $isActive("./invite") || $isActive("./admin")
+  }
+
   navigation.init($redirect)
 
   // Only recalculates when an action actually changes
@@ -72,20 +76,29 @@
       $appsStore,
       $loaded,
     ]) => {
-      // Only run logic when fully loaded
+      // Early redirect for account portal (before loaded)
+      if (
+        $admin.loaded &&
+        $auth.loaded &&
+        !$auth.user &&
+        useAccountPortal &&
+        !isOnPreLoginPage() &&
+        $admin.accountPortalUrl
+      ) {
+        return { type: "accountPortalRedirect", url: $admin.accountPortalUrl }
+      }
+
+      // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
       }
 
-      // Return URL management - set when *not* logged in
-      // will redirect back to this location on auth
+      // Set the return url
       if (
         !$auth.user &&
         !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
         !$auth.postLogout &&
-        !$isActive("./auth") &&
-        !$isActive("./invite") &&
-        !$isActive("./admin")
+        !isOnPreLoginPage()
       ) {
         return { type: "setReturnUrl", url: window.location.pathname }
       }
@@ -101,13 +114,7 @@
       }
 
       // Redirect to log in at any time if the user isn't authenticated
-      if (
-        (hasAdminUser || cloud) &&
-        !$auth.user &&
-        !$isActive("./auth") &&
-        !$isActive("./invite") &&
-        !$isActive("./admin")
-      ) {
+      if (!$auth.user && !isOnPreLoginPage()) {
         return { type: "redirect", path: "./auth" }
       }
 
@@ -115,7 +122,6 @@
       if ($auth.user?.forceResetPassword) {
         return { type: "redirect", path: "./auth/reset" }
       }
-
       // Authenticated user navigation
       if ($auth.user) {
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
@@ -125,14 +131,20 @@
           return { type: "returnUrl", url: returnUrl }
         }
 
-        // Builders without apps should be redirected to the onboarding flow.
         if (
-          isBuilder &&
           $appsStore.apps.length === 0 &&
+          !$isActive("./apps") &&
           !$isActive("./onboarding") &&
-          !$isActive("./apps")
+          !$isActive("./get-started")
         ) {
-          return { type: "redirect", path: "./onboarding" }
+          // Tenant owners without apps should be redirected to onboarding
+          if (isOwner) {
+            return { type: "redirect", path: "./onboarding" }
+          }
+          // Regular builders without apps should be redirected to "get started"
+          if (isBuilder && !isOwner) {
+            return { type: "redirect", path: "./get-started" }
+          }
         }
 
         // Redirect non-builders to apps unless they're already there
@@ -149,7 +161,10 @@
           !$appStore.appId
         ) {
           const defaultApp = $enrichedApps[0]
-          return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
+          // Only redirect if enriched apps are loaded
+          if (defaultApp?.devId) {
+            return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
+          }
         }
       }
 
@@ -213,32 +228,40 @@
 
   async function initBuilder() {
     loaded.set(false)
-    await auth.getSelf()
-    await admin.init()
+    try {
+      await auth.getSelf()
+      await admin.init()
 
-    if ($admin.maintenance.length > 0) {
-      $redirect("./maintenance")
-      return
-    }
-    if ($auth.user) {
-      // We need to load apps to know if we need to show onboarding fullscreen
-      await Promise.all([
-        licensing.init(),
-        appsStore.load(),
-        organisation.init(),
-        groups.init(),
-      ])
-
-      await auth.getInitInfo()
-
-      if (usersLimitLockAction) {
-        usersLimitLockAction()
+      if ($admin.maintenance.length > 0) {
+        $redirect("./maintenance")
+        return
       }
-    }
+      if ($auth.user) {
+        // We need to load apps to know if we need to show onboarding fullscreen
+        await Promise.all([
+          licensing.init(),
+          appsStore.load(),
+          organisation.init(),
+          groups.init(),
+        ])
 
-    // Validate tenant if in a multi-tenant env
-    if (multiTenancyEnabled) {
-      await validateTenantId()
+        await auth.getInitInfo()
+
+        if (usersLimitLockAction) {
+          usersLimitLockAction()
+        }
+      }
+
+      // Validate tenant if in a multi-tenant env
+      if (multiTenancyEnabled) {
+        await validateTenantId()
+      }
+    } catch (error) {
+      // Don't show a notification here, as we might 403 initially due to not
+      // being logged in. API error handler will clear user if session was destroyed.
+      console.error("Error during builder initialization:", error)
+      // Rethrow to trigger catch block in template
+      throw error
     }
 
     loaded.set(true)
@@ -283,6 +306,10 @@
         CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
         window.location.href = action.url
         break
+
+      case "accountPortalRedirect":
+        window.location.href = action.url
+        break
     }
   }
 
@@ -324,7 +351,7 @@
 {:catch error}
   <div class="init page-error">
     <Layout gap={"S"} alignContent={"center"} justifyItems={"center"}>
-      <Heading size={"L"}>Ooops...</Heading>
+      <Heading size={"L"}>Oops...</Heading>
       <Body size={"S"}>There was a problem initialising the builder</Body>
       {#if error?.message}
         <div class="error-message">
@@ -358,6 +385,8 @@
     background-color: var(--spectrum-global-color-gray-50);
     font-family: monospace;
     font-size: 12px;
+    max-width: 90%;
+    word-break: break-all;
   }
   .loading {
     min-height: 100vh;

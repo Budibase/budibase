@@ -7,7 +7,7 @@
   export let size = 265
 
   // If single color is provided, use it for all
-  $: topRight = color || topRightColor
+  $: finalTopRight = color || topRightColor
   $: finalBottomRight = color || bottomRightColor
   $: finalTopLeft = color || topLeftColor
   $: finalBottomLeft = color || bottomLeftColor
@@ -25,7 +25,7 @@
   <g clip-path="url(#clip0_1_1799)">
     <path
       d="M158.2 8.6V116.6C158.2 121.3 162 125.2 166.8 125.2H213.8C218 125.2 222 123.2 224.6 119.8L262.9 68.9C265.7 65.2 265.7 60.1 262.9 56.4L224.6 5.4C222 2 218 0 213.8 0H166.8C162 0 158.2 3.8 158.2 8.6Z"
-      fill={topRight}
+      fill={finalTopRight}
     />
     <path
       d="M158.2 148.4V256.4C158.2 261.1 162 265 166.8 265H213.8C218 265 222 263 224.6 259.6L262.9 208.7C265.7 205 265.7 199.9 262.9 196.2L224.6 145.3C222.1 141.9 218.1 139.9 213.8 139.9H166.8C162 139.8 158.2 143.7 158.2 148.4Z"
