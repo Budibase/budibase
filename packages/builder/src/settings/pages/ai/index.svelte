@@ -173,52 +173,6 @@
     customConfigModal?.show()
   }
 
-  function closeChatConfigModal() {
-    customModalConfig = null
-    customConfigModal?.hide()
-  }
-
-  async function handleChatConfigSave(
-    event: CustomEvent<CustomAIProviderConfig>
-  ) {
-    const draft = event.detail
-    try {
-      if (draft._id) {
-        await aiConfigsStore.updateConfig(draft)
-        notifications.success("Chat configuration updated")
-      } else {
-        const { _id, _rev, ...rest } = draft
-        await aiConfigsStore.createConfig(rest)
-        notifications.success("Chat configuration created")
-      }
-      closeChatConfigModal()
-    } catch (err: any) {
-      notifications.error(err.message || "Failed to save chat configuration")
-    }
-  }
-
-  function handleChatModalCancel() {
-    closeChatConfigModal()
-  }
-
-  async function handleChatConfigDelete(
-    event: CustomEvent<CustomAIProviderConfig>
-  ) {
-    const draft = event.detail
-    if (!draft._id) {
-      closeChatConfigModal()
-      return
-    }
-
-    try {
-      await aiConfigsStore.deleteConfig(draft._id)
-      notifications.success("Chat configuration deleted")
-      closeChatConfigModal()
-    } catch (err: any) {
-      notifications.error(err.message || "Failed to delete chat configuration")
-    }
-  }
-
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
     if (provider === "Chat") {
@@ -380,12 +334,7 @@
 </Modal>
 <Modal bind:this={customConfigModal}>
   {#if customModalConfig}
-    <CustomConfigModal
-      config={customModalConfig}
-      on:save={handleChatConfigSave}
-      on:cancel={handleChatModalCancel}
-      on:delete={handleChatConfigDelete}
-    />
+    <CustomConfigModal config={customModalConfig} />
   {/if}
 </Modal>
 

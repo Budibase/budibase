@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { aiConfigsStore } from "@/stores/portal"
   import {
     ModalContent,
     Label,
@@ -6,20 +7,14 @@
     Toggle,
     Heading,
     ActionButton,
+    notifications,
   } from "@budibase/bbui"
   import {
     PASSWORD_REPLACEMENT,
     type CustomAIProviderConfig,
   } from "@budibase/types"
-  import { createEventDispatcher } from "svelte"
 
   export let config: CustomAIProviderConfig
-
-  const dispatch = createEventDispatcher<{
-    save: CustomAIProviderConfig
-    cancel: void
-    delete: CustomAIProviderConfig
-  }>()
 
   let draft: CustomAIProviderConfig = { ...config }
 
@@ -31,9 +26,33 @@
   $: trimmedName = (draft.name || "").trim()
   $: canSave = trimmedName.length > 0 && hasApiKey
 
-  const confirm = () => dispatch("save", { ...draft })
-  const cancel = () => dispatch("cancel")
-  const deleteConfig = () => dispatch("delete", { ...draft })
+  async function confirm() {
+    try {
+      if (draft._id) {
+        await aiConfigsStore.updateConfig(draft)
+        notifications.success("Chat configuration updated")
+      } else {
+        const { _id, _rev, ...rest } = draft
+        await aiConfigsStore.createConfig(rest)
+        notifications.success("Chat configuration created")
+      }
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to save chat configuration")
+    }
+  }
+
+  async function deleteConfig() {
+    if (!draft._id) {
+      return
+    }
+
+    try {
+      await aiConfigsStore.deleteConfig(draft._id)
+      notifications.success("Chat configuration deleted")
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to delete chat configuration")
+    }
+  }
 </script>
 
 <ModalContent
@@ -41,7 +60,6 @@
   confirmText={isEdit ? "Save" : "Create"}
   cancelText="Cancel"
   onConfirm={confirm}
-  onCancel={cancel}
   disabled={!canSave}
 >
   <div slot="header">
