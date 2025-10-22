@@ -281,6 +281,7 @@ export interface AutomationMetadata extends Document {
 export type AutomationAttachment = {
   url: string
   filename: string
+  name?: string
 }
 
 export type AutomationAttachmentContent = {
