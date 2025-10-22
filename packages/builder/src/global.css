@@ -32,6 +32,8 @@ body {
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .hoverable:hover {
