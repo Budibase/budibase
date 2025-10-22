@@ -24,7 +24,12 @@ export abstract class ImportSource {
       return value
     }
 
-    return value.replace(/\{([^{}]+)\}/g, "{{$1}}")
+    return value.replace(/\{([^{}]+)\}/g, (_match, token) => {
+      const variable = token.trim()
+      const sanitized = variable.match(/^[A-Za-z0-9._-]+/)
+      const name = sanitized ? sanitized[0] : variable
+      return `{{${name}}}`
+    })
   }
 
   protected normalizeMethod = (method?: string): string | undefined => {
