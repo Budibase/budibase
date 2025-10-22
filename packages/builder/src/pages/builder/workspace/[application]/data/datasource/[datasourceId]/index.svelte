@@ -1,8 +1,8 @@
 <script>
   import { params } from "@roxi/routify"
-import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
-import { datasources, integrations } from "@/stores/builder"
-import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+  import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
+  import { datasources, integrations } from "@/stores/builder"
+  import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"
   import RelationshipsPanel from "./_components/panels/Relationships.svelte"

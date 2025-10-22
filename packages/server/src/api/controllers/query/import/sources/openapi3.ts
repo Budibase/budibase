@@ -163,10 +163,7 @@ export class OpenAPI3 extends OpenAPISource {
         const headers: any = {}
         let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
-        const ensureParameter = (
-          paramName: string,
-          defaultValue = ""
-        ) => {
+        const ensureParameter = (paramName: string, defaultValue = "") => {
           if (!parameters.some(parameter => parameter.name === paramName)) {
             parameters.push({
               name: paramName,
