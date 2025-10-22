@@ -396,9 +396,7 @@ describe("OpenAPI3 Import", () => {
       const supported = await openapi3.isSupported(spec)
       expect(supported).toBe(true)
       const [query] = await openapi3.getQueries("datasourceId")
-      expect(query.fields.path).toBe(
-        "https://api.example.com/widgets/{{id}}"
-      )
+      expect(query.fields.path).toBe("https://api.example.com/widgets/{{id}}")
       expect(query.fields.headers).toEqual({
         "Content-Type": "application/json",
       })

@@ -77,9 +77,7 @@ export class OpenAPI2 extends OpenAPISource {
   }
 
   private normalizeParameters(
-    params:
-      | (OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject)[]
-      | undefined
+    params: (OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject)[] | undefined
   ): OpenAPIV2.Parameter[] {
     if (!Array.isArray(params)) {
       return []
