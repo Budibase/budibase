@@ -113,10 +113,8 @@
 
   const toggleSelectAll = () => {
     if (allSelected) {
-      // Deselect all
       dispatch("change", [])
     } else {
-      // Select all
       const allValues = options.map(option => getOptionValue(option))
       dispatch("change", allValues)
     }
