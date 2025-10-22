@@ -4,6 +4,7 @@ import { ImportInfo, ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
+import nodeFetch from "node-fetch"
 // @ts-ignore
 import { context, events } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
@@ -17,26 +18,59 @@ export class RestImporter {
   data: string
   sources: ImportSource[]
   source!: ImportSource
+  private input: string
 
   constructor(data: string) {
     this.data = data
+    this.input = data
     this.sources = [new OpenAPI2(), new OpenAPI3(), new Curl()]
   }
 
+  private async ensureDataLoaded() {
+    if (!this.data) {
+      throw new Error("No data provided for REST import")
+    }
+
+    const trimmed = this.data.trim()
+    if (/^https?:\/\//i.test(trimmed)) {
+      const response = await nodeFetch(trimmed)
+      if (!response.ok) {
+        throw new Error(
+          `Failed to download specification from ${trimmed} (status ${response.status})`
+        )
+      }
+      this.data = await response.text()
+    }
+  }
+
   init = async () => {
+    await this.ensureDataLoaded()
     for (let source of this.sources) {
       if (await source.isSupported(this.data)) {
         this.source = source
         break
       }
     }
+
+    if (!this.source) {
+      const message = /^https?:\/\//i.test(this.input.trim())
+        ? "Unsupported or unreadable specification at provided URL"
+        : "Unsupported REST import format"
+      throw new Error(message)
+    }
   }
 
   getInfo = async (): Promise<ImportInfo> => {
+    if (!this.source) {
+      throw new Error("REST importer is not initialised")
+    }
     return this.source.getInfo()
   }
 
   importQueries = async (datasourceId: string): Promise<ImportResult> => {
+    if (!this.source) {
+      throw new Error("REST importer is not initialised")
+    }
     // construct the queries
     let queries = await this.source.getQueries(datasourceId)
 

@@ -7,25 +7,14 @@ import { URL } from "url"
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
 
-const parameterNotRef = (
-  param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
-): param is OpenAPIV3.ParameterObject => {
-  // all refs are deferenced by parser library
-  return true
-}
-
-const requestBodyNotRef = (
-  param: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.RequestBodyObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
-}
-
-const schemaNotRef = (
-  param: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.SchemaObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
+const isReferenceObject = (
+  value: unknown
+): value is OpenAPIV3.ReferenceObject => {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    Object.prototype.hasOwnProperty.call(value, "$ref")
+  )
 }
 
 const isOpenAPI3 = (
@@ -39,53 +28,6 @@ const isOpenAPI3 = (
 }
 
 const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
-
-const isOperation = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV3.OperationObject => {
-  return methods.includes(key)
-}
-
-const isParameter = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV3.ParameterObject => {
-  return !isOperation(key, pathItem)
-}
-
-const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    const supportedMimeTypes = getMimeTypes(operation)
-    if (supportedMimeTypes.length > 0) {
-      const mimeType = supportedMimeTypes[0]
-
-      // try get example from request
-      const content = request.content[mimeType]
-      if (content.example) {
-        return content.example
-      }
-
-      // try get example from schema
-      if (schemaNotRef(content.schema)) {
-        const schema = content.schema
-        if (schema.example) {
-          return schema.example
-        }
-      }
-    }
-  }
-  return undefined
-}
-
-const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    return Object.keys(request.content)
-  }
-  return []
-}
 
 /**
  * OpenAPI Version 3.0
@@ -106,6 +48,91 @@ export class OpenAPI3 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  private resolveRef<T>(ref: string): T | undefined {
+    if (!ref || !ref.startsWith("#/")) {
+      return undefined
+    }
+    const parts = ref
+      .slice(2)
+      .split("/")
+      .map(part => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+
+    let current: any = this.document
+    for (let part of parts) {
+      if (current == null || typeof current !== "object") {
+        return undefined
+      }
+      current = current[part]
+    }
+    return current as T | undefined
+  }
+
+  private resolveMaybeRef<T>(
+    value: T | OpenAPIV3.ReferenceObject | undefined
+  ): T | undefined {
+    if (!value) {
+      return undefined
+    }
+    if (isReferenceObject(value)) {
+      return this.resolveRef<T>(value.$ref)
+    }
+    return value as T
+  }
+
+  private normalizeParameters(
+    params:
+      | (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[]
+      | undefined
+  ): OpenAPIV3.ParameterObject[] {
+    if (!Array.isArray(params)) {
+      return []
+    }
+    const resolved: OpenAPIV3.ParameterObject[] = []
+    for (let param of params) {
+      const normalized = this.resolveMaybeRef<OpenAPIV3.ParameterObject>(param)
+      if (normalized) {
+        resolved.push(normalized)
+      }
+    }
+    return resolved
+  }
+
+  private getMimeTypes(operation: OpenAPIV3.OperationObject): string[] {
+    const requestBody = this.resolveMaybeRef<OpenAPIV3.RequestBodyObject>(
+      operation.requestBody
+    )
+    if (!requestBody?.content) {
+      return []
+    }
+    return Object.keys(requestBody.content)
+  }
+
+  private getRequestExample(
+    operation: OpenAPIV3.OperationObject,
+    mimeType?: string
+  ) {
+    const requestBody = this.resolveMaybeRef<OpenAPIV3.RequestBodyObject>(
+      operation.requestBody
+    )
+    if (!requestBody?.content) {
+      return undefined
+    }
+    const mimeTypes = Object.keys(requestBody.content)
+    if (mimeTypes.length === 0) {
+      return undefined
+    }
+    const selected = mimeType || mimeTypes[0]
+    const content = requestBody.content[selected]
+    if (!content) {
+      return undefined
+    }
+    if (content.example) {
+      return content.example
+    }
+    const schema = this.resolveMaybeRef<OpenAPIV3.SchemaObject>(content.schema)
+    return schema?.example
   }
 
   getInfo = async (): Promise<ImportInfo> => {
@@ -131,31 +158,27 @@ export class OpenAPI3 extends OpenAPISource {
     const queries: Query[] = []
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
-      // parameters that apply to every operation in the path
-      let pathParams: OpenAPIV3.ParameterObject[] = []
-
-      // pathItemObject can be undefined
       if (!pathItemObject) {
         continue
       }
 
-      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
-        if (isParameter(key, opOrParams)) {
-          const pathParameters = opOrParams as OpenAPIV3.ParameterObject[]
-          pathParams.push(...pathParameters)
+      const pathItem = pathItemObject as OpenAPIV3.PathItemObject
+      const pathParameters = this.normalizeParameters(pathItem.parameters)
+
+      for (let methodName of methods) {
+        const maybeOperation = (pathItem as Record<string, any>)[methodName]
+        if (!maybeOperation) {
           continue
         }
-        // can not be a parameter, must be an operation
-        const operation = opOrParams as OpenAPIV3.OperationObject
 
-        const methodName = key
         if (!this.isSupportedMethod(methodName)) {
           continue
         }
+
+        const operation = maybeOperation as OpenAPIV3.OperationObject
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
         const ensureParameter = (paramName: string, defaultValue = "") => {
           if (!parameters.some(parameter => parameter.name === paramName)) {
@@ -165,42 +188,39 @@ export class OpenAPI3 extends OpenAPISource {
             })
           }
         }
-        const mimeTypes = getMimeTypes(operation)
+        const mimeTypes = this.getMimeTypes(operation)
+        const requestBody = this.getRequestExample(operation, mimeTypes[0])
 
         if (mimeTypes.length > 0) {
           headers["Content-Type"] = mimeTypes[0]
         }
 
-        // combine the path parameters with the operation parameters
-        const operationParams = operation.parameters || []
-        const allParams = [...pathParams, ...operationParams]
+        const operationParams = this.normalizeParameters(operation.parameters)
+        const allParams = [...pathParameters, ...operationParams]
 
         for (let param of allParams) {
-          if (parameterNotRef(param)) {
-            switch (param.in) {
-              case "query": {
-                let prefix = ""
-                if (queryString) {
-                  prefix = "&"
-                }
-                queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
-                break
+          switch (param.in) {
+            case "query": {
+              let prefix = ""
+              if (queryString) {
+                prefix = "&"
               }
-              case "header":
-                headers[param.name] = `{{${param.name}}}`
-                break
-              case "path":
-                // do nothing: param is already in the path
-                break
-              case "formData":
-                // future enhancement
-                break
+              queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
+              break
             }
+            case "header":
+              headers[param.name] = `{{${param.name}}}`
+              break
+            case "path":
+              // already captured via path string
+              break
+            case "formData":
+              // future enhancement for multipart/form-data
+              break
+          }
 
-            // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
-              ensureParameter(param.name)
-            }
+          if (["query", "header", "path"].includes(param.in)) {
+            ensureParameter(param.name)
           }
         }
 

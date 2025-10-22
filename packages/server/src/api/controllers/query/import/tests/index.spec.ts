@@ -1,8 +1,13 @@
 import { events } from "@budibase/backend-core"
 import fs from "fs"
+import nodeFetch from "node-fetch"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
 import { RestImporter } from "../index"
+
+jest.mock("node-fetch", () => jest.fn())
+
+const mockedFetch = nodeFetch as jest.MockedFunction<typeof nodeFetch>
 
 type Assertions = Record<
   DatasetKey,
@@ -53,6 +58,10 @@ describe("Rest Importer", () => {
 
   beforeAll(async () => {
     await config.init()
+  })
+
+  afterEach(() => {
+    mockedFetch.mockReset()
   })
 
   let restImporter: RestImporter
@@ -235,5 +244,26 @@ describe("Rest Importer", () => {
       1
     )
     jest.clearAllMocks()
+  })
+
+  it("fetches specifications when provided a URL", async () => {
+    const specUrl = "https://example.com/spec.yaml"
+    mockedFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: jest.fn().mockResolvedValue(oapi3PetstoreJson),
+    } as any)
+
+    await config.doInContext(config.devWorkspaceId, async () => {
+      restImporter = new RestImporter(specUrl)
+      await restImporter.init()
+
+      expect(mockedFetch).toHaveBeenCalledWith(specUrl)
+
+      const datasource = await config.createDatasource()
+      const importResult = await restImporter.importQueries(datasource._id)
+      expect(importResult.errorQueries.length).toBe(0)
+      expect(importResult.queries.length).toBe(19)
+    })
   })
 })
