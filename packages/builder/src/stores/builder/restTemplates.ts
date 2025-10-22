@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Microsoft Teams",
-      description:
-        "Microsoft Graph endpoints for Teams channels, chats, and meeting workflows",
-      specs: [
-        {
-          version: "v1.0",
-          url: "https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/microsoft-teams.svg",
-    },
-    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
@@ -90,18 +78,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: "/builder/assets/rest-template-icons/netsuite.svg",
-    },
-    {
-      name: "n8n",
-      description:
-        "n8n public API for managing workflows, executions, credentials, and users",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/cli/src/public-api/v1/openapi.yml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/n8n.svg",
     },
     {
       name: "Jira",
