@@ -43,7 +43,7 @@
   },
   "scripts": {
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
-    "build": "DISABLE_V8_COMPILE_CACHE=1 NODE_OPTIONS=--max-old-space-size=2500 lerna run build --stream",
+    "build": "DISABLE_V8_COMPILE_CACHE=1 NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream",
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
     "build:cli": "yarn build --scope @budibase/cli",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",

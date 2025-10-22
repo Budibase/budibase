@@ -12,7 +12,6 @@
 
   // Initialize Routify store and derive callable function
   $gotoStore
-  let goto
   $: goto = $gotoStore
 
   export let app
