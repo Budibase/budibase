@@ -1,6 +1,33 @@
-import { ImportSource } from "."
 import SwaggerParser from "@apidevtools/swagger-parser"
+import { load as loadYaml } from "js-yaml"
+import isObject from "lodash/isObject"
 import { OpenAPI } from "openapi-types"
+import { ImportSource } from "."
+
+const isYamlDocument = (loaded: unknown): loaded is OpenAPI.Document => {
+  if (isObject(loaded)) {
+    return true
+  }
+  return false
+}
+
+const prepareDocument = (raw: string): string | OpenAPI.Document => {
+  const trimmed = raw.trim()
+  if (!trimmed) {
+    throw new Error("Empty OpenAPI document")
+  }
+
+  try {
+    const yamlDocument = loadYaml(trimmed)
+    if (isYamlDocument(yamlDocument)) {
+      return yamlDocument
+    }
+  } catch (err) {
+    // fall through to allow swagger parser to attempt parsing
+  }
+
+  return raw
+}
 
 export abstract class OpenAPISource extends ImportSource {
   parseData = async (data: string): Promise<OpenAPI.Document> => {
@@ -10,21 +37,16 @@ export abstract class OpenAPISource extends ImportSource {
       },
     }
 
-    const document = (await SwaggerParser.parse(
-      data,
-      baseOptions
-    )) as OpenAPI.Document
+    const parsedInput = prepareDocument(data)
+    const document = await SwaggerParser.parse(parsedInput, baseOptions)
 
     try {
-      return (await SwaggerParser.validate(document)) as OpenAPI.Document
+      return await SwaggerParser.validate(document)
     } catch (err) {
       console.log(
         `[OpenAPI Import] Schema validation failed, continuing without validation`
       )
-      return (await SwaggerParser.dereference(
-        document,
-        baseOptions
-      )) as OpenAPI.Document
+      return await SwaggerParser.dereference(document, baseOptions)
     }
   }
 }

@@ -126,12 +126,6 @@ export class OpenAPI3 extends OpenAPISource {
       const server = this.document.servers[0] as ServerObject
       url = server.url
       serverVariables = server.variables || {}
-      try {
-        url = new URL(url)
-      } catch (err) {
-        // unable to construct url, e.g. with variables
-        // proceed with string form of url
-      }
     }
 
     const queries: Query[] = []
