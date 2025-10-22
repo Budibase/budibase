@@ -15,6 +15,10 @@ builderAdminRoutes
   .post("/api/agent/chat/stream", ai.agentChatStream)
   .delete("/api/agent/history/:historyId", ai.remove)
   .get("/api/agent/history", ai.fetchHistory)
+  .get("/api/configs", ai.fetchAIConfigs)
+  .post("/api/configs", ai.createAIConfig)
+  .put("/api/configs", ai.updateAIConfig)
+  .delete("/api/configs/:id", ai.deleteAIConfig)
   .post(
     "/api/agent/toolsource",
     createToolSourceValidator(),
