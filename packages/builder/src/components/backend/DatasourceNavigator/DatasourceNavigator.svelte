@@ -24,6 +24,7 @@
   export let datasourceFilter = () => true
   export let showAppUsers = true
   export let showManageRoles = true
+  export let datasourceSort
   let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
@@ -38,6 +39,10 @@
     searchTerm,
     datasourceFilter
   )
+
+  $: displayedDatasources = datasourceSort
+    ? enrichedDataSources.slice().sort(datasourceSort)
+    : enrichedDataSources
 
   function selectDatasource(datasource) {
     openNode(datasource)
@@ -97,7 +102,7 @@
       selectedBy={$userSelectedResourceMap.roles}
     />
   {/if}
-  {#each enrichedDataSources.filter(ds => ds.show) as datasource}
+  {#each displayedDatasources.filter(ds => ds.show) as datasource}
     <DatasourceNavItem
       {datasource}
       on:click={() => selectDatasource(datasource)}
