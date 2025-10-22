@@ -80,18 +80,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/netsuite.svg",
     },
     {
-      name: "n8n",
-      description:
-        "n8n public API for managing workflows, executions, credentials, and users",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/cli/src/public-api/v1/openapi.yml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/n8n.svg",
-    },
-    {
       name: "Jira",
       description:
         "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
