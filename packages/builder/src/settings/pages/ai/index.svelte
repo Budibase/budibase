@@ -10,15 +10,19 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin, licensing } from "@/stores/portal"
+  import { admin, featureFlags, licensing } from "@/stores/portal"
   import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
   import AIConfigTile from "./AIConfigTile.svelte"
   import ConfigModal from "./ConfigModal.svelte"
+  import CustomConfigModal from "./CustomConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import {
+    type CustomAIProviderConfig,
+    type CreateAIConfigRequest,
+    type UpdateAIConfigRequest,
     type AIProvider,
     ConfigType,
     type AIConfig,
@@ -37,16 +41,18 @@
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
+  let customConfigModal: { show: () => void; hide: () => void }
   let modalProvider: AIProvider
   let modalConfig: ProviderConfig
   let providerNames: AIProvider[]
 
   let providers: { provider: AIProvider; config: ProviderConfig }[]
-  let chatProviders: { provider: AIProvider; config: ProviderConfig }[]
+  let customConfigs: CustomAIProviderConfig[] = []
   let hasLicenseKey: boolean
+  let customModalConfig: CustomAIProviderConfig | null = null
 
   $: isCloud = $admin.cloud
-  $: chatEnabled = true // TODO
+  $: chatEnabled = $featureFlags.AI_AGENTS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -56,16 +62,6 @@
         config: getProviderConfig(provider).config,
       }))
     : []
-
-  $: chatProviders =
-    chatEnabled && aiConfig
-      ? [
-          {
-            provider: "Chat",
-            config: getProviderConfig("Chat").config,
-          },
-        ]
-      : []
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -145,8 +141,96 @@
     await saveConfig(aiConfig)
   }
 
+  function buildChatDraft(): CustomAIProviderConfig {
+    return {
+      provider: "Custom",
+      name: "",
+      active: true,
+      isDefault: customConfigs.length === 0,
+      apiKey: "",
+      baseUrl: "",
+      defaultModel: "",
+    }
+  }
+
+  async function loadChatConfigs() {
+    try {
+      customConfigs = await API.fetchChatConfigs()
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to fetch chat configurations")
+    }
+  }
+
+  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
+    customModalConfig = config
+      ? {
+          ...config,
+          apiKey: config.apiKey ?? "",
+          baseUrl: config.baseUrl ?? "",
+          defaultModel: config.defaultModel ?? "",
+          active: config.active ?? false,
+          isDefault: config.isDefault ?? false,
+        }
+      : {
+          ...buildChatDraft(),
+        }
+    customConfigModal?.show()
+  }
+
+  function closeChatConfigModal() {
+    customModalConfig = null
+    customConfigModal?.hide()
+  }
+
+  async function handleChatConfigSave(
+    event: CustomEvent<CustomAIProviderConfig>
+  ) {
+    const draft = event.detail
+    try {
+      if (draft._id) {
+        await API.updateChatConfig(draft as UpdateAIConfigRequest)
+        notifications.success("Chat configuration updated")
+      } else {
+        const { _id, _rev, ...rest } = draft
+        await API.createChatConfig(rest as CreateAIConfigRequest)
+        notifications.success("Chat configuration created")
+      }
+      await loadChatConfigs()
+      closeChatConfigModal()
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to save chat configuration")
+    }
+  }
+
+  function handleChatModalCancel() {
+    closeChatConfigModal()
+  }
+
+  async function handleChatConfigDelete(
+    event: CustomEvent<CustomAIProviderConfig>
+  ) {
+    const draft = event.detail
+    if (!draft._id) {
+      closeChatConfigModal()
+      return
+    }
+
+    try {
+      await API.deleteChatConfig(draft._id)
+      notifications.success("Chat configuration deleted")
+      await loadChatConfigs()
+      closeChatConfigModal()
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to delete chat configuration")
+    }
+  }
+
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
+    if (provider === "Chat") {
+      openCustomAIConfigModal()
+      return
+    }
     if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
       portalModal.show()
       return
@@ -180,6 +264,7 @@
     } catch {
       notifications.error("Error fetching AI settings")
     }
+    await loadChatConfigs()
   })
 </script>
 
@@ -254,17 +339,26 @@
       <div class="section">
         <div class="section-header">
           <div class="section-title">Chat configuration</div>
+          <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
+            Add configuration
+          </Button>
         </div>
 
-        <div class="ai-list">
-          {#each chatProviders as { provider, config } (provider)}
-            <AIConfigTile
-              {config}
-              editHandler={() => handleEnable(provider)}
-              disableHandler={() => disableProvider(provider)}
-            />
-          {/each}
-        </div>
+        {#if customConfigs.length}
+          <div class="ai-list">
+            {#each customConfigs as config (config._id)}
+              <AIConfigTile
+                {config}
+                editHandler={() => openCustomAIConfigModal(config)}
+                disableHandler={null}
+              />
+            {/each}
+          </div>
+        {:else}
+          <div class="no-enabled">
+            <Body size="S">No chat configurations yet</Body>
+          </div>
+        {/if}
       </div>
     {/if}
   </Layout>
@@ -288,6 +382,16 @@
       enableProvider(modalProvider, updatedConfig)}
     disableHandler={() => disableProvider(modalProvider)}
   />
+</Modal>
+<Modal bind:this={customConfigModal}>
+  {#if customModalConfig}
+    <CustomConfigModal
+      config={customModalConfig}
+      on:save={handleChatConfigSave}
+      on:cancel={handleChatModalCancel}
+      on:delete={handleChatConfigDelete}
+    />
+  {/if}
 </Modal>
 
 <style>
