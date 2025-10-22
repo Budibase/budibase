@@ -137,9 +137,10 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   async logout() {
     // Save current URL as return URL before logging out, unless we're on auth pages
     const currentPath = window.location.pathname
-    const isAuthPage = currentPath.includes("/auth") ||
-                       currentPath.includes("/invite") ||
-                       currentPath.includes("/admin")
+    const isAuthPage =
+      currentPath.includes("/auth") ||
+      currentPath.includes("/invite") ||
+      currentPath.includes("/admin")
 
     if (!isAuthPage && !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)) {
       CookieUtils.setCookie(Constants.Cookies.ReturnUrl, currentPath)

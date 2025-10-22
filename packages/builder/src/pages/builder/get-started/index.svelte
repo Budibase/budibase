@@ -31,7 +31,7 @@
     <div>
       <Layout justifyItems="center">
         <div class="budibaseLogo">
-          <BBLogo size={36} color={"var(--spectrum-global-color-gray-900)"}/>
+          <BBLogo size={36} color={"var(--spectrum-global-color-gray-900)"} />
         </div>
         <Heading>Create your own workspace</Heading>
         <Body textAlign="center">
