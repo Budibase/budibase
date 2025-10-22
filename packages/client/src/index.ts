@@ -14,6 +14,7 @@ import {
   routeStore,
   notificationStore,
 } from "@/stores"
+import { mount } from "svelte"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
 import {
@@ -101,7 +102,7 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: ClientApp | UpdatingApp
+let app: Record<string, unknown> | undefined
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
@@ -132,7 +133,7 @@ const loadBudibase = async () => {
 
   if (window.MIGRATING_APP) {
     if (!app) {
-      app = new UpdatingApp({
+      app = mount(UpdatingApp, {
         target: window.document.body,
       })
     }
@@ -205,7 +206,7 @@ const loadBudibase = async () => {
 
   // Create app if one hasn't been created yet
   if (!app) {
-    app = new ClientApp({
+    app = mount(ClientApp, {
       target: window.document.body,
     })
   }

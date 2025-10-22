@@ -8,7 +8,7 @@ import { builderStore } from "./builder"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 
-import * as AppComponents from "../components/app/index.js"
+import * as AppComponents from "../components/app/index.ts"
 import { ScreenslotID, ScreenslotType } from "../constants"
 
 export const BudibasePrefix = "@budibase/standard-components/"

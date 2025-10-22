@@ -46,6 +46,7 @@ import {
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
+import { render } from "svelte/server"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -274,8 +275,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
       }
 
-      // `css` deprecated. CSS elements now included in `head`
-      const { head, html } = AppComponent.render({ props })
+      const { head, body } = await render(AppComponent, { props: { props } })
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
@@ -316,7 +316,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       ctx.body = await processString(appHbs, {
         head: `${head}${extraHead}`,
-        body: html,
+        body: body,
         css: `:root{${themeVariables}}`,
         appId: workspaceId,
         embedded: bbHeaderEmbed,
@@ -374,11 +374,16 @@ export const serveBuilderPreview = async function (
 }
 
 function serveLocalFile(ctx: Ctx, fileName: string) {
-  const tsPath = join(require.resolve("@budibase/client"), "..")
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  return send(ctx, fileName, {
-    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-  })
+  // Resolve via the package.json to avoid ESM/CJS export resolution issues
+  // with require.resolve on packages that mark "type":"module".
+  const pkgJsonPath = require.resolve("@budibase/client/package.json")
+  const pkgDir = path.dirname(pkgJsonPath)
+  const distFromPkg = join(pkgDir, "dist")
+  //normal falback
+
+  const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  const root = fs.existsSync(nodeModulesDist) ? nodeModulesDist : distFromPkg
+  return send(ctx, fileName, { root })
 }
 
 export const serveClientLibrary = async function (
