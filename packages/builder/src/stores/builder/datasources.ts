@@ -316,7 +316,7 @@ export class DatasourceStore extends DerivedBudiStore<
       const sql =
         "SELECT * FROM " +
         viewName +
-        " \nOFFSET {{ offset }} \nLIMIT {{ limit }}"
+        " \nLIMIT {{ limit }} \nOFFSET {{ offset }}"
 
       const query = {
         datasourceId: datasource._id!,

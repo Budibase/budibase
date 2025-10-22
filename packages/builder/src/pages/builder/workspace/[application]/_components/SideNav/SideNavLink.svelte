@@ -68,6 +68,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-bottom: 2px;
     height: 28px;
     gap: 5px;
     padding: 0 calc(var(--nav-padding) / 2);

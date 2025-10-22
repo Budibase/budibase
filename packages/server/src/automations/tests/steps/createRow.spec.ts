@@ -233,6 +233,83 @@ describe("test the create row action", () => {
     expect(objectData.ContentLength).toBeGreaterThan(0)
   })
 
+  it("should accept attachment values provided as JSON strings (array)", async () => {
+    let attachmentTable = await config.api.table.save(
+      basicTableWithAttachmentField()
+    )
+
+    let attachmentRow: Row = { tableId: attachmentTable._id }
+
+    const filename = "test_json_array.txt"
+    const presignedUrl = await uploadTestFile(filename)
+    const attachmentJson = JSON.stringify([{ url: presignedUrl, filename }])
+
+    attachmentRow.file_attachment = attachmentJson as unknown as any
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .createRow({ row: attachmentRow }, { stepName: "CreateRowJsonArray" })
+      .test({ fields: { type: "attachment-json-array" } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.row.file_attachment[0]).toHaveProperty("key")
+  })
+
+  it("should accept attachment values provided as JSON strings (single)", async () => {
+    let attachmentTable = await config.api.table.save(
+      basicTableWithAttachmentField()
+    )
+
+    let attachmentRow: Row = { tableId: attachmentTable._id }
+
+    const filename = "test_json_single.txt"
+    const presignedUrl = await uploadTestFile(filename)
+    const attachmentJson = JSON.stringify({ url: presignedUrl, filename })
+
+    // Simulate binding producing a JSON string
+    attachmentRow.single_file_attachment = attachmentJson as unknown as any
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .createRow({ row: attachmentRow }, { stepName: "CreateRowJsonSingle" })
+      .test({ fields: { type: "attachment-json-single" } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.row.single_file_attachment).toHaveProperty(
+      "key"
+    )
+  })
+
+  it("should accept attachment objects from bindings with { name, url, key } by deriving filename", async () => {
+    let attachmentTable = await config.api.table.save(
+      basicTableWithAttachmentField()
+    )
+
+    let attachmentRow: Row = { tableId: attachmentTable._id }
+
+    const filename = "test_binding_like.jpg"
+    const presignedUrl = await uploadTestFile(filename)
+    const bindingLike = JSON.stringify({
+      name: filename,
+      url: presignedUrl,
+      key: `some_workspace/attachments/${filename}`,
+      size: 12345,
+      extension: "jpg",
+    })
+
+    attachmentRow.single_file_attachment = bindingLike as unknown as any
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .createRow({ row: attachmentRow }, { stepName: "CreateRowBindingLike" })
+      .test({ fields: { type: "attachment-binding-like" } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.row.single_file_attachment).toHaveProperty(
+      "key"
+    )
+  })
+
   it("should check that attachment without the correct keys throws an error", async () => {
     let attachmentTable = await config.api.table.save(
       basicTableWithAttachmentField()
