@@ -53,6 +53,9 @@
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
+  $: showFreeTrialBanner =
+    $licensing.license?.plan?.type ===
+      Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
 
   $: usersLimitLockAction = $licensing?.errUserLimit
     ? () => accountLockedModal.show()
@@ -219,13 +222,6 @@
     await API.analyticsPing({ source: "builder" })
   }
 
-  const showFreeTrialBanner = () => {
-    return (
-      $licensing.license?.plan?.type ===
-        Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
-    )
-  }
-
   async function initBuilder() {
     loaded.set(false)
     try {
@@ -322,7 +318,7 @@
   }
 </script>
 
-<EnterpriseBasicTrialBanner show={showFreeTrialBanner()} />
+<EnterpriseBasicTrialBanner show={showFreeTrialBanner} />
 
 <AccountLockedModal
   bind:this={accountLockedModal}
