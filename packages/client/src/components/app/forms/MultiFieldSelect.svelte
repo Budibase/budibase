@@ -29,6 +29,8 @@
   export let direction: "horizontal" | "vertical" = "vertical"
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let showSelectAll: boolean = false
+  export let selectAllText: string = "Select all"
 
   let fieldState: FieldState | undefined
   let fieldApi: FieldApi | undefined
@@ -94,6 +96,8 @@
         {placeholder}
         {options}
         {autocomplete}
+        {showSelectAll}
+        {selectAllText}
       />
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup
@@ -105,6 +109,8 @@
         on:change={handleChange}
         getOptionLabel={flatOptions ? x => x : x => getProp("label", x)}
         getOptionValue={flatOptions ? x => x : x => getProp("value", x)}
+        {showSelectAll}
+        {selectAllText}
       />
     {/if}
   {/if}
