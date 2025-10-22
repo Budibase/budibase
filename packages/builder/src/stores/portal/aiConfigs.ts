@@ -18,10 +18,10 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
   }
 
   init = async () => {
-    await this.fetchAIConfigConfigs()
+    await this.fetch()
   }
 
-  fetchAIConfigConfigs = async () => {
+  fetch = async () => {
     const configs = await API.aiConfig.fetch()
     this.update(state => {
       state.customConfigs = configs
@@ -30,7 +30,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
     return configs
   }
 
-  createAIConfigConfig = async (
+  createConfig = async (
     config: CreateAIConfigRequest
   ): Promise<CustomAIProviderConfig> => {
     const created = await API.aiConfig.create(config)
@@ -41,7 +41,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
     return created
   }
 
-  updateAIConfigConfig = async (
+  updateConfig = async (
     config: UpdateAIConfigRequest
   ): Promise<CustomAIProviderConfig> => {
     const updated = await API.aiConfig.update(config)
@@ -55,7 +55,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
     return updated
   }
 
-  deleteAIConfigConfig = async (id: string) => {
+  deleteConfig = async (id: string) => {
     await API.aiConfig.delete(id)
     this.update(state => {
       state.customConfigs = state.customConfigs.filter(

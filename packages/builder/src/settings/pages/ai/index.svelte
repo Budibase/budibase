@@ -10,7 +10,12 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin, featureFlags, licensing } from "@/stores/portal"
+  import {
+    admin,
+    aiConfigsStore,
+    featureFlags,
+    licensing,
+  } from "@/stores/portal"
   import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
@@ -21,8 +26,6 @@
   import PortalModal from "./PortalModal.svelte"
   import {
     type CustomAIProviderConfig,
-    type CreateAIConfigRequest,
-    type UpdateAIConfigRequest,
     type AIProvider,
     ConfigType,
     type AIConfig,
@@ -47,7 +50,6 @@
   let providerNames: AIProvider[]
 
   let providers: { provider: AIProvider; config: ProviderConfig }[]
-  let customConfigs: CustomAIProviderConfig[] = []
   let hasLicenseKey: boolean
   let customModalConfig: CustomAIProviderConfig | null = null
 
@@ -62,6 +64,8 @@
         config: getProviderConfig(provider).config,
       }))
     : []
+
+  $: customConfigs = $aiConfigsStore.customConfigs
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -153,14 +157,6 @@
     }
   }
 
-  async function loadChatConfigs() {
-    try {
-      customConfigs = await API.fetchChatConfigs()
-    } catch (err: any) {
-      notifications.error(err.message || "Failed to fetch chat configurations")
-    }
-  }
-
   function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
     customModalConfig = config
       ? {
@@ -188,14 +184,13 @@
     const draft = event.detail
     try {
       if (draft._id) {
-        await API.updateChatConfig(draft as UpdateAIConfigRequest)
+        await aiConfigsStore.updateConfig(draft)
         notifications.success("Chat configuration updated")
       } else {
         const { _id, _rev, ...rest } = draft
-        await API.createChatConfig(rest as CreateAIConfigRequest)
+        await aiConfigsStore.createConfig(rest)
         notifications.success("Chat configuration created")
       }
-      await loadChatConfigs()
       closeChatConfigModal()
     } catch (err: any) {
       notifications.error(err.message || "Failed to save chat configuration")
@@ -216,9 +211,8 @@
     }
 
     try {
-      await API.deleteChatConfig(draft._id)
+      await aiConfigsStore.deleteConfig(draft._id)
       notifications.success("Chat configuration deleted")
-      await loadChatConfigs()
       closeChatConfigModal()
     } catch (err: any) {
       notifications.error(err.message || "Failed to delete chat configuration")
@@ -253,7 +247,7 @@
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-      const license = await $licensing.license
+      const license = $licensing.license
       const isOfflineLicense = () => license && "identifier" in license
       if (isOfflineLicense()) {
         hasLicenseKey = true
@@ -261,10 +255,11 @@
         const licenseKeyResponse = await API.getLicenseKey()
         hasLicenseKey = !!licenseKeyResponse?.licenseKey
       }
+
+      customConfigs = await aiConfigsStore.fetch()
     } catch {
       notifications.error("Error fetching AI settings")
     }
-    await loadChatConfigs()
   })
 </script>
 
