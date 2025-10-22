@@ -54,7 +54,7 @@
     "joi": "17.6.0",
     "jsonwebtoken": "9.0.2",
     "knex": "2.4.2",
-    "koa": "2.15.4",
+    "koa": "3.0.3",
     "koa-passport": "^6.0.0",
     "koa-pino-logger": "4.0.0",
     "@koa/router": "13.1.0",
