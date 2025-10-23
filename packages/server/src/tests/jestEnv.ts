@@ -28,7 +28,7 @@ process.env.MINIO_SECRET_KEY = "budibase"
 process.env.SYNC_MIGRATION_CHECKS_MS = "10"
 process.env.SKIP_WORKSPACE_MIGRATIONS = "1"
 
-let agent: MockAgent | null = null
+let agent: MockAgent | null = null;
 
 // Don't eagerly install MockAgent - let tests control when they need it
 // This allows nock and undici to coexist
