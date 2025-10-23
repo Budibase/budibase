@@ -8,6 +8,7 @@
     Heading,
     ActionButton,
     notifications,
+    keepOpen,
   } from "@budibase/bbui"
   import { type CustomAIProviderConfig } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
@@ -43,6 +44,7 @@
       }
     } catch (err: any) {
       notifications.error(err.message || "Failed to save chat configuration")
+      return keepOpen
     }
   }
 
