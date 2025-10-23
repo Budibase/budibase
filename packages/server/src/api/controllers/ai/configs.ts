@@ -38,10 +38,6 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  if (!body.apiKey || body.apiKey.trim() === "") {
-    throw new HTTPError("API key is required", 400)
-  }
-
   const newConfig = await sdk.aiConfigs.create(body)
 
   ctx.body = sanitizeConfig(newConfig)
@@ -58,10 +54,6 @@ export const updateAIConfig = async (
 
   if (!body.name) {
     throw new HTTPError("Config name is required", 400)
-  }
-
-  if (!body.apiKey || body.apiKey.trim() === "") {
-    throw new HTTPError("API key is required", 400)
   }
 
   const updatedConfig = await sdk.aiConfigs.update(body)

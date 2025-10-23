@@ -146,30 +146,16 @@
     await saveConfig(aiConfig)
   }
 
-  function buildChatDraft(): CustomAIProviderConfig {
-    return {
-      name: "",
-      active: true,
-      isDefault: customConfigs.length === 0,
-      apiKey: "",
-      baseUrl: "",
-      defaultModel: "",
-    }
-  }
-
   function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
     customModalConfig = config
       ? {
           ...config,
           apiKey: config.apiKey ?? "",
           baseUrl: config.baseUrl ?? "",
-          defaultModel: config.defaultModel ?? "",
-          active: config.active ?? false,
+          model: config.model ?? "",
           isDefault: config.isDefault ?? false,
         }
-      : {
-          ...buildChatDraft(),
-        }
+      : null
     customConfigModal?.show()
   }
 
@@ -332,14 +318,12 @@
   />
 </Modal>
 <Modal bind:this={customConfigModal}>
-  {#if customModalConfig}
-    <CustomConfigModal
-      config={customModalConfig}
-      on:hide={() => {
-        customConfigModal.hide()
-      }}
-    />
-  {/if}
+  <CustomConfigModal
+    config={customModalConfig}
+    on:hide={() => {
+      customConfigModal.hide()
+    }}
+  />
 </Modal>
 
 <style>

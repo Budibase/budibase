@@ -15,18 +15,27 @@
   } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
-  export let config: CustomAIProviderConfig
+  export let config: CustomAIProviderConfig | null
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: CustomAIProviderConfig = { ...config }
+  let draft: CustomAIProviderConfig = config
+    ? { ...config }
+    : {
+        name: "",
+        isDefault: false,
+        baseUrl: "",
+        model: "",
+        apiKey: "",
+        liteLLMKey: "",
+      }
 
   $: isEdit = !!config
   $: hasApiKey =
     typeof draft.apiKey === "string" &&
     (draft.apiKey === PASSWORD_REPLACEMENT || draft.apiKey.trim().length > 0)
   $: trimmedName = (draft.name || "").trim()
-  $: canSave = trimmedName.length > 0 && hasApiKey
+  $: canSave = trimmedName.length > 0 // && hasApiKey
 
   async function confirm() {
     try {
@@ -67,7 +76,7 @@
 >
   <div slot="header">
     <Heading size="XS">
-      {isEdit ? `Edit ${config.name}` : "Add chat configuration"}
+      {isEdit ? `Edit ${draft.name}` : "Add chat configuration"}
     </Heading>
   </div>
 
