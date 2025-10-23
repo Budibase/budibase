@@ -9,10 +9,7 @@
     ActionButton,
     notifications,
   } from "@budibase/bbui"
-  import {
-    PASSWORD_REPLACEMENT,
-    type CustomAIProviderConfig,
-  } from "@budibase/types"
+  import { type CustomAIProviderConfig } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
   export let config: CustomAIProviderConfig | null
@@ -31,11 +28,8 @@
       }
 
   $: isEdit = !!config
-  $: hasApiKey =
-    typeof draft.apiKey === "string" &&
-    (draft.apiKey === PASSWORD_REPLACEMENT || draft.apiKey.trim().length > 0)
   $: trimmedName = (draft.name || "").trim()
-  $: canSave = trimmedName.length > 0 // && hasApiKey
+  $: canSave = trimmedName.length > 0
 
   async function confirm() {
     try {
