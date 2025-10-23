@@ -19,7 +19,7 @@
   </div>
   <div>
     <ActionButton on:click={() => editHandler && editHandler()}>
-      {#if config.apiKey}Edit{:else}Set up{/if}
+      Edit
     </ActionButton>
   </div>
 </div>
