@@ -7,6 +7,8 @@ import {
   DeleteDatasourceResponse,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchDatasourceRelationshipInfoRequest,
+  FetchDatasourceRelationshipInfoResponse,
   FetchDatasourceViewInfoRequest,
   FetchDatasourceViewInfoResponse,
   FetchExternalSchemaResponse,
@@ -42,6 +44,9 @@ export interface DatasourceEndpoints {
   fetchViewInfoForDatasource: (
     datasource: Datasource
   ) => Promise<FetchDatasourceViewInfoResponse>
+  fetchRelationshipInfoForDatasource: (
+    datasource: Datasource
+  ) => Promise<FetchDatasourceRelationshipInfoResponse>
   fetchExternalSchema: (
     datasourceId: string
   ) => Promise<FetchExternalSchemaResponse>
@@ -135,6 +140,19 @@ export const buildDatasourceEndpoints = (
       FetchDatasourceViewInfoResponse
     >({
       url: `/api/datasources/views`,
+      body: { datasource },
+    })
+  },
+
+  /**
+   * Fetch relationship names available within the datasource
+   */
+  fetchRelationshipInfoForDatasource: async (datasource: Datasource) => {
+    return await API.post<
+      FetchDatasourceRelationshipInfoRequest,
+      FetchDatasourceRelationshipInfoResponse
+    >({
+      url: `/api/datasources/relationships`,
       body: { datasource },
     })
   },

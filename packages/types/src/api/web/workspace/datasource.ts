@@ -1,4 +1,5 @@
 import { Datasource } from "../../../documents"
+import { DatasourceRelationshipConfig } from "../../../sdk/datasources"
 
 export interface CreateDatasourceResponse {
   datasource: Datasource
@@ -38,6 +39,15 @@ export interface FetchDatasourceViewInfoRequest {
 
 export interface FetchDatasourceViewInfoResponse {
   views: string[]
+  error?: string
+}
+
+export interface FetchDatasourceRelationshipInfoRequest {
+  datasource: Datasource
+}
+
+export interface FetchDatasourceRelationshipInfoResponse {
+  relationships: DatasourceRelationshipConfig[]
   error?: string
 }
 

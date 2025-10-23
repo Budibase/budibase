@@ -15,6 +15,8 @@ import {
   SqlClient,
   EnrichedQueryJson,
   SqlQueryBinding,
+  DatasourceRelationshipConfig,
+  DatasourceRelationshipType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -26,6 +28,7 @@ import {
 } from "./utils"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
+import { v4 as uuidv4 } from "uuid"
 
 import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
@@ -71,6 +74,7 @@ const SCHEMA: Integration = {
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
     [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
+  relationships: true,
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -192,6 +196,28 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   WHERE pg_namespace.nspname = ANY(current_schemas(false))
     AND pg_table_is_visible(pg_class.oid)
     AND pg_class.relkind = 'v';
+  `
+
+  RELATIONSHIPS_SQL = () => `
+  SELECT
+    tc.table_schema,
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_schema AS foreign_table_schema,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+  FROM
+    information_schema.table_constraints AS tc
+    JOIN information_schema.key_column_usage AS kcu
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    JOIN information_schema.constraint_column_usage AS ccu
+      ON ccu.constraint_name = tc.constraint_name
+      AND ccu.table_schema = tc.table_schema
+  WHERE
+    tc.constraint_type = 'FOREIGN KEY'
+    AND tc.table_schema = ANY(current_schemas(false));
   `
 
   COLUMNS_SQL = () => `
@@ -448,6 +474,63 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const views: string[] = viewsResponse.rows.map(row => row.view_name)
 
       return views
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getRelationships(
+    tableNames?: string[]
+  ): Promise<DatasourceRelationshipConfig[]> {
+    try {
+      await this.openConnection()
+      const relationshipsResponse = await this.client.query(
+        this.RELATIONSHIPS_SQL()
+      )
+
+      // Create structured relationship configs, excluding self-referencing relationships
+      const relationships: DatasourceRelationshipConfig[] =
+        relationshipsResponse.rows
+          .filter(row => row.table_name !== row.foreign_table_name) // Exclude self-referencing relationships
+          .filter(
+            row =>
+              !tableNames ||
+              (tableNames.includes(row.table_name) &&
+                tableNames.includes(row.foreign_table_name))
+          ) // Filter for imported tables if tableNames is provided
+          .map(row => ({
+            _id: uuidv4(), // Generate a unique ID for the relationship
+            label: `${row.table_name}.${row.column_name} → ${row.foreign_table_name}.${row.foreign_column_name}`,
+            sourceTable: row.table_name,
+            sourceColumn: row.column_name,
+            targetTable: row.foreign_table_name,
+            targetColumn: row.foreign_column_name,
+            relationshipType: DatasourceRelationshipType.MANY_TO_ONE, // Foreign keys are always many-to-one
+          }))
+
+      // Return unique relationships (by complete relationship definition)
+      const uniqueRelationships = relationships
+        .sort((a, b) => {
+          // Sort by source table first, then by source column
+          if (a.sourceTable !== b.sourceTable) {
+            return a.sourceTable.localeCompare(b.sourceTable)
+          }
+          return a.sourceColumn.localeCompare(b.sourceColumn)
+        })
+        .filter((rel, index, self) => {
+          // Create a unique key for each relationship based on all components
+          const relationshipKey = `${rel.sourceTable}.${rel.sourceColumn}->${rel.targetTable}.${rel.targetColumn}`
+          return (
+            index ===
+            self.findIndex(
+              r =>
+                `${r.sourceTable}.${r.sourceColumn}->${r.targetTable}.${r.targetColumn}` ===
+                relationshipKey
+            )
+          )
+        })
+
+      return uniqueRelationships
     } finally {
       await this.closeConnection()
     }

@@ -22,6 +22,10 @@ builderRoutes
   .post("/api/datasources/info", datasourceController.information)
   .post("/api/datasources/views", datasourceController.viewInformation)
   .post(
+    "/api/datasources/relationships",
+    datasourceController.relationshipInformation
+  )
+  .post(
     "/api/datasources/:datasourceId/schema",
     datasourceController.buildSchemaFromSource
   )
