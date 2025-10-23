@@ -261,7 +261,7 @@ export const publishWorkspace = async function (
       await replication.resolveInconsistencies(
         devTables
           .map(tableDocument => tableDocument._id)
-          .filter(x => x !== undefined),
+          .filter(x => x !== undefined)
       )
 
       await devDb.compact()

@@ -230,16 +230,36 @@ describe("Replication", () => {
     })
 
     it.each([
-      { sourceRev: "5-abc123", targetRev: "8-def456", expected: true, description: "target has higher revision" },
-      { sourceRev: "10-abc123", targetRev: "8-def456", expected: false, description: "source has higher revision" },
-      { sourceRev: "5-abc123", targetRev: "5-def456", expected: false, description: "revisions are equal" },
-    ])("should return $expected when $description", ({ sourceRev, targetRev, expected }) => {
-      const sourceDoc = { _rev: sourceRev }
-      const targetDoc = { _rev: targetRev }
-      
-      const hasInconsistency = (replication as any).haveReplicationInconsistencies(sourceDoc, targetDoc)
-      expect(hasInconsistency).toBe(expected)
-    })
+      {
+        sourceRev: "5-abc123",
+        targetRev: "8-def456",
+        expected: true,
+        description: "target has higher revision",
+      },
+      {
+        sourceRev: "10-abc123",
+        targetRev: "8-def456",
+        expected: false,
+        description: "source has higher revision",
+      },
+      {
+        sourceRev: "5-abc123",
+        targetRev: "5-def456",
+        expected: false,
+        description: "revisions are equal",
+      },
+    ])(
+      "should return $expected when $description",
+      ({ sourceRev, targetRev, expected }) => {
+        const sourceDoc = { _rev: sourceRev }
+        const targetDoc = { _rev: targetRev }
+
+        const hasInconsistency = (
+          replication as any
+        ).haveReplicationInconsistencies(sourceDoc, targetDoc)
+        expect(hasInconsistency).toBe(expected)
+      }
+    )
   })
 
   describe("resolveInconsistencies", () => {
@@ -251,7 +271,7 @@ describe("Replication", () => {
         source: mockSourceDb.name,
         target: mockTargetDb.name,
       })
-      jest.spyOn(replication, 'replicate').mockResolvedValue({} as any)
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
     })
 
     it("should remove conflicted documents and replicate them", async () => {

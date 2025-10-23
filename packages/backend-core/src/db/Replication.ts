@@ -55,7 +55,7 @@ class Replication {
   }
 
   // Resolves replication conflicts by treating source as the source of truth.
-  // For documents where target revision is higher than source, removes the target 
+  // For documents where target revision is higher than source, removes the target
   // document and re-replicates from source to ensure source version prevails.
   async resolveInconsistencies(documentIds: string[]) {
     const inconsistentDocumentIds: string[] = []
@@ -63,9 +63,11 @@ class Replication {
       try {
         const [sourceDocument, targetDocument] = await Promise.all([
           this.source.get(documentId),
-          this.target.get(documentId)
+          this.target.get(documentId),
         ])
-        if (this.haveReplicationInconsistencies(sourceDocument, targetDocument)) {
+        if (
+          this.haveReplicationInconsistencies(sourceDocument, targetDocument)
+        ) {
           await this.target.remove({
             _id: targetDocument._id,
             _rev: targetDocument._rev,
@@ -76,19 +78,22 @@ class Replication {
         console.warn("Cannot resolve inconsistencies for document", documentId)
       }
     }
-    if(inconsistentDocumentIds.length > 0) {
-      await this.replicate({doc_ids: inconsistentDocumentIds})
+    if (inconsistentDocumentIds.length > 0) {
+      await this.replicate({ doc_ids: inconsistentDocumentIds })
     }
   }
 
-  private haveReplicationInconsistencies(sourceDocument: Document, targetDocument: Document) {
+  private haveReplicationInconsistencies(
+    sourceDocument: Document,
+    targetDocument: Document
+  ) {
     const sourceRevisionNumber = this.getRevisionNumber(sourceDocument)
     const targetRevisionNumber = this.getRevisionNumber(targetDocument)
     return targetRevisionNumber > sourceRevisionNumber
   }
 
   private getRevisionNumber(document: Document) {
-    return parseInt(document._rev?.split('-')[0] || '0')
+    return parseInt(document._rev?.split("-")[0] || "0")
   }
 
   appReplicateOpts(
