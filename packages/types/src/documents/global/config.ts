@@ -46,7 +46,7 @@ export interface SettingsInnerConfig {
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
   createdVersion?: string
-  liteLLMKey?: string
+  liteLLM?: { keyId: string; secretKey: string }
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}

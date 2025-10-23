@@ -54,28 +54,33 @@ async function ensureSingleDefault(currentId?: string) {
   }
 }
 
-async function ensureLiteLLMKey() {
+async function ensureLiteLLMConfigured() {
   let storedConfig = await configs.getSettingsConfigDoc()
-  if (!storedConfig?.config.liteLLMKey) {
+  if (!storedConfig?.config.liteLLM?.keyId) {
     storedConfig ??= { type: ConfigType.SETTINGS, config: {} }
-    storedConfig.config.liteLLMKey = await liteLLM.generateKey(
-      context.getTenantId()
-    )
+    const key = await liteLLM.generateKey(context.getTenantId())
+    storedConfig.config.liteLLM = {
+      keyId: key.id,
+      secretKey: key.secret,
+    }
     await context.getGlobalDB().put(storedConfig)
   }
-  return storedConfig.config.liteLLMKey
+  return storedConfig.config.liteLLM
 }
 
-export const getLiteLLMKey = ensureLiteLLMKey
+export async function getLiteLLMSecretKey() {
+  const liteLLMConfig = await ensureLiteLLMConfigured()
+  return liteLLMConfig.secretKey
+}
 
 export async function create(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
-  await ensureLiteLLMKey()
+  await ensureLiteLLMConfigured()
 
   const db = context.getGlobalDB()
 
-  await liteLLM.addModelIfRequired({
+  const modelId = await liteLLM.addModal({
     provider: config.provider,
     name: config.model,
     baseUrl: config.baseUrl,
@@ -90,6 +95,7 @@ export async function create(
     provider: config.provider,
     model: config.model,
     apiKey: config.apiKey,
+    liteLLMModelId: modelId,
   }
 
   const { rev } = await db.put(newConfig)
@@ -99,23 +105,19 @@ export async function create(
     await ensureSingleDefault(newConfig._id)
   }
 
+  await liteLLM.syncKeyModels()
+
   return newConfig
 }
 
 export async function update(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
+  await ensureLiteLLMConfigured()
   const existing = await find(config._id!)
 
   config.apiKey =
     config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
-
-  await liteLLM.addModelIfRequired({
-    provider: config.provider,
-    name: config.model,
-    baseUrl: config.baseUrl,
-    apiKey: config.apiKey,
-  })
 
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
@@ -130,6 +132,8 @@ export async function update(
     await ensureSingleDefault(updatedConfig._id)
   }
 
+  await liteLLM.syncKeyModels()
+
   return updatedConfig
 }
 
@@ -138,4 +142,6 @@ export async function remove(id: string) {
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
+
+  await liteLLM.syncKeyModels()
 }

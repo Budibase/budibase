@@ -1,7 +1,10 @@
-import { HTTPError } from "@budibase/backend-core"
+import { configs, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
+import sdk from ".."
 
-export async function generateKey(name: string): Promise<string> {
+export async function generateKey(
+  name: string
+): Promise<{ id: string; secret: string }> {
   const body = JSON.stringify({
     key_alias: name,
   })
@@ -21,36 +24,16 @@ export async function generateKey(name: string): Promise<string> {
   )
 
   const json = await response.json()
-  return json.key
+  return { id: json.token_id, secret: json.key }
 }
 
-async function getExistingModels(): Promise<string[]> {
-  const requestOptions = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
-    },
-  }
-
-  const response = await fetch("http://localhost:4000/models", requestOptions)
-
-  const json = await response.json()
-  return json.data.map((x: any) => x.id)
-}
-
-export async function addModelIfRequired(model: {
+export async function addModal(model: {
   provider: string
   name: string
   baseUrl: string
   apiKey: string | undefined
-}): Promise<{ added: boolean }> {
+}): Promise<string> {
   const { name, baseUrl, provider } = model
-  const existingModels = await getExistingModels()
-  if (existingModels.includes(name)) {
-    return { added: false }
-  }
-
   await validateConfig(model)
 
   const requestOptions = {
@@ -75,8 +58,9 @@ export async function addModelIfRequired(model: {
     }),
   }
 
-  await fetch("http://localhost:4000/model/new", requestOptions)
-  return { added: true }
+  const res = await fetch("http://localhost:4000/model/new", requestOptions)
+  const json = await res.json()
+  return json.model_id
 }
 
 export async function validateConfig(model: {
@@ -118,4 +102,34 @@ export async function validateConfig(model: {
 
     throw new HTTPError(`Error validating configuration: ${trimmedError}`, 400)
   }
+}
+
+export async function syncKeyModels() {
+  const { liteLLM } = await configs.getSettingsConfig()
+  if (!liteLLM) {
+    throw new Error("LiteLLM key not configured")
+  }
+
+  const aiConfigs = await sdk.aiConfigs.fetch()
+
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer sk-1234",
+    },
+    body: JSON.stringify({
+      key: liteLLM.keyId,
+      models: aiConfigs.map(c => c.liteLLMModelId),
+    }),
+  }
+
+  const res = await fetch("http://localhost:4000/key/update", requestOptions)
+  const json = await res.json()
+  if (json.status === "error") {
+    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+
+    throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
+  }
+
 }
