@@ -105,6 +105,11 @@ export async function create(
 export async function update(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
+  const existing = await find(config._id!)
+
+  config.apiKey =
+    config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
+
   await liteLLM.addModelIfRequired({
     provider: config.provider,
     name: config.model,
@@ -112,15 +117,9 @@ export async function update(
     apiKey: config.apiKey,
   })
 
-  const existing = await find(config._id!)
-
-  const apiKey =
-    config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
-
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
-    apiKey,
   }
 
   const db = context.getGlobalDB()
