@@ -104,18 +104,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/netsuite.svg",
     },
     {
-      name: "Okta",
-      description:
-        "Okta management API for directories, authentication, and lifecycle automation",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/okta/okta-management-openapi-spec/master/dist/current/management-oneOfInheritance.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/okta.svg",
-    },
-    {
       name: "PagerDuty",
       description:
         "PagerDuty REST resources for services, incidents, and incident automation",
