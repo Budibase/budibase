@@ -403,6 +403,9 @@
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
     width: 0;
     flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .popover-content.auto-width .spectrum-Menu-item {
     padding-right: var(--spacing-xl);
