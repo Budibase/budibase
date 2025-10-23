@@ -29,7 +29,7 @@
     return true
   }
 
-  const shouldShowVerb = entry => {
+  const isRestQuery = entry => {
     if (entry?.type !== "query") {
       return false
     }
@@ -60,11 +60,19 @@
       on:click={() => onSelect(data)}
     >
       <span class="spectrum-Menu-itemLabel">
-        {#if shouldShowVerb(data)}
-          <QueryVerbBadge
-            verb={customQueryIconText(data)}
-            color={customQueryIconColor(data)}
-          />
+        {#if data?.type === "query"}
+          {#if isRestQuery(data)}
+            <QueryVerbBadge
+              verb={customQueryIconText(data)}
+              color={customQueryIconColor(data)}
+            />
+          {:else}
+            <Icon
+              name="database"
+              size="S"
+              color="var(--spectrum-global-color-gray-600)"
+            />
+          {/if}
         {/if}
         <span class="label-text">
           {data.datasourceName && displayDatasourceName
