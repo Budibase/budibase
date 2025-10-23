@@ -58,6 +58,10 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getGlobalDB()
 
+  await liteLLM.addModelIfRequired({
+    name: config.model,
+    baseUrl: config.baseUrl,
+  })
   const liteLLMKey = await liteLLM.generateKey(config.name)
   {
     const newConfig: CustomAIProviderConfig = {
@@ -84,6 +88,11 @@ export async function create(
 export async function update(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
+  await liteLLM.addModelIfRequired({
+    name: config.model,
+    baseUrl: config.baseUrl,
+  })
+
   const existing = await find(config._id!)
 
   const apiKey =

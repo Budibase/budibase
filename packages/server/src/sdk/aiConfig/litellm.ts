@@ -70,10 +70,31 @@ export async function removeKey(key: string) {
   return json.token
 }
 
-export async function addModel() {
-  const body = JSON.stringify({
-    key_alias: name,
-  })
+async function getExistingModels(): Promise<string[]> {
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer sk-1234",
+    },
+  }
+
+  const response = await fetch("http://localhost:4000/models", requestOptions)
+
+  const json = await response.json()
+  return json.data.map((x: any) => x.id)
+}
+
+export async function addModelIfRequired(model: {
+  name: string
+  baseUrl: string
+}) {
+  const { name, baseUrl } = model
+  const existingModels = await getExistingModels()
+  if (existingModels.includes(name)) {
+    return
+  }
+  const provider = name.split("/")[0]
 
   const requestOptions = {
     method: "POST",
@@ -81,14 +102,23 @@ export async function addModel() {
       "Content-Type": "application/json",
       Authorization: "Bearer sk-1234",
     },
-    body,
+    body: JSON.stringify({
+      model_name: name,
+      litellm_params: {
+        api_base: baseUrl,
+        custom_llm_provider: provider,
+        model: name,
+        use_in_pass_through: false,
+        use_litellm_proxy: false,
+        merge_reasoning_content_in_choices: false,
+        input_cost_per_token: 0,
+        output_cost_per_token: 0,
+        guardrails: [],
+      },
+    }),
   }
 
-  const response = await fetch(
-    "http://localhost:4000/model/new",
-    requestOptions
-  )
-
-  const json = await response.json()
-  return json.token
+  const res = await fetch("http://localhost:4000/model/new", requestOptions)
+  const text = await res.text()
+  console.error(text)
 }
