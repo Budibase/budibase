@@ -128,6 +128,50 @@ async function branchMatches(
   ctx: AutomationContext,
   branch: Readonly<Branch>
 ): Promise<boolean> {
+  const hasCondition = (condition: any): boolean => {
+    if (!condition || typeof condition !== "object") {
+      return false
+    }
+
+    const keys = Object.keys(condition)
+    if (keys.length === 0) {
+      return false
+    }
+
+    if (keys.length === 1 && keys[0] === "onEmptyFilter") {
+      return false
+    }
+
+    for (const key of keys) {
+      if (key === "onEmptyFilter") {
+        continue
+      }
+
+      const value = condition[key]
+      if (value && typeof value === "object") {
+        if (key === "$and" || key === "$or") {
+          if (
+            value.conditions &&
+            Array.isArray(value.conditions) &&
+            value.conditions.length > 0
+          ) {
+            return true
+          }
+        } else if (Object.keys(value).length > 0) {
+          return true
+        }
+      } else if (value !== undefined && value !== null) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  if (!hasCondition(branch.condition)) {
+    return true
+  }
+
   const toFilter: Record<string, any> = {}
 
   // Because we allow bindings on both the left and right of each condition in
