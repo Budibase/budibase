@@ -56,11 +56,25 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  getUrl = (): URL => {
+  getUrl = (): URL | undefined => {
     const scheme = this.document.schemes?.includes("https") ? "https" : "http"
     const basePath = this.document.basePath || ""
-    const host = this.document.host || "<host>"
-    return new URL(`${scheme}://${host}${basePath}`)
+    const host = this.document.host
+
+    if (!host) {
+      return undefined
+    }
+
+    const normalizedBasePath = basePath
+      ? basePath.startsWith("/")
+        ? basePath
+        : `/${basePath}`
+      : ""
+    try {
+      return new URL(`${scheme}://${host}${normalizedBasePath}`)
+    } catch (_err) {
+      return undefined
+    }
   }
 
   getInfo = async (): Promise<ImportInfo> => {
