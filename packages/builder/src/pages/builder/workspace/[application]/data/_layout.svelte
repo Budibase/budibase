@@ -9,6 +9,7 @@
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { onMount, onDestroy, setContext } from "svelte"
 
+  $goto
   let searchValue
   let maxWidth = window.innerWidth / 3
   let panelWidth = 260
