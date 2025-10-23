@@ -1,3 +1,4 @@
+import { HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 
 export async function generateKey(name: string) {
@@ -88,12 +89,15 @@ async function getExistingModels(): Promise<string[]> {
 export async function addModelIfRequired(model: {
   name: string
   baseUrl: string
-}) {
+}): Promise<{ added: boolean }> {
   const { name, baseUrl } = model
   const existingModels = await getExistingModels()
   if (existingModels.includes(name)) {
-    return
+    return { added: false }
   }
+
+  await validateConfig(model)
+
   const provider = name.split("/")[0]
 
   const requestOptions = {
@@ -118,7 +122,42 @@ export async function addModelIfRequired(model: {
     }),
   }
 
-  const res = await fetch("http://localhost:4000/model/new", requestOptions)
-  const text = await res.text()
-  console.error(text)
+  await fetch("http://localhost:4000/model/new", requestOptions)
+  return { added: true }
+}
+
+export async function validateConfig(model: { name: string; baseUrl: string }) {
+  const { name, baseUrl } = model
+  const provider = name.split("/")[0]
+
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer sk-1234",
+    },
+    body: JSON.stringify({
+      mode: "chat",
+      litellm_params: {
+        model: name,
+        custom_llm_provider: provider,
+        api_base: baseUrl,
+      },
+    }),
+  }
+
+  const res = await fetch(
+    "http://localhost:4000/health/test_connection",
+    requestOptions
+  )
+  if (res.status !== 200) {
+    const text = await res.text()
+    throw new HTTPError(text, 500)
+  }
+  const json = await res.json()
+  if (json.status === "error") {
+    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+
+    throw new HTTPError(`Error validating configuration: ${trimmedError}`, 400)
+  }
 }
