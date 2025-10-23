@@ -21,7 +21,7 @@ export async function generateKey(name: string) {
   )
 
   const json = await response.json()
-  return json.token
+  return json.key
 }
 
 export async function updateKey(key: string, name: string) {
@@ -87,18 +87,18 @@ async function getExistingModels(): Promise<string[]> {
 }
 
 export async function addModelIfRequired(model: {
+  provider: string
   name: string
   baseUrl: string
+  apiKey: string | undefined
 }): Promise<{ added: boolean }> {
-  const { name, baseUrl } = model
+  const { name, baseUrl, provider } = model
   const existingModels = await getExistingModels()
   if (existingModels.includes(name)) {
     return { added: false }
   }
 
   await validateConfig(model)
-
-  const provider = name.split("/")[0]
 
   const requestOptions = {
     method: "POST",
@@ -111,7 +111,7 @@ export async function addModelIfRequired(model: {
       litellm_params: {
         api_base: baseUrl,
         custom_llm_provider: provider,
-        model: name,
+        model: `${provider}/${name}`,
         use_in_pass_through: false,
         use_litellm_proxy: false,
         merge_reasoning_content_in_choices: false,
@@ -126,9 +126,13 @@ export async function addModelIfRequired(model: {
   return { added: true }
 }
 
-export async function validateConfig(model: { name: string; baseUrl: string }) {
-  const { name, baseUrl } = model
-  const provider = name.split("/")[0]
+export async function validateConfig(model: {
+  provider: string
+  name: string
+  baseUrl: string
+  apiKey: string | undefined
+}) {
+  const { name, baseUrl, provider, apiKey } = model
 
   const requestOptions = {
     method: "POST",
@@ -137,10 +141,11 @@ export async function validateConfig(model: { name: string; baseUrl: string }) {
       Authorization: "Bearer sk-1234",
     },
     body: JSON.stringify({
-      mode: "chat",
+      // mode: "chat",
       litellm_params: {
-        model: name,
+        model: `${provider}/${name}`,
         custom_llm_provider: provider,
+        api_key: apiKey,
         api_base: baseUrl,
       },
     }),

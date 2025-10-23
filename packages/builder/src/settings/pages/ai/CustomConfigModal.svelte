@@ -20,6 +20,7 @@
   let draft: CustomAIProviderConfig = config
     ? { ...config }
     : {
+        provider: "",
         name: "",
         isDefault: false,
         baseUrl: "",
@@ -30,7 +31,8 @@
 
   $: isEdit = !!config
   $: trimmedName = (draft.name || "").trim()
-  $: canSave = trimmedName.length > 0
+  $: trimmedProvider = (draft.provider || "").trim()
+  $: canSave = !!trimmedName && !!trimmedProvider
 
   async function confirm() {
     try {
@@ -79,6 +81,11 @@
   <div class="form-row">
     <Label size="M">Name</Label>
     <Input bind:value={draft.name} placeholder="Support chat" />
+  </div>
+
+  <div class="form-row">
+    <Label size="M">Provider</Label>
+    <Input bind:value={draft.provider} />
   </div>
 
   <div class="form-row">

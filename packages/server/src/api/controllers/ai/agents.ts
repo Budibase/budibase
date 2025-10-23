@@ -64,7 +64,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     ctx.throw(422, "Chat config not found")
   }
   const model = await ai.getChatLLM({
-    model: aiConfig.model,
+    model: `${aiConfig.provider}/${aiConfig.model}`,
     baseUrl: "http://localhost:4000",
     apiKey: "sk-1234",
   })
