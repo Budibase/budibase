@@ -15,13 +15,11 @@
   import { auth } from "@/stores/portal/auth"
   import { organisation } from "@/stores/portal/organisation"
   import { licensing } from "@/stores/portal/licensing"
-  import { admin } from "@/stores/portal/admin"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { routeActions } from "@/settings/pages"
 
   import { API } from "@/api"
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
 
   const imageExtensions = [
@@ -52,7 +50,6 @@
   $: onConfigUpdate(config)
   $: initialised = Object.keys(config).length > 0
 
-  $: isCloud = $admin.cloud
   $: brandingEnabled = $licensing.brandingEnabled
 
   const onConfigUpdate = () => {
@@ -380,24 +377,6 @@
         </div>
       </div>
       <div class="buttons">
-        {#if !brandingEnabled}
-          <Button
-            on:click={() => {
-              if (isCloud && $auth?.user?.accountPortalAccess) {
-                window.open(
-                  $admin.accountPortalUrl + "/portal/upgrade",
-                  "_blank"
-                )
-              } else if (sdk.users.isAdmin($auth.user)) {
-                $goto("/builder/portal/account/upgrade")
-              }
-            }}
-            secondary
-            disabled={saving}
-          >
-            Upgrade
-          </Button>
-        {/if}
         <div use:routeActions class="controls">
           <Button
             on:click={saveConfig}
