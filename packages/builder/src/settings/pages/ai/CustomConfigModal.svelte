@@ -21,7 +21,6 @@
 
   let draft: CustomAIProviderConfig = { ...config }
 
-  $: draft.provider = "Custom"
   $: isEdit = !!config
   $: hasApiKey =
     typeof draft.apiKey === "string" &&
@@ -89,12 +88,7 @@
 
   <div class="form-row">
     <Label size="M">Model</Label>
-    <Input placeholder="gpt-4o-mini" bind:value={draft.defaultModel} />
-  </div>
-
-  <div class="toggle-row">
-    <Label size="M">Active</Label>
-    <Toggle bind:value={draft.active} />
+    <Input placeholder="gpt-4o-mini" bind:value={draft.model} />
   </div>
 
   <div class="toggle-row">

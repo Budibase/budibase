@@ -19,6 +19,13 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
 }
 
+export async function getDefault(): Promise<
+  CustomAIProviderConfig | undefined
+> {
+  const allConfigs = await fetch()
+  return allConfigs.find(c => c.isDefault)
+}
+
 export async function find(id: string): Promise<CustomAIProviderConfig> {
   const db = context.getGlobalDB()
   const result = await db.get<CustomAIProviderConfig>(id)
@@ -55,14 +62,12 @@ export async function create(
   {
     const newConfig: CustomAIProviderConfig = {
       _id: docIds.generateAIConfigID(),
-      provider: "Custom",
-      active: config.active ?? false,
       isDefault: config.isDefault ?? false,
       name: config.name,
-      apiKey: config.apiKey,
       baseUrl: config.baseUrl,
-      defaultModel: config.defaultModel,
+      model: config.model,
       liteLLMKey,
+      apiKey: config.apiKey,
     }
 
     const { rev } = await db.put(newConfig)
@@ -88,9 +93,6 @@ export async function update(
     ...existing,
     ...config,
     apiKey,
-    provider: "Custom",
-    active: config.active ?? existing.active ?? false,
-    isDefault: config.isDefault ?? existing.isDefault ?? false,
   }
 
   const db = context.getGlobalDB()

@@ -1,12 +1,10 @@
 import { Document } from "../../"
 
 export interface CustomAIProviderConfig extends Document {
-  provider: "Custom"
   name: string
-  active: boolean
   isDefault: boolean
+  baseUrl: string
+  model: string
   apiKey?: string
-  baseUrl?: string
-  defaultModel?: string
   liteLLMKey: string
 }

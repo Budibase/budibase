@@ -38,6 +38,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
       state.customConfigs = [...state.customConfigs, created]
       return state
     })
+    await this.fetch()
     return created
   }
 
@@ -52,6 +53,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
       }
       return state
     })
+    await this.fetch()
     return updated
   }
 

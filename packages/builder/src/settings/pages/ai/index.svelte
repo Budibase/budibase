@@ -32,6 +32,7 @@
     type ProviderConfig,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
+  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -147,7 +148,6 @@
 
   function buildChatDraft(): CustomAIProviderConfig {
     return {
-      provider: "Custom",
       name: "",
       active: true,
       isDefault: customConfigs.length === 0,
@@ -296,10 +296,9 @@
         {#if customConfigs.length}
           <div class="ai-list">
             {#each customConfigs as config (config._id)}
-              <AIConfigTile
+              <CustomAIConfigTile
                 {config}
                 editHandler={() => openCustomAIConfigModal(config)}
-                disableHandler={null}
               />
             {/each}
           </div>

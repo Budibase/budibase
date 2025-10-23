@@ -13,6 +13,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
+import sdk from "../../../sdk"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -58,7 +59,14 @@ function addDebugInformation(messages: Message[]) {
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const model = await ai.getLLMOrThrow(true)
+  const aiConfig = await sdk.aiConfigs.getDefault()
+  if (!aiConfig) {
+    ctx.throw(422, "Chat config not found")
+  }
+  const model = await ai.getChatLLM({
+    model: aiConfig.model,
+    baseUrl: aiConfig.baseUrl,
+  })
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
 
