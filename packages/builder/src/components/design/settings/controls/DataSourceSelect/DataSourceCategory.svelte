@@ -38,6 +38,18 @@
     )
     return datasource?.source === IntegrationTypes.REST
   }
+
+  const shouldInclude = entry => {
+    if (entry?.type !== "query") {
+      return true
+    }
+    if (!isRestQuery(entry)) {
+      return true
+    }
+    return entry.queryVerb === "create" || entry.queryVerb === "read"
+  }
+
+  $: filteredDataSet = dataSet?.filter(shouldInclude) ?? []
 </script>
 
 {#if dividerState}
@@ -50,7 +62,7 @@
 {/if}
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul class="spectrum-Menu" role="listbox">
-  {#each dataSet as data}
+  {#each filteredDataSet as data}
     <li
       class="spectrum-Menu-item"
       class:is-selected={isSelected(data) && value?.type === data.type}
