@@ -509,28 +509,16 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           }))
 
       // Return unique relationships (by complete relationship definition)
-      const uniqueRelationships = relationships
-        .sort((a, b) => {
-          // Sort by source table first, then by source column
-          if (a.sourceTable !== b.sourceTable) {
-            return a.sourceTable.localeCompare(b.sourceTable)
-          }
-          return a.sourceColumn.localeCompare(b.sourceColumn)
-        })
-        .filter((rel, index, self) => {
-          // Create a unique key for each relationship based on all components
-          const relationshipKey = `${rel.sourceTable}.${rel.sourceColumn}->${rel.targetTable}.${rel.targetColumn}`
-          return (
-            index ===
-            self.findIndex(
-              r =>
-                `${r.sourceTable}.${r.sourceColumn}->${r.targetTable}.${r.targetColumn}` ===
-                relationshipKey
-            )
-          )
-        })
+      const sortedRelationships = relationships.sort((a, b) => {
+        // Sort by source table first, then by source column
+        if (a.sourceTable !== b.sourceTable) {
+          return a.sourceTable.localeCompare(b.sourceTable)
+        }
+        return a.sourceColumn.localeCompare(b.sourceColumn)
+      })
 
-      return uniqueRelationships
+      // Return sorted relationships
+      return sortedRelationships
     } finally {
       await this.closeConnection()
     }
