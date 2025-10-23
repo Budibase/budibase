@@ -19,11 +19,12 @@
   import { PopoverAlignment } from "../../constants"
   import Search from "./Search.svelte"
   import PickerIcon from "./PickerIcon.svelte"
+  import type { PickerIconInput, ResolvedIcon } from "../../types/Picker"
 
   export let id: string | undefined = undefined
   export let disabled: boolean = false
   export let fieldText: string = ""
-  export let fieldIcon: any = ""
+  export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
@@ -73,15 +74,15 @@
 
   const dispatch = createEventDispatcher()
 
-  let button: any
-  let component: any
-  let optionIconDescriptor: any
+  let button: HTMLButtonElement | null = null
+  let component: HTMLUListElement | null = null
+  let optionIconDescriptor: ResolvedIcon | null = null
 
-  const resolveIcon = (icon: any) => {
+  const resolveIcon = (icon: PickerIconInput): ResolvedIcon | null => {
     if (!icon) {
       return null
     }
-    if (icon.component) {
+    if (typeof icon === "object" && icon.component) {
       return {
         type: "component",
         component: icon.component,
@@ -157,7 +158,7 @@
 
   $: component?.addEventListener("scroll", onScroll)
   onDestroy(() => {
-    component?.removeEventListener("scroll", null)
+    component?.removeEventListener("scroll", onScroll)
   })
 </script>
 
@@ -295,10 +296,7 @@
             {/if}
             {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
               <span class="option-extra icon">
-                <PickerIcon
-                  icon={optionIconDescriptor}
-                  {useOptionIconImage}
-                />
+                <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}

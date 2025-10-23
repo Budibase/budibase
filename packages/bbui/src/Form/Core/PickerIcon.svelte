@@ -1,16 +1,6 @@
 <script lang="ts">
   import Icon from "../../Icon/Icon.svelte"
-
-  type ResolvedIcon =
-    | {
-        type: "component"
-        component: any
-        props?: Record<string, any>
-      }
-    | {
-        type: "string"
-        value: string
-      }
+  import type { ResolvedIcon } from "../../types/Picker"
 
   export let icon: ResolvedIcon | null = null
   export let useOptionIconImage: boolean = false
