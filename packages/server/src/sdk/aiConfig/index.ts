@@ -100,6 +100,9 @@ export async function update(
   if (updatedConfig.isDefault) {
     await ensureSingleDefault(updatedConfig._id)
   }
+
+  await liteLLM.updateKey(existing.liteLLMKey, updatedConfig.name)
+
   return updatedConfig
 }
 
@@ -108,5 +111,5 @@ export async function remove(id: string) {
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
-  await liteLLM.removeKey(existing.name)
+  await liteLLM.removeKey(existing.liteLLMKey)
 }
