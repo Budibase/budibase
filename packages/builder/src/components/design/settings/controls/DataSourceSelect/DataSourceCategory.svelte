@@ -73,18 +73,20 @@
     >
       <span class="spectrum-Menu-itemLabel">
         {#if data?.type === "query"}
-          {#if isRestQuery(data)}
-            <QueryVerbBadge
-              verb={customQueryIconText(data)}
-              color={customQueryIconColor(data)}
-            />
-          {:else}
-            <Icon
-              name="database"
-              size="S"
-              color="var(--spectrum-global-color-gray-600)"
-            />
-          {/if}
+          <span class="query-icon">
+            {#if isRestQuery(data)}
+              <QueryVerbBadge
+                verb={customQueryIconText(data)}
+                color={customQueryIconColor(data)}
+              />
+            {:else}
+              <Icon
+                name="database"
+                size="S"
+                color="var(--spectrum-global-color-gray-600)"
+              />
+            {/if}
+          </span>
         {/if}
         <span class="label-text">
           {data.datasourceName && displayDatasourceName
@@ -113,6 +115,12 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .query-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 42px;
   }
   .label-text {
     flex: 1;
