@@ -79,18 +79,6 @@
       $appsStore,
       $loaded,
     ]) => {
-      // Early redirect for account portal (before loaded)
-      if (
-        $admin.loaded &&
-        $auth.loaded &&
-        !$auth.user &&
-        useAccountPortal &&
-        !isOnPreLoginPage() &&
-        $admin.accountPortalUrl
-      ) {
-        return { type: "accountPortalRedirect", url: $admin.accountPortalUrl }
-      }
-
       // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
@@ -300,10 +288,6 @@
 
       case "returnUrl":
         CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-        window.location.href = action.url
-        break
-
-      case "accountPortalRedirect":
         window.location.href = action.url
         break
     }
