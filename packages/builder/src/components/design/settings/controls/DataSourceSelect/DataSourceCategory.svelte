@@ -1,6 +1,12 @@
 <script>
   import { datasources } from "@/stores/builder"
   import { Divider, Heading, Icon } from "@budibase/bbui"
+  import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import {
+    customQueryIconColor,
+    customQueryIconText,
+  } from "@/helpers/data/utils"
+  import { IntegrationTypes } from "@/constants/backend"
 
   export let dividerState
   export let heading
@@ -21,6 +27,16 @@
       }
     }
     return true
+  }
+
+  const shouldShowVerb = entry => {
+    if (entry?.type !== "query") {
+      return false
+    }
+    const datasource = $datasources.list.find(
+      ds => ds._id === entry.datasourceId
+    )
+    return datasource?.source === IntegrationTypes.REST
   }
 </script>
 
@@ -44,9 +60,17 @@
       on:click={() => onSelect(data)}
     >
       <span class="spectrum-Menu-itemLabel">
-        {data.datasourceName && displayDatasourceName
-          ? `${data.datasourceName} - `
-          : ""}{data.label}
+        {#if shouldShowVerb(data)}
+          <QueryVerbBadge
+            verb={customQueryIconText(data)}
+            color={customQueryIconColor(data)}
+          />
+        {/if}
+        <span class="label-text">
+          {data.datasourceName && displayDatasourceName
+            ? `${data.datasourceName} - `
+            : ""}{data.label}
+        </span>
       </span>
       <div class="check">
         <Icon name="check" />
@@ -64,6 +88,14 @@
     padding-left: 0;
     margin: 0;
     width: 100%;
+  }
+  .spectrum-Menu-itemLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .label-text {
+    flex: 1;
   }
   .check {
     display: none;

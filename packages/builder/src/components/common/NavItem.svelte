@@ -290,9 +290,16 @@
     transform: rotate(90deg);
   }
   .iconText {
-    margin-top: 1px;
+    display: inline-flex;
+    align-items: center;
     font-size: var(--spectrum-global-dimension-font-size-50);
-    flex: 0 0 34px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    justify-content: flex-end;
+    width: 44px;
+    flex: 0 0 44px;
+    margin-right: var(--spacing-s);
   }
 
   .nav-item-body {
