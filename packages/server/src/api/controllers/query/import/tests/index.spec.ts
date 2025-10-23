@@ -130,9 +130,8 @@ describe("Rest Importer", () => {
   ) => {
     await init(data)
     const datasource = await config.createDatasource()
-    const importResult = await config.doInContext(
-      config.devWorkspaceId,
-      () => restImporter.importQueries(datasource._id)
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
     )
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
@@ -226,9 +225,8 @@ describe("Rest Importer", () => {
 
     await init(spec)
     const datasource = await config.createDatasource()
-    const importResult = await config.doInContext(
-      config.devWorkspaceId,
-      () => restImporter.importQueries(datasource._id)
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
     )
 
     expect(importResult.errorQueries.length).toBe(0)
