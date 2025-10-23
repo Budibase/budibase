@@ -4,6 +4,7 @@ import {
   DocumentType,
   PASSWORD_REPLACEMENT,
 } from "@budibase/types"
+import * as liteLLM from "./litellm"
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getGlobalDB()
@@ -50,6 +51,8 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getGlobalDB()
 
+  const liteLLMKey = await liteLLM.generateKey(config.name)
+
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
     provider: "Custom",
@@ -59,6 +62,7 @@ export async function create(
     apiKey: config.apiKey,
     baseUrl: config.baseUrl,
     defaultModel: config.defaultModel,
+    liteLLMKey,
   }
 
   const { rev } = await db.put(newConfig)
@@ -67,6 +71,7 @@ export async function create(
   if (newConfig.isDefault) {
     await ensureSingleDefault(newConfig._id)
   }
+
   return newConfig
 }
 
