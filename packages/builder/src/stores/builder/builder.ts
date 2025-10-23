@@ -6,6 +6,7 @@ import { BudiStore } from "../BudiStore.js"
 import { createBuilderWebsocket } from "./websocket.js"
 
 interface BuilderState {
+  created?: boolean
   previousTopNavPath: Record<string, string>
   highlightedSetting: {
     key: string
@@ -114,6 +115,13 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.update(state => ({
       ...state,
       isResizingPanel: isResizing,
+    }))
+  }
+
+  appCreated(created: boolean) {
+    this.update(state => ({
+      ...state,
+      created,
     }))
   }
 }
