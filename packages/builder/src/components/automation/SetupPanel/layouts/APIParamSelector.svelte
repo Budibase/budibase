@@ -18,13 +18,19 @@
     customQueryIconColor,
     customQueryIconText,
   } from "@/helpers/data/utils"
+  import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
   import { goto, params } from "@roxi/routify"
   import { type AutomationContext } from "@/stores/builder/automations"
   import { runtimeToReadableBinding } from "@/dataBinding"
 
   const dispatch = createEventDispatcher()
 
-  type QueryWithIcon = Query & { icon: string }
+  type QueryWithIcon = Query & {
+    icon?: {
+      component: typeof QueryVerbBadge
+      props: { verb?: string; color?: string }
+    }
+  }
 
   export let value: Partial<APIRequestStepInputs["query"]> | undefined =
     undefined
@@ -61,29 +67,19 @@
 
   const getQueryOptions = (queries: Query[]): QueryWithIcon[] => {
     return queries.reduce<QueryWithIcon[]>((acc, q) => {
+      const verb = customQueryIconText(q)
+      const color = customQueryIconColor(q)
       acc.push({
         ...q,
-        icon: getQueryIcon(customQueryIconText(q), customQueryIconColor(q)),
+        icon: verb
+          ? {
+              component: QueryVerbBadge,
+              props: { verb, color },
+            }
+          : undefined,
       })
       return acc
     }, [])
-  }
-
-  // Verb icon builder
-  const getQueryIcon = (
-    verb: string = "-",
-    color: string = "#53a761"
-  ): string => {
-    const fontSize = 64 * 1
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:1em;height:1em" viewBox="0 0 100 100" aria-label="${verb ? verb.toUpperCase() : "none"}">
-        <text x="50" y="55" text-anchor="middle" dominant-baseline="middle"
-              font-size="${fontSize}" font-family="sans-serif" fill="${color}">
-          ${verb ? verb.toUpperCase() : "none"}
-        </text>
-      </svg>`.trim()
-
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
   }
 
   const getFieldDefault = (name: string) => {
@@ -103,7 +99,6 @@
       options={queryOptions}
       getOptionValue={query => query._id}
       getOptionLabel={query => query.name}
-      useOptionIconImage
     />
 
     <ActionButton

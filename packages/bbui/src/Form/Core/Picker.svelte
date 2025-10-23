@@ -18,11 +18,12 @@
   import AbsTooltip from "../../Tooltip/AbsTooltip.svelte"
   import { PopoverAlignment } from "../../constants"
   import Search from "./Search.svelte"
+  import PickerIcon from "./PickerIcon.svelte"
 
   export let id: string | undefined = undefined
   export let disabled: boolean = false
   export let fieldText: string = ""
-  export let fieldIcon: string = ""
+  export let fieldIcon: any = ""
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
@@ -74,6 +75,26 @@
 
   let button: any
   let component: any
+  let optionIconDescriptor: any
+
+  const resolveIcon = (icon: any) => {
+    if (!icon) {
+      return null
+    }
+    if (icon.component) {
+      return {
+        type: "component",
+        component: icon.component,
+        props: icon.props || {},
+      }
+    }
+    if (typeof icon === "string") {
+      return { type: "string", value: icon }
+    }
+    return null
+  }
+
+  $: resolvedFieldIcon = resolveIcon(fieldIcon)
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -150,16 +171,14 @@
   on:click={onClick}
   bind:this={button}
 >
-  {#if fieldIcon}
-    {#if !useOptionIconImage}
-      <span class="option-extra icon">
-        <Icon size="M" name={fieldIcon} />
-      </span>
-    {:else}
-      <span class="option-extra icon field-icon">
-        <img class="icon-dims" src={fieldIcon} alt="icon" />
-      </span>
-    {/if}
+  {#if resolvedFieldIcon}
+    <span
+      class="option-extra icon"
+      class:field-icon={useOptionIconImage &&
+        resolvedFieldIcon.type !== "component"}
+    >
+      <PickerIcon icon={resolvedFieldIcon} {useOptionIconImage} />
+    </span>
   {/if}
   {#if fieldColour}
     <span class="option-extra">
@@ -272,6 +291,14 @@
                     name={getOptionIcon(option, idx)}
                   />
                 {/if}
+              </span>
+            {/if}
+            {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
+              <span class="option-extra icon">
+                <PickerIcon
+                  icon={optionIconDescriptor}
+                  {useOptionIconImage}
+                />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
