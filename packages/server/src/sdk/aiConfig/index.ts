@@ -1,5 +1,6 @@
-import { context, docIds } from "@budibase/backend-core"
+import { configs, context, docIds } from "@budibase/backend-core"
 import {
+  ConfigType,
   CustomAIProviderConfig,
   DocumentType,
   PASSWORD_REPLACEMENT,
@@ -53,9 +54,25 @@ async function ensureSingleDefault(currentId?: string) {
   }
 }
 
+async function ensureLiteLLMKey() {
+  let storedConfig = await configs.getSettingsConfigDoc()
+  if (!storedConfig?.config.liteLLMKey) {
+    storedConfig ??= { type: ConfigType.SETTINGS, config: {} }
+    storedConfig.config.liteLLMKey = await liteLLM.generateKey(
+      context.getTenantId()
+    )
+    await context.getGlobalDB().put(storedConfig)
+  }
+  return storedConfig.config.liteLLMKey
+}
+
+export const getLiteLLMKey = ensureLiteLLMKey
+
 export async function create(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
+  await ensureLiteLLMKey()
+
   const db = context.getGlobalDB()
 
   await liteLLM.addModelIfRequired({
@@ -64,28 +81,25 @@ export async function create(
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
   })
-  const liteLLMKey = await liteLLM.generateKey(config.name)
-  {
-    const newConfig: CustomAIProviderConfig = {
-      _id: docIds.generateAIConfigID(),
-      isDefault: config.isDefault ?? false,
-      name: config.name,
-      baseUrl: config.baseUrl,
-      provider: config.provider,
-      model: config.model,
-      liteLLMKey,
-      apiKey: config.apiKey,
-    }
 
-    const { rev } = await db.put(newConfig)
-    newConfig._rev = rev
-
-    if (newConfig.isDefault) {
-      await ensureSingleDefault(newConfig._id)
-    }
-
-    return newConfig
+  const newConfig: CustomAIProviderConfig = {
+    _id: docIds.generateAIConfigID(),
+    isDefault: config.isDefault ?? false,
+    name: config.name,
+    baseUrl: config.baseUrl,
+    provider: config.provider,
+    model: config.model,
+    apiKey: config.apiKey,
   }
+
+  const { rev } = await db.put(newConfig)
+  newConfig._rev = rev
+
+  if (newConfig.isDefault) {
+    await ensureSingleDefault(newConfig._id)
+  }
+
+  return newConfig
 }
 
 export async function update(
@@ -117,8 +131,6 @@ export async function update(
     await ensureSingleDefault(updatedConfig._id)
   }
 
-  await liteLLM.updateKey(existing.liteLLMKey, updatedConfig.name)
-
   return updatedConfig
 }
 
@@ -127,5 +139,4 @@ export async function remove(id: string) {
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
-  await liteLLM.removeKey(existing.liteLLMKey)
 }

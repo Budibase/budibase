@@ -26,7 +26,6 @@
         baseUrl: "",
         model: "",
         apiKey: "",
-        liteLLMKey: "",
       }
 
   $: isEdit = !!config

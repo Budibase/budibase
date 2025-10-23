@@ -66,7 +66,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const model = await ai.getChatLLM({
     model: `${aiConfig.provider}/${aiConfig.model}`,
     baseUrl: "http://localhost:4000",
-    apiKey: "sk-1234",
+    apiKey: await sdk.aiConfigs.getLiteLLMKey(),
   })
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()

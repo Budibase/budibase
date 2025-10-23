@@ -7,5 +7,4 @@ export interface CustomAIProviderConfig extends Document {
   baseUrl: string
   model: string
   apiKey?: string
-  liteLLMKey: string
 }
