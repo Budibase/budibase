@@ -1,4 +1,4 @@
-import { Query, QueryParameter } from "@budibase/types"
+import { Query, QueryParameter, QueryVerb } from "@budibase/types"
 import { URL } from "url"
 
 export interface ImportInfo {
@@ -100,16 +100,12 @@ export abstract class ImportSource {
     return query
   }
 
-  verbFromMethod = (method: string) => {
+  verbFromMethod = (method: string): QueryVerb => {
     const normalized = this.normalizeMethod(method)
     if (!normalized) {
       throw new Error(`Unsupported method: ${method}`)
     }
-    const verb = (MethodToVerb as Record<string, string>)[normalized]
-    if (!verb) {
-      throw new Error(`Unsupported method: ${method}`)
-    }
-    return verb
+    return MethodToVerb[normalized as keyof typeof MethodToVerb]
   }
 
   processPath = (path: string): string => {
