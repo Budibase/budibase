@@ -334,7 +334,12 @@
 </Modal>
 <Modal bind:this={customConfigModal}>
   {#if customModalConfig}
-    <CustomConfigModal config={customModalConfig} />
+    <CustomConfigModal
+      config={customModalConfig}
+      on:hide={() => {
+        customConfigModal.hide()
+      }}
+    />
   {/if}
 </Modal>
 

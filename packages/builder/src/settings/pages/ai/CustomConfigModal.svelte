@@ -13,8 +13,11 @@
     PASSWORD_REPLACEMENT,
     type CustomAIProviderConfig,
   } from "@budibase/types"
+  import { createEventDispatcher } from "svelte"
 
   export let config: CustomAIProviderConfig
+
+  const dispatch = createEventDispatcher<{ hide: void }>()
 
   let draft: CustomAIProviderConfig = { ...config }
 
@@ -49,6 +52,7 @@
     try {
       await aiConfigsStore.deleteConfig(draft._id)
       notifications.success("Chat configuration deleted")
+      dispatch("hide")
     } catch (err: any) {
       notifications.error(err.message || "Failed to delete chat configuration")
     }

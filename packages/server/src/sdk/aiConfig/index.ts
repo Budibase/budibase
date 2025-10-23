@@ -52,27 +52,28 @@ export async function create(
   const db = context.getGlobalDB()
 
   const liteLLMKey = await liteLLM.generateKey(config.name)
+  {
+    const newConfig: CustomAIProviderConfig = {
+      _id: docIds.generateAIConfigID(),
+      provider: "Custom",
+      active: config.active ?? false,
+      isDefault: config.isDefault ?? false,
+      name: config.name,
+      apiKey: config.apiKey,
+      baseUrl: config.baseUrl,
+      defaultModel: config.defaultModel,
+      liteLLMKey,
+    }
 
-  const newConfig: CustomAIProviderConfig = {
-    _id: docIds.generateAIConfigID(),
-    provider: "Custom",
-    active: config.active ?? false,
-    isDefault: config.isDefault ?? false,
-    name: config.name,
-    apiKey: config.apiKey,
-    baseUrl: config.baseUrl,
-    defaultModel: config.defaultModel,
-    liteLLMKey,
+    const { rev } = await db.put(newConfig)
+    newConfig._rev = rev
+
+    if (newConfig.isDefault) {
+      await ensureSingleDefault(newConfig._id)
+    }
+
+    return newConfig
   }
-
-  const { rev } = await db.put(newConfig)
-  newConfig._rev = rev
-
-  if (newConfig.isDefault) {
-    await ensureSingleDefault(newConfig._id)
-  }
-
-  return newConfig
 }
 
 export async function update(
@@ -107,4 +108,5 @@ export async function remove(id: string) {
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
+  await liteLLM.removeKey(existing.name)
 }

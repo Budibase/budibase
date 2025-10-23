@@ -20,6 +20,28 @@ export async function generateKey(name: string) {
   )
 
   const json = await response.json()
+  return json.token
+}
 
+export async function removeKey(name: string) {
+  const body = JSON.stringify({
+    key_aliases: [name],
+  })
+
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer sk-1234",
+    },
+    body,
+  }
+
+  const response = await fetch(
+    "http://localhost:4000/key/delete",
+    requestOptions
+  )
+
+  const json = await response.json()
   return json.token
 }
