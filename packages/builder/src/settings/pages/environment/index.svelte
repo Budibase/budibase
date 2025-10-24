@@ -12,7 +12,7 @@
   import { onMount } from "svelte"
   import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { routeActions } from "@/settings/pages"
 
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
