@@ -83,6 +83,7 @@
   selected={$isActive("./table/:tableId") &&
     $tablesStore.selected?._id === table._id}
   selectedBy={$userSelectedResourceMap[table._id]}
+  alignIconLabel
   on:click
 >
   <div class="buttons">

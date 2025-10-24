@@ -80,6 +80,7 @@
   selected={$isActive("./query/:queryId") &&
     $queries.selectedQueryId === query._id}
   hovering={query._id === $contextMenuStore.id}
+  alignIconLabel={!iconVerb}
   on:click={() => goto(`./query/${query._id}`)}
   selectedBy={$userSelectedResourceMap[query._id]}
 >

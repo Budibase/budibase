@@ -28,6 +28,7 @@
   export let hovering: boolean = false
   export let disabled: boolean = false
   export let nonSelectable: boolean = false
+  export let alignIconLabel: boolean = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -76,6 +77,7 @@
   class:disabled
   class:nonSelectable
   class:multiline={subtext}
+  class:alignIconLabel
   on:dragend
   on:dragstart
   on:dragover
@@ -333,6 +335,11 @@
   .subtext {
     color: var(--spectrum-global-color-gray-700);
     font-weight: normal;
+  }
+
+  .nav-item.alignIconLabel .icon:not(.arrow) {
+    justify-content: flex-start;
+    flex: 0 0 42px;
   }
 
   .actions {
