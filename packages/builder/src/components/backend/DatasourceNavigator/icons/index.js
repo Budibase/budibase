@@ -42,12 +42,14 @@ const ICONS = {
 
 export default ICONS
 
-export function getIcon(integrationType, schema) {
+export function getIcon(integrationType, schema, iconUrl) {
   const integrationList = get(integrations)
   if (!integrationList) {
     return
   }
-  if (integrationList[integrationType]?.iconUrl) {
+  if (iconUrl) {
+    return { url: iconUrl }
+  } else if (integrationList[integrationType]?.iconUrl) {
     return { url: integrationList[integrationType].iconUrl }
   } else if (schema?.custom || !ICONS[integrationType]) {
     return { icon: ICONS.CUSTOM }
