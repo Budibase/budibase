@@ -152,20 +152,23 @@ export class AttachmentCleanup {
     for (const row of rows) {
       await AttachmentCleanup.coreCleanup(
         () =>
-          Object.entries(table.schema).reduce<string[]>((files, [key, schema]) => {
-            if (
-              schema.type !== FieldType.ATTACHMENTS &&
-              schema.type !== FieldType.ATTACHMENT_SINGLE &&
-              schema.type !== FieldType.SIGNATURE_SINGLE
-            ) {
-              return files
-            }
-            const columnFiles = AttachmentCleanup.extractAttachmentKeys(
-              schema.type,
-              row[key]
-            )
-            return files.concat(columnFiles)
-          }, []),
+          Object.entries(table.schema).reduce<string[]>(
+            (files, [key, schema]) => {
+              if (
+                schema.type !== FieldType.ATTACHMENTS &&
+                schema.type !== FieldType.ATTACHMENT_SINGLE &&
+                schema.type !== FieldType.SIGNATURE_SINGLE
+              ) {
+                return files
+              }
+              const columnFiles = AttachmentCleanup.extractAttachmentKeys(
+                schema.type,
+                row[key]
+              )
+              return files.concat(columnFiles)
+            },
+            []
+          ),
         {
           tableId: table._id,
           schema: table.schema,
@@ -178,28 +181,31 @@ export class AttachmentCleanup {
   static async rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
     await AttachmentCleanup.coreCleanup(
       () =>
-        Object.entries(table.schema).reduce<string[]>((files, [key, schema]) => {
-          if (
-            schema.type !== FieldType.ATTACHMENTS &&
-            schema.type !== FieldType.ATTACHMENT_SINGLE &&
-            schema.type !== FieldType.SIGNATURE_SINGLE
-          ) {
-            return files
-          }
+        Object.entries(table.schema).reduce<string[]>(
+          (files, [key, schema]) => {
+            if (
+              schema.type !== FieldType.ATTACHMENTS &&
+              schema.type !== FieldType.ATTACHMENT_SINGLE &&
+              schema.type !== FieldType.SIGNATURE_SINGLE
+            ) {
+              return files
+            }
 
-          const oldKeys = AttachmentCleanup.extractAttachmentKeys(
-            schema.type,
-            opts.oldRow[key]
-          )
-          const newKeys = AttachmentCleanup.extractAttachmentKeys(
-            schema.type,
-            opts.row[key]
-          )
-          const columnFiles = oldKeys.filter(
-            (key: string) => newKeys.indexOf(key) === -1
-          )
-          return files.concat(columnFiles)
-        }, []),
+            const oldKeys = AttachmentCleanup.extractAttachmentKeys(
+              schema.type,
+              opts.oldRow[key]
+            )
+            const newKeys = AttachmentCleanup.extractAttachmentKeys(
+              schema.type,
+              opts.row[key]
+            )
+            const columnFiles = oldKeys.filter(
+              (key: string) => newKeys.indexOf(key) === -1
+            )
+            return files.concat(columnFiles)
+          },
+          []
+        ),
       {
         tableId: table._id,
         schema: table.schema,
