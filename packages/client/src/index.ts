@@ -43,9 +43,18 @@ if (typeof window !== "undefined") {
   })
 }
 
-// Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
+import * as svelteStore from "svelte/store"
+// @ts-ignore
+import * as svelteInternal from "svelte/internal/client"
 window.svelte = svelte
+// Expose internals for compat-built plugins that import from
+// `svelte/internal` or `svelte/src/internal/*`
+// @ts-ignore - augmenting the window at runtime
+window.svelteInternal = svelteInternal
+// Some libraries import from "svelte/store" separately
+// @ts-ignore - augmenting the window at runtime
+window.svelteStore = svelteStore
 
 // Extend global window scope
 declare global {
@@ -78,6 +87,10 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
+    // Global for plugins that externalize "svelte/store"
+    svelteStore: typeof svelteStore
+    // Global for plugins that externalize Svelte internals
+    svelteInternal: typeof svelteInternal
     INIT_TIME: number
   }
 }
