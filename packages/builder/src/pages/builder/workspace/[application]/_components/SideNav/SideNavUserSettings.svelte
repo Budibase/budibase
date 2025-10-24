@@ -2,7 +2,7 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { auth } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
-  import UserDropdown from "@/pages/builder/portal/_components/UserDropdown.svelte"
+  import UserDropdown from "@/pages/builder/_components/UserDropdown.svelte"
   import { PopoverAlignment } from "@budibase/bbui"
   import { type User } from "@budibase/types"
 

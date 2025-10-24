@@ -23,16 +23,6 @@
       CookieUtils.setCookie("tenantId", newTenantId, domain)
     }
   }
-
-  if (
-    !$auth.user &&
-    $admin.cloud &&
-    !$admin.disableAccountPortal &&
-    $admin.accountPortalUrl &&
-    !$admin?.checklist?.sso?.checked
-  ) {
-    window.location.href = $admin.accountPortalUrl
-  }
 </script>
 
 {#if !$auth.user || $auth.user.forceResetPassword}

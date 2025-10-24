@@ -1,6 +1,12 @@
 <script>
   import { datasources } from "@/stores/builder"
   import { Divider, Heading, Icon } from "@budibase/bbui"
+  import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import {
+    customQueryIconColor,
+    customQueryIconText,
+  } from "@/helpers/data/utils"
+  import { IntegrationTypes } from "@/constants/backend"
 
   export let dividerState
   export let heading
@@ -22,6 +28,28 @@
     }
     return true
   }
+
+  const isRestQuery = entry => {
+    if (entry?.type !== "query") {
+      return false
+    }
+    const datasource = $datasources.list.find(
+      ds => ds._id === entry.datasourceId
+    )
+    return datasource?.source === IntegrationTypes.REST
+  }
+
+  const shouldInclude = entry => {
+    if (entry?.type !== "query") {
+      return true
+    }
+    if (!isRestQuery(entry)) {
+      return true
+    }
+    return entry.queryVerb === "create" || entry.queryVerb === "read"
+  }
+
+  $: filteredDataSet = dataSet?.filter(shouldInclude) ?? []
 </script>
 
 {#if dividerState}
@@ -34,7 +62,7 @@
 {/if}
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul class="spectrum-Menu" role="listbox">
-  {#each dataSet as data}
+  {#each filteredDataSet as data}
     <li
       class="spectrum-Menu-item"
       class:is-selected={isSelected(data) && value?.type === data.type}
@@ -44,9 +72,27 @@
       on:click={() => onSelect(data)}
     >
       <span class="spectrum-Menu-itemLabel">
-        {data.datasourceName && displayDatasourceName
-          ? `${data.datasourceName} - `
-          : ""}{data.label}
+        {#if data?.type === "query"}
+          <span class="query-icon">
+            {#if isRestQuery(data)}
+              <QueryVerbBadge
+                verb={customQueryIconText(data)}
+                color={customQueryIconColor(data)}
+              />
+            {:else}
+              <Icon
+                name="database"
+                size="S"
+                color="var(--spectrum-global-color-gray-600)"
+              />
+            {/if}
+          </span>
+        {/if}
+        <span class="label-text">
+          {data.datasourceName && displayDatasourceName
+            ? `${data.datasourceName} - `
+            : ""}{data.label}
+        </span>
       </span>
       <div class="check">
         <Icon name="check" />
@@ -64,6 +110,20 @@
     padding-left: 0;
     margin: 0;
     width: 100%;
+  }
+  .spectrum-Menu-itemLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .query-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 42px;
+  }
+  .label-text {
+    flex: 1;
   }
   .check {
     display: none;

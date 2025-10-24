@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
 
   import { API } from "@/api"
-  import { ChangelogURL } from "@/constants"
+  import { CHANGELOG_URL } from "@/constants"
   import { admin } from "@/stores/portal"
 
   export function show() {
@@ -118,7 +118,7 @@
     {/if}
     <Body size="S">
       Find the changelog for the latest release
-      <Link href={ChangelogURL} target="_blank">here</Link>
+      <Link href={CHANGELOG_URL} target="_blank">here</Link>
     </Body>
     {#if revertAvailable}
       <Body size="S">

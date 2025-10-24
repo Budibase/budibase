@@ -1,9 +1,11 @@
-import { Query, QueryParameter, QueryVerb } from "@budibase/types"
+import {
+  ImportRestQueryInfoResponse,
+  Query,
+  QueryParameter,
+  QueryVerb,
+  RestQueryImportOption,
+} from "@budibase/types"
 import { URL } from "url"
-
-export interface ImportInfo {
-  name: string
-}
 
 enum MethodToVerb {
   get = "read",
@@ -13,11 +15,22 @@ enum MethodToVerb {
   delete = "delete",
 }
 
+export interface GetQueriesOptions {
+  selectedQueryIds?: Set<string>
+}
+
 export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
-  abstract getInfo(): Promise<ImportInfo>
-  abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getInfo(): Promise<ImportRestQueryInfoResponse>
+  abstract getQueries(
+    datasourceId: string,
+    options?: GetQueriesOptions
+  ): Promise<Query[]>
   abstract getImportSource(): string
+
+  async listQueries(): Promise<RestQueryImportOption[]> {
+    return []
+  }
 
   protected convertPathVariables = (value: string): string => {
     if (!value) {

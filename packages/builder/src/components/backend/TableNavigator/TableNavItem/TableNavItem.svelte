@@ -13,7 +13,7 @@
   import { Icon } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { notifications } from "@budibase/bbui"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { WorkspaceResource } from "@budibase/types"
 
   export let table

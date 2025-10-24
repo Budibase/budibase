@@ -16,7 +16,6 @@
   import { auth } from "@/stores/portal/auth"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
-  import { redirect } from "@roxi/routify"
   import { processStringSync } from "@budibase/string-templates"
   import DeleteLicenseKeyModal from "@/components/portal/licensing/DeleteLicenseKeyModal.svelte"
   import { API } from "@/api"
@@ -42,13 +41,6 @@
   const offlineLicenseExtensions = [".txt"]
 
   let installInfo
-
-  // Make sure page can't be visited directly in cloud
-  $: {
-    if ($admin.cloud) {
-      $redirect("../../portal")
-    }
-  }
 
   // LICENSE KEY
 

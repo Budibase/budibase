@@ -11,22 +11,28 @@
   import { IntegrationTypes } from "@/constants/backend"
 
   let searchValue
-  let maxWidth = window.innerWidth / 3
-  let panelWidth = 260
+  const MIN_PANEL_WIDTH = 320
+  let maxWidth = Math.max(window.innerWidth / 3, MIN_PANEL_WIDTH)
+  let panelWidth = MIN_PANEL_WIDTH
 
   // Load persisted panel width from localStorage
   const loadPanelWidth = () => {
     const saved = localStorage.getItem("datasource-panel-width")
-    if (saved) {
-      const width = parseInt(saved, 10)
-      if (width && width > 100 && width < window.innerWidth) {
-        panelWidth = width
-      }
+    if (!saved) {
+      return
     }
+
+    const width = parseInt(saved, 10)
+    if (!Number.isFinite(width)) {
+      return
+    }
+
+    const clamped = Math.max(MIN_PANEL_WIDTH, Math.min(width, maxWidth))
+    panelWidth = clamped
   }
 
   const updateMaxWidth = () => {
-    maxWidth = window.innerWidth / 3
+    maxWidth = Math.max(window.innerWidth / 3, MIN_PANEL_WIDTH)
   }
 
   let gridDispatch = null
@@ -42,6 +48,10 @@
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     panelWidth,
     width => {
+      if (width < MIN_PANEL_WIDTH) {
+        width = MIN_PANEL_WIDTH
+      }
+
       if (width > maxWidth) {
         const element = document.querySelector(".panel-container")
         if (element) {
@@ -139,8 +149,7 @@
   }
   .panel-container {
     display: flex;
-    min-width: 262px;
-    width: 260px;
+    min-width: 320px;
     max-width: 33.33vw;
     height: 100%;
     overflow: visible;

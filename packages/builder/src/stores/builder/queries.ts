@@ -9,6 +9,8 @@ import {
   QueryPreview,
   PreviewQueryResponse,
   SaveQueryRequest,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   ImportRestQueryRequest,
   QuerySchema,
 } from "@budibase/types"
@@ -97,6 +99,12 @@ export class QueryStore extends DerivedBudiStore<
 
   async importQueries(data: ImportRestQueryRequest) {
     return await API.importQueries(data)
+  }
+
+  async importQueriesInfo(
+    data: ImportRestQueryInfoRequest
+  ): Promise<ImportRestQueryInfoResponse> {
+    return await API.getImportInfo(data)
   }
 
   select(id: string | null) {

@@ -4,6 +4,8 @@ import {
   ExecuteV2QueryResponse,
   FetchQueriesResponse,
   FindQueryResponse,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   ImportRestQueryRequest,
   ImportRestQueryResponse,
   PreviewQueryRequest,
@@ -26,6 +28,9 @@ export interface QueryEndpoints {
   importQueries: (
     data: ImportRestQueryRequest
   ) => Promise<ImportRestQueryResponse>
+  getImportInfo: (
+    data: ImportRestQueryInfoRequest
+  ) => Promise<ImportRestQueryInfoResponse>
 }
 
 export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
@@ -93,6 +98,13 @@ export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
   importQueries: async data => {
     return await API.post({
       url: "/api/queries/import",
+      body: data,
+    })
+  },
+
+  getImportInfo: async data => {
+    return await API.post({
+      url: "/api/queries/import/info",
       body: data,
     })
   },

@@ -24,7 +24,7 @@
   import { BackupTrigger, BackupType } from "@/constants/backend/backups"
   import { onMount } from "svelte"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let loading = true

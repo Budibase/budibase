@@ -1,12 +1,16 @@
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
-import { ImportInfo, ImportSource } from "./sources/base"
+import { ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 // @ts-ignore
 import { context, events } from "@budibase/backend-core"
-import { Datasource, Query } from "@budibase/types"
+import {
+  Datasource,
+  ImportRestQueryInfoResponse,
+  Query,
+} from "@budibase/types"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -32,13 +36,25 @@ export class RestImporter {
     }
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
-    return this.source.getInfo()
+  getInfo = async (): Promise<ImportRestQueryInfoResponse> => {
+    const info = await this.source.getInfo()
+    const queries = await this.source.listQueries()
+    if (queries.length) {
+      info.queries = queries
+    }
+    return info
   }
 
-  importQueries = async (datasourceId: string): Promise<ImportResult> => {
+  importQueries = async (
+    datasourceId: string,
+    options?: { selectedQueryIds?: string[] }
+  ): Promise<ImportResult> => {
     // construct the queries
-    let queries = await this.source.getQueries(datasourceId)
+    const selectedIds = options?.selectedQueryIds
+    const selectedSet = selectedIds ? new Set(selectedIds) : undefined
+    let queries = await this.source.getQueries(datasourceId, {
+      selectedQueryIds: selectedSet,
+    })
 
     // validate queries
     const errorQueries: Query[] = []

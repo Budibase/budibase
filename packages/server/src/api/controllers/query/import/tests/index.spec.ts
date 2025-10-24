@@ -191,6 +191,24 @@ describe("Rest Importer", () => {
     await runTest(testImportQueries, assertions)
   })
 
+  it("imports selected queries", async () => {
+    const data = oapi3CrudJson
+    await init(data)
+    const datasource = await config.createDatasource()
+    const info = await restImporter.getInfo()
+    const firstId = info.queries?.[0]?.id
+    expect(firstId).toBeDefined()
+
+    const result = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id, {
+        selectedQueryIds: [firstId],
+      })
+    )
+
+    expect(result.errorQueries.length).toBe(0)
+    expect(result.queries.length).toBe(1)
+  })
+
   it("filters unsupported options methods", async () => {
     const spec = JSON.stringify(
       {
