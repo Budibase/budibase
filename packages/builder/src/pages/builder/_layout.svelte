@@ -16,6 +16,10 @@
   import { Modal, notifications } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
 
+  $isActive
+  $params
+  $redirect
+
   let loaded = false
   let commandPaletteModal
   let settingsModal

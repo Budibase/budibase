@@ -32,7 +32,7 @@ const svelteCompilePlugin = {
         )
         const { js } = compile(preprocessed.code, {
           css: "injected",
-          generate: "ssr",
+          generate: "server",
         })
 
         return {
@@ -45,7 +45,14 @@ const svelteCompilePlugin = {
           resolveDir: dir,
         }
       } catch (e) {
-        return { errors: [JSON.stringify(e)] }
+        return {
+          errors: [
+            {
+              text: e && e.message ? e.message : String(e),
+              detail: e,
+            },
+          ],
+        }
       }
     })
   },

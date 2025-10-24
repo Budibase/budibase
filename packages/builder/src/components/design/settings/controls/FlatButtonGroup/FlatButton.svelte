@@ -12,7 +12,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="flatbutton" class:selected on:click={() => onClick(value || text)}>
   {#if useIcon}
-    <i class={icon} />
+    <i class={icon}></i>
   {:else}
     <span>
       <!-- eslint-disable-next-line svelte/no-at-html-tags -->

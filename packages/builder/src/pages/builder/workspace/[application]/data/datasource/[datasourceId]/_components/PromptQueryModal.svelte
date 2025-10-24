@@ -2,6 +2,9 @@
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
 
+  $goto
+  $params
+
   const handleOpen = (modal, params) => {
     if (params["?promptQuery"] && modal?.show) {
       modal.show()

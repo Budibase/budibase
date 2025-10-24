@@ -28,12 +28,12 @@
   $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: state = $instance?.state
+  $: instanceSate = $instance?.state
   $: showBar =
     definition?.showSettingsBar !== false &&
     !$dndIsDragging &&
     definition &&
-    !$state?.errorState
+    !$instanceSate?.errorState
   $: settings = getBarSettings(component, definition)
   $: isRoot = id === $builderStore.screen?.props?._id
   $: showGridStyles =
@@ -229,7 +229,7 @@
         active={gridHAlign === "stretch"}
         componentId={id}
       />
-      <div class="divider" />
+      <div class="divider"></div>
       <GridStylesButton
         style={gridVAlignVar}
         value="start"
@@ -262,7 +262,7 @@
         active={gridVAlign === "stretch"}
         componentId={id}
       />
-      <div class="divider" />
+      <div class="divider"></div>
     {/if}
     {#each settings as setting, idx}
       {#if setting.type === "select"}
@@ -303,7 +303,7 @@
         />
       {/if}
       {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
-        <div class="divider" />
+        <div class="divider"></div>
       {/if}
     {/each}
     {#if !isRoot}

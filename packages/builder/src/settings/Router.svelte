@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Routing, MatchedRoute } from "@/types/routing"
-  import { type SvelteComponent } from "svelte"
+  import type { Component } from "svelte"
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
   import { memo } from "@budibase/frontend-core"
@@ -14,7 +14,7 @@
   setContext("routing", routing)
 
   // Load the comp
-  let page: typeof SvelteComponent<any> | undefined
+  let page: Component<Record<string, unknown>> | undefined
 
   $: memoRoute.set(route)
 

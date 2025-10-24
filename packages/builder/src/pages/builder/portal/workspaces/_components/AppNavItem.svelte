@@ -9,6 +9,9 @@
   import { Icon } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
 
+  $goto
+  $params
+
   export let app
 
   let opened

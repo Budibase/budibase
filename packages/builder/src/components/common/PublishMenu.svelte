@@ -43,7 +43,7 @@
         <Icon size="M" name="arrow-circle-up" />
         <span>Publish</span>
       </div>
-      <div class="separator" />
+      <div class="separator"></div>
       <div
         bind:this={publishPopoverAnchor}
         class="publish-dropdown"

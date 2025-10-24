@@ -52,6 +52,10 @@
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
 
+  $beforeUrlChange
+  $goto
+  $params
+
   export let queryId
 
   let query, datasource
@@ -692,7 +696,7 @@
             </Layout>
           </Tab>
           <div class="auth-container">
-            <div />
+            <div></div>
             <!-- spacer -->
 
             <AuthPicker

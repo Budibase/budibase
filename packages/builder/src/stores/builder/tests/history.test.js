@@ -2,7 +2,7 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { Operations, initialState, createHistoryStore } from "../history"
 
 import { writable, derived, get } from "svelte/store"
-import * as jsonpatch from "fast-json-patch/index.mjs"
+import * as jsonpatch from "fast-json-patch"
 
 vi.mock("svelte/store", () => {
   return {
@@ -12,7 +12,7 @@ vi.mock("svelte/store", () => {
   }
 })
 
-vi.mock("fast-json-patch/index.mjs", () => {
+vi.mock("fast-json-patch", () => {
   return {
     compare: vi.fn(),
     deepClone: vi.fn(),
@@ -51,7 +51,7 @@ describe("admin store", () => {
 
     it("inits the derived store with the initial writable store and an update function", () => {
       expect(derived).toHaveBeenCalledTimes(1)
-      expect(derived.calls[0][1]({ position: 0, history: [] })).toEqual({
+      expect(derived.mock.calls[0][1]({ position: 0, history: [] })).toEqual({
         position: 0,
         history: [],
         canUndo: false,
@@ -81,21 +81,22 @@ describe("admin store", () => {
       ctx.getDoc.mockReturnValue(ctx.oldDoc)
       jsonpatch.deepClone.mockReturnValue(ctx.newDoc)
 
-      vi.stubGlobal("Math", { random: vi.fn() })
+      const mockRandom = vi.fn()
+      vi.spyOn(Math, "random").mockImplementation(mockRandom)
 
       ctx.forwardPatch = { foo: 1 }
       ctx.backwardsPatch = { bar: 2 }
 
       jsonpatch.compare.mockReturnValueOnce(ctx.forwardPatch)
       jsonpatch.compare.mockReturnValueOnce(ctx.backwardsPatch)
-      Math.random.mockReturnValue(1234)
+      mockRandom.mockReturnValue(1234)
 
       const wrappedSaveFn = ctx.returnedStore.wrapSaveDoc(ctx.saveFn)
       await wrappedSaveFn(ctx.doc, null)
     })
 
     it("sets the state to loading", ctx => {
-      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[0][0]({})).toEqual({
         loading: true,
       })
     })
@@ -114,13 +115,13 @@ describe("admin store", () => {
 
     it("creates the undo/redo patches", ctx => {
       expect(jsonpatch.compare).toHaveBeenCalledTimes(2)
-      expect(jsonpatch.compare.calls[0]).toEqual([ctx.oldDoc, ctx.doc])
-      expect(jsonpatch.compare.calls[1]).toEqual([ctx.doc, ctx.oldDoc])
+      expect(jsonpatch.compare.mock.calls[0]).toEqual([ctx.oldDoc, ctx.doc])
+      expect(jsonpatch.compare.mock.calls[1]).toEqual([ctx.doc, ctx.oldDoc])
     })
 
     it("saves the operation", ctx => {
       expect(
-        ctx.writableReturn.update.calls[1][0]({
+        ctx.writableReturn.update.mock.calls[1][0]({
           history: [],
           position: 0,
         })
@@ -140,7 +141,7 @@ describe("admin store", () => {
 
     it("sets the state to not loading", ctx => {
       expect(ctx.writableReturn.update).toHaveBeenCalledTimes(3)
-      expect(ctx.writableReturn.update.calls[2][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[2][0]({})).toEqual({
         loading: false,
       })
     })
@@ -154,15 +155,16 @@ describe("admin store", () => {
       ctx.oldDoc = { _id: "oldDoc" }
       jsonpatch.deepClone.mockReturnValue(ctx.oldDoc)
 
-      vi.stubGlobal("Math", { random: vi.fn() })
-      Math.random.mockReturnValue(1235)
+      const mockRandom = vi.fn()
+      vi.spyOn(Math, "random").mockImplementation(mockRandom)
+      mockRandom.mockReturnValue(1235)
 
       const wrappedDeleteDoc = ctx.returnedStore.wrapDeleteDoc(ctx.deleteFn)
       await wrappedDeleteDoc(ctx.doc, null)
     })
 
     it("sets the state to loading", ctx => {
-      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[0][0]({})).toEqual({
         loading: true,
       })
     })
@@ -179,7 +181,7 @@ describe("admin store", () => {
 
     it("saves the operation", ctx => {
       expect(
-        ctx.writableReturn.update.calls[1][0]({
+        ctx.writableReturn.update.mock.calls[1][0]({
           history: [],
           position: 0,
         })
@@ -197,7 +199,7 @@ describe("admin store", () => {
 
     it("sets the state to not loading", ctx => {
       expect(ctx.writableReturn.update).toHaveBeenCalledTimes(3)
-      expect(ctx.writableReturn.update.calls[2][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[2][0]({})).toEqual({
         loading: false,
       })
     })
@@ -240,7 +242,7 @@ describe("admin store", () => {
     })
 
     it("sets the state to loading", ctx => {
-      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[0][0]({})).toEqual({
         loading: true,
       })
     })
@@ -252,7 +254,7 @@ describe("admin store", () => {
 
     it("sets the state to the previous position", ctx => {
       expect(
-        ctx.writableReturn.update.calls[1][0]({ history: [], position: 1 })
+        ctx.writableReturn.update.mock.calls[1][0]({ history: [], position: 1 })
       ).toEqual({ history: [], position: 0 })
     })
 
@@ -274,7 +276,7 @@ describe("admin store", () => {
     })
 
     it("sets the state to not loading", ctx => {
-      expect(ctx.writableReturn.update.calls[5][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[5][0]({})).toEqual({
         loading: false,
       })
     })
@@ -311,7 +313,7 @@ describe("admin store", () => {
     })
 
     it("sets the state to loading", ctx => {
-      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[0][0]({})).toEqual({
         loading: true,
       })
     })
@@ -323,7 +325,7 @@ describe("admin store", () => {
 
     it("sets the state to the next position", ctx => {
       expect(
-        ctx.writableReturn.update.calls[1][0]({ history: [], position: 0 })
+        ctx.writableReturn.update.mock.calls[1][0]({ history: [], position: 0 })
       ).toEqual({ history: [], position: 1 })
     })
 
@@ -332,7 +334,7 @@ describe("admin store", () => {
     })
 
     it("sets the state to not loading", ctx => {
-      expect(ctx.writableReturn.update.calls[5][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[5][0]({})).toEqual({
         loading: false,
       })
     })

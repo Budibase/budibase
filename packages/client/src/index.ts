@@ -14,6 +14,7 @@ import {
   routeStore,
   notificationStore,
 } from "@/stores"
+import { mount } from "svelte"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
 import {
@@ -42,12 +43,18 @@ if (typeof window !== "undefined") {
   })
 }
 
-// Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
+import * as svelteStore from "svelte/store"
 // @ts-ignore
-import * as internal from "svelte/internal"
-window.svelte_internal = internal
+import * as svelteInternal from "svelte/internal/client"
 window.svelte = svelte
+// Expose internals for compat-built plugins that import from
+// `svelte/internal` or `svelte/src/internal/*`
+// @ts-ignore - augmenting the window at runtime
+window.svelteInternal = svelteInternal
+// Some libraries import from "svelte/store" separately
+// @ts-ignore - augmenting the window at runtime
+window.svelteStore = svelteStore
 
 // Extend global window scope
 declare global {
@@ -80,7 +87,10 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
-    svelte_internal: typeof internal
+    // Global for plugins that externalize "svelte/store"
+    svelteStore: typeof svelteStore
+    // Global for plugins that externalize Svelte internals
+    svelteInternal: typeof svelteInternal
     INIT_TIME: number
   }
 }
@@ -105,7 +115,7 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: ClientApp | UpdatingApp
+let app: Record<string, unknown> | undefined
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
@@ -136,7 +146,7 @@ const loadBudibase = async () => {
 
   if (window.MIGRATING_APP) {
     if (!app) {
-      app = new UpdatingApp({
+      app = mount(UpdatingApp, {
         target: window.document.body,
       })
     }
@@ -209,7 +219,7 @@ const loadBudibase = async () => {
 
   // Create app if one hasn't been created yet
   if (!app) {
-    app = new ClientApp({
+    app = mount(ClientApp, {
       target: window.document.body,
     })
   }

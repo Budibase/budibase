@@ -21,7 +21,7 @@
           <Icon name="x" />
         </button>
       </div>
-      <div class="divider" />
+      <div class="divider"></div>
       <a
         class="help-item-container"
         target="_blank"
@@ -32,14 +32,14 @@
         </div>
         <Body size="S">Help docs</Body>
       </a>
-      <div class="divider" />
+      <div class="divider"></div>
       <a target="_blank" class="help-item-container" href={ChangelogURL}>
         <div class="icon">
           <Icon name="list-bullets" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Changelog</Body>
       </a>
-      <div class="divider" />
+      <div class="divider"></div>
       <a
         target="_blank"
         href="https://github.com/Budibase/budibase/discussions"
@@ -50,7 +50,7 @@
         </div>
         <Body size="S">Discussions</Body>
       </a>
-      <div class="divider" />
+      <div class="divider"></div>
       <a
         target="_blank"
         class="help-item-container"
@@ -61,7 +61,7 @@
         </div>
         <Body size="S">Discord</Body>
       </a>
-      <div class="divider" />
+      <div class="divider"></div>
       <a
         target="_blank"
         class="help-item-container"
@@ -72,7 +72,7 @@
         </div>
         <Body size="S">Budibase University</Body>
       </a>
-      <div class="divider" />
+      <div class="divider"></div>
       <a
         class="help-item-container"
         href={premiumOrAboveLicense

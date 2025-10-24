@@ -19,6 +19,8 @@
   import { sdk } from "@budibase/shared-core"
   import type { AppTemplate } from "@/types"
 
+  $goto
+
   let creating = false
   let defaultAppName: string
 

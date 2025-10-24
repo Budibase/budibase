@@ -150,7 +150,6 @@
   {buttonText}
   on:change
 >
-  {buttonText}
   <div slot="anchor">
     <div class="filter-button-wrap" class:inactive={!filter}>
       <!-- svelte-ignore a11y-click-events-have-key-events -->

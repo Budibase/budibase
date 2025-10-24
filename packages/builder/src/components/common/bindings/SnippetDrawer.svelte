@@ -137,9 +137,7 @@
         placeholder="return function(input) &#10100; ... &#10101;"
         value={code}
         on:change={e => (code = e.detail)}
-      >
-        <Input placeholder="Name" />
-      </BindingPanel>
+      />
     {/key}
   </svelte:fragment>
 </Drawer>

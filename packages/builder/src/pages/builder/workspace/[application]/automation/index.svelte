@@ -33,6 +33,8 @@
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
 
+  $url
+
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">

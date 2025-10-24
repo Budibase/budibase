@@ -3,6 +3,8 @@
   import { screenStore } from "@/stores/builder"
   import { onMount } from "svelte"
 
+  $redirect
+
   onMount(() => {
     const { screens } = $screenStore
 
