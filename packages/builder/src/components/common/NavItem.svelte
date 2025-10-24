@@ -291,15 +291,13 @@
   }
   .iconText {
     display: inline-flex;
-    align-items: center;
     font-size: var(--spectrum-global-dimension-font-size-50);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    justify-content: flex-end;
-    width: 44px;
-    flex: 0 0 44px;
-    margin-right: var(--spacing-s);
+    justify-content: flex-start;
+    width: 42px;
+    flex: 0 0 42px;
   }
 
   .nav-item-body {
