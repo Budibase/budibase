@@ -424,6 +424,10 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export type EmailTriggerInputs = {
+  from: string
+}
+
 export type CronTriggerOutputs = {
   timestamp: number
 }
