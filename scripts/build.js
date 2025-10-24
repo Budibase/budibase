@@ -77,7 +77,12 @@ async function runBuild(entry, outfile) {
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin({
-        allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
+        allowList: [
+          "@budibase/frontend-core",
+          "@budibase/pro",
+          "svelte",
+          "svelte-portal",
+        ],
       }),
     ],
     preserveSymlinks: true,
