@@ -13,6 +13,8 @@ import {
   FetchQueriesResponse,
   FieldType,
   FindQueryResponse,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   ImportRestQueryRequest,
   ImportRestQueryResponse,
   JsonFieldSubType,
@@ -69,6 +71,17 @@ export async function fetch(ctx: UserCtx<void, FetchQueriesResponse>) {
   ctx.body = await sdk.queries.fetch()
 }
 
+const importInfo = async (
+  ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
+) => {
+  const { data } = ctx.request.body
+
+  const importer = new RestImporter(data)
+  await importer.init()
+
+  ctx.body = await importer.getInfo()
+}
+
 const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
@@ -108,7 +121,9 @@ const _import = async (
     datasourceId = body.datasourceId
   }
 
-  const importResult = await importer.importQueries(datasourceId)
+  const importResult = await importer.importQueries(datasourceId, {
+    selectedQueryIds: body.selectedQueryIds,
+  })
 
   ctx.body = {
     ...importResult,
@@ -116,6 +131,7 @@ const _import = async (
   }
 }
 export { _import as import }
+export { importInfo }
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()

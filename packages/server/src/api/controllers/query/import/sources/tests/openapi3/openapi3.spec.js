@@ -132,6 +132,18 @@ describe("OpenAPI3 Import", () => {
     await runTests("petstore", testImportInfo)
   })
 
+  const testListQueries = async (file, extension) => {
+    await openapi3.isSupported(getData(file, extension))
+    const queries = await openapi3.listQueries()
+    expect(queries.length).toBeGreaterThan(0)
+    expect(queries[0]).toHaveProperty("id")
+    expect(queries[0]).toHaveProperty("method")
+  }
+
+  it("lists available queries", async () => {
+    await runTests("crud", testListQueries)
+  })
+
   describe("Returns queries", () => {
     const indexQueries = queries => {
       return queries.reduce((acc, query) => {
@@ -142,10 +154,20 @@ describe("OpenAPI3 Import", () => {
 
     const getQueries = async (file, extension) => {
       await openapi3.isSupported(getData(file, extension))
-      const queries = await openapi3.getQueries()
+      const queries = await openapi3.getQueries("datasourceId")
       expect(queries.length).toBe(6)
       return indexQueries(queries)
     }
+
+    it("filters queries using selected ids", async () => {
+      await openapi3.isSupported(getData("crud", "json"))
+      const summaries = await openapi3.listQueries()
+      const selectedId = summaries[0].id
+      const queries = await openapi3.getQueries("datasourceId", {
+        selectedQueryIds: new Set([selectedId]),
+      })
+      expect(queries.length).toBe(1)
+    })
 
     const testVerb = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)

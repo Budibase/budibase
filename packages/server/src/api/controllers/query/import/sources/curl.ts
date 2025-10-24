@@ -1,5 +1,6 @@
-import { ImportSource, ImportInfo } from "./base"
+import { ImportSource } from "./base"
 import { Query } from "../../../../../definitions/common"
+import { RestQueryImportOption } from "@budibase/types"
 import { URL } from "url"
 
 const curlconverter = require("curlconverter")
@@ -64,15 +65,29 @@ export class Curl extends ImportSource {
     return new URL(this.curl.raw_url)
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = async () => {
     const url = this.getUrl()
     return {
       name: url.hostname,
+      url: url.origin,
     }
   }
 
   getImportSource(): string {
     return "curl"
+  }
+
+  async listQueries(): Promise<RestQueryImportOption[]> {
+    const url = this.getUrl()
+    return [
+      {
+        id: `${this.curl.method?.toUpperCase?.() || "GET"} ${url.pathname || "/"}`,
+        name: url.pathname || url.href,
+        method: this.curl.method?.toUpperCase?.() || "GET",
+        path: url.pathname || "/",
+        description: url.href,
+      },
+    ]
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {

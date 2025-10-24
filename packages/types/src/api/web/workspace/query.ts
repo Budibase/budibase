@@ -10,10 +10,30 @@ export type FetchQueriesResponse = Query[]
 export interface SaveQueryRequest extends Query {}
 export interface SaveQueryResponse extends Query {}
 
+export interface RestQueryImportOption {
+  id: string
+  name: string
+  method: string
+  path: string
+  description?: string
+  tags?: string[]
+}
+
+export interface ImportRestQueryInfoRequest {
+  data: string
+}
+
+export interface ImportRestQueryInfoResponse {
+  name: string
+  url?: string
+  queries?: RestQueryImportOption[]
+}
+
 export interface ImportRestQueryRequest {
   datasourceId?: string
   data: string
   datasource: Datasource
+  selectedQueryIds?: string[]
 }
 export interface ImportRestQueryResponse {
   errorQueries: Query[]

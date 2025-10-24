@@ -38,6 +38,7 @@ builderRoutes
     generateQueryValidation(),
     queryController.save
   )
+  .post("/api/queries/import/info", queryController.importInfo)
   .post("/api/queries/import", queryController.import)
   .post(
     "/api/queries/preview",

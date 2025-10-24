@@ -1,6 +1,6 @@
-import { ImportInfo } from "./base"
-import { Query, QueryParameter } from "@budibase/types"
+import { Query, QueryParameter, RestQueryImportOption } from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
+import { GetQueriesOptions } from "./base"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 
@@ -94,6 +94,11 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
 
+  private buildQueryId = (method: string, path: string) => {
+    const normalisedMethod = method.toUpperCase()
+    return `${normalisedMethod} ${path}`
+  }
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
@@ -108,18 +113,62 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = async () => {
     const name = this.document.info.title || "OpenAPI Import"
-    return {
+    const info: { name: string; url?: string } = {
       name,
     }
+    const server = this.document.servers?.[0]
+    if (server?.url) {
+      info.url = server.url
+    }
+    return info
   }
 
   getImportSource(): string {
     return "openapi3.0"
   }
 
-  getQueries = async (datasourceId: string): Promise<Query[]> => {
+  async listQueries(): Promise<RestQueryImportOption[]> {
+    const options: RestQueryImportOption[] = []
+    for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
+      if (!pathItemObject) {
+        continue
+      }
+
+      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
+        if (isParameter(key, opOrParams)) {
+          continue
+        }
+
+        const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+
+        const operation = opOrParams as OpenAPIV3.OperationObject
+        const id = this.buildQueryId(methodName, path)
+        const name =
+          operation.summary || operation.operationId || `${methodName.toUpperCase()} ${path}`
+
+        options.push({
+          id,
+          name,
+          method: methodName.toUpperCase(),
+          path,
+          description: operation.description,
+          tags: operation.tags,
+        })
+      }
+    }
+
+    return options
+  }
+
+  getQueries = async (
+    datasourceId: string,
+    options?: GetQueriesOptions
+  ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
     if (this.document.servers?.length) {
@@ -129,6 +178,7 @@ export class OpenAPI3 extends OpenAPISource {
     }
 
     const queries: Query[] = []
+    const selected = options?.selectedQueryIds
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -150,6 +200,10 @@ export class OpenAPI3 extends OpenAPISource {
 
         const methodName = key
         if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const queryId = this.buildQueryId(methodName, path)
+        if (selected && !selected.has(queryId)) {
           continue
         }
         const name = operation.operationId || path
@@ -220,6 +274,7 @@ export class OpenAPI3 extends OpenAPISource {
           parameters,
           requestBody
         )
+        query.fields.method = methodName.toUpperCase()
         queries.push(query)
       }
     }
