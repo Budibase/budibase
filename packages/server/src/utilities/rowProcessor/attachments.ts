@@ -105,29 +105,30 @@ export class AttachmentCleanup {
   ) {
     const tableSchema = opts.oldTable?.schema || table.schema
     return AttachmentCleanup.coreCleanup(
-      () => {
-        let files: string[] = []
-        for (let [key, schema] of Object.entries(tableSchema)) {
+      () =>
+        Object.entries(tableSchema).reduce<string[]>((files, [key, schema]) => {
           if (
             schema.type !== FieldType.ATTACHMENTS &&
             schema.type !== FieldType.ATTACHMENT_SINGLE &&
             schema.type !== FieldType.SIGNATURE_SINGLE
           ) {
-            continue
+            return files
           }
 
           const columnRemoved = opts.oldTable && !table.schema[key]
           const renaming = opts.rename?.old === key
           if ((columnRemoved && !renaming) || opts.deleting) {
             rows.forEach(row => {
-              files = files.concat(
-                AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
+              const keys = AttachmentCleanup.extractAttachmentKeys(
+                schema.type,
+                row[key]
               )
+              files.push(...keys)
             })
           }
-        }
-        return files
-      },
+
+          return files
+        }, []),
       {
         tableId: table._id,
         schema: tableSchema,
@@ -150,22 +151,21 @@ export class AttachmentCleanup {
   static async rowDelete(table: Table, rows: Row[]) {
     for (const row of rows) {
       await AttachmentCleanup.coreCleanup(
-        () => {
-          let files: string[] = []
-          for (let [key, schema] of Object.entries(table.schema)) {
+        () =>
+          Object.entries(table.schema).reduce<string[]>((files, [key, schema]) => {
             if (
               schema.type !== FieldType.ATTACHMENTS &&
               schema.type !== FieldType.ATTACHMENT_SINGLE &&
               schema.type !== FieldType.SIGNATURE_SINGLE
             ) {
-              continue
+              return files
             }
-            files = files.concat(
-              AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
+            const columnFiles = AttachmentCleanup.extractAttachmentKeys(
+              schema.type,
+              row[key]
             )
-          }
-          return files
-        },
+            return files.concat(columnFiles)
+          }, []),
         {
           tableId: table._id,
           schema: table.schema,
@@ -177,15 +177,14 @@ export class AttachmentCleanup {
 
   static async rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
     await AttachmentCleanup.coreCleanup(
-      () => {
-        let files: string[] = []
-        for (let [key, schema] of Object.entries(table.schema)) {
+      () =>
+        Object.entries(table.schema).reduce<string[]>((files, [key, schema]) => {
           if (
             schema.type !== FieldType.ATTACHMENTS &&
             schema.type !== FieldType.ATTACHMENT_SINGLE &&
             schema.type !== FieldType.SIGNATURE_SINGLE
           ) {
-            continue
+            return files
           }
 
           const oldKeys = AttachmentCleanup.extractAttachmentKeys(
@@ -196,12 +195,11 @@ export class AttachmentCleanup {
             schema.type,
             opts.row[key]
           )
-          files = files.concat(
-            oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
+          const columnFiles = oldKeys.filter(
+            (key: string) => newKeys.indexOf(key) === -1
           )
-        }
-        return files
-      },
+          return files.concat(columnFiles)
+        }, []),
       {
         tableId: table._id,
         schema: table.schema,
