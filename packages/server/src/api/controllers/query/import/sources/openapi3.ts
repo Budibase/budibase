@@ -1,8 +1,11 @@
 import { ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
-import { OpenAPIV3 } from "openapi-types"
+import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
+
+type ServerObject = OpenAPIV3.ServerObject
+type ServerVariableObject = OpenAPIV3.ServerVariableObject
 
 const parameterNotRef = (
   param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
@@ -25,8 +28,14 @@ const schemaNotRef = (
   return param !== undefined
 }
 
-const isOpenAPI3 = (document: any): document is OpenAPIV3.Document => {
-  return document.openapi.includes("3.0")
+const isOpenAPI3 = (
+  document: OpenAPI.Document
+): document is OpenAPIV3.Document => {
+  if (!("openapi" in document)) {
+    return false
+  }
+  const { openapi } = document as { openapi: string }
+  return openapi.startsWith("3.")
 }
 
 const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
@@ -87,7 +96,7 @@ export class OpenAPI3 extends OpenAPISource {
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
-      const document: any = await this.parseData(data)
+      const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
         return true
@@ -112,14 +121,11 @@ export class OpenAPI3 extends OpenAPISource {
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     let url: string | URL | undefined
+    let serverVariables: Record<string, ServerVariableObject> = {}
     if (this.document.servers?.length) {
-      url = this.document.servers[0].url
-      try {
-        url = new URL(url)
-      } catch (err) {
-        // unable to construct url, e.g. with variables
-        // proceed with string form of url
-      }
+      const server = this.document.servers[0] as ServerObject
+      url = server.url
+      serverVariables = server.variables || {}
     }
 
     const queries: Query[] = []
@@ -143,11 +149,22 @@ export class OpenAPI3 extends OpenAPISource {
         const operation = opOrParams as OpenAPIV3.OperationObject
 
         const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
         let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
+        const ensureParameter = (paramName: string, defaultValue = "") => {
+          if (!parameters.some(parameter => parameter.name === paramName)) {
+            parameters.push({
+              name: paramName,
+              default: defaultValue,
+            })
+          }
+        }
         const mimeTypes = getMimeTypes(operation)
 
         if (mimeTypes.length > 0) {
@@ -182,12 +199,14 @@ export class OpenAPI3 extends OpenAPISource {
 
             // add the parameter if it can be bound in our config
             if (["query", "header", "path"].includes(param.in)) {
-              parameters.push({
-                name: param.name,
-                default: "",
-              })
+              ensureParameter(param.name)
             }
           }
+        }
+
+        for (let [variableName, variable] of Object.entries(serverVariables)) {
+          const defaultValue = variable?.default || ""
+          ensureParameter(variableName, defaultValue)
         }
 
         const query = this.constructQuery(

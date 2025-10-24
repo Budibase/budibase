@@ -161,7 +161,9 @@
 
           const entry: UIFavouriteResource = {
             name: resource.name,
-            icon: isRestQuery ? "globe" : ResourceIcons[favourite.resourceType],
+            icon: isRestQuery
+              ? "globe-hemisphere-west"
+              : ResourceIcons[favourite.resourceType],
           }
 
           if (favourite.resourceType === WorkspaceResource.WORKSPACE_APP) {
@@ -190,8 +192,13 @@
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${appPrefix}/automation/${id}`,
-      [WorkspaceResource.DATASOURCE]: (id: string) =>
-        `${appPrefix}/data/datasource/${id}`,
+      [WorkspaceResource.DATASOURCE]: (id: string) => {
+        const datasourceMap = get(datasourceLookup) || {}
+        const datasource = datasourceMap[id]
+        const basePath =
+          datasource?.source === IntegrationTypes.REST ? "apis" : "data"
+        return `${appPrefix}/${basePath}/datasource/${id}`
+      },
       [WorkspaceResource.TABLE]: (id: string) =>
         `${appPrefix}/data/table/${id}`,
       [WorkspaceResource.WORKSPACE_APP]: (id: string) => {
@@ -204,8 +211,17 @@
         }
         return `${appPrefix}/design/${wsa.screens[0]?._id}`
       },
-      [WorkspaceResource.QUERY]: (id: string) =>
-        `${appPrefix}/data/query/${id}`,
+      [WorkspaceResource.QUERY]: (id: string) => {
+        const queriesStore = get(queries)
+        const datasourceMap = get(datasourceLookup) || {}
+        const query = queriesStore.list?.find(q => q._id === id)
+        const datasource = query?.datasourceId
+          ? datasourceMap[query.datasourceId]
+          : undefined
+        const basePath =
+          datasource?.source === IntegrationTypes.REST ? "apis" : "data"
+        return `${appPrefix}/${basePath}/query/${id}`
+      },
       [WorkspaceResource.VIEW]: (id: string) => {
         const view = $viewsV2.list.find(v => v.id === id)
         return `${appPrefix}/data/table/${view?.tableId}/${id}`
@@ -290,57 +306,165 @@
 
     <div class="nav_body">
       <div class="links core">
-        <div>
-          <SideNavLink
-            icon="browser"
-            text="Apps"
-            url={$url("./design")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <SideNavLink
-            icon="path"
-            text="Automations"
-            url={$url("./automation")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <SideNavLink
-            icon="database"
-            text="Data"
-            url={$url("./data")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <!-- <SideNavLink
-          icon="webhooks-logo"
-          text="APIs"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="sparkle"
-          text="AI"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="paper-plane-tilt"
-          text="Email"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        /> -->
-          {#if $featureFlags.AI_AGENTS}
+        {#if appId}
+          <div>
             <SideNavLink
-              icon="cpu"
-              text="Agent"
-              url={$url("./agent")}
+              icon="browser"
+              text="Apps"
+              url={$url("./design")}
               {collapsed}
               on:click={keepCollapsed}
             />
+            <span class="root-nav" class:selected={$isActive("./automation")}>
+              {#if collapsed && automationErrorCount}
+                <span class="status-indicator">
+                  <StatusLight
+                    color="var(--spectrum-global-color-static-red-600)"
+                    size="M"
+                  />
+                </span>
+              {/if}
+              <SideNavLink
+                icon="path"
+                text="Automations"
+                url={$url("./automation")}
+                {collapsed}
+                on:click={keepCollapsed}
+              >
+                <svelte:fragment slot="right">
+                  {#if automationErrorCount}
+                    <StatusLight
+                      color="var(--spectrum-global-color-static-red-600)"
+                      size="M"
+                    />
+                  {/if}
+                </svelte:fragment>
+              </SideNavLink>
+            </span>
+
+            <SideNavLink
+              icon="database"
+              text="Data"
+              url={$url("./data")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+            <SideNavLink
+              icon="globe-hemisphere-west"
+              text="APIs"
+              url={$url("./apis")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+            {#if $featureFlags.AI_AGENTS}
+              <SideNavLink
+                icon="cpu"
+                text="Agent"
+                url={$url("./agent")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+            {/if}
+          </div>
+          <Divider size="S" />
+          <div class="favourite-wrapper">
+            <div class="favourite-title">
+              <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+                FAVOURITES
+              </Body>
+            </div>
+            {#if !favourites?.length || !resourceLookup}
+              <div class="favourite-empty-state">
+                <div>
+                  <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
+                </div>
+                <Body
+                  color="var(--spectrum-global-color-gray-700)"
+                  size="XS"
+                  textAlign="center"
+                >
+                  You have no favorites yet! Favourite an automation, app, table
+                  or API for quicker access.
+                </Body>
+                <Link
+                  href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
+                  target="_blank"
+                  secondary
+                  quiet
+                >
+                  Learn how
+                </Link>
+              </div>
+            {:else}
+              <div class="favourite-links">
+                {#each favourites as favourite}
+                  {@const lookup = getFavouriteResourceLookup(favourite)}
+                  {@const workspaceApp = lookup.workspaceApp}
+                  {@const showLiveLink =
+                    favourite.resourceType ===
+                      WorkspaceResource.WORKSPACE_APP &&
+                    workspaceApp &&
+                    workspaceApp.publishStatus?.state ===
+                      PublishResourceState.PUBLISHED &&
+                    !workspaceApp.disabled}
+                  {@const liveUrl =
+                    showLiveLink && workspaceApp
+                      ? buildLiveWorkspaceAppUrl(workspaceApp)
+                      : null}
+                  <div class="link">
+                    <SideNavLink
+                      icon={lookup?.icon}
+                      text={lookup?.name}
+                      {collapsed}
+                      on:click={() => {
+                        const targetLink = resourceLink(favourite)
+                        if (targetLink) $goto(targetLink)
+                        keepCollapsed()
+                      }}
+                    >
+                      <div slot="actions">
+                        <div class="action-buttons">
+                          {#if liveUrl}
+                            <button
+                              type="button"
+                              class="live-app-link"
+                              aria-label="View live app"
+                              on:click|stopPropagation|preventDefault={() =>
+                                openLiveWorkspaceApp(liveUrl)}
+                            >
+                              <Icon
+                                name="globe-simple"
+                                size="S"
+                                hoverable
+                                color="#fff"
+                                hoverColor="#fff"
+                                tooltip="View live app"
+                                tooltipType={TooltipType.Info}
+                                tooltipPosition={TooltipPosition.Top}
+                              />
+                            </button>
+                          {/if}
+                          <FavouriteResourceButton {favourite} />
+                        </div>
+                      </div>
+                    </SideNavLink>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      <div class="links">
+        <span class="root-nav" class:error={backupErrorCount}>
+          {#if collapsed && backupErrorCount}
+            <span class="status-indicator">
+              <StatusLight
+                color="var(--spectrum-global-color-static-red-600)"
+                size="M"
+              />
+            </span>
           {/if}
         </div>
         <Divider size="S" />

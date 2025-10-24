@@ -1,4 +1,4 @@
-import { Query, QueryParameter } from "@budibase/types"
+import { Query, QueryParameter, QueryVerb } from "@budibase/types"
 import { URL } from "url"
 
 export interface ImportInfo {
@@ -19,6 +19,34 @@ export abstract class ImportSource {
   abstract getQueries(datasourceId: string): Promise<Query[]>
   abstract getImportSource(): string
 
+  protected convertPathVariables = (value: string): string => {
+    if (!value) {
+      return value
+    }
+
+    return value.replace(/\{([^{}]+)\}/g, (_match, token) => {
+      const variable = token.trim()
+      const sanitized = variable.match(/^[A-Za-z0-9._-]+/)
+      const name = sanitized ? sanitized[0] : variable
+      return `{{${name}}}`
+    })
+  }
+
+  protected normalizeMethod = (method?: string): string | undefined => {
+    if (!method) {
+      return undefined
+    }
+    return method.toLowerCase()
+  }
+
+  protected isSupportedMethod = (method: string): boolean => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      return false
+    }
+    return Object.prototype.hasOwnProperty.call(MethodToVerb, normalized)
+  }
+
   constructQuery = (
     datasourceId: string,
     name: string,
@@ -37,13 +65,17 @@ export abstract class ImportSource {
     path = this.processPath(path)
     if (url) {
       if (typeof url === "string") {
-        path = `${url}/${path}`
+        let base = this.convertPathVariables(url)
+        if (base.endsWith("/")) {
+          base = base.slice(0, -1)
+        }
+        path = path ? `${base}/${path}` : base
       } else {
         let href = url.href
         if (href.endsWith("/")) {
           href = href.slice(0, -1)
         }
-        path = `${href}/${path}`
+        path = path ? `${href}/${path}` : href
       }
     }
     queryString = this.processQuery(queryString)
@@ -68,12 +100,12 @@ export abstract class ImportSource {
     return query
   }
 
-  verbFromMethod = (method: string) => {
-    const verb = (<any>MethodToVerb)[method]
-    if (!verb) {
+  verbFromMethod = (method: string): QueryVerb => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
       throw new Error(`Unsupported method: ${method}`)
     }
-    return verb
+    return MethodToVerb[normalized as keyof typeof MethodToVerb]
   }
 
   processPath = (path: string): string => {
@@ -81,9 +113,7 @@ export abstract class ImportSource {
       path = path.substring(1)
     }
 
-    // add extra braces around params for binding
-    path = path.replace(/[{]/g, "{{")
-    path = path.replace(/[}]/g, "}}")
+    path = this.convertPathVariables(path)
 
     return path
   }

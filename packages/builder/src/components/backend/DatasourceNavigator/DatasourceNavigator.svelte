@@ -21,6 +21,10 @@
   import { DataEnvironmentMode } from "@budibase/types"
 
   export let searchTerm
+  export let datasourceFilter = () => true
+  export let showAppUsers = true
+  export let showManageRoles = true
+  export let datasourceSort
   let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
@@ -32,8 +36,13 @@
     $views,
     $viewsV2,
     toggledDatasources,
-    searchTerm
+    searchTerm,
+    datasourceFilter
   )
+
+  $: displayedDatasources = datasourceSort
+    ? enrichedDataSources.slice().sort(datasourceSort)
+    : enrichedDataSources
 
   function selectDatasource(datasource) {
     openNode(datasource)
@@ -59,8 +68,9 @@
 
   const appUsersTableName = "App users"
   $: showAppUsersTable =
-    !searchTerm ||
-    appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
+    showAppUsers &&
+    (!searchTerm ||
+      appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1)
 
   onMount(() => {
     if ($tables.selected) {
@@ -83,14 +93,16 @@
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
   {/if}
-  <NavItem
-    icon="user-gear"
-    text="Manage roles"
-    selected={$isActive("./roles")}
-    on:click={() => $goto("./roles")}
-    selectedBy={$userSelectedResourceMap.roles}
-  />
-  {#each enrichedDataSources.filter(ds => ds.show) as datasource}
+  {#if showManageRoles}
+    <NavItem
+      icon="user-gear"
+      text="Manage roles"
+      selected={$isActive("./roles")}
+      on:click={() => $goto("./roles")}
+      selectedBy={$userSelectedResourceMap.roles}
+    />
+  {/if}
+  {#each displayedDatasources.filter(ds => ds.show) as datasource}
     <DatasourceNavItem
       {datasource}
       on:click={() => selectDatasource(datasource)}
