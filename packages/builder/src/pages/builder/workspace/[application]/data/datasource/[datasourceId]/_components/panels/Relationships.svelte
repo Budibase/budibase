@@ -1,6 +1,7 @@
 <script>
-  import { Button, Table, notifications } from "@budibase/bbui"
+  import { Button, Table, notifications, Modal } from "@budibase/bbui"
   import CreateEditRelationshipModal from "@/components/backend/Datasources/CreateEditRelationshipModal.svelte"
+  import RelationshipImportSelection from "@/components/backend/Datasources/TableImportSelection/RelationshipImportSelection.svelte"
   import {
     tables as tablesStore,
     integrations as integrationsStore,
@@ -14,10 +15,12 @@
   export let datasource
 
   let modal
+  let relationshipSelectionModal
 
   $: tables =
     $tablesStore.list.filter(tbl => tbl.sourceId === datasource._id) || []
   $: relationships = getRelationships(tables)
+  $: supportsRelationships = datasource.source === "POSTGRES"
 
   function getRelationships(tables) {
     const relatedColumns = {}
@@ -98,10 +101,25 @@
   {tables}
 />
 
+<Modal bind:this={relationshipSelectionModal}>
+  <RelationshipImportSelection
+    {datasource}
+    onComplete={() => {
+      relationshipSelectionModal.hide()
+      tablesStore.fetch()
+    }}
+  />
+</Modal>
+
 <Panel>
-  <Button slot="controls" cta on:click={modal.show}>
-    Define relationships
-  </Button>
+  <div slot="controls" class="controls">
+    <Button cta on:click={modal.show}>Define relationships</Button>
+    {#if supportsRelationships}
+      <Button secondary on:click={relationshipSelectionModal.show}>
+        Fetch relationships
+      </Button>
+    {/if}
+  </div>
   <Tooltip
     slot="tooltip"
     title="Relationships"
@@ -116,3 +134,10 @@
     allowSelectRows={false}
   />
 </Panel>
+
+<style>
+  .controls {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+</style>
