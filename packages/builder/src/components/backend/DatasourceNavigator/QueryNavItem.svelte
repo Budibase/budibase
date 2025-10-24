@@ -14,7 +14,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
-  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import { WorkspaceResource } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
 
