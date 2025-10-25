@@ -7,11 +7,14 @@ const mockSourceDb = {
     to: jest.fn(),
   },
   name: "source_db",
+  get: jest.fn(),
 }
 
 const mockTargetDb = {
   destroy: jest.fn(),
   name: "target_db",
+  get: jest.fn(),
+  remove: jest.fn(),
 }
 
 jest.mock("./couch", () => ({
@@ -191,6 +194,114 @@ describe("Replication", () => {
       const opts = replication.appReplicateOpts(inputOpts)
 
       expect(opts).toBe(inputOpts)
+    })
+  })
+
+  describe("getRevisionNumber", () => {
+    let replication: Replication
+
+    beforeEach(() => {
+      replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+    })
+
+    it.each([
+      { rev: "5-abc123def456", expected: 5 },
+      { rev: "10-xyz789", expected: 10 },
+      { rev: "1-simple", expected: 1 },
+      { rev: undefined, expected: 0 },
+    ])("should return $expected for revision '$rev'", ({ rev, expected }) => {
+      const doc = { _rev: rev }
+      const revNum = (replication as any).getRevisionNumber(doc)
+      expect(revNum).toBe(expected)
+    })
+  })
+
+  describe("haveReplicationInconsistencies", () => {
+    let replication: Replication
+
+    beforeEach(() => {
+      replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+    })
+
+    it.each([
+      {
+        sourceRev: "5-abc123",
+        targetRev: "8-def456",
+        expected: true,
+        description: "target has higher revision",
+      },
+      {
+        sourceRev: "10-abc123",
+        targetRev: "8-def456",
+        expected: false,
+        description: "source has higher revision",
+      },
+      {
+        sourceRev: "5-abc123",
+        targetRev: "5-def456",
+        expected: false,
+        description: "revisions are equal",
+      },
+    ])(
+      "should return $expected when $description",
+      ({ sourceRev, targetRev, expected }) => {
+        const sourceDoc = { _rev: sourceRev }
+        const targetDoc = { _rev: targetRev }
+
+        const hasInconsistency = (
+          replication as any
+        ).haveReplicationInconsistencies(sourceDoc, targetDoc)
+        expect(hasInconsistency).toBe(expected)
+      }
+    )
+  })
+
+  describe("resolveInconsistencies", () => {
+    let replication: Replication
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      replication = new Replication({
+        source: mockSourceDb.name,
+        target: mockTargetDb.name,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+    })
+
+    it("should remove conflicted documents and replicate them", async () => {
+      const sourceDoc = { _id: "doc1", _rev: "5-abc123" }
+      const targetDoc = { _id: "doc1", _rev: "8-def456" }
+
+      mockSourceDb.get.mockResolvedValue(sourceDoc)
+      mockTargetDb.get.mockResolvedValue(targetDoc)
+      mockTargetDb.remove.mockResolvedValue({})
+
+      await replication.resolveInconsistencies(["doc1"])
+
+      expect(mockTargetDb.remove).toHaveBeenCalledWith({
+        _id: "doc1",
+        _rev: "8-def456",
+      })
+      expect(replication.replicate).toHaveBeenCalledWith({ doc_ids: ["doc1"] })
+    })
+
+    it("should not remove documents without inconsistencies", async () => {
+      const sourceDoc = { _id: "doc1", _rev: "8-abc123" }
+      const targetDoc = { _id: "doc1", _rev: "5-def456" }
+
+      mockSourceDb.get.mockResolvedValue(sourceDoc)
+      mockTargetDb.get.mockResolvedValue(targetDoc)
+
+      await replication.resolveInconsistencies(["doc1"])
+
+      expect(mockTargetDb.remove).not.toHaveBeenCalled()
+      expect(replication.replicate).not.toHaveBeenCalled()
     })
   })
 })

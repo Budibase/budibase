@@ -96,6 +96,21 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
   })
 }
 
+export async function getAllInternalTableIds(db?: Database): Promise<string[]> {
+  return await tracer.trace("getAllInternalTableIds", async span => {
+    const database = db || context.getWorkspaceDB()
+    span.addTags({ db: database.name })
+
+    const { rows } = await database.allDocs<Table>(
+      getTableParams(null, { include_docs: false })
+    )
+
+    const tableIds = rows.map(({ id }) => id)
+    span.addTags({ numTableIds: tableIds.length })
+    return tableIds
+  })
+}
+
 export async function listEmptyProductionTables(): Promise<string[]> {
   const internalTables = await getAllInternalTables()
   const emptyTableIds: string[] = []
