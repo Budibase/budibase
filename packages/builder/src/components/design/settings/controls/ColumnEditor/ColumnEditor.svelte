@@ -47,7 +47,7 @@
 
   const getText = value => {
     if (!value?.length) {
-      return placeholder || "All columns"
+      return placeholder
     }
     let text = `${value.length} column`
     if (value.length !== 1) {
