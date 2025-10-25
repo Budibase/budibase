@@ -302,7 +302,7 @@ describe("Branching automations", () => {
         },
         elseBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
-          condition: {}, // Empty condition acts as ELSE branch
+          condition: {}, // Empty condition acts as default/ELSE branch
         },
       })
       .test({ fields: { input: "3" } })
@@ -329,7 +329,7 @@ describe("Branching automations", () => {
         },
         elseBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
-          condition: {}, // Empty condition acts as ELSE branch
+          condition: {}, // Empty condition acts as default/ELSE branch
         },
       })
       .test({ fields: { input: "2" } })
