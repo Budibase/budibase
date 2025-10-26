@@ -24,6 +24,7 @@
   } from "@budibase/types"
   import { onDestroy, onMount, type ComponentType } from "svelte"
   import Chatbox from "./Chatbox.svelte"
+  import type { ComponentPreviewPayload } from "@budibase/types"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
@@ -143,7 +144,21 @@
         updatedChat,
         $params.application,
         chunk => {
-          if (chunk.type === "content") {
+          if (chunk.type === "component") {
+            const componentData = chunk.component as ComponentPreviewPayload
+            const previewMessage = {
+              role: "assistant",
+              content: null,
+              componentPreview: componentData,
+            } as any
+
+            chat = {
+              ...chat,
+              messages: [...chat.messages, previewMessage],
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "content") {
             // Accumulate streaming content
             streamingContent += chunk.content || ""
 

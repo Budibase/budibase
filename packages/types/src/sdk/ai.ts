@@ -109,12 +109,14 @@ export interface LLMProviderConfig extends LLMConfigOptions {
 export interface LLMStreamChunk {
   type:
     | "content"
+    | "component"
     | "tool_call_start"
     | "tool_call_result"
     | "done"
     | "error"
     | "chat_saved"
   content?: string
+  component?: ComponentPreviewPayload
   toolCall?: {
     id: string
     name: string
@@ -128,4 +130,11 @@ export interface LLMStreamChunk {
   messages?: Message[]
   chat?: AgentChat
   tokensUsed?: number
+}
+
+export interface ComponentPreviewPayload {
+  name: string
+  props: Record<string, unknown>
+  slot: string
+  themeVariables: string
 }

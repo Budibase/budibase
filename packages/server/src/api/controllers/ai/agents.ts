@@ -11,6 +11,7 @@ import {
   Message,
   Tool,
   UserCtx,
+  ComponentPreviewPayload,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
@@ -124,58 +125,66 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     let finalMessages: Message[] = []
     let totalTokens = 0
 
-    for await (const chunk of model.chatStream(prompt)) {
-      // Send chunk to client
-      ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
+    // for await (const chunk of model.chatStream(prompt)) {
+    //   // Send chunk to client
+    //   ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
 
-      if (chunk.type === "done") {
-        finalMessages = chunk.messages || []
-        totalTokens = chunk.tokensUsed || 0
-        break
-      } else if (chunk.type === "error") {
-        ctx.res.write(
-          `data: ${JSON.stringify({
-            type: "error",
-            content: chunk.content,
-          })}\n\n`
-        )
-        ctx.res.end()
-        return
-      }
-    }
+    //   if (chunk.type === "done") {
+    //     finalMessages = chunk.messages || []
+    //     totalTokens = chunk.tokensUsed || 0
+    //     break
+    //   } else if (chunk.type === "error") {
+    //     ctx.res.write(
+    //       `data: ${JSON.stringify({
+    //         type: "error",
+    //         content: chunk.content,
+    //       })}\n\n`
+    //     )
+    //     ctx.res.end()
+    //     return
+    //   }
+    // }
+
+    // Proof-of-concept: append a mocked custom HTML assistant message so the builder UI can render it.
+    ctx.res.write(
+      `data: ${JSON.stringify({
+        type: "component",
+        component: await buildComponentPreview(),
+      })}\n\n`
+    )
 
     // Save chat to database after streaming is complete
-    if (finalMessages.length > 0) {
-      if (!chat._id) {
-        chat._id = docIds.generateAgentChatID()
-      }
+    // if (finalMessages.length > 0) {
+    //   if (!chat._id) {
+    //     chat._id = docIds.generateAgentChatID()
+    //   }
 
-      if (!chat.title || chat.title === "") {
-        const titlePrompt = new ai.LLMRequest()
-          .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
-          .addMessages(finalMessages)
-        const { message } = await model.prompt(titlePrompt)
-        chat.title = message
-      }
+    //   if (!chat.title || chat.title === "") {
+    //     const titlePrompt = new ai.LLMRequest()
+    //       .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
+    //       .addMessages(finalMessages)
+    //     const { message } = await model.prompt(titlePrompt)
+    //     chat.title = message
+    //   }
 
-      const newChat: AgentChat = {
-        _id: chat._id,
-        _rev: chat._rev,
-        title: chat.title,
-        messages: addDebugInformation(finalMessages),
-      }
+    //   const newChat: AgentChat = {
+    //     _id: chat._id,
+    //     _rev: chat._rev,
+    //     title: chat.title,
+    //     messages: addDebugInformation(finalMessages),
+    //   }
 
-      const { rev } = await db.put(newChat)
+    //   const { rev } = await db.put(newChat)
 
-      // Send final chat info
-      ctx.res.write(
-        `data: ${JSON.stringify({
-          type: "chat_saved",
-          chat: { ...newChat, _rev: rev },
-          tokensUsed: totalTokens,
-        })}\n\n`
-      )
-    }
+    //   // Send final chat info
+    //   ctx.res.write(
+    //     `data: ${JSON.stringify({
+    //       type: "chat_saved",
+    //       chat: { ...newChat, _rev: rev },
+    //       tokensUsed: totalTokens,
+    //     })}\n\n`
+    //   )
+    // }
 
     ctx.res.end()
   } catch (error: any) {
@@ -283,5 +292,18 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
       throw new HTTPError("Tool source not found", 404)
     }
     throw error
+  }
+}
+async function buildComponentPreview(): Promise<ComponentPreviewPayload> {
+  const buttonProps = {
+    primary: true,
+    size: "M",
+  }
+  const slotContent = "Ask Budibase"
+
+  return {
+    name: "Button",
+    props: buttonProps,
+    slot: slotContent,
   }
 }

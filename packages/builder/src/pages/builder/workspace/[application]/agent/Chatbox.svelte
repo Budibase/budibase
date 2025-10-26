@@ -2,13 +2,21 @@
   import { MarkdownViewer } from "@budibase/bbui"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
   import { type AgentChat } from "@budibase/types"
+  import type { ComponentPreviewPayload } from "@budibase/types"
+  import ComponentPreview from "./ComponentPreview.svelte"
 
   export let chat: AgentChat
   export let loading: boolean = false
+
+  type ChatMessage = (typeof chat.messages)[number] & {
+    componentPreview?: ComponentPreviewPayload
+  }
+
+  $: messages = chat.messages as ChatMessage[]
 </script>
 
 <div class="chatbox">
-  {#each chat.messages as message}
+  {#each messages as message}
     {#if message.role === "user"}
       <div class="message user">
         <MarkdownViewer
@@ -24,6 +32,10 @@
                   .join("")
               : "[Empty message]"}
         />
+      </div>
+    {:else if message.role === "assistant" && message.componentPreview}
+      <div class="message assistant">
+        <ComponentPreview data={message.componentPreview} />
       </div>
     {:else if message.role === "assistant" && message.content}
       <div class="message assistant">
