@@ -298,6 +298,7 @@ async function buildComponentPreview(): Promise<ComponentPreviewPayload> {
   const buttonProps = {
     primary: true,
     size: "M",
+    onClick: "alert('fromCallback')",
   }
   const slotContent = "Ask Budibase"
 
