@@ -1,16 +1,15 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
-  import ComponentPreview from "./ComponentPreview.svelte"
-  import type { AgentChat, ComponentPreviewPayload } from "@budibase/types"
+  import ComponentPreview from "./Component/Component.svelte"
+  import type { AgentChat, ComponentPayload } from "@budibase/types"
 
   export let chat: AgentChat
   export let loading: boolean = false
   export let botAvatar: any = undefined
 
   type ChatMessage = (typeof chat.messages)[number] & {
-    componentPreview?: ComponentPreviewPayload
+    componentPreview?: ComponentPayload
   }
-
   $: messages = chat.messages as ChatMessage[]
 </script>
 

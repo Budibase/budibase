@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Button } from "@budibase/bbui"
-  import type { ComponentPreviewPayload } from "@budibase/types"
+  import type { ComponentPayload } from "@budibase/types"
 
-  export let data: ComponentPreviewPayload
+  export let data: ComponentPayload
 
   const allowedButtonProps = new Set([
     "type",
@@ -43,9 +43,9 @@
       ? ((rawProps as Record<string, unknown>).label as string)
       : "Ask Budibase")
 
-  const handleClick = (event: MouseEvent) => {
+  const handleClick = (event: Event) => {
     if (typeof onClick === "function") {
-      ;(onClick as (event: MouseEvent) => void)(event)
+      onClick(event)
       return
     }
 
@@ -60,23 +60,6 @@
   }
 </script>
 
-<div class="component-preview">
-  {#if data.name === "Button"}
-    <Button {...buttonProps} on:click={handleClick}>
-      {slotContent}
-    </Button>
-  {:else}
-    <p class="unsupported">Unsupported component: {data.name}</p>
-  {/if}
-</div>
-
-<style>
-  .component-preview {
-    display: inline-flex;
-  }
-
-  .unsupported {
-    margin: 0;
-    font-size: 16px;
-  }
-</style>
+<Button {...buttonProps} on:click={e => handleClick(e)}>
+  {slotContent}
+</Button>
