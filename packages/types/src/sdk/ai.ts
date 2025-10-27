@@ -136,5 +136,4 @@ export interface ComponentPreviewPayload {
   name: string
   props: Record<string, unknown>
   slot: string
-  themeVariables: string
 }
