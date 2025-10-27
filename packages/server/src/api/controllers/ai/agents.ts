@@ -146,12 +146,17 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     // }
 
     // Proof-of-concept: append a mocked custom HTML assistant message so the builder UI can render it.
-    ctx.res.write(
-      `data: ${JSON.stringify({
-        type: "component",
-        component: await buildComponentPreview(),
-      })}\n\n`
+    const component = await buildComponentPreview(
+      chat.messages.map(x => x.content as string).pop()
     )
+    if (component) {
+      ctx.res.write(
+        `data: ${JSON.stringify({
+          type: "component",
+          component,
+        })}\n\n`
+      )
+    }
 
     // Save chat to database after streaming is complete
     // if (finalMessages.length > 0) {
@@ -294,17 +299,74 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
     throw error
   }
 }
-async function buildComponentPreview(): Promise<ComponentPayload> {
-  const buttonProps = {
-    primary: true,
-    size: "M",
-    onClick: "alert('fromCallback')",
-  }
-  const slotContent = "Ask Budibase"
+async function buildComponentPreview(
+  message?: string
+): Promise<ComponentPayload | undefined> {
+  if (message?.toLocaleLowerCase().includes("button")) {
+    const buttonProps = {
+      primary: true,
+      size: "M",
+      onClick: "alert('fromCallback')",
+    }
+    const slotContent = "Ask Budibase"
 
-  return {
-    name: "Button",
-    props: buttonProps,
-    slot: slotContent,
+    return {
+      name: "Button",
+      props: buttonProps,
+      slot: slotContent,
+    }
+  }
+  if (message?.toLocaleLowerCase().includes("form")) {
+    return {
+      name: "Form",
+      props: {
+        description: "Please leave your details and we'll get back to you.",
+      },
+      slot: "Contact us",
+      children: [
+        {
+          name: "Input",
+          slot: "Full Name",
+          props: {
+            placeholder: "Jane Doe",
+          },
+        },
+        {
+          name: "Input",
+          slot: "Email",
+          props: {
+            placeholder: "name@example.com",
+            type: "email",
+          },
+        },
+        {
+          name: "Select",
+          slot: "Topic",
+          props: {
+            options: [
+              { label: "Sales", value: "sales" },
+              { label: "Support", value: "support" },
+              { label: "Other", value: "other" },
+            ],
+            placeholder: "Choose a topic",
+          },
+        },
+        {
+          name: "TextArea",
+          slot: "Message",
+          props: {
+            placeholder: "Tell us more about your request",
+            rows: 4,
+          },
+        },
+        {
+          name: "Checkbox",
+          slot: "Subscribe to updates",
+          props: {
+            helpText: "We'll send occasional product news.",
+          },
+        },
+      ],
+    }
   }
 }

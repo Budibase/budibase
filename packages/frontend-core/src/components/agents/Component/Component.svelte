@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from "./_Button.svelte"
+  import Form from "./_Form.svelte"
   import type { ComponentPayload } from "@budibase/types"
 
   export let data: ComponentPayload
@@ -8,6 +9,8 @@
 <div class="component-preview">
   {#if data.name === "Button"}
     <Button {data} />
+  {:else if data.name === "Form"}
+    <Form {data} />
   {:else}
     <p class="unsupported">Unsupported component: {data.name}</p>
   {/if}

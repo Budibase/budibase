@@ -136,4 +136,5 @@ export interface ComponentPayload {
   name: string
   props: Record<string, unknown>
   slot: string
+  children?: ComponentPayload[]
 }
