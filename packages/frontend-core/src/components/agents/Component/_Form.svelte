@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { ComponentPayload } from "@budibase/types"
   import FormField from "./_FormField.svelte"
+  import ButtonComponent from "./_Button.svelte"
 
   export let data: ComponentPayload
 
-  const fields = Array.isArray(data.children) ? data.children : []
+  const children = Array.isArray(data.children) ? data.children : []
   const description =
     typeof data.props?.description === "string" ? data.props.description : ""
   const showHeader = typeof data.slot === "string" && data.slot.trim().length
@@ -18,10 +19,16 @@
     <p class="form-preview__description">{description}</p>
   {/if}
 
-  {#if fields.length}
+  {#if children.length}
     <div class="form-preview__fields">
-      {#each fields as field, index (field.name + index)}
-        <FormField data={field} />
+      {#each children as child, index (child.name + index)}
+        {#if child.name === "Button"}
+          <div class="form-preview__actions">
+            <ButtonComponent data={child} />
+          </div>
+        {:else}
+          <FormField data={child} />
+        {/if}
       {/each}
     </div>
   {:else}
@@ -58,6 +65,11 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .form-preview__actions {
+    display: flex;
+    justify-content: flex-end;
   }
 
   .form-preview__empty {

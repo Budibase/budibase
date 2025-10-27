@@ -366,6 +366,13 @@ async function buildComponentPreview(
             helpText: "We'll send occasional product news.",
           },
         },
+        {
+          name: "Button",
+          slot: "Submit",
+          props: {
+            primary: true,
+          },
+        },
       ],
     }
   }
