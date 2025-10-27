@@ -11,7 +11,7 @@ import {
   Message,
   Tool,
   UserCtx,
-  ComponentPreviewPayload,
+  ComponentPayload,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
@@ -294,7 +294,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
     throw error
   }
 }
-async function buildComponentPreview(): Promise<ComponentPreviewPayload> {
+async function buildComponentPreview(): Promise<ComponentPayload> {
   const buttonProps = {
     primary: true,
     size: "M",

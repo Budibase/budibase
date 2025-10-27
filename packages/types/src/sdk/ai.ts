@@ -116,7 +116,7 @@ export interface LLMStreamChunk {
     | "error"
     | "chat_saved"
   content?: string
-  component?: ComponentPreviewPayload
+  component?: ComponentPayload
   toolCall?: {
     id: string
     name: string
@@ -132,7 +132,7 @@ export interface LLMStreamChunk {
   tokensUsed?: number
 }
 
-export interface ComponentPreviewPayload {
+export interface ComponentPayload {
   name: string
   props: Record<string, unknown>
   slot: string
