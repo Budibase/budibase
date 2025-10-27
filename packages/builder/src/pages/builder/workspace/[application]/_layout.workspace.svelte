@@ -73,8 +73,6 @@
   <PreviewOverlay />
 {/if}
 
-<EnterpriseBasicTrialModal />
-
 <style>
   .init.page-error,
   .init.page-error :global(.container) {

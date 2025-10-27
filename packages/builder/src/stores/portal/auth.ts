@@ -35,7 +35,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     })
   }
 
-  setUser(user?: GetGlobalSelfResponse) {
+  setUser(user?: GetGlobalSelfResponse, sessionTerminated: boolean = false) {
     this.set({
       loaded: true,
       user: user,
@@ -43,7 +43,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       tenantId: user?.tenantId || "default",
       tenantSet: !!user,
       isSSO: user != null && isSSOUser(user),
-      postLogout: false,
+      postLogout: sessionTerminated,
     })
 
     if (user) {
@@ -58,6 +58,11 @@ class AuthStore extends BudiStore<PortalAuthStore> {
           // an error here.
         })
     }
+  }
+
+  clearSession() {
+    // sessionTerminated true prevents saving return URL for invalid URLs
+    this.setUser(undefined, true)
   }
 
   async setOrganisation(tenantId: string) {
@@ -135,14 +140,17 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   }
 
   async logout() {
-    // Save current URL as return URL before logging out, unless we're on auth pages
+    // Save current URL as return URL before logging out, unless we're on pre-login pages
     const currentPath = window.location.pathname
-    const isAuthPage =
-      currentPath.includes("/auth") ||
-      currentPath.includes("/invite") ||
-      currentPath.includes("/admin")
+    const isPreLoginPage =
+      currentPath.startsWith("/builder/auth") ||
+      currentPath.startsWith("/builder/invite") ||
+      currentPath.startsWith("/builder/admin")
 
-    if (!isAuthPage && !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)) {
+    if (
+      !isPreLoginPage &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+    ) {
       CookieUtils.setCookie(Constants.Cookies.ReturnUrl, currentPath)
     }
 

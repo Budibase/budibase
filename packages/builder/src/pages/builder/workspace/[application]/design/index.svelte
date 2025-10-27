@@ -309,13 +309,15 @@
     </div>
   </div>
 
-  <div class="table-header">
-    <span>Name</span>
-    <span>Status</span>
-    <span>Last updated</span>
-    <span></span>
-  </div>
-  {#each filteredWorkspaceApps as app}
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span>Name</span>
+      <span>Status</span>
+      <span>Last updated</span>
+      <span></span>
+    </div>
+    <div class="apps">
+      {#each filteredWorkspaceApps as app}
     <a
       class="app"
       class:favourite={app.favourite?._id}
@@ -356,16 +358,18 @@
         </span>
       </div>
     </a>
-  {/each}
-  {#if !workspaceApps.length}
-    <NoResults
-      ctaText="Create your first app"
-      onCtaClick={createApp}
-      resourceType="app"
-    >
-      No apps yet! Build your first app to get started.
-    </NoResults>
-  {/if}
+      {/each}
+      {#if !workspaceApps.length}
+        <NoResults
+          ctaText="Create your first app"
+          onCtaClick={createApp}
+          resourceType="app"
+        >
+          No apps yet! Build your first app to get started.
+        </NoResults>
+      {/if}
+    </div>
+  </div>
 </div>
 
 <WorkspaceAppModal
@@ -392,7 +396,8 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
   }
   .secondary-bar {
     padding: 10px 12px;
@@ -474,5 +479,17 @@
   .update-version :global(.spectrum-ActionButton-label) {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .table-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+  }
+
+  .apps {
+    overflow-y: auto;
+    flex: 1 1 auto;
   }
 </style>

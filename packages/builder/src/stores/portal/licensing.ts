@@ -63,6 +63,7 @@ interface LicensingState {
   aiCreditsExceeded: boolean
   actionsExceeded: boolean
   errUserLimit: boolean
+  showTrialBanner: boolean
 }
 
 class LicensingStore extends BudiStore<LicensingState> {
@@ -109,6 +110,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       actionsExceeded: false,
       // AI Limits
       aiCreditsExceeded: false,
+      showTrialBanner: false,
     })
 
     this.goToUpgradePage = this.goToUpgradePage.bind(this)

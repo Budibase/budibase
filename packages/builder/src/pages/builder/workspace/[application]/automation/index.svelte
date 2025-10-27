@@ -236,73 +236,77 @@
     </div>
   </div>
 
-  <div class="table-header">
-    <span>Name</span>
-    <span>Trigger</span>
-    <span>Status</span>
-    <span>Last updated</span>
-    <span></span>
-  </div>
-  {#each filteredAutomations as automation}
-    <a
-      class="app"
-      class:favourite={automation.favourite?._id}
-      href={$url(`./${automation._id}`)}
-      on:contextmenu={e => openContextMenu(e, automation)}
-      class:active={showHighlight && selectedAutomation === automation}
-    >
-      <Body size="S" color="var(--spectrum-global-color-gray-900)">
-        <div class="auto-name">
-          {automation.name}
-          {#if automation._id && targetApp?.automationErrors?.[automation._id]}
-            <StatusLight
-              color="var(--spectrum-global-color-static-red-600)"
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span>Name</span>
+      <span>Trigger</span>
+      <span>Status</span>
+      <span>Last updated</span>
+      <span></span>
+    </div>
+    <div class="automations">
+      {#each filteredAutomations as automation}
+      <a
+        class="automation"
+        class:favourite={automation.favourite?._id}
+        href={$url(`./${automation._id}`)}
+        on:contextmenu={e => openContextMenu(e, automation)}
+        class:active={showHighlight && selectedAutomation === automation}
+      >
+        <Body size="S" color="var(--spectrum-global-color-gray-900)">
+          <div class="auto-name">
+            {automation.name}
+            {#if automation._id && targetApp?.automationErrors?.[automation._id]}
+              <StatusLight
+                color="var(--spectrum-global-color-static-red-600)"
+                size="M"
+              />
+            {/if}
+          </div>
+        </Body>
+        <div>{getTriggerFriendlyName(automation)}</div>
+        <div>
+          <PublishStatusBadge
+            status={automation.publishStatus.state}
+            loading={automationChangingStatus === automation._id}
+          />
+        </div>
+        <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
+          <span>
+            {capitalise(durationFromNow(automation.updatedAt || ""))}
+          </span>
+        </AbsTooltip>
+        <div class="actions">
+          <div class="ctx-btn">
+            <Icon
+              name="More"
               size="M"
+              hoverable
+              on:click={e => openContextMenu(e, automation)}
             />
-          {/if}
-        </div>
-      </Body>
-      <div>{getTriggerFriendlyName(automation)}</div>
-      <div>
-        <PublishStatusBadge
-          status={automation.publishStatus.state}
-          loading={automationChangingStatus === automation._id}
-        />
-      </div>
-      <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
-        <span>
-          {capitalise(durationFromNow(automation.updatedAt || ""))}
-        </span>
-      </AbsTooltip>
-      <div class="actions">
-        <div class="ctx-btn">
-          <Icon
-            name="More"
-            size="M"
-            hoverable
-            on:click={e => openContextMenu(e, automation)}
-          />
-        </div>
+          </div>
 
-        <span class="favourite-btn">
-          <FavouriteResourceButton
-            favourite={automation.favourite}
-            position={TooltipPosition.Left}
-            noWrap
-          />
-        </span>
-      </div>
-    </a>
-  {/each}
-  {#if !automations.length}
-    <NoResults
-      ctaText="Create your first automation"
-      onCtaClick={() => createModal.show()}
-      resourceType="automation"
-    >
-      No automations yet! Build your first automation to get started.
-    </NoResults>
-  {/if}
+          <span class="favourite-btn">
+            <FavouriteResourceButton
+              favourite={automation.favourite}
+              position={TooltipPosition.Left}
+              noWrap
+            />
+          </span>
+        </div>
+      </a>
+    {/each}
+    {#if !automations.length}
+      <NoResults
+        ctaText="Create your first automation"
+        onCtaClick={() => createModal.show()}
+        resourceType="automation"
+      >
+        No automations yet! Build your first automation to get started.
+      </NoResults>
+    {/if}
+    </div>
+  </div>
 </div>
 
 <Modal bind:this={createModal}>
@@ -339,7 +343,8 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
   }
   .secondary-bar {
     padding: 10px 12px;
@@ -370,7 +375,7 @@
     display: flex;
     gap: 8px;
   }
-  .app,
+  .automation,
   .table-header {
     display: grid;
     grid-template-columns: 1fr 200px 200px 200px 50px;
@@ -381,7 +386,7 @@
     padding: 5px 12px;
     color: var(--spectrum-global-color-gray-700);
   }
-  .app {
+  .automation {
     padding: 9px 12px;
     color: var(--text-color);
     transition: background 130ms ease-out;
@@ -416,5 +421,17 @@
 
   .actions .favourite-btn {
     pointer-events: all;
+  }
+
+  .table-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+  }
+
+  .automations {
+    overflow-y: auto;
+    flex: 1 1 auto;
   }
 </style>

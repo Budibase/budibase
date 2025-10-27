@@ -44,6 +44,7 @@
   let settingsModal
   let accountLockedModal
   let hasAuthenticated = false
+  let lastExecutedAction = null
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -53,50 +54,93 @@
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
-  $: showFreeTrialBanner =
-    $licensing.license?.plan?.type ===
-      Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
+
+  // Re-run initBuilder when user logs in
+  $: {
+    const isAuthenticated = !!$auth.user
+    if (isAuthenticated && !hasAuthenticated) {
+      initPromise = initBuilder()
+    }
+    hasAuthenticated = isAuthenticated
+  }
 
   $: usersLimitLockAction = $licensing?.errUserLimit
     ? () => accountLockedModal.show()
     : null
 
+  $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
+
+  // Process navigation actions
+  $: processNavAction($navigationAction)
+
+  navigation.init($redirect)
+
   const isOnPreLoginPage = () => {
     return $isActive("./auth") || $isActive("./invite") || $isActive("./admin")
   }
 
-  navigation.init($redirect)
+  // Determine if the user is on a trial and show the banner.
+  const updateBannerVisibility = (user, licenseType, isOwner) => {
+    if (!user && $licensing.showTrialBanner) {
+      licensing.update(store => {
+        store.showTrialBanner = false
+        return store
+      })
+    } else if (
+      user &&
+      !$licensing.showTrialBanner &&
+      licenseType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      isOwner
+    ) {
+      licensing.update(store => {
+        store.showTrialBanner = true
+        return store
+      })
+    }
+  }
 
-  // Only recalculates when an action actually changes
+  // Handle navigation actions from derived store
+  const processNavAction = action => {
+    // Reset last executed action when there's no action to process
+    if (!action) {
+      lastExecutedAction = null
+      return
+    }
+
+    // Prevent executing the same action repeatedly
+    const actionKey = JSON.stringify(action)
+    if (actionKey === lastExecutedAction) {
+      return
+    }
+    lastExecutedAction = actionKey
+
+    switch (action.type) {
+      case "setReturnUrl":
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, action.url)
+        break
+
+      case "redirect":
+        if (!$isActive(action.path)) {
+          $redirect(action.path)
+        }
+        break
+
+      case "returnUrl":
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+        $goto(action.url)
+        break
+    }
+  }
+
   const navigationAction = derivedMemo(
-    [admin, auth, enrichedApps, appStore, isActive, appsStore, loaded],
-    ([
-      $admin,
-      $auth,
-      $enrichedApps,
-      $appStore,
-      $isActive,
-      $appsStore,
-      $loaded,
-    ]) => {
-      // Early redirect for account portal (before loaded)
-      if (
-        $admin.loaded &&
-        $auth.loaded &&
-        !$auth.user &&
-        useAccountPortal &&
-        !isOnPreLoginPage() &&
-        $admin.accountPortalUrl
-      ) {
-        return { type: "accountPortalRedirect", url: $admin.accountPortalUrl }
-      }
-
+    [admin, auth, enrichedApps, isActive, appsStore, loaded],
+    ([$admin, $auth, $enrichedApps, $isActive, $appsStore, $loaded]) => {
       // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
       }
 
-      // Set the return url
+      // Set the return url on logout
       if (
         !$auth.user &&
         !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
@@ -125,6 +169,7 @@
       if ($auth.user?.forceResetPassword) {
         return { type: "redirect", path: "./auth/reset" }
       }
+
       // Authenticated user navigation
       if ($auth.user) {
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
@@ -160,8 +205,7 @@
           isBuilder &&
           $appsStore.apps.length &&
           !$isActive("./workspace/:application") &&
-          !$isActive("./apps") &&
-          !$appStore.appId
+          !$isActive("./apps")
         ) {
           const defaultApp = $enrichedApps[0]
           // Only redirect if enriched apps are loaded
@@ -272,43 +316,6 @@
     await analyticsPing()
   }
 
-  onMount(() => {
-    initPromise = initBuilder()
-    hasAuthenticated = !!$auth.user
-  })
-
-  // Re-run initBuilder when user logs in
-  $: {
-    const isAuthenticated = !!$auth.user
-    if (isAuthenticated && !hasAuthenticated) {
-      initPromise = initBuilder()
-    }
-    hasAuthenticated = isAuthenticated
-  }
-
-  // Handle navigation actions from derived store
-  $: if ($navigationAction) {
-    const action = $navigationAction
-    switch (action.type) {
-      case "setReturnUrl":
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, action.url)
-        break
-
-      case "redirect":
-        $redirect(action.path)
-        break
-
-      case "returnUrl":
-        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-        window.location.href = action.url
-        break
-
-      case "accountPortalRedirect":
-        window.location.href = action.url
-        break
-    }
-  }
-
   // Event handler for the command palette
   const handleKeyDown = e => {
     if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
@@ -316,9 +323,14 @@
       commandPaletteModal.toggle()
     }
   }
+
+  onMount(() => {
+    initPromise = initBuilder()
+    hasAuthenticated = !!$auth.user
+  })
 </script>
 
-<EnterpriseBasicTrialBanner show={showFreeTrialBanner} />
+<EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
 
 <AccountLockedModal
   bind:this={accountLockedModal}
@@ -342,7 +354,9 @@
   <div class="loading" />
 {:then _}
   {#if $loaded || $admin.maintenance.length}
-    <slot />
+    <div class="content">
+      <slot />
+    </div>
   {/if}
 {:catch error}
   <div class="init page-error">
@@ -391,5 +405,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    overflow: hidden;
   }
 </style>

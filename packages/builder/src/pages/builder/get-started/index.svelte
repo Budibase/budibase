@@ -6,15 +6,16 @@
   import { appsStore } from "@/stores/portal/apps"
   import BBLogo from "assets/BBLogo.svelte"
   import CreateWorkspaceModal from "../workspace/[application]/_components/CreateWorkspaceModal.svelte"
+  import type { CreateWorkspaceResponse } from "@budibase/types"
 
   let createWorkspaceModal: Modal
   let loading = false
 
-  const initialise = async () => {
-    // Need to refresh the workspaces to ensure the builder will load
-    // The default workspace will then loaded.
+  const initialise = async (event: CustomEvent<CreateWorkspaceResponse>) => {
+    // Refresh the apps list to include the newly created app
     await appsStore.load()
-    $goto("/builder")
+    // Redirect to the newly created workspace
+    $goto(`/builder/workspace/${event.detail.instance._id}`)
   }
 </script>
 
