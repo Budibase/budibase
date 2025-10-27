@@ -23,7 +23,8 @@
     UserMessage,
   } from "@budibase/types"
   import { onDestroy, onMount, type ComponentType } from "svelte"
-  import Chatbox from "./Chatbox.svelte"
+  import { AgentChatbox } from "@budibase/frontend-core"
+  import BBAI from "@/components/common/Icons/BBAI.svelte"
   import type { ComponentPreviewPayload } from "@budibase/types"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
@@ -121,7 +122,7 @@
 
     const userMessage: UserMessage = { role: "user", content: inputValue }
 
-    const updatedChat = {
+    let updatedChat = {
       ...chat,
       messages: [...chat.messages, userMessage],
     }
@@ -155,6 +156,11 @@
             chat = {
               ...chat,
               messages: [...chat.messages, previewMessage],
+            }
+
+            updatedChat = {
+              ...updatedChat,
+              messages: [...updatedChat.messages, previewMessage],
             }
 
             scrollToBottom()
@@ -494,7 +500,7 @@
 
     <div class="chat-wrapper">
       <div class="chat-area" bind:this={chatAreaElement}>
-        <Chatbox bind:chat {loading} />
+        <AgentChatbox bind:chat {loading} botAvatar={BBAI} />
         <div class="input-wrapper">
           <textarea
             bind:value={inputValue}

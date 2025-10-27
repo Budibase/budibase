@@ -41,18 +41,18 @@
     data.slot ??
     (typeof (rawProps as Record<string, unknown>).label === "string"
       ? ((rawProps as Record<string, unknown>).label as string)
-      : "")
+      : "Ask Budibase")
 
-  const handleClick = (event: Event) => {
+  const handleClick = (event: MouseEvent) => {
     if (typeof onClick === "function") {
-      onClick(event)
+      ;(onClick as (event: MouseEvent) => void)(event)
       return
     }
 
     if (typeof onClick === "string") {
       try {
         const fn = new Function(onClick)
-        fn.call(window)
+        fn.call(window, event)
       } catch (error) {
         console.error("Failed to execute preview onClick handler", error)
       }
@@ -62,7 +62,7 @@
 
 <div class="component-preview">
   {#if data.name === "Button"}
-    <Button {...buttonProps} on:click={e => handleClick(e)}>
+    <Button {...buttonProps} on:click={handleClick}>
       {slotContent}
     </Button>
   {:else}

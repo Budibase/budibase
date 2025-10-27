@@ -1,6 +1,7 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import type { z } from "zod"
+import type { ComponentPreviewPayload } from "../../sdk/ai"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -18,6 +19,7 @@ export interface AssistantMessage {
   role: "assistant"
   content: string | null
   tool_calls?: openai.ChatCompletionMessageToolCall[]
+  componentPreview?: ComponentPreviewPayload
 }
 
 export interface ToolMessage {

@@ -1,12 +1,11 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
-  import BBAI from "@/components/common/Icons/BBAI.svelte"
-  import { type AgentChat } from "@budibase/types"
-  import type { ComponentPreviewPayload } from "@budibase/types"
   import ComponentPreview from "./ComponentPreview.svelte"
+  import type { AgentChat, ComponentPreviewPayload } from "@budibase/types"
 
   export let chat: AgentChat
   export let loading: boolean = false
+  export let botAvatar: any = undefined
 
   type ChatMessage = (typeof chat.messages)[number] & {
     componentPreview?: ComponentPreviewPayload
@@ -22,7 +21,7 @@
         <MarkdownViewer
           value={typeof message.content === "string"
             ? message.content
-            : message.content.length > 0
+            : message.content && message.content.length > 0
               ? message.content
                   .map(part =>
                     part.type === "text"
@@ -45,7 +44,9 @@
   {/each}
   {#if loading}
     <div class="message system">
-      <BBAI size="48px" animate />
+      {#if botAvatar}
+        <svelte:component this={botAvatar} />
+      {/if}
     </div>
   {/if}
 </div>
@@ -88,7 +89,6 @@
     padding-left: 0;
   }
 
-  /* Style the markdown tool sections in assistant messages */
   :global(.assistant strong) {
     color: var(--spectrum-global-color-static-seafoam-700);
   }
