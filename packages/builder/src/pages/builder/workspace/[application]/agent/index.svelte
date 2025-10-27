@@ -163,6 +163,7 @@
               messages: [...updatedChat.messages, previewMessage],
             }
 
+            loading = false
             scrollToBottom()
           } else if (chunk.type === "content") {
             // Accumulate streaming content
