@@ -302,6 +302,40 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
 async function buildComponentPreview(
   message?: string
 ): Promise<ComponentPayload | undefined> {
+  if (message?.toLocaleLowerCase().includes("button group")) {
+    return {
+      name: "MultiButton",
+      props: {
+        layout: "horizontal",
+      },
+      slot: "",
+      children: [
+        {
+          name: "Button",
+          slot: "Book meeting",
+          props: {
+            primary: true,
+          },
+        },
+        {
+          name: "Button",
+          slot: "Request callback",
+          props: {
+            secondary: true,
+          },
+        },
+        {
+          name: "Button",
+          slot: "Open docs",
+          props: {
+            quiet: true,
+            onClick: "window.open('https://docs.budibase.com', '_blank')",
+          },
+        },
+      ],
+    }
+  }
+
   if (message?.toLocaleLowerCase().includes("button")) {
     const buttonProps = {
       primary: true,
