@@ -91,5 +91,10 @@
       "donut",
       "histogram"
     ]
+  },
+  {
+    "name": "AI",
+    "icon": "GraphBarVertical",
+    "children": ["agentchat"]
   }
 ]
