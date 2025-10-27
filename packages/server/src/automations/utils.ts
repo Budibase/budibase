@@ -18,6 +18,7 @@ import { Thread, ThreadType } from "../threads"
 import { updateEntityMetadata } from "../utilities"
 import { automationQueue } from "./bullboard"
 import { checkMail } from "./email"
+import { cloneDeep } from "lodash"
 
 let Runner: Thread
 if (automationsEnabled()) {
@@ -64,15 +65,14 @@ export async function processEvent(job: AutomationJob) {
       },
     })
 
+    const trigger = job.data.automation
+      ? job.data.automation.definition.trigger
+      : null
+
     const task = async () => {
       try {
         return await tracer.trace("task", async () => {
-          const trigger = job.data.automation
-            ? job.data.automation.definition.trigger
-            : null
-
           if (isEmailTrigger(trigger)) {
-            // we need to decorate the output data at runtime
             const { proceed, ...checkMailResult } = await checkMail(
               trigger,
               job.data.automation._id!
@@ -83,8 +83,21 @@ export async function processEvent(job: AutomationJob) {
               return { skipped: true }
             }
 
-            const { fields } = checkMailResult
-            job.data.event = { ...job.data.event, ...fields }
+            const { messages } = checkMailResult
+
+            if (!messages) return { skipped: true }
+
+            await Promise.all(
+              messages?.map(async m => {
+                const jobClone = cloneDeep(job)
+                jobClone.data.event = { ...jobClone.data.event, ...m }
+                const runFn = () => Runner.run(jobClone)
+                await quotas.addAutomation(runFn, {
+                  automationId,
+                })
+              })
+            )
+            return {}
           }
           const isCron = trigger && isCronTrigger(trigger)
           if (isCron && !job.data.event.timestamp) {
@@ -244,7 +257,7 @@ export async function enableCronOrEmailTrigger(
         automation,
         event: { appId },
       },
-      { repeat: { every: 10_000 }, jobId }
+      { repeat: { every: 30_000 }, jobId }
     )
 
     trigger.cronJobId = job.id.toString()

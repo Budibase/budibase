@@ -2,10 +2,10 @@ export type CheckMailOutput =
   | {
       proceed: false
       reason: string
-      fields?: undefined
+      messages?: undefined
     }
   | {
       proceed: true
-      fields: Record<string, string | undefined>
+      messages: Record<string, string | undefined>[]
       reason?: undefined
     }

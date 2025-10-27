@@ -3,8 +3,8 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
-jest.mock("../../email/utils/fetchMessage", () => ({
-  fetchMessage: jest.fn(),
+jest.mock("../../email/utils/fetchMessages", () => ({
+  fetchMessages: jest.fn(),
 }))
 
 const smtpFallbackEnv = {
@@ -57,7 +57,7 @@ describe("email trigger", () => {
     expect(messages).toHaveLength(1)
 
     const repeat = messages[0].opts?.repeat
-    expect(repeat).toEqual({ every: 10_000 })
+    expect(repeat).toEqual({ every: 30_000 })
   })
 })
 
@@ -72,15 +72,15 @@ describe("checkMail behaviour", () => {
 
     const logout = jest.fn().mockResolvedValue(undefined)
     const getClientMock = jest.fn().mockResolvedValue({ logout })
-    const fetchMessageMock = jest.fn()
+    const fetchMessagesMock = jest.fn()
     const checkSenderMock = jest.fn()
     const toOutputFieldsMock = jest.fn()
 
     jest.doMock("../../email/utils/getClient", () => ({
       getClient: getClientMock,
     }))
-    jest.doMock("../../email/utils/fetchMessage", () => ({
-      fetchMessage: fetchMessageMock,
+    jest.doMock("../../email/utils/fetchMessages", () => ({
+      fetchMessages: fetchMessagesMock,
     }))
     jest.doMock("../../email/utils/checkSender", () => ({
       checkSender: checkSenderMock,
@@ -94,7 +94,7 @@ describe("checkMail behaviour", () => {
       checkMail,
       mocks: {
         getClientMock,
-        fetchMessageMock,
+        fetchMessagesMock,
         checkSenderMock,
         toOutputFieldsMock,
         logout,
@@ -105,7 +105,7 @@ describe("checkMail behaviour", () => {
   it("should initialise mailbox state on first run", async () => {
     const { checkMail, mocks } = await loadCheckMail()
     const message = { uid: 5 }
-    mocks.fetchMessageMock.mockResolvedValue(message)
+    mocks.fetchMessagesMock.mockResolvedValue([message])
 
     const result = await checkMail(
       { inputs: { from: "sender@example.com" } } as any,
@@ -131,9 +131,9 @@ describe("checkMail behaviour", () => {
       subject: "Hello",
     }
 
-    mocks.fetchMessageMock
-      .mockResolvedValueOnce(initialMessage)
-      .mockResolvedValueOnce(newMessage)
+    mocks.fetchMessagesMock
+      .mockResolvedValueOnce([initialMessage])
+      .mockResolvedValueOnce([initialMessage, newMessage])
     mocks.checkSenderMock.mockReturnValue(true)
     mocks.toOutputFieldsMock.mockReturnValue(fields)
 
@@ -141,12 +141,15 @@ describe("checkMail behaviour", () => {
       { inputs: { from: "sender@example.com" } } as any,
       "automation-new-mail"
     )
-    const result = await checkMail(
+    const { messages, proceed } = await checkMail(
       { inputs: { from: "sender@example.com" } } as any,
       "automation-new-mail"
     )
 
-    expect(result).toEqual({ proceed: true, fields })
+    const result = messages?.[0]
+
+    expect(proceed).toBeTrue()
+    expect(result).toEqual(fields)
     expect(mocks.checkSenderMock).toHaveBeenCalledWith(
       "sender@example.com",
       newMessage
@@ -163,9 +166,9 @@ describe("checkMail behaviour", () => {
       envelope: { from: [{ address: "other@example.com" }] },
     }
 
-    mocks.fetchMessageMock
-      .mockResolvedValueOnce(initialMessage)
-      .mockResolvedValueOnce(unexpectedSenderMessage)
+    mocks.fetchMessagesMock
+      .mockResolvedValueOnce([initialMessage])
+      .mockResolvedValueOnce([unexpectedSenderMessage])
     mocks.checkSenderMock.mockReturnValue(false)
 
     await checkMail(
