@@ -6,6 +6,6 @@ export type CheckMailOutput =
     }
   | {
       proceed: true
-      messages: Record<string, string | undefined>[]
+      messages: Record<string, string | Date | undefined>[]
       reason?: undefined
     }

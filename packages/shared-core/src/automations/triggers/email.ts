@@ -10,7 +10,7 @@ export const definition: AutomationTriggerDefinition = {
   name: "Email",
   event: AutomationEventType.EMAIL_TRIGGER,
   icon: "envelope",
-  tagline: "Email Trigger (<b>{{inputs.email_from}}</b>)",
+  tagline: "Email Trigger",
   description: "Triggers automation when an email is received",
   stepId: AutomationTriggerStepId.EMAIL,
   inputs: {},
@@ -20,9 +20,9 @@ export const definition: AutomationTriggerDefinition = {
         from: {
           type: AutomationIOType.STRING,
           title: "From:",
+          description: "Leave empty to react to any sender",
         },
       },
-      required: ["from"],
     },
     outputs: {
       properties: {
@@ -37,6 +37,10 @@ export const definition: AutomationTriggerDefinition = {
         subject: {
           type: AutomationIOType.STRING,
           description: "What was the subject of the email",
+        },
+        sentAt: {
+          type: AutomationIOType.DATETIME,
+          description: "When the email was sent",
         },
       },
       required: ["from", "to"],

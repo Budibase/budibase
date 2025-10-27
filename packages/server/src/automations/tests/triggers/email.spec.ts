@@ -2,6 +2,11 @@ import { setEnv } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import {
+  AutomationTriggerSchema,
+  AutomationTriggerStepId,
+} from "@budibase/types"
+import { FetchMessageObject } from "imapflow"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
@@ -117,17 +122,16 @@ describe("checkMail behaviour", () => {
     mocks.getLastSeenUidMock.mockResolvedValueOnce(undefined)
 
     const result = await checkMail(
-      { inputs: { from: "sender@example.com" } } as any,
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
       "automation-first"
     )
 
     expect(result).toEqual({ proceed: false, reason: "init, now waiting" })
     expect(mocks.checkSenderMock).not.toHaveBeenCalled()
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
-    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith(
-      "automation-first",
-      5
-    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith("automation-first", 5)
     expect(mocks.logout).toHaveBeenCalledTimes(1)
   })
 
@@ -142,6 +146,7 @@ describe("checkMail behaviour", () => {
       from: "sender@example.com",
       to: "recipient@example.com",
       subject: "Hello",
+      sentAt: "2024-01-01T00:00:00.000Z",
     }
 
     mocks.fetchMessagesMock
@@ -154,11 +159,15 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(10)
 
     await checkMail(
-      { inputs: { from: "sender@example.com" } } as any,
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
       "automation-new-mail"
     )
     const { messages, proceed } = await checkMail(
-      { inputs: { from: "sender@example.com" } } as any,
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
       "automation-new-mail"
     )
 
@@ -201,11 +210,15 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(20)
 
     await checkMail(
-      { inputs: { from: "sender@example.com" } } as any,
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
       "automation-sender-check"
     )
     const result = await checkMail(
-      { inputs: { from: "sender@example.com" } } as any,
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
       "automation-sender-check"
     )
 
@@ -225,5 +238,79 @@ describe("checkMail behaviour", () => {
       21
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
+  })
+
+  it("should allow any sender when no filter is configured", async () => {
+    const { checkMail, mocks } = await loadCheckMail()
+    const initialMessage = { uid: 30 }
+    const newMessage = {
+      uid: 31,
+      envelope: { from: [{ address: "anyone@example.com" }] },
+    }
+    const fields = {
+      from: "anyone@example.com",
+      to: "recipient@example.com",
+      subject: "Hello from anyone",
+      sentAt: "2024-02-02T00:00:00.000Z",
+    }
+
+    mocks.fetchMessagesMock
+      .mockResolvedValueOnce([initialMessage])
+      .mockResolvedValueOnce([initialMessage, newMessage])
+    mocks.checkSenderMock.mockReturnValue(true)
+    mocks.toOutputFieldsMock.mockReturnValue(fields)
+    mocks.getLastSeenUidMock
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(30)
+
+    await checkMail(
+      {
+        inputs: {},
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
+      "automation-no-filter"
+    )
+    const { proceed, messages } = await checkMail(
+      { inputs: {} } as any,
+      "automation-no-filter"
+    )
+
+    expect(proceed).toBeTrue()
+    expect(messages?.[0]).toEqual(fields)
+    expect(mocks.checkSenderMock).toHaveBeenCalledWith(undefined, newMessage)
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      1,
+      "automation-no-filter",
+      30
+    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      2,
+      "automation-no-filter",
+      31
+    )
+    expect(mocks.logout).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("checkSender", () => {
+  const { checkSender } = jest.requireActual<
+    typeof import("../../email/utils/checkSender")
+  >("../../email/utils/checkSender")
+
+  it("returns true when no expected sender is provided", () => {
+    const message = {
+      envelope: { from: [{ address: "sender@example.com" }] },
+    } as FetchMessageObject
+
+    expect(checkSender(undefined, message)).toBeTrue()
+    expect(checkSender("   ", message)).toBeTrue()
+  })
+
+  it("performs a trimmed, case-insensitive comparison", () => {
+    const message = {
+      envelope: { from: [{ address: "sender@example.com" }] },
+    } as FetchMessageObject
+
+    expect(checkSender("SENDER@EXAMPLE.COM", message)).toBeTrue()
+    expect(checkSender("other@example.com", message)).toBeFalse()
   })
 })
