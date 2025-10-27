@@ -331,7 +331,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isCloudAccount = await this.isCloud()
     const errUserLimit =
       isCloudAccount &&
-      license.plan.model === PlanModel.PER_USER &&
+      license?.plan.model === PlanModel.PER_USER &&
       userLimitExceeded
 
     this.update(state => {

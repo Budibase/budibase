@@ -21,7 +21,7 @@
   import { users } from "@/stores/portal/users"
   import { appsStore } from "@/stores/portal/apps"
   import { auditLogs } from "@/stores/portal/auditLogs"
-  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount, setContext } from "svelte"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
