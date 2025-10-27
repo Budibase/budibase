@@ -35,8 +35,9 @@
     }
   }
 
-  const sendMessage = async () => {
-    const content = inputValue.trim()
+  const sendMessage = async (contentOverride?: string) => {
+    const rawContent = contentOverride != null ? contentOverride : inputValue
+    const content = rawContent.trim()
     if (!content || loading) {
       return
     }
@@ -195,7 +196,11 @@
   {/if}
   <div class="chat-wrapper">
     <div class="chat-area" bind:this={chatContainer}>
-      <AgentChatbox {chat} {loading} />
+      <AgentChatbox
+        {chat}
+        {loading}
+        on:interaction={e => sendMessage(e.detail?.label)}
+      />
       <div class="input-wrapper">
         {#if errorMessage}
           <InlineAlert type="negative" message={errorMessage} />
@@ -211,7 +216,7 @@
         <Button
           primary
           class="chat-send"
-          on:click={sendMessage}
+          on:click={() => sendMessage()}
           disabled={loading || !inputValue.trim()}
         >
           {sendButtonLabel}
@@ -281,9 +286,5 @@
 
   .chat-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
-  }
-
-  .chat-send {
-    align-self: flex-end;
   }
 </style>

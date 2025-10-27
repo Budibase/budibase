@@ -57,6 +57,23 @@
         console.error("Failed to execute preview onClick handler", error)
       }
     }
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent("budibase-agent-interaction", {
+          detail: {
+            type: "button",
+            payload: {
+              label: slotContent,
+              props: rawProps,
+              component: data,
+            },
+          },
+        })
+      )
+    } catch (error) {
+      console.warn("Failed to dispatch agent interaction event", error)
+    }
   }
 </script>
 

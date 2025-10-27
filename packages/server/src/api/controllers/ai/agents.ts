@@ -302,7 +302,68 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
 async function buildComponentPreview(
   message?: string
 ): Promise<ComponentPayload | undefined> {
-  if (message?.toLocaleLowerCase().includes("button group")) {
+  if (!message) {
+    return
+  }
+
+  const lowered = message.toLowerCase()
+
+  if (lowered.includes("book meeting")) {
+    return {
+      name: "Form",
+      props: {
+        description:
+          "Let us know a few details and we’ll send over a calendar invite.",
+      },
+      slot: "Book a meeting",
+      children: [
+        {
+          name: "Input",
+          slot: "Full name",
+          props: {
+            placeholder: "Ada Lovelace",
+          },
+        },
+        {
+          name: "Input",
+          slot: "Work email",
+          props: {
+            placeholder: "you@company.com",
+            type: "email",
+          },
+        },
+        {
+          name: "Select",
+          slot: "Preferred time",
+          props: {
+            placeholder: "Choose a slot",
+            options: [
+              { label: "Morning (9-11am)", value: "am" },
+              { label: "Afternoon (1-3pm)", value: "pm" },
+              { label: "Late afternoon (3-5pm)", value: "late" },
+            ],
+          },
+        },
+        {
+          name: "TextArea",
+          slot: "Agenda",
+          props: {
+            placeholder: "Share anything we should prepare in advance",
+            rows: 3,
+          },
+        },
+        {
+          name: "Button",
+          slot: "Submit booking",
+          props: {
+            primary: true,
+          },
+        },
+      ],
+    }
+  }
+
+  if (lowered.includes("button group")) {
     return {
       name: "MultiButton",
       props: {
@@ -336,7 +397,7 @@ async function buildComponentPreview(
     }
   }
 
-  if (message?.toLocaleLowerCase().includes("button")) {
+  if (lowered.includes("button")) {
     const buttonProps = {
       primary: true,
       size: "M",
@@ -350,7 +411,7 @@ async function buildComponentPreview(
       slot: slotContent,
     }
   }
-  if (message?.toLocaleLowerCase().includes("form")) {
+  if (lowered.includes("form")) {
     return {
       name: "Form",
       props: {

@@ -25,7 +25,6 @@
   import { onDestroy, onMount, type ComponentType } from "svelte"
   import { AgentChatbox } from "@budibase/frontend-core"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
-  import type { ComponentPreviewPayload } from "@budibase/types"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
@@ -115,25 +114,31 @@
     }
   }
 
-  async function prompt() {
+  async function prompt(messageOverride?: string) {
+    const rawContent = messageOverride ?? inputValue
+    const content = rawContent.trim()
+    if (!content) {
+      return
+    }
+
     if (!chat) {
       chat = { title: "", messages: [] }
     }
 
-    const userMessage: UserMessage = { role: "user", content: inputValue }
+    const userMessage: UserMessage = { role: "user", content }
 
     let updatedChat = {
       ...chat,
       messages: [...chat.messages, userMessage],
     }
 
-    // Update local display immediately with user message
     chat = updatedChat
 
-    // Ensure we scroll to the new message
     await scrollToBottom()
 
-    inputValue = ""
+    if (!messageOverride) {
+      inputValue = ""
+    }
     loading = true
 
     let streamingContent = ""
@@ -146,7 +151,7 @@
         $params.application,
         chunk => {
           if (chunk.type === "component") {
-            const componentData = chunk.component as ComponentPreviewPayload
+            const componentData = chunk.component
             const previewMessage = {
               role: "assistant",
               content: null,
