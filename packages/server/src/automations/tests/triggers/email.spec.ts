@@ -75,6 +75,8 @@ describe("checkMail behaviour", () => {
     const fetchMessagesMock = jest.fn()
     const checkSenderMock = jest.fn()
     const toOutputFieldsMock = jest.fn()
+    const getLastSeenUidMock = jest.fn().mockResolvedValue(undefined)
+    const setLastSeenUidMock = jest.fn().mockResolvedValue(undefined)
 
     jest.doMock("../../email/utils/getClient", () => ({
       getClient: getClientMock,
@@ -88,6 +90,10 @@ describe("checkMail behaviour", () => {
     jest.doMock("../../email/utils/toOutputFields", () => ({
       toOutputFields: toOutputFieldsMock,
     }))
+    jest.doMock("../../email/state", () => ({
+      getLastSeenUid: getLastSeenUidMock,
+      setLastSeenUid: setLastSeenUidMock,
+    }))
 
     const { checkMail } = await import("../../email")
     return {
@@ -97,6 +103,8 @@ describe("checkMail behaviour", () => {
         fetchMessagesMock,
         checkSenderMock,
         toOutputFieldsMock,
+        getLastSeenUidMock,
+        setLastSeenUidMock,
         logout,
       },
     }
@@ -106,6 +114,7 @@ describe("checkMail behaviour", () => {
     const { checkMail, mocks } = await loadCheckMail()
     const message = { uid: 5 }
     mocks.fetchMessagesMock.mockResolvedValue([message])
+    mocks.getLastSeenUidMock.mockResolvedValueOnce(undefined)
 
     const result = await checkMail(
       { inputs: { from: "sender@example.com" } } as any,
@@ -115,6 +124,10 @@ describe("checkMail behaviour", () => {
     expect(result).toEqual({ proceed: false, reason: "init, now waiting" })
     expect(mocks.checkSenderMock).not.toHaveBeenCalled()
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
+    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith(
+      "automation-first",
+      5
+    )
     expect(mocks.logout).toHaveBeenCalledTimes(1)
   })
 
@@ -136,6 +149,9 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce([initialMessage, newMessage])
     mocks.checkSenderMock.mockReturnValue(true)
     mocks.toOutputFieldsMock.mockReturnValue(fields)
+    mocks.getLastSeenUidMock
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(10)
 
     await checkMail(
       { inputs: { from: "sender@example.com" } } as any,
@@ -155,6 +171,16 @@ describe("checkMail behaviour", () => {
       newMessage
     )
     expect(mocks.toOutputFieldsMock).toHaveBeenCalledWith(newMessage)
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      1,
+      "automation-new-mail",
+      10
+    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      2,
+      "automation-new-mail",
+      11
+    )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
   })
 
@@ -170,6 +196,9 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce([initialMessage])
       .mockResolvedValueOnce([unexpectedSenderMessage])
     mocks.checkSenderMock.mockReturnValue(false)
+    mocks.getLastSeenUidMock
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(20)
 
     await checkMail(
       { inputs: { from: "sender@example.com" } } as any,
@@ -185,6 +214,16 @@ describe("checkMail behaviour", () => {
       reason: "sender email does not match expected",
     })
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      1,
+      "automation-sender-check",
+      20
+    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      2,
+      "automation-sender-check",
+      21
+    )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
   })
 })

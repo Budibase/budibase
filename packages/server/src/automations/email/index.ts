@@ -5,8 +5,8 @@ import { getClient } from "./utils/getClient"
 import { fetchMessages } from "./utils/fetchMessages"
 import { getMessageId } from "./utils/getMessageId"
 import { checkSender } from "./utils/checkSender"
+import { getLastSeenUid, setLastSeenUid } from "./state"
 
-const mailboxState = new Map<string, number>()
 export const lockKey = "INBOX"
 
 export const checkMail = async (
@@ -17,7 +17,7 @@ export const checkMail = async (
   const stateKey = automationId
 
   try {
-    const lastSeenUid = mailboxState.get(stateKey)
+    const lastSeenUid = await getLastSeenUid(stateKey)
     const messages = await fetchMessages(smtpClient, lockKey, lastSeenUid)
     console.log("[email trigger] fetched messages", messages)
 
@@ -41,7 +41,7 @@ export const checkMail = async (
       messagesWithUid[messagesWithUid.length - 1]
 
     if (lastSeenUid == null) {
-      mailboxState.set(stateKey, messageUid)
+      await setLastSeenUid(stateKey, messageUid)
       return { proceed: false, reason: "init, now waiting" }
     }
 
@@ -49,7 +49,7 @@ export const checkMail = async (
       return { proceed: false, reason: "no new mail" }
     }
 
-    mailboxState.set(stateKey, messageUid)
+    await setLastSeenUid(stateKey, messageUid)
 
     if (!checkSender(trigger.inputs.from, message)) {
       return { proceed: false, reason: "sender email does not match expected" }
