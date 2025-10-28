@@ -88,13 +88,4 @@
   u {
     font-weight: 600;
   }
-
-  .spectrum-Toast {
-    border-radius: 0px;
-  }
-  .spectrum-Toast-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
 </style>
