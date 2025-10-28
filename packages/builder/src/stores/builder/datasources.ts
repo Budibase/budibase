@@ -116,7 +116,7 @@ export class DatasourceStore extends DerivedBudiStore<
     this.replaceDatasource = this.replaceDatasource.bind(this)
     this.getTableNames = this.getTableNames.bind(this)
     this.getViewNames = this.getViewNames.bind(this)
-    this.getRelationshipNames = this.getRelationshipNames.bind(this)
+    this.getRelationships = this.getRelationships.bind(this)
     this.generateLookup = this.generateLookup.bind(this)
 
     this.lookup = this.generateLookup()
@@ -308,7 +308,7 @@ export class DatasourceStore extends DerivedBudiStore<
     return info.views || []
   }
 
-  async getRelationshipNames(datasource: Datasource) {
+  async getRelationships(datasource: Datasource) {
     const info = await API.fetchRelationshipInfoForDatasource(datasource)
     return info.relationships || []
   }

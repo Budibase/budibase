@@ -28,17 +28,18 @@
         )
         return option ? option.id : null
       })
-      .filter(id => id !== null) as string[]
+      .filter((id): id is string => !!id)
     return $store.relationships.filter(rel => selectedIds.includes(rel._id))
   }
 
-  $: title = "Choose your relationships"
+  const title = "Choose your relationships"
+  const description = "Choose what relationships you want to sync with Budibase"
+  const selectAllText = "Select all"
+
   $: confirmText =
     $store.loading || $store.hasSelected
-      ? "Fetch relationships"
+      ? "Import relationships"
       : "Continue without fetching"
-  $: description = "Choose what relationships you want to sync with Budibase"
-  $: selectAllText = "Select all"
 </script>
 
 <ModalContent

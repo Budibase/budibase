@@ -106,7 +106,7 @@ export async function viewInformation(
   }
 }
 
-export async function relationshipInformation(
+export async function getRelationshipInformation(
   ctx: UserCtx<
     FetchDatasourceRelationshipInfoRequest,
     FetchDatasourceRelationshipInfoResponse

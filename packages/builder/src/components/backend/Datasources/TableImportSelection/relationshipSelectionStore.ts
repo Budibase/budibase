@@ -20,7 +20,7 @@ export const createRelationshipSelectionStore = (datasource: Datasource) => {
   const errorStore = writable<Error | null>(null)
   const loadingStore = writable<boolean>(true)
 
-  datasources.getRelationshipNames(datasource).then(relationships => {
+  datasources.getRelationships(datasource).then(relationships => {
     relationshipsStore.set(relationships)
     selectedRelationshipsStore.set(
       relationships.filter(_relationship => {
