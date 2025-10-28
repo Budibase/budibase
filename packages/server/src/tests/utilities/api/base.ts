@@ -30,7 +30,7 @@ export interface Expectations {
   status?: number
   headers?: Record<string, string | RegExp>
   headersNotPresent?: string[]
-  body?: Record<string, any>
+  body?: Record<string, unknown>
 }
 
 export interface RequestOpts {

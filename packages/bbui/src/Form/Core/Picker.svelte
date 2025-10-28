@@ -18,11 +18,13 @@
   import AbsTooltip from "../../Tooltip/AbsTooltip.svelte"
   import { PopoverAlignment } from "../../constants"
   import Search from "./Search.svelte"
+  import PickerIcon from "./PickerIcon.svelte"
+  import type { PickerIconInput, ResolvedIcon } from "../../types/Picker"
 
   export let id: string | undefined = undefined
   export let disabled: boolean = false
   export let fieldText: string = ""
-  export let fieldIcon: string = ""
+  export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
@@ -64,11 +66,36 @@
     _e: MouseEvent,
     _option: any
   ) => void = () => {}
+  export let showSelectAll: boolean = false
+  export let selectAllText: string = "Select all"
+  export let indeterminate: boolean = false
+  export let allSelected: boolean = false
+  export let toggleSelectAll: () => void = () => {}
 
   const dispatch = createEventDispatcher()
 
-  let button: any
-  let component: any
+  let button: HTMLButtonElement | null = null
+  let component: HTMLUListElement | null = null
+  let optionIconDescriptor: ResolvedIcon | null = null
+
+  const resolveIcon = (icon: PickerIconInput): ResolvedIcon | null => {
+    if (!icon) {
+      return null
+    }
+    if (typeof icon === "object" && icon.component) {
+      return {
+        type: "component",
+        component: icon.component,
+        props: icon.props || {},
+      }
+    }
+    if (typeof icon === "string") {
+      return { type: "string", value: icon }
+    }
+    return null
+  }
+
+  $: resolvedFieldIcon = resolveIcon(fieldIcon)
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -131,7 +158,7 @@
 
   $: component?.addEventListener("scroll", onScroll)
   onDestroy(() => {
-    component?.removeEventListener("scroll", null)
+    component?.removeEventListener("scroll", onScroll)
   })
 </script>
 
@@ -145,16 +172,14 @@
   on:click={onClick}
   bind:this={button}
 >
-  {#if fieldIcon}
-    {#if !useOptionIconImage}
-      <span class="option-extra icon">
-        <Icon size="M" name={fieldIcon} />
-      </span>
-    {:else}
-      <span class="option-extra icon field-icon">
-        <img class="icon-dims" src={fieldIcon} alt="icon" />
-      </span>
-    {/if}
+  {#if resolvedFieldIcon}
+    <span
+      class="option-extra icon"
+      class:field-icon={useOptionIconImage &&
+        resolvedFieldIcon.type !== "component"}
+    >
+      <PickerIcon icon={resolvedFieldIcon} {useOptionIconImage} />
+    </span>
   {/if}
   {#if fieldColour}
     <span class="option-extra">
@@ -198,6 +223,27 @@
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>
+      {#if showSelectAll && filteredOptions.length > 0}
+        <li
+          class="spectrum-Menu-item select-all-item"
+          role="option"
+          aria-selected="true"
+          tabindex="0"
+          on:click={toggleSelectAll}
+        >
+          <span class="spectrum-Menu-itemLabel">{selectAllText}</span>
+          {#if indeterminate || allSelected}
+            <div class="check select-all-check">
+              <Icon
+                name={indeterminate ? "minus" : "check"}
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
+            </div>
+          {/if}
+        </li>
+      {/if}
       {#if placeholderOption}
         <li
           class="spectrum-Menu-item placeholder"
@@ -246,6 +292,11 @@
                     name={getOptionIcon(option, idx)}
                   />
                 {/if}
+              </span>
+            {/if}
+            {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
+              <span class="option-extra icon">
+                <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
@@ -352,6 +403,9 @@
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
     width: 0;
     flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .popover-content.auto-width .spectrum-Menu-item {
     padding-right: var(--spacing-xl);
@@ -416,5 +470,13 @@
     color: var(--spectrum-global-color-gray-600);
     display: block;
     margin-top: var(--spacing-s);
+  }
+
+  .select-all-item {
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    margin-bottom: 4px;
+  }
+  .select-all-item .select-all-check {
+    display: block;
   }
 </style>

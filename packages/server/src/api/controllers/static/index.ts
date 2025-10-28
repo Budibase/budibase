@@ -198,8 +198,8 @@ const getAppScriptHTML = (
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   // No app ID found, cannot serve - return message instead
-  const appId = context.getWorkspaceId()
-  if (!appId) {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
     ctx.body = "No content found - requires app ID"
     return
   }
@@ -207,7 +207,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
-    isWorkspaceFullyMigrated(appId),
+    isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
     configs.getRecaptchaConfig(),
   ])
@@ -230,7 +230,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
-    const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
+    const manifestUrl = hasPWA ? `/api/apps/${workspaceId}/manifest.json` : ""
     const addAppScripts =
       ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
       false
@@ -256,10 +256,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
-        clientCacheKey: await objectStore.getClientCacheKey(
-          appId!,
-          appInfo.version
-        ),
+        clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
@@ -268,6 +265,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
+        workspaceId,
       }
 
       // Add custom app scripts if enabled
@@ -319,7 +317,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
-        appId,
+        appId: workspaceId,
         embedded: bbHeaderEmbed,
         nonce: ctx.state.nonce,
       })
@@ -385,25 +383,25 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
-  const appId = context.getWorkspaceId() || (ctx.request.query.appId as string)
+  const workspaceId = context.getWorkspaceId()
 
-  if (!appId) {
-    ctx.throw(400, "No app ID provided - cannot fetch client library.")
+  if (!workspaceId) {
+    ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
   }
 
-  const serveLocally = shouldServeLocally()
+  const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      await objectStore.clientLibraryPath(appId!)
+      await objectStore.clientLibraryPath(workspaceId!)
     )
     ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
   } else {
-    if (!(await features.isEnabled(FeatureFlag.USE_DYNAMIC_LOADING))) {
+    if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
       return serveLocalFile(ctx, "budibase-client.js")
     } else {
-      return serveLocalFile(ctx, "budibase-client.new.js")
+      return serveLocalFile(ctx, "budibase-client.esm.js")
     }
   }
 }
@@ -411,13 +409,16 @@ export const serveClientLibrary = async function (
 export const serve3rdPartyFile = async function (ctx: Ctx) {
   const { file } = ctx.params
 
-  const appId = context.getWorkspaceId()
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
+  }
 
-  const serveLocally = shouldServeLocally()
+  const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
     const { stream, contentType } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      objectStore.client3rdPartyLibrary(appId!, file)
+      objectStore.client3rdPartyLibrary(workspaceId, file)
     )
 
     if (contentType) {

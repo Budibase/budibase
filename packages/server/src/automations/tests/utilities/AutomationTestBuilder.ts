@@ -37,10 +37,10 @@ type BranchConfig = {
 
 type LoopConfig = {
   option: LoopStepType
-  binding: any
+  binding: unknown
   steps: StepBuilderFunction
   iterations?: number
-  failure?: any
+  failure?: string
   resultOptions?: {
     storeFullResults?: boolean
     summarizeOnly?: boolean
@@ -113,6 +113,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
+  getRow = this.step(AutomationActionStepId.GET_ROW)
   loop = this.step(AutomationActionStepId.LOOP)
   loopv2 = this.step(AutomationActionStepId.LOOP_V2)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)

@@ -9,20 +9,66 @@ import {
 import { ObjectStoreBuckets } from "../../constants"
 
 export class AttachmentCleanup {
-  static async coreCleanup(fileListFn: () => string[]): Promise<void> {
+  static async coreCleanup(
+    fileListFn: () => string[] | Promise<string[]>,
+    opts: { tableId?: string; schema?: Table["schema"]; rowId?: string } = {}
+  ): Promise<void> {
+    let files = await Promise.resolve(fileListFn())
+    if (files.length === 0) {
+      return
+    }
+
     const appId = context.getWorkspaceId()
     if (!dbCore.isProdWorkspaceID(appId)) {
       const prodAppId = dbCore.getProdWorkspaceID(appId!)
-      // if prod exists, then don't allow deleting
       const exists = await dbCore.dbExists(prodAppId)
       if (exists) {
-        return
+        if (!opts.rowId) {
+          return
+        }
+        files = await AttachmentCleanup.excludeFilesUsedInProd(
+          opts.rowId,
+          files,
+          prodAppId,
+          opts
+        )
+        if (files.length === 0) {
+          return
+        }
       }
     }
-    const files = fileListFn()
-    if (files.length > 0) {
-      await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
+
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
+  }
+
+  private static async excludeFilesUsedInProd(
+    rowId: string,
+    files: string[],
+    prodAppId: string,
+    opts: { tableId?: string; schema?: Table["schema"] }
+  ): Promise<string[]> {
+    const { tableId, schema } = opts
+    if (!tableId || !schema) {
+      return files
     }
+
+    const prodDb = dbCore.getDB(prodAppId)
+    const response = await prodDb.tryGet(rowId)
+    const usedKeys = new Set<string>()
+    if (!response) {
+      return files
+    }
+
+    const row = response as Row
+    for (const [key, column] of Object.entries(schema)) {
+      const columnKeys = AttachmentCleanup.extractAttachmentKeys(
+        column.type,
+        row[key]
+      )
+      columnKeys.forEach(value => usedKeys.add(value))
+    }
+
+    return files.filter(file => !usedKeys.has(file))
   }
 
   private static extractAttachmentKeys(
@@ -57,31 +103,37 @@ export class AttachmentCleanup {
     rows: Row[],
     opts: { oldTable?: Table; rename?: RenameColumn; deleting?: boolean }
   ) {
-    return AttachmentCleanup.coreCleanup(() => {
-      let files: string[] = []
-      const tableSchema = opts.oldTable?.schema || table.schema
-      for (let [key, schema] of Object.entries(tableSchema)) {
-        if (
-          schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE_SINGLE
-        ) {
-          continue
-        }
+    const tableSchema = opts.oldTable?.schema || table.schema
+    return AttachmentCleanup.coreCleanup(
+      () =>
+        Object.entries(tableSchema).reduce<string[]>((files, [key, schema]) => {
+          if (
+            schema.type !== FieldType.ATTACHMENTS &&
+            schema.type !== FieldType.ATTACHMENT_SINGLE &&
+            schema.type !== FieldType.SIGNATURE_SINGLE
+          ) {
+            return files
+          }
 
-        const columnRemoved = opts.oldTable && !table.schema[key]
-        const renaming = opts.rename?.old === key
-        // old table had this column, new table doesn't - delete it
-        if ((columnRemoved && !renaming) || opts.deleting) {
-          rows.forEach(row => {
-            files = files.concat(
-              AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
-            )
-          })
-        }
+          const columnRemoved = opts.oldTable && !table.schema[key]
+          const renaming = opts.rename?.old === key
+          if ((columnRemoved && !renaming) || opts.deleting) {
+            rows.forEach(row => {
+              const keys = AttachmentCleanup.extractAttachmentKeys(
+                schema.type,
+                row[key]
+              )
+              files.push(...keys)
+            })
+          }
+
+          return files
+        }, []),
+      {
+        tableId: table._id,
+        schema: tableSchema,
       }
-      return files
-    })
+    )
   }
 
   static async tableDelete(table: Table, rows: Row[]) {
@@ -97,52 +149,68 @@ export class AttachmentCleanup {
   }
 
   static async rowDelete(table: Table, rows: Row[]) {
-    return AttachmentCleanup.coreCleanup(() => {
-      let files: string[] = []
-      for (let [key, schema] of Object.entries(table.schema)) {
-        if (
-          schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE_SINGLE
-        ) {
-          continue
+    for (const row of rows) {
+      await AttachmentCleanup.coreCleanup(
+        () =>
+          Object.entries(table.schema).reduce<string[]>(
+            (files, [key, schema]) => {
+              if (
+                schema.type !== FieldType.ATTACHMENTS &&
+                schema.type !== FieldType.ATTACHMENT_SINGLE &&
+                schema.type !== FieldType.SIGNATURE_SINGLE
+              ) {
+                return files
+              }
+              const columnFiles = AttachmentCleanup.extractAttachmentKeys(
+                schema.type,
+                row[key]
+              )
+              return files.concat(columnFiles)
+            },
+            []
+          ),
+        {
+          tableId: table._id,
+          schema: table.schema,
+          rowId: row._id,
         }
-
-        rows.forEach(row => {
-          files = files.concat(
-            AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
-          )
-        })
-      }
-      return files
-    })
+      )
+    }
   }
 
-  static rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
-    return AttachmentCleanup.coreCleanup(() => {
-      let files: string[] = []
-      for (let [key, schema] of Object.entries(table.schema)) {
-        if (
-          schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE_SINGLE
-        ) {
-          continue
-        }
+  static async rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
+    await AttachmentCleanup.coreCleanup(
+      () =>
+        Object.entries(table.schema).reduce<string[]>(
+          (files, [key, schema]) => {
+            if (
+              schema.type !== FieldType.ATTACHMENTS &&
+              schema.type !== FieldType.ATTACHMENT_SINGLE &&
+              schema.type !== FieldType.SIGNATURE_SINGLE
+            ) {
+              return files
+            }
 
-        const oldKeys = AttachmentCleanup.extractAttachmentKeys(
-          schema.type,
-          opts.oldRow[key]
-        )
-        const newKeys = AttachmentCleanup.extractAttachmentKeys(
-          schema.type,
-          opts.row[key]
-        )
-        files = files.concat(
-          oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
-        )
+            const oldKeys = AttachmentCleanup.extractAttachmentKeys(
+              schema.type,
+              opts.oldRow[key]
+            )
+            const newKeys = AttachmentCleanup.extractAttachmentKeys(
+              schema.type,
+              opts.row[key]
+            )
+            const columnFiles = oldKeys.filter(
+              (key: string) => newKeys.indexOf(key) === -1
+            )
+            return files.concat(columnFiles)
+          },
+          []
+        ),
+      {
+        tableId: table._id,
+        schema: table.schema,
+        rowId: opts.row._id,
       }
-      return files
-    })
+    )
   }
 }

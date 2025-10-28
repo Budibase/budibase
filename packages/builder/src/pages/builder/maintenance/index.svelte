@@ -2,7 +2,7 @@
   import { MaintenanceType } from "@budibase/types"
   import { Heading, Body, Button, Layout } from "@budibase/bbui"
   import { admin } from "@/stores/portal"
-  import BudibaseLogo from "../portal/_components/BudibaseLogo.svelte"
+  import BudibaseLogo from "../_components/BudibaseLogo.svelte"
 
   $: {
     if ($admin.maintenance.length === 0) {
@@ -19,7 +19,7 @@
     <div class="inner-content">
       {#each $admin.maintenance as maintenance}
         {#if maintenance.type === MaintenanceType.SQS_MISSING}
-          <Layout>
+          <Layout noPadding>
             <Heading>Please upgrade your Budibase installation</Heading>
             <Body>
               We've detected that the version of Budibase you're using depends
@@ -35,8 +35,9 @@
           <Button
             on:click={() =>
               (window.location = "https://docs.budibase.com/docs/migrations")}
-            >Migration guide</Button
           >
+            Migration guide
+          </Button>
         {/if}
       {/each}
     </div>
@@ -56,11 +57,11 @@
   }
   .hero {
     margin: var(--spacing-l);
+    margin-top: 0px;
   }
   .content {
     display: flex;
     flex-direction: row;
-    align-items: baseline;
     justify-content: center;
     gap: var(--spacing-m);
   }
@@ -69,7 +70,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
   }
 
   @media only screen and (max-width: 600px) {

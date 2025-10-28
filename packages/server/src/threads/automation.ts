@@ -54,7 +54,7 @@ function stepSuccess(
   if (step.isLegacyLoop) {
     outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
 
-    const legacyChild: any = (step as LoopV2Step)?.inputs?.children?.[0]
+    const legacyChild = (step as LoopV2Step)?.inputs?.children?.[0]
     const legacyId = legacyChild?.id || step.id
     const legacyStepId = legacyChild?.stepId || step.stepId
     const legacyInputs = inputs || legacyChild?.inputs || step.inputs
@@ -549,7 +549,16 @@ class Orchestrator {
 
             // Process results based on their type
             for (const result of iterationResults) {
-              automationUtils.processStandardResult(storage, result, iterations)
+              const isDirectChild = children.some(
+                child => child.id === result.id
+              )
+              if (isDirectChild) {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations
+                )
+              }
             }
 
             const hasFailures = iterationResults.some(

@@ -144,22 +144,68 @@
     </script>
   {/if}
   <script
-    type="application/javascript"
-    src={`/api/assets/client?${props.clientCacheKey}`}
+    id="budibase-client-script"
+    type="module"
+    src={`/api/assets/${props.workspaceId}/client?${props.clientCacheKey}`}
+    data-plugin-scripts={JSON.stringify(
+      props.usedPlugins?.map(plugin => plugin.jsUrl) ?? []
+    )}
   ></script>
   <!-- Custom components need inserted after the core client library -->
   <!-- But before loadBudibase is called -->
-  {#if props.usedPlugins?.length}
-    {#each props.usedPlugins as plugin}
-      <script type="application/javascript" src={plugin.jsUrl}></script>
-    {/each}
-  {/if}
+
   <script type="application/javascript" nonce={props.nonce}>
-    if (window.loadBudibase) {
-      window.loadBudibase()
-    } else {
+    const clientScript = document.getElementById("budibase-client-script")
+    const pluginsUrls = (() => {
+      if (!clientScript) {
+        return []
+      }
+      const raw = clientScript.getAttribute("data-plugin-scripts")
+      if (!raw) {
+        return []
+      }
+      try {
+        return JSON.parse(raw)
+      } catch (error) {
+        console.error("Failed to parse plugin script list", error)
+        return []
+      }
+    })()
+
+    function showLoadError() {
       console.error("Failed to load the Budibase client")
-      document.getElementById("error").style.display = "flex"
+      const errorPanel = document.getElementById("error")
+      if (errorPanel) {
+        errorPanel.style.display = "flex"
+      }
+    }
+
+    async function loadPluginScripts() {
+      for (const pluginUrl of pluginsUrls) {
+        const script = document.createElement("script")
+        script.type = "application/javascript"
+        script.src = pluginUrl
+        script.onerror = () => {
+          console.error(`Failed to load plugin script: ${pluginUrl}`)
+        }
+        document.head.appendChild(script)
+      }
+    }
+
+    async function bootBudibase() {
+      if (window.loadBudibase) {
+        await loadPluginScripts()
+        window.loadBudibase()
+      } else {
+        showLoadError()
+      }
+    }
+
+    if (window.loadBudibase) {
+      bootBudibase()
+    } else {
+      clientScript.addEventListener("load", bootBudibase)
+      clientScript.addEventListener("error", showLoadError)
     }
   </script>
 

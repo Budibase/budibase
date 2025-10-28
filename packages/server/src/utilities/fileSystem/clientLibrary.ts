@@ -1,6 +1,6 @@
-import { objectStore } from "@budibase/backend-core"
+import { features, objectStore } from "@budibase/backend-core"
 import { sdk, utils } from "@budibase/shared-core"
-import { libDependencies } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 import fs from "fs"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
@@ -22,13 +22,13 @@ export function devClientLibPath() {
  * The paths for the in-use version are:
  * {appId}/manifest.json
  * {appId}/budibase-client.js
- * {appId}/_dependencies/...
+ * {appId}/_chunks/...
  * {appId}/... (and any other app files)
  *
  * The paths for the backups are:
  * {appId}/.bak/manifest.json
  * {appId}/.bak/budibase-client.js
- * {appId}/.bak/_dependencies/...
+ * {appId}/.bak/_chunks/...
  * {appId}/.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
@@ -84,63 +84,54 @@ export async function updateClientLibrary(appId: string) {
   if (env.isDev()) {
     const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
-    manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
+    const distFolder = path.dirname(clientPath)
+    manifest = join(path.dirname(distFolder), "manifest.json")
     client = clientPath
-    clientNew = join(
-      path.dirname(path.dirname(clientPath)),
-      "dist",
-      "budibase-client.new.js"
-    )
-    for (const lib of Object.values(libDependencies)) {
-      dependencies.push(
-        join(path.dirname(path.dirname(clientPath)), "dist", lib.outFile)
-      )
-    }
+    clientNew = join(distFolder, "budibase-client.esm.js")
+    const chunksDir = join(distFolder, "chunks")
+    dependencies = fs
+      .readdirSync(chunksDir)
+      .filter(f => f.endsWith(".js"))
+      .map(f => join(chunksDir, f))
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.new.js")
-    for (const lib of Object.values(libDependencies)) {
-      dependencies.push(resolve(TOP_LEVEL_PATH, "client", lib.outFile))
-    }
+    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.esm.js")
+    const chunksDir = join(resolve(TOP_LEVEL_PATH, "client"), "chunks")
+    dependencies = fs
+      .readdirSync(chunksDir)
+      .filter(f => f.endsWith(".js"))
+      .map(f => join(chunksDir, f))
   }
 
   // Upload latest manifest and client library
-  const manifestUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "manifest.json"),
-    stream: fs.createReadStream(manifest),
-  })
-  const clientUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.js"),
-    stream: fs.createReadStream(client),
-  })
-  const clientNewUpload = objectStore.streamUpload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: join(appId, "budibase-client.new.js"),
-    stream: fs.createReadStream(clientNew),
-  })
-  let depUploads = []
-  for (const dependency of dependencies) {
-    depUploads.push(
-      objectStore.streamUpload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: join(appId, "_dependencies", path.basename(dependency)),
-        stream: fs.createReadStream(dependency),
-      })
-    )
-  }
+  const files = [
+    {
+      filename: join(appId, "manifest.json"),
+      stream: fs.createReadStream(manifest),
+    },
+    {
+      filename: join(appId, "budibase-client.js"),
+      stream: fs.createReadStream(client),
+    },
+    {
+      filename: join(appId, "budibase-client.esm.js"),
+      stream: fs.createReadStream(clientNew),
+    },
+    ...dependencies.map(dependency => ({
+      filename: join(appId, "chunks", path.basename(dependency)),
+      stream: fs.createReadStream(dependency),
+    })),
+  ]
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
-
   await Promise.all([
-    manifestUpload,
-    clientUpload,
+    objectStore.streamUploadMany({
+      bucket: ObjectStoreBuckets.APPS,
+      files,
+    }),
     manifestSrc,
-    ...depUploads,
-    clientNewUpload,
   ])
 
   return JSON.parse(await manifestSrc)
@@ -260,9 +251,9 @@ const forEachObject = (
     5
   )
 
-export function shouldServeLocally() {
+export async function shouldServeLocally() {
   if (env.isDev()) {
-    if (env.DEV_USE_CLIENT_FROM_STORAGE) {
+    if (await features.isEnabled(FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE)) {
       return false
     }
     return true

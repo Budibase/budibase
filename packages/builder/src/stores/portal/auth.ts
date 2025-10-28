@@ -3,6 +3,8 @@ import { API } from "@/api"
 import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
+import { reset as resetBuilderStores } from "@/stores/builder"
+import { CookieUtils, Constants } from "@budibase/frontend-core"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -33,7 +35,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     })
   }
 
-  setUser(user?: GetGlobalSelfResponse) {
+  setUser(user?: GetGlobalSelfResponse, sessionTerminated = false) {
     this.set({
       loaded: true,
       user: user,
@@ -41,7 +43,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       tenantId: user?.tenantId || "default",
       tenantSet: !!user,
       isSSO: user != null && isSSOUser(user),
-      postLogout: false,
+      postLogout: sessionTerminated,
     })
 
     if (user) {
@@ -56,6 +58,11 @@ class AuthStore extends BudiStore<PortalAuthStore> {
           // an error here.
         })
     }
+  }
+
+  clearSession() {
+    // sessionTerminated true prevents saving return URL for invalid URLs
+    this.setUser(undefined, true)
   }
 
   async setOrganisation(tenantId: string) {
@@ -133,10 +140,32 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   }
 
   async logout() {
+    // Save current URL as return URL before logging out, unless we're on pre-login pages
+    const currentPath = window.location.pathname
+    const isPreLoginPage =
+      currentPath.startsWith("/builder/auth") ||
+      currentPath.startsWith("/builder/invite") ||
+      currentPath.startsWith("/builder/admin")
+
+    if (
+      !isPreLoginPage &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+    ) {
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, currentPath)
+    }
+
     await API.logOut()
     this.setPostLogout()
     this.setUser()
-    await this.setInitInfo({})
+    try {
+      await this.setInitInfo({})
+    } catch (error) {
+      // Ignore errors clearing init info after logout
+      // User is already logged out, this is just cleanup
+    }
+    // App info needs to be cleared on logout.
+    // Invalid app context will cause init failures for users logging back in.
+    resetBuilderStores()
   }
 
   async updateSelf(fields: UpdateSelfRequest) {

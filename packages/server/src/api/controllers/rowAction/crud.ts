@@ -1,3 +1,4 @@
+import { events } from "@budibase/backend-core"
 import {
   CreateRowActionRequest,
   Ctx,
@@ -6,7 +7,6 @@ import {
   RowActionResponse,
   RowActionsResponse,
 } from "@budibase/types"
-import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 async function getTable(ctx: Ctx) {
@@ -31,7 +31,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   }
 
   const { actions } = rowActions
-  const automationNames = await sdk.rowActions.getNames(rowActions)
+  const automationNames = await sdk.rowActions.getNames(Object.values(actions))
   const result: RowActionsResponse = {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({

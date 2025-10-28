@@ -12,6 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -24,6 +25,7 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
+  import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
 
   let versionModal: VersionModal
   let exportModal: Modal
@@ -32,6 +34,7 @@
   let unpublishModal: ConfirmDialog
   let revertModal: RevertModal
   let deleteModal: DeleteModal
+  let cloneResourcesModal: CloneResourcesModal
 
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
@@ -99,12 +102,12 @@
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">Client version</Heading>
-    {#if $admin.usingLocalComponentLibs}
+    {#if $admin.isDev && !$featureFlags.DEV_USE_CLIENT_FROM_STORAGE}
       <Body size="S">
         You're running the latest client version from your file system, as
         you're in developer mode.
         <br />
-        Use the env var DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
+        Use the flag DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
       </Body>
     {:else if updateAvailable}
       <Body size="S">
@@ -196,6 +199,19 @@
     <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider noMargin />
+  {#if $featureFlags.COPY_RESOURCES_BETWEEN_WORKSPACES}
+    <Layout noPadding gap="XS">
+      <Heading size="XS">Copy resources</Heading>
+      <Body size="S">Copy resources from this workspace to another one</Body>
+    </Layout>
+    <div class="row">
+      <Button secondary on:click={() => cloneResourcesModal.show()}>
+        Copy resources
+      </Button>
+      <CloneResourcesModal bind:this={cloneResourcesModal} />
+    </div>
+    <Divider noMargin />
+  {/if}
   <Layout noPadding gap="XS">
     <div class="row">
       <Heading size="S">Recaptcha</Heading>

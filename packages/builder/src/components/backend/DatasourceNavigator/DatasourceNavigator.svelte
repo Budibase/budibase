@@ -8,6 +8,8 @@
     views,
     viewsV2,
     userSelectedResourceMap,
+    dataEnvironmentStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import QueryNavItem from "./QueryNavItem.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
@@ -16,6 +18,7 @@
   import { TableNames } from "@/constants"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
+  import { DataEnvironmentMode } from "@budibase/types"
 
   export let searchTerm
   let toggledDatasources = {}
@@ -38,6 +41,10 @@
   }
 
   const selectTable = tableId => {
+    // Always use DEVELOPMENT environment if table is not published
+    if (!$workspaceDeploymentStore.tables[tableId]?.published) {
+      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
+    }
     tables.select(tableId)
     $goto(`./table/${tableId}`)
   }
