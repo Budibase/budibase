@@ -4,6 +4,7 @@ import {
   AutomationSettings,
   Plugin,
   PWAManifest,
+  TranslationOverrides,
   UpdateWorkspaceRequest,
   Workspace,
   WorkspaceFeatures,
@@ -12,6 +13,7 @@ import {
 import { get } from "svelte/store"
 import { initialise, navigationStore, workspaceAppStore } from "."
 import { BudiStore } from "../BudiStore"
+import { resolveWorkspaceTranslations } from "@budibase/shared-core"
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -53,6 +55,7 @@ export interface AppMetaState {
   icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
+  translationOverrides: TranslationOverrides
 }
 
 export const INITIAL_APP_META_STATE: AppMetaState = {
@@ -97,6 +100,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
     screenshots: [],
   },
   scripts: [],
+  translationOverrides: {},
 }
 
 export class AppMetaStore extends BudiStore<AppMetaState> {
@@ -109,6 +113,10 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   }
 
   syncApp(app: Workspace) {
+    const translationOverrides = resolveWorkspaceTranslations(
+      app.translationOverrides
+    )
+
     this.update(state => ({
       ...state,
       name: app.name,
@@ -130,6 +138,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasAppPackage: true,
       pwa: app.pwa,
       scripts: app.scripts || [],
+      translationOverrides,
     }))
   }
 

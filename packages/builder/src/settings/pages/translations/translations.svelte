@@ -7,11 +7,33 @@
     Select,
     Search,
     Table,
+    notifications,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { API } from "@/api"
+  import {
+    UI_TRANSLATIONS,
+    filterValidTranslationOverrides,
+    type TranslationCategory,
+  } from "@budibase/shared-core"
   import { onDestroy } from "svelte"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
+
+  const categoryLabels: Record<TranslationCategory, string> = {
+    userMenu: "User menu",
+    profileModal: "Profile modal",
+    passwordModal: "Password modal",
+  } as const
+
+  const categoryKeys = Object.keys(categoryLabels) as TranslationCategory[]
+
+  const categoryOptions = [
+    { label: "All", value: "all" },
+    ...categoryKeys.map(value => ({
+      label: categoryLabels[value],
+      value,
+    })),
+  ]
 
   const schema = {
     name: {
@@ -29,8 +51,137 @@
     { column: "translation", component: TranslationValueCell },
   ]
 
+  function normaliseOverrides(source: Record<string, string>) {
+    const filtered = filterValidTranslationOverrides(source)
+    return Object.keys(filtered)
+      .sort()
+      .reduce(
+        (acc, key) => {
+          acc[key] = filtered[key]
+          return acc
+        },
+        {} as Record<string, string>
+      )
+  }
+
+  function signature(source: Record<string, string>) {
+    return JSON.stringify(normaliseOverrides(source))
+  }
+
+  function categoryLabel(category: TranslationCategory) {
+    return categoryLabels[category] ?? category
+  }
+
+  type TranslationDefinition = (typeof UI_TRANSLATIONS)[number]
+  function matchesQuery(definition: TranslationDefinition, query: string) {
+    if (!query) {
+      return true
+    }
+    const q = query.toLowerCase()
+    return (
+      definition.name.toLowerCase().includes(q) ||
+      definition.defaultValue.toLowerCase().includes(q) ||
+      definition.key.toLowerCase().includes(q) ||
+      definition.fullKey.toLowerCase().includes(q)
+    )
+  }
+
   let selectedCategory = "userMenu"
   let searchTerm = ""
+  let overrides = { ...$appStore.translationOverrides }
+  let lastSyncedSignature = signature(overrides)
+  let debouncedHandle: ReturnType<typeof setTimeout> | undefined
+  let saving = false
+  let saveError = false
+
+  const refreshFromStore = () => {
+    const storeOverrides = $appStore.translationOverrides
+    const storeSignature = signature(storeOverrides)
+    if (storeSignature !== lastSyncedSignature) {
+      overrides = { ...storeOverrides }
+      lastSyncedSignature = storeSignature
+    }
+  }
+
+  $: refreshFromStore()
+
+  $: filteredRows = UI_TRANSLATIONS.filter(definition => {
+    const inCategory =
+      selectedCategory === "all" || definition.category === selectedCategory
+    return inCategory && matchesQuery(definition, searchTerm)
+  })
+
+  $: tableData = filteredRows.map(definition => ({
+    key: definition.fullKey,
+    shortKey: definition.key,
+    name: definition.name,
+    translation: overrides?.[definition.fullKey] ?? "",
+    defaultValue: definition.defaultValue,
+    category: definition.category,
+    categoryLabel: categoryLabel(definition.category),
+  }))
+
+  const sanitize = () => normaliseOverrides(overrides)
+
+  const handleTranslationChange = (detail: { key: string; value: string }) => {
+    const { key, value } = detail
+    const trimmed = (value || "").trim()
+    overrides = { ...overrides }
+    if (!trimmed) {
+      delete overrides[key]
+    } else {
+      overrides[key] = trimmed
+    }
+    scheduleSave()
+  }
+
+  const scheduleSave = () => {
+    if (debouncedHandle) {
+      clearTimeout(debouncedHandle)
+    }
+    debouncedHandle = setTimeout(saveOverrides, 1200)
+  }
+
+  const saveOverrides = async () => {
+    const payload = sanitize()
+    const nextSignature = signature(payload)
+    if (nextSignature === lastSyncedSignature) {
+      return
+    }
+    saving = true
+    saveError = false
+    try {
+      await API.saveAppMetadata($appStore.appId, {
+        translationOverrides: payload,
+      })
+      appStore.update(state => ({
+        ...state,
+        translationOverrides: payload,
+      }))
+      lastSyncedSignature = signature(payload)
+      overrides = { ...payload }
+      notifications.success("Translations saved successfully")
+    } catch (error) {
+      saveError = true
+      notifications.error("Failed to save translations")
+      console.error(error)
+    } finally {
+      saving = false
+    }
+  }
+  type TranslationDetail = {
+    key: string
+    value: string
+  }
+  const onButtonClick = (event: CustomEvent<TranslationDetail>) => {
+    handleTranslationChange(event.detail)
+  }
+
+  onDestroy(() => {
+    if (debouncedHandle) {
+      clearTimeout(debouncedHandle)
+    }
+  })
 </script>
 
 <Layout noPadding>
@@ -46,7 +197,10 @@
     <div class="filters">
       <Select
         value={selectedCategory}
+        options={categoryOptions}
         placeholder={false}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
         on:change={event => (selectedCategory = event.detail)}
       />
       <Search
@@ -56,11 +210,16 @@
     </div>
     <Table
       {schema}
+      data={tableData.map(row => ({
+        ...row,
+        category: row.categoryLabel,
+      }))}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
       {customRenderers}
       placeholderText="No translations found"
+      on:buttonclick={onButtonClick}
     />
   </div>
 </Layout>
