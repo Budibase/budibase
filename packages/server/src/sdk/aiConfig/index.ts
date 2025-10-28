@@ -1,4 +1,4 @@
-import { configs, context, docIds } from "@budibase/backend-core"
+import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   ConfigType,
   CustomAIProviderConfig,
@@ -113,8 +113,12 @@ export async function create(
 export async function update(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
+  const id = config._id
+  if (!id) {
+    throw new HTTPError("id cannot be empty", 400)
+  }
   await ensureLiteLLMConfigured()
-  const existing = await find(config._id!)
+  const existing = await find(id)
 
   config.apiKey =
     config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
@@ -131,6 +135,14 @@ export async function update(
   if (updatedConfig.isDefault) {
     await ensureSingleDefault(updatedConfig._id)
   }
+
+  await liteLLM.updateModel({
+    id,
+    provider: config.provider,
+    name: config.model,
+    baseUrl: config.baseUrl,
+    apiKey: config.apiKey,
+  })
 
   await liteLLM.syncKeyModels()
 

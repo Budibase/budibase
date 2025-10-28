@@ -64,6 +64,47 @@ export async function addModel(model: {
   return json.model_id
 }
 
+export async function updateModel(model: {
+  id: string
+  provider: string
+  name: string
+  baseUrl: string
+  apiKey: string | undefined
+}): Promise<string> {
+  const { id, name, baseUrl, provider, apiKey } = model
+  await validateConfig(model)
+
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer sk-1234",
+    },
+    body: JSON.stringify({
+      model_name: name,
+      litellm_params: {
+        api_base: baseUrl,
+        api_key: apiKey,
+        custom_llm_provider: provider,
+        model: `${provider}/${name}`,
+        use_in_pass_through: false,
+        use_litellm_proxy: false,
+        merge_reasoning_content_in_choices: false,
+        input_cost_per_token: 0,
+        output_cost_per_token: 0,
+        guardrails: [],
+      },
+    }),
+  }
+
+  const res = await fetch(
+    `http://localhost:4000/model/${id}/update`,
+    requestOptions
+  )
+  const json = await res.json()
+  return json.model_id
+}
+
 export async function validateConfig(model: {
   provider: string
   name: string
