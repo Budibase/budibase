@@ -96,7 +96,20 @@ export async function create(
       )
     }
 
-    const doc = await pro.plugins.storePlugin(metadata, directory, source)
+    let origin
+    if (source === PluginSource.GITHUB) {
+      const { repo, url: canonical } = sdk.plugins.parseGithubRepo(url)
+      if (repo && canonical) {
+        origin = { source: "github" as const, repo, url: canonical }
+      }
+    }
+
+    const doc = await pro.plugins.storePlugin(
+      metadata,
+      directory,
+      source,
+      origin
+    )
 
     clientAppSocket?.emit("plugins-update", { name, hash: doc.hash })
     ctx.body = { plugin: doc }
