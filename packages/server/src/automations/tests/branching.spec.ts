@@ -291,13 +291,13 @@ describe("Branching automations", () => {
         branch1: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 1" }),
           condition: {
-            equal: { "{{ trigger.fields.input }}": "1" },
+            equal: { "{{trigger.fields.input}}": "1" },
           },
         },
         branch2: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
           condition: {
-            equal: { "{{ trigger.fields.input }}": "2" },
+            equal: { "{{trigger.fields.input}}": "2" },
           },
         },
         elseBranch: {
@@ -318,13 +318,13 @@ describe("Branching automations", () => {
         branch1: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 1" }),
           condition: {
-            equal: { "{{ trigger.fields.input }}": "1" },
+            equal: { "{{trigger.fields.input}}": "1" },
           },
         },
         branch2: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
           condition: {
-            equal: { "{{ trigger.fields.input }}": "2" },
+            equal: { "{{trigger.fields.input}}": "2" },
           },
         },
         elseBranch: {
