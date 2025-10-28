@@ -146,7 +146,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
 
     // Proof-of-concept: append a mocked custom HTML assistant message so the builder UI can render it.
-    const component = await buildComponentPreview(
+    const component = await buildComponent(
       chat.messages.map(x => x.content as string).pop()
     )
     if (component) {
@@ -299,7 +299,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
     throw error
   }
 }
-async function buildComponentPreview(
+async function buildComponent(
   message?: string
 ): Promise<ComponentPayload | undefined> {
   if (!message) {
