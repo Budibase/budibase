@@ -6,8 +6,8 @@ import {
   FieldType,
   EmptyFilterOption,
   SortOrder,
-  QueryRowsStepInputs,
-  QueryRowsStepOutputs,
+  GetRowStepInputs,
+  GetRowStepOutputs,
 } from "@budibase/types"
 
 async function getTable(appId: string, tableId: string) {
@@ -24,18 +24,20 @@ export async function run({
   inputs,
   appId,
 }: {
-  inputs: QueryRowsStepInputs
+  inputs: GetRowStepInputs
   appId: string
-}): Promise<QueryRowsStepOutputs> {
-  const { tableId, filters, sortColumn, sortOrder, limit } = inputs
+}): Promise<GetRowStepOutputs> {
+  const { tableId, filters, sortColumn, sortOrder } = inputs
   if (!tableId) {
     return {
       success: false,
+      row: null,
       response: {
         message: "You must select a table to query.",
       },
     }
   }
+
   const table = await getTable(appId, tableId)
   let sortType = FieldType.STRING
   if (sortColumn && table && table.schema && table.schema[sortColumn]) {
@@ -43,21 +45,21 @@ export async function run({
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
-  // when passing the tableId in the Ctx it needs to be decoded
+
   const ctx = buildCtx(appId, null, {
     params: {
       tableId: decodeURIComponent(tableId),
     },
     body: {
       sortType,
-      limit,
+      limit: 1,
       sort: sortColumn,
       query: filters || {},
-      // default to ascending, like data tab
       sortOrder: sortOrder || SortOrder.ASCENDING,
     },
     version: "1",
   })
+
   try {
     let rows
 
@@ -73,12 +75,13 @@ export async function run({
     }
 
     return {
-      rows,
+      row: rows && rows.length > 0 ? rows[0] : null,
       success: true,
     }
   } catch (err) {
     return {
       success: false,
+      row: null,
       response: automationUtils.getError(err),
     }
   }
