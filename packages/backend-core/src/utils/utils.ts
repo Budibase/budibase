@@ -74,7 +74,7 @@ export function isPublicApiRequest(ctx: Ctx): boolean {
 export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   let workspaceId: string | undefined
 
-  function checkWorkspaceId(possibleWorkspaceId: string | undefined) {
+  function setWorkspaceIdIfValid(possibleWorkspaceId: string | undefined) {
     if (!possibleWorkspaceId) {
       return
     }
@@ -100,7 +100,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
       values = [values]
     }
     for (const value of values) {
-      checkWorkspaceId(value)
+      setWorkspaceIdIfValid(value)
     }
   }
 
@@ -108,11 +108,11 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   checkPossibleValues(ctx.request.headers[Header.APP_ID])
 
   // look in body
-  checkWorkspaceId(ctx.request.body?.appId)
+  setWorkspaceIdIfValid(ctx.request.body?.appId)
 
   // look in the path
   const pathId = parseWorkspaceIdFromUrlPath(ctx.path)
-  checkWorkspaceId(pathId)
+  setWorkspaceIdIfValid(pathId)
 
   // look in queryParams
   checkPossibleValues(ctx.query?.appId)
@@ -124,7 +124,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   const isViewingProdApp =
     ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
   if (isViewingProdApp) {
-    checkWorkspaceId(await resolveAppUrl(ctx))
+    setWorkspaceIdIfValid(await resolveAppUrl(ctx))
   }
 
   return workspaceId
