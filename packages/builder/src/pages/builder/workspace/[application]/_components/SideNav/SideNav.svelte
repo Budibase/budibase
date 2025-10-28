@@ -416,16 +416,16 @@
             </span>
 
             <SideNavLink
-              icon="database"
-              text="Data"
-              url={$url("./data")}
+              icon="webhooks-logo"
+              text="APIs"
+              url={$url("./apis")}
               {collapsed}
               on:click={keepCollapsed}
             />
             <SideNavLink
-              icon="webhooks-logo"
-              text="APIs"
-              url={$url("./apis")}
+              icon="database"
+              text="Data"
+              url={$url("./data")}
               {collapsed}
               on:click={keepCollapsed}
             />
