@@ -140,7 +140,7 @@
       name: datasource.name,
       icon:
         datasource.source === IntegrationTypes.REST
-          ? "globe-hemisphere-west"
+          ? "webhooks-logo"
           : "database",
       action: () =>
         $goto(
