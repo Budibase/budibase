@@ -17,6 +17,7 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  isRestTemplate?: boolean
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
   uiMetadata?: DatasourceUIMetadata
