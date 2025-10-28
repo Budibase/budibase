@@ -45,16 +45,33 @@ if (typeof window !== "undefined") {
 
 import * as svelte from "svelte"
 import * as svelteStore from "svelte/store"
+// Legacy Svelte 4 runtime for plugin compatibility
+import * as svelteLegacy from "svelte-legacy"
+// @ts-ignore
+import * as svelteLegacyStore from "svelte-legacy/store"
 // @ts-ignore
 import * as svelteInternal from "svelte/internal/client"
+// @ts-ignore
+import * as svelteLegacyInternal from "svelte-legacy/internal"
+
 window.svelte = svelte
-// Expose internals for compat-built plugins that import from
-// `svelte/internal` or `svelte/src/internal/*`
+// Expose legacy runtime under dedicated globals so Svelte 5 consumers stay untouched
 // @ts-ignore - augmenting the window at runtime
-window.svelteInternal = svelteInternal
-// Some libraries import from "svelte/store" separately
+window.svelteLegacy = svelteLegacy
+// @ts-ignore - augmenting the window at runtime
+window.svelteLegacyStore = svelteLegacyStore
+// @ts-ignore - augmenting the window at runtime
+window.svelteLegacyInternal = svelteLegacyInternal
+// Provide the legacy global names that Svelte 4 bundles hardcode
+// @ts-ignore - augmenting the window at runtime
+window.svelte_internal = svelteLegacyInternal
+// @ts-ignore - augmenting the window at runtime
+window.svelte_store = svelteLegacyStore
+// Maintain existing camelCase aliases expected by some plugins
 // @ts-ignore - augmenting the window at runtime
 window.svelteStore = svelteStore
+// @ts-ignore - augmenting the window at runtime
+window.svelteInternal = svelteInternal
 
 // Extend global window scope
 declare global {
@@ -87,9 +104,9 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
-    // Global for plugins that externalize "svelte/store"
+    // @ts-ignore
+    svelteLegacy?: typeof legacySvelte
     svelteStore: typeof svelteStore
-    // Global for plugins that externalize Svelte internals
     svelteInternal: typeof svelteInternal
     INIT_TIME: number
   }

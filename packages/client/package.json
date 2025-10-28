@@ -38,6 +38,7 @@
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
+    "svelte-legacy": "npm:svelte@4.2.20",
     "svelte-spa-router": "^4.0.1"
   },
   "devDependencies": {
