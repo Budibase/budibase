@@ -1,4 +1,4 @@
-import { configs, HTTPError } from "@budibase/backend-core"
+import { configs, context, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 import sdk from ".."
 
@@ -56,6 +56,10 @@ export async function addModel(model: {
         output_cost_per_token: 0,
         guardrails: [],
       },
+      model_info: {
+        created_at: new Date().toISOString(),
+        created_by: (context.getIdentity() as any)?.email,
+      },
     }),
   }
 
@@ -93,6 +97,10 @@ export async function updateModel(model: {
         input_cost_per_token: 0,
         output_cost_per_token: 0,
         guardrails: [],
+      },
+      model_info: {
+        updated_at: new Date().toISOString(),
+        updated_by: (context.getIdentity() as any)?.email,
       },
     }),
   }
