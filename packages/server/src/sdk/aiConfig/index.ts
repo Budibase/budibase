@@ -137,7 +137,7 @@ export async function update(
   }
 
   await liteLLM.updateModel({
-    id,
+    llmModelId: config.liteLLMModelId,
     provider: config.provider,
     name: config.model,
     baseUrl: config.baseUrl,

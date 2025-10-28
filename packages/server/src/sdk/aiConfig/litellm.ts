@@ -69,17 +69,17 @@ export async function addModel(model: {
 }
 
 export async function updateModel(model: {
-  id: string
+  llmModelId: string
   provider: string
   name: string
   baseUrl: string
   apiKey: string | undefined
-}): Promise<string> {
-  const { id, name, baseUrl, provider, apiKey } = model
+}) {
+  const { llmModelId, name, baseUrl, provider, apiKey } = model
   await validateConfig(model)
 
   const requestOptions = {
-    method: "POST",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer sk-1234",
@@ -106,11 +106,15 @@ export async function updateModel(model: {
   }
 
   const res = await fetch(
-    `http://localhost:4000/model/${id}/update`,
+    `http://localhost:4000/model/${llmModelId}/update`,
     requestOptions
   )
   const json = await res.json()
-  return json.model_id
+  if (json.status === "error") {
+    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+
+    throw new HTTPError(`Error updating configuration: ${trimmedError}`, 400)
+  }
 }
 
 export async function validateConfig(model: {
