@@ -72,6 +72,7 @@
         config,
         name: buildDatasourceName(template, spec),
         uiMetadata: { iconUrl: template.icon },
+        isRestTemplate: true,
       })
 
       if (!datasource?._id) {
