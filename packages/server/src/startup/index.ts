@@ -28,7 +28,6 @@ import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
-import { backfillPluginOrigins } from "./backfill/plugins"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -188,16 +187,6 @@ export async function startup(
 
   console.log("Initialising JS runner")
   jsRunner.init()
-
-  // Optionally backfill GitHub origins for existing plugins so future update checks work
-  if (env.ENABLE_PLUGIN_GH_ORIGIN_BACKFILL) {
-    try {
-      console.log("Backfilling plugin origins (GitHub)")
-      await backfillPluginOrigins()
-    } catch (err) {
-      logging.logAlert("Plugin origin backfill failed", err as Error)
-    }
-  }
 
   STATE = "ready"
 }

@@ -1,4 +1,3 @@
-import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import { plugins as pluginCore } from "@budibase/backend-core"
 import {
   PluginType,
@@ -13,10 +12,11 @@ import {
   DeletePluginResponse,
   PluginMetadata,
 } from "@budibase/types"
+import { sdk as pro } from "@budibase/pro"
+import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
 import sdk from "../../../sdk"
-import { sdk as pro } from "@budibase/pro"
 
 export async function upload(
   ctx: UserCtx<UploadPluginRequest, UploadPluginResponse>
@@ -120,6 +120,16 @@ export async function create(
 }
 
 export async function fetch(ctx: UserCtx<void, FetchPluginResponse>) {
+  if (env.ENABLE_PLUGIN_GH_ORIGIN_BACKFILL) {
+    try {
+      await sdk.plugins.backfillPluginOrigins()
+    } catch (err) {
+      console.log(
+        "Plugin origin backfill failed during fetch",
+        err instanceof Error ? err.message : String(err)
+      )
+    }
+  }
   ctx.body = await sdk.plugins.fetch()
 }
 
