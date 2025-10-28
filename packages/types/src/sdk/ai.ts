@@ -1,5 +1,7 @@
 import { Message } from "../api"
 import { AgentChat, AIProvider } from "../documents"
+import { ComponentPayload } from "./ai/components"
+export * from "./ai/components"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
@@ -130,11 +132,4 @@ export interface LLMStreamChunk {
   messages?: Message[]
   chat?: AgentChat
   tokensUsed?: number
-}
-
-export interface ComponentPayload {
-  name: string
-  props: Record<string, unknown>
-  slot: string
-  children?: ComponentPayload[]
 }

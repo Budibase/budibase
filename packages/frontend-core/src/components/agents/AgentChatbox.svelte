@@ -2,7 +2,6 @@
   import { MarkdownViewer } from "@budibase/bbui"
   import ComponentPreview from "./Component/Component.svelte"
   import type { AgentChat, ComponentPayload } from "@budibase/types"
-  import { createEventDispatcher, onDestroy, onMount } from "svelte"
 
   export let chat: AgentChat
   export let loading: boolean = false
@@ -12,39 +11,6 @@
     componentPreview?: ComponentPayload
   }
   $: messages = chat.messages as ChatMessage[]
-
-  const dispatch = createEventDispatcher()
-
-  const handleComponentInteraction = (event: Event) => {
-    const detail = (event as CustomEvent).detail
-    if (!detail || typeof detail !== "object") {
-      return
-    }
-    if (detail.type === "button") {
-      const label =
-        typeof detail.payload?.label === "string"
-          ? detail.payload.label
-          : "Button clicked"
-      dispatch("interaction", {
-        label,
-        payload: detail.payload,
-      })
-    }
-  }
-
-  onMount(() => {
-    window.addEventListener(
-      "budibase-agent-interaction",
-      handleComponentInteraction
-    )
-  })
-
-  onDestroy(() => {
-    window.removeEventListener(
-      "budibase-agent-interaction",
-      handleComponentInteraction
-    )
-  })
 </script>
 
 <div class="chatbox">

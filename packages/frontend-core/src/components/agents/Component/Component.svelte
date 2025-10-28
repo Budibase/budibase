@@ -8,14 +8,14 @@
 </script>
 
 <div class="component-preview">
-  {#if data.name === "Button"}
+  {#if data.type === "Button"}
     <Button {data} />
-  {:else if data.name === "Form"}
+  {:else if data.type === "Form"}
     <Form {data} />
-  {:else if data.name === "MultiButton"}
+  {:else if data.type === "MultiButton"}
     <MultiButton {data} />
   {:else}
-    <p class="unsupported">Unsupported component: {data.name}</p>
+    <p class="unsupported">Unsupported component: {data.type}</p>
   {/if}
 </div>
 
