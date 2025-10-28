@@ -5,11 +5,13 @@
   import type { ComponentPayload } from "@budibase/types"
 
   export let data: ComponentPayload
+
+  $: props = data.props as any
 </script>
 
 <div class="component-preview">
   {#if data.type === "Button"}
-    <Button {data} />
+    <Button {...props} />
   {:else if data.type === "Form"}
     <Form {data} />
   {:else if data.type === "MultiButton"}
