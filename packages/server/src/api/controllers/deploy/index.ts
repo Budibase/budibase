@@ -104,7 +104,7 @@ async function initDeployedApp(prodAppId: string) {
     promises.push(
       enableCronOrEmailTrigger(prodAppId, automation).catch(err => {
         throw new Error(
-          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
           { cause: err }
         )
       })
