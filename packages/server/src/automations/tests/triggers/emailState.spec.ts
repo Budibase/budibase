@@ -44,21 +44,6 @@ describe("email state persistence", () => {
       )
     })
 
-    it("returns undefined when the stored UID is not numeric", async () => {
-      const automationId = "auto-invalid"
-      const tryGet = jest
-        .fn()
-        .mockResolvedValue({ lastSeenUid: "not-a-number" })
-      getWorkspaceDBMock.mockReturnValueOnce({ tryGet })
-
-      const result = await getLastSeenUid(automationId)
-
-      expect(result).toBeUndefined()
-      expect(tryGet).toHaveBeenCalledWith(
-        `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}`
-      )
-    })
-
     it("returns the stored UID when present", async () => {
       const automationId = "auto-valid"
       const tryGet = jest.fn().mockResolvedValue({ lastSeenUid: 42 })

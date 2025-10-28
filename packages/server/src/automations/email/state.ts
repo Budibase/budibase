@@ -14,14 +14,9 @@ export const getLastSeenUid = async (
   automationId: string
 ): Promise<number | undefined> => {
   const db = context.getWorkspaceDB()
-  const doc =
-    (await db.tryGet<MailboxStateDoc>(getMetadataId(automationId))) || null
+  const doc = await db.tryGet<MailboxStateDoc>(getMetadataId(automationId))
 
-  if (!doc || typeof doc.lastSeenUid !== "number") {
-    return undefined
-  }
-
-  return doc.lastSeenUid
+  return doc?.lastSeenUid
 }
 
 export const setLastSeenUid = async (

@@ -39,11 +39,11 @@ export const checkMail = async (
     messagesWithUid.sort((a, b) => a.uid - b.uid)
     const latestUid = messagesWithUid[messagesWithUid.length - 1]?.uid
 
-    if (latestUid == null) {
+    if (!latestUid) {
       return { proceed: false, reason: "no message id" }
     }
 
-    if (lastSeenUid == null) {
+    if (!lastSeenUid) {
       await setLastSeenUid(stateKey, latestUid)
       return { proceed: false, reason: "init, now waiting" }
     }
