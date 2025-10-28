@@ -15,7 +15,6 @@ export const definition: AutomationStepDefinition = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.API_REQUEST,
   internal: true,
-  new: true,
   features: {
     [AutomationFeature.LOOPING]: true,
   },
