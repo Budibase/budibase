@@ -1,4 +1,4 @@
-import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
+import { AutomationStatus, Table } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import * as automation from "../index"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
