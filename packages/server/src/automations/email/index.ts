@@ -37,27 +37,38 @@ export const checkMail = async (
     }
 
     messagesWithUid.sort((a, b) => a.uid - b.uid)
-    const { message, uid: messageUid } =
-      messagesWithUid[messagesWithUid.length - 1]
+    const latestUid = messagesWithUid[messagesWithUid.length - 1]?.uid
+
+    if (latestUid == null) {
+      return { proceed: false, reason: "no message id" }
+    }
 
     if (lastSeenUid == null) {
-      await setLastSeenUid(stateKey, messageUid)
+      await setLastSeenUid(stateKey, latestUid)
       return { proceed: false, reason: "init, now waiting" }
     }
 
-    if (messageUid <= lastSeenUid) {
+    const unseenMessages = messagesWithUid.filter(
+      ({ uid }) => uid > lastSeenUid
+    )
+
+    if (!unseenMessages.length) {
       return { proceed: false, reason: "no new mail" }
     }
 
-    await setLastSeenUid(stateKey, messageUid)
+    const filteredMessages = unseenMessages.filter(({ message }) =>
+      checkSender(trigger.inputs.from, message)
+    )
 
-    if (!checkSender(trigger.inputs.from, message)) {
+    await setLastSeenUid(stateKey, latestUid)
+
+    if (!filteredMessages.length) {
       return { proceed: false, reason: "sender email does not match expected" }
     }
 
     return {
       proceed: true,
-      messages: messagesWithUid.map(({ message }) => toOutputFields(message)),
+      messages: filteredMessages.map(({ message }) => toOutputFields(message)),
     }
   } catch (err) {
     console.log(err)

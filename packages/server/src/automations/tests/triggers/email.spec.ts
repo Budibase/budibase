@@ -289,6 +289,126 @@ describe("checkMail behaviour", () => {
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
   })
+
+  it("should emit matching messages even when later emails fail the sender check", async () => {
+    const { checkMail, mocks } = await loadCheckMail()
+    const initialMessage = { uid: 40 }
+    const matchingMessage = {
+      uid: 41,
+      envelope: { from: [{ address: "sender@example.com" }] },
+    }
+    const unexpectedMessage = {
+      uid: 42,
+      envelope: { from: [{ address: "other@example.com" }] },
+    }
+    const fields = { from: "sender@example.com" }
+
+    mocks.fetchMessagesMock
+      .mockResolvedValueOnce([initialMessage])
+      .mockResolvedValueOnce([matchingMessage, unexpectedMessage])
+    mocks.checkSenderMock.mockReturnValueOnce(true).mockReturnValueOnce(false)
+    mocks.toOutputFieldsMock.mockReturnValueOnce(fields)
+    mocks.getLastSeenUidMock
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(40)
+
+    await checkMail(
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
+      "automation-mixed-send"
+    )
+    const { proceed, messages } = await checkMail(
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
+      "automation-mixed-send"
+    )
+
+    expect(proceed).toBeTrue()
+    expect(messages).toEqual([fields])
+    expect(mocks.checkSenderMock).toHaveBeenNthCalledWith(
+      1,
+      "sender@example.com",
+      matchingMessage
+    )
+    expect(mocks.checkSenderMock).toHaveBeenNthCalledWith(
+      2,
+      "sender@example.com",
+      unexpectedMessage
+    )
+    expect(mocks.toOutputFieldsMock).toHaveBeenCalledTimes(1)
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      1,
+      "automation-mixed-send",
+      40
+    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      2,
+      "automation-mixed-send",
+      42
+    )
+  })
+
+  it("should filter out non-matching senders when a later email matches", async () => {
+    const { checkMail, mocks } = await loadCheckMail()
+    const initialMessage = { uid: 50 }
+    const unexpectedMessage = {
+      uid: 51,
+      envelope: { from: [{ address: "other@example.com" }] },
+    }
+    const matchingMessage = {
+      uid: 52,
+      envelope: { from: [{ address: "sender@example.com" }] },
+    }
+    const fields = { from: "sender@example.com" }
+
+    mocks.fetchMessagesMock
+      .mockResolvedValueOnce([initialMessage])
+      .mockResolvedValueOnce([unexpectedMessage, matchingMessage])
+    mocks.checkSenderMock.mockReturnValueOnce(false).mockReturnValueOnce(true)
+    mocks.toOutputFieldsMock.mockReturnValueOnce(fields)
+    mocks.getLastSeenUidMock
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(50)
+
+    await checkMail(
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
+      "automation-filtered-send"
+    )
+    const { proceed, messages } = await checkMail(
+      {
+        inputs: { from: "sender@example.com" },
+      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
+      "automation-filtered-send"
+    )
+
+    expect(proceed).toBeTrue()
+    expect(messages).toEqual([fields])
+    expect(mocks.checkSenderMock).toHaveBeenNthCalledWith(
+      1,
+      "sender@example.com",
+      unexpectedMessage
+    )
+    expect(mocks.checkSenderMock).toHaveBeenNthCalledWith(
+      2,
+      "sender@example.com",
+      matchingMessage
+    )
+    expect(mocks.toOutputFieldsMock).toHaveBeenCalledTimes(1)
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      1,
+      "automation-filtered-send",
+      50
+    )
+    expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
+      2,
+      "automation-filtered-send",
+      52
+    )
+  })
 })
 
 describe("checkSender", () => {
