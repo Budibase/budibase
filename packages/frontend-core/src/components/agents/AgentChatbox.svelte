@@ -164,6 +164,7 @@
               messages: [...updatedChat.messages, previewMessage],
             }
 
+            streamingContent = ""
             scrollToBottom()
             return
           }
@@ -228,6 +229,9 @@
               messages: updatedMessages,
             }
             chat = updatedChat
+            streamingContent = ""
+            isToolCall = false
+            toolCallInfo = ""
             scrollToBottom()
             return
           }
