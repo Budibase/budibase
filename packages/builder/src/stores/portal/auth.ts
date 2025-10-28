@@ -65,7 +65,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     this.setUser(undefined, true)
   }
 
-  async setOrganisation(tenantId: string = "default") {
+  async setOrganisation(tenantId = "default") {
     const prevId = get(this.store).tenantId
     auth.update(store => {
       store.tenantId = tenantId
