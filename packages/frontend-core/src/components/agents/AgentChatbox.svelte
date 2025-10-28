@@ -1,6 +1,6 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
-  import ComponentPreview from "./Component/Component.svelte"
+  import Component from "./Component/Component.svelte"
   import type { AgentChat, ComponentPayload } from "@budibase/types"
 
   export let chat: AgentChat
@@ -8,7 +8,7 @@
   export let botAvatar: any = undefined
 
   type ChatMessage = (typeof chat.messages)[number] & {
-    componentPreview?: ComponentPayload
+    component?: ComponentPayload
   }
   $: messages = chat.messages as ChatMessage[]
 </script>
@@ -31,9 +31,9 @@
               : "[Empty message]"}
         />
       </div>
-    {:else if message.role === "assistant" && message.componentPreview}
+    {:else if message.role === "assistant" && message.component}
       <div class="message assistant">
-        <ComponentPreview data={message.componentPreview} />
+        <Component data={message.component} />
       </div>
     {:else if message.role === "assistant" && message.content}
       <div class="message assistant">

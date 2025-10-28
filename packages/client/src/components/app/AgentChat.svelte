@@ -5,11 +5,7 @@
   import { appStore } from "@/stores/app"
   import { get } from "svelte/store"
   import { tick } from "svelte"
-  import type {
-    AgentChat,
-    ComponentPreviewPayload,
-    UserMessage,
-  } from "@budibase/types"
+  import type { AgentChat, UserMessage } from "@budibase/types"
 
   export let intro: string = "Ask our assistant anything about this app."
   export let placeholder: string = "Ask Budibase..."
@@ -74,11 +70,10 @@
         workspaceId,
         chunk => {
           if (chunk.type === "component") {
-            const componentData = chunk.component as ComponentPreviewPayload
             const previewMessage = {
               role: "assistant" as const,
               content: null,
-              componentPreview: componentData,
+              component: chunk.component,
             }
 
             chat = {
@@ -99,10 +94,7 @@
             streamingContent += chunk.content || ""
             const updatedMessages = [...updatedChat.messages]
             const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (
-              lastMessage?.role === "assistant" &&
-              !lastMessage.componentPreview
-            ) {
+            if (lastMessage?.role === "assistant" && !lastMessage.component) {
               lastMessage.content =
                 streamingContent + (isToolCall ? toolCallInfo : "")
             } else {
@@ -215,7 +207,6 @@
         />
         <Button
           primary
-          class="chat-send"
           on:click={() => sendMessage()}
           disabled={loading || !inputValue.trim()}
         >

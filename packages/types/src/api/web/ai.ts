@@ -19,7 +19,7 @@ export interface AssistantMessage {
   role: "assistant"
   content: string | null
   tool_calls?: openai.ChatCompletionMessageToolCall[]
-  componentPreview?: ComponentPayload
+  component?: ComponentPayload
 }
 
 export interface ToolMessage {

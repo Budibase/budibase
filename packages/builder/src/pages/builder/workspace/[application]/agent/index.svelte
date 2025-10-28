@@ -155,7 +155,7 @@
             const previewMessage = {
               role: "assistant",
               content: null,
-              componentPreview: componentData,
+              component: componentData,
             } as any
 
             chat = {
