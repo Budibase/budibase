@@ -246,65 +246,65 @@
     </div>
     <div class="automations">
       {#each filteredAutomations as automation}
-      <a
-        class="automation"
-        class:favourite={automation.favourite?._id}
-        href={$url(`./${automation._id}`)}
-        on:contextmenu={e => openContextMenu(e, automation)}
-        class:active={showHighlight && selectedAutomation === automation}
-      >
-        <Body size="S" color="var(--spectrum-global-color-gray-900)">
-          <div class="auto-name">
-            {automation.name}
-            {#if automation._id && targetApp?.automationErrors?.[automation._id]}
-              <StatusLight
-                color="var(--spectrum-global-color-static-red-600)"
+        <a
+          class="automation"
+          class:favourite={automation.favourite?._id}
+          href={$url(`./${automation._id}`)}
+          on:contextmenu={e => openContextMenu(e, automation)}
+          class:active={showHighlight && selectedAutomation === automation}
+        >
+          <Body size="S" color="var(--spectrum-global-color-gray-900)">
+            <div class="auto-name">
+              {automation.name}
+              {#if automation._id && targetApp?.automationErrors?.[automation._id]}
+                <StatusLight
+                  color="var(--spectrum-global-color-static-red-600)"
+                  size="M"
+                />
+              {/if}
+            </div>
+          </Body>
+          <div>{getTriggerFriendlyName(automation)}</div>
+          <div>
+            <PublishStatusBadge
+              status={automation.publishStatus.state}
+              loading={automationChangingStatus === automation._id}
+            />
+          </div>
+          <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
+            <span>
+              {capitalise(durationFromNow(automation.updatedAt || ""))}
+            </span>
+          </AbsTooltip>
+          <div class="actions">
+            <div class="ctx-btn">
+              <Icon
+                name="More"
                 size="M"
+                hoverable
+                on:click={e => openContextMenu(e, automation)}
               />
-            {/if}
-          </div>
-        </Body>
-        <div>{getTriggerFriendlyName(automation)}</div>
-        <div>
-          <PublishStatusBadge
-            status={automation.publishStatus.state}
-            loading={automationChangingStatus === automation._id}
-          />
-        </div>
-        <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
-          <span>
-            {capitalise(durationFromNow(automation.updatedAt || ""))}
-          </span>
-        </AbsTooltip>
-        <div class="actions">
-          <div class="ctx-btn">
-            <Icon
-              name="More"
-              size="M"
-              hoverable
-              on:click={e => openContextMenu(e, automation)}
-            />
-          </div>
+            </div>
 
-          <span class="favourite-btn">
-            <FavouriteResourceButton
-              favourite={automation.favourite}
-              position={TooltipPosition.Left}
-              noWrap
-            />
-          </span>
-        </div>
-      </a>
-    {/each}
-    {#if !automations.length}
-      <NoResults
-        ctaText="Create your first automation"
-        onCtaClick={() => createModal.show()}
-        resourceType="automation"
-      >
-        No automations yet! Build your first automation to get started.
-      </NoResults>
-    {/if}
+            <span class="favourite-btn">
+              <FavouriteResourceButton
+                favourite={automation.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
+            </span>
+          </div>
+        </a>
+      {/each}
+      {#if !automations.length}
+        <NoResults
+          ctaText="Create your first automation"
+          onCtaClick={() => createModal.show()}
+          resourceType="automation"
+        >
+          No automations yet! Build your first automation to get started.
+        </NoResults>
+      {/if}
     </div>
   </div>
 </div>

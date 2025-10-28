@@ -318,46 +318,46 @@
     </div>
     <div class="apps">
       {#each filteredWorkspaceApps as app}
-    <a
-      class="app"
-      class:favourite={app.favourite?._id}
-      href={`./design/${app._id}`}
-      on:contextmenu={e => openContextMenu(e, app)}
-      class:active={showHighlight && selectedWorkspaceApp === app}
-    >
-      <Body size="S" color="var(--spectrum-global-color-gray-900)"
-        >{app.name}</Body
-      >
-      <div>
-        <PublishStatusBadge
-          status={app.publishStatus.state}
-          loading={appChangingStatus === app._id}
-        />
-      </div>
-      <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
-        <span>
-          {capitalise(durationFromNow(app.updatedAt || ""))}
-        </span>
-      </AbsTooltip>
-      <div class="actions">
-        <div class="ctx-btn">
-          <Icon
-            name="More"
-            size="M"
-            hoverable
-            on:click={e => openContextMenu(e, app)}
-          />
-        </div>
+        <a
+          class="app"
+          class:favourite={app.favourite?._id}
+          href={`./design/${app._id}`}
+          on:contextmenu={e => openContextMenu(e, app)}
+          class:active={showHighlight && selectedWorkspaceApp === app}
+        >
+          <Body size="S" color="var(--spectrum-global-color-gray-900)"
+            >{app.name}</Body
+          >
+          <div>
+            <PublishStatusBadge
+              status={app.publishStatus.state}
+              loading={appChangingStatus === app._id}
+            />
+          </div>
+          <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
+            <span>
+              {capitalise(durationFromNow(app.updatedAt || ""))}
+            </span>
+          </AbsTooltip>
+          <div class="actions">
+            <div class="ctx-btn">
+              <Icon
+                name="More"
+                size="M"
+                hoverable
+                on:click={e => openContextMenu(e, app)}
+              />
+            </div>
 
-        <span class="favourite-btn">
-          <FavouriteResourceButton
-            favourite={app.favourite}
-            position={TooltipPosition.Left}
-            noWrap
-          />
-        </span>
-      </div>
-    </a>
+            <span class="favourite-btn">
+              <FavouriteResourceButton
+                favourite={app.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
+            </span>
+          </div>
+        </a>
       {/each}
       {#if !workspaceApps.length}
         <NoResults
