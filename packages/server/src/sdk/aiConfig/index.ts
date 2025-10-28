@@ -80,7 +80,7 @@ export async function create(
 
   const db = context.getGlobalDB()
 
-  const modelId = await liteLLM.addModal({
+  const modelId = await liteLLM.addModel({
     provider: config.provider,
     name: config.model,
     baseUrl: config.baseUrl,

@@ -27,13 +27,13 @@ export async function generateKey(
   return { id: json.token_id, secret: json.key }
 }
 
-export async function addModal(model: {
+export async function addModel(model: {
   provider: string
   name: string
   baseUrl: string
   apiKey: string | undefined
 }): Promise<string> {
-  const { name, baseUrl, provider } = model
+  const { name, baseUrl, provider, apiKey } = model
   await validateConfig(model)
 
   const requestOptions = {
@@ -46,6 +46,7 @@ export async function addModal(model: {
       model_name: name,
       litellm_params: {
         api_base: baseUrl,
+        api_key: apiKey,
         custom_llm_provider: provider,
         model: `${provider}/${name}`,
         use_in_pass_through: false,
@@ -131,5 +132,4 @@ export async function syncKeyModels() {
 
     throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
   }
-
 }
