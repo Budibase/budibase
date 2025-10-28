@@ -14,12 +14,12 @@ const SortOrderPretty = {
 }
 
 export const definition: AutomationStepDefinition = {
-  description: "Query rows from the database",
-  icon: "magnifying-glass",
-  name: "Query Rows",
-  tagline: "Query rows from {{inputs.enriched.table.name}} table",
+  description: "Get a single row from the database",
+  icon: "box-arrow-down",
+  name: "Get Row",
+  tagline: "Get a row from {{inputs.enriched.table.name}} table",
   type: AutomationStepType.ACTION,
-  stepId: AutomationActionStepId.QUERY_ROWS,
+  stepId: AutomationActionStepId.GET_ROW,
   internal: true,
   features: {
     [AutomationFeature.LOOPING]: true,
@@ -49,27 +49,22 @@ export const definition: AutomationStepDefinition = {
           enum: Object.values(SortOrder),
           pretty: Object.values(SortOrderPretty),
         },
-        limit: {
-          type: AutomationIOType.NUMBER,
-          title: "Limit",
-          customType: AutomationCustomIOType.QUERY_LIMIT,
-        },
       },
       required: ["tableId"],
     },
     outputs: {
       properties: {
-        rows: {
-          type: AutomationIOType.ARRAY,
-          customType: AutomationCustomIOType.ROWS,
-          description: "The rows that were found",
+        row: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
+          description: "The row that was found",
         },
         success: {
           type: AutomationIOType.BOOLEAN,
           description: "Whether the query was successful",
         },
       },
-      required: ["rows", "success"],
+      required: ["row", "success"],
     },
   },
 }
