@@ -1,6 +1,6 @@
 import * as rowController from "../../api/controllers/row"
 import * as tableController from "../../api/controllers/table"
-import { buildCtx } from "./utils"
+import { buildCtx, hasNullFilters } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   FieldType,
@@ -18,13 +18,6 @@ async function getTable(appId: string, tableId: string) {
   })
   await tableController.find(ctx)
   return ctx.body
-}
-
-function hasNullFilters(filters: any[]) {
-  return (
-    filters.length === 0 ||
-    filters.some(filter => filter.value === null || filter.value === "")
-  )
 }
 
 export async function run({

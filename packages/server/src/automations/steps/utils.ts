@@ -1,6 +1,13 @@
 import { ContextEmitter } from "@budibase/types"
 import { Response } from "node-fetch"
 
+export function hasNullFilters(filters: any[] = []) {
+  return (
+    filters.length === 0 ||
+    filters.some(filter => filter.value === null || filter.value === "")
+  )
+}
+
 export async function getFetchResponse(fetched: Response) {
   let status = fetched.status,
     message

@@ -6,8 +6,6 @@ import { GetGlobalSelfResponse } from "@budibase/types"
 import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { UserAvatar } from "@budibase/frontend-core"
-import { PortalAppsStore } from "@/stores/portal/apps"
-import { StoreApp } from "@/types"
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -139,7 +137,6 @@ export const orgRoutes = (
     },
     {
       section: "Recaptcha",
-      access: () => isAdmin,
       path: "recaptcha",
       icon: "shield-check",
       comp: Pages.get("recaptcha"),
@@ -208,21 +205,10 @@ export const orgRoutes = (
   }))
 }
 
-export const appRoutes = (
-  appStore: AppMetaState,
-  appsStore: PortalAppsStore
-): Route[] => {
+export const appRoutes = (appStore: AppMetaState): Route[] => {
   if (!appStore?.appId) {
     return []
   }
-
-  const getBackupErrors = (apps: StoreApp[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
-    return target?.backupErrors || {}
-  }
-
-  const backupErrors = getBackupErrors(appsStore.apps || [], appStore?.appId)
-  const backupErrorCount = Object.keys(backupErrors).length
 
   return [
     {
@@ -235,7 +221,6 @@ export const appRoutes = (
           path: "backups",
           comp: Pages.get("backups"),
           title: "Backups",
-          error: () => backupErrorCount > 0,
         },
         {
           title: "OAuth2",
@@ -276,22 +261,7 @@ export const appRoutes = (
 export const filterRoutes = (routes: Route[]): Route[] =>
   routes
     .filter(e => (typeof e.access === "function" ? e.access() : true))
-    .map(route => {
-      const filteredChildRoutes = route?.routes
-        ? filterRoutes(route.routes)
-        : []
-
-      // Check if any child has an error
-      const hasChildError = filteredChildRoutes.some(
-        child => child.error?.() || false
-      )
-
-      // Check if this route itself has an error
-      const hasOwnError = route.error?.() || false
-
-      return {
-        ...route,
-        ...(route?.routes ? { routes: filteredChildRoutes } : {}),
-        ...(hasOwnError || hasChildError ? { error: () => true } : {}),
-      }
-    })
+    .map(route => ({
+      ...route,
+      ...(route?.routes ? { routes: filterRoutes(route.routes) } : {}),
+    }))

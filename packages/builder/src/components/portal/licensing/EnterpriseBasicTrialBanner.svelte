@@ -30,11 +30,11 @@
       <div transition:fly={{ y: -30 }}>
         <Banner
           type={BANNER_TYPES.INFO}
-          extraButtonAction={licensing.goToUpgradePage}
-          extraButtonText={"View plans"}
+          extraLinkText={"Please select a plan."}
+          extraLinkAction={licensing.goToUpgradePage}
           showCloseButton={false}
         >
-          Your free trial will end {daysUntilCancel()}. Please select a plan.
+          Your free trial will end {daysUntilCancel()}
         </Banner>
       </div>
     {/if}

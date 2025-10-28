@@ -326,6 +326,19 @@ export type QueryRowsStepOutputs = BaseAutomationOutputs & {
   rows?: Row[]
 }
 
+export type GetRowStepInputs = {
+  tableId: string
+  filters?: SearchFilters
+  "filters-def"?: any
+  sortColumn?: string
+  sortOrder?: SortOrder
+  onEmptyFilter?: EmptyFilterOption
+}
+
+export type GetRowStepOutputs = BaseAutomationOutputs & {
+  row?: Row | null
+}
+
 export type SmtpEmailStepInputs = {
   to: string
   from: string

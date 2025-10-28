@@ -45,31 +45,6 @@ vi.mock("@/stores/portal", () => {
   }
 })
 
-vi.mock("@/stores/builder", () => {
-  const mockAppStore = writable()
-  const appStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
-  }
-
-  const mockWorkspaceAppStore = writable({
-    selectedWorkspaceAppId: null,
-    selectedWorkspaceApp: null,
-    workspaceApps: [],
-  })
-  const workspaceAppStore = {
-    subscribe: mockWorkspaceAppStore.subscribe,
-    update: mockWorkspaceAppStore.update,
-    set: mockWorkspaceAppStore.set,
-  }
-
-  return {
-    appStore,
-    workspaceAppStore,
-  }
-})
-
 function setupEnv(hosting, features = {}, flags = {}) {
   admin.set({ cloud: hosting === Hosting.CLOUD })
   licensing.set({ ...defaultFeatures, ...features })

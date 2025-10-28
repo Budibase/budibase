@@ -256,6 +256,10 @@ export const publishWorkspace = async function (
       }
       replication = new dbCore.Replication(config)
       const devDb = context.getDevWorkspaceDB()
+
+      const devTablesIds = await sdk.tables.getAllInternalTableIds()
+      await replication.resolveInconsistencies(devTablesIds)
+
       await devDb.compact()
       await replication.replicate(
         replication.appReplicateOpts({

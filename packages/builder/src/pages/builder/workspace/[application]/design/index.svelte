@@ -7,7 +7,7 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
   import { buildLiveUrl } from "@/helpers/urls"
-  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
     appStore,

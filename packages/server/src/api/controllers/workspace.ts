@@ -117,21 +117,19 @@ function checkWorkspaceUrl(
 
 function checkWorkspaceName(
   ctx: UserCtx,
-  workspaces: Workspace[],
+  apps: Workspace[],
   name: string,
-  currentWorkspaceId?: string
+  currentAppId?: string
 ) {
   // TODO: Replace with Joi
   if (!name) {
     ctx.throw(400, "Name is required")
   }
-  if (currentWorkspaceId) {
-    workspaces = workspaces.filter(
-      (ws: Workspace) => ws.appId !== currentWorkspaceId
-    )
+  if (currentAppId) {
+    apps = apps.filter((app: any) => app.appId !== currentAppId)
   }
-  if (workspaces.some((app: Workspace) => app.name === name)) {
-    ctx.throw(400, "Workspace name is already in use.")
+  if (apps.some((app: any) => app.name === name)) {
+    ctx.throw(400, "App name is already in use.")
   }
 }
 
@@ -366,14 +364,22 @@ async function performWorkspaceCreate(
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
-  const isOnboarding = body.isOnboarding === "true"
-  const useTemplate = body.useTemplate === "true"
-  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
+  let isOnboarding = false
+  if (typeof body.isOnboarding === "string") {
+    isOnboarding = body.isOnboarding === "true"
+  } else if (typeof body.isOnboarding === "boolean") {
+    isOnboarding = body.isOnboarding
+  }
 
-  const appName = isOnboarding ? DEFAULT_WORKSPACE_NAME : name
+  let useTemplate = false
+  if (typeof body.useTemplate === "string") {
+    useTemplate = body.useTemplate === "true"
+  } else if (typeof body.useTemplate === "boolean") {
+    useTemplate = body.useTemplate
+  }
 
-  checkWorkspaceName(ctx, workspaces, appName)
-  const appUrl = sdk.workspaces.getAppUrl({ name: appName, url })
+  checkWorkspaceName(ctx, workspaces, name)
+  const appUrl = sdk.workspaces.getAppUrl({ name, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
@@ -391,6 +397,7 @@ async function performWorkspaceCreate(
     }
   }
 
+  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const workspaceId = getDevWorkspaceID(generateWorkspaceID(tenantId))
 
   return await context.doInWorkspaceContext(workspaceId, async () => {
@@ -409,7 +416,7 @@ async function performWorkspaceCreate(
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: appName,
+      name: isOnboarding ? DEFAULT_WORKSPACE_NAME : name,
       url: appUrl,
       template: templateKey,
       instance,
@@ -482,7 +489,7 @@ async function performWorkspaceCreate(
     if (isOnboarding) {
       try {
         await addSampleDataDocs()
-        await createOnboardingDefaultWorkspaceApp("Welcome app")
+        await createOnboardingDefaultWorkspaceApp(name)
         await addOnboardingWelcomeScreen()
 
         // Fetch the latest version of the workspace after these changes
@@ -651,8 +658,7 @@ async function workspacePostCreate(
 
   // If the user is a creator, we need to give them access to the new app
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
-    const globalId = dbCore.getGlobalIDFromUserMetadataID(ctx.user._id!)
-    const user = await users.UserDB.getUser(globalId)
+    const user = await users.UserDB.getUser(ctx.user._id!)
     await users.addAppBuilder(user, workspace.appId)
   }
 }

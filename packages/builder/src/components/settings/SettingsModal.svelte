@@ -183,17 +183,11 @@
                 <span
                   class="root-nav"
                   class:selected
-                  class:error={route?.error?.()}
                   style={route.color ? `--routeColour:${route.color}` : ""}
                 >
-                  {#if (route.new || route?.error?.()) && settingsSideBarCollapsed}
+                  {#if route.new && settingsSideBarCollapsed}
                     <span class="status-indicator">
-                      <StatusLight
-                        color={route?.error?.()
-                          ? "var(--spectrum-global-color-static-red-600)"
-                          : "#433872"}
-                        size="M"
-                      />
+                      <StatusLight color="#433872" size="M" />
                     </span>
                   {/if}
                   <SideNavLink
@@ -222,12 +216,7 @@
                     </svelte:fragment>
 
                     <svelte:fragment slot="right">
-                      {#if route.error?.()}
-                        <StatusLight
-                          color={"var(--spectrum-global-color-static-red-600)"}
-                          size="M"
-                        />
-                      {:else if route.new}
+                      {#if route.new}
                         <NewPill />
                       {/if}
                     </svelte:fragment>
@@ -261,10 +250,6 @@
 
   .status-indicator :global(.spectrum-StatusLight::before) {
     border: 0.5px solid #5645a1;
-  }
-
-  .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
-    border: unset;
   }
 
   .setting-main .setting-page {

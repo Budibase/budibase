@@ -1,8 +1,9 @@
 <script>
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { tables, datasources } from "@/stores/builder"
+  import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
   import { goto } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { DataEnvironmentMode } from "@budibase/types"
 
   export let datasource
 
@@ -34,6 +35,7 @@
   async function saveTable() {
     try {
       submitted = true
+      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
       const table = await tables.save(buildDefaultTable(name, datasource._id))
       await datasources.fetch()
       $goto(`../../table/${table._id}`)

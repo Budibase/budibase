@@ -5,7 +5,6 @@ import { derived } from "svelte/store"
 import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
 import { appStore } from "@/stores/builder/app"
-import { appsStore } from "@/stores/portal/apps"
 import {
   appRoutes,
   filterRoutes,
@@ -14,8 +13,8 @@ import {
 } from "@/settings/routes"
 
 export const permittedRoutes = derived(
-  [admin, auth, appStore, appsStore],
-  ([$admin, $auth, $appStore, $appsStore]) => {
+  [admin, auth, appStore],
+  ([$admin, $auth, $appStore]) => {
     const user = $auth?.user
 
     if (!user) {
@@ -23,7 +22,7 @@ export const permittedRoutes = derived(
     }
     const routes = [
       ...globalRoutes(user),
-      ...appRoutes($appStore, $appsStore),
+      ...appRoutes($appStore),
       ...orgRoutes(user, $admin),
     ]
     return filterRoutes(routes)

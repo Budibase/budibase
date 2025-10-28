@@ -27,7 +27,7 @@
   import RestBodyInput from "./RestBodyInput.svelte"
   import { capitalise, confirm } from "@/helpers"
   import { onMount } from "svelte"
-  import restUtils from "@/helpers/data/utils"
+  import restUtils, { customQueryIconColor } from "@/helpers/data/utils"
   import {
     PaginationLocations,
     PaginationTypes,
@@ -94,6 +94,14 @@
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
+  $: verbOptions = Object.keys(queryConfig || {}).map(verb => {
+    const label = queryConfig?.[verb]?.displayName || capitalise(verb)
+    return {
+      value: verb,
+      label,
+      colour: customQueryIconColor(verb),
+    }
+  })
   $: url = buildUrl(query?.fields?.path, breakQs)
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
@@ -557,9 +565,10 @@
             <Select
               bind:value={query.queryVerb}
               on:change={() => {}}
-              options={Object.keys(queryConfig)}
-              getOptionLabel={verb =>
-                queryConfig[verb]?.displayName || capitalise(verb)}
+              options={verbOptions}
+              getOptionValue={option => option.value}
+              getOptionLabel={option => option.label}
+              getOptionColour={option => option.colour}
             />
           </div>
           <div class="url">
