@@ -11,7 +11,6 @@
     enrichedApps,
   } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
-  import { appStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
   import {

@@ -35,7 +35,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     })
   }
 
-  setUser(user?: GetGlobalSelfResponse, sessionTerminated: boolean = false) {
+  setUser(user?: GetGlobalSelfResponse, sessionTerminated = false) {
     this.set({
       loaded: true,
       user: user,
