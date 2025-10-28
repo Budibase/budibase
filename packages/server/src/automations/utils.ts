@@ -78,8 +78,6 @@ export async function processEvent(job: AutomationJob) {
               job.data.automation._id!
             )
             if (proceed === false) {
-              const { reason } = checkMailResult
-              console.log("automation skipped", `reason: ${reason}`)
               return { skipped: true }
             }
 

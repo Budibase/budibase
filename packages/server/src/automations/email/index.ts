@@ -19,7 +19,7 @@ export const checkMail = async (
   try {
     const lastSeenUid = await getLastSeenUid(stateKey)
     const messages = await fetchMessages(smtpClient, lockKey, lastSeenUid)
-    console.log("[email trigger] fetched messages", messages)
+    console.info(`[email trigger] fetched ${messages.length} messages`)
 
     if (!messages.length) {
       return { proceed: false, reason: "no new mail" }
