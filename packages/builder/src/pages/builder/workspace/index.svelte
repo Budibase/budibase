@@ -1,5 +1,5 @@
 <script>
   import { redirect } from "@roxi/routify"
 
-  $redirect("../builder")
+  $redirect("../portal")
 </script>
