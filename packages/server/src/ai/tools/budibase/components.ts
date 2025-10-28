@@ -33,7 +33,7 @@ export default [
   newTool({
     name: "build_component",
     description:
-      "Allow rendering components from the Budibase UI. Call this when you want to present an interactive component to the user.",
+      "Allow rendering components from the Budibase UI. Call this when you want to present an interactive component to the user. This will return a payload that will be used in the frontend to render. Do not try to render or return plain HTML.",
     parameters: z.object({
       component: componentSchema.describe("The component to render."),
       message: z
