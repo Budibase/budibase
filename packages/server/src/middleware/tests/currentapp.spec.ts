@@ -55,7 +55,7 @@ function mockAuthWithNoCookie() {
         },
       },
       utils: {
-        getAppIdFromCtx: jest.fn(),
+        getWorkspaceIdFromCtx: jest.fn(),
         setCookie: jest.fn(),
         getCookie: jest.fn(),
       },
@@ -75,7 +75,7 @@ function mockAuthWithCookie() {
         dbExists: () => true,
       },
       utils: {
-        getAppIdFromCtx: () => {
+        getWorkspaceIdFromCtx: () => {
           return "app_test"
         },
         setCookie: jest.fn(),
@@ -190,7 +190,7 @@ describe("Current app middleware", () => {
             dbExists: () => true,
           },
           utils: {
-            getAppIdFromCtx: () => {
+            getWorkspaceIdFromCtx: () => {
               return "app_test"
             },
             setCookie: jest.fn(),
