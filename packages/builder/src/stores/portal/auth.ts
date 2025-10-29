@@ -207,7 +207,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     const store = get(this.store)
     const adminStore = get(admin)
     const host = window.location.host
-    if (!adminStore.baseUrl) {
+    if (host.includes("localhost:") || !adminStore.baseUrl) {
       // ignore local dev
       return
     }
