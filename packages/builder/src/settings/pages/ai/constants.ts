@@ -64,7 +64,4 @@ export const ConfigMap = {
   Custom: {
     baseUrl: "",
   },
-  Chat: {
-    baseUrl: "",
-  },
 }

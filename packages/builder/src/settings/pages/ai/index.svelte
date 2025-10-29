@@ -108,6 +108,12 @@
     provider: AIProvider,
     updates?: Partial<Omit<ProviderConfig, "active" | "isDefault">>
   ) {
+    // Ensure that only one provider is active at a time.
+    for (const config of Object.values(aiConfig.config)) {
+      config.active = false
+      config.isDefault = false
+    }
+
     const { key, config } = getProviderConfig(provider)
     aiConfig.config[key] = {
       ...config,
