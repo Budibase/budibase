@@ -14,7 +14,7 @@ import {
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
-import environment from "packages/server/src/environment"
+import environment from "../../../environment"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]

@@ -7,7 +7,7 @@ import {
   PASSWORD_REPLACEMENT,
   UserCtx,
 } from "@budibase/types"
-import sdk from "packages/server/src/sdk"
+import sdk from "../../../sdk"
 
 const sanitizeConfig = (
   config: CustomAIProviderConfig
