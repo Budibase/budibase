@@ -70,16 +70,19 @@ async function loadRollupFromSkeleton(): Promise<string | undefined> {
   const tempDir = path.join(os.tmpdir(), `bb-skeleton-${Date.now()}`)
   try {
     fs.mkdirSync(tempDir)
-  } catch (_) {}
+  } catch (err: any) {
+    console.error(
+      "Failed to create temporary directory:",
+      err instanceof Error ? err.message : err
+    )
+    return undefined
+  }
 
   const types = ["component", "datasource", "automation"]
   for (const t of types) {
     const extractDir = path.join(tempDir, t)
     try {
-      fs.mkdirSync(extractDir)
-      // Reuse existing helper to fetch and extract latest skeleton of given type
       await getSkeleton(t, extractDir)
-      // Try to find rollup.config.mjs within extracted skeleton
       let rollupPath = path.join(extractDir, "rollup.config.mjs")
       if (!fs.existsSync(rollupPath)) {
         rollupPath = findFileRecursive(extractDir, "rollup.config.mjs") || ""
@@ -97,9 +100,6 @@ async function loadRollupFromSkeleton(): Promise<string | undefined> {
 
 export async function migrateRollupConfig(): Promise<MigrationResult> {
   const rollupFile = findRollupFile()
-  if (!rollupFile) {
-    // We'll create a brand new rollup.config.mjs
-  }
   let originalSource = ""
   if (rollupFile) {
     originalSource = fs.readFileSync(rollupFile, "utf8")
