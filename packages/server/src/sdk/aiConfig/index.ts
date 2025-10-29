@@ -109,7 +109,7 @@ export async function update(
   if (!id) {
     throw new HTTPError("id cannot be empty", 400)
   }
-  await ensureLiteLLMConfigured()
+
   const existing = await find(id)
   if (!existing) {
     throw new HTTPError("Config to edit not found", 404)
@@ -159,8 +159,8 @@ async function getDefault(): Promise<CustomAIProviderConfig | undefined> {
 }
 
 async function getLiteLLMSecretKey() {
-  const liteLLMConfig = await ensureLiteLLMConfigured()
-  return liteLLMConfig.secretKey
+  const liteLLMConfig = await configs.getSettingsConfigDoc()
+  return liteLLMConfig.config.liteLLM?.secretKey
 }
 
 export async function getLLMOrThrow() {
@@ -168,10 +168,19 @@ export async function getLLMOrThrow() {
   if (!aiConfig) {
     throw new HTTPError("Chat config not found", 422)
   }
+
+  const secretKey = await getLiteLLMSecretKey()
+  if (!secretKey) {
+    throw new HTTPError(
+      "LiteLLM should be configured. Contact support if the issue persists.",
+      422
+    )
+  }
+
   const llm = await ai.getChatLLM({
     model: aiConfig.liteLLMModelId,
     baseUrl: environment.LITELLM_URL,
-    apiKey: await getLiteLLMSecretKey(),
+    apiKey: secretKey,
   })
   return llm
 }
