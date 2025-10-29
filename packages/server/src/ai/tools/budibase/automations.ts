@@ -37,11 +37,7 @@ export default [
         .describe(
           "Input fields/data to pass to the app action automation trigger as JSON object. Ensure the schema for the automation is known before triggering it."
         ),
-      timeout: z
-        .number()
-        .optional()
-        .nullable()
-        .describe("Timeout in seconds (optional)"),
+      timeout: z.number().optional().describe("Timeout in seconds (optional)"),
     }),
     handler: async ({
       automationId,
