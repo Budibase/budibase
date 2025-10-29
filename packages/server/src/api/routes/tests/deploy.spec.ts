@@ -582,8 +582,17 @@ describe("/api/deploy", () => {
     updateSpy.mockClear()
 
     const updatedTable = cloneDeep(table)
+    const existingFormulaField = updatedTable.schema[formulaFieldName]
+
+    if (
+      !existingFormulaField ||
+      existingFormulaField.type !== FieldType.FORMULA
+    ) {
+      throw new Error("expected formula field metadata")
+    }
+
     updatedTable.schema[formulaFieldName] = {
-      ...updatedTable.schema[formulaFieldName],
+      ...existingFormulaField,
       formula: updatedFormula,
     }
     await config.api.table.save(updatedTable)
