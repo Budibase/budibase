@@ -14,6 +14,7 @@ import {
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
+import environment from "packages/server/src/environment"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -65,7 +66,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
   const model = await ai.getChatLLM({
     model: aiConfig.liteLLMModelId,
-    baseUrl: "http://localhost:4000",
+    baseUrl: environment.LITELLM_URL,
     apiKey: await sdk.aiConfigs.getLiteLLMSecretKey(),
   })
   const chat = ctx.request.body
