@@ -293,12 +293,7 @@ export async function applyPluginUpdates(
 
     let directory: string | undefined
     try {
-      const release = await fetchLatestRelease(
-        plugin.origin.repo,
-        plugin.origin.etag,
-        token,
-        { force: true }
-      )
+      const release = await fetchLatestRelease(plugin.origin.repo, token)
 
       if (!release || !shouldUpgrade(plugin.version, release.version)) {
         continue
