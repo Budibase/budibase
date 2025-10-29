@@ -19,7 +19,6 @@ export interface AssistantMessage {
   role: "assistant"
   content: string | null
   tool_calls?: openai.ChatCompletionMessageToolCall[]
-  component?: ComponentPayload
 }
 
 export interface ToolMessage {
@@ -28,11 +27,18 @@ export interface ToolMessage {
   content: string
 }
 
+export interface ComponentMessage {
+  role: "component"
+  component: ComponentPayload
+  message?: string | null
+}
+
 export type Message =
   | SystemMessage
   | UserMessage
   | AssistantMessage
   | ToolMessage
+  | ComponentMessage
 
 export type Tool<T extends z.ZodType = z.ZodType> = Required<ToolArgs<T>>
 

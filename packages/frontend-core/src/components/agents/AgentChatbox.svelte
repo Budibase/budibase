@@ -10,9 +10,8 @@
   import { tick } from "svelte"
   import type {
     AgentChat,
-    ComponentPayload,
+    ComponentMessage,
     LLMStreamChunk,
-    UserMessage,
   } from "@budibase/types"
 
   const dispatch = createEventDispatcher<{
@@ -49,15 +48,11 @@
   export let showErrorInline: boolean = true
   export let inputValue: string = ""
 
-  type ChatMessage = (typeof chat.messages)[number] & {
-    component?: ComponentPayload
-  }
-
   let chatContainer: HTMLDivElement | null = null
   let textareaElement: HTMLTextAreaElement | null = null
   let observer: MutationObserver | null = null
 
-  $: messages = (chat?.messages ?? []) as ChatMessage[]
+  $: messages = chat?.messages ?? []
 
   const scrollToBottom = async () => {
     await tick()
@@ -118,12 +113,10 @@
       return
     }
 
-    const userMessage: UserMessage = { role: "user", content }
-
     let updatedChat: AgentChat = chat ?? { title: "", messages: [] }
     updatedChat = {
       ...updatedChat,
-      messages: [...(updatedChat.messages ?? []), userMessage],
+      messages: [...(updatedChat.messages ?? []), { role: "user", content }],
     }
 
     chat = updatedChat
@@ -148,10 +141,9 @@
           dispatch("chunk", { chunk })
 
           if (chunk.type === "component") {
-            const previewMessage = {
-              role: "assistant" as const,
-              content: null,
-              component: chunk.component,
+            const previewMessage: ComponentMessage = {
+              role: "component",
+              component: chunk.component!,
             }
 
             chat = {
@@ -173,7 +165,7 @@
             streamingContent += chunk.content || ""
             const updatedMessages = [...updatedChat.messages]
             const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant" && !lastMessage?.component) {
+            if (lastMessage?.role === "assistant") {
               lastMessage.content =
                 streamingContent + (isToolCall ? toolCallInfo : "")
             } else {
@@ -322,13 +314,13 @@
                     : "[Empty message]"}
               />
             </div>
-          {:else if message.role === "assistant" && message.component}
-            <div class="message assistant">
-              <Component data={message.component} />
-            </div>
           {:else if message.role === "assistant" && message.content}
             <div class="message assistant">
               <MarkdownViewer value={message.content} />
+            </div>
+          {:else if message.role === "component"}
+            <div class="message assistant">
+              <Component data={message.component} />
             </div>
           {/if}
         {/each}
