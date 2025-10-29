@@ -20,6 +20,7 @@
 
   onMount(async () => {
     try {
+      await auth.validateTenantId()
       await admin.init()
       await auth.checkQueryString()
     } catch (error) {
