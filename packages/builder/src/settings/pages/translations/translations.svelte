@@ -187,12 +187,9 @@
 
 <Layout noPadding>
   <div class="settings">
-    <div class="heading">
-      <Heading size="S">Workspace translations</Heading>
-    </div>
     <Body size="S">
-      Update the text shown across your workspace. Leave fields blank to use the
-      Budibase defaults.
+      Define custom text for user-facing elements across apps in this workspace.
+      Blank fields will fall back to Budibase defaults.
     </Body>
     <Divider noMargin />
     <div class="filters">
