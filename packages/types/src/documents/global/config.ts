@@ -212,13 +212,13 @@ export type ConfigTypeToConfig<T extends ConfigType> =
       : T extends ConfigType.IMAP
         ? IMAPConfig
         : T extends ConfigType.GOOGLE
-        ? GoogleConfig
-        : T extends ConfigType.OIDC
-          ? OIDCConfig
-          : T extends ConfigType.OIDC_LOGOS
-            ? OIDCLogosConfig
-            : T extends ConfigType.SCIM
-              ? SCIMConfig
-              : T extends ConfigType.AI
-                ? AIConfig
-                : never
+          ? GoogleConfig
+          : T extends ConfigType.OIDC
+            ? OIDCConfig
+            : T extends ConfigType.OIDC_LOGOS
+              ? OIDCLogosConfig
+              : T extends ConfigType.SCIM
+                ? SCIMConfig
+                : T extends ConfigType.AI
+                  ? AIConfig
+                  : never

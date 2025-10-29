@@ -56,12 +56,14 @@
           config: {
             secure: true,
             port: 993,
-            mailbox: "INBOX",
           },
         }
       }
-      requireAuth =
-        !!(imapConfig && "config" in imapConfig && imapConfig.config.auth)
+      requireAuth = !!(
+        imapConfig &&
+        "config" in imapConfig &&
+        imapConfig.config.auth
+      )
       await admin.getChecklist()
       notifications.success(`Settings cleared`)
     } catch (error) {
@@ -77,8 +79,11 @@
       return
     }
     imapConfig = config
-    requireAuth =
-      !!(imapConfig && "config" in imapConfig && imapConfig.config.auth)
+    requireAuth = !!(
+      imapConfig &&
+      "config" in imapConfig &&
+      imapConfig.config.auth
+    )
   })
 
   $: if (imapConfig && requireAuth && !imapConfig.config.auth) {
@@ -109,10 +114,6 @@
         <Input type="number" bind:value={imapConfig.config.port} />
       </div>
       <div class="form-row">
-        <Label size="L">Mailbox folder</Label>
-        <Input bind:value={imapConfig.config.mailbox} />
-      </div>
-      <div class="form-row">
         <Label size="L">Require sign in</Label>
         <Checkbox bind:value={requireAuth} />
       </div>
@@ -130,11 +131,7 @@
 
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveImap}>Save</Button>
-      <Button
-        secondary
-        on:click={deleteImap}
-        disabled={!imapConfig?._id}
-      >
+      <Button secondary on:click={deleteImap} disabled={!imapConfig?._id}>
         Reset
       </Button>
     </div>
