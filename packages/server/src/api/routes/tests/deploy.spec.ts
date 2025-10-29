@@ -10,7 +10,16 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
+import * as staticFormulaController from "../../controllers/row/staticFormula"
 import * as setup from "./utilities"
+
+jest.mock("../../controllers/row/staticFormula", () => {
+  const actual = jest.requireActual("../../controllers/row/staticFormula")
+  return {
+    ...actual,
+    updateAllFormulasInTable: jest.fn(actual.updateAllFormulasInTable),
+  }
+})
 
 describe("/api/deploy", () => {
   let config = setup.getConfig()
@@ -487,5 +496,112 @@ describe("/api/deploy", () => {
     )
 
     expect(prodRowAfterPublish[formulaFieldName]).toBe(6)
+  })
+
+  it("does not rerun static formula updates when definitions are unchanged", async () => {
+    const updateSpy =
+      staticFormulaController.updateAllFormulasInTable as jest.Mock
+
+    const amountFieldName = "amount"
+    const formulaFieldName = "amountPlusOne"
+    const formula = "{{ add amount 1 }}"
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: {
+          [amountFieldName]: {
+            name: amountFieldName,
+            type: FieldType.NUMBER,
+            constraints: {},
+          },
+          [formulaFieldName]: {
+            name: formulaFieldName,
+            type: FieldType.FORMULA,
+            formula,
+            formulaType: FormulaType.STATIC,
+            responseType: FieldType.NUMBER,
+          },
+        },
+      })
+    )
+
+    await config.api.row.save(table._id!, {
+      tableId: table._id!,
+      name: "Dev row",
+      description: "Row in development",
+      [amountFieldName]: 5,
+    })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    updateSpy.mockClear()
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const formulaCallsForTable = updateSpy.mock.calls.filter(
+      ([tableArg]) => tableArg._id === table._id
+    )
+    expect(formulaCallsForTable).toHaveLength(0)
+  })
+
+  it("recomputes static formulas in production when the definition changes", async () => {
+    const updateSpy =
+      staticFormulaController.updateAllFormulasInTable as jest.Mock
+
+    const amountFieldName = "amount"
+    const formulaFieldName = "amountPlusOne"
+    const initialFormula = "{{ add amount 1 }}"
+    const updatedFormula = "{{ add amount 2 }}"
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: {
+          [amountFieldName]: {
+            name: amountFieldName,
+            type: FieldType.NUMBER,
+            constraints: {},
+          },
+          [formulaFieldName]: {
+            name: formulaFieldName,
+            type: FieldType.FORMULA,
+            formula: initialFormula,
+            formulaType: FormulaType.STATIC,
+            responseType: FieldType.NUMBER,
+          },
+        },
+      })
+    )
+
+    const row = await config.api.row.save(table._id!, {
+      tableId: table._id!,
+      name: "Dev row",
+      description: "Row in development",
+      [amountFieldName]: 5,
+    })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    updateSpy.mockClear()
+
+    const updatedTable = cloneDeep(table)
+    updatedTable.schema[formulaFieldName] = {
+      ...updatedTable.schema[formulaFieldName],
+      formula: updatedFormula,
+    }
+    await config.api.table.save(updatedTable)
+
+    updateSpy.mockClear()
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const formulaCallsForTable = updateSpy.mock.calls.filter(
+      ([tableArg]) => tableArg._id === table._id
+    )
+    expect(formulaCallsForTable.length).toBeGreaterThan(0)
+
+    const prodRowAfterPublish = await config.withHeaders(
+      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      async () => await config.api.row.get(table._id!, row._id!)
+    )
+
+    expect(prodRowAfterPublish[formulaFieldName]).toBe(7)
   })
 })
