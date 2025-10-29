@@ -277,23 +277,6 @@
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
-            {#if getOptionIcon(option, idx)}
-              <span class="option-extra icon">
-                {#if useOptionIconImage}
-                  <img
-                    class="icon-dims"
-                    src={getOptionIcon(option, idx)}
-                    alt="icon"
-                  />
-                {:else}
-                  <Icon
-                    size="M"
-                    color="var(--spectrum-global-color-gray-600)"
-                    name={getOptionIcon(option, idx)}
-                  />
-                {/if}
-              </span>
-            {/if}
             {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
               <span class="option-extra icon">
                 <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
@@ -352,10 +335,6 @@
 </Popover>
 
 <style>
-  .icon-dims {
-    height: 15px;
-    width: auto;
-  }
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
