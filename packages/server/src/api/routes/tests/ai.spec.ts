@@ -13,7 +13,6 @@ import {
   AttachmentSubType,
   ConfigType,
   CustomAIProviderConfig,
-  DocumentType,
   Feature,
   FieldType,
   License,
@@ -23,7 +22,7 @@ import {
   ProviderConfig,
   RelationshipType,
 } from "@budibase/types"
-import { context, docIds } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
 import {
@@ -604,6 +603,35 @@ describe("BudibaseAI", () => {
       const { deleted } = await config.api.ai.deleteConfig(created._id!)
       expect(deleted).toBe(true)
       expect(deleteScope.isDone()).toBe(true)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(0)
+    })
+
+    it("validates configuration", async () => {
+      const failingScope = nock("http://localhost:4000")
+        .post("/key/generate")
+        .reply(200, { token_id: "key-4", key: "secret-4" })
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: {
+            error: "Connection refused\nTraceback...",
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.createConfig(
+        {
+          ...defaultRequest,
+          name: "Broken Config",
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(failingScope.isDone()).toBe(true)
+      expect(errorResponse.message).toContain("Error validating configuration")
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(0)
