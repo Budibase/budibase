@@ -29,8 +29,10 @@ export async function getSkeleton(type: string, name: string) {
   const url = await getSkeletonUrl(type)
   const tarballFile = join(os.tmpdir(), "skeleton.tar.gz")
 
+  // download the full skeleton tarball
   fs.writeFileSync(tarballFile, await download(url))
   fs.mkdirSync(name)
+  // extract it and get what we need
   await tar.extract({
     file: tarballFile,
     C: name,
