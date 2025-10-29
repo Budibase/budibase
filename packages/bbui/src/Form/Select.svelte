@@ -43,6 +43,7 @@
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let loading: boolean | undefined = false
+  export let searchPlaceholder: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -84,6 +85,7 @@
     {onOptionMouseenter}
     {onOptionMouseleave}
     {tooltipMessage}
+    {searchPlaceholder}
     on:change={onChange}
     on:click
   />

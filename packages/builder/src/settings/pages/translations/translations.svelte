@@ -23,6 +23,7 @@
     userMenu: "User menu",
     profileModal: "Profile modal",
     passwordModal: "Password modal",
+    picker: "Picker",
   } as const
 
   const categoryKeys = Object.keys(categoryLabels) as TranslationCategory[]

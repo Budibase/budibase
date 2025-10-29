@@ -7,6 +7,7 @@
     type FieldSchema,
     FieldType,
   } from "@budibase/types"
+  import { createWorkspaceTranslationStore } from "@budibase/frontend-core"
   import type { FieldApi, FieldState } from "@/types"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
@@ -44,6 +45,7 @@
     valueColumn,
     customOptions
   )
+  const pickerLabels = createWorkspaceTranslationStore("picker")
 
   const expand = (values?: string[] | string): string[] => {
     if (!values) {
@@ -94,6 +96,7 @@
         {placeholder}
         {options}
         {autocomplete}
+        searchPlaceholder={$pickerLabels.searchPlaceholder}
       />
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup

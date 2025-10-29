@@ -1,6 +1,7 @@
 import { userMenuTranslations } from "./userMenu"
 import { profileModalTranslations } from "./profileModal"
 import { passwordModalTranslations } from "./passwordModal"
+import { pickerTranslations } from "./picker"
 import type {
   TranslationCategory,
   TranslationDefinition,
@@ -12,6 +13,7 @@ export {
   userMenuTranslations,
   profileModalTranslations,
   passwordModalTranslations,
+  pickerTranslations,
 }
 
 // Central export of all translation definitions across modules.
@@ -20,6 +22,7 @@ export const translations: TranslationDefinition[] = [
   ...userMenuTranslations,
   ...profileModalTranslations,
   ...passwordModalTranslations,
+  ...pickerTranslations,
 ]
 
 // Build a category -> translation[] lookup for efficient access.

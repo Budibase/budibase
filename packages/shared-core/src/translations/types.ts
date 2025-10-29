@@ -1,4 +1,8 @@
-export type TranslationCategory = "userMenu" | "profileModal" | "passwordModal"
+export type TranslationCategory =
+  | "userMenu"
+  | "profileModal"
+  | "passwordModal"
+  | "picker"
 
 export interface TranslationDefinitionInput {
   key: string

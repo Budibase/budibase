@@ -24,6 +24,7 @@
   export let loading: boolean = false
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let searchPlaceholder: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -124,4 +125,5 @@
   {loading}
   {onOptionMouseenter}
   {onOptionMouseleave}
+  searchPlaceholder={searchPlaceholder ?? "Search"}
 />

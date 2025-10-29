@@ -18,12 +18,15 @@
     type Row,
     type UIFieldValidationRule,
   } from "@budibase/types"
-  import { fetchData, Utils } from "@budibase/frontend-core"
-  import { getContext } from "svelte"
+  import {
+    fetchData,
+    Utils,
+    createWorkspaceTranslationStore,
+  } from "@budibase/frontend-core"
+  import { getContext, createEventDispatcher } from "svelte"
   import Field from "./Field.svelte"
   import type { FieldApi, FieldState } from "@/types"
   import { utils } from "@budibase/shared-core"
-  import { createEventDispatcher } from "svelte"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -48,7 +51,10 @@
   export let tableId: string | undefined = undefined
   export let defaultRows: Row[] | undefined = []
 
-  const { API } = getContext("sdk")
+  const sdk = (getContext("sdk") as any) ?? {}
+  const { API } = sdk
+
+  const pickerLabels = createWorkspaceTranslationStore("picker")
 
   const dispatch = createEventDispatcher()
 
@@ -93,6 +99,12 @@
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
   $: primaryDisplayField = primaryDisplay || tableDefinition?.primaryDisplay
+  $: relationshipPickerPlaceholder = primaryDisplayField
+    ? $pickerLabels.searchByFieldPlaceholder.replace(
+        "{field}",
+        primaryDisplayField
+      )
+    : $pickerLabels.searchPlaceholder
 
   // Build our options map
   $: rows = $fetch?.rows || []
@@ -454,6 +466,7 @@
       {autocomplete}
       bind:searchTerm
       bind:open
+      searchPlaceholder={relationshipPickerPlaceholder}
       on:change={handleChange}
     />
   {/if}
