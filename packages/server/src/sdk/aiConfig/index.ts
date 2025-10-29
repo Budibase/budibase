@@ -1,10 +1,12 @@
 import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import {
   ConfigType,
   CustomAIProviderConfig,
   DocumentType,
   PASSWORD_REPLACEMENT,
 } from "@budibase/types"
+import environment from "../../environment"
 import * as liteLLM from "./litellm"
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
@@ -18,13 +20,6 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
-}
-
-export async function getDefault(): Promise<
-  CustomAIProviderConfig | undefined
-> {
-  const allConfigs = await fetch()
-  return allConfigs.find(c => c.isDefault)
 }
 
 export async function find(id: string): Promise<CustomAIProviderConfig> {
@@ -66,11 +61,6 @@ async function ensureLiteLLMConfigured() {
     await context.getGlobalDB().put(storedConfig)
   }
   return storedConfig.config.liteLLM
-}
-
-export async function getLiteLLMSecretKey() {
-  const liteLLMConfig = await ensureLiteLLMConfigured()
-  return liteLLMConfig.secretKey
 }
 
 export async function create(
@@ -156,4 +146,27 @@ export async function remove(id: string) {
   await db.remove(existing)
 
   await liteLLM.syncKeyModels()
+}
+
+async function getDefault(): Promise<CustomAIProviderConfig | undefined> {
+  const allConfigs = await fetch()
+  return allConfigs.find(c => c.isDefault)
+}
+
+async function getLiteLLMSecretKey() {
+  const liteLLMConfig = await ensureLiteLLMConfigured()
+  return liteLLMConfig.secretKey
+}
+
+export async function getLLMOrThrow() {
+  const aiConfig = await getDefault()
+  if (!aiConfig) {
+    throw new HTTPError("Chat config not found", 422)
+  }
+  const llm = await ai.getChatLLM({
+    model: aiConfig.liteLLMModelId,
+    baseUrl: environment.LITELLM_URL,
+    apiKey: await getLiteLLMSecretKey(),
+  })
+  return llm
 }
