@@ -366,7 +366,8 @@ export function migrateSchemaJson(): MigrationResult {
   if (!needsUpdate) {
     return {
       changed: false,
-      message: "schema.json metadata already includes svelteMajor: 5. Skipping.",
+      message:
+        "schema.json metadata already includes svelteMajor: 5. Skipping.",
     }
   }
 
@@ -403,7 +404,11 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   } else {
     report.push("package.json appears to already depend on Svelte 5.")
   }
-  if (projectedVersion && currentVersion && projectedVersion !== currentVersion) {
+  if (
+    projectedVersion &&
+    currentVersion &&
+    projectedVersion !== currentVersion
+  ) {
     report.push(
       `Will bump package.json version from ${currentVersion} to ${projectedVersion}.`
     )
