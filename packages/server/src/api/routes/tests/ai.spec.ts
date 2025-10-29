@@ -31,6 +31,7 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import environment from "../../../environment"
 
 function dedent(str: string) {
   return str
@@ -502,7 +503,7 @@ describe("BudibaseAI", () => {
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
-      const liteLLMScope = nock("http://localhost:4000")
+      const liteLLMScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "key-1", key: "secret-1" })
         .post("/health/test_connection")
@@ -531,7 +532,7 @@ describe("BudibaseAI", () => {
     })
 
     it("updates a custom config while preserving the stored API key", async () => {
-      const creationScope = nock("http://localhost:4000")
+      const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "key-2", key: "secret-2" })
         .post("/health/test_connection")
@@ -544,7 +545,7 @@ describe("BudibaseAI", () => {
       const created = await config.api.ai.createConfig({ ...defaultRequest })
       expect(creationScope.isDone()).toBe(true)
 
-      const updateScope = nock("http://localhost:4000")
+      const updateScope = nock(environment.LITELLM_URL)
         .post("/health/test_connection")
         .reply(200, { status: "success" })
         .patch(`/model/${created.liteLLMModelId}/update`)
@@ -578,7 +579,7 @@ describe("BudibaseAI", () => {
     })
 
     it("deletes a custom config and syncs LiteLLM models", async () => {
-      const creationScope = nock("http://localhost:4000")
+      const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "key-3", key: "secret-3" })
         .post("/health/test_connection")
@@ -591,7 +592,7 @@ describe("BudibaseAI", () => {
       const created = await config.api.ai.createConfig({ ...defaultRequest })
       expect(creationScope.isDone()).toBe(true)
 
-      const deleteScope = nock("http://localhost:4000")
+      const deleteScope = nock(environment.LITELLM_URL)
         .post("/key/update", body => {
           expect(body).toMatchObject({
             models: [],
@@ -609,7 +610,7 @@ describe("BudibaseAI", () => {
     })
 
     it("validates configuration", async () => {
-      const failingScope = nock("http://localhost:4000")
+      const failingScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "key-4", key: "secret-4" })
         .post("/health/test_connection")
