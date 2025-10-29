@@ -7,6 +7,7 @@ import {
   CronTriggerInputs,
   isCronTrigger,
   MetadataType,
+  TestAutomationRequest,
 } from "@budibase/types"
 import { JobId } from "bull"
 import tracer from "dd-trace"
@@ -36,11 +37,11 @@ function loggingArgs(job: AutomationJob) {
 
 export async function processEvent(job: AutomationJob) {
   return tracer.trace("processEvent", async span => {
-    const appId = job.data.event.appId!
+    const workspaceId = job.data.event.appId!
     const automationId = job.data.automation._id!
 
     span.addTags({
-      appId,
+      appId: workspaceId,
       automationId,
       job: {
         id: job.id,
@@ -88,7 +89,7 @@ export async function processEvent(job: AutomationJob) {
     }
 
     return await context.doInAutomationContext({
-      workspaceId: appId,
+      workspaceId,
       automationId,
       task,
     })
@@ -96,13 +97,12 @@ export async function processEvent(job: AutomationJob) {
 }
 
 export async function updateTestHistory(
-  appId: any,
-  automation: any,
-  history: any
+  automation: Automation,
+  history: TestAutomationRequest & { occurredAt: number }
 ) {
   return updateEntityMetadata(
     MetadataType.AUTOMATION_TEST_HISTORY,
-    automation._id,
+    automation._id as string,
     (metadata: any) => {
       if (metadata && Array.isArray(metadata.history)) {
         metadata.history.push(history)
@@ -117,7 +117,7 @@ export async function updateTestHistory(
 }
 
 // end the repetition and the job itself
-export async function disableAllCrons(appId: any) {
+export async function disableAllCrons(appId: string) {
   const promises = []
   const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {

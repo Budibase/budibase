@@ -10,6 +10,7 @@ import {
   AutomationAttachment,
   AutomationStep,
   AutomationStepResult,
+  AutomationStepResultOutputs,
   AutomationStepStatus,
   BaseIOStructure,
   BranchStep,
@@ -120,16 +121,72 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
-export function guardAttachment(attachmentObject: any) {
-  if (
-    attachmentObject &&
-    (!("url" in attachmentObject) || !("filename" in attachmentObject))
-  ) {
-    const providedKeys = Object.keys(attachmentObject).join(", ")
+export function guardAttachment(
+  attachmentObject?: object
+): attachmentObject is AutomationAttachment {
+  if (!attachmentObject) {
+    return false
+  }
+  return true
+}
+
+function deriveFilenameFromUrl(url: string) {
+  try {
+    const pathname = url.startsWith("http") ? new URL(url).pathname : url
+    const parts = pathname.split("/")
+    return parts[parts.length - 1] || ""
+  } catch {
+    return ""
+  }
+}
+
+function normalizeSingleAttachment(
+  input: string | AutomationAttachment
+): AutomationAttachment | null {
+  if (typeof input === "string") {
+    try {
+      const parsed = JSON.parse(input)
+      return normalizeSingleAttachment(parsed)
+    } catch {
+      return { url: input, filename: deriveFilenameFromUrl(input) }
+    }
+  }
+
+  const url: string | undefined = input.url
+  if (!url) {
+    const providedKeys = Object.keys(input).join(", ")
     throw new Error(
       `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
     )
   }
+  const filename: string =
+    input.filename ?? input.name ?? deriveFilenameFromUrl(url)
+
+  return { url, filename }
+}
+
+function normalizeAttachmentValue(
+  value: string | AutomationAttachment | AutomationAttachment[]
+): AutomationAttachment | AutomationAttachment[] | null {
+  if (value == null) return null
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value)
+      return normalizeAttachmentValue(parsed)
+    } catch {
+      return normalizeSingleAttachment(value)
+    }
+  }
+
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map(item => normalizeSingleAttachment(item))
+      .filter(Boolean) as AutomationAttachment[]
+    return normalized
+  }
+
+  return normalizeSingleAttachment(value)
 }
 
 export async function sendAutomationAttachmentsToStorage(
@@ -139,7 +196,7 @@ export async function sendAutomationAttachmentsToStorage(
   const table = await sdk.tables.getTable(tableId)
   const attachmentRows: Record<
     string,
-    AutomationAttachment[] | AutomationAttachment
+    AutomationAttachment[] | AutomationAttachment | null
   > = {}
 
   for (const [prop, value] of Object.entries(row)) {
@@ -149,12 +206,15 @@ export async function sendAutomationAttachmentsToStorage(
       schema?.type === FieldType.ATTACHMENT_SINGLE ||
       schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
-      if (Array.isArray(value)) {
-        value.forEach(item => guardAttachment(item))
-      } else {
-        guardAttachment(value)
+      const normalized = normalizeAttachmentValue(value)
+
+      if (Array.isArray(normalized)) {
+        normalized.forEach(item => guardAttachment(item))
+      } else if (normalized) {
+        guardAttachment(normalized)
       }
-      attachmentRows[prop] = value
+
+      attachmentRows[prop] = normalized
     }
   }
 
@@ -387,8 +447,29 @@ export function processStandardResult(
   result: AutomationStepResult,
   iteration: number
 ): void {
+  let toStore: AutomationStepResult = result
+  if (result.stepId === AutomationActionStepId.BRANCH) {
+    const outputs = result.outputs || ({} as any)
+    const sanitizedOutputs: AutomationStepResultOutputs = {
+      success: outputs.success === false ? false : true,
+    }
+    if (outputs.status !== undefined) {
+      sanitizedOutputs.status = outputs.status
+    }
+    if (outputs.branchName !== undefined) {
+      sanitizedOutputs.branchName = outputs.branchName
+    }
+
+    toStore = {
+      id: result.id,
+      stepId: result.stepId,
+      inputs: {},
+      outputs: sanitizedOutputs,
+    }
+  }
+
   storage.summary.totalProcessed++
-  if (result.outputs.success) {
+  if (toStore.outputs.success) {
     storage.summary.successCount++
   } else {
     storage.summary.failureCount++
@@ -396,22 +477,26 @@ export function processStandardResult(
       storage.summary.firstFailure = {
         iteration,
         error:
-          result.outputs.response ||
-          result.outputs.error ||
-          result.outputs.response?.message ||
+          toStore.outputs.response ||
+          toStore.outputs.error ||
+          toStore.outputs.response?.message ||
           "Unknown error",
       }
     }
   }
 
-  if (result.outputs.summary) {
-    storage.nestedSummaries[result.id].push(result.outputs.summary)
+  if (toStore.outputs.summary) {
+    storage.nestedSummaries[toStore.id].push(toStore.outputs.summary)
   }
 
-  storage.results[result.id].push(result)
+  if (!storage.results[toStore.id]) {
+    storage.results[toStore.id] = []
+  }
+
+  storage.results[toStore.id].push(toStore)
   // If we exceed max, remove the oldest
-  if (storage.results[result.id].length > storage.maxStoredResults) {
-    storage.results[result.id].shift()
+  if (storage.results[toStore.id].length > storage.maxStoredResults) {
+    storage.results[toStore.id].shift()
   }
 }
 

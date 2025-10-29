@@ -7,6 +7,7 @@ jest.mock("@budibase/backend-core", () => {
       listAllObjects: jest.fn(),
       retrieveToTmp: jest.fn().mockResolvedValue("/tmp/file"),
       streamUpload: jest.fn(),
+      streamUploadMany: jest.fn().mockResolvedValue([]),
       upload: jest.fn(),
       deleteFile: jest.fn(),
       getReadStream: jest.fn(),
@@ -25,19 +26,19 @@ jest.mock("fs", () => ({
   promises: {
     readFile: jest.fn(),
   },
+  readdirSync: jest.fn(),
 }))
 
 jest.mock("../../../environment", () => ({
   isDev: jest.fn(),
   isTest: jest.fn(),
-  DEV_USE_CLIENT_FROM_STORAGE: false,
 }))
 
 jest.mock("../filesystem", () => ({
   TOP_LEVEL_PATH: "/mock/top/level/path",
 }))
 
-import { objectStore } from "@budibase/backend-core"
+import { context, features, objectStore } from "@budibase/backend-core"
 import fs from "fs"
 import { ObjectStoreBuckets } from "../../../constants"
 import env from "../../../environment"
@@ -162,35 +163,43 @@ describe("clientLibrary", () => {
       mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
       mockedFs.createReadStream.mockReturnValueOnce("stream5" as any)
 
+      mockedFs.readdirSync.mockReturnValueOnce([
+        "chunk1.js",
+        "notJs.txt",
+        "chunk2.js",
+      ] as any)
+
       mockedEnv.isDev.mockReturnValue(isDev)
 
       const result = await updateClientLibrary(testAppId)
 
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(5)
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
+      expect(mockedFs.readdirSync).toHaveBeenCalledTimes(1)
+
+      expect(mockedObjectStore.streamUploadMany).toHaveBeenCalledTimes(1)
+      expect(mockedObjectStore.streamUploadMany).toHaveBeenCalledWith({
         bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/manifest.json",
-        stream: "stream1",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/budibase-client.js",
-        stream: "stream2",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/budibase-client.new.js",
-        stream: "stream3",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/_dependencies/apexcharts.js",
-        stream: "stream4",
-      })
-      expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: "app_123/_dependencies/html5-qrcode.js",
-        stream: "stream5",
+        files: [
+          {
+            filename: "app_123/manifest.json",
+            stream: "stream1",
+          },
+          {
+            filename: "app_123/budibase-client.js",
+            stream: "stream2",
+          },
+          {
+            filename: "app_123/budibase-client.esm.js",
+            stream: "stream3",
+          },
+          {
+            filename: "app_123/chunks/chunk1.js",
+            stream: "stream4",
+          },
+          {
+            filename: "app_123/chunks/chunk2.js",
+            stream: "stream5",
+          },
+        ],
       })
       expect(result).toEqual({ version: "1.0.0" })
     })
@@ -326,27 +335,44 @@ describe("clientLibrary", () => {
     beforeEach(() => {
       mockedEnv.isDev.mockReturnValue(false)
       mockedEnv.isTest.mockReturnValue(false)
-      ;(mockedEnv as any).DEV_USE_CLIENT_FROM_STORAGE = false
+      features.testutils.setFeatureFlags("", {
+        DEV_USE_CLIENT_FROM_STORAGE: false,
+      })
     })
 
-    it("should serve locally in dev mode", () => {
+    async function getShouldServeLocally() {
+      return await context.doInTenant(
+        "tenantId",
+        async () => await shouldServeLocally()
+      )
+    }
+
+    it("should serve locally in dev mode", async () => {
+      mockedEnv.isDev.mockReturnValueOnce(true)
+      const result = await getShouldServeLocally()
+      expect(result).toBe(true)
+    })
+
+    it("should not serve locally in dev mode if DEV_USE_CLIENT_FROM_STORAGE is true", async () => {
       mockedEnv.isDev.mockReturnValue(true)
-      expect(shouldServeLocally()).toBe(true)
+      const result = await features.testutils.withFeatureFlags(
+        "tenantId",
+        {
+          DEV_USE_CLIENT_FROM_STORAGE: true,
+        },
+        async () => getShouldServeLocally()
+      )
+
+      expect(result).toBe(false)
     })
 
-    it("should not serve locally in dev mode if DEV_USE_CLIENT_FROM_STORAGE is true", () => {
-      mockedEnv.isDev.mockReturnValue(true)
-      ;(mockedEnv as any).DEV_USE_CLIENT_FROM_STORAGE = true
-      expect(shouldServeLocally()).toBe(false)
-    })
-
-    it("should serve locally in test mode", () => {
+    it("should serve locally in test mode", async () => {
       mockedEnv.isTest.mockReturnValue(true)
-      expect(shouldServeLocally()).toBe(true)
+      expect(await shouldServeLocally()).toBe(true)
     })
 
-    it("should not serve locally in production", () => {
-      expect(shouldServeLocally()).toBe(false)
+    it("should not serve locally in production", async () => {
+      expect(await shouldServeLocally()).toBe(false)
     })
   })
 })

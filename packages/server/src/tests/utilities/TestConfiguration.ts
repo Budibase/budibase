@@ -60,6 +60,7 @@ import {
   TableSourceType,
   User,
   UserCtx,
+  UserGroup,
   View,
   Webhook,
   WithRequired,
@@ -266,9 +267,10 @@ export default class TestConfiguration {
     }
   }
 
-  async withApp<R>(app: Workspace | string, f: () => Promise<R>) {
+  async withApp<R>(workspace: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.devWorkspaceId
-    this.devWorkspaceId = typeof app === "string" ? app : app.appId
+    this.devWorkspaceId =
+      typeof workspace === "string" ? workspace : workspace.appId
     return await context.doInWorkspaceContext(this.devWorkspaceId, async () => {
       try {
         return await f()
@@ -374,6 +376,17 @@ export default class TestConfiguration {
         _id: id,
         _rev: rev,
         ...baseGroup,
+      }
+    })
+  }
+
+  async updateGroup(group: UserGroup) {
+    return context.doInTenant(this.tenantId!, async () => {
+      const { id, rev } = await pro.sdk.groups.save(group)
+      return {
+        _id: id,
+        _rev: rev,
+        ...group,
       }
     })
   }
@@ -643,7 +656,10 @@ export default class TestConfiguration {
   }
 
   // WORKSPACE
-  async createWorkspace(name: string, url?: string): Promise<Workspace> {
+  async createWorkspace(
+    name: string = generator.guid(),
+    url?: string
+  ): Promise<Workspace> {
     this.devWorkspaceId = undefined
     this.devWorkspace = await context.doInTenant(
       this.tenantId!,

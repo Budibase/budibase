@@ -4,8 +4,8 @@ import { Ctx } from "@budibase/types"
 export function publicApiMiddleware({
   requiresAppId,
 }: { requiresAppId?: boolean } = {}) {
-  return async (ctx: Ctx, next: any) => {
-    const appId = await utils.getAppIdFromCtx(ctx)
+  return async (ctx: Ctx, next: () => void) => {
+    const appId = await utils.getWorkspaceIdFromCtx(ctx)
     if (requiresAppId && !appId) {
       ctx.throw(
         400,

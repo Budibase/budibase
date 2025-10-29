@@ -189,7 +189,7 @@ export class GitHubClient {
           state,
           labels,
         }) => {
-          const updateData: any = {}
+          const updateData: Record<string, unknown> = {}
           if (title) updateData.title = title
           if (body) {
             // Ensure proper formatting by converting escaped newlines to actual newlines

@@ -54,7 +54,7 @@ function stepSuccess(
   if (step.isLegacyLoop) {
     outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
 
-    const legacyChild: any = (step as LoopV2Step)?.inputs?.children?.[0]
+    const legacyChild = (step as LoopV2Step)?.inputs?.children?.[0]
     const legacyId = legacyChild?.id || step.id
     const legacyStepId = legacyChild?.stepId || step.stepId
     const legacyInputs = inputs || legacyChild?.inputs || step.inputs
@@ -397,6 +397,8 @@ class Orchestrator {
         ctx.stepsById[step.id] = result.outputs
         ctx.stepsByName[step.name || step.id] = result.outputs
 
+        ctx.previous = result.outputs
+
         ctx._stepIndex ||= 0
         ctx.steps[ctx._stepIndex] = result.outputs
         ctx._stepIndex++
@@ -547,7 +549,16 @@ class Orchestrator {
 
             // Process results based on their type
             for (const result of iterationResults) {
-              automationUtils.processStandardResult(storage, result, iterations)
+              const isDirectChild = children.some(
+                child => child.id === result.id
+              )
+              if (isDirectChild) {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations
+                )
+              }
             }
 
             const hasFailures = iterationResults.some(
@@ -686,8 +697,8 @@ class Orchestrator {
 }
 
 export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
-  const appId = job.data.event.appId
-  if (!appId) {
+  const workspaceId = job.data.event.appId
+  if (!workspaceId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
@@ -697,7 +708,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   }
 
   return context.doInAutomationContext({
-    workspaceId: appId,
+    workspaceId,
     automationId,
     task: async () => {
       await context.ensureSnippetContext()

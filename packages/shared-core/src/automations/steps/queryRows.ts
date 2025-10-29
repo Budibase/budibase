@@ -16,7 +16,7 @@ const SortOrderPretty = {
 export const definition: AutomationStepDefinition = {
   description: "Query rows from the database",
   icon: "magnifying-glass",
-  name: "Query rows",
+  name: "Query Rows",
   tagline: "Query rows from {{inputs.enriched.table.name}} table",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.QUERY_ROWS,

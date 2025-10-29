@@ -1,4 +1,5 @@
 export * from "./fileUtils"
+export * from "./fetch"
 import { context } from "@budibase/backend-core"
 import { Document } from "@budibase/types"
 import dayjs from "dayjs"
@@ -38,7 +39,7 @@ export function isDate(str: string) {
   return false
 }
 
-export function removeFromArray(array: any[], element: any) {
+export function removeFromArray(array: unknown[], element: unknown) {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)

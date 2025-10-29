@@ -108,28 +108,30 @@ function checkWorkspaceUrl(
   currentAppId?: string
 ) {
   if (currentAppId) {
-    apps = apps.filter((app: any) => app.appId !== currentAppId)
+    apps = apps.filter(app => app.appId !== currentAppId)
   }
-  if (apps.some((app: any) => app.url === url)) {
+  if (apps.some(app => app.url === url)) {
     ctx.throw(400, "App URL is already in use.")
   }
 }
 
 function checkWorkspaceName(
   ctx: UserCtx,
-  apps: Workspace[],
+  workspaces: Workspace[],
   name: string,
-  currentAppId?: string
+  currentWorkspaceId?: string
 ) {
   // TODO: Replace with Joi
   if (!name) {
     ctx.throw(400, "Name is required")
   }
-  if (currentAppId) {
-    apps = apps.filter((app: any) => app.appId !== currentAppId)
+  if (currentWorkspaceId) {
+    workspaces = workspaces.filter(
+      (ws: Workspace) => ws.appId !== currentWorkspaceId
+    )
   }
-  if (apps.some((app: any) => app.name === name)) {
-    ctx.throw(400, "App name is already in use.")
+  if (workspaces.some((app: Workspace) => app.name === name)) {
+    ctx.throw(400, "Workspace name is already in use.")
   }
 }
 
@@ -340,7 +342,6 @@ export async function fetchAppPackage(
   )
 
   const clientCacheKey = await objectStore.getClientCacheKey(
-    ctx.params.appId,
     application.version
   )
 
@@ -365,22 +366,14 @@ async function performWorkspaceCreate(
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
-  let isOnboarding = false
-  if (typeof body.isOnboarding === "string") {
-    isOnboarding = body.isOnboarding === "true"
-  } else if (typeof body.isOnboarding === "boolean") {
-    isOnboarding = body.isOnboarding
-  }
+  const isOnboarding = body.isOnboarding === "true"
+  const useTemplate = body.useTemplate === "true"
+  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  let useTemplate = false
-  if (typeof body.useTemplate === "string") {
-    useTemplate = body.useTemplate === "true"
-  } else if (typeof body.useTemplate === "boolean") {
-    useTemplate = body.useTemplate
-  }
+  const appName = isOnboarding ? DEFAULT_WORKSPACE_NAME : name
 
-  checkWorkspaceName(ctx, workspaces, name)
-  const appUrl = sdk.workspaces.getAppUrl({ name, url })
+  checkWorkspaceName(ctx, workspaces, appName)
+  const appUrl = sdk.workspaces.getAppUrl({ name: appName, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
@@ -398,7 +391,6 @@ async function performWorkspaceCreate(
     }
   }
 
-  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const workspaceId = getDevWorkspaceID(generateWorkspaceID(tenantId))
 
   return await context.doInWorkspaceContext(workspaceId, async () => {
@@ -417,7 +409,7 @@ async function performWorkspaceCreate(
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: isOnboarding ? DEFAULT_WORKSPACE_NAME : name,
+      name: appName,
       url: appUrl,
       template: templateKey,
       instance,
@@ -490,7 +482,7 @@ async function performWorkspaceCreate(
     if (isOnboarding) {
       try {
         await addSampleDataDocs()
-        await createOnboardingDefaultWorkspaceApp(name)
+        await createOnboardingDefaultWorkspaceApp("Welcome app")
         await addOnboardingWelcomeScreen()
 
         // Fetch the latest version of the workspace after these changes
@@ -595,9 +587,9 @@ async function updateUserColumns(
 
 async function creationEvents(
   request: BBRequest<CreateWorkspaceRequest>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  let creationFns: ((app: Workspace) => Promise<void>)[] = []
+  let creationFns: ((workspace: Workspace) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
   if (useTemplate === "true") {
@@ -612,7 +604,7 @@ async function creationEvents(
     // from server file path
     else if (file) {
       // explicitly pass in the newly created workspace id
-      creationFns.push(a => events.app.duplicated(a, app.appId))
+      creationFns.push(a => events.app.duplicated(a, workspace.appId))
     }
     // unknown
     else {
@@ -625,23 +617,23 @@ async function creationEvents(
   creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
-    await fn(app)
+    await fn(workspace)
   }
 }
 
 async function workspacePostCreate(
   ctx: UserCtx<CreateWorkspaceRequest, Workspace>,
-  app: Workspace
+  workspace: Workspace
 ) {
-  await creationEvents(ctx.request, app)
+  await creationEvents(ctx.request, workspace)
 
   // app import, template creation and duplication
   if (ctx.request.body.useTemplate) {
-    const { rows } = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([workspace.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
-        await context.doInWorkspaceContext(app.appId, () => {
+        await context.doInWorkspaceContext(workspace.appId, () => {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
@@ -649,7 +641,7 @@ async function workspacePostCreate(
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
-          ctx.params.appId = app.appId
+          ctx.params.appId = workspace.appId
           await destroyWorkspace(ctx)
         }
         throw err
@@ -659,8 +651,9 @@ async function workspacePostCreate(
 
   // If the user is a creator, we need to give them access to the new app
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
-    const user = await users.UserDB.getUser(ctx.user._id!)
-    await users.addAppBuilder(user, app.appId)
+    const globalId = dbCore.getGlobalIDFromUserMetadataID(ctx.user._id!)
+    const user = await users.UserDB.getUser(globalId)
+    await users.addAppBuilder(user, workspace.appId)
   }
 }
 

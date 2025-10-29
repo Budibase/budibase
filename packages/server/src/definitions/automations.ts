@@ -36,6 +36,7 @@ export interface AutomationContext {
   }
   loop?: { currentItem: any }
   state: Record<string, any>
+  previous?: AutomationStepResultOutputs | AutomationTriggerResultOutputs
   _stepIndex: number
   _error: boolean
   _stepResults: AutomationStepResult[]

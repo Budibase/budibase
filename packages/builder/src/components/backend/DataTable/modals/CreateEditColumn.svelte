@@ -1039,9 +1039,13 @@
   <JSONSchemaModal
     schema={editableColumn.schema}
     json={editableColumn.json}
+    subtype={editableColumn.subtype}
     on:save={({ detail }) => {
       editableColumn.schema = detail.schema
       editableColumn.json = detail.json
+      if (editableColumn.type === FieldType.JSON) {
+        editableColumn.subtype = detail.subtype
+      }
     }}
   />
 </Modal>

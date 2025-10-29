@@ -1,12 +1,12 @@
-import env from "../environment"
+import { FeatureFlag } from "@budibase/types"
 import * as crypto from "crypto"
-import * as context from "../context"
-import { PostHog, PostHogOptions } from "posthog-node"
 import tracer from "dd-trace"
-import { Duration } from "../utils"
 import { cloneDeep } from "lodash"
-import { FeatureFlagDefaults } from "@budibase/types"
+import { PostHog, PostHogOptions } from "posthog-node"
 import * as configs from "../configs"
+import * as context from "../context"
+import env from "../environment"
+import { Duration } from "../utils"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -232,9 +232,19 @@ export class FlagSet<T extends { [name: string]: boolean }> {
   }
 }
 
-export const flags = new FlagSet(FeatureFlagDefaults)
+const featureFlagDefaults: Record<FeatureFlag, boolean> = {
+  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
+  [FeatureFlag.AI_AGENTS]: false,
+  [FeatureFlag.ESM_CLIENT]: false,
 
-export async function isEnabled(flag: keyof typeof FeatureFlagDefaults) {
+  [FeatureFlag.DEBUG_UI]: env.isDev(),
+  [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
+  [FeatureFlag.DUPLICATE_APP]: false,
+  [FeatureFlag.COPY_RESOURCES_BETWEEN_WORKSPACES]: false,
+}
+export const flags = new FlagSet(featureFlagDefaults)
+
+export async function isEnabled(flag: FeatureFlag) {
   return await flags.isEnabled(flag)
 }
 

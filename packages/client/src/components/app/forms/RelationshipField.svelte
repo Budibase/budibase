@@ -17,13 +17,15 @@
     type RelationshipFieldMetadata,
     type Row,
     type UIFieldValidationRule,
+    type DataFetchDatasource,
   } from "@budibase/types"
+  import { getContext, createEventDispatcher } from "svelte"
   import {
     fetchData,
     Utils,
     createWorkspaceTranslationStore,
+    Constants,
   } from "@budibase/frontend-core"
-  import { getContext, createEventDispatcher } from "svelte"
   import Field from "./Field.svelte"
   import type { FieldApi, FieldState } from "@/types"
   import { utils } from "@budibase/shared-core"
@@ -55,6 +57,8 @@
   const { API } = sdk
 
   const pickerLabels = createWorkspaceTranslationStore("picker")
+  // Limit datasourceType "user" to app users only
+  export let workspaceUsersOnly: boolean | undefined = false
 
   const dispatch = createEventDispatcher()
 
@@ -73,7 +77,7 @@
   let loadingMissingOptions: boolean = false
 
   // Reset the available options when our base filter changes
-  $: filter, (optionsMap = {})
+  $: filter, workspaceUsersOnly, (optionsMap = {})
   // Determine if we can select multiple rows or not
   $: multiselect =
     multi ??
@@ -93,7 +97,8 @@
     writable,
     datasourceType,
     migratedFilter,
-    linkedTableId
+    linkedTableId,
+    workspaceUsersOnly
   )
 
   // Attempt to determine the primary display field to use
@@ -149,16 +154,17 @@
     writable: boolean,
     dsType: typeof datasourceType,
     filter: UISearchFilter | undefined,
-    linkedTableId?: string
+    linkedTableId?: string,
+    workspaceUsersOnly?: boolean
   ) => {
-    const datasource =
+    const datasource: DataFetchDatasource =
       dsType === "table"
         ? {
             type: dsType,
             tableId: linkedTableId!,
           }
         : {
-            type: dsType,
+            type: workspaceUsersOnly ? "table" : dsType,
             tableId: InternalTable.USER_METADATA,
           }
     return fetchData({
@@ -212,6 +218,14 @@
     optionsMap = optionsMap
   }
 
+  const parseId = (id: string) => {
+    // Normalise app table users to the global format.
+    if (datasourceType === "user" && workspaceUsersOnly) {
+      return id.replace(`ro_${Constants.TableNames.USERS}_`, "")
+    }
+    return id
+  }
+
   // Parses a row-like structure into a properly shaped option
   const parseOption = (
     option: string | BasicRelatedRow | Row,
@@ -231,21 +245,21 @@
     // that
     if (Object.keys(option).length === 2 && "primaryDisplay" in option) {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: ensureString(option.primaryDisplay),
       }
     }
     // Otherwise use the primary display field specified
     if (primaryDisplay) {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: ensureString(
           option[primaryDisplay as keyof typeof option]
         ),
       }
     } else {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: option._id,
       }
     }

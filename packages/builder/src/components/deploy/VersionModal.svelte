@@ -7,11 +7,12 @@
     Modal,
     ModalContent,
     notifications,
+    ProgressCircle,
     StatusLight,
   } from "@budibase/bbui"
 
   import { API } from "@/api"
-  import { ChangelogURL } from "@/constants"
+  import { CHANGELOG_URL } from "@/constants"
   import { admin } from "@/stores/portal"
 
   export function show() {
@@ -60,7 +61,9 @@
     updateModal.hide()
   }
 
+  let reverting = false
   const revert = async () => {
+    reverting = true
     try {
       await API.revertAppClientVersion(appId)
 
@@ -71,6 +74,8 @@
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
+    } finally {
+      reverting = false
     }
     updateModal.hide()
   }
@@ -89,7 +94,13 @@
   >
     <div slot="footer">
       {#if revertAvailable}
-        <Button quiet secondary on:click={revert}>Revert</Button>
+        <Button quiet secondary on:click={revert} disabled={reverting}>
+          {#if reverting}
+            <ProgressCircle overBackground={true} size="S" />
+          {:else}
+            Revert
+          {/if}
+        </Button>
       {/if}
     </div>
     {#if updateAvailable}
@@ -107,7 +118,7 @@
     {/if}
     <Body size="S">
       Find the changelog for the latest release
-      <Link href={ChangelogURL} target="_blank">here</Link>
+      <Link href={CHANGELOG_URL} target="_blank">here</Link>
     </Body>
     {#if revertAvailable}
       <Body size="S">

@@ -171,7 +171,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
   JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
   WHERE pg_namespace.nspname = ANY(current_schemas(false))
-  AND pg_table_is_visible(pg_class.oid);
+  AND pg_table_is_visible(pg_class.oid)
+  AND pg_class.relkind = 'r';
   `
 
   ENUM_VALUES = () => `
@@ -182,6 +183,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
   `
 
+  VIEWS_SQL = () => `
+  SELECT DISTINCT pg_class.relname as view_name,
+         pg_namespace.nspname as table_schema,
+         pg_get_viewdef(pg_class.oid) as definition
+  FROM pg_class
+  JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+  WHERE pg_namespace.nspname = ANY(current_schemas(false))
+    AND pg_table_is_visible(pg_class.oid)
+    AND pg_class.relkind = 'v';
+  `
+
   COLUMNS_SQL = () => `
   SELECT columns.*
   FROM information_schema.columns columns
@@ -189,7 +201,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_namespace name_space ON name_space.oid = pg_class.relnamespace
   WHERE columns.table_schema = ANY(current_schemas(false))
     AND columns.table_schema = name_space.nspname
-    AND pg_table_is_visible(pg_class.oid);
+    AND pg_table_is_visible(pg_class.oid)
+    AND pg_class.relkind = 'r';
   `
 
   constructor(config: PostgresConfig) {
@@ -242,7 +255,18 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 
   async openConnection() {
-    await this.client.connect()
+    if (this.open) {
+      return
+    }
+    try {
+      await this.client.connect()
+    } catch (error) {
+      if ((error as Error).message.includes("already been connected")) {
+        // Already connected, continue
+      } else {
+        throw error
+      }
+    }
     if (!this.config.schema) {
       this.config.schema = "public"
     }
@@ -411,6 +435,19 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         await this.client.query(this.COLUMNS_SQL())
       const names = columnsResponse.rows.map(row => row.table_name)
       return [...new Set(names)]
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getViewNames() {
+    try {
+      await this.openConnection()
+      const viewsResponse = await this.client.query(this.VIEWS_SQL())
+
+      const views: string[] = viewsResponse.rows.map(row => row.view_name)
+
+      return views
     } finally {
       await this.closeConnection()
     }
