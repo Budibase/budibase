@@ -5,14 +5,14 @@ import {
   isAdmin,
   isAdminOrWorkspaceBuilder,
 } from "../users"
-import { getAppIdFromCtx } from "../utils"
+import { getWorkspaceIdFromCtx } from "../utils"
 
 export async function workspaceBuilderOrAdmin(ctx: UserCtx, next: any) {
   if (ctx.internal || isAdmin(ctx.user)) {
     return next()
   }
 
-  const workspaceId = await getAppIdFromCtx(ctx)
+  const workspaceId = await getWorkspaceIdFromCtx(ctx)
 
   if (workspaceId && !isAdminOrWorkspaceBuilder(ctx.user, workspaceId)) {
     ctx.throw(403, "Workspace Admin/Builder user only endpoint.")
