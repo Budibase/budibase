@@ -25,7 +25,6 @@ export interface IMAPInnerConfig {
   port: number
   host: string
   secure: boolean
-  mailbox?: string
   auth?: {
     type?: "login" | null
     user: string

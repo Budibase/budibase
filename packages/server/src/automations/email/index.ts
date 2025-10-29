@@ -13,12 +13,12 @@ export const checkMail = async (
   trigger: EmailTrigger,
   automationId: string
 ): Promise<CheckMailOutput> => {
-  const smtpClient = await getClient()
+  const imapClient = await getClient()
   const stateKey = automationId
 
   try {
     const lastSeenUid = await getLastSeenUid(stateKey)
-    const messages = await fetchMessages(smtpClient, lockKey, lastSeenUid)
+    const messages = await fetchMessages(imapClient, lockKey, lastSeenUid)
     console.info(`[email trigger] fetched ${messages.length} messages`)
 
     if (!messages.length) {
@@ -73,7 +73,7 @@ export const checkMail = async (
   } catch (err) {
     console.log(err)
   } finally {
-    await smtpClient.logout().catch(console.log)
+    await imapClient.logout().catch(console.log)
   }
   return { proceed: false, reason: "unknown" }
 }

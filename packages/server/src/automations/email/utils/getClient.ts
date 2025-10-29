@@ -1,13 +1,13 @@
 import { configs } from "@budibase/backend-core"
-import { SMTPInnerConfig } from "@budibase/types"
+import { IMAPInnerConfig } from "@budibase/types"
 import { ImapFlow } from "imapflow"
 
-export const getClient = async (config?: SMTPInnerConfig) => {
-  const smtpConfig = config || (await configs.getSMTPConfig(true))
-  if (!smtpConfig) throw new Error("no available SMTP config")
+export const getClient = async (config?: IMAPInnerConfig) => {
+  const imapConfig = config || (await configs.getIMAPConfig())
+  if (!imapConfig) throw new Error("no available IMAP config")
 
   const client = new ImapFlow({
-    ...smtpConfig,
+    ...imapConfig,
     // imap flow has its own pino instance enabled by default and is very very chatty!
     logger: false,
   })

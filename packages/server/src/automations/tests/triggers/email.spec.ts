@@ -1,10 +1,12 @@
-import { setEnv } from "@budibase/backend-core"
+import { configs } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import {
   AutomationTriggerSchema,
   AutomationTriggerStepId,
+  ConfigType,
+  IMAPInnerConfig,
 } from "@budibase/types"
 import { FetchMessageObject } from "imapflow"
 
@@ -12,18 +14,18 @@ jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
 }))
 
-const smtpFallbackEnv = {
-  SMTP_FALLBACK_ENABLED: "1",
-  SMTP_HOST: "localhost",
-  SMTP_PORT: 1025,
-  SMTP_FROM_ADDRESS: "dom@dom.dom",
-  SMTP_USER: "dom",
-  SMTP_PASSWORD: "dom",
+const imapConfig: IMAPInnerConfig = {
+  host: "localhost",
+  port: 993,
+  secure: false,
+  auth: {
+    user: "dom",
+    pass: "dom",
+  },
 }
 
 describe("email trigger", () => {
   const config = new TestConfiguration()
-  let resetEnv: (() => void) | undefined
 
   beforeAll(async () => {
     await config.init()
@@ -35,7 +37,12 @@ describe("email trigger", () => {
   })
 
   beforeEach(async () => {
-    resetEnv = setEnv(smtpFallbackEnv)
+    await config.doInTenant(() =>
+      configs.save({
+        type: ConfigType.IMAP,
+        config: imapConfig,
+      })
+    )
     const { automations } = await config.api.automation.fetch()
     for (const automation of automations) {
       await config.api.automation.delete(automation)
@@ -43,8 +50,6 @@ describe("email trigger", () => {
   })
 
   afterEach(() => {
-    resetEnv?.()
-    resetEnv = undefined
     jest.clearAllMocks()
   })
 
