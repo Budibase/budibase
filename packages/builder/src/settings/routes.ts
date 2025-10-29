@@ -110,6 +110,11 @@ export const orgRoutes = (
           comp: Pages.get("email"),
         },
         {
+          path: "imap",
+          title: "IMAP",
+          comp: Pages.get("email_imap"),
+        },
+        {
           path: "templates",
           title: "Templates",
           comp: Pages.get("email_templates"),
