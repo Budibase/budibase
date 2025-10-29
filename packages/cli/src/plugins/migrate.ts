@@ -10,15 +10,41 @@ type MigrationResult = {
   message: string
 }
 
+type RollupTemplate = {
+  source: string
+  origin: "local" | "skeleton"
+  location?: string
+}
+
 type AnalysisResult = {
   rollup: "needs-migration" | "looks-new" | "unknown"
   packageJson: "needs-migration" | "looks-new"
   wrapper: "needs-migration" | "looks-new" | "not-found"
+  schema: "needs-migration" | "looks-new" | "not-found" | "unknown"
   canBuildAfter: boolean
   report: string[]
   rollupFile?: string
   wrapperFile?: string
   pkg: any
+}
+
+const bumpMinorVersion = (version: string | undefined): string | undefined => {
+  if (!version || typeof version !== "string") return undefined
+  const parts = version.trim().split(".")
+  if (parts.length < 2) return undefined
+  const major = Number.parseInt(parts[0], 10)
+  const minor = Number.parseInt(parts[1], 10)
+  const patch = parts.length > 2 ? Number.parseInt(parts[2], 10) : 0
+  if (
+    Number.isNaN(major) ||
+    Number.isNaN(minor) ||
+    Number.isNaN(patch) ||
+    major < 0 ||
+    minor < 0
+  ) {
+    return undefined
+  }
+  return `${major}.${minor + 1}.0`
 }
 
 export function findRollupFile(): string | undefined {
@@ -66,7 +92,28 @@ function findFileRecursive(dir: string, filename: string): string | undefined {
   return undefined
 }
 
-async function loadRollupFromSkeleton(): Promise<string | undefined> {
+async function loadRollupFromSkeleton(): Promise<RollupTemplate | undefined> {
+  const templateCandidates: string[] = []
+  if (process.env.BUDIBASE_ROLLUP_TEMPLATE) {
+    templateCandidates.push(
+      path.resolve(process.env.BUDIBASE_ROLLUP_TEMPLATE.trim())
+    )
+  }
+
+  for (const candidate of templateCandidates) {
+    if (candidate && fs.existsSync(candidate)) {
+      try {
+        const source = fs.readFileSync(candidate, "utf8")
+        return { source, origin: "local", location: candidate }
+      } catch (err: any) {
+        console.error(
+          `Failed to read local Rollup template at ${candidate}:`,
+          err instanceof Error ? err.message : err
+        )
+      }
+    }
+  }
+
   const tempDir = path.join(os.tmpdir(), `bb-skeleton-${Date.now()}`)
   try {
     fs.mkdirSync(tempDir)
@@ -89,7 +136,7 @@ async function loadRollupFromSkeleton(): Promise<string | undefined> {
       }
       if (rollupPath && fs.existsSync(rollupPath)) {
         const content = fs.readFileSync(rollupPath, "utf8")
-        return content
+        return { source: content, origin: "skeleton", location: rollupPath }
       }
     } catch (_) {
       // try next type
@@ -117,23 +164,27 @@ export async function migrateRollupConfig(): Promise<MigrationResult> {
   }
 
   const newConfigPath = "rollup.config.mjs"
-  const skeletonSource = await loadRollupFromSkeleton()
-  if (!skeletonSource) {
+  const template = await loadRollupFromSkeleton()
+  if (!template) {
     return {
       changed: false,
       message:
         "Failed to retrieve canonical rollup.config.mjs from skeleton. Please check your network or update the CLI.",
     }
   }
-  fs.writeFileSync(newConfigPath, skeletonSource)
+  fs.writeFileSync(newConfigPath, template.source)
 
+  const templateMessage =
+    template.origin === "local" && template.location
+      ? ` using local template at ${template.location}`
+      : ""
   return {
     changed: true,
     before: rollupFile ? originalSource : undefined,
-    after: skeletonSource,
+    after: template.source,
     message: backupPath
-      ? `Wrote new Rollup config to ${newConfigPath} (backup at ${backupPath}).`
-      : `Wrote new Rollup config to ${newConfigPath}.`,
+      ? `Wrote new Rollup config to ${newConfigPath}${templateMessage} (backup at ${backupPath}).`
+      : `Wrote new Rollup config to ${newConfigPath}${templateMessage}.`,
   }
 }
 
@@ -228,6 +279,10 @@ export function migratePackageJson(): MigrationResult {
 
   const before = JSON.stringify(json, null, 2)
 
+  const previousVersion =
+    typeof json.version === "string" ? json.version.trim() : undefined
+  const bumpedVersion = bumpMinorVersion(previousVersion)
+
   if (!json.dependencies) json.dependencies = {}
   json.dependencies["svelte"] = "^5.0.0"
 
@@ -251,6 +306,10 @@ export function migratePackageJson(): MigrationResult {
   json.scripts["build"] = "rollup -c rollup.config.mjs"
   json.scripts["watch"] = "rollup -cw rollup.config.mjs"
 
+  if (bumpedVersion) {
+    json.version = bumpedVersion
+  }
+
   const after = JSON.stringify(json, null, 2)
 
   if (before === after) {
@@ -263,11 +322,67 @@ export function migratePackageJson(): MigrationResult {
   fs.writeFileSync(`${pkgPath}.pre-svelte5`, raw)
   fs.writeFileSync(pkgPath, `${after}\n`)
 
+  const versionMessage =
+    previousVersion && bumpedVersion
+      ? ` (version ${previousVersion} -> ${bumpedVersion})`
+      : ""
+  const message = bumpedVersion
+    ? `Updated package.json for Svelte 5, Rollup 4, scripts, and version bump${versionMessage}.`
+    : "Updated package.json for Svelte 5, Rollup 4, and scripts."
+
   return {
     changed: true,
     before,
     after,
-    message: "Updated package.json for Svelte 5, Rollup 4, and scripts.",
+    message,
+  }
+}
+
+export function migrateSchemaJson(): MigrationResult {
+  const schemaPath = path.join(process.cwd(), "schema.json")
+  if (!fs.existsSync(schemaPath)) {
+    return {
+      changed: false,
+      message: "schema.json not found - skipping schema metadata migration.",
+    }
+  }
+
+  const raw = fs.readFileSync(schemaPath, "utf8")
+  let json: any
+  try {
+    json = JSON.parse(raw)
+  } catch (err: any) {
+    return {
+      changed: false,
+      message: `Invalid schema.json: ${err?.message || "parse error"}`,
+    }
+  }
+
+  const metadata =
+    json && typeof json.metadata === "object" && !Array.isArray(json.metadata)
+      ? json.metadata
+      : {}
+  const needsUpdate = metadata?.svelteMajor !== 5
+  if (!needsUpdate) {
+    return {
+      changed: false,
+      message: "schema.json metadata already includes svelteMajor: 5. Skipping.",
+    }
+  }
+
+  const before = JSON.stringify(json, null, 2)
+  const nextMetadata = { ...metadata, svelteMajor: 5 }
+  json.metadata = nextMetadata
+  const after = JSON.stringify(json, null, 2)
+
+  fs.writeFileSync(`${schemaPath}.pre-svelte5`, raw)
+  fs.writeFileSync(schemaPath, `${after}\n`)
+
+  return {
+    changed: true,
+    before,
+    after,
+    message: "Updated schema.json metadata to include svelteMajor: 5.",
   }
 }
 
@@ -280,10 +395,18 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   const usingSvelte5 =
     pkg?.dependencies?.svelte?.startsWith("^5") ||
     pkg?.peerDependencies?.svelte?.startsWith("^5")
+  const currentVersion =
+    typeof pkg?.version === "string" ? pkg.version.trim() : undefined
+  const projectedVersion = bumpMinorVersion(currentVersion)
   if (!usingSvelte5) {
     report.push("Will bump svelte to ^5.0.0 and align dev/peer dependencies.")
   } else {
     report.push("package.json appears to already depend on Svelte 5.")
+  }
+  if (projectedVersion && currentVersion && projectedVersion !== currentVersion) {
+    report.push(
+      `Will bump package.json version from ${currentVersion} to ${projectedVersion}.`
+    )
   }
 
   // rollup
@@ -323,6 +446,36 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
     report.push("No wrapper.svelte found - skipping wrapper migration.")
   }
 
+  // schema
+  let schemaStatus: AnalysisResult["schema"] = "unknown"
+  if (fs.existsSync("schema.json")) {
+    try {
+      const schemaRaw = fs.readFileSync("schema.json", "utf8")
+      const schemaJson = JSON.parse(schemaRaw)
+      const metadata =
+        schemaJson &&
+        typeof schemaJson.metadata === "object" &&
+        !Array.isArray(schemaJson.metadata)
+          ? schemaJson.metadata
+          : {}
+      if (metadata.svelteMajor === 5) {
+        schemaStatus = "looks-new"
+        report.push("schema.json metadata already declares svelteMajor: 5.")
+      } else {
+        schemaStatus = "needs-migration"
+        report.push("Will update schema.json metadata to set svelteMajor: 5.")
+      }
+    } catch (err: any) {
+      schemaStatus = "unknown"
+      report.push(
+        `schema.json could not be parsed - please fix JSON before migration (${err?.message || "parse error"}).`
+      )
+    }
+  } else {
+    schemaStatus = "not-found"
+    report.push("schema.json not found - cannot update metadata.")
+  }
+
   const packageJsonStatus: AnalysisResult["packageJson"] = usingSvelte5
     ? "looks-new"
     : "needs-migration"
@@ -332,6 +485,7 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
     rollup: rollupStatus,
     packageJson: packageJsonStatus,
     wrapper: wrapperStatus,
+    schema: schemaStatus,
     canBuildAfter: true,
     rollupFile,
     wrapperFile,
@@ -341,7 +495,8 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
 
 export async function runSvelte5Migration() {
   const pkgRes = migratePackageJson()
+  const schemaRes = migrateSchemaJson()
   const rollupRes = await migrateRollupConfig()
   const wrapperRes = migrateWrapper()
-  return { pkgRes, rollupRes, wrapperRes }
+  return { pkgRes, schemaRes, rollupRes, wrapperRes }
 }

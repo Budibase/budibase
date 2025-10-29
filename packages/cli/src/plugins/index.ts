@@ -229,6 +229,9 @@ async function migrateSvelte5() {
   if (results.pkgRes?.message) {
     console.log(info(results.pkgRes.message))
   }
+  if (results.schemaRes?.message) {
+    console.log(info(results.schemaRes.message))
+  }
   if (results.rollupRes?.message) {
     console.log(info(results.rollupRes.message))
   }
