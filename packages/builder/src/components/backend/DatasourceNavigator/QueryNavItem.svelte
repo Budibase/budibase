@@ -14,8 +14,9 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { WorkspaceResource } from "@budibase/types"
+  import { IntegrationTypes } from "@/constants/backend"
 
   export let datasource
   export let query
@@ -25,6 +26,9 @@
   let confirmDeleteModal
 
   $: favourite = query?._id ? $favourites[query?._id] : undefined
+  $: isRestDatasource = datasource?.source === IntegrationTypes.REST
+  $: iconVerb = isRestDatasource ? customQueryIconText(query) : ""
+  $: iconColor = isRestDatasource ? customQueryIconColor(query) : undefined
 
   // goto won't work in the context menu callback if the store is called directly
   $: goto = $gotoStore
@@ -70,8 +74,8 @@
   on:contextmenu={openContextMenu}
   indentLevel={1}
   icon="database"
-  iconText={customQueryIconText(datasource, query)}
-  iconColor={customQueryIconColor(datasource, query)}
+  iconText={iconVerb}
+  {iconColor}
   text={customQueryText(datasource, query)}
   selected={$isActive("./query/:queryId") &&
     $queries.selectedQueryId === query._id}

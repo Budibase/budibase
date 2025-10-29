@@ -30,6 +30,8 @@ export interface Plugin extends Document {
   jsUrl?: string
   // Populated on read
   iconUrl?: string
+  // Optional origin metadata to support update checks (e.g. GitHub)
+  origin?: PluginOrigin
 }
 
 export const PLUGIN_TYPE_ARR = Object.values(PluginType)
@@ -53,4 +55,13 @@ export interface PluginMetadata {
 export interface PluginUpload {
   metadata: PluginMetadata
   directory: string
+}
+
+export interface PluginOrigin {
+  source: "github"
+  url: string
+  repo: string
+  etag?: string
+  lastCheckedAt?: string
+  latestKnownVersion?: string
 }
