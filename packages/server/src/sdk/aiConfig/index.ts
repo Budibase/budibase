@@ -22,9 +22,11 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
 }
 
-export async function find(id: string): Promise<CustomAIProviderConfig> {
+export async function find(
+  id: string
+): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getGlobalDB()
-  const result = await db.get<CustomAIProviderConfig>(id)
+  const result = await db.tryGet<CustomAIProviderConfig>(id)
 
   return result
 }
@@ -109,6 +111,9 @@ export async function update(
   }
   await ensureLiteLLMConfigured()
   const existing = await find(id)
+  if (!existing) {
+    throw new HTTPError("Config to edit not found", 404)
+  }
 
   config.apiKey =
     config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
