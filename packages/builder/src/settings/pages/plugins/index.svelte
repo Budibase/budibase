@@ -8,6 +8,8 @@
     ActionButton,
     Icon,
     TooltipPosition,
+    Banner,
+    notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin } from "@/stores/portal/admin"
@@ -16,6 +18,8 @@
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
   import { routeActions } from "@/settings/pages"
+  import { featureFlags } from "@/stores/portal"
+  import { get } from "svelte/store"
 
   const schema = {
     name: {
@@ -49,6 +53,9 @@
     { label: "Components", value: "component" },
   ]
 
+  const pluginUpdates = plugins.updates
+  let applyingUpdates = false
+
   if (!$admin.cloud) {
     filterOptions.push({ label: "Datasources", value: "datasource" })
   }
@@ -66,10 +73,74 @@
 
   onMount(async () => {
     await plugins.load()
+    if (get(featureFlags)?.PLUGIN_AUTO_UPDATE) {
+      try {
+        await plugins.checkUpdates()
+      } catch (err: any) {
+        notifications.error(
+          err?.message
+            ? `Failed to check plugin updates: ${err.message}`
+            : "Failed to check plugin updates"
+        )
+      }
+    }
   })
+
+  async function applyAllUpdates() {
+    if (applyingUpdates) {
+      return
+    }
+    applyingUpdates = true
+    try {
+      const response = await plugins.applyUpdates()
+      if (response.updated.length) {
+        const count = response.updated.length
+        notifications.success(
+          count === 1
+            ? `Updated ${response.updated[0].name} to ${response.updated[0].updatedVersion}`
+            : `Updated ${count} plugins`
+        )
+      }
+      if (response.failed.length) {
+        const messages = response.failed
+          .map(item => `${item.name}: ${item.error}`)
+          .join("\n")
+        notifications.error(`Failed to update plugins:\n${messages}`)
+      }
+    } catch (err: any) {
+      notifications.error(
+        err?.message
+          ? `Failed to update plugins: ${err.message}`
+          : "Failed to update plugins"
+      )
+    } finally {
+      applyingUpdates = false
+    }
+  }
 </script>
 
 <Layout noPadding gap="S">
+  {#if $featureFlags.PLUGIN_AUTO_UPDATE && $pluginUpdates.length}
+    <Banner type="info" showCloseButton={false}>
+      <div class="updates-banner">
+        <span>
+          {#if $pluginUpdates.length === 1}
+            1 plugin update available
+          {:else}
+            {$pluginUpdates.length} plugin updates available
+          {/if}
+        </span>
+        <Button
+        secondary
+          size="S"
+          on:click={applyAllUpdates}
+          disabled={applyingUpdates}
+        >
+          {applyingUpdates ? "Updating..." : "Update all"}
+        </Button>
+      </div>
+    </Banner>
+  {/if}
   <Layout noPadding gap="S">
     <div use:routeActions class="controls">
       <ActionButton
@@ -145,5 +216,12 @@
     .controls :global(.spectrum-Search) {
       width: auto;
     }
+  }
+  .updates-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    flex-wrap: wrap;
   }
 </style>

@@ -236,6 +236,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
   [FeatureFlag.ESM_CLIENT]: false,
+  [FeatureFlag.PLUGIN_AUTO_UPDATE]: false,
 
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
