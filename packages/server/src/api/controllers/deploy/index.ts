@@ -12,9 +12,8 @@ import {
   DeploymentDoc,
   DeploymentProgressResponse,
   DeploymentStatus,
-  FieldType,
   FetchDeploymentResponse,
-  FormulaType,
+  Table,
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
@@ -31,7 +30,7 @@ import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
-import { updateAllFormulasInTable } from "../row/staticFormula"
+import { updateAllFormulasInTableIfNeeded } from "../table/bulkFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -122,18 +121,19 @@ async function initDeployedApp(prodAppId: string) {
   })
 }
 
-async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
+async function syncStaticFormulasToProduction(
+  prodWorkspaceId: string,
+  previousTables: Record<string, Table> = {},
+  tablesToProcess: Table[]
+) {
   await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-    const tables = await sdk.tables.getAllInternalTables()
-    for (const table of tables) {
-      const hasStaticFormula = Object.values(table.schema).some(
-        column =>
-          column?.type === FieldType.FORMULA &&
-          column.formulaType === FormulaType.STATIC
-      )
-      if (hasStaticFormula) {
-        await updateAllFormulasInTable(table)
+    for (const table of tablesToProcess) {
+      const tableId = table._id
+      if (!tableId) {
+        continue
       }
+      const oldTable = previousTables[tableId]
+      await updateAllFormulasInTableIfNeeded(table, { oldTable })
     }
   })
 }
@@ -242,6 +242,24 @@ export const publishWorkspace = async function (
       }
 
       const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
+      const prodTablesBeforeReplicationList =
+        await context.doInWorkspaceContext(prodId, async () => {
+          try {
+            return await sdk.tables.getAllInternalTables()
+          } catch (err) {
+            return [] as Table[]
+          }
+        })
+      const prodTablesBeforeReplication =
+        prodTablesBeforeReplicationList.reduce(
+          (acc, tbl) => {
+            if (tbl._id) {
+              acc[tbl._id] = tbl
+            }
+            return acc
+          },
+          {} as Record<string, Table>
+        )
 
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
@@ -294,14 +312,18 @@ export const publishWorkspace = async function (
       deployment.appUrl = appDoc.url
       appDoc.appId = prodId
       appDoc.instance._id = prodId
-      const [automations, workspaceApps, tables] = await Promise.all([
-        sdk.automations.fetch(),
-        sdk.workspaceApps.fetch(),
-        sdk.tables.getAllInternalTables(),
-      ])
+      const [automations, workspaceApps, prodTablesAfterReplication] =
+        await context.doInWorkspaceContext(prodId, async () => {
+          const [autos, apps, tables] = await Promise.all([
+            sdk.automations.fetch(),
+            sdk.workspaceApps.fetch(),
+            sdk.tables.getAllInternalTables(),
+          ])
+          return [autos, apps, tables] as const
+        })
       const automationIds = automations.map(auto => auto._id!)
       const workspaceAppIds = workspaceApps.map(app => app._id!)
-      const tableIds = tables.map(table => table._id!)
+      const tableIds = prodTablesAfterReplication.map(table => table._id!)
       const fullMap = [
         ...(automationIds ?? []),
         ...(workspaceAppIds ?? []),
@@ -319,7 +341,11 @@ export const publishWorkspace = async function (
       await db.put(appDoc)
       await cache.workspace.invalidateWorkspaceMetadata(prodId)
       await initDeployedApp(prodId)
-      await syncStaticFormulasToProduction(prodId)
+      await syncStaticFormulasToProduction(
+        prodId,
+        prodTablesBeforeReplication,
+        prodTablesAfterReplication
+      )
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

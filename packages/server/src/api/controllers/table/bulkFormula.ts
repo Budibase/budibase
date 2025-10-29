@@ -170,7 +170,7 @@ async function updateRelatedFormulaLinksOnTables(
   }
 }
 
-async function checkIfFormulaUpdated(
+export async function updateAllFormulasInTableIfNeeded(
   table: Table,
   { oldTable }: { oldTable?: Table }
 ) {
@@ -195,6 +195,6 @@ export async function runStaticFormulaChecks(
   await updateRelatedFormulaLinksOnTables(table, { deletion })
   await checkIfFormulaNeedsCleared(table, { oldTable, deletion })
   if (!deletion) {
-    await checkIfFormulaUpdated(table, { oldTable })
+    await updateAllFormulasInTableIfNeeded(table, { oldTable })
   }
 }
