@@ -108,17 +108,6 @@
     provider: AIProvider,
     updates?: Partial<Omit<ProviderConfig, "active" | "isDefault">>
   ) {
-    if (provider !== "Chat") {
-      // Ensure that only one provider is active at a time.
-      for (const config of Object.values(aiConfig.config)) {
-        if (config.provider === "Chat") {
-          continue
-        }
-        config.active = false
-        config.isDefault = false
-      }
-    }
-
     const { key, config } = getProviderConfig(provider)
     aiConfig.config[key] = {
       ...config,
@@ -161,10 +150,6 @@
 
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
-    if (provider === "Chat") {
-      openCustomAIConfigModal()
-      return
-    }
     if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
       portalModal.show()
       return
