@@ -191,7 +191,12 @@ export function migrateWrapper(): MigrationResult {
   if (fs.existsSync(legacyBoundary)) {
     try {
       fs.unlinkSync(legacyBoundary)
-    } catch (_) {}
+    } catch (err: any) {
+      console.log(
+        "Failed to delete legacy Boundary.js:",
+        err instanceof Error ? err.message : err
+      )
+    }
   }
 
   return {
