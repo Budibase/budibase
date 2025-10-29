@@ -55,7 +55,7 @@
   let customModalConfig: CustomAIProviderConfig | null = null
 
   $: isCloud = $admin.cloud
-  $: chatEnabled = $featureFlags.AI_AGENTS
+  $: privateLLMSEnabled = !$admin.cloud && $featureFlags.PRIVATE_LLMS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -255,7 +255,7 @@
       {/if}
     </div>
 
-    {#if chatEnabled}
+    {#if privateLLMSEnabled}
       <div class="section">
         <div class="section-header">
           <div class="section-title">Chat configuration</div>
