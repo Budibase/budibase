@@ -1,11 +1,5 @@
 <script>
-  import {
-    ActionButton,
-    AbsTooltip,
-    Input,
-    Icon,
-    Tooltip,
-  } from "@budibase/bbui"
+  import { ActionButton, AbsTooltip, Input, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   export let row

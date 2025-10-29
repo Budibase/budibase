@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     Layout,
-    Heading,
     Body,
     Divider,
     Select,
@@ -92,9 +91,6 @@
   let overrides = { ...$appStore.translationOverrides }
   let lastSyncedSignature = signature(overrides)
   let debouncedHandle: ReturnType<typeof setTimeout> | undefined
-  let saving = false
-  let saveError = false
-
   const refreshFromStore = () => {
     const storeOverrides = $appStore.translationOverrides
     const storeSignature = signature(storeOverrides)
@@ -149,8 +145,6 @@
     if (nextSignature === lastSyncedSignature) {
       return
     }
-    saving = true
-    saveError = false
     try {
       await API.saveAppMetadata($appStore.appId, {
         translationOverrides: payload,
@@ -163,11 +157,8 @@
       overrides = { ...payload }
       notifications.success("Translations saved successfully")
     } catch (error) {
-      saveError = true
       notifications.error("Failed to save translations")
       console.error(error)
-    } finally {
-      saving = false
     }
   }
   type TranslationDetail = {
@@ -227,13 +218,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
-  }
-
-  .heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
   }
 
   .filters {
