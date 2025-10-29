@@ -9,16 +9,8 @@ export default [
     description: "List rows in a given table",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to list rows from"),
-      limit: z
-        .number()
-        .optional()
-        .nullable()
-        .describe("Maximum number of rows to return"),
-      startKey: z
-        .string()
-        .optional()
-        .nullable()
-        .describe("Start key for pagination"),
+      limit: z.number().optional().describe("Maximum number of rows to return"),
+      startKey: z.string().optional().describe("Start key for pagination"),
     }),
     handler: async ({ tableId }) => {
       const rows = await sdk.rows.fetch(tableId)
@@ -74,7 +66,6 @@ export default [
       data: z
         .object({})
         .optional()
-        .nullable()
         .describe("The updated data as key-value pairs"),
     }),
     handler: async ({ tableId, rowId, data }) => {
@@ -93,7 +84,6 @@ export default [
       query: z
         .object({})
         .optional()
-        .nullable()
         .describe("Search criteria as key-value pairs"),
       sort: z
         .object({
@@ -101,13 +91,8 @@ export default [
           order: z.enum(["ascending", "descending"]).describe("Sort order"),
         })
         .optional()
-        .nullable()
         .describe("Sort configuration"),
-      limit: z
-        .number()
-        .optional()
-        .nullable()
-        .describe("Maximum number of results"),
+      limit: z.number().optional().describe("Maximum number of results"),
     }),
     handler: async ({ tableId, query = {}, sort, limit }) => {
       const searchParams: RowSearchParams = {
