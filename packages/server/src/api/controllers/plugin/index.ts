@@ -96,6 +96,13 @@ export async function create(
       )
     }
 
+    // Block Svelte 5 plugins until we release Svelte 5
+    if (metadata.schema?.metadata?.svelteMajor === 5) {
+      throw new Error(
+        "Svelte 5 plugins are not yet supported in Budibase"
+      )
+    }
+
     let origin
     if (source === PluginSource.GITHUB) {
       const { repo, url: canonical } = sdk.plugins.parseGithubRepo(url)
