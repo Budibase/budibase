@@ -33,7 +33,7 @@
   let filter = ""
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
-  let itemEls: Array<HTMLElement | null> = []
+  let itemEls: (HTMLElement | null)[] = []
 
   const navigateToWorkspace = (devId: string | undefined) => {
     if (!devId) return
