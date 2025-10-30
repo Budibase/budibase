@@ -379,9 +379,9 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
   const pkgJsonPath = require.resolve("@budibase/client/package.json")
   const pkgDir = path.dirname(pkgJsonPath)
   const distFromPkg = join(pkgDir, "dist")
-  //normal falback
+  //normal fallback
   const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  const root = nodeModulesDist
+  const root = nodeModulesDist || distFromPkg
   return send(ctx, fileName, { root })
 }
 

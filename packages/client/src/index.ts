@@ -104,8 +104,6 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
-    // @ts-ignore
-    svelteLegacy?: typeof legacySvelte
     svelteStore: typeof svelteStore
     svelteInternal: typeof svelteInternal
     INIT_TIME: number

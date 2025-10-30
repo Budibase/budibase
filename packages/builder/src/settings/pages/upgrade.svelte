@@ -23,8 +23,6 @@
   import { sdk } from "@budibase/shared-core"
   import { getFormattedPlanName } from "@/helpers/planTitle"
 
-  $redirect
-
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 

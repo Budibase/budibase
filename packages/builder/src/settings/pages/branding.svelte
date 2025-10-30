@@ -22,8 +22,6 @@
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
 
-  $goto
-
   const imageExtensions = [
     ".png",
     ".tiff",
