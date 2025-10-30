@@ -91,6 +91,7 @@ enum QueueEventType {
   DOC_WRITETHROUGH = "doc-writethrough",
   DEV_REVERT_EVENT = "dev-revert-event",
   BATCH_USER_SYNC_PROCESSOR = "batch-user-sync-processor",
+  STATIC_FORMULA_SYNC = "static-formula-sync",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -103,6 +104,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.DEV_REVERT_PROCESSOR]: QueueEventType.DEV_REVERT_EVENT,
   [JobQueue.BATCH_USER_SYNC_PROCESSOR]:
     QueueEventType.BATCH_USER_SYNC_PROCESSOR,
+  [JobQueue.STATIC_FORMULA_SYNC]: QueueEventType.STATIC_FORMULA_SYNC,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {
