@@ -4,11 +4,11 @@
   import Portal from "svelte-portal"
 
   export let currentSort: string
+  export let open = false
   export let options: { key: string; label: string }[] = []
 
   const dispatch = createEventDispatcher<{ select: string }>()
 
-  let open = false
   let anchor: HTMLButtonElement | null = null
   let dropdown: HTMLDivElement | null = null
   let left = 0
@@ -45,6 +45,8 @@
   type="button"
   class="sort-button"
   aria-label="Sort"
+  aria-haspopup="menu"
+  aria-expanded={open}
   bind:this={anchor}
   on:click|stopPropagation={toggle}
 >

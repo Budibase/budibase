@@ -28,8 +28,10 @@
 
   const dispatch = createEventDispatcher()
 
+  export let open = false
+  let sortOpen = false
+
   let workspaceMenu: ActionMenu | undefined
-  let menuOpen = false
   let filter = ""
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
@@ -83,13 +85,18 @@
   $: displayApps = [...favourites, ...nonFavourites]
   $: activeIndex = displayApps.length ? 0 : -1
 
-  $: if (menuOpen && activeIndex >= 0) {
+  $: if (open && activeIndex >= 0) {
     itemEls[activeIndex]?.scrollIntoView({ block: "nearest" })
   }
 
   const onMenuOpen = () => {
-    menuOpen = true
+    open = true
     setTimeout(() => filterInput?.focus(), 0)
+  }
+
+  const onMenuClose = () => {
+    open = false
+    sortOpen = false
   }
 
   const onSortSelect = async (key: string) => {
@@ -138,7 +145,7 @@
   disabled={false}
   roundedPopover
   on:open={onMenuOpen}
-  on:close={() => (menuOpen = false)}
+  on:close={onMenuClose}
 >
   <svelte:fragment slot="control">
     <div class="workspace-menu" class:disabled={false}>
@@ -147,9 +154,11 @@
         tabindex="0"
         class="workspace-menu-text"
         title={$appStore.name}
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
         <span>{$appStore.name}</span>
-        <Icon size="M" name={!menuOpen ? "caret-down" : "caret-up"} />
+        <Icon size="M" name={!open ? "caret-down" : "caret-up"} />
       </div>
     </div>
   </svelte:fragment>
@@ -180,6 +189,7 @@
         {currentSort}
         options={SORT_OPTIONS}
         on:select={e => onSortSelect(e.detail)}
+        bind:open={sortOpen}
       />
     </div>
   </div>
