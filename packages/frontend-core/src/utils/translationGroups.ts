@@ -4,13 +4,20 @@ import {
   resolveTranslationGroup,
   resolveWorkspaceTranslations,
   type TranslationCategory,
-  type TranslationGroup,
+  type TranslationOverrides,
 } from "@budibase/shared-core"
+
+type TranslationGroup = Record<string, string>
 
 interface WorkspaceTranslationStore extends Readable<TranslationGroup> {}
 
+type TranslationStoreValue = {
+  translationOverrides?: TranslationOverrides | null
+  application?: { translationOverrides?: TranslationOverrides | null } | null
+}
+
 interface CreateWorkspaceTranslationStoreOptions {
-  appStore?: Readable<any> | null
+  appStore?: Readable<TranslationStoreValue> | null
 }
 
 export const createWorkspaceTranslationStore = (
@@ -18,8 +25,11 @@ export const createWorkspaceTranslationStore = (
   options?: CreateWorkspaceTranslationStoreOptions
 ): WorkspaceTranslationStore => {
   const sdk = (getContext("sdk") as any) ?? {}
-  const contextStore = sdk?.appStore
-  const providedStore = options?.appStore ?? contextStore
+  const contextStore = sdk?.appStore as Readable<TranslationStoreValue> | undefined
+  const providedStore = (options?.appStore ?? contextStore) as
+    | Readable<TranslationStoreValue>
+    | null
+    | undefined
 
   if (providedStore && typeof providedStore.subscribe === "function") {
     return derived(providedStore, value => {
