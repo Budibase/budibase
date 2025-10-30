@@ -402,7 +402,7 @@
           label="Description"
           value={selectedEndpoint?.description || ""}
           readonly
-          rows={4}
+          minHeight={120}
           placeholder="No description provided"
         />
       {:else}

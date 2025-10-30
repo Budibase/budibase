@@ -12,15 +12,27 @@
     TextArea,
     Dropzone,
     Combobox,
+    Select,
     InlineAlert,
     ProgressCircle,
   } from "@budibase/bbui"
-  import { datasources, queries } from "@/stores/builder"
+  import {
+    datasources,
+    queries,
+    sortedIntegrations as integrations,
+  } from "@/stores/builder"
+  import { restTemplates } from "@/stores/builder/restTemplates"
+  import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+  import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import { customQueryIconColor } from "@/helpers/data/utils"
+  import { IntegrationTypes } from "@/constants/backend"
   import { writable } from "svelte/store"
   import type {
     Datasource,
     ImportRestQueryRequest,
     QueryImportEndpoint,
+    RestConfig,
+    RestTemplate,
     UIFile,
   } from "@budibase/types"
 
@@ -44,6 +56,25 @@
 
   let datasource: Datasource
   $: datasource = $datasources.selected as Datasource
+  $: restTemplateList = $restTemplates.templates
+  let selectedEndpoint: QueryImportEndpoint | undefined
+  $: restIntegration = ($integrations || []).find(
+    integration => integration.name === datasource?.source
+  )
+  $: datasourceTemplateUrl = getTemplateSpecUrl(datasource)
+  $: template = getMatchingTemplate(
+    datasource,
+    restTemplateList,
+    datasourceTemplateUrl
+  )
+  $: resolvedTemplateSpecUrl = template
+    ? template.specs?.find(spec => spec.url === datasourceTemplateUrl)?.url ||
+      template.specs?.[0]?.url
+    : undefined
+  $: templateName = template?.name
+  $: templateIcon = template?.icon
+  $: isTemplateDatasource = Boolean(datasource?.isRestTemplate && template)
+  $: templateEndpointDescription = selectedEndpoint?.description || ""
   let endpointOptions: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let endpointsLoading = false
@@ -51,6 +82,41 @@
   let dataStringCache: string | undefined
   let loadRequestId = 0
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
+  let currentTemplateUrl: string | undefined
+
+  const getTemplateSpecUrl = (source: Datasource | undefined) => {
+    if (!source?.isRestTemplate) {
+      return undefined
+    }
+    const config = (source.config || {}) as Partial<RestConfig>
+    return typeof config.url === "string" ? config.url : undefined
+  }
+
+  const getMatchingTemplate = (
+    source: Datasource | undefined,
+    templates: RestTemplate[],
+    specUrl: string | undefined
+  ) => {
+    if (!source?.isRestTemplate) {
+      return undefined
+    }
+
+    let match = specUrl
+      ? templates.find(template =>
+          template.specs?.some(spec => spec.url === specUrl)
+        )
+      : undefined
+
+    if (!match && source.uiMetadata?.iconUrl) {
+      match = templates.find(template => template.icon === source.uiMetadata?.iconUrl)
+    }
+
+    if (!match && source.name) {
+      match = templates.find(template => template.name === source.name)
+    }
+
+    return match
+  }
 
   const resetEndpoints = () => {
     loadRequestId += 1
@@ -59,6 +125,52 @@
     endpointsError = null
     endpointsLoading = false
     dataStringCache = undefined
+  }
+
+  const loadTemplateEndpoints = async (specUrl: string) => {
+    resetEndpoints()
+    const requestId = ++loadRequestId
+    endpointsLoading = true
+    endpointsError = null
+
+    try {
+      const response = await fetch(specUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch template (${response.status})`)
+      }
+      const dataString = await response.text()
+      const info = await queries.fetchImportInfo({ data: dataString })
+      if (requestId !== loadRequestId) {
+        return
+      }
+      dataStringCache = dataString
+      endpointOptions = (info.endpoints || [])
+        .slice()
+        .sort((a, b) => compareEndpointOrder(a, b))
+      selectedEndpointId = endpointOptions[0]?.id
+    } catch (error: any) {
+      if (requestId !== loadRequestId) {
+        return
+      }
+      endpointsError = error?.message || "Failed to load endpoints"
+      endpointOptions = []
+      selectedEndpointId = undefined
+      dataStringCache = undefined
+    } finally {
+      if (requestId === loadRequestId) {
+        endpointsLoading = false
+      }
+    }
+  }
+
+  $: if (isTemplateDatasource) {
+    const specUrl = resolvedTemplateSpecUrl
+    if (specUrl && specUrl !== currentTemplateUrl) {
+      currentTemplateUrl = specUrl
+      loadTemplateEndpoints(specUrl)
+    }
+  } else if (currentTemplateUrl) {
+    currentTemplateUrl = undefined
   }
 
   const getData = async (): Promise<string> => {
@@ -96,6 +208,21 @@
   }
 
   const getEndpointId = (endpoint: QueryImportEndpoint) => endpoint.id
+
+  const getEndpointIcon = (endpoint: QueryImportEndpoint) => {
+    const method = (endpoint.method || "").toUpperCase()
+    if (!method) {
+      return undefined
+    }
+    const verbKey = endpoint.queryVerb || method.toLowerCase()
+    return {
+      component: QueryVerbBadge,
+      props: {
+        verb: method,
+        color: customQueryIconColor(verbKey),
+      },
+    }
+  }
 
   const verbOrder: Record<string, number> = {
     GET: 0,
@@ -192,6 +319,10 @@
     selectedEndpointId = event.detail
   }
 
+  $: selectedEndpoint = endpointOptions.find(
+    endpoint => endpoint.id === selectedEndpointId
+  )
+
   async function importQueries() {
     try {
       if (!selectedEndpointId) {
@@ -243,79 +374,135 @@
   onConfirm={() => importQueries()}
   {onCancel}
   confirmText={"Import"}
-  cancelText="Back"
+  cancelText={isTemplateDatasource ? "Cancel" : "Back"}
   size="L"
   disabled={confirmDisabled}
 >
   <Layout noPadding>
-    <Heading size="S">Import</Heading>
-    <Body size="XS"
-      >Import your rest collection using one of the options below</Body
-    >
-    <Tabs selected="File">
-      <Tab title="File">
-        <Dropzone
-          gallery={false}
-          value={$data.file ? [$data.file] : []}
-          on:change={onFileChange}
-          fileTags={[
-            "OpenAPI 3.0",
-            "OpenAPI 2.0",
-            "Swagger 2.0",
-            "cURL",
-            "YAML",
-            "JSON",
-          ]}
-          maximum={1}
-        />
-      </Tab>
-      <Tab title="Raw Text">
-        <TextArea
-          bind:value={$data.raw}
-          on:change={onRawChange}
-          label={"Paste raw text"}
-          placeholder={'e.g. curl --location --request GET "https://example.com"'}
-        />
-      </Tab>
-    </Tabs>
-    <div class="endpoint-select">
-      <Heading size="S">Select endpoint</Heading>
-      <Body size="XS"
-        >Choose the endpoint you want to import from this template.</Body
-      >
-      {#if endpointsLoading}
-        <div class="endpoint-loading">
-          <ProgressCircle size="S" />
-          <Body size="XS">Loading endpoints…</Body>
+    {#if isTemplateDatasource}
+      <div class="template-modal">
+        <div class="endpoint-heading">
+          <IntegrationIcon
+            iconUrl={templateIcon || datasource?.uiMetadata?.iconUrl}
+            integrationType={datasource?.source || IntegrationTypes.REST}
+            schema={restIntegration}
+            size="32"
+          />
         </div>
-      {:else if endpointsError}
-        <InlineAlert
-          type="error"
-          header="Unable to load endpoints"
-          message={endpointsError}
-        />
-      {:else if endpointOptions.length > 0}
-        <Combobox
-          label="Endpoint"
-          value={selectedEndpointId}
-          options={endpointOptions}
-          on:change={onSelectEndpoint}
-          getOptionValue={getEndpointId}
-          getOptionLabel={formatEndpointLabel}
-          helpText="Only one endpoint can be imported at a time."
-        />
-      {:else if dataStringCache}
-        <Body size="XS">No endpoints were found in the provided template.</Body>
-      {:else}
+        <Heading size="S">Select action</Heading>
+        <Body size="XS">
+          Choose the action you want to import from
+          {templateName || datasource?.name || "this template"}.
+        </Body>
+        {#if endpointsLoading}
+          <div class="endpoint-loading">
+            <ProgressCircle size="S" />
+            <Body size="XS">Loading actions…</Body>
+          </div>
+        {:else if endpointsError}
+          <InlineAlert
+            type="error"
+            header="Unable to load actions"
+            message={endpointsError}
+          />
+        {:else if endpointOptions.length > 0}
+          <Select
+            label="Action"
+            value={selectedEndpointId}
+            options={endpointOptions}
+            getOptionValue={getEndpointId}
+            getOptionLabel={formatEndpointLabel}
+            getOptionIcon={getEndpointIcon}
+            placeholder="Select an action"
+            autocomplete={true}
+            on:change={onSelectEndpoint}
+          />
+          <TextArea
+            label="Description"
+            value={templateEndpointDescription}
+            readonly
+            placeholder="No description provided"
+            minHeight={120}
+          />
+        {:else}
+          <Body size="XS">No actions were found for this template.</Body>
+        {/if}
+      </div>
+    {:else}
+      <Heading size="S">Import</Heading>
+      <Body size="XS"
+        >Import your rest collection using one of the options below</Body
+      >
+      <Tabs selected="File">
+        <Tab title="File">
+          <Dropzone
+            gallery={false}
+            value={$data.file ? [$data.file] : []}
+            on:change={onFileChange}
+            fileTags={[
+              "OpenAPI 3.0",
+              "OpenAPI 2.0",
+              "Swagger 2.0",
+              "cURL",
+              "YAML",
+              "JSON",
+            ]}
+            maximum={1}
+          />
+        </Tab>
+        <Tab title="Raw Text">
+          <TextArea
+            bind:value={$data.raw}
+            on:change={onRawChange}
+            label={"Paste raw text"}
+            placeholder={'e.g. curl --location --request GET "https://example.com"'}
+          />
+        </Tab>
+      </Tabs>
+      <div class="endpoint-select">
+        <Heading size="S">Select endpoint</Heading>
         <Body size="XS"
-          >Add a file or paste a template to load available endpoints.</Body
+          >Choose the endpoint you want to import from this template.</Body
         >
-      {/if}
-    </div>
+        {#if endpointsLoading}
+          <div class="endpoint-loading">
+            <ProgressCircle size="S" />
+            <Body size="XS">Loading endpoints…</Body>
+          </div>
+        {:else if endpointsError}
+          <InlineAlert
+            type="error"
+            header="Unable to load endpoints"
+            message={endpointsError}
+          />
+        {:else if endpointOptions.length > 0}
+          <Combobox
+            label="Endpoint"
+            value={selectedEndpointId}
+            options={endpointOptions}
+            on:change={onSelectEndpoint}
+            getOptionValue={getEndpointId}
+            getOptionLabel={formatEndpointLabel}
+            helpText="Only one endpoint can be imported at a time."
+          />
+        {:else if dataStringCache}
+          <Body size="XS">No endpoints were found in the provided template.</Body>
+        {:else}
+          <Body size="XS"
+            >Add a file or paste a template to load available endpoints.</Body
+          >
+        {/if}
+      </div>
+    {/if}
   </Layout>
 </ModalContent>
 
 <style>
+  .template-modal {
+    display: grid;
+    gap: 24px;
+  }
+
   .endpoint-select {
     margin-top: 24px;
     display: grid;
@@ -326,5 +513,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .endpoint-heading {
+    display: flex;
+    justify-content: flex-start;
   }
 </style>

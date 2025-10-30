@@ -5,6 +5,7 @@
   import QueryVerbRenderer from "@/components/common/renderers/QueryVerbRenderer.svelte"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
+  import RestImportQueriesModal from "./RestImportQueriesModal.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
@@ -17,6 +18,7 @@
   )
 
   let viewSelectionModal
+  let restImportModal
 
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
@@ -41,9 +43,24 @@
   </Modal>
 {/if}
 
+{#if isRestDatasource}
+  <Modal bind:this={restImportModal}>
+    <RestImportQueriesModal
+      datasourceId={datasource._id}
+      createDatasource={false}
+    />
+  </Modal>
+{/if}
+
 <Panel>
   <div class="controls" slot="controls">
-    <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
+    <Button
+      cta
+      on:click={() =>
+        datasource?.isRestTemplate
+          ? restImportModal?.show()
+          : $goto(`../../query/new/${datasource._id}`)}
+    >
       {createQueryLabel}
     </Button>
     {#if supportsViews}
