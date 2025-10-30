@@ -30,7 +30,8 @@ import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
-import { updateAllFormulasInTableIfNeeded } from "../table/bulkFormula"
+import { shouldUpdateStaticFormulas } from "../table/bulkFormula"
+import { enqueueStaticFormulaSyncJob } from "./staticFormulaQueue"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -118,23 +119,6 @@ async function initDeployedApp(prodAppId: string) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
-  })
-}
-
-async function syncStaticFormulasToProduction(
-  prodWorkspaceId: string,
-  previousTables: Record<string, Table> = {},
-  tablesToProcess: Table[]
-) {
-  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-    for (const table of tablesToProcess) {
-      const tableId = table._id
-      if (!tableId) {
-        continue
-      }
-      const oldTable = previousTables[tableId]
-      await updateAllFormulasInTableIfNeeded(table, { oldTable })
-    }
   })
 }
 
@@ -341,11 +325,25 @@ export const publishWorkspace = async function (
       await db.put(appDoc)
       await cache.workspace.invalidateWorkspaceMetadata(prodId)
       await initDeployedApp(prodId)
-      await syncStaticFormulasToProduction(
-        prodId,
-        prodTablesBeforeReplication,
-        prodTablesAfterReplication
-      )
+      const tablesWithStaticFormulaChanges = prodTablesAfterReplication
+        .map(table => {
+          const tableId = table._id
+          if (!tableId) {
+            return
+          }
+          const previousTable = prodTablesBeforeReplication[tableId]
+          return shouldUpdateStaticFormulas(table, previousTable)
+            ? tableId
+            : undefined
+        })
+        .filter((tableId): tableId is string => Boolean(tableId))
+
+      if (tablesWithStaticFormulaChanges.length > 0) {
+        await enqueueStaticFormulaSyncJob({
+          workspaceId: prodId,
+          tableIds: tablesWithStaticFormulaChanges,
+        })
+      }
       deployment.setStatus(DeploymentStatus.SUCCESS)
       await storeDeploymentHistory(deployment)
       app = appDoc

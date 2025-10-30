@@ -174,18 +174,12 @@ export async function updateAllFormulasInTableIfNeeded(
   table: Table,
   { oldTable }: { oldTable?: Table }
 ) {
-  // look to see if any formula values have changed
-  const shouldUpdate = Object.values(table.schema).find(
-    column =>
-      isStaticFormula(column) &&
-      (!oldTable ||
-        !oldTable.schema[column.name] ||
-        !isEqual(oldTable.schema[column.name], column))
-  )
-  // if a static formula column has updated, then need to run the update
-  if (shouldUpdate != null) {
-    await updateAllFormulasInTable(table)
+  if (!shouldUpdateStaticFormulas(table, oldTable)) {
+    return false
   }
+
+  await updateAllFormulasInTable(table)
+  return true
 }
 
 export async function runStaticFormulaChecks(
@@ -197,4 +191,17 @@ export async function runStaticFormulaChecks(
   if (!deletion) {
     await updateAllFormulasInTableIfNeeded(table, { oldTable })
   }
+}
+
+export function shouldUpdateStaticFormulas(
+  table: Table,
+  oldTable?: Table
+) {
+  return Object.values(table.schema).some(
+    column =>
+      isStaticFormula(column) &&
+      (!oldTable ||
+        !oldTable.schema[column.name] ||
+        !isEqual(oldTable.schema[column.name], column))
+  )
 }

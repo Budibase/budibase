@@ -18,6 +18,7 @@ import * as api from "../api"
 import * as automations from "../automations"
 import * as bullboard from "../automations/bullboard"
 import env from "../environment"
+import { initStaticFormulaQueue } from "../api/controllers/deploy/staticFormulaQueue"
 import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
 import * as jsRunner from "../jsRunner"
@@ -126,6 +127,7 @@ export async function startup(
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
+  queuePromises.push(initStaticFormulaQueue())
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
