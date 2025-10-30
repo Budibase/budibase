@@ -103,7 +103,11 @@
 
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
-  $: primaryDisplayField = primaryDisplay || tableDefinition?.primaryDisplay
+  $: primaryDisplayField =
+    primaryDisplay ||
+    (tableDefinition && "primaryDisplay" in tableDefinition
+      ? tableDefinition.primaryDisplay
+      : undefined)
   $: relationshipPickerPlaceholder = primaryDisplayField
     ? $pickerLabels.searchByFieldPlaceholder.replace(
         "{field}",
