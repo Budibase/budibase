@@ -1,5 +1,6 @@
 <script>
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
+  import { datasources } from "@/stores/builder"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
 
   const handleOpen = (modal, params) => {
@@ -13,13 +14,16 @@
   $: params = $paramsStore
   $: goto = $gotoStore
   $: handleOpen(modal, params)
+  $: selectedDatasource = $datasources.selected
+  $: confirmText =
+    selectedDatasource?.source === "REST" ? "Add action" : "Create new query"
 </script>
 
 <Modal bind:this={modal}>
   <ModalContent
     size="L"
     cancelText="Cancel"
-    confirmText="Create new query"
+    {confirmText}
     onConfirm={() => goto(`../../query/new/${params["datasourceId"]}`)}
     showCloseIcon={false}
   >

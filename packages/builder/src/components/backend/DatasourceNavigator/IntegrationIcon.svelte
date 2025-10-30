@@ -4,9 +4,10 @@
 
   export let integrationType
   export let schema
+  export let iconUrl = undefined
   export let size = "18"
 
-  $: iconInfo = getIcon(integrationType, schema)
+  $: iconInfo = getIcon(integrationType, schema, iconUrl)
 
   async function getSvgFromUrl(info) {
     const url = `${info.url}`
