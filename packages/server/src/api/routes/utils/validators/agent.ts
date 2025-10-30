@@ -46,42 +46,6 @@ function getAuthValidation() {
 }
 
 /**
- * Validator for chat agent requests
- */
-export function chatAgentValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      _id: OPTIONAL_STRING,
-      _rev: OPTIONAL_STRING,
-      title: OPTIONAL_STRING,
-      messages: Joi.array()
-        .items(
-          Joi.object({
-            role: Joi.string()
-              .valid("system", "user", "assistant", "tool")
-              .required(),
-            content: Joi.string().allow("").allow(null),
-            tool_calls: Joi.array()
-              .items(
-                Joi.object({
-                  id: Joi.string().required(),
-                  type: Joi.string().valid("function").required(),
-                  function: Joi.object({
-                    name: Joi.string().required(),
-                    arguments: Joi.string().required(),
-                  }).required(),
-                })
-              )
-              .optional(),
-            tool_call_id: OPTIONAL_STRING,
-          })
-        )
-        .required(),
-    })
-  )
-}
-
-/**
  * Validator for creating tool source requests
  */
 export function createToolSourceValidator() {
