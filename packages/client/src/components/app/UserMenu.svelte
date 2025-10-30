@@ -31,8 +31,14 @@
     $appStore.application?.translationOverrides
   )
   $: userMenuLabels = resolveTranslationGroup("userMenu", translationOverrides)
-  $: profileLabels = resolveTranslationGroup("profileModal", translationOverrides)
-  $: passwordLabels = resolveTranslationGroup("passwordModal", translationOverrides)
+  $: profileLabels = resolveTranslationGroup(
+    "profileModal",
+    translationOverrides
+  )
+  $: passwordLabels = resolveTranslationGroup(
+    "passwordModal",
+    translationOverrides
+  )
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
