@@ -15,6 +15,8 @@ import {
   FindQueryResponse,
   ImportRestQueryRequest,
   ImportRestQueryResponse,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
@@ -108,7 +110,18 @@ const _import = async (
     datasourceId = body.datasourceId
   }
 
-  const importResult = await importer.importQueries(datasourceId)
+  let importResult
+  try {
+    importResult = await importer.importQueries(
+      datasourceId,
+      body.selectedEndpointId
+    )
+  } catch (error: any) {
+    if (body.selectedEndpointId && error?.message) {
+      ctx.throw(400, error.message)
+    }
+    throw error
+  }
 
   ctx.body = {
     ...importResult,
@@ -116,6 +129,23 @@ const _import = async (
   }
 }
 export { _import as import }
+
+export async function importInfo(
+  ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
+) {
+  const { data } = ctx.request.body
+  if (!data) {
+    ctx.throw(400, "Import data is required")
+  }
+  const importer = new RestImporter(data)
+  await importer.init()
+  const info = await importer.getInfo()
+  ctx.body = {
+    name: info.name,
+    url: info.url,
+    endpoints: info.endpoints || [],
+  }
+}
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()

@@ -4,7 +4,20 @@
   import RestTemplateOption from "../data/_components/RestTemplateOption.svelte"
   import CreationPage from "@/components/common/CreationPage.svelte"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Body, Heading, Layout, Modal, notifications } from "@budibase/bbui"
+  import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import {
+    Body,
+    Heading,
+    Layout,
+    Modal,
+    ModalContent,
+    notifications,
+    Select,
+    TextArea,
+    ProgressCircle,
+    keepOpen,
+    ModalCancelFrom,
+  } from "@budibase/bbui"
   import {
     sortedIntegrations as integrations,
     datasources,
@@ -12,15 +25,25 @@
   } from "@/stores/builder"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { configFromIntegration } from "@/stores/selectors"
+  import { customQueryIconColor } from "@/helpers/data/utils"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
-  import type { RestTemplate } from "@budibase/types"
+  import type { RestTemplate, QueryImportEndpoint } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
   let templateVersionModal: Modal
+  let templateEndpointModal: Modal
   let selectedTemplate: RestTemplate | null = null
   let templateLoading = false
+  let pendingTemplate: RestTemplate | null = null
+  let pendingSpec: RestTemplate["specs"][number] | null = null
+  let pendingSpecData: string | null = null
+  let templateEndpoints: QueryImportEndpoint[] = []
+  let selectedEndpointId: string | undefined = undefined
+  $: selectedEndpoint = templateEndpoints.find(
+    endpoint => endpoint.id === selectedEndpointId
+  )
 
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === IntegrationTypes.REST
@@ -62,16 +85,111 @@
 
     templateLoading = true
     try {
+      const response = await fetch(spec.url)
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch template definition (${response.status})`
+        )
+      }
+      const specData = await response.text()
+      const info = await queries.fetchImportInfo({ data: specData })
+
+      if (!info.endpoints?.length) {
+        throw new Error("No endpoints found in this template")
+      }
+
+      pendingTemplate = template
+      pendingSpec = spec
+      pendingSpecData = specData
+      templateEndpoints = info.endpoints
+        ?.slice()
+        .sort((a, b) => compareEndpointOrder(a, b))
+      selectedEndpointId = templateEndpoints[0]?.id
+      await templateEndpointModal?.show()
+    } catch (error: any) {
+      notifications.error(
+        `Error importing template - ${error?.message || "Unknown error"}`
+      )
+    } finally {
+      templateLoading = false
+    }
+  }
+
+  const formatEndpointLabel = (endpoint: QueryImportEndpoint) => {
+    const path = endpoint.path || ""
+    if (!path) {
+      return endpoint.name
+    }
+    if (endpoint.name && endpoint.name !== path) {
+      return `${path} – ${endpoint.name}`
+    }
+    return path
+  }
+
+  const getEndpointIcon = (endpoint: QueryImportEndpoint) => {
+    const method = (endpoint.method || "").toUpperCase()
+    if (!method) {
+      return undefined
+    }
+    const verbKey = endpoint.queryVerb || method.toLowerCase()
+    const color = customQueryIconColor(verbKey)
+    return {
+      component: QueryVerbBadge,
+      props: {
+        verb: method,
+        color,
+      },
+    }
+  }
+
+  const verbOrder: Record<string, number> = {
+    GET: 0,
+    POST: 1,
+    PUT: 2,
+    PATCH: 3,
+    DELETE: 4,
+  }
+
+  const compareEndpointOrder = (
+    a: QueryImportEndpoint,
+    b: QueryImportEndpoint
+  ) => {
+    const methodA = (a.method || "").toUpperCase()
+    const methodB = (b.method || "").toUpperCase()
+    const orderA = verbOrder[methodA] ?? 999
+    const orderB = verbOrder[methodB] ?? 999
+    if (orderA !== orderB) {
+      return orderA - orderB
+    }
+    const labelA = formatEndpointLabel(a)
+    const labelB = formatEndpointLabel(b)
+    return labelA.localeCompare(labelB)
+  }
+
+  const importTemplate = async () => {
+    if (
+      !pendingTemplate ||
+      !pendingSpec ||
+      !pendingSpecData ||
+      !selectedEndpointId ||
+      !restIntegration
+    ) {
+      notifications.error("Select an endpoint to import")
+      return keepOpen
+    }
+
+    templateLoading = true
+    try {
       const config = {
         ...configFromIntegration(restIntegration),
-        url: spec.url,
+        url: pendingSpec.url,
       }
 
       const datasource = await datasources.create({
         integration: restIntegration,
         config,
-        name: buildDatasourceName(template, spec),
-        uiMetadata: { iconUrl: template.icon },
+        name: buildDatasourceName(pendingTemplate, pendingSpec),
+        uiMetadata: { iconUrl: pendingTemplate.icon },
         isRestTemplate: true,
       })
 
@@ -80,22 +198,54 @@
       }
 
       await queries.importQueries({
-        data: spec.url,
+        data: pendingSpecData,
         datasource,
         datasourceId: datasource._id,
+        selectedEndpointId,
       })
 
       await Promise.all([datasources.fetch(), queries.fetch()])
 
-      notifications.success(`${template.name} imported successfully`)
+      notifications.success(`${pendingTemplate.name} imported successfully`)
+      await templateEndpointModal?.hide()
       $goto(`./datasource/${datasource._id}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
       )
+      return keepOpen
     } finally {
       templateLoading = false
     }
+  }
+
+  const onSelectEndpoint = (event: CustomEvent<string>) => {
+    selectedEndpointId = event.detail
+  }
+
+  const resetEndpointSelection = () => {
+    pendingTemplate = null
+    pendingSpec = null
+    pendingSpecData = null
+    templateEndpoints = []
+    selectedEndpointId = undefined
+  }
+
+  const cancelEndpointSelection = () => {
+    resetEndpointSelection()
+  }
+
+  const handleTemplateCancel = (event: CustomEvent<ModalCancelFrom>) => {
+    if (event.detail === ModalCancelFrom.OUTSIDE_CLICK) {
+      // Prevent outside clicks from closing the modal
+      queryMicrotask(() => templateEndpointModal?.show())
+      return
+    }
+    cancelEndpointSelection()
+  }
+
+  const queryMicrotask = (fn: () => void) => {
+    Promise.resolve().then(fn)
   }
 
   const selectTemplate = (template: RestTemplate) => {
@@ -200,6 +350,68 @@
   {/if}
 </Modal>
 
+<Modal
+  bind:this={templateEndpointModal}
+  on:hide={resetEndpointSelection}
+  on:cancel={handleTemplateCancel}
+>
+  <ModalContent
+    size="L"
+    confirmText="Import"
+    cancelText="Cancel"
+    onConfirm={importTemplate}
+    onCancel={cancelEndpointSelection}
+    disabled={!selectedEndpointId || templateLoading}
+  >
+    <Layout noPadding gap="M">
+      <div class="endpoint-heading">
+        <IntegrationIcon
+          iconUrl={pendingTemplate?.icon}
+          integrationType={restIntegration?.name || IntegrationTypes.REST}
+          schema={restIntegration}
+          size="32"
+        />
+      </div>
+      <Heading size="S">Select action</Heading>
+      <Body size="XS">
+        Choose the action you want to import from {pendingTemplate?.name}.
+      </Body>
+      {#if templateLoading && !pendingSpecData}
+        <div class="endpoint-loading">
+          <ProgressCircle size="S" />
+          <Body size="XS">Loading actions…</Body>
+        </div>
+      {:else if templateLoading}
+        <div class="endpoint-loading">
+          <ProgressCircle size="S" />
+          <Body size="XS">Importing selected action…</Body>
+        </div>
+      {:else if templateEndpoints.length > 0}
+        <Select
+          label="Action"
+          value={selectedEndpointId}
+          options={templateEndpoints}
+          getOptionValue={endpoint => endpoint.id}
+          getOptionLabel={formatEndpointLabel}
+          getOptionIcon={getEndpointIcon}
+          autocomplete={true}
+          placeholder="Select an action"
+          on:change={onSelectEndpoint}
+        />
+        <TextArea
+          label="Description"
+          value={selectedEndpoint?.description || ""}
+          readonly
+          rows={4}
+          placeholder="No description provided"
+        />
+      {:else}
+        <Body size="XS">No actions available for this template.</Body>
+      {/if}
+    </Layout>
+  </ModalContent>
+</Modal>
+
 <style>
   .subHeading {
     display: flex;
@@ -259,5 +471,16 @@
   .empty-state {
     text-align: center;
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .endpoint-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .endpoint-heading {
+    display: flex;
+    justify-content: flex-start;
   }
 </style>

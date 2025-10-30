@@ -3,6 +3,17 @@ import { URL } from "url"
 
 export interface ImportInfo {
   name: string
+  url?: string
+  endpoints: ImportEndpoint[]
+}
+
+export interface ImportEndpoint {
+  id: string
+  name: string
+  method?: string
+  path?: string
+  description?: string
+  queryVerb?: QueryVerb
 }
 
 enum MethodToVerb {
@@ -16,8 +27,16 @@ enum MethodToVerb {
 export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
-  abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getQueries(
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]>
   abstract getImportSource(): string
+
+  protected buildEndpointId = (method: string, path: string): string => {
+    const normalized = this.normalizeMethod(method) || method.toLowerCase()
+    return `${normalized}::${path}`
+  }
 
   protected convertPathVariables = (value: string): string => {
     if (!value) {

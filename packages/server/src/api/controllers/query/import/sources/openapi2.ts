@@ -77,10 +77,39 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const endpoints: ImportInfo["endpoints"] = []
+    for (let [path, pathItem] of Object.entries(this.document.paths)) {
+      for (let [key, opOrParams] of Object.entries(pathItem || {})) {
+        if (isParameter(key, opOrParams)) {
+          continue
+        }
+        const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const operation = opOrParams as OpenAPIV2.OperationObject
+        const name = operation.operationId || path
+        endpoints.push({
+          id: this.buildEndpointId(methodName, path),
+          name,
+          method: methodName.toUpperCase(),
+          path,
+          description: operation.summary || operation.description,
+          queryVerb: this.verbFromMethod(methodName),
+        })
+      }
+    }
+    return endpoints
+  }
+
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
+    const url = this.getUrl()?.href
     return {
       name,
+      url,
+      endpoints: this.getEndpoints(),
     }
   }
 
@@ -88,9 +117,13 @@ export class OpenAPI2 extends OpenAPISource {
     return "openapi2.0"
   }
 
-  getQueries = async (datasourceId: string): Promise<Query[]> => {
+  getQueries = async (
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]> => {
     const url = this.getUrl()
     const queries = []
+    const filterIds = options?.filterIds
 
     for (let [path, pathItem] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -107,6 +140,10 @@ export class OpenAPI2 extends OpenAPISource {
 
         const methodName = key
         if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const endpointId = this.buildEndpointId(methodName, path)
+        if (filterIds && !filterIds.has(endpointId)) {
           continue
         }
         const name = operation.operationId || path

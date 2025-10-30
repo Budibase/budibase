@@ -108,10 +108,45 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const endpoints: ImportInfo["endpoints"] = []
+    for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
+      if (!pathItemObject) {
+        continue
+      }
+      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
+        if (isParameter(key, opOrParams)) {
+          continue
+        }
+        const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const operation = opOrParams as OpenAPIV3.OperationObject
+        const name = operation.operationId || path
+        endpoints.push({
+          id: this.buildEndpointId(methodName, path),
+          name,
+          method: methodName.toUpperCase(),
+          path,
+          description: operation.summary || operation.description,
+          queryVerb: this.verbFromMethod(methodName),
+        })
+      }
+    }
+    return endpoints
+  }
+
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "OpenAPI Import"
+    let url: string | undefined
+    if (this.document.servers?.length) {
+      url = (this.document.servers[0] as ServerObject)?.url
+    }
     return {
       name,
+      url,
+      endpoints: this.getEndpoints(),
     }
   }
 
@@ -119,7 +154,10 @@ export class OpenAPI3 extends OpenAPISource {
     return "openapi3.0"
   }
 
-  getQueries = async (datasourceId: string): Promise<Query[]> => {
+  getQueries = async (
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
     if (this.document.servers?.length) {
@@ -129,6 +167,7 @@ export class OpenAPI3 extends OpenAPISource {
     }
 
     const queries: Query[] = []
+    const filterIds = options?.filterIds
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -150,6 +189,10 @@ export class OpenAPI3 extends OpenAPISource {
 
         const methodName = key
         if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const endpointId = this.buildEndpointId(methodName, path)
+        if (filterIds && !filterIds.has(endpointId)) {
           continue
         }
         const name = operation.operationId || path

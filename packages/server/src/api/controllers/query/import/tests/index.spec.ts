@@ -6,7 +6,7 @@ import { RestImporter } from "../index"
 
 type Assertions = Record<
   DatasetKey,
-  { name?: string; source?: string; count?: number }
+  { name?: string; source?: string; count?: number; endpoints?: number }
 >
 
 const getData = (file: string) => {
@@ -85,6 +85,11 @@ describe("Rest Importer", () => {
     await init(data)
     const info = await restImporter.getInfo()
     expect(info.name).toBe(assertions[key].name)
+    if (assertions[key].endpoints != null) {
+      expect(info.endpoints.length).toBe(assertions[key].endpoints)
+    } else {
+      expect(info.endpoints.length).toBeGreaterThan(0)
+    }
   }
 
   it("gets info", async () => {
@@ -92,32 +97,41 @@ describe("Rest Importer", () => {
       // openapi2 (swagger)
       oapi2CrudJson: {
         name: "CRUD",
+        endpoints: 6,
       },
       oapi2CrudYaml: {
         name: "CRUD",
+        endpoints: 6,
       },
       oapi2PetstoreJson: {
         name: "Swagger Petstore",
+        endpoints: 20,
       },
       oapi2PetstoreYaml: {
         name: "Swagger Petstore",
+        endpoints: 20,
       },
       // openapi3
       oapi3CrudJson: {
         name: "CRUD",
+        endpoints: 6,
       },
       oapi3CrudYaml: {
         name: "CRUD",
+        endpoints: 6,
       },
       oapi3PetstoreJson: {
         name: "Swagger Petstore - OpenAPI 3.0",
+        endpoints: 19,
       },
       oapi3PetstoreYaml: {
         name: "Swagger Petstore - OpenAPI 3.0",
+        endpoints: 19,
       },
       // curl
       curl: {
         name: "example.com",
+        endpoints: 1,
       },
     }
     await runTest(testGetInfo, assertions)
@@ -189,6 +203,37 @@ describe("Rest Importer", () => {
       },
     }
     await runTest(testImportQueries, assertions)
+  })
+
+  it("imports only the selected endpoint", async () => {
+    const dataset = oapi3CrudJson
+    await init(dataset)
+    const info = await restImporter.getInfo()
+    const endpoint = info.endpoints[0]
+    const datasource = await config.createDatasource()
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id, endpoint.id)
+    )
+    expect(importResult.errorQueries.length).toBe(0)
+    expect(importResult.queries.length).toBe(1)
+    expect(importResult.queries[0].name).toBe(endpoint.name)
+    expect(events.query.imported).toHaveBeenCalledTimes(1)
+    expect(events.query.imported).toHaveBeenCalledWith(
+      datasource,
+      restImporter.source.getImportSource(),
+      1
+    )
+    jest.clearAllMocks()
+  })
+
+  it("throws when the selected endpoint is missing", async () => {
+    await init(oapi3CrudJson)
+    const datasource = await config.createDatasource()
+    await expect(
+      config.doInContext(config.devWorkspaceId, () =>
+        restImporter.importQueries(datasource._id, "missing::endpoint")
+      )
+    ).rejects.toThrow("Selected endpoint could not be imported")
   })
 
   it("filters unsupported options methods", async () => {
