@@ -30,18 +30,25 @@ vi.mock("@/api", () => ({
 }))
 
 vi.mock("@/stores/portal", () => {
-  const toMock = store => {
+  const toMock = (store, extra) => {
     return {
       subscribe: store.subscribe,
       update: store.update,
       set: store.set,
+      ...extra,
     }
   }
 
+  const mockaiConfigsStore = writable({
+    customConfigs: [],
+  })
   return {
     admin: toMock(writable()),
     licensing: toMock(writable()),
     featureFlags: toMock(writable()),
+    aiConfigsStore: toMock(mockaiConfigsStore, {
+      fetch: vi.fn(),
+    }),
   }
 })
 
