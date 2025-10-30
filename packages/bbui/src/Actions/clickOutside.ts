@@ -104,12 +104,9 @@ const handleBlur = () => {
 }
 
 // Global singleton listeners for our events
-const hasDom = typeof window !== "undefined" && typeof document !== "undefined"
-if (hasDom) {
-  document.addEventListener("mousedown", handleMouseDown)
-  document.addEventListener("contextmenu", handleClick)
-  window.addEventListener("blur", handleBlur)
-}
+document.addEventListener("mousedown", handleMouseDown)
+document.addEventListener("contextmenu", handleClick)
+window.addEventListener("blur", handleBlur)
 
 /**
  * Adds or updates a click handler
