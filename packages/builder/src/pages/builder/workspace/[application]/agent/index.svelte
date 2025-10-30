@@ -20,6 +20,7 @@
   import AppsHero from "assets/automation-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
+  import { onMount } from "svelte"
 
   let showHighlight = true
   let upsertModal: AgentModal
@@ -79,6 +80,10 @@
     // }
 
     return b.updatedAt!.localeCompare(a.updatedAt!)
+  })
+
+  onMount(async () => {
+    await agentsStore.fetchAgents()
   })
 </script>
 

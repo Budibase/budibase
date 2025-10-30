@@ -32,7 +32,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   fetchAgents = async () => {
-    const agents = await API.fetchAgents()
+    const { agents } = await API.fetchAgents()
     this.update(state => {
       state.agents = agents
       return state
