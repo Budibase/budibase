@@ -10,21 +10,29 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin, licensing } from "@/stores/portal"
+  import {
+    admin,
+    aiConfigsStore,
+    featureFlags,
+    licensing,
+  } from "@/stores/portal"
   import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
   import AIConfigTile from "./AIConfigTile.svelte"
   import ConfigModal from "./ConfigModal.svelte"
+  import CustomConfigModal from "./CustomConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import {
+    type CustomAIProviderConfig,
     type AIProvider,
     ConfigType,
     type AIConfig,
     type ProviderConfig,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
+  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -37,12 +45,17 @@
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
+  let customConfigModal: { show: () => void; hide: () => void }
   let modalProvider: AIProvider
   let modalConfig: ProviderConfig
   let providerNames: AIProvider[]
+
+  let providers: { provider: AIProvider; config: ProviderConfig }[]
   let hasLicenseKey: boolean
+  let customModalConfig: CustomAIProviderConfig | null = null
 
   $: isCloud = $admin.cloud
+  $: privateLLMSEnabled = !$admin.cloud && $featureFlags.PRIVATE_LLMS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -52,6 +65,8 @@
         config: getProviderConfig(provider).config,
       }))
     : []
+
+  $: customConfigs = $aiConfigsStore.customConfigs
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -126,6 +141,19 @@
     await saveConfig(aiConfig)
   }
 
+  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
+    customModalConfig = config
+      ? {
+          ...config,
+          apiKey: config.apiKey ?? "",
+          baseUrl: config.baseUrl ?? "",
+          model: config.model ?? "",
+          isDefault: config.isDefault ?? false,
+        }
+      : null
+    customConfigModal?.show()
+  }
+
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
     if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
@@ -150,7 +178,7 @@
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-      const license = await $licensing.license
+      const license = $licensing.license
       const isOfflineLicense = () => license && "identifier" in license
       if (isOfflineLicense()) {
         hasLicenseKey = true
@@ -158,6 +186,8 @@
         const licenseKeyResponse = await API.getLicenseKey()
         hasLicenseKey = !!licenseKeyResponse?.licenseKey
       }
+
+      customConfigs = await aiConfigsStore.fetch()
     } catch {
       notifications.error("Error fetching AI settings")
     }
@@ -230,6 +260,32 @@
         </div>
       {/if}
     </div>
+
+    {#if privateLLMSEnabled}
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Chat configuration</div>
+          <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
+            Add configuration
+          </Button>
+        </div>
+
+        {#if customConfigs.length}
+          <div class="ai-list">
+            {#each customConfigs as config (config._id)}
+              <CustomAIConfigTile
+                {config}
+                editHandler={() => openCustomAIConfigModal(config)}
+              />
+            {/each}
+          </div>
+        {:else}
+          <div class="no-enabled">
+            <Body size="S">No chat configurations yet</Body>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </Layout>
 {/if}
 
@@ -250,6 +306,14 @@
     enableHandler={updatedConfig =>
       enableProvider(modalProvider, updatedConfig)}
     disableHandler={() => disableProvider(modalProvider)}
+  />
+</Modal>
+<Modal bind:this={customConfigModal}>
+  <CustomConfigModal
+    config={customModalConfig}
+    on:hide={() => {
+      customConfigModal.hide()
+    }}
   />
 </Modal>
 
@@ -304,6 +368,18 @@
     font-weight: 600;
     font-size: 16px;
     color: var(--ink);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+  }
+
+  .section-header .section-title {
+    margin-bottom: 0;
   }
 
   .disabled-title {

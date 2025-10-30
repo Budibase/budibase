@@ -41,6 +41,7 @@ import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { RecaptchaEndpoints } from "./recaptcha"
+import { AIConfigEndpoints } from "./aiConfig"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -153,4 +154,5 @@ export type APIClient = BaseAPIClient &
     workspace: WorkspaceFavouriteEndpoints
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
+    aiConfig: AIConfigEndpoints
   }

@@ -5,7 +5,7 @@ export async function ensureTenantAppOwnershipMiddleware(
   ctx: UserCtx,
   next: () => Promise<void> | void
 ) {
-  const appId = await utils.getAppIdFromCtx(ctx)
+  const appId = await utils.getWorkspaceIdFromCtx(ctx)
   if (!appId) {
     ctx.throw(400, "appId must be provided")
   }
