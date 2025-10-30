@@ -132,6 +132,11 @@ export async function processUploaded(plugin: KoaFile, source: PluginSource) {
     throw new Error("Only component plugins are supported outside of self-host")
   }
 
+  // Block Svelte 5 plugins until we release Svelte 5
+  if (metadata.schema?.metadata?.svelteMajor === 5) {
+    throw new Error("Svelte 5 plugins are not yet supported in Budibase")
+  }
+
   const doc = await pro.plugins.storePlugin(metadata, directory, source)
   clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
