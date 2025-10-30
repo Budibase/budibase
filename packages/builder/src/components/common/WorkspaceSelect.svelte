@@ -177,6 +177,7 @@
       {#if $auth.user && sdk.users.canCreateApps($auth.user) && !$licensing.isFreePlan}
         <Icon
           name="plus"
+          size="M"
           hoverable
           tooltip="Create workspace"
           on:click={() => {
@@ -184,6 +185,8 @@
             workspaceMenu?.hide()
           }}
         />
+      {:else}
+        <span class="header-actions-spacer" aria-hidden="true" />
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -232,6 +235,7 @@
               >
                 <Icon
                   name="star"
+                  size="XS"
                   weight={app.favourite ? "fill" : "regular"}
                   color={app.favourite
                     ? "var(--spectrum-global-color-yellow-1000)"
@@ -259,30 +263,35 @@
   .menu-item :global(.spectrum-Menu-item) {
     width: 100%;
   }
-
   .menu-item.active :global(.spectrum-Menu-item) {
     background: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
   }
-
   .menu-item :global(.spectrum-Menu-itemLabel) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .menu-item :global(.spectrum-Menu-item .icon),
+  .menu-item :global(.spectrum-Menu-item .keys) {
+    flex: 0 0 24px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
   .menu-item :global(.spectrum-Menu-item .icon) {
     order: 1;
-    margin-left: var(--spacing-s);
-    margin-right: 0;
   }
   .menu-item :global(.spectrum-Menu-item .keys) {
     order: 2;
-    margin-left: var(--spacing-s);
   }
 
   .fav-slot {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 24px;
   }
   .fav-icon-button {
     background: transparent;
@@ -291,7 +300,11 @@
     margin: 0;
     cursor: pointer;
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
   }
+
   .menu-item :global(.fav-icon) {
     opacity: 0;
     transition: opacity 130ms ease-in-out;
@@ -342,6 +355,7 @@
   .workspace-menu.disabled .workspace-menu-text:hover {
     border-radius: 0;
   }
+
   .menu-item-header {
     display: flex;
     justify-content: space-between;
@@ -360,9 +374,18 @@
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
   }
+
   .header-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
+  }
+  .header-actions > :global(*),
+  .header-actions-spacer {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
   }
 </style>
