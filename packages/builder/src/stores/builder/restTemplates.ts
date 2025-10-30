@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "BambooHR",
-      description:
-        "HRIS platform for employee records, time off, and performance management",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/kevinoid/bamboohr-openapi/main/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/bamboohr.svg",
-    },
-    {
       name: "Box",
       description:
         "Cloud content management for files, folders, collaboration, and metadata",
@@ -90,18 +78,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: "/builder/assets/rest-template-icons/jira.svg",
-    },
-    {
-      name: "NetSuite",
-      description:
-        "ERP platform covering finance, inventory, and record management REST APIs",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/philip-denys/netsuite-rest-api-v1/master/ns-restapi-v1.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/netsuite.svg",
     },
     {
       name: "PagerDuty",
