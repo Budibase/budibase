@@ -40,17 +40,7 @@
     }
   }
 
-  async function duplicateAgent() {
-    notifications.info("TODO")
-  }
-
   const getContextMenuItems = () => {
-    const edit = {
-      icon: "pencil",
-      name: "Edit",
-      visible: true,
-      callback: () => upsertModal.show(),
-    }
     const del = {
       icon: "trash",
       name: "Delete",
@@ -58,16 +48,7 @@
       disabled: false,
       callback: () => confirmDeleteDialog.show(),
     }
-    return [
-      edit,
-      {
-        icon: "copy",
-        name: "Duplicate",
-        visible: true,
-        callback: duplicateAgent,
-      },
-      del,
-    ]
+    return [del]
   }
 
   const openContextMenu = (e: MouseEvent, agent: Agent) => {
@@ -184,9 +165,8 @@
   </div>
 </div>
 
+<AgentModal bind:this={upsertModal} />
 {#if selectedAgent}
-  <AgentModal bind:this={upsertModal} agent={selectedAgent} />
-
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
     okText="Delete Agent"
