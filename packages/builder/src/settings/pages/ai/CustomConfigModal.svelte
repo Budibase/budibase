@@ -6,7 +6,6 @@
     Input,
     Toggle,
     Heading,
-    ActionButton,
     notifications,
     keepOpen,
   } from "@budibase/bbui"
@@ -71,6 +70,10 @@
   cancelText="Cancel"
   onConfirm={confirm}
   disabled={!canSave}
+  showSecondaryButton={isEdit}
+  secondaryButtonText={"Delete"}
+  secondaryAction={deleteConfig}
+  secondaryButtonWarning
 >
   <div slot="header">
     <Heading size="XS">
@@ -78,61 +81,40 @@
     </Heading>
   </div>
 
-  <div class="form-row">
+  <div class="row">
     <Label size="M">Name</Label>
     <Input bind:value={draft.name} placeholder="Support chat" />
   </div>
 
-  <div class="form-row">
+  <div class="row">
     <Label size="M">Provider</Label>
     <Input bind:value={draft.provider} />
   </div>
 
-  <div class="form-row">
+  <div class="row">
     <Label size="M">API Key</Label>
     <Input type="password" bind:value={draft.apiKey} />
   </div>
 
-  <div class="form-row">
+  <div class="row">
     <Label size="M">Base URL</Label>
     <Input placeholder="https://api.openai.com" bind:value={draft.baseUrl} />
   </div>
 
-  <div class="form-row">
+  <div class="row">
     <Label size="M">Model</Label>
     <Input placeholder="gpt-4o-mini" bind:value={draft.model} />
   </div>
 
-  <div class="toggle-row">
-    <Label size="M">Default</Label>
+  <div class="row">
+    <Label size="M">Use as default configuration</Label>
     <Toggle bind:value={draft.isDefault} />
   </div>
-
-  {#if isEdit}
-    <div class="delete">
-      <ActionButton quiet on:click={deleteConfig}>
-        Delete configuration
-      </ActionButton>
-    </div>
-  {/if}
 </ModalContent>
 
 <style>
-  .form-row {
+  .row {
     display: grid;
     gap: var(--spacing-s);
-  }
-
-  .toggle-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-xxs) 0;
-  }
-
-  .delete {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: var(--spacing-xs);
   }
 </style>

@@ -1,6 +1,9 @@
 import { configs, context, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 import sdk from ".."
+import env from "../../environment"
+
+const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
 export async function generateKey(
   name: string
@@ -13,13 +16,13 @@ export async function generateKey(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
+      Authorization: liteLLMAuthorizationHeader,
     },
     body,
   }
 
   const response = await fetch(
-    "http://localhost:4000/key/generate",
+    `${env.LITELLM_URL}/key/generate`,
     requestOptions
   )
 
@@ -40,7 +43,7 @@ export async function addModel(model: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
+      Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
       model_name: name,
@@ -63,7 +66,7 @@ export async function addModel(model: {
     }),
   }
 
-  const res = await fetch("http://localhost:4000/model/new", requestOptions)
+  const res = await fetch(`${env.LITELLM_URL}/model/new`, requestOptions)
   const json = await res.json()
   return json.model_id
 }
@@ -82,7 +85,7 @@ export async function updateModel(model: {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
+      Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
       model_name: name,
@@ -106,7 +109,7 @@ export async function updateModel(model: {
   }
 
   const res = await fetch(
-    `http://localhost:4000/model/${llmModelId}/update`,
+    `${env.LITELLM_URL}/model/${llmModelId}/update`,
     requestOptions
   )
   const json = await res.json()
@@ -129,7 +132,7 @@ export async function validateConfig(model: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
+      Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
       // mode: "chat",
@@ -143,7 +146,7 @@ export async function validateConfig(model: {
   }
 
   const res = await fetch(
-    "http://localhost:4000/health/test_connection",
+    `${env.LITELLM_URL}/health/test_connection`,
     requestOptions
   )
   if (res.status !== 200) {
@@ -170,7 +173,7 @@ export async function syncKeyModels() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer sk-1234",
+      Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
       key: liteLLM.keyId,
@@ -178,7 +181,7 @@ export async function syncKeyModels() {
     }),
   }
 
-  const res = await fetch("http://localhost:4000/key/update", requestOptions)
+  const res = await fetch(`${env.LITELLM_URL}/key/update`, requestOptions)
   const json = await res.json()
   if (json.status === "error") {
     const trimmedError = json.result.error.split("\n")[0] || json.result.error

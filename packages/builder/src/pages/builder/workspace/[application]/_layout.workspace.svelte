@@ -11,7 +11,6 @@
   import { API } from "@/api"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
   export let application
@@ -72,8 +71,6 @@
 {#if $previewStore.showPreview}
   <PreviewOverlay />
 {/if}
-
-<EnterpriseBasicTrialModal />
 
 <style>
   .init.page-error,

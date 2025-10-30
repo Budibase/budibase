@@ -2,11 +2,13 @@
   import { goto } from "@roxi/routify"
   import { Button, Table, Modal } from "@budibase/bbui"
   import { queries } from "@/stores/builder"
+  import QueryVerbRenderer from "@/components/common/renderers/QueryVerbRenderer.svelte"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
 
   export let datasource
 
@@ -18,6 +20,13 @@
 
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
+  $: methodRenderer =
+    datasource?.source === IntegrationTypes.REST
+      ? QueryVerbRenderer
+      : CapitaliseRenderer
+  $: isRestDatasource = datasource?.source === "REST"
+  $: showImportButton = isRestDatasource && !datasource?.isRestTemplate
+  $: createQueryLabel = isRestDatasource ? "Add action" : "Create new query"
 </script>
 
 {#if supportsViews}
@@ -35,12 +44,12 @@
 <Panel>
   <div class="controls" slot="controls">
     <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
-      Create new query
+      {createQueryLabel}
     </Button>
     {#if supportsViews}
       <Button secondary on:click={viewSelectionModal.show}>Fetch views</Button>
     {/if}
-    {#if datasource.source === "REST"}
+    {#if showImportButton}
       <RestImportButton datasourceId={datasource._id} />
     {/if}
   </div>
@@ -59,7 +68,7 @@
     allowEditColumns={false}
     allowEditRows={false}
     allowSelectRows={false}
-    customRenderers={[{ column: "queryVerb", component: CapitaliseRenderer }]}
+    customRenderers={[{ column: "queryVerb", component: methodRenderer }]}
   />
 </Panel>
 

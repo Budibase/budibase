@@ -5,7 +5,7 @@ export function publicApiMiddleware({
   requiresAppId,
 }: { requiresAppId?: boolean } = {}) {
   return async (ctx: Ctx, next: () => void) => {
-    const appId = await utils.getAppIdFromCtx(ctx)
+    const appId = await utils.getWorkspaceIdFromCtx(ctx)
     if (requiresAppId && !appId) {
       ctx.throw(
         400,

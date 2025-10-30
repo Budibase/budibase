@@ -59,15 +59,7 @@ function addDebugInformation(messages: Message[]) {
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const aiConfig = await sdk.aiConfigs.getDefault()
-  if (!aiConfig) {
-    ctx.throw(422, "Chat config not found")
-  }
-  const model = await ai.getChatLLM({
-    model: aiConfig.liteLLMModelId,
-    baseUrl: "http://localhost:4000",
-    apiKey: await sdk.aiConfigs.getLiteLLMSecretKey(),
-  })
+  const model = await sdk.aiConfigs.getLLMOrThrow()
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
 

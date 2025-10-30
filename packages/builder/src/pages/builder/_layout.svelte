@@ -11,7 +11,6 @@
     enrichedApps,
   } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
-  import { appStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
   import {
@@ -44,47 +43,100 @@
   let settingsModal
   let accountLockedModal
   let hasAuthenticated = false
+  let lastExecutedAction = null
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
-  $: baseUrl = $admin?.baseUrl
   $: cloud = $admin?.cloud
   $: user = $auth.user
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
-  $: showFreeTrialBanner =
-    $licensing.license?.plan?.type ===
-      Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
+  // Re-run initBuilder when user logs in
+  $: {
+    const isAuthenticated = !!$auth.user
+    if (isAuthenticated && !hasAuthenticated) {
+      initPromise = initBuilder()
+    }
+    hasAuthenticated = isAuthenticated
+  }
 
   $: usersLimitLockAction = $licensing?.errUserLimit
     ? () => accountLockedModal.show()
     : null
 
+  $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
+
+  $: processNavAction($navigationAction)
+
+  navigation.init($redirect)
+
   const isOnPreLoginPage = () => {
     return $isActive("./auth") || $isActive("./invite") || $isActive("./admin")
   }
 
-  navigation.init($redirect)
+  // Determine if the user is on a trial and show the banner.
+  const updateBannerVisibility = (user, licenseType, isOwner) => {
+    if (!user && $licensing.showTrialBanner) {
+      licensing.update(store => {
+        store.showTrialBanner = false
+        return store
+      })
+    } else if (
+      user &&
+      !$licensing.showTrialBanner &&
+      licenseType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      isOwner
+    ) {
+      licensing.update(store => {
+        store.showTrialBanner = true
+        return store
+      })
+    }
+  }
 
-  // Only recalculates when an action actually changes
+  // Handle navigation actions from derived store
+  const processNavAction = action => {
+    // Reset last executed action when there's no action to process
+    if (!action) {
+      lastExecutedAction = null
+      return
+    }
+
+    // Prevent executing the same action repeatedly
+    const actionKey = JSON.stringify(action)
+    if (actionKey === lastExecutedAction) {
+      return
+    }
+    lastExecutedAction = actionKey
+
+    switch (action.type) {
+      case "setReturnUrl":
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, action.url)
+        break
+
+      case "redirect":
+        if (!$isActive(action.path)) {
+          $redirect(action.path)
+        }
+        break
+
+      case "returnUrl":
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+        $goto(action.url)
+        break
+    }
+  }
+
   const navigationAction = derivedMemo(
-    [admin, auth, enrichedApps, appStore, isActive, appsStore, loaded],
-    ([
-      $admin,
-      $auth,
-      $enrichedApps,
-      $appStore,
-      $isActive,
-      $appsStore,
-      $loaded,
-    ]) => {
+    [admin, auth, enrichedApps, isActive, appsStore, loaded],
+    ([$admin, $auth, $enrichedApps, $isActive, $appsStore, $loaded]) => {
       // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
       }
 
-      // Set the return url
+      // Set the return url on logout
       if (
         !$auth.user &&
         !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
@@ -113,6 +165,7 @@
       if ($auth.user?.forceResetPassword) {
         return { type: "redirect", path: "./auth/reset" }
       }
+
       // Authenticated user navigation
       if ($auth.user) {
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
@@ -148,8 +201,7 @@
           isBuilder &&
           $appsStore.apps.length &&
           !$isActive("./workspace/:application") &&
-          !$isActive("./apps") &&
-          !$appStore.appId
+          !$isActive("./apps")
         ) {
           const defaultApp = $enrichedApps[0]
           // Only redirect if enriched apps are loaded
@@ -163,49 +215,6 @@
     }
   )
 
-  const validateTenantId = async () => {
-    const host = window.location.host
-    if (host.includes("localhost:") || !baseUrl) {
-      // ignore local dev
-      return
-    }
-
-    const mainHost = new URL(baseUrl).host
-    let urlTenantId
-    // remove the main host part
-    const hostParts = host.split(mainHost).filter(part => part !== "")
-    // if there is a part left, it has to be the tenant ID subdomain
-    if (hostParts.length === 1) {
-      urlTenantId = hostParts[0].replace(/\./g, "")
-    }
-
-    if (user && user.tenantId) {
-      if (!urlTenantId) {
-        // redirect to correct tenantId subdomain
-        if (!window.location.host.includes("localhost")) {
-          let redirectUrl = window.location.href
-          redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
-          window.location.href = redirectUrl
-        }
-        return
-      }
-
-      if (urlTenantId && user.tenantId !== urlTenantId) {
-        // user should not be here - play it safe and log them out
-        try {
-          await auth.logout()
-          await auth.setOrganisation(null)
-        } catch (error) {
-          console.error(
-            `Tenant mis-match - "${urlTenantId}" and "${user.tenantId}" - logout`
-          )
-        }
-      }
-    } else {
-      // no user - set the org according to the url
-      await auth.setOrganisation(urlTenantId)
-    }
-  }
   async function analyticsPing() {
     await API.analyticsPing({ source: "builder" })
   }
@@ -238,7 +247,7 @@
 
       // Validate tenant if in a multi-tenant env
       if (multiTenancyEnabled) {
-        await validateTenantId()
+        await auth.validateTenantId()
       }
     } catch (error) {
       // Don't show a notification here, as we might 403 initially due to not
@@ -256,40 +265,10 @@
         duration: 5000,
       })
     }
-
-    await analyticsPing()
-  }
-
-  onMount(() => {
-    initPromise = initBuilder()
-    hasAuthenticated = !!$auth.user
-  })
-
-  // Re-run initBuilder when user logs in
-  $: {
-    const isAuthenticated = !!$auth.user
-    if (isAuthenticated && !hasAuthenticated) {
-      initPromise = initBuilder()
-    }
-    hasAuthenticated = isAuthenticated
-  }
-
-  // Handle navigation actions from derived store
-  $: if ($navigationAction) {
-    const action = $navigationAction
-    switch (action.type) {
-      case "setReturnUrl":
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, action.url)
-        break
-
-      case "redirect":
-        $redirect(action.path)
-        break
-
-      case "returnUrl":
-        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-        window.location.href = action.url
-        break
+    try {
+      await analyticsPing()
+    } catch (e) {
+      console.error("Analytics ping failed", e?.message)
     }
   }
 
@@ -300,9 +279,14 @@
       commandPaletteModal.toggle()
     }
   }
+
+  onMount(() => {
+    initPromise = initBuilder()
+    hasAuthenticated = !!$auth.user
+  })
 </script>
 
-<EnterpriseBasicTrialBanner show={showFreeTrialBanner} />
+<EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
 
 <AccountLockedModal
   bind:this={accountLockedModal}
@@ -326,7 +310,9 @@
   <div class="loading" />
 {:then _}
   {#if $loaded || $admin.maintenance.length}
-    <slot />
+    <div class="content">
+      <slot />
+    </div>
   {/if}
 {:catch error}
   <div class="init page-error">
@@ -375,5 +361,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    overflow: hidden;
   }
 </style>

@@ -55,7 +55,7 @@
   let customModalConfig: CustomAIProviderConfig | null = null
 
   $: isCloud = $admin.cloud
-  $: chatEnabled = $featureFlags.AI_AGENTS
+  $: privateLLMSEnabled = !$admin.cloud && $featureFlags.PRIVATE_LLMS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -108,15 +108,10 @@
     provider: AIProvider,
     updates?: Partial<Omit<ProviderConfig, "active" | "isDefault">>
   ) {
-    if (provider !== "Chat") {
-      // Ensure that only one provider is active at a time.
-      for (const config of Object.values(aiConfig.config)) {
-        if (config.provider === "Chat") {
-          continue
-        }
-        config.active = false
-        config.isDefault = false
-      }
+    // Ensure that only one provider is active at a time.
+    for (const config of Object.values(aiConfig.config)) {
+      config.active = false
+      config.isDefault = false
     }
 
     const { key, config } = getProviderConfig(provider)
@@ -161,10 +156,6 @@
 
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
-    if (provider === "Chat") {
-      openCustomAIConfigModal()
-      return
-    }
     if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
       portalModal.show()
       return
@@ -270,7 +261,7 @@
       {/if}
     </div>
 
-    {#if chatEnabled}
+    {#if privateLLMSEnabled}
       <div class="section">
         <div class="section-header">
           <div class="section-title">Chat configuration</div>

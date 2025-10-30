@@ -64,7 +64,7 @@ services:
     container_name: budi-litellm-dev
     image: ghcr.io/berriai/litellm:main-stable
     ports:
-      - "4000:4000"
+      - "${LITELLM_PORT:-4000}:4000"
     environment:
       DATABASE_URL: "postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
