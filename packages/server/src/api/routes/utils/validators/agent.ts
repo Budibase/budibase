@@ -80,3 +80,29 @@ export function updateToolSourceValidator() {
     }).unknown(true)
   )
 }
+
+export function createAgentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      name: Joi.string().required(),
+      description: OPTIONAL_STRING,
+      aiconfig: Joi.string().required(),
+      promptInstructions: OPTIONAL_STRING,
+      allowedTools: Joi.array().items(Joi.string()).default([]),
+    })
+  )
+}
+
+export function updateAgentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      _id: Joi.string().required(),
+      _rev: Joi.string().required(),
+      name: Joi.string().required(),
+      description: OPTIONAL_STRING,
+      aiconfig: Joi.string().required(),
+      promptInstructions: OPTIONAL_STRING,
+      allowedTools: Joi.array().items(Joi.string()).default([]),
+    })
+  )
+}

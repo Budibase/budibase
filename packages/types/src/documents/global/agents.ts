@@ -1,5 +1,13 @@
 import { Document, Message, Tool } from "../../"
 
+export interface Agent extends Document {
+  name: string
+  description?: string
+  aiconfig: string
+  promptInstructions?: string
+  allowedTools: string[]
+}
+
 export interface AgentChat extends Document {
   title: string
   messages: Message[]

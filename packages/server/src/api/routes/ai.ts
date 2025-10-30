@@ -1,12 +1,20 @@
 import * as ai from "../controllers/ai"
 import {
+  createAgentValidator,
   createToolSourceValidator,
+  updateAgentValidator,
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
+
+builderAdminRoutes
+  .get("/api/agent", ai.fetchAgents)
+  .post("/api/agent", createAgentValidator(), ai.createAgent)
+  .put("/api/agent", updateAgentValidator(), ai.updateAgent)
+  .delete("/api/agent/:agentId", ai.deleteAgent)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
