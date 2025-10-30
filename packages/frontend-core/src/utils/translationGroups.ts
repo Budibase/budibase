@@ -25,7 +25,9 @@ export const createWorkspaceTranslationStore = (
   options?: CreateWorkspaceTranslationStoreOptions
 ): WorkspaceTranslationStore => {
   const sdk = (getContext("sdk") as any) ?? {}
-  const contextStore = sdk?.appStore as Readable<TranslationStoreValue> | undefined
+  const contextStore = sdk?.appStore as
+    | Readable<TranslationStoreValue>
+    | undefined
   const providedStore = (options?.appStore ?? contextStore) as
     | Readable<TranslationStoreValue>
     | null
