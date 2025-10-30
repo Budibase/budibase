@@ -16,6 +16,8 @@ import { success, error, info, moveDirectory } from "../utils"
 import { captureEvent } from "../events"
 import { init as hostingInit } from "../hosting/init"
 import { start as hostingStart } from "../hosting/start"
+import { analysePluginForSvelte5, runSvelte5Migration } from "./migrate"
+import { execSync } from "child_process"
 
 const fp = require("find-free-port")
 
@@ -177,6 +179,95 @@ async function dev() {
   console.log(success("Password: ") + info(password))
 }
 
+async function migrateSvelte5() {
+  // preflight: ensure inside plugin
+  checkInPlugin()
+
+  // optional git dirty check; allow override with --force
+  let isDirty = false
+  try {
+    const out = execSync("git status --porcelain", { encoding: "utf8" })
+    isDirty = !!out.trim()
+  } catch (_) {
+    // if git not available, ignore
+  }
+  if (isDirty && !process.argv.includes("--force")) {
+    console.log(
+      info(
+        "Your git working directory is not clean. Commit or stash changes, or re-run with --force."
+      )
+    )
+    const proceed = await questions.confirmation(
+      "Proceed with migration anyway?"
+    )
+    if (!proceed) {
+      console.log(info("Migration aborted."))
+      return
+    }
+  }
+
+  // analysis
+  console.log(info("Analyzing plugin for Svelte 5 migration..."))
+  const analysis = await analysePluginForSvelte5()
+  console.log(info("Proposed changes:"))
+  for (const line of analysis.report) {
+    console.log(info(" - " + line))
+  }
+
+  // confirmation unless --yes
+  if (!process.argv.includes("--yes")) {
+    const confirm = await questions.confirmation("Apply these changes now?")
+    if (!confirm) {
+      console.log(info("Migration aborted by user."))
+      return
+    }
+  }
+
+  // apply migrations
+  console.log(info("Applying migrations..."))
+  const results = await runSvelte5Migration()
+  if (results.pkgRes?.message) {
+    console.log(info(results.pkgRes.message))
+  }
+  if (results.schemaRes?.message) {
+    console.log(info(results.schemaRes.message))
+  }
+  if (results.rollupRes?.message) {
+    console.log(info(results.rollupRes.message))
+  }
+  if (results.wrapperRes?.message) {
+    console.log(info(results.wrapperRes.message))
+  }
+
+  // reinstall deps
+  console.log(info("Installing updated dependencies..."))
+  await runPkgCommand("install")
+
+  // verify & build
+  console.log(info("Re-verifying plugin..."))
+  const verified = await verify()
+  if (!verified?.name) {
+    console.log(error("Verification failed after migration."))
+    return
+  }
+
+  console.log(info("Attempting build..."))
+  try {
+    await runPkgCommand("build")
+    console.log(
+      success(
+        "Migration completed. Your plugin was migrated to Svelte 5 and built successfully."
+      )
+    )
+  } catch (err: any) {
+    console.log(
+      error(
+        `Build failed after migration. Please review the errors above. ${err?.message || ""}`
+      )
+    )
+  }
+}
+
 export default new Command(`${CommandWord.PLUGIN}`)
   .addHelp(
     "Custom plugins for Budibase, init, build and verify your components and datasources with this tool."
@@ -200,4 +291,9 @@ export default new Command(`${CommandWord.PLUGIN}`)
     "--dev",
     "Run a development environment which automatically watches the current directory.",
     dev
+  )
+  .addSubOption(
+    "--migrate-svelte5",
+    "Migrate this plugin to the Svelte 5-compatible Budibase plugin format.",
+    migrateSvelte5
   )
