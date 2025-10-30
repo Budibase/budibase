@@ -67,7 +67,7 @@ describe("email trigger", () => {
     expect(messages).toHaveLength(1)
 
     const repeat = messages[0].opts?.repeat
-    expect(repeat).toEqual({ every: 30_000 })
+    expect(repeat).toEqual({ every: 60_000 })
   })
 })
 

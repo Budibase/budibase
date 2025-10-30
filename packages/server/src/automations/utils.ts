@@ -255,7 +255,7 @@ export async function enableCronOrEmailTrigger(
         automation,
         event: { appId },
       },
-      { repeat: { every: 30_000 }, jobId }
+      { repeat: { every: 60_000 }, jobId }
     )
 
     trigger.cronJobId = job.id.toString()
