@@ -54,6 +54,7 @@ import { buildResourceEndpoints } from "./resource"
 import { buildDeploymentEndpoints } from "./deploy"
 import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildRecaptchaEndpoints } from "./recaptcha"
+import { buildAIConfigEndpoints } from "./aiConfig"
 
 export type { APIClient } from "./types"
 
@@ -308,5 +309,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     workspace: buildWorkspaceFavouriteEndpoints(API),
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
+    aiConfig: buildAIConfigEndpoints(API),
   }
 }

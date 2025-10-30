@@ -26,6 +26,9 @@
       <Body size="S" weight={"600"}>{config.name}</Body>
     </div>
     <div class="controls">
+      {#if config.isDefault}
+        <div class="tag default">Default</div>
+      {/if}
       {#if config.active}
         <div class="tag active">Enabled</div>
       {:else}
@@ -70,6 +73,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
   }
 
   .option :global(label) {
@@ -119,5 +127,9 @@
 
   .disabled {
     background: var(--grey-3);
+  }
+
+  .default {
+    background: var(--bb-indigo);
   }
 </style>
