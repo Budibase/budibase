@@ -47,7 +47,7 @@
         notifications.success("Logged in successfully")
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
 
-        $goto("../portal")
+        $goto("/builder")
       }
     } catch (err) {
       notifications.error(err.message ? err.message : "Invalid credentials")

@@ -12,6 +12,17 @@
     $redirect("../")
   }
 
+  // Redirect to account portal for authentication in cloud environments
+  if (
+    !$auth.user &&
+    $admin.cloud &&
+    !$admin.disableAccountPortal &&
+    $admin.accountPortalUrl &&
+    !$admin?.checklist?.sso?.checked
+  ) {
+    window.location.href = $admin.accountPortalUrl
+  }
+
   if ($admin?.cloud && $admin?.checklist?.branding) {
     let url = new URL(window.location.href)
     let hostname = url.hostname
@@ -24,16 +35,6 @@
     if (!existingTenantId || existingTenantId !== newTenantId) {
       CookieUtils.setCookie("tenantId", newTenantId, domain)
     }
-  }
-
-  if (
-    !$auth.user &&
-    $admin.cloud &&
-    !$admin.disableAccountPortal &&
-    $admin.accountPortalUrl &&
-    !$admin?.checklist?.sso?.checked
-  ) {
-    window.location.href = $admin.accountPortalUrl
   }
 </script>
 

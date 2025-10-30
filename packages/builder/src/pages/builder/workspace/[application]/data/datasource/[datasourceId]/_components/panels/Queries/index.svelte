@@ -2,11 +2,13 @@
   import { goto } from "@roxi/routify"
   import { Button, Table, Modal } from "@budibase/bbui"
   import { queries } from "@/stores/builder"
+  import QueryVerbRenderer from "@/components/common/renderers/QueryVerbRenderer.svelte"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
 
   $goto
 
@@ -20,6 +22,10 @@
 
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
+  $: methodRenderer =
+    datasource?.source === IntegrationTypes.REST
+      ? QueryVerbRenderer
+      : CapitaliseRenderer
 </script>
 
 {#if supportsViews}
@@ -61,7 +67,7 @@
     allowEditColumns={false}
     allowEditRows={false}
     allowSelectRows={false}
-    customRenderers={[{ column: "queryVerb", component: CapitaliseRenderer }]}
+    customRenderers={[{ column: "queryVerb", component: methodRenderer }]}
   />
 </Panel>
 

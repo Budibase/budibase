@@ -1,13 +1,14 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { screenStore } from "@/stores/builder"
+  import { screenStore, appStore } from "@/stores/builder"
   import { onMount } from "svelte"
 
   $redirect
 
   onMount(() => {
     const { screens } = $screenStore
-
+    const { appId } = $appStore
+    if (!appId) return
     if (screens && screens.length > 0) {
       $redirect("./design")
     } else {

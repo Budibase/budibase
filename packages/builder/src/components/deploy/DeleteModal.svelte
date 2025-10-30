@@ -2,7 +2,7 @@
   import { Input, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { appsStore } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
   import { API } from "@/api"
 
   $goto
@@ -10,7 +10,7 @@
   export let appId
   export let appName
   export let onDeleteSuccess = () => {
-    $goto("/builder")
+    $goto("/")
   }
 
   let deleting = false
@@ -38,12 +38,13 @@
     deleting = true
     try {
       await API.deleteApp(appId)
-      appsStore.load()
-      notifications.success("App deleted successfully")
+      // Clear the current app from appStore since it no longer exists
+      appStore.reset()
+      notifications.success("Workspace deleted successfully")
       deleting = false
       onDeleteSuccess()
     } catch (err) {
-      notifications.error("Error deleting app")
+      notifications.error("Error deleting workspace")
       deleting = false
     }
   }

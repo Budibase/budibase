@@ -3,5 +3,5 @@
 
   $redirect
 
-  $redirect("../portal")
+  $redirect("../builder")
 </script>

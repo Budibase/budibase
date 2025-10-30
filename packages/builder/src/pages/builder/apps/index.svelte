@@ -3,10 +3,8 @@
   import { API } from "@/api"
   import {
     admin,
-    appsStore,
     auth,
     clientAppsStore,
-    groups,
     licensing,
     organisation,
   } from "@/stores/portal"
@@ -63,10 +61,7 @@
 
   onMount(async () => {
     try {
-      await organisation.init()
-      await appsStore.load()
       await clientAppsStore.load()
-      await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")
     }
@@ -105,7 +100,7 @@
                 Update password
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
-                <MenuItem icon="user-gear" on:click={() => $goto("../portal")}>
+                <MenuItem icon="user-gear" on:click={() => $goto("/builder")}>
                   Open developer mode
                 </MenuItem>
               {/if}
