@@ -146,6 +146,11 @@ const environment = {
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED ?? true,
   UPLOAD_APPS_FILES_ON_TEST: process.env.UPLOAD_APPS_FILES_ON_TEST,
+  LITELLM_PORT: process.env.LITELLM_PORT || "4000",
+  LITELLM_URL:
+    process.env.LITELLM_URL ||
+    `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
+  LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

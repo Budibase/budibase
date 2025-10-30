@@ -41,6 +41,7 @@ export enum DocumentType {
   OAUTH2_CONFIG_LOG = "oauth2log",
   AGENT_CHAT = "agentchat",
   AGENT_TOOL_SOURCE = "agenttoolsource",
+  AI_CONFIG = "aiconfig",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
 }

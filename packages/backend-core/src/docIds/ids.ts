@@ -129,6 +129,10 @@ export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }
 
+export const generateAIConfigID = () => {
+  return `${DocumentType.AI_CONFIG}${SEPARATOR}${newid()}`
+}
+
 export const generateWorkspaceAppID = () => {
   return `${DocumentType.WORKSPACE_APP}${SEPARATOR}${newid()}`
 }

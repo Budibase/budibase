@@ -1,17 +1,21 @@
+import { constants } from "@budibase/backend-core"
 import {
+  AIConfigListResponse,
   ChatCompletionRequest,
   ChatCompletionResponse,
+  CreateAIConfigRequest,
+  CustomAIProviderConfig,
   GenerateCronRequest,
   GenerateCronResponse,
   GenerateJsRequest,
   GenerateJsResponse,
   GenerateTablesRequest,
   GenerateTablesResponse,
+  UpdateAIConfigRequest,
   UploadFileRequest,
   UploadFileResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import { constants } from "@budibase/backend-core"
 
 export class AIAPI extends TestAPI {
   generateJs = async (
@@ -72,6 +76,43 @@ export class AIAPI extends TestAPI {
     return await this._post<GenerateTablesResponse>(`/api/ai/tables`, {
       body: req,
       headers,
+      expectations,
+    })
+  }
+
+  fetchConfigs = async (
+    expectations?: Expectations
+  ): Promise<AIConfigListResponse> => {
+    return await this._get<AIConfigListResponse>(`/api/configs`, {
+      expectations,
+    })
+  }
+
+  createConfig = async (
+    body: CreateAIConfigRequest,
+    expectations?: Expectations
+  ): Promise<CustomAIProviderConfig> => {
+    return await this._post<CustomAIProviderConfig>(`/api/configs`, {
+      body,
+      expectations,
+    })
+  }
+
+  updateConfig = async (
+    body: UpdateAIConfigRequest,
+    expectations?: Expectations
+  ): Promise<CustomAIProviderConfig> => {
+    return await this._put<CustomAIProviderConfig>(`/api/configs`, {
+      body,
+      expectations,
+    })
+  }
+
+  deleteConfig = async (
+    id: string,
+    expectations?: Expectations
+  ): Promise<{ deleted: true }> => {
+    return await this._delete<{ deleted: true }>(`/api/configs/${id}`, {
       expectations,
     })
   }
