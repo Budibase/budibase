@@ -430,7 +430,7 @@
             {#if $featureFlags.AI_AGENTS}
               <SideNavLink
                 icon="cpu"
-                text="Agent"
+                text="Agents"
                 url={$url("./agent")}
                 {collapsed}
                 on:click={keepCollapsed}
