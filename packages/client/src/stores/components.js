@@ -8,8 +8,12 @@ import { builderStore } from "./builder"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 
-import * as AppComponents from "../components/app/index.js"
+import * as AppComponents from "../components/app/index.ts"
 import { ScreenslotID, ScreenslotType } from "../constants"
+import {
+  isLegacySvelteComponent,
+  wrapLegacyComponent,
+} from "@/utils/wrapLegacyComponent"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 
@@ -184,13 +188,17 @@ const createComponentStore = () => {
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {
-    if (!Component || !schema?.schema?.name || !version) {
-      return
+    if (!Component || !schema?.schema?.name || !version) return
+
+    let RegisteredComponent = Component
+    if (isLegacySvelteComponent(Component)) {
+      RegisteredComponent = wrapLegacyComponent(Component)
     }
-    const component = `plugin/${schema.schema.name}`
+
+    const componentKey = `plugin/${schema.schema.name}`
     store.update(state => {
-      state.customComponentManifest[component] = {
-        Component,
+      state.customComponentManifest[componentKey] = {
+        Component: RegisteredComponent,
         schema,
       }
       return state
@@ -198,8 +206,8 @@ const createComponentStore = () => {
 
     // Reload any mounted instances of this custom component
     const state = get(store)
-    if (state.customComponentMap[component]?.length) {
-      state.customComponentMap[component].forEach(id => {
+    if (state.customComponentMap[componentKey]?.length) {
+      state.customComponentMap[componentKey].forEach(id => {
         state.mountedComponents[id]?.reload()
       })
     }

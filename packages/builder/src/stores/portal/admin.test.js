@@ -89,7 +89,9 @@ describe("admin store", () => {
         expect(get).toHaveBeenNthCalledWith(1, auth)
         expect(API.getChecklist).toHaveBeenCalledTimes(1)
         expect(API.getChecklist).toHaveBeenCalledWith("tenantId")
-        expect(ctx.writableReturn.update.calls[0][0]({ foo: "foo" })).toEqual({
+        expect(
+          ctx.writableReturn.update.mock.calls[0][0]({ foo: "foo" })
+        ).toEqual({
           foo: "foo",
           checklist: "checklist",
         })
@@ -104,7 +106,9 @@ describe("admin store", () => {
       it("adds the environment to the store", ctx => {
         expect(API.getEnvironment).toHaveBeenCalledTimes(1)
         expect(API.getEnvironment).toHaveBeenCalledWith()
-        expect(ctx.writableReturn.update.calls[1][0]({ foo: "foo" })).toEqual({
+        expect(
+          ctx.writableReturn.update.mock.calls[1][0]({ foo: "foo" })
+        ).toEqual({
           foo: "foo",
           multiTenancy: true,
           cloud: true,
@@ -143,9 +147,9 @@ describe("admin store", () => {
           expect(get).toHaveBeenNthCalledWith(2, ctx.writableReturn)
           expect(API.getSystemStatus).toHaveBeenCalledTimes(1)
           expect(API.getEnvironment).toHaveBeenCalledWith()
-          expect(ctx.writableReturn.update.calls[2][0]({ foo: "foo" })).toEqual(
-            { foo: "foo", status: "status" }
-          )
+          expect(
+            ctx.writableReturn.update.mock.calls[2][0]({ foo: "foo" })
+          ).toEqual({ foo: "foo", status: "status" })
         })
 
         it("checkStatus", ctx => {
@@ -166,9 +170,9 @@ describe("admin store", () => {
           expect(get).toHaveBeenNthCalledWith(2, ctx.writableReturn)
           expect(API.getSystemStatus).toHaveBeenCalledTimes(1)
           expect(API.getEnvironment).toHaveBeenCalledWith()
-          expect(ctx.writableReturn.update.calls[2][0]({ foo: "foo" })).toEqual(
-            { foo: "foo", status: "status" }
-          )
+          expect(
+            ctx.writableReturn.update.mock.calls[2][0]({ foo: "foo" })
+          ).toEqual({ foo: "foo", status: "status" })
         })
 
         it("checkStatus", ctx => {
@@ -186,7 +190,9 @@ describe("admin store", () => {
       })
 
       it("marks the store as loaded", ctx => {
-        expect(ctx.writableReturn.update.calls[3][0]({ foo: "foo" })).toEqual({
+        expect(
+          ctx.writableReturn.update.mock.calls[3][0]({ foo: "foo" })
+        ).toEqual({
           foo: "foo",
           loaded: true,
         })
@@ -200,7 +206,9 @@ describe("admin store", () => {
     })
 
     it("sets the store's loaded parameter to false", ctx => {
-      expect(ctx.writableReturn.update.calls[0][0]({ loaded: true })).toEqual({
+      expect(
+        ctx.writableReturn.update.mock.calls[0][0]({ loaded: true })
+      ).toEqual({
         loaded: false,
       })
     })
@@ -217,7 +225,9 @@ describe("admin store", () => {
       expect(get).toHaveBeenNthCalledWith(1, auth)
       expect(API.getChecklist).toHaveBeenCalledTimes(1)
       expect(API.getChecklist).toHaveBeenCalledWith("tenantId")
-      expect(ctx.writableReturn.update.calls[0][0]({ foo: "foo" })).toEqual({
+      expect(
+        ctx.writableReturn.update.mock.calls[0][0]({ foo: "foo" })
+      ).toEqual({
         foo: "foo",
         checklist: "checklist",
       })

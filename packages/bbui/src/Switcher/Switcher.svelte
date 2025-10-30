@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { AbsTooltip, ActionButton } from "@budibase/bbui"
+  import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import ActionButton from "../ActionButton/ActionButton.svelte"
 
   export let leftIcon: string
   export let leftNotificationTooltip: string | undefined = undefined

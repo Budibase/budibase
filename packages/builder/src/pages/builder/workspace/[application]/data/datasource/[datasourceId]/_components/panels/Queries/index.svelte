@@ -10,6 +10,8 @@
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
   import { IntegrationTypes } from "@/constants/backend"
 
+  $goto
+
   export let datasource
 
   $: queryList = $queries.list.filter(

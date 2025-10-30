@@ -35,7 +35,7 @@
 {#if visible}
   <div class="reorder-wrapper">
     <GridScrollWrapper scrollVertically>
-      <div class="reorder-overlay" {style} />
+      <div class="reorder-overlay" {style}></div>
     </GridScrollWrapper>
   </div>
 {/if}

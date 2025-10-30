@@ -92,7 +92,7 @@ describe("backups store", () => {
 
     it("sets the state with the selected backup", ctx => {
       expect(ctx.writableReturn.update).toHaveBeenCalledTimes(1)
-      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+      expect(ctx.writableReturn.update.mock.calls[0][0]({})).toEqual({
         selectedBackup: ctx.backupId,
       })
     })

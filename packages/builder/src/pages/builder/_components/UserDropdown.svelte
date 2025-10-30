@@ -9,6 +9,8 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { API } from "@/api"
 
+  $goto
+
   export let align = "right"
 
   let themeModal

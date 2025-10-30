@@ -38,7 +38,7 @@
         <div class="options">
           <Label>Label</Label>
           <Label>Value</Label>
-          <div />
+          <div></div>
           {#each options as option (option.id)}
             <Input placeholder="Label" bind:value={option.label} />
             <Input placeholder="Value" bind:value={option.value} />

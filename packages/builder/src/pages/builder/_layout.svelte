@@ -37,6 +37,9 @@
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { writable } from "svelte/store"
 
+  $isActive
+  $redirect
+
   let initPromise
   let loaded = writable(false)
   let commandPaletteModal

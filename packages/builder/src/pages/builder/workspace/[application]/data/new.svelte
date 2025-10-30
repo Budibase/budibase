@@ -17,6 +17,9 @@
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
 
+  $goto
+  $params
+
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
 

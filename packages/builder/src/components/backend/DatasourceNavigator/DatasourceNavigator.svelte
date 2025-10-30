@@ -20,6 +20,11 @@
   import { onMount } from "svelte"
   import { DataEnvironmentMode } from "@budibase/types"
 
+  $goto
+  $isActive
+  $params
+  $goto
+
   export let searchTerm
   let toggledDatasources = {}
 
