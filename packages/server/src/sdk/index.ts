@@ -21,6 +21,7 @@ import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
+import * as aiConfigs from "./aiConfig"
 
 const sdk = {
   backups,
@@ -46,6 +47,7 @@ const sdk = {
   deployment,
   dev,
   workspace,
+  aiConfigs,
 }
 
 // default export for TS

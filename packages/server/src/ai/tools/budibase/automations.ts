@@ -37,7 +37,7 @@ export default [
         .describe(
           "Input fields/data to pass to the app action automation trigger as JSON object. Ensure the schema for the automation is known before triggering it."
         ),
-      timeout: z.number().optional().describe("Timeout in seconds (optional)"),
+      timeout: z.number().nullish().describe("Timeout in seconds (optional)"),
     }),
     handler: async ({
       automationId,
@@ -46,7 +46,7 @@ export default [
     }: {
       automationId: string
       fields: string
-      timeout?: number
+      timeout?: number | null
     }) => {
       let parsedData
       try {
@@ -57,7 +57,7 @@ export default [
       const result = await sdk.automations.execution.trigger(
         automationId,
         parsedData || {},
-        timeout
+        timeout ?? undefined
       )
       const formatted = JSON.stringify(result, null, 2)
       return `Successfully triggered automation:\n\n${formatted}`
