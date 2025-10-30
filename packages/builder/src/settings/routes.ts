@@ -1,11 +1,12 @@
+import { sdk } from "@budibase/shared-core"
+import { FeatureFlag, GetGlobalSelfResponse } from "@budibase/types"
+import { UserAvatar } from "@budibase/frontend-core"
+
+import { isEnabled } from "@/helpers/featureFlags"
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
-
-import { sdk } from "@budibase/shared-core"
-import { GetGlobalSelfResponse } from "@budibase/types"
 import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
-import { UserAvatar } from "@budibase/frontend-core"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 
@@ -31,6 +32,37 @@ export const orgRoutes = (
   const isAdmin = user != null && sdk.users.isAdmin(user)
   const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
   const cloud = admin?.cloud
+
+  const emailRoutes: Route[] = [
+    {
+      path: "smtp",
+      title: "SMTP",
+      comp: Pages.get("email"),
+    },
+    {
+      path: "templates",
+      title: "Templates",
+      comp: Pages.get("email_templates"),
+      routes: [
+        {
+          path: ":templateId",
+          title: "Template",
+          comp: Pages.get("email_template"),
+        },
+      ],
+    },
+  ]
+
+  if (isEnabled(FeatureFlag.EMAIL_TRIGGER)) {
+    const imapRoute: Route = {
+      path: "imap",
+      title: "IMAP",
+      comp: Pages.get("email_imap"),
+    }
+    const smtpIndex = emailRoutes.findIndex(route => route.path === "smtp")
+    const insertIndex = smtpIndex >= 0 ? smtpIndex + 1 : emailRoutes.length
+    emailRoutes.splice(insertIndex, 0, imapRoute)
+  }
 
   return [
     {
@@ -103,30 +135,7 @@ export const orgRoutes = (
       path: "email",
       icon: "envelope",
       access: () => isAdmin,
-      routes: [
-        {
-          path: "smtp",
-          title: "SMTP",
-          comp: Pages.get("email"),
-        },
-        {
-          path: "imap",
-          title: "IMAP",
-          comp: Pages.get("email_imap"),
-        },
-        {
-          path: "templates",
-          title: "Templates",
-          comp: Pages.get("email_templates"),
-          routes: [
-            {
-              path: ":templateId",
-              title: "Template",
-              comp: Pages.get("email_template"),
-            },
-          ],
-        },
-      ],
+      routes: emailRoutes,
     },
     {
       section: "AI",
