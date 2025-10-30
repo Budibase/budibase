@@ -193,10 +193,7 @@ export async function runStaticFormulaChecks(
   }
 }
 
-export function shouldUpdateStaticFormulas(
-  table: Table,
-  oldTable?: Table
-) {
+export function shouldUpdateStaticFormulas(table: Table, oldTable?: Table) {
   return Object.values(table.schema).some(
     column =>
       isStaticFormula(column) &&
