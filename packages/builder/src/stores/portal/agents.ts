@@ -1,39 +1,43 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
+  Agent,
   AgentChat,
-  AgentToolSource,
   AgentToolSourceWithTools,
+  CreateAgentRequest,
   CreateToolSourceRequest,
+  UpdateAgentRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
 
-interface AgentStore {
+interface AgentStoreState {
+  agents: Agent[]
+  currentAgentId?: string
   chats: AgentChat[]
   currentChatId?: string
   toolSources: AgentToolSourceWithTools[]
 }
 
-export class AgentsStore extends BudiStore<AgentStore> {
+export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
     super({
+      agents: [],
       chats: [],
       toolSources: [],
     })
   }
 
   init = async () => {
-    await this.fetchChats()
-    await this.fetchToolSources()
+    await this.fetchAgents()
   }
 
-  fetchChats = async () => {
-    const chats = await API.fetchChats()
+  fetchAgents = async () => {
+    const agents = await API.fetchAgents()
     this.update(state => {
-      state.chats = chats
+      state.agents = agents
       return state
     })
-    return chats
+    return agents
   }
 
   removeChat = async (chatId: string) => {
@@ -103,6 +107,32 @@ export class AgentsStore extends BudiStore<AgentStore> {
       state.currentChatId = undefined
       return state
     })
+  }
+
+  createAgent = async (agent: CreateAgentRequest) => {
+    const created = await API.createAgent(agent)
+    this.update(state => {
+      state.agents = [...state.agents, created]
+      return state
+    })
+    return created
+  }
+
+  updateAgent = async (agent: UpdateAgentRequest) => {
+    const updated = await API.updateAgent(agent)
+    this.update(state => {
+      const index = state.agents.findIndex(a => a._id === updated._id)
+      if (index !== -1) {
+        state.agents[index] = updated
+      }
+      return state
+    })
+    return updated
+  }
+
+  deleteAgent = async (agentId: string) => {
+    await API.deleteAgent(agentId)
+    await this.fetchAgents()
   }
 }
 

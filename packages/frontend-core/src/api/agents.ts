@@ -3,9 +3,14 @@ import {
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
+  CreateAgentRequest,
+  CreateAgentResponse,
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
+  FetchAgentsResponse,
   LLMStreamChunk,
+  UpdateAgentRequest,
+  UpdateAgentResponse,
 } from "@budibase/types"
 
 import { Header } from "@budibase/shared-core"
@@ -28,6 +33,10 @@ export interface AgentEndpoints {
   ) => Promise<{ created: true }>
   updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
   deleteToolSource: (toolSourceId: string) => Promise<{ deleted: true }>
+  fetchAgents: () => Promise<FetchAgentsResponse>
+  createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
+  updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
+  deleteAgent: (agentId: string) => Promise<{ deleted: true }>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -133,6 +142,32 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteToolSource: async (toolSourceId: string) => {
     return await API.delete({
       url: `/api/agent/toolsource/${toolSourceId}`,
+    })
+  },
+
+  fetchAgents: async () => {
+    return await API.get({
+      url: "/api/agent",
+    })
+  },
+
+  createAgent: async (agent: CreateAgentRequest) => {
+    return await API.post({
+      url: "/api/agent",
+      body: agent,
+    })
+  },
+
+  updateAgent: async (agent: UpdateAgentRequest) => {
+    return await API.put({
+      url: "/api/agent",
+      body: agent,
+    })
+  },
+
+  deleteAgent: async (agentId: string) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}`,
     })
   },
 })
