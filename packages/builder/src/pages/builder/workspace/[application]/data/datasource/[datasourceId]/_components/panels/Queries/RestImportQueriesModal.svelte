@@ -17,21 +17,32 @@
   } from "@budibase/bbui"
   import { datasources, queries } from "@/stores/builder"
   import { writable } from "svelte/store"
-  import type { Datasource, QueryImportEndpoint } from "@budibase/types"
+  import type {
+    Datasource,
+    ImportRestQueryRequest,
+    QueryImportEndpoint,
+    UIFile,
+  } from "@budibase/types"
 
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
   export let createDatasource = false
   export let onCancel: (() => void) | undefined = undefined
 
-  const data = writable<{ url: string; raw: string; file?: any }>({
+  interface ImportFormData {
+    url: string
+    raw: string
+    file?: File
+  }
+
+  const data = writable<ImportFormData>({
     url: "",
     raw: "",
-    file: undefined,
   })
 
-  let lastTouched = "url"
+  let lastTouched: "url" | "file" | "raw" = "url"
 
+  let datasource: Datasource
   $: datasource = $datasources.selected as Datasource
   let endpointOptions: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
@@ -83,6 +94,8 @@
     }
     return label
   }
+
+  const getEndpointId = (endpoint: QueryImportEndpoint) => endpoint.id
 
   const verbOrder: Record<string, number> = {
     GET: 0,
@@ -155,8 +168,11 @@
     }
   }
 
-  const onFileChange = async (event: { detail: unknown[] }) => {
-    $data.file = event.detail?.[0]
+  const onFileChange = async (
+    event: CustomEvent<(File | UIFile | undefined)[]>
+  ) => {
+    const [file] = event.detail ?? []
+    $data.file = file instanceof File ? file : undefined
     lastTouched = "file"
     resetEndpoints()
     if ($data.file) {
@@ -172,7 +188,7 @@
     }
   }
 
-  const onSelectEndpoint = (event: { detail: string | undefined }) => {
+  const onSelectEndpoint = (event: CustomEvent<string | undefined>) => {
     selectedEndpointId = event.detail
   }
 
@@ -195,7 +211,7 @@
         throw new Error("No datasource id")
       }
 
-      const body = {
+      const body: ImportRestQueryRequest = {
         data: dataString,
         datasourceId,
         datasource,
@@ -284,7 +300,7 @@
           value={selectedEndpointId}
           options={endpointOptions}
           on:change={onSelectEndpoint}
-          getOptionValue={endpoint => endpoint.id}
+          getOptionValue={getEndpointId}
           getOptionLabel={formatEndpointLabel}
           helpText="Only one endpoint can be imported at a time."
         />

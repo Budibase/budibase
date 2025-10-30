@@ -1,36 +1,56 @@
-<script>
-  import Field from "./Field.svelte"
-  import Combobox from "./Core/Combobox.svelte"
+<script lang="ts" generics="O">
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let label = undefined
+  import Combobox from "./Core/Combobox.svelte"
+  import Field from "./Field.svelte"
+  import type { LabelPosition } from "../types"
+
+  export let value: string | undefined = undefined
+  export let label: string | undefined = undefined
   export let disabled = false
   export let readonly = false
-  export let labelPosition = "above"
-  export let error = null
+  export let labelPosition: LabelPosition = "above"
+  export let error: string | undefined | false = undefined
   export let placeholder = "Choose an option or type"
-  export let options = []
-  export let helpText = null
-  export let getOptionLabel = option => extractProperty(option, "label")
-  export let getOptionValue = option => extractProperty(option, "value")
+  export let options: O[] = []
+  export let helpText: string | undefined = undefined
+  export let getOptionLabel: (option: O) => string = option =>
+    extractProperty(option, "label")
+  export let getOptionValue: (option: O) => string = option =>
+    extractProperty(option, "value")
 
-  const dispatch = createEventDispatcher()
-  const onChange = e => {
-    value = e.detail
-    dispatch("change", e.detail)
+  const dispatch = createEventDispatcher<{
+    change: string | undefined
+  }>()
+
+  const onChange = (event: CustomEvent<string | undefined>) => {
+    value = event.detail
+    dispatch("change", event.detail)
   }
-  const extractProperty = (value, property) => {
-    if (value && typeof value === "object") {
-      return value[property]
+
+  const extractProperty = (option: O, property: string): string => {
+    if (option && typeof option === "object" && property in option) {
+      const record = option as Record<string, unknown>
+      const extracted = record[property]
+      if (typeof extracted === "string") {
+        return extracted
+      }
+      if (typeof extracted === "number" || typeof extracted === "boolean") {
+        return String(extracted)
+      }
+      return ""
     }
-    return value
+
+    if (option === null || option === undefined) {
+      return ""
+    }
+
+    return String(option)
   }
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
   <Combobox
-    {error}
     {disabled}
     {value}
     {options}
