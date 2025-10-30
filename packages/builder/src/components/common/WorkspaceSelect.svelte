@@ -1,19 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import {
-    ActionMenu,
-    MenuItem,
-    Icon,
-    AbsTooltip,
-    TooltipPosition,
-  } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
   import { appsStore, sortBy } from "@/stores/portal/apps"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
+  import type { EnrichedApp } from "@/types"
 
   const SORT_OPTIONS = [
     { key: "name", label: "Alphabetical" },
@@ -128,6 +123,14 @@
     })
   }
 
+  const getStatus = (app: EnrichedApp) => {
+    return app.prodId ? "Published" : "Unpublished"
+  }
+
+  const getTitleText = (app: EnrichedApp) => {
+    return `${app.name}\n${getStatus(app)}\n${formatLastEdited(app.updatedAt)}`
+  }
+
   onMount(() => {
     try {
       const saved = localStorage.getItem(SORT_STORAGE_KEY)
@@ -205,50 +208,45 @@
         class:selected
         class:favourite={app.favourite}
         class:active={i === activeIndex}
-        title={app.name}
+        title={getTitleText(app)}
         bind:this={itemEls[i]}
       >
-        <AbsTooltip
-          position={TooltipPosition.Right}
-          text={formatLastEdited(app.updatedAt)}
+        <MenuItem
+          icon={selected ? "check" : undefined}
+          on:click={() => {
+            if (selected) return
+            navigateToWorkspace(app.devId)
+          }}
         >
-          <MenuItem
-            icon={selected ? "check" : undefined}
-            on:click={() => {
-              if (selected) return
-              navigateToWorkspace(app.devId)
-            }}
-          >
-            {app.name}
-            <div slot="right" class="fav-slot">
-              <button
-                type="button"
-                class="fav-icon-button fav-icon"
-                aria-label={app.favourite
-                  ? "Remove from favourites"
-                  : "Add to favourites"}
-                on:click={e => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  toggleFavourite(app.appId, !app.favourite)
-                }}
-              >
-                <Icon
-                  name="star"
-                  size="XS"
-                  weight={app.favourite ? "fill" : "regular"}
-                  color={app.favourite
-                    ? "var(--spectrum-global-color-yellow-1000)"
-                    : "var(--spectrum-global-color-gray-700)"}
-                  hoverColor={app.favourite
-                    ? "var(--spectrum-global-color-yellow-700)"
-                    : "var(--spectrum-global-color-gray-900)"}
-                  hoverable
-                />
-              </button>
-            </div>
-          </MenuItem>
-        </AbsTooltip>
+          {app.name}
+          <div slot="right" class="fav-slot">
+            <button
+              type="button"
+              class="fav-icon-button fav-icon"
+              aria-label={app.favourite
+                ? "Remove from favourites"
+                : "Add to favourites"}
+              on:click={e => {
+                e.stopPropagation()
+                e.preventDefault()
+                toggleFavourite(app.appId, !app.favourite)
+              }}
+            >
+              <Icon
+                name="star"
+                size="XS"
+                weight={app.favourite ? "fill" : "regular"}
+                color={app.favourite
+                  ? "var(--spectrum-global-color-yellow-1000)"
+                  : "var(--spectrum-global-color-gray-700)"}
+                hoverColor={app.favourite
+                  ? "var(--spectrum-global-color-yellow-700)"
+                  : "var(--spectrum-global-color-gray-900)"}
+                hoverable
+              />
+            </button>
+          </div>
+        </MenuItem>
       </span>
     {/each}
   </div>
