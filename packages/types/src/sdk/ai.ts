@@ -112,6 +112,7 @@ export interface LLMStreamChunk {
   type:
     | "content"
     | "component"
+    | "component_complete"
     | "tool_call_start"
     | "tool_call_result"
     | "done"
@@ -119,6 +120,9 @@ export interface LLMStreamChunk {
     | "chat_saved"
   content?: string
   component?: ComponentPayload
+  componentId?: string
+  message?: string
+  row?: unknown
   toolCall?: {
     id: string
     name: string

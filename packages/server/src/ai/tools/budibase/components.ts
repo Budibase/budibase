@@ -198,8 +198,9 @@ export default [
         ),
       componentId: z
         .string()
-        .nullish()
-        .describe("Optional component identifier associated with the form."),
+        .describe(
+          "Component identifier associated with the form submission. Use the componentId from the FORM_SUBMISSION payload."
+        ),
     }),
     handler: async ({ tableId, values, componentId }) => {
       let parsedValues: Record<string, unknown>
@@ -251,9 +252,12 @@ export default [
       }
 
       const row = await sdk.rows.save(tableId, sanitized, undefined)
-      const formatted = JSON.stringify(row, null, 2)
-      const componentInfo = componentId ? ` for component ${componentId}` : ""
-      return `Form submission processed successfully${componentInfo}:\n\n${formatted}`
+      return JSON.stringify({
+        type: "component_complete",
+        componentId,
+        message: `Form submission processed successfully for component ${componentId}.`,
+        row,
+      })
     },
   }),
 ]
