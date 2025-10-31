@@ -108,7 +108,6 @@ export default [
       function mapField(column: FieldSchema): FormFieldPayload {
         switch (column.type) {
           case FieldType.STRING:
-          case FieldType.NUMBER:
           case FieldType.DATETIME:
             return {
               name: column.name,
@@ -143,6 +142,7 @@ export default [
               name: column.name,
               type: FormFieldType.Select,
               // helpText: column.description,
+              options: column.constraints.inclusion,
               errorText: `Please provide a valid ${column.name}.`,
             }
           case FieldType.ATTACHMENTS:

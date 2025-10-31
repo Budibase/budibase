@@ -29,9 +29,32 @@ export enum FormFieldType {
   Toggle = "Toggle",
 }
 
-export interface FormFieldPayload {
+interface BaseFormFieldPayload<T extends FormFieldType> {
   name: string
-  type: FormFieldType
+  type: T
   helpText?: string
   errorText: string
 }
+
+interface InputFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.Input> {}
+interface InputNumberFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.InputNumber> {}
+interface TextAreaFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.TextArea> {}
+interface SelectFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.Select> {
+  options: string[]
+}
+interface CheckboxFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.Checkbox> {}
+interface ToggleFormFieldPayload
+  extends BaseFormFieldPayload<FormFieldType.Toggle> {}
+
+export type FormFieldPayload =
+  | InputFormFieldPayload
+  | InputNumberFormFieldPayload
+  | TextAreaFormFieldPayload
+  | SelectFormFieldPayload
+  | CheckboxFormFieldPayload
+  | ToggleFormFieldPayload

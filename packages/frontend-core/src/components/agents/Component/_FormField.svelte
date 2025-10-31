@@ -12,6 +12,8 @@
 
   export let props: FormFieldPayload
   export let submitted: boolean
+
+  $: type = props.type
 </script>
 
 <div class="form-field">
@@ -26,13 +28,13 @@
   {:else if props.type === FormFieldType.TextArea}
     <TextArea />
   {:else if props.type === FormFieldType.Select}
-    <Select />
+    <Select options={props.options} />
   {:else if props.type === FormFieldType.Checkbox}
     <Checkbox />
   {:else if props.type === FormFieldType.Toggle}
     <Toggle />
   {:else}
-    <p class="unsupported">Unsupported field: {props.name}</p>
+    <p class="unsupported">Unsupported field: {type}</p>
   {/if}
 
   {#if props.helpText}
