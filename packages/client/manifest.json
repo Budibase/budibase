@@ -7930,6 +7930,16 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "key": "preventClose",
+        "label": "Prevent manual closing",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "ignoreClicksOutside",
+          "value": true
+        }
+      },
+      {
         "type": "event",
         "key": "onClose",
         "label": "On close"
