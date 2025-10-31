@@ -50,7 +50,9 @@
   {:else}
     <p class="form-preview__empty">This form has no fields yet.</p>
   {/if}
-  <Button type="submit" on:click={submit}>{props.submitButtonText}</Button>
+  <div class="form-submit">
+    <Button type="submit" on:click={submit}>{props.submitButtonText}</Button>
+  </div>
 </form>
 
 <style>
@@ -88,5 +90,10 @@
     margin: 0;
     font-size: 14px;
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .form-submit {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>
