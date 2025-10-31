@@ -52,6 +52,7 @@
   let chatContainer: HTMLDivElement | null = null
   let textareaElement: HTMLTextAreaElement | null = null
   let observer: MutationObserver | null = null
+  let componentLoading = new Set<string>()
 
   $: messages = chat?.messages ?? []
 
@@ -304,6 +305,7 @@
     }>
   ) {
     const { componentId, tableId, values } = event.detail
+    componentLoading.add(componentId)
     const data = {
       type: "FORM_SUBMISSION",
       componentId,
@@ -350,7 +352,25 @@
             </div>
           {:else if message.role === "component"}
             <div class="message assistant">
-              <Component data={message.component} on:submit={submitComponent} />
+              <div
+                class="component-message"
+                class:component-message--loading={componentLoading.has(
+                  message.component.componentId
+                )}
+              >
+                <Component
+                  data={message.component}
+                  on:submit={submitComponent}
+                />
+                {#if componentLoading.has(message.component.componentId)}
+                  <div class="component-message__overlay">
+                    <div class="component-message__status">
+                      <span class="component-message__status-dot" />
+                      <span>Submitting…</span>
+                    </div>
+                  </div>
+                {/if}
+              </div>
             </div>
           {/if}
         {/each}
@@ -484,5 +504,56 @@
 
   .chat-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .component-message {
+    position: relative;
+  }
+
+  .component-message--loading {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .component-message__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .component-message__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .component-message__status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--spectrum-global-color-blue-400, #3182ce);
+    animation: component-message-pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes component-message-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.4);
+      opacity: 1;
+    }
   }
 </style>
