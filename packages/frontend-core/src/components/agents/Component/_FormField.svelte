@@ -11,15 +11,18 @@
   import { FormFieldType } from "@budibase/types"
 
   export let props: FormFieldPayload
+  export let submitted: boolean
 </script>
 
 <div class="form-field">
   {#if props.name}
-    <Label>{props}</Label>
+    <Label>{props.name}</Label>
   {/if}
 
   {#if props.type === FormFieldType.Input}
     <Input />
+  {:else if props.type === FormFieldType.InputNumber}
+    <Input type="number" />
   {:else if props.type === FormFieldType.TextArea}
     <TextArea />
   {:else if props.type === FormFieldType.Select}
@@ -35,7 +38,7 @@
   {#if props.helpText}
     <p class="form-field__help">{props.helpText}</p>
   {/if}
-  {#if props.errorText}
+  {#if props.errorText && submitted}
     <p class="form-field__error">{props.errorText}</p>
   {/if}
 </div>

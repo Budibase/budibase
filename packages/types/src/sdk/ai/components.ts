@@ -22,6 +22,7 @@ export interface FormPayload {
 
 export enum FormFieldType {
   Input = "Input",
+  InputNumber = "InputNumber",
   TextArea = "TextArea",
   Select = "Select",
   Checkbox = "Checkbox",

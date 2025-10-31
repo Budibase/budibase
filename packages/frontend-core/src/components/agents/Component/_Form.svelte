@@ -4,6 +4,7 @@
 
   export let data: FormPayload
 
+  $: submitted = false
   $: props = data.props
 </script>
 
@@ -18,7 +19,7 @@
   {#if props.fields.length}
     <div class="form-preview__fields">
       {#each props.fields as field, index (field.name + index)}
-        <FormField props={field} />
+        <FormField props={field} {submitted} />
       {/each}
     </div>
   {:else}

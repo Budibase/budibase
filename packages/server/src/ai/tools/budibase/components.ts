@@ -116,6 +116,13 @@ export default [
               // helpText: column.description,
               errorText: `Please provide a valid ${column.name}.`,
             }
+          case FieldType.NUMBER:
+            return {
+              name: column.name,
+              type: FormFieldType.InputNumber,
+              // helpText: column.description,
+              errorText: `Please provide a valid ${column.name}.`,
+            }
           case FieldType.BOOLEAN:
             return {
               name: column.name,
