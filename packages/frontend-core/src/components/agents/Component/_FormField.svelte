@@ -42,7 +42,7 @@
     <p class="form-field__help">{props.helpText}</p>
   {/if}
   {#if props.errorText && submitted}
-    <p class="form-field__error">{props.errorText}</p>
+    <!-- <p class="form-field__error">{props.errorText}</p> -->
   {/if}
 </div>
 
@@ -59,11 +59,11 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .form-field__error {
+  /* .form-field__error {
     margin: 0;
     font-size: 12px;
     color: var(--spectrum-global-color-red-600);
-  }
+  } */
 
   .unsupported {
     margin: 0;
