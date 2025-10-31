@@ -241,6 +241,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.DUPLICATE_APP]: false,
   [FeatureFlag.COPY_RESOURCES_BETWEEN_WORKSPACES]: false,
   [FeatureFlag.PRIVATE_LLMS]: false,
+  [FeatureFlag.AGENTS_SHOW_DEBUG_INFO]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 
