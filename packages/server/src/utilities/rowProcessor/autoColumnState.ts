@@ -53,23 +53,15 @@ async function computeRowMaxes(
       continue
     }
     for (const columnName of columnNames) {
-      const value = doc[columnName]
-      let numericValue: number | undefined
-      if (typeof value === "number") {
-        numericValue = value
-      } else if (typeof value === "string" && value.length > 0) {
-        const parsed = Number(value)
-        if (!Number.isNaN(parsed)) {
-          numericValue = parsed
-        }
+      const currentValue = doc[columnName]
+      if (typeof currentValue !== "number") {
+        continue
       }
 
-      if (
-        numericValue != null &&
-        !Number.isNaN(numericValue) &&
-        numericValue > (maxes[columnName] ?? 0)
-      ) {
-        maxes[columnName] = numericValue
+      const currentMax = maxes[columnName] ?? 0
+      const isNewMaximum = currentValue > currentMax
+      if (isNewMaximum) {
+        maxes[columnName] = currentValue
       }
     }
   }
