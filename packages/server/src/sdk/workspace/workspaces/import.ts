@@ -45,6 +45,7 @@ async function getNewWorkspaceMetadata(
       features: tempMetadata.features,
       icon: tempMetadata.icon,
       navigation: tempMetadata.navigation,
+      scripts: tempMetadata.scripts,
       type: tempMetadata.type,
       version: tempMetadata.version,
     }
