@@ -6,6 +6,7 @@
     TextArea,
     Toggle,
     Label,
+    DatePicker,
   } from "@budibase/bbui"
   import type { FormFieldPayload } from "@budibase/types"
   import { FormFieldType } from "@budibase/types"
@@ -28,6 +29,8 @@
     <Input bind:value type="number" />
   {:else if props.type === FormFieldType.TextArea}
     <TextArea bind:value />
+  {:else if props.type === FormFieldType.Date}
+    <DatePicker bind:value enableTime={false} />
   {:else if props.type === FormFieldType.Select}
     <Select bind:value options={props.options} />
   {:else if props.type === FormFieldType.Checkbox}

@@ -117,10 +117,16 @@ export default [
       function mapField(column: FieldSchema): FormFieldPayload {
         switch (column.type) {
           case FieldType.STRING:
-          case FieldType.DATETIME:
             return {
               name: column.name,
               type: FormFieldType.Input,
+              // helpText: column.description,
+              errorText: `Please provide a valid ${column.name}.`,
+            }
+          case FieldType.DATETIME:
+            return {
+              name: column.name,
+              type: FormFieldType.Date,
               // helpText: column.description,
               errorText: `Please provide a valid ${column.name}.`,
             }
