@@ -12,6 +12,7 @@
     AgentChat,
     ComponentMessage,
     LLMStreamChunk,
+    UserContent,
   } from "@budibase/types"
 
   const dispatch = createEventDispatcher<{
@@ -53,6 +54,30 @@
   let observer: MutationObserver | null = null
 
   $: messages = chat?.messages ?? []
+
+  const formatUserContent = (content: UserContent): string => {
+    if (typeof content === "string") {
+      try {
+        const json = JSON.parse(content.trim())
+        if (json?.type === "FORM_SUBMISSION") {
+          return "Submitted form data"
+        }
+      } catch {
+        // fall back to original content
+      }
+      return content
+    }
+    if (content && Array.isArray(content) && content.length > 0) {
+      return content
+        .map(part =>
+          part.type === "text"
+            ? part.text
+            : `${part.type} content not supported`
+        )
+        .join("")
+    }
+    return "[Empty message]"
+  }
 
   const scrollToBottom = async () => {
     await tick()
@@ -317,19 +342,7 @@
         {#each messages as message}
           {#if message.role === "user"}
             <div class="message user">
-              <MarkdownViewer
-                value={typeof message.content === "string"
-                  ? message.content
-                  : message.content && message.content.length > 0
-                    ? message.content
-                        .map(part =>
-                          part.type === "text"
-                            ? part.text
-                            : `${part.type} content not supported`
-                        )
-                        .join("")
-                    : "[Empty message]"}
-              />
+              <MarkdownViewer value={formatUserContent(message.content)} />
             </div>
           {:else if message.role === "assistant" && message.content}
             <div class="message assistant">
