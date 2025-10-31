@@ -237,7 +237,7 @@ export async function enableCronOrEmailTrigger(
       { repeat: { cron: cronExp }, jobId }
     )
 
-    trigger.cronJobId = job.id.toString()
+    trigger.cronJobId = jobId
 
     await dbCore.doWithDB(appId, async db => {
       const response = await db.put(automation)
