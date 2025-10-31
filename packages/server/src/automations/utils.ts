@@ -227,8 +227,9 @@ export async function enableCronOrEmailTrigger(
       )
     }
 
-    const jobId = `${appId}_cron_${utils.newid()}`
-    const job = await automationQueue.add(
+    const existingJobId = trigger.cronJobId
+    const jobId = existingJobId || `${appId}_cron_${utils.newid()}`
+    await automationQueue.add(
       {
         automation,
         event: { appId },
@@ -249,22 +250,25 @@ export async function enableCronOrEmailTrigger(
   }
 
   if (isEmailTrigger(trigger)) {
-    const jobId = `${appId}_email_${utils.newid()}`
-    const job = await automationQueue.add(
+    const existingJobId = trigger.cronJobId
+    const jobId = existingJobId || `${appId}_email_${utils.newid()}`
+    await automationQueue.add(
       {
         automation,
         event: { appId },
       },
-      { repeat: { every: 60_000 }, jobId }
+      { repeat: { every: 30_000 }, jobId }
     )
 
-    trigger.cronJobId = job.id.toString()
+    trigger.cronJobId = jobId
 
-    await dbCore.doWithDB(appId, async db => {
-      const response = await db.put(automation)
-      automation._id = response.id
-      automation._rev = response.rev
-    })
+    if (trigger.cronJobId !== existingJobId) {
+      await dbCore.doWithDB(appId, async db => {
+        const response = await db.put(automation)
+        automation._id = response.id
+        automation._rev = response.rev
+      })
+    }
 
     enabled = true
     return { enabled, automation }
