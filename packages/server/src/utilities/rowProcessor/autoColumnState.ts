@@ -1,8 +1,8 @@
 import { context } from "@budibase/backend-core"
-import { Document, Row, Table } from "@budibase/types"
+import { Document, DocumentType, Row, Table, SEPARATOR } from "@budibase/types"
 import { getRowParams } from "../../db/utils"
 
-const AUTO_COLUMN_STATE_DOC_PREFIX = "autocolumn:"
+const AUTO_COLUMN_STATE_DOC_PREFIX = `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`
 const MAX_ALLOCATE_ATTEMPTS = 5
 
 interface AutoColumnStateDoc extends Document {
