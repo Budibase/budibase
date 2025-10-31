@@ -274,12 +274,18 @@
   async function submitComponent(
     event: CustomEvent<{
       componentId: string
+      tableId: string
       values: Record<string, unknown>
     }>
   ) {
-    const { componentId, values } = event.detail
-    const payload = JSON.stringify({ componentId, values })
-    await sendMessage(payload)
+    const { componentId, tableId, values } = event.detail
+    const data = {
+      type: "FORM_SUBMISSION",
+      componentId,
+      values,
+      tableId: tableId,
+    }
+    await sendMessage(JSON.stringify(data))
   }
 
   onMount(async () => {

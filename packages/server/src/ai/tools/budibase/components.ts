@@ -2,11 +2,11 @@ import { z } from "zod"
 import {
   FieldType,
   FormFieldType,
+  FormPayload,
+  RequiredKeys,
   type ComponentPayload,
   type FieldSchema,
   type FormFieldPayload,
-  type FormPayload,
-  type RequiredKeys,
 } from "@budibase/types"
 import { newTool } from ".."
 import sdk from "../../../sdk"
@@ -173,6 +173,7 @@ export default [
           title: table.name,
           submitButtonText,
           message: message ?? undefined,
+          tableId,
           fields: selectedColumns.map(([_, fieldSchema]) =>
             mapField(fieldSchema)
           ),
@@ -180,6 +181,79 @@ export default [
       }
 
       return JSON.stringify({ type: "component", component })
+    },
+  }),
+  newTool({
+    name: "submit_form_data",
+    description:
+      "Persist data submitted from a render_table_form component. Use this after the user submits a FORM_SUBMISSION payload.",
+    parameters: z.object({
+      tableId: z
+        .string()
+        .describe("Table ID that the form submission should write to."),
+      values: z
+        .any()
+        .describe(
+          "Submitted form values. Accepts a JSON object or JSON string."
+        ),
+      componentId: z
+        .string()
+        .nullish()
+        .describe("Optional component identifier associated with the form."),
+    }),
+    handler: async ({ tableId, values, componentId }) => {
+      let parsedValues: Record<string, unknown>
+      if (typeof values === "string") {
+        try {
+          parsedValues = JSON.parse(values)
+        } catch (error) {
+          return `Error: Invalid JSON provided for values: ${String(error)}`
+        }
+      } else {
+        parsedValues = values
+      }
+
+      const table = await sdk.tables.getTable(tableId)
+      const schemaEntries = Object.entries(table.schema ?? {})
+      const allowedColumns = new Set(
+        schemaEntries.map(([columnName]) => columnName)
+      )
+      const displayNameToId = new Map<string, string>()
+      for (const [columnId, schema] of schemaEntries) {
+        if (schema.name) {
+          displayNameToId.set(schema.name, columnId)
+        }
+      }
+
+      const sanitized = Object.entries(parsedValues).reduce(
+        (acc, [key, value]) => {
+          if (key === "_id" || key === "id") {
+            acc._id = value
+            return acc
+          }
+          let targetKey = key
+          if (!allowedColumns.has(targetKey)) {
+            const mappedKey = displayNameToId.get(key)
+            if (mappedKey) {
+              targetKey = mappedKey
+            }
+          }
+          if (allowedColumns.has(targetKey)) {
+            acc[targetKey] = value
+          }
+          return acc
+        },
+        {} as Record<string, unknown>
+      )
+
+      if (!Object.keys(sanitized).length) {
+        return `Error: No valid columns supplied for table "${table.name}".`
+      }
+
+      const row = await sdk.rows.save(tableId, sanitized, undefined)
+      const formatted = JSON.stringify(row, null, 2)
+      const componentInfo = componentId ? ` for component ${componentId}` : ""
+      return `Form submission processed successfully${componentInfo}:\n\n${formatted}`
     },
   }),
 ]

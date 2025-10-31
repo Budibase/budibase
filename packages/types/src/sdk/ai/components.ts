@@ -17,6 +17,7 @@ export interface FormPayload {
     title: string
     submitButtonText: string
     message?: string
+    tableId: string
     fields: FormFieldPayload[]
   }
 }

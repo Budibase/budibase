@@ -1,27 +1,32 @@
 <script lang="ts">
-import type { FormPayload } from "@budibase/types"
-import FormField from "./_FormField.svelte"
-import { Button } from "@budibase/bbui"
-import { createEventDispatcher } from "svelte"
+  import type { FormPayload } from "@budibase/types"
+  import FormField from "./_FormField.svelte"
+  import { Button } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
-export let data: FormPayload
+  export let data: FormPayload
 
-const dispatch = createEventDispatcher<{
-  submit: { componentId: string; values: Record<string, unknown> }
-}>()
+  const dispatch = createEventDispatcher<{
+    submit: {
+      componentId: string
+      tableId: string
+      values: Record<string, unknown>
+    }
+  }>()
 
-$: submitted = false
-$: props = data.props
+  $: submitted = false
+  $: props = data.props
 
-$: formData = {} as Record<string, any>
+  let formData: Record<string, unknown> = {}
 
-function submit() {
-  submitted = true
-  dispatch("submit", {
-    componentId: data.componentId,
-    values: { ...formData },
-  })
-}
+  function submit() {
+    submitted = true
+    dispatch("submit", {
+      componentId: data.componentId,
+      tableId: props.tableId,
+      values: { ...formData },
+    })
+  }
 </script>
 
 <form class="form-preview">
@@ -45,7 +50,7 @@ function submit() {
   {:else}
     <p class="form-preview__empty">This form has no fields yet.</p>
   {/if}
-  <Button on:click={submit}>{props.submitButtonText}</Button>
+  <Button type="submit" on:click={submit}>{props.submitButtonText}</Button>
 </form>
 
 <style>
