@@ -54,20 +54,26 @@
   let observer: MutationObserver | null = null
   let componentLoading = new Set<string>()
 
-  $: messages = chat?.messages ?? []
+  $: messages = (chat?.messages ?? []).filter(message => {
+    if (message.role !== "user") {
+      return true
+    }
 
-  const formatUserContent = (content: UserContent): string => {
-    if (typeof content === "string") {
+    if (typeof message.content === "string") {
       try {
-        const json = JSON.parse(content.trim())
+        const json = JSON.parse(message.content.trim())
         if (json?.type === "FORM_SUBMISSION") {
-          return "Submitted form data"
+          return false
         }
       } catch {
-        // fall back to original content
+        // Render all other type
       }
-      return content
     }
+
+    return true
+  })
+
+  const formatUserContent = (content: UserContent): string => {
     if (content && Array.isArray(content) && content.length > 0) {
       return content
         .map(part =>
