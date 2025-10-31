@@ -1,23 +1,20 @@
 <script lang="ts">
   import Button from "./_Button.svelte"
   import Form from "./_Form.svelte"
-  import MultiButton from "./_MultiButton.svelte"
   import type { ComponentPayload } from "@budibase/types"
 
   export let data: ComponentPayload
 
-  $: props = data.props as any
+  $: type = data.type
 </script>
 
 <div class="component-preview">
   {#if data.type === "Button"}
-    <Button {...props} />
+    <Button {...data.props} />
   {:else if data.type === "Form"}
     <Form {data} />
-  {:else if data.type === "MultiButton"}
-    <MultiButton {data} />
   {:else}
-    <p class="unsupported">Unsupported component: {data.type}</p>
+    <p class="unsupported">Unsupported component type: {type}</p>
   {/if}
 </div>
 

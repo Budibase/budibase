@@ -21,6 +21,6 @@
   }
 </script>
 
-<Button on:click={e => handleClick(e)}>
+<Button on:click={handleClick}>
   {text}
 </Button>

@@ -1,34 +1,24 @@
 <script lang="ts">
-  import type { ComponentPayload } from "@budibase/types"
+  import type { FormPayload } from "@budibase/types"
   import FormField from "./_FormField.svelte"
-  import ButtonComponent from "./_Button.svelte"
 
-  export let data: ComponentPayload
+  export let data: FormPayload
 
-  const children = Array.isArray(data.children) ? data.children : []
-  const description =
-    typeof data.props?.description === "string" ? data.props.description : ""
-  const showHeader = typeof data.slot === "string" && data.slot.trim().length
+  $: props = data.props
 </script>
 
 <div class="form-preview">
-  {#if showHeader}
-    <h3 class="form-preview__title">{data.slot}</h3>
+  {#if props.title}
+    <h3 class="form-preview__title">{props.title}</h3>
   {/if}
-  {#if description}
-    <p class="form-preview__description">{description}</p>
+  {#if props.message}
+    <p class="form-preview__description">{props.message}</p>
   {/if}
 
-  {#if children.length}
+  {#if props.fields.length}
     <div class="form-preview__fields">
-      {#each children as child, index (child.name + index)}
-        {#if child.name === "Button"}
-          <div class="form-preview__actions">
-            <ButtonComponent data={child} />
-          </div>
-        {:else}
-          <FormField data={child} />
-        {/if}
+      {#each props.fields as field, index (field.name + index)}
+        <FormField props={field} />
       {/each}
     </div>
   {:else}
@@ -65,11 +55,6 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-
-  .form-preview__actions {
-    display: flex;
-    justify-content: flex-end;
   }
 
   .form-preview__empty {
