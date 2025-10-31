@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { FormPayload } from "@budibase/types"
   import FormField from "./_FormField.svelte"
+  import { Button } from "@budibase/bbui"
 
   export let data: FormPayload
 
@@ -25,6 +26,7 @@
   {:else}
     <p class="form-preview__empty">This form has no fields yet.</p>
   {/if}
+  <Button>{props.submitButtonText}</Button>
 </div>
 
 <style>

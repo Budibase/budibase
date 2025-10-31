@@ -15,6 +15,7 @@ export interface FormPayload {
   componentId: string
   props: {
     title: string
+    submitButtonText: string
     message?: string
     fields: FormFieldPayload[]
   }

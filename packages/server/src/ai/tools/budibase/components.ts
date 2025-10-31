@@ -70,6 +70,9 @@ export default [
       tableId: z
         .string()
         .describe("Table ID of the table to render the form for."),
+      submitButtonText: z
+        .string()
+        .describe("Text to display on the form submit button."),
       columns: z
         .array(z.string())
         .describe(
@@ -81,7 +84,13 @@ export default [
         .nullish()
         .describe("Optional message to accompany the component."),
     }),
-    handler: async ({ tableId, columns, componentId, message }) => {
+    handler: async ({
+      tableId,
+      submitButtonText,
+      columns,
+      componentId,
+      message,
+    }) => {
       const table = await sdk.tables.getTable(tableId)
       const tableColumns = Object.entries(table.schema ?? {}).filter(
         ([key, schema]) => {
@@ -162,6 +171,7 @@ export default [
         componentId,
         props: {
           title: table.name,
+          submitButtonText,
           message: message ?? undefined,
           fields: selectedColumns.map(([_, fieldSchema]) =>
             mapField(fieldSchema)
