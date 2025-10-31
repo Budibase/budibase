@@ -89,7 +89,7 @@
     }
   }
 
-  export const sendMessage = async (contentOverride?: string) => {
+  const sendMessage = async (contentOverride?: string) => {
     if (!workspaceId) {
       errorMessage = "Workspace ID not available."
       dispatch("error", { message: errorMessage })
@@ -271,6 +271,17 @@
     }
   }
 
+  async function submitComponent(
+    event: CustomEvent<{
+      componentId: string
+      values: Record<string, unknown>
+    }>
+  ) {
+    const { componentId, values } = event.detail
+    const payload = JSON.stringify({ componentId, values })
+    await sendMessage(payload)
+  }
+
   onMount(async () => {
     ensureObserver()
     await focusInput()
@@ -320,7 +331,7 @@
             </div>
           {:else if message.role === "component"}
             <div class="message assistant">
-              <Component data={message.component} />
+              <Component data={message.component} on:submit={submitComponent} />
             </div>
           {/if}
         {/each}

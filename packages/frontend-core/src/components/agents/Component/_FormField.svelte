@@ -12,6 +12,7 @@
 
   export let props: FormFieldPayload
   export let submitted: boolean
+  export let value: any
 
   $: type = props.type
 </script>
@@ -22,17 +23,17 @@
   {/if}
 
   {#if props.type === FormFieldType.Input}
-    <Input />
+    <Input bind:value />
   {:else if props.type === FormFieldType.InputNumber}
-    <Input type="number" />
+    <Input bind:value type="number" />
   {:else if props.type === FormFieldType.TextArea}
-    <TextArea />
+    <TextArea bind:value />
   {:else if props.type === FormFieldType.Select}
-    <Select options={props.options} />
+    <Select bind:value options={props.options} />
   {:else if props.type === FormFieldType.Checkbox}
-    <Checkbox />
+    <Checkbox bind:value />
   {:else if props.type === FormFieldType.Toggle}
-    <Toggle />
+    <Toggle bind:value />
   {:else}
     <p class="unsupported">Unsupported field: {type}</p>
   {/if}

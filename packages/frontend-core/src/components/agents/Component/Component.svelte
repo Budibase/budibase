@@ -12,7 +12,7 @@
   {#if data.type === "Button"}
     <Button {...data.props} />
   {:else if data.type === "Form"}
-    <Form {data} />
+    <Form {data} on:submit />
   {:else}
     <p class="unsupported">Unsupported component type: {type}</p>
   {/if}
