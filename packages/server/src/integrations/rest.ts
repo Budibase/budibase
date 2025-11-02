@@ -26,12 +26,7 @@ import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
-import { fetch, Response, RequestInit, Agent } from "undici"
-import nodeFetch from "node-fetch"
-import type {
-  Response as NodeFetchResponse,
-  RequestInit as NodeFetchRequestInit,
-} from "node-fetch"
+import { fetch, Response, RequestInit, Agent, Headers } from "undici"
 import environment from "../environment"
 
 const coreFields = {
@@ -152,7 +147,7 @@ export class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(
-    response: Response | NodeFetchResponse,
+    response: Response,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
     let data: any[] | string | undefined,
@@ -370,6 +365,56 @@ export class RestIntegration implements IntegrationBase {
         addPaginationToBody((key: string, value: any) => {
           form.append(key, value)
         })
+        const formHeaders = form.getHeaders()
+        if (formHeaders) {
+          const ensureHeaderObject = (): Record<
+            string,
+            string | readonly string[]
+          > => {
+            if (!input.headers) {
+              const headerObject: Record<string, string> = {}
+              input.headers = headerObject
+              return headerObject
+            }
+            if (Array.isArray(input.headers)) {
+              const headerObject = input.headers.reduce<Record<string, string>>(
+                (acc, [name, value]) => {
+                  acc[name] = value
+                  return acc
+                },
+                {}
+              )
+              input.headers = headerObject
+              return headerObject
+            }
+            if (input.headers instanceof Headers) {
+              const headerObject: Record<string, string> = {}
+              input.headers.forEach((value, key) => {
+                headerObject[key] = value
+              })
+              input.headers = headerObject
+              return headerObject
+            }
+            return input.headers
+          }
+          const headers = ensureHeaderObject()
+          for (let [headerName, headerValue] of Object.entries(formHeaders)) {
+            const normalizedName = headerName.toLowerCase()
+            const existingKey = Object.keys(headers).find(
+              key => key.toLowerCase() === normalizedName
+            )
+            if (existingKey) {
+              continue
+            }
+            if (typeof headerValue === "undefined" || headerValue === null) {
+              continue
+            }
+            const headerString = Array.isArray(headerValue)
+              ? headerValue.join(", ")
+              : String(headerValue)
+            headers[headerName] = headerString
+          }
+        }
         input.body = form
         break
       }
@@ -524,15 +569,9 @@ export class RestIntegration implements IntegrationBase {
       input.dispatcher = agent
     }
 
-    let response: Response | NodeFetchResponse
+    let response: Response
     try {
-      // Use node-fetch in test environment for nock compatibility
-      if (process.env.NODE_ENV === "jest") {
-        const { dispatcher, ...nodeFetchInput } = input
-        response = await nodeFetch(url, nodeFetchInput as NodeFetchRequestInit)
-      } else {
-        response = await fetch(url, input)
-      }
+      response = await fetch(url, input)
     } catch (err: any) {
       console.log("[rest integration] Fetch error details", {
         url,
