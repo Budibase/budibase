@@ -423,7 +423,7 @@ export class RestIntegration implements IntegrationBase {
           string = new XmlBuilder().buildObject(object)
         }
         input.body = string
-        // @ts-ignore
+        // @ts-expect-error
         input.headers["Content-Type"] = "application/xml"
         break
       case BodyType.JSON:
@@ -435,7 +435,7 @@ export class RestIntegration implements IntegrationBase {
           object[key] = value
         })
         input.body = JSON.stringify(object)
-        // @ts-ignore
+        // @ts-expect-error
         input.headers["Content-Type"] = "application/json"
         break
     }
