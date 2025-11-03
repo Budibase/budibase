@@ -3,7 +3,6 @@ import {
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
-  ChatAgentResponse,
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
   LLMStreamChunk,
@@ -13,7 +12,6 @@ import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  agentChat: (chat: AgentChat) => Promise<ChatAgentResponse>
   agentChatStream: (
     chat: AgentChat,
     workspaceId: string,
@@ -33,14 +31,6 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  agentChat: async chat => {
-    const body: ChatAgentRequest = chat
-    return await API.post({
-      url: "/api/agent/chat",
-      body,
-    })
-  },
-
   agentChatStream: async (chat, workspaceId, onChunk, onError) => {
     const body: ChatAgentRequest = chat
 
@@ -58,6 +48,11 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       })
 
       if (!response.ok) {
+        const body = await response.json()
+
+        if (body.message) {
+          throw new Error(body.message)
+        }
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 

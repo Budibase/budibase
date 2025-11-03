@@ -173,7 +173,7 @@ describe("/applications", () => {
     })
 
     it("creates app with sample data when onboarding", async () => {
-      const name = generateAppName()
+      const name = "Welcome app"
       const newWorkspace = await config.api.workspace.create({
         name,
         isOnboarding: "true",
@@ -279,7 +279,7 @@ describe("/applications", () => {
     it("should reject with a known name", async () => {
       await config.api.workspace.create(
         { name: workspace.name },
-        { body: { message: "App name is already in use." }, status: 400 }
+        { body: { message: "Workspace name is already in use." }, status: 400 }
       )
     })
 
@@ -1351,7 +1351,7 @@ describe("/applications", () => {
           name: workspace.name,
           url: "/known-name",
         },
-        { body: { message: "App name is already in use." }, status: 400 }
+        { body: { message: "Workspace name is already in use." }, status: 400 }
       )
       expect(events.app.duplicated).not.toHaveBeenCalled()
     })

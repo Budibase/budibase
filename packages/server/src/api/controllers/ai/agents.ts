@@ -5,7 +5,6 @@ import {
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
-  ChatAgentResponse,
   CreateToolSourceRequest,
   DocumentType,
   FetchAgentHistoryResponse,
@@ -14,6 +13,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
+import sdk from "../../../sdk"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -58,82 +58,8 @@ function addDebugInformation(messages: Message[]) {
   return processedMessages
 }
 
-export async function agentChat(
-  ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
-) {
-  const model = await ai.getLLMOrThrow()
-  const chat = ctx.request.body
-  const db = context.getWorkspaceDB()
-
-  const toolSources = await db.allDocs<AgentToolSource>(
-    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
-      include_docs: true,
-    })
-  )
-
-  let prompt = new ai.LLMRequest()
-    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
-    .addMessages(chat.messages)
-
-  let toolGuidelines = ""
-
-  for (const row of toolSources.rows) {
-    const toolSource = row.doc!
-    const toolSourceInstance = createToolSourceInstance(toolSource)
-
-    if (!toolSourceInstance) {
-      console.warn(`Skipping unknown tool source type: ${toolSource.type}`)
-      continue
-    }
-
-    const guidelines = toolSourceInstance.getGuidelines()
-    if (guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-    }
-
-    const toolsToAdd = toolSourceInstance.getEnabledTools()
-    if (toolsToAdd.length > 0) {
-      prompt = prompt.addTools(toolsToAdd)
-    }
-  }
-
-  // Append tool guidelines to the system prompt if any exist
-  if (toolGuidelines) {
-    prompt = prompt.addSystemMessage(toolGuidelines)
-  }
-
-  const response = await model.chat(prompt)
-
-  // Process tool calls to add debug information to messages instead of using separate tool messages
-  // TODO: replace with better debug UI
-  response.messages = addDebugInformation(response.messages)
-
-  if (!chat._id) {
-    chat._id = docIds.generateAgentChatID()
-  }
-
-  if (!chat.title || chat.title === "") {
-    const titlePrompt = new ai.LLMRequest()
-      .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
-      .addMessages(response.messages)
-    const { message } = await model.prompt(titlePrompt)
-    chat.title = message
-  }
-
-  const newChat: AgentChat = {
-    _id: chat._id,
-    _rev: chat._rev,
-    title: chat.title,
-    messages: response.messages,
-  }
-
-  const { rev } = await db.put(newChat)
-  newChat._rev = rev
-  ctx.body = newChat
-}
-
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const model = await ai.getLLMOrThrow()
+  const model = await sdk.aiConfigs.getLLMOrThrow()
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
 

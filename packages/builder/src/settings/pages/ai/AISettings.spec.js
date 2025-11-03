@@ -30,18 +30,50 @@ vi.mock("@/api", () => ({
 }))
 
 vi.mock("@/stores/portal", () => {
-  const toMock = store => {
+  const toMock = (store, extra) => {
     return {
       subscribe: store.subscribe,
       update: store.update,
       set: store.set,
+      ...extra,
     }
   }
 
+  const mockaiConfigsStore = writable({
+    customConfigs: [],
+  })
   return {
     admin: toMock(writable()),
     licensing: toMock(writable()),
     featureFlags: toMock(writable()),
+    aiConfigsStore: toMock(mockaiConfigsStore, {
+      fetch: vi.fn(),
+    }),
+  }
+})
+
+vi.mock("@/stores/builder", () => {
+  const mockAppStore = writable()
+  const appStore = {
+    subscribe: mockAppStore.subscribe,
+    update: mockAppStore.update,
+    set: mockAppStore.set,
+  }
+
+  const mockWorkspaceAppStore = writable({
+    selectedWorkspaceAppId: null,
+    selectedWorkspaceApp: null,
+    workspaceApps: [],
+  })
+  const workspaceAppStore = {
+    subscribe: mockWorkspaceAppStore.subscribe,
+    update: mockWorkspaceAppStore.update,
+    set: mockWorkspaceAppStore.set,
+  }
+
+  return {
+    appStore,
+    workspaceAppStore,
   }
 })
 

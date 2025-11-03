@@ -63,6 +63,7 @@ interface LicensingState {
   aiCreditsExceeded: boolean
   actionsExceeded: boolean
   errUserLimit: boolean
+  showTrialBanner: boolean
 }
 
 class LicensingStore extends BudiStore<LicensingState> {
@@ -109,6 +110,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       actionsExceeded: false,
       // AI Limits
       aiCreditsExceeded: false,
+      showTrialBanner: false,
     })
 
     this.goToUpgradePage = this.goToUpgradePage.bind(this)
@@ -331,7 +333,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const isCloudAccount = await this.isCloud()
     const errUserLimit =
       isCloudAccount &&
-      license.plan.model === PlanModel.PER_USER &&
+      license?.plan.model === PlanModel.PER_USER &&
       userLimitExceeded
 
     this.update(state => {
