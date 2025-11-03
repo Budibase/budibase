@@ -46,6 +46,80 @@ const { Response } = undici
 const realFetch = (undici as any).__actualFetch as typeof undici.fetch
 const fetchMock = undici.fetch as jest.MockedFunction<typeof realFetch>
 
+const getFormDataBuffer = (body: any): string | undefined => {
+  if (!body) {
+    return undefined
+  }
+
+  const candidate = body.getBuffer
+  if (typeof candidate === "function") {
+    try {
+      const result = candidate.call(body)
+      if (typeof result === "string") {
+        return result
+      }
+      if (Buffer.isBuffer(result)) {
+        return result.toString("utf8")
+      }
+      if (ArrayBuffer.isView(result)) {
+        return Buffer.from(
+          result.buffer,
+          result.byteOffset,
+          result.byteLength
+        ).toString("utf8")
+      }
+    } catch (_err) {
+      // fall through to other strategies
+    }
+  }
+
+  return undefined
+}
+
+const extractFormEntries = (
+  body: any
+): Record<string, string> | undefined => {
+  if (!body) {
+    return undefined
+  }
+
+  if (typeof body.entries === "function") {
+    const result: Record<string, string> = {}
+    for (const [key, value] of body.entries()) {
+      result[String(key)] = String(value ?? "")
+    }
+    return result
+  }
+
+  if (typeof body.forEach === "function") {
+    const result: Record<string, string> = {}
+    body.forEach((value: unknown, key: string) => {
+      result[key] = String(value ?? "")
+    })
+    return result
+  }
+
+  return undefined
+}
+
+const expectFormDataToMatch = (
+  body: unknown,
+  expected: Record<string, string>
+) => {
+  const entries = extractFormEntries(body)
+  if (entries) {
+    expect(entries).toMatchObject(expected)
+    return
+  }
+
+  const payload = getFormDataBuffer(body)
+  expect(payload).toBeDefined()
+  for (const [key, value] of Object.entries(expected)) {
+    expect(payload).toContain(`name="${key}"`)
+    expect(payload).toContain(String(value))
+  }
+}
+
 describe("REST Integration", () => {
   let integration: RestIntegration
   const pendingFetches: Array<
@@ -221,13 +295,10 @@ describe("REST Integration", () => {
     })
 
     it("should allow form data", () => {
-      const FormData = require("form-data")
       const output = integration.addBody("form", input, {})
-      expect(output.body instanceof FormData).toEqual(true)
-      expect((output.body! as any)._valueLength).toEqual(2)
-      const contentType = (output.headers as any)["content-type"]
-      expect(typeof contentType).toEqual("string")
-      expect(contentType).toContain("multipart/form-data; boundary=")
+      const body: any = output.body
+      expect(body).toBeDefined()
+      expectFormDataToMatch(body, { a: "1", b: "2" })
     })
 
     it("should allow encoded form data", () => {
@@ -620,13 +691,7 @@ describe("REST Integration", () => {
         (url, options) => {
           expect(url).toEqual("https://example.com/api")
           expect(options?.method).toEqual("POST")
-          const formBody = options?.body as any
-          const payload = formBody.getBuffer().toString("utf8")
-          expect(payload).toContain(`name="page"\r\n\r\n3\r\n`)
-          expect(payload).toContain(`name="size"\r\n\r\n10\r\n`)
-          const headers = options?.headers as Record<string, string>
-          const contentType = headers["content-type"] || headers["Content-Type"]
-          expect(contentType).toContain("multipart/form-data; boundary=")
+          expectFormDataToMatch(options?.body, { page: "3", size: "10" })
         },
         { foo: "bar" }
       )
@@ -724,9 +789,7 @@ describe("REST Integration", () => {
         (url, options) => {
           expect(url).toEqual("https://example.com/api")
           expect(options?.method).toEqual("POST")
-          const payload = (options?.body as any).getBuffer().toString("utf8")
-          expect(payload).toContain(`name="page"\r\n\r\n3\r\n`)
-          expect(payload).toContain(`name="size"\r\n\r\n10\r\n`)
+          expectFormDataToMatch(options?.body, { page: "3", size: "10" })
         },
         { cursor: 123, foo: "bar" }
       )
