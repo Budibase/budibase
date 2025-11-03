@@ -78,7 +78,9 @@ export async function backupClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function updateClientLibrary(appId: string) {
-  let manifest, client, clientNew
+  appId = sdk.applications.getProdAppID(appId)
+
+  let manifest: string, client: string
   let dependencies = []
 
   if (env.isDev()) {
@@ -87,7 +89,6 @@ export async function updateClientLibrary(appId: string) {
     const distFolder = path.dirname(clientPath)
     manifest = join(path.dirname(distFolder), "manifest.json")
     client = clientPath
-    clientNew = join(distFolder, "budibase-client.esm.js")
     const chunksDir = join(distFolder, "chunks")
     dependencies = fs
       .readdirSync(chunksDir)
@@ -97,7 +98,6 @@ export async function updateClientLibrary(appId: string) {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-    clientNew = resolve(TOP_LEVEL_PATH, "client", "budibase-client.esm.js")
     const chunksDir = join(resolve(TOP_LEVEL_PATH, "client"), "chunks")
     dependencies = fs
       .readdirSync(chunksDir)
@@ -115,10 +115,6 @@ export async function updateClientLibrary(appId: string) {
       filename: join(appId, "budibase-client.js"),
       stream: fs.createReadStream(client),
     },
-    {
-      filename: join(appId, "budibase-client.esm.js"),
-      stream: fs.createReadStream(clientNew),
-    },
     ...dependencies.map(dependency => ({
       filename: join(appId, "chunks", path.basename(dependency)),
       stream: fs.createReadStream(dependency),
@@ -133,6 +129,32 @@ export async function updateClientLibrary(appId: string) {
     }),
     manifestSrc,
   ])
+
+  const uploadedFiles = files.map(file => file.filename)
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(objectStore.ObjectStoreBuckets.APPS, appId),
+    async file => {
+      const key = file.Key
+      if (!key) {
+        return
+      }
+      if (!key.startsWith(`${appId}/chunks/`)) {
+        return
+      }
+      if (!uploadedFiles.includes(key)) {
+        filesToDelete.push(key)
+      }
+    },
+    5
+  )
+
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(
+      objectStore.ObjectStoreBuckets.APPS,
+      filesToDelete
+    )
+  }
 
   return JSON.parse(await manifestSrc)
 }
