@@ -19,6 +19,10 @@
 
   $: apps = $enrichedApps
   $: appId = $appStore.appId
+
+  const getAppUrl = (app: any) => {
+    return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
+  }
 </script>
 
 <ActionMenu
@@ -62,13 +66,16 @@
         <MenuItem
           icon={selected ? "check" : undefined}
           on:click={() => {
+            const appUrl = getAppUrl(app)
+            if (!app.editable) {
+              window.open(appUrl, "_blank")
+              return
+            }
             if (selected) return
-
-            $goto(`/builder/workspace/${app.devId}`)
+            $goto(appUrl)
           }}
           on:auxclick={() => {
-            if (selected) return
-            window.open(`/builder/workspace/${app.devId}`, "_blank")
+            window.open(getAppUrl(app), "_blank")
           }}
         >
           {app.name}
