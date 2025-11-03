@@ -11,7 +11,7 @@
     return sdk.users.hasAppBuilderPermissions(row)
       ? row.builder.apps.length +
           Object.keys(row.roles || {}).filter(appId =>
-            row.builder.apps.includes(appId)
+            !row.builder.apps.includes(appId)
           ).length
       : Object.keys(value || {}).length
   }
