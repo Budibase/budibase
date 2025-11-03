@@ -73,7 +73,7 @@ export async function edit(
   const { body } = ctx.request
 
   if (ctx.params.id !== body._id) {
-    ctx.throw("Path and body ids do not match", 400)
+    ctx.throw(400, "Path and body ids do not match")
   }
 
   const toUpdate = {
@@ -117,7 +117,7 @@ export async function validate(
   if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {
     const existingConfig = await sdk.oauth2.get(body._id)
     if (!existingConfig) {
-      ctx.throw(`OAuth2 config with id '${body._id}' not found.`, 404)
+      ctx.throw(404, `OAuth2 config with id '${body._id}' not found.`)
     }
 
     config.clientSecret = existingConfig.clientSecret

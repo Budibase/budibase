@@ -43,7 +43,7 @@ export async function save(
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
-    ctx.throw("Workspace app id not valid", 400)
+    ctx.throw(400, "Workspace app id not valid")
   }
 
   const isCreation = !screen._id

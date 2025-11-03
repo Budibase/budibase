@@ -84,7 +84,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
     }
 
     if (workspaceId && workspaceId !== possibleWorkspaceId) {
-      ctx.throw("App id conflict", 403)
+      ctx.throw(403, "App id conflict")
     }
 
     workspaceId = possibleWorkspaceId
