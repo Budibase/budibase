@@ -216,6 +216,7 @@ describe("clientLibrary", () => {
       const existingFiles: ObjectStoreFile[] = [
         { Key: "app_123/manifest.json" },
         { Key: "app_123/budibase-client.js" },
+        { Key: "app_123/attachments/5317e208-8ee7-47e2-b045-f6632febec05.jpg" },
         { Key: "app_123/chunks/chunk1.js" },
         { Key: "app_123/chunks/chunk2.js" },
         { Key: "app_123/chunks/old.js" },
