@@ -50,7 +50,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "latest",
-          url: "https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi.yaml",
+          url: "https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/doc/api/openapi/openapi.yaml",
         },
       ],
       icon: "/builder/assets/rest-template-icons/gitlab.svg",
