@@ -3864,7 +3864,7 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
         "defaultValue": false,
         "dependsOn": {
@@ -4049,7 +4049,7 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
         "defaultValue": false,
         "dependsOn": {
@@ -4109,6 +4109,22 @@
         "dependsOn": {
           "setting": "optionsType",
           "value": "checkbox"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Show Select All",
+        "key": "showSelectAll",
+        "defaultValue": false
+      },
+      {
+        "type": "text",
+        "label": "Select All Text",
+        "key": "selectAllText",
+        "defaultValue": "Select all",
+        "dependsOn": {
+          "setting": "showSelectAll",
+          "value": true
         }
       },
       {

@@ -1,11 +1,14 @@
+import { sdk } from "@budibase/shared-core"
+import { FeatureFlag, GetGlobalSelfResponse } from "@budibase/types"
+import { UserAvatar } from "@budibase/frontend-core"
+
+import { isEnabled } from "@/helpers/featureFlags"
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
-
-import { sdk } from "@budibase/shared-core"
-import { GetGlobalSelfResponse } from "@budibase/types"
 import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
-import { UserAvatar } from "@budibase/frontend-core"
+import { PortalAppsStore } from "@/stores/portal/apps"
+import { StoreApp } from "@/types"
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -29,6 +32,37 @@ export const orgRoutes = (
   const isAdmin = user != null && sdk.users.isAdmin(user)
   const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
   const cloud = admin?.cloud
+
+  const emailRoutes: Route[] = [
+    {
+      path: "smtp",
+      title: "SMTP",
+      comp: Pages.get("email"),
+    },
+    {
+      path: "templates",
+      title: "Templates",
+      comp: Pages.get("email_templates"),
+      routes: [
+        {
+          path: ":templateId",
+          title: "Template",
+          comp: Pages.get("email_template"),
+        },
+      ],
+    },
+  ]
+
+  if (isEnabled(FeatureFlag.EMAIL_TRIGGER)) {
+    const imapRoute: Route = {
+      path: "imap",
+      title: "IMAP",
+      comp: Pages.get("email_imap"),
+    }
+    const smtpIndex = emailRoutes.findIndex(route => route.path === "smtp")
+    const insertIndex = smtpIndex >= 0 ? smtpIndex + 1 : emailRoutes.length
+    emailRoutes.splice(insertIndex, 0, imapRoute)
+  }
 
   return [
     {
@@ -101,25 +135,7 @@ export const orgRoutes = (
       path: "email",
       icon: "envelope",
       access: () => isAdmin,
-      routes: [
-        {
-          path: "smtp",
-          title: "SMTP",
-          comp: Pages.get("email"),
-        },
-        {
-          path: "templates",
-          title: "Templates",
-          comp: Pages.get("email_templates"),
-          routes: [
-            {
-              path: ":templateId",
-              title: "Template",
-              comp: Pages.get("email_template"),
-            },
-          ],
-        },
-      ],
+      routes: emailRoutes,
     },
     {
       section: "AI",
@@ -137,6 +153,7 @@ export const orgRoutes = (
     },
     {
       section: "Recaptcha",
+      access: () => isAdmin,
       path: "recaptcha",
       icon: "shield-check",
       comp: Pages.get("recaptcha"),
@@ -205,10 +222,21 @@ export const orgRoutes = (
   }))
 }
 
-export const appRoutes = (appStore: AppMetaState): Route[] => {
+export const appRoutes = (
+  appStore: AppMetaState,
+  appsStore: PortalAppsStore
+): Route[] => {
   if (!appStore?.appId) {
     return []
   }
+
+  const getBackupErrors = (apps: StoreApp[], appId: string) => {
+    const target = apps.find(app => app.devId === appId)
+    return target?.backupErrors || {}
+  }
+
+  const backupErrors = getBackupErrors(appsStore.apps || [], appStore?.appId)
+  const backupErrorCount = Object.keys(backupErrors).length
 
   return [
     {
@@ -221,6 +249,7 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
           path: "backups",
           comp: Pages.get("backups"),
           title: "Backups",
+          error: () => backupErrorCount > 0,
         },
         {
           title: "OAuth2",
@@ -261,7 +290,22 @@ export const appRoutes = (appStore: AppMetaState): Route[] => {
 export const filterRoutes = (routes: Route[]): Route[] =>
   routes
     .filter(e => (typeof e.access === "function" ? e.access() : true))
-    .map(route => ({
-      ...route,
-      ...(route?.routes ? { routes: filterRoutes(route.routes) } : {}),
-    }))
+    .map(route => {
+      const filteredChildRoutes = route?.routes
+        ? filterRoutes(route.routes)
+        : []
+
+      // Check if any child has an error
+      const hasChildError = filteredChildRoutes.some(
+        child => child.error?.() || false
+      )
+
+      // Check if this route itself has an error
+      const hasOwnError = route.error?.() || false
+
+      return {
+        ...route,
+        ...(route?.routes ? { routes: filteredChildRoutes } : {}),
+        ...(hasOwnError || hasChildError ? { error: () => true } : {}),
+      }
+    })

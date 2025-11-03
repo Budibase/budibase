@@ -10,7 +10,7 @@ import zlib from "zlib"
 import { automationQueue } from "../automations"
 import { apiEnabled, automationsEnabled } from "../features"
 import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
-import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import { currentWorkspaceMiddleware as currentWorkspace } from "../middleware/currentWorkspace"
 import { workspaceMigrations as migrations } from "../middleware/workspaceMigrations"
 import { getState } from "../startup"
 import { assetRoutes, mainRoutes, publicRoutes, staticRoutes } from "./routes"
@@ -74,7 +74,7 @@ if (apiEnabled()) {
       })
     )
     .use(pro.licensing())
-    .use(currentApp)
+    .use(currentWorkspace)
 
   // Add CSP as soon as possible - depends on licensing and currentApp
   if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {

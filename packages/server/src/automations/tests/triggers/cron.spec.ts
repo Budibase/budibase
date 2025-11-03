@@ -61,7 +61,7 @@ describe("cron trigger", () => {
     await config.api.workspace.publish(config.getDevWorkspaceId(), {
       status: 500,
       body: {
-        message: `Deployment Failed: Failed to enable CRON trigger for automation "${automation.name}": Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.`,
+        message: `Deployment Failed: Failed to enable CRON or Email trigger for automation "${automation.name}": Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.`,
       },
     })
   })

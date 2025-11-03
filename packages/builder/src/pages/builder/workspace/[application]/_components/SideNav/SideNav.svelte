@@ -5,13 +5,16 @@
     Body,
     Link,
     Divider,
+    Modal,
+    PopoverAlignment,
     TooltipPosition,
     TooltipType,
     notifications,
+    StatusLight,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
-  import { url, goto } from "@roxi/routify"
-  import BBLogo from "assets/bb-emblem.svg"
+  import { url, goto, isActive } from "@roxi/routify"
+  import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
     builderStore,
@@ -23,8 +26,13 @@
     queries,
     viewsV2,
   } from "@/stores/builder"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
-  import { featureFlags } from "@/stores/portal"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import {
+    appsStore,
+    featureFlags,
+    licensing,
+    enrichedApps,
+  } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
@@ -43,7 +51,30 @@
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
   import { bb } from "@/stores/bb"
+  import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
+  import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
+  import HelpMenu from "@/components/common/HelpMenu.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
+  import { type EnrichedApp } from "@/types"
+
+  export const show = () => {
+    pinned.set(true)
+  }
+
+  $: automationErrors = getAutomationErrors($enrichedApps || [], appId)
+  $: automationErrorCount = Object.keys(automationErrors).length
+  $: backupErrors = getBackupErrors($enrichedApps || [], appId)
+  $: backupErrorCount = Object.keys(backupErrors).length
+
+  const getAutomationErrors = (apps: EnrichedApp[], appId: string) => {
+    const target = apps.find(app => app.devId === appId)
+    return target?.automationErrors || {}
+  }
+
+  const getBackupErrors = (apps: EnrichedApp[], appId: string) => {
+    const target = apps.find(app => app.devId === appId)
+    return target?.backupErrors || {}
+  }
 
   type ResourceLinkFn = (_id: string) => string
 
@@ -76,16 +107,36 @@
   const datasourceLookup = datasources.lookup
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
+  const navLogoSize = 20
 
   let ignoreFocus = false
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
-
-  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | undefined
+  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
+    null
+  let workspaceSelect: WorkspaceSelect | undefined
+  let createWorkspaceModal: Modal | undefined
+  let workspaceMenuOpen = false
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
-  $: collapsed = !focused && !$pinned
+
+  // keep sidebar expanded when workspace selector is open
+  $: collapsed = !focused && !$pinned && !workspaceMenuOpen
+  // keep sidebar expanded when selector is open, even if mouse leaves
+  $: navFocused = focused || workspaceMenuOpen
+
+  // Ensure the workspaceSelect closes if the sidebar is hidden
+  $: if (collapsed && workspaceSelect) {
+    workspaceSelect.hide()
+  }
+
+  // Hide the picker if the user cannot see it
+  $: canSelectWorkspace = !$licensing.isFreePlan || $appsStore.apps.length > 1
+
+  $: if (!canSelectWorkspace) {
+    workspaceMenuOpen = false
+  }
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
@@ -225,6 +276,19 @@
     return liveUrl || null
   }
 
+  const getFavouriteResourceLookup = (
+    favourite: WorkspaceFavourite
+  ): UIFavouriteResource => {
+    return (
+      $resourceLookup?.[favourite.resourceId] ?? {
+        name: favourite.resourceId,
+        icon:
+          ResourceIcons[favourite.resourceType] ??
+          ResourceIcons[WorkspaceResource.TABLE],
+      }
+    )
+  }
+
   const openLiveWorkspaceApp = (liveUrl?: string | null) => {
     if (!liveUrl) {
       notifications.error("Could not resolve live workspace app URL")
@@ -264,22 +328,41 @@
   })
 </script>
 
-<div class="nav_wrapper">
+<Modal bind:this={createWorkspaceModal}>
+  <CreateWorkspaceModal />
+</Modal>
+
+<div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
   <div class="nav_spacer" class:pinned={$pinned} />
   <div
     class="nav"
     class:pinned={$pinned}
-    class:focused
+    class:focused={navFocused}
     role="tooltip"
     on:mouseenter={() => setFocused(true)}
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <a href={$url("/builder/portal/workspaces")}>
-        <img src={BBLogo} alt="Budibase logo" />
-      </a>
-      <div class="nav_title">
-        <h1>{$appStore.name}</h1>
+      <div>
+        <BBLogo
+          color={"var(--spectrum-global-color-gray-900)"}
+          size={navLogoSize}
+        />
+      </div>
+
+      <div class="nav-title">
+        {#if canSelectWorkspace}
+          <WorkspaceSelect
+            bind:this={workspaceSelect}
+            bind:open={workspaceMenuOpen}
+            on:create={() => {
+              createWorkspaceModal?.show()
+              setFocused(false)
+            }}
+          />
+        {:else}
+          <h1>{$appStore.name}</h1>
+        {/if}
       </div>
       <Icon
         name="sidebar-simple"
@@ -290,29 +373,50 @@
 
     <div class="nav_body">
       <div class="links core">
-        <div>
-          <SideNavLink
-            icon="browser"
-            text="Apps"
-            url={$url("./design")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <SideNavLink
-            icon="path"
-            text="Automations"
-            url={$url("./automation")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <SideNavLink
-            icon="database"
-            text="Data"
-            url={$url("./data")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-          <!-- <SideNavLink
+        {#if appId}
+          <div>
+            <SideNavLink
+              icon="browser"
+              text="Apps"
+              url={$url("./design")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+            <span class="root-nav" class:selected={$isActive("./automation")}>
+              {#if collapsed && automationErrorCount}
+                <span class="status-indicator">
+                  <StatusLight
+                    color="var(--spectrum-global-color-static-red-600)"
+                    size="M"
+                  />
+                </span>
+              {/if}
+              <SideNavLink
+                icon="path"
+                text="Automations"
+                url={$url("./automation")}
+                {collapsed}
+                on:click={keepCollapsed}
+              >
+                <svelte:fragment slot="right">
+                  {#if automationErrorCount}
+                    <StatusLight
+                      color="var(--spectrum-global-color-static-red-600)"
+                      size="M"
+                    />
+                  {/if}
+                </svelte:fragment>
+              </SideNavLink>
+            </span>
+
+            <SideNavLink
+              icon="database"
+              text="Data"
+              url={$url("./data")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+            <!-- <SideNavLink
           icon="webhooks-logo"
           text="APIs"
           url={$url("./data")}
@@ -333,135 +437,154 @@
           {collapsed}
           on:click={keepCollapsed}
         /> -->
-          {#if $featureFlags.AI_AGENTS}
-            <SideNavLink
-              icon="cpu"
-              text="Agent"
-              url={$url("./agent")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
-          {/if}
-        </div>
-        <Divider size="S" />
-        <div class="favourite-wrapper">
-          <div class="favourite-title">
-            <Body color="var(--spectrum-global-color-gray-700)" size="XS">
-              FAVOURITES
-            </Body>
+            {#if $featureFlags.AI_AGENTS}
+              <SideNavLink
+                icon="cpu"
+                text="Agent"
+                url={$url("./agent")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+            {/if}
           </div>
-          {#if !favourites?.length || !resourceLookup}
-            <div class="favourite-empty-state">
-              <div>
-                <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
-              </div>
-              <Body
-                color="var(--spectrum-global-color-gray-700)"
-                size="XS"
-                textAlign="center"
-              >
-                You have no favorites yet! Favourite an automation, app, table
-                or API for quicker access.
+          <Divider size="S" />
+          <div class="favourite-wrapper">
+            <div class="favourite-title">
+              <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+                FAVOURITES
               </Body>
-              <Link
-                href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
-                target="_blank"
-                secondary
-                quiet>Learn how</Link
-              >
             </div>
-          {:else}
-            <div class="favourite-links">
-              {#each favourites as favourite}
-                {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
-                  name: favourite.resourceId,
-                  icon:
-                    ResourceIcons[favourite.resourceType] ??
-                    ResourceIcons[WorkspaceResource.TABLE],
-                }}
-                {@const workspaceApp = lookup?.workspaceApp}
-                {@const showLiveLink =
-                  favourite.resourceType === WorkspaceResource.WORKSPACE_APP &&
-                  workspaceApp &&
-                  workspaceApp.publishStatus?.state ===
-                    PublishResourceState.PUBLISHED &&
-                  !workspaceApp.disabled}
-                {@const liveUrl =
-                  showLiveLink && workspaceApp
-                    ? buildLiveWorkspaceAppUrl(workspaceApp)
-                    : null}
-                <div class="link">
-                  <SideNavLink
-                    icon={lookup?.icon}
-                    text={lookup?.name}
-                    {collapsed}
-                    on:click={() => {
-                      const targetLink = resourceLink(favourite)
-                      if (targetLink) $goto(targetLink)
-                      keepCollapsed()
-                    }}
-                  >
-                    <div slot="actions">
-                      <div class="action-buttons">
-                        {#if liveUrl}
-                          <button
-                            type="button"
-                            class="live-app-link"
-                            aria-label="View live app"
-                            on:click|stopPropagation|preventDefault={() =>
-                              openLiveWorkspaceApp(liveUrl)}
-                          >
-                            <Icon
-                              name="globe-simple"
-                              size="S"
-                              hoverable
-                              color="#fff"
-                              hoverColor="#fff"
-                              tooltip="View live app"
-                              tooltipType={TooltipType.Info}
-                              tooltipPosition={TooltipPosition.Top}
-                            />
-                          </button>
-                        {/if}
-                        <FavouriteResourceButton {favourite} />
-                      </div>
-                    </div>
-                  </SideNavLink>
+            {#if !favourites?.length || !resourceLookup}
+              <div class="favourite-empty-state">
+                <div>
+                  <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
                 </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
+                <Body
+                  color="var(--spectrum-global-color-gray-700)"
+                  size="XS"
+                  textAlign="center"
+                >
+                  You have no favorites yet! Favourite an automation, app, table
+                  or API for quicker access.
+                </Body>
+                <Link
+                  href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
+                  target="_blank"
+                  secondary
+                  quiet
+                >
+                  Learn how
+                </Link>
+              </div>
+            {:else}
+              <div class="favourite-links">
+                {#each favourites as favourite}
+                  {@const lookup = getFavouriteResourceLookup(favourite)}
+                  {@const workspaceApp = lookup.workspaceApp}
+                  {@const showLiveLink =
+                    favourite.resourceType ===
+                      WorkspaceResource.WORKSPACE_APP &&
+                    workspaceApp &&
+                    workspaceApp.publishStatus?.state ===
+                      PublishResourceState.PUBLISHED &&
+                    !workspaceApp.disabled}
+                  {@const liveUrl =
+                    showLiveLink && workspaceApp
+                      ? buildLiveWorkspaceAppUrl(workspaceApp)
+                      : null}
+                  <div class="link">
+                    <SideNavLink
+                      icon={lookup?.icon}
+                      text={lookup?.name}
+                      {collapsed}
+                      on:click={() => {
+                        const targetLink = resourceLink(favourite)
+                        if (targetLink) $goto(targetLink)
+                        keepCollapsed()
+                      }}
+                    >
+                      <div slot="actions">
+                        <div class="action-buttons">
+                          {#if liveUrl}
+                            <button
+                              type="button"
+                              class="live-app-link"
+                              aria-label="View live app"
+                              on:click|stopPropagation|preventDefault={() =>
+                                openLiveWorkspaceApp(liveUrl)}
+                            >
+                              <Icon
+                                name="globe-simple"
+                                size="S"
+                                hoverable
+                                color="#fff"
+                                hoverColor="#fff"
+                                tooltip="View live app"
+                                tooltipType={TooltipType.Info}
+                                tooltipPosition={TooltipPosition.Top}
+                              />
+                            </button>
+                          {/if}
+                          <FavouriteResourceButton {favourite} />
+                        </div>
+                      </div>
+                    </SideNavLink>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
       </div>
+
       <div class="links">
-        <SideNavLink
-          icon="gear"
-          text="Settings"
-          {collapsed}
-          on:click={() => {
-            bb.settings()
-            keepCollapsed()
-          }}
-        />
-        <SideNavLink
-          icon="user-plus"
-          text="Invite member"
-          on:click={() => {
-            builderStore.showBuilderSidePanel()
-            keepCollapsed()
-          }}
-          {collapsed}
-        />
-        <SideNavLink
-          icon="book"
-          text="Documentation"
-          url="https://docs.budibase.com"
-          target="_blank"
-          on:click={() => {
-            keepCollapsed()
-          }}
-          {collapsed}
-        />
+        <span class="root-nav" class:error={backupErrorCount}>
+          {#if collapsed && backupErrorCount}
+            <span class="status-indicator">
+              <StatusLight
+                color="var(--spectrum-global-color-static-red-600)"
+                size="M"
+              />
+            </span>
+          {/if}
+          <SideNavLink
+            icon="gear"
+            text="Settings"
+            {collapsed}
+            on:click={() => {
+              bb.settings()
+              keepCollapsed()
+            }}
+          >
+            <svelte:fragment slot="right">
+              {#if backupErrorCount}
+                <StatusLight
+                  color="var(--spectrum-global-color-static-red-600)"
+                  size="M"
+                />
+              {/if}
+            </svelte:fragment>
+          </SideNavLink>
+        </span>
+        {#if $appStore.appId}
+          <SideNavLink
+            icon="user-plus"
+            text="Invite member"
+            on:click={() => {
+              builderStore.showBuilderSidePanel()
+              keepCollapsed()
+            }}
+            {collapsed}
+          />
+        {/if}
+        <HelpMenu align={PopoverAlignment.RightOutside} let:open>
+          <SideNavLink
+            icon={"question"}
+            text={"Help"}
+            {collapsed}
+            forceActive={open}
+          />
+        </HelpMenu>
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
@@ -470,9 +593,31 @@
 </div>
 
 <style>
+  .status-indicator {
+    position: absolute;
+    top: -10px;
+    z-index: 3;
+    right: -6px;
+  }
+
+  .root-nav.error .status-indicator :global(.spectrum-StatusLight::before) {
+    border: unset;
+  }
+
+  .root-nav {
+    position: relative;
+  }
+  .root-nav :global(.custom-icon .spectrum-Avatar) {
+    line-height: 0.8em;
+  }
+
+  .root-nav:not(.selected) .status-indicator {
+    top: -5px;
+    right: -5px;
+  }
+
   .nav_wrapper {
     display: contents;
-    --nav-logo-width: 20px;
     --nav-padding: 12px;
     --nav-collapsed-width: calc(
       var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
@@ -488,7 +633,6 @@
     display: none;
   }
 
-  /* Main nav*/
   .nav {
     background: var(--background-alt);
     position: absolute;
@@ -515,8 +659,10 @@
     flex: 0 0 var(--nav-width);
     width: var(--nav-width);
   }
-  /* Header */
+
   .nav_header {
+    width: 100%;
+    box-sizing: border-box;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -526,30 +672,35 @@
     border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
   }
-  .nav_header a {
+  .nav_header > div :global(> svg) {
     display: grid;
     place-items: center;
     transition: filter 130ms ease-out;
   }
-  .nav_header a:hover {
-    cursor: pointer;
-    filter: brightness(1.2);
+  .nav:not(.pinned):not(.focused) .nav-title {
+    opacity: 0;
   }
-  .nav_header img {
-    width: var(--nav-logo-width);
-  }
-  .nav_title {
+
+  .nav-title {
+    max-width: 100%;
+    min-width: 0;
     width: 0;
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 4px;
-    transition: color 130ms ease-out;
-    color: var(--spectrum-global-color-gray-800);
+    transition: opacity 130ms ease-out;
+    color: var(--spectrum-global-color-gray-900);
   }
-  .nav_title h1 {
+
+  .nav-title :global(> div) {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .nav-title h1 {
     font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
@@ -560,7 +711,6 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  /* Body */
   .nav_body {
     display: flex;
     flex-direction: column;
@@ -572,12 +722,10 @@
     min-height: 0;
   }
 
-  /* Popover container */
   .popover-container {
     position: absolute;
   }
 
-  /*  Links */
   .links {
     display: flex;
     flex-direction: column;
@@ -599,7 +747,6 @@
     min-height: 0;
   }
 
-  /*  favourite section */
   .favourite-wrapper {
     display: flex;
     flex-direction: column;

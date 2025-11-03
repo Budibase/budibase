@@ -138,12 +138,19 @@ const environment = {
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
+  ENABLE_PLUGIN_GH_ORIGIN_BACKFILL:
+    process.env.ENABLE_PLUGIN_GH_ORIGIN_BACKFILL ?? "true",
   SYNC_MIGRATION_CHECKS_MS:
     parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
   SKIP_MIGRATION_LOCKS_IN_TESTS:
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED ?? true,
   UPLOAD_APPS_FILES_ON_TEST: process.env.UPLOAD_APPS_FILES_ON_TEST,
+  LITELLM_PORT: process.env.LITELLM_PORT || "4000",
+  LITELLM_URL:
+    process.env.LITELLM_URL ||
+    `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
+  LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

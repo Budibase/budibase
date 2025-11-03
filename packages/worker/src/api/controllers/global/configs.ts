@@ -16,6 +16,7 @@ import {
   ConfigChecklistResponse,
   ConfigType,
   Ctx,
+  IMAPInnerConfig,
   DeleteConfigResponse,
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
@@ -23,6 +24,7 @@ import {
   GoogleInnerConfig,
   isAIConfig,
   isGoogleConfig,
+  isIMAPConfig,
   isOIDCConfig,
   isRecaptchaConfig,
   isSettingsConfig,
@@ -177,6 +179,19 @@ async function processSMTPConfig(
   }
 }
 
+async function processIMAPConfig(
+  config: IMAPInnerConfig,
+  existingConfig?: IMAPInnerConfig
+) {
+  if (config.auth?.pass === PASSWORD_REPLACEMENT) {
+    if (existingConfig && existingConfig.auth?.pass) {
+      config.auth.pass = existingConfig.auth.pass
+    } else {
+      throw new BadRequestError("IMAP password is required")
+    }
+  }
+}
+
 async function processSettingsConfig(
   config: SettingsInnerConfig & SettingsBrandingConfig,
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
@@ -317,6 +332,9 @@ export async function save(
       case ConfigType.SMTP:
         await processSMTPConfig(config, existingConfig?.config)
         break
+      case ConfigType.IMAP:
+        await processIMAPConfig(config, existingConfig?.config)
+        break
       case ConfigType.SETTINGS:
         await processSettingsConfig(config, existingConfig?.config)
         break
@@ -447,6 +465,10 @@ function stripSecrets(config: Config) {
       }
     }
   } else if (isSMTPConfig(config)) {
+    if (config.config.auth?.pass) {
+      config.config.auth.pass = PASSWORD_REPLACEMENT
+    }
+  } else if (isIMAPConfig(config)) {
     if (config.config.auth?.pass) {
       config.config.auth.pass = PASSWORD_REPLACEMENT
     }

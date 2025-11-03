@@ -6,37 +6,39 @@
     previewStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal"
-  import { notifications } from "@budibase/bbui"
+  import { appsStore, admin } from "@/stores/portal"
+  import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
-  import { redirect } from "@roxi/routify"
-  import { onDestroy } from "svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
   export let application
 
   let promise = getPackage(application)
+  let sideNav = null
 
   async function getPackage(appId) {
     try {
-      reset()
-      const pkg = await API.fetchAppPackage(appId)
-      await initialise(pkg)
-      await appsStore.load()
+      if ($admin.maintenance.length) {
+        return
+      }
+      if ($builderStore.created) {
+        builderStore.appCreated(false)
+        await appsStore.load()
+      } else {
+        reset()
+        const pkg = await API.fetchAppPackage(appId)
+        await initialise(pkg)
+      }
       await deploymentStore.load()
-      return pkg
     } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
-      $redirect("../../")
+      console.error(`Error initialising app: ${error?.message}`)
+      sideNav.show()
+
+      throw error
     }
   }
-
-  onDestroy(() => {
-    setTimeout(reset, 10)
-  })
 </script>
 
 {#if $builderStore.builderSidePanel}
@@ -44,16 +46,25 @@
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <SideNav />
+  <SideNav bind:this={sideNav} />
   {#await promise}
-    <!-- This should probably be some kind of loading state? -->
     <div class="loading" />
   {:then _}
     <div class="body">
       <slot />
     </div>
   {:catch error}
-    <p>Something went wrong: {error.message}</p>
+    <div class="body">
+      <div class="init page-error">
+        <Layout gap={"S"} alignContent={"center"} justifyItems={"center"}>
+          <Heading size={"L"}>Oops...</Heading>
+          <Body size={"S"}>There was a problem initialising the workspace</Body>
+          <div class="error-message">
+            {error?.message || "Something went wrong."}
+          </div>
+        </Layout>
+      </div>
+    </div>
   {/await}
 </div>
 
@@ -61,9 +72,18 @@
   <PreviewOverlay />
 {/if}
 
-<EnterpriseBasicTrialModal />
-
 <style>
+  .init.page-error,
+  .init.page-error :global(.container) {
+    height: 100%;
+  }
+  .error-message {
+    padding: var(--spacing-m);
+    border-radius: 4px;
+    background-color: var(--spectrum-global-color-gray-50);
+    font-family: monospace;
+    font-size: 12px;
+  }
   .loading {
     min-height: 100%;
     height: 100%;
@@ -71,8 +91,7 @@
     background: var(--background);
   }
   .root {
-    min-height: 100%;
-    height: 100%;
+    flex: 1;
     width: 100%;
     display: flex;
     flex-direction: row;

@@ -965,7 +965,16 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     else if (type === "jsonarray") {
       table = tables.find(table => table._id === datasource.tableId)
       let tableSchema = table?.schema
-      schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
+      const fieldSchema =
+        datasource.fieldName && tableSchema
+          ? tableSchema[datasource.fieldName]
+          : undefined
+
+      if (fieldSchema?.schema) {
+        schema = cloneDeep(fieldSchema.schema)
+      } else {
+        schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
+      }
     }
 
     // "queryarray" datasources are arrays inside JSON responses

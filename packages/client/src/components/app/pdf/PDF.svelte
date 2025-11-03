@@ -20,7 +20,7 @@
   let rendering = false
   let pageCount = 1
   let ref: HTMLElement
-  let gridRef: HTMLElement
+  let gridRef: HTMLElement | undefined
 
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
@@ -64,6 +64,9 @@
   }
 
   const handleGridMutation = () => {
+    if (!gridRef) {
+      return
+    }
     const rows = parseInt(gridRef.dataset.requiredRows || "1")
     const nextPageCount = Math.max(1, Math.ceil(rows / DesiredRows))
     if (nextPageCount > pageCount || !gridRef.classList.contains("highlight")) {
@@ -73,14 +76,34 @@
 
   onMount(() => {
     // Observe required content rows and use this to determine required pages
-    const gridDOMID = `${$component.id}-grid-dom`
-    gridRef = document.getElementsByClassName(gridDOMID)[0] as HTMLElement
+    // Wait for grid element to exist before observing (race condition on fresh load)
     const mutationObserver = new MutationObserver(handleGridMutation)
-    mutationObserver.observe(gridRef, {
-      attributes: true,
-      attributeFilter: ["data-required-rows", "class"],
-    })
+    let contentObserver: MutationObserver | null = null
+
+    const attachToGrid = () => {
+      gridRef = ref?.getElementsByClassName("grid")[0] as HTMLElement
+      if (!gridRef) {
+        return false
+      }
+      mutationObserver.observe(gridRef, {
+        attributes: true,
+        attributeFilter: ["data-required-rows", "class"],
+      })
+      handleGridMutation()
+      return true
+    }
+
+    if (!attachToGrid()) {
+      contentObserver = new MutationObserver(() => {
+        if (attachToGrid()) {
+          contentObserver?.disconnect()
+        }
+      })
+      contentObserver.observe(ref, { childList: true, subtree: true })
+    }
+
     return () => {
+      contentObserver?.disconnect()
       mutationObserver.disconnect()
     }
   })

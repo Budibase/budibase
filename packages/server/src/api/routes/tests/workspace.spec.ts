@@ -173,7 +173,7 @@ describe("/applications", () => {
     })
 
     it("creates app with sample data when onboarding", async () => {
-      const name = generateAppName()
+      const name = "Welcome app"
       const newWorkspace = await config.api.workspace.create({
         name,
         isOnboarding: "true",
@@ -279,7 +279,7 @@ describe("/applications", () => {
     it("should reject with a known name", async () => {
       await config.api.workspace.create(
         { name: workspace.name },
-        { body: { message: "App name is already in use." }, status: 400 }
+        { body: { message: "Workspace name is already in use." }, status: 400 }
       )
     })
 
@@ -461,6 +461,60 @@ describe("/applications", () => {
         "chunks/users-bee20df5.js": "40d29d530dc9b4f6ec0d54d020cb0710",
         "chunks/utc-71549d16.js": "e2a1d198f0d5941807e95d62408681e7",
         "manifest.json": "84459d28e16709c6c3edeabfc6912dbf",
+      })
+    })
+
+    it("preserves app scripts when creating from an import", async () => {
+      const sourceWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+      const scripts = [
+        {
+          id: "s1",
+          name: "Head script",
+          location: "Head" as const,
+          html: "<script>window.__testHead = true</script>",
+          cspWhitelist: "https://example.com",
+        },
+        {
+          id: "s2",
+          name: "Body script",
+          location: "Body" as const,
+          html: "<script>window.__testBody = true</script>",
+        },
+      ]
+      await config.withApp(sourceWorkspace, async () => {
+        await config.api.workspace.update(sourceWorkspace.appId, { scripts })
+      })
+
+      const exportPath = await sdk.backups.exportApp(sourceWorkspace.appId, {
+        tar: true,
+      })
+
+      const newWorkspace = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: exportPath,
+      })
+
+      const workspacePackage = await config.withApp(newWorkspace, async () => {
+        return await config.api.workspace.getAppPackage(newWorkspace.appId)
+      })
+      const importedScripts = workspacePackage.application.scripts || []
+      expect(importedScripts).toHaveLength(scripts.length)
+
+      const headScript = importedScripts.find(s => s.location === "Head")
+      expect(headScript).toMatchObject({
+        name: "Head script",
+        location: "Head",
+        html: "<script>window.__testHead = true</script>",
+        cspWhitelist: "https://example.com",
+      })
+
+      const bodyScript = importedScripts.find(s => s.location === "Body")
+      expect(bodyScript).toMatchObject({
+        name: "Body script",
+        location: "Body",
+        html: "<script>window.__testBody = true</script>",
       })
     })
   })
@@ -1351,7 +1405,7 @@ describe("/applications", () => {
           name: workspace.name,
           url: "/known-name",
         },
-        { body: { message: "App name is already in use." }, status: 400 }
+        { body: { message: "Workspace name is already in use." }, status: 400 }
       )
       expect(events.app.duplicated).not.toHaveBeenCalled()
     })
