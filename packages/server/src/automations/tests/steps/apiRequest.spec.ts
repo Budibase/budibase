@@ -1,4 +1,4 @@
-import { setEnv } from "@budibase/backend-core"
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { environmentVariables } from "@budibase/pro"
 import { encodeJSBinding } from "@budibase/string-templates"
@@ -13,14 +13,18 @@ import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration
 import * as setup from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { RestIntegration } from "../../../../src/integrations/rest"
+import { setEnv } from "../../../../src/environment"
 
 describe("API REST request", () => {
   const config = new TestConfiguration()
   let envCleanup: () => void
+  let coreEnvCleanup: () => void
 
   beforeAll(async () => {
-    envCleanup = setEnv({
+    coreEnvCleanup = setCoreEnv({
       ENCRYPTION_KEY: "some-key",
+    })
+    envCleanup = setEnv({
       REST_REJECT_UNAUTHORIZED: false,
     })
 
@@ -58,6 +62,7 @@ describe("API REST request", () => {
 
   afterAll(async () => {
     envCleanup()
+    coreEnvCleanup()
     config.end()
   })
 

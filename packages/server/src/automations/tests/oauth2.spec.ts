@@ -21,6 +21,18 @@ import nock from "nock"
 
 const jsonHeaders = { "content-type": "application/json" }
 
+interface OAuthRetryResponse {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+const buildReply = (statusCode: number, data: OAuthRetryResponse) => ({
+  statusCode,
+  data,
+  responseOptions: { headers: jsonHeaders },
+})
+
 const parseJsonBody = (body: unknown) => {
   if (!body) {
     return undefined
@@ -259,18 +271,16 @@ describe("OAuth2 Automation Binding", () => {
           if (firstCall) {
             firstCall = false
             expect(authHeader).toEqual("Bearer test_access_token")
-            return {
-              statusCode: 401,
-              data: { error: "Unauthorized" },
-              responseOptions: { headers: jsonHeaders },
-            }
+            return buildReply(401, {
+              success: false,
+              error: "Unauthorized",
+            })
           }
           expect(authHeader).toEqual("Bearer test_access_token2")
-          return {
-            statusCode: 200,
-            data: { success: true, message: "Request succeeded on retry!" },
-            responseOptions: { headers: jsonHeaders },
-          }
+          return buildReply(200, {
+            success: true,
+            message: "Request succeeded on retry!",
+          })
         })
         .times(2)
 
