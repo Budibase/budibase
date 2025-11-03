@@ -151,6 +151,8 @@ describe("clientLibrary", () => {
       ;(mockedFs.promises.readFile as MockedReadFile).mockResolvedValue(
         '{"version": "1.0.0"}' as any
       )
+
+      mockedFs.createReadStream.mockReset()
     })
 
     it.each([
@@ -161,7 +163,6 @@ describe("clientLibrary", () => {
       mockedFs.createReadStream.mockReturnValueOnce("stream2" as any)
       mockedFs.createReadStream.mockReturnValueOnce("stream3" as any)
       mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
-      mockedFs.createReadStream.mockReturnValueOnce("stream5" as any)
 
       mockedFs.readdirSync.mockReturnValueOnce([
         "chunk1.js",
@@ -188,16 +189,12 @@ describe("clientLibrary", () => {
             stream: "stream2",
           },
           {
-            filename: "app_123/budibase-client.esm.js",
+            filename: "app_123/chunks/chunk1.js",
             stream: "stream3",
           },
           {
-            filename: "app_123/chunks/chunk1.js",
-            stream: "stream4",
-          },
-          {
             filename: "app_123/chunks/chunk2.js",
-            stream: "stream5",
+            stream: "stream4",
           },
         ],
       })
