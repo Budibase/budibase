@@ -4,6 +4,7 @@ jest.mock("@budibase/backend-core", () => {
     ...actual,
     objectStore: {
       deleteFolder: jest.fn(),
+      deleteFiles: jest.fn(),
       listAllObjects: jest.fn(),
       retrieveToTmp: jest.fn().mockResolvedValue("/tmp/file"),
       streamUpload: jest.fn(),
@@ -199,6 +200,37 @@ describe("clientLibrary", () => {
         ],
       })
       expect(result).toEqual({ version: "1.0.0" })
+    })
+
+    it("should remove outdated client library files", async () => {
+      mockedFs.createReadStream.mockReturnValueOnce("stream1" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream2" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream3" as any)
+      mockedFs.createReadStream.mockReturnValueOnce("stream4" as any)
+
+      mockedFs.readdirSync.mockReturnValueOnce([
+        "chunk1.js",
+        "chunk2.js",
+      ] as any)
+
+      const existingFiles: ObjectStoreFile[] = [
+        { Key: "app_123/manifest.json" },
+        { Key: "app_123/budibase-client.js" },
+        { Key: "app_123/chunks/chunk1.js" },
+        { Key: "app_123/chunks/chunk2.js" },
+        { Key: "app_123/chunks/old.js" },
+        { Key: "app_123/.bak/manifest-to-keep.json" },
+      ]
+
+      mockedObjectStore.listAllObjects.mockReturnValue(existingFiles as any)
+
+      await updateClientLibrary(testAppId)
+
+      expect(mockedObjectStore.deleteFiles).toHaveBeenCalledTimes(1)
+      expect(mockedObjectStore.deleteFiles).toHaveBeenCalledWith(
+        ObjectStoreBuckets.APPS,
+        ["app_123/chunks/old.js"]
+      )
     })
   })
 

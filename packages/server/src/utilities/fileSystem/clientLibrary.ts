@@ -78,6 +78,8 @@ export async function backupClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function updateClientLibrary(appId: string) {
+  appId = sdk.applications.getProdAppID(appId)
+
   let manifest: string, client: string
   let dependencies = []
 
@@ -127,6 +129,32 @@ export async function updateClientLibrary(appId: string) {
     }),
     manifestSrc,
   ])
+
+  const uploadedFiles = files.map(file => file.filename)
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(objectStore.ObjectStoreBuckets.APPS, appId),
+    async file => {
+      const key = file.Key
+      if (!key) {
+        return
+      }
+      if (key.startsWith(`${appId}/.bak/`)) {
+        return
+      }
+      if (!uploadedFiles.includes(key)) {
+        filesToDelete.push(key)
+      }
+    },
+    5
+  )
+
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(
+      objectStore.ObjectStoreBuckets.APPS,
+      filesToDelete
+    )
+  }
 
   return JSON.parse(await manifestSrc)
 }
