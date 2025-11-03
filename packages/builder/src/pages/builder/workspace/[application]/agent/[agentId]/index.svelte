@@ -331,6 +331,7 @@
         // Create new tool source
         const toolSourceData: CreateToolSourceRequest = {
           type: selectedToolSource.type,
+          agentId: $agentsStore.currentAgentId || "",
           disabledTools: [],
           auth: authConfig,
         }
@@ -338,7 +339,9 @@
         notifications.success("Tool source saved successfully.")
       }
 
-      await agentsStore.fetchToolSources()
+      if ($agentsStore.currentAgentId) {
+        await agentsStore.fetchToolSources($agentsStore.currentAgentId)
+      }
       toolConfigModal.hide()
     } catch (err: any) {
       console.error(err)
@@ -441,6 +444,7 @@
 
     if ($agentsStore.currentAgentId) {
       await agentsStore.fetchChats($agentsStore.currentAgentId)
+      await agentsStore.fetchToolSources($agentsStore.currentAgentId)
     }
 
     // Ensure we always autoscroll to reveal new messages

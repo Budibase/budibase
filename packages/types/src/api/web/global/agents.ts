@@ -13,6 +13,11 @@ export type CreateToolSourceRequest = Omit<
   "_id" | "_rev" | "createdAt" | "updatedAt"
 >
 
+export type UpdateToolSourceRequest = Omit<
+  AgentToolSource,
+  "createdAt" | "updatedAt"
+>
+
 export type CreateAgentRequest = Omit<
   Agent,
   "_id" | "_rev" | "createdAt" | "updatedAt"

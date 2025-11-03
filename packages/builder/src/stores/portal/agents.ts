@@ -69,15 +69,24 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.currentAgentId = agentId
       if (agentId) {
         this.fetchChats(agentId)
+        this.fetchToolSources(agentId)
       } else {
         state.chats = []
+        state.toolSources = []
       }
       return state
     })
   }
 
-  fetchToolSources = async () => {
-    const toolSources = await API.fetchToolSources()
+  fetchToolSources = async (agentId: string) => {
+    if (!agentId) {
+      this.update(state => {
+        state.toolSources = []
+        return state
+      })
+      return []
+    }
+    const toolSources = await API.fetchToolSources(agentId)
     this.update(state => {
       state.toolSources = toolSources
       return state
@@ -87,10 +96,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
     await API.createToolSource(toolSource)
-    const newToolSourceWithTools: AgentToolSourceWithTools = {
+    const newToolSourceWithTools = {
       ...toolSource,
       tools: [],
-    }
+    } as AgentToolSourceWithTools
     this.update(state => {
       state.toolSources = [...state.toolSources, newToolSourceWithTools]
       return state

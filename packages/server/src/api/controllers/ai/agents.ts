@@ -16,6 +16,7 @@ import {
   Tool,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  UpdateToolSourceRequest,
   UserCtx,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
@@ -98,6 +99,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   for (const row of toolSources.rows) {
     const toolSource = row.doc!
+
+    if (toolSource.agentId !== agentId) {
+      continue
+    }
+
     const toolSourceInstance = createToolSourceInstance(toolSource)
 
     if (!toolSourceInstance) {
@@ -229,36 +235,56 @@ export async function fetchHistory(
 }
 
 export async function fetchToolSources(
-  ctx: UserCtx<void, AgentToolSourceWithTools[]>
+  ctx: UserCtx<void, AgentToolSourceWithTools[], { agentId: string }>
 ) {
   const db = context.getWorkspaceDB()
+  const agentId = ctx.params.agentId
+
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  await sdk.ai.agents.getOrThrow(agentId)
+
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
       include_docs: true,
     })
   )
 
-  ctx.body = toolSources.rows.map(row => {
-    const doc = row.doc!
-    const toolSourceInstance = createToolSourceInstance(doc)
+  ctx.body = toolSources.rows
+    .map(row => row.doc!)
+    .filter(toolSource => toolSource.agentId === agentId)
+    .map(doc => {
+      const toolSourceInstance = createToolSourceInstance(doc)
 
-    const tools: Tool[] = toolSourceInstance
-      ? toolSourceInstance.getTools()
-      : []
+      const tools: Tool[] = toolSourceInstance
+        ? toolSourceInstance.getTools()
+        : []
 
-    return {
-      ...doc,
-      tools,
-    }
-  })
+      return {
+        ...doc,
+        tools,
+      }
+    })
 }
 
 export async function createToolSource(
   ctx: UserCtx<CreateToolSourceRequest, { created: true }>
 ) {
   const db = context.getWorkspaceDB()
-  const toolSource = ctx.request.body
-  toolSource._id = docIds.generateAgentToolSourceID()
+  const toolSourceRequest = ctx.request.body
+
+  if (!toolSourceRequest.agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
+
+  const toolSource: AgentToolSource = {
+    ...toolSourceRequest,
+    _id: docIds.generateAgentToolSourceID(),
+  } as AgentToolSource
 
   await db.put(toolSource)
   // TODO: handle PH events
@@ -268,15 +294,23 @@ export async function createToolSource(
 }
 
 export async function updateToolSource(
-  ctx: UserCtx<CreateToolSourceRequest, AgentToolSource>
+  ctx: UserCtx<UpdateToolSourceRequest, AgentToolSource>
 ) {
-  const toolSource = ctx.request.body
+  const toolSourceRequest = ctx.request.body
 
-  if (!toolSource._id || !toolSource._rev) {
+  if (!toolSourceRequest._id || !toolSourceRequest._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
 
+  if (!toolSourceRequest.agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
   const db = context.getWorkspaceDB()
+
+  await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
+
+  const toolSource: AgentToolSource = toolSourceRequest as AgentToolSource
 
   const response = await db.put(toolSource)
   toolSource._rev = response.rev

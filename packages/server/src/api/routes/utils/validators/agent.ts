@@ -53,6 +53,7 @@ export function createToolSourceValidator() {
     Joi.object({
       _id: OPTIONAL_STRING,
       _rev: OPTIONAL_STRING,
+      agentId: Joi.string().required(),
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
@@ -71,6 +72,7 @@ export function updateToolSourceValidator() {
     Joi.object({
       _id: Joi.string().required(),
       _rev: Joi.string().required(),
+      agentId: Joi.string().required(),
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),

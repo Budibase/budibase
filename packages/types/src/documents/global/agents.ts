@@ -44,24 +44,28 @@ export type AgentToolSourceAuth =
 
 export interface GitHubToolSource extends Document {
   type: "GITHUB"
+  agentId: string
   disabledTools: string[]
   auth: GitHubToolAuth
 }
 
 export interface ConfluenceToolSource extends Document {
   type: "CONFLUENCE"
+  agentId: string
   disabledTools: string[]
   auth: ConfluenceToolAuth
 }
 
 export interface BudibaseToolSource extends Document {
   type: "BUDIBASE"
+  agentId: string
   disabledTools: string[]
   auth: BudibaseToolAuth
 }
 
 export interface BambooHRToolSource extends Document {
   type: "BAMBOOHR"
+  agentId: string
   disabledTools: string[]
   auth: BambooHRToolAuth
 }

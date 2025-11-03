@@ -27,7 +27,7 @@ export interface AgentEndpoints {
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchToolSources: () => Promise<AgentToolSourceWithTools[]>
+  fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
   createToolSource: (
     toolSource: CreateToolSourceRequest
   ) => Promise<{ created: true }>
@@ -119,9 +119,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchToolSources: async () => {
+  fetchToolSources: async (agentId: string) => {
     return await API.get({
-      url: "/api/agent/toolsource",
+      url: `/api/agent/${agentId}/toolsource`,
     })
   },
 
