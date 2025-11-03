@@ -9,10 +9,10 @@ import {
   PaginationConfig,
   RestQueryFields,
 } from "@budibase/types"
-import nock from "nock"
 import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { RestIntegration } from "../../../../src/integrations/rest"
 
 describe("API REST request", () => {
   const config = new TestConfiguration()
@@ -21,10 +21,10 @@ describe("API REST request", () => {
   beforeAll(async () => {
     envCleanup = setEnv({
       ENCRYPTION_KEY: "some-key",
+      REST_REJECT_UNAUTHORIZED: false,
     })
 
     await config.init()
-    // No snippet/js support in queries. Snippet support in auto
     config.devWorkspace = await config.api.workspace.update(
       config.getDevWorkspaceId(),
       {
@@ -40,10 +40,8 @@ describe("API REST request", () => {
       }
     )
 
-    // Init env vars
     await config.doInTenant(async () => {
       mocks.licenses.useEnvironmentVariables()
-      // Set some base variables
       await environmentVariables.update("env-1", {
         production: "a",
         development: "b",
@@ -63,12 +61,21 @@ describe("API REST request", () => {
     config.end()
   })
 
-  beforeEach(() => {
-    nock.cleanAll()
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
+  const mockRestResponse = (response: any) => {
+    jest
+      .spyOn(RestIntegration.prototype as any, "_req")
+      .mockResolvedValue({
+        data: response,
+        info: { code: 200, size: "", time: "" },
+      })
+  }
+
   it("should be able to execute a query and relay the results", async () => {
-    nock("http://myapi.com/api").get("/count").reply(200, { count: 1234 })
+    mockRestResponse({ count: 1234 })
 
     const queryFields: RestQueryFields = {
       disabledHeaders: {},
@@ -102,23 +109,15 @@ describe("API REST request", () => {
   })
 
   it("should be able to execute an API request with bindings/snippets/env in the query or automation step", async () => {
-    nock("http://myapi.com/api")
-      .get("/count")
-      .query(true)
-      .reply(200, (uri, _body) => {
-        // Intercept the request and query the values as they are used.
-        const url = new URL(`http://myapi.com${uri}`)
-        const qBinding = url.searchParams.get("qBinding")
-        const envQBinding = url.searchParams.get("envQBinding")
-        const autoSnip = url.searchParams.get("autoSnip")
-        const autoEnv = url.searchParams.get("autoEnv")
-        return { qBinding, envQBinding, autoSnip, autoEnv }
-      })
+    mockRestResponse({
+      qBinding: "replaced",
+      envQBinding: "d",
+      autoSnip: "snippet_running",
+      autoEnv: "b",
+    })
 
-    // Snippet values - should be processed in the automation
     const encodedSnippet = encodeJSBinding("return snippets.tester('running')")
 
-    // 'Bindings' in the automation UI
     const parameters = [
       {
         name: "someBinding",
@@ -126,17 +125,16 @@ describe("API REST request", () => {
       },
       {
         name: "envBinding",
-        // The development val of env-2 is used in the test
         default: "{{ env.env-2 }}",
       },
     ]
 
     const queryFields: RestQueryFields = {
       path: "http://myapi.com/api/count",
-      queryString: `qBinding={{ someBinding }}&envQBinding={{ envBinding }}&autoSnip={{ snip }}&autoEnv={{ autoEnv }}`,
+      queryString:
+        "qBinding={{ someBinding }}&envQBinding={{ envBinding }}&autoSnip={{ snip }}&autoEnv={{ autoEnv }}",
     }
 
-    // Build the rest source and query.
     const restSource = await config.restDatasource()
     const someQuery = await setup.saveRESTQuery(
       config,
@@ -145,7 +143,6 @@ describe("API REST request", () => {
       parameters
     )
 
-    // Execute the auto
     const { steps } = await createAutomationBuilder(config)
       .onAppAction()
       .apiRequest({
@@ -158,7 +155,6 @@ describe("API REST request", () => {
       })
       .test({ fields: {} })
 
-    // Confirm snippets are running.
     const [queryStep] = steps
     expect(queryStep?.inputs?.query?.snip).toBe("snippet_running")
 
@@ -170,23 +166,16 @@ describe("API REST request", () => {
       requestStep?.outputs!
     const response = requestOutputs?.response?.[0]
 
-    // The value set in the automation should should be passed to the query.
+    expect(requestOutputs.success).toBe(true)
+    expect(requestOutputs.info.code).toBe(200)
     expect(response.qBinding).toBe("replaced")
-
-    // The env variable configured in the query should be processed
     expect(response.envQBinding).toBe("d")
-
-    // The snippet should have been processed in the automation and the result relayed.
     expect(response.autoSnip).toBe("snippet_running")
-
-    // Env vars should have resolved in the auto and been relayed
     expect(response.autoEnv).toBe("b")
   })
 
-  // Legacy - the old Execute query step doesn't have any tests for the REST datasource type
-  // This ensures that old steps configured in this way still run without issue.
   it("should be able to execute a query and relay the results - for the old execute query steps", async () => {
-    nock("http://myapi.com/api").get("/count").reply(200, { count: 1234 })
+    mockRestResponse({ count: 1234 })
 
     const queryFields: RestQueryFields = {
       path: "http://myapi.com/api/count",
@@ -197,7 +186,7 @@ describe("API REST request", () => {
 
     const { steps } = await createAutomationBuilder(config)
       .onAppAction()
-      .executeQuery({ query: { queryId: restQuery._id! } }) // Main difference
+      .executeQuery({ query: { queryId: restQuery._id! } })
       .test({ fields: {} })
 
     const requestStep = steps.find(
