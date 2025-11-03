@@ -5,7 +5,6 @@ export interface Agent extends Document {
   description?: string
   aiconfig: string
   promptInstructions?: string
-  allowedTools: string[]
 }
 
 export interface AgentChat extends Document {

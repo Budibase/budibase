@@ -71,14 +71,6 @@
   }
 
   $: agents = $agentsStore.agents.sort((a, b) => {
-    // const aIsFav = !!a.favourite._id
-    // const bIsFav = !!b.favourite._id
-
-    // // Group by favourite status
-    // if (aIsFav !== bIsFav) {
-    //   return bIsFav ? 1 : -1
-    // }
-
     return b.updatedAt!.localeCompare(a.updatedAt!)
   })
 

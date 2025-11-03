@@ -8,7 +8,6 @@ import {
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
-  allowedTools: agent.allowedTools ?? [],
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -50,7 +49,6 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     description: request.description,
     aiconfig: request.aiconfig,
     promptInstructions: request.promptInstructions,
-    allowedTools: request.allowedTools ?? [],
     createdAt: now,
   }
 
@@ -71,7 +69,6 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
   const updated: Agent = {
     ...existing,
     ...request,
-    allowedTools: request.allowedTools ?? [],
     updatedAt: new Date().toISOString(),
   }
 

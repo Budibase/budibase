@@ -26,7 +26,6 @@
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       aiconfig: aiConfig,
-      allowedTools: [],
     })
     $goto(`./${newAgent._id}`)
   }

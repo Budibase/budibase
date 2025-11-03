@@ -351,7 +351,6 @@ export async function createAgent(
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
-    allowedTools: body.allowedTools,
     _deleted: false,
   }
 
@@ -373,7 +372,6 @@ export async function updateAgent(
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
-    allowedTools: body.allowedTools,
     _deleted: false,
   }
 

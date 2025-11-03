@@ -90,7 +90,6 @@ export function createAgentValidator() {
       description: OPTIONAL_STRING,
       aiconfig: Joi.string().required(),
       promptInstructions: OPTIONAL_STRING,
-      allowedTools: Joi.array().items(Joi.string()).default([]),
     })
   )
 }
@@ -104,7 +103,6 @@ export function updateAgentValidator() {
       description: OPTIONAL_STRING,
       aiconfig: Joi.string().required(),
       promptInstructions: OPTIONAL_STRING,
-      allowedTools: Joi.array().items(Joi.string()).default([]),
     })
   )
 }
