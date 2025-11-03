@@ -513,7 +513,7 @@ export const addWorkspaceIdToInvite = async (
 ) => {
   const { code, role } = ctx.params
 
-  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
   if (!workspaceId) {
     ctx.throw(400, "Workspace id not set")
   }
@@ -536,7 +536,7 @@ export const removeWorkspaceIdFromInvite = async (
 ) => {
   const { code } = ctx.params
 
-  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
   if (!workspaceId) {
     ctx.throw(400, "Workspace id not set")
   }
@@ -651,7 +651,7 @@ async function handleUserWorkspacePermission(
 
   const currentUserId = ctx.user?._id
 
-  const workspaceId = await backendCoreUtils.getAppIdFromCtx(ctx)
+  const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
   if (!workspaceId) {
     ctx.throw(400, "Workspace id not set")
   }

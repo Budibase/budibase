@@ -23,14 +23,14 @@ export function addTenantToUrl(url: string) {
   return url
 }
 
-export const isUserInAppTenant = (appId: string, user?: any) => {
+export const isUserInWorkspaceTenant = (workspace: string, user?: any) => {
   let userTenantId
   if (user) {
     userTenantId = user.tenantId || DEFAULT_TENANT_ID
   } else {
     userTenantId = getTenantId()
   }
-  const tenantId = getTenantIDFromWorkspaceID(appId) || DEFAULT_TENANT_ID
+  const tenantId = getTenantIDFromWorkspaceID(workspace) || DEFAULT_TENANT_ID
   return tenantId === userTenantId
 }
 

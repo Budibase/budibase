@@ -47,13 +47,11 @@
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
-  $: baseUrl = $admin?.baseUrl
   $: cloud = $admin?.cloud
   $: user = $auth.user
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
-
   // Re-run initBuilder when user logs in
   $: {
     const isAuthenticated = !!$auth.user
@@ -69,7 +67,6 @@
 
   $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
 
-  // Process navigation actions
   $: processNavAction($navigationAction)
 
   navigation.init($redirect)
@@ -218,49 +215,6 @@
     }
   )
 
-  const validateTenantId = async () => {
-    const host = window.location.host
-    if (host.includes("localhost:") || !baseUrl) {
-      // ignore local dev
-      return
-    }
-
-    const mainHost = new URL(baseUrl).host
-    let urlTenantId
-    // remove the main host part
-    const hostParts = host.split(mainHost).filter(part => part !== "")
-    // if there is a part left, it has to be the tenant ID subdomain
-    if (hostParts.length === 1) {
-      urlTenantId = hostParts[0].replace(/\./g, "")
-    }
-
-    if (user && user.tenantId) {
-      if (!urlTenantId) {
-        // redirect to correct tenantId subdomain
-        if (!window.location.host.includes("localhost")) {
-          let redirectUrl = window.location.href
-          redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
-          window.location.href = redirectUrl
-        }
-        return
-      }
-
-      if (urlTenantId && user.tenantId !== urlTenantId) {
-        // user should not be here - play it safe and log them out
-        try {
-          await auth.logout()
-          await auth.setOrganisation(null)
-        } catch (error) {
-          console.error(
-            `Tenant mis-match - "${urlTenantId}" and "${user.tenantId}" - logout`
-          )
-        }
-      }
-    } else {
-      // no user - set the org according to the url
-      await auth.setOrganisation(urlTenantId)
-    }
-  }
   async function analyticsPing() {
     await API.analyticsPing({ source: "builder" })
   }
@@ -293,7 +247,7 @@
 
       // Validate tenant if in a multi-tenant env
       if (multiTenancyEnabled) {
-        await validateTenantId()
+        await auth.validateTenantId()
       }
     } catch (error) {
       // Don't show a notification here, as we might 403 initially due to not
@@ -311,8 +265,11 @@
         duration: 5000,
       })
     }
-
-    await analyticsPing()
+    try {
+      await analyticsPing()
+    } catch (e) {
+      console.error("Analytics ping failed", e?.message)
+    }
   }
 
   // Event handler for the command palette

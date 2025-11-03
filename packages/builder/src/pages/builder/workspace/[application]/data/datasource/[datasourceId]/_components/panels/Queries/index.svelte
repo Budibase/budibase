@@ -24,6 +24,9 @@
     datasource?.source === IntegrationTypes.REST
       ? QueryVerbRenderer
       : CapitaliseRenderer
+  $: isRestDatasource = datasource?.source === "REST"
+  $: showImportButton = isRestDatasource && !datasource?.isRestTemplate
+  $: createQueryLabel = isRestDatasource ? "Add action" : "Create new query"
 </script>
 
 {#if supportsViews}
@@ -41,12 +44,12 @@
 <Panel>
   <div class="controls" slot="controls">
     <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
-      Create new query
+      {createQueryLabel}
     </Button>
     {#if supportsViews}
       <Button secondary on:click={viewSelectionModal.show}>Fetch views</Button>
     {/if}
-    {#if datasource.source === "REST"}
+    {#if showImportButton}
       <RestImportButton datasourceId={datasource._id} />
     {/if}
   </div>
