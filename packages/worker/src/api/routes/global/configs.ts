@@ -19,6 +19,21 @@ function smtpValidation() {
   }).unknown(true)
 }
 
+function imapValidation() {
+  // prettier-ignore
+  return Joi.object({
+    port: Joi.number().required(),
+    host: Joi.string().required(),
+    secure: Joi.boolean().optional(),
+    mailbox: Joi.string().optional(),
+    auth: Joi.object({
+      type: Joi.string().valid("login", null),
+      user: Joi.string().required(),
+      pass: Joi.string().allow("", null),
+    }).optional(),
+  }).unknown(true)
+}
+
 function settingValidation() {
   // prettier-ignore
   return Joi.object({
@@ -100,6 +115,7 @@ function buildConfigSaveValidation() {
       .conditional("type", {
         switch: [
           { is: ConfigType.SMTP, then: smtpValidation() },
+          { is: ConfigType.IMAP, then: imapValidation() },
           { is: ConfigType.SETTINGS, then: settingValidation() },
           { is: ConfigType.ACCOUNT, then: Joi.object().unknown(true) },
           { is: ConfigType.GOOGLE, then: googleValidation() },
