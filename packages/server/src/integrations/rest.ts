@@ -400,8 +400,12 @@ export class RestIntegration implements IntegrationBase {
     let jsonValue: JSONValue | undefined
 
     if (body != null) {
-      const { bodyString, bodyObject, parseError, jsonValue: parsedJson } =
-        normaliseBody(body)
+      const {
+        bodyString,
+        bodyObject,
+        parseError,
+        jsonValue: parsedJson,
+      } = normaliseBody(body)
       string = bodyString
       object = bodyObject
       error = parseError
@@ -575,12 +579,10 @@ export class RestIntegration implements IntegrationBase {
         } else if (pagination?.location === "body") {
           const fallback: Record<string, JSONValue> = { ...object }
           if (pagination.pageParam && paginationValues?.page != null) {
-            fallback[pagination.pageParam] =
-              paginationValues.page as JSONValue
+            fallback[pagination.pageParam] = paginationValues.page as JSONValue
           }
           if (pagination.sizeParam && paginationValues?.limit != null) {
-            fallback[pagination.sizeParam] =
-              paginationValues.limit as JSONValue
+            fallback[pagination.sizeParam] = paginationValues.limit as JSONValue
           }
           if (Object.keys(fallback).length > 0) {
             payload = fallback
