@@ -36,6 +36,7 @@
     "svelte-check": "^4.1.5",
     "svelte-eslint-parser": "0.43.0",
     "svelte-preprocess": "^6.0.3",
+    "testcontainers": "^11.7.2",
     "typescript": "5.9.2",
     "typescript-eslint": "8.17.0",
     "update-dotenv": "1.1.1",

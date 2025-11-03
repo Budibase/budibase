@@ -116,10 +116,15 @@
     null
   let workspaceSelect: WorkspaceSelect | undefined
   let createWorkspaceModal: Modal | undefined
+  let workspaceMenuOpen = false
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
-  $: collapsed = !focused && !$pinned
+
+  // keep sidebar expanded when workspace selector is open
+  $: collapsed = !focused && !$pinned && !workspaceMenuOpen
+  // keep sidebar expanded when selector is open, even if mouse leaves
+  $: navFocused = focused || workspaceMenuOpen
 
   // Ensure the workspaceSelect closes if the sidebar is hidden
   $: if (collapsed && workspaceSelect) {
@@ -127,7 +132,11 @@
   }
 
   // Hide the picker if the user cannot see it
-  $: canSelectedWorkspace = !$licensing.isFreePlan || $appsStore.apps.length > 1
+  $: canSelectWorkspace = !$licensing.isFreePlan || $appsStore.apps.length > 1
+
+  $: if (!canSelectWorkspace) {
+    workspaceMenuOpen = false
+  }
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
@@ -328,7 +337,7 @@
   <div
     class="nav"
     class:pinned={$pinned}
-    class:focused
+    class:focused={navFocused}
     role="tooltip"
     on:mouseenter={() => setFocused(true)}
     on:mouseleave={() => setFocused(false)}
@@ -342,9 +351,10 @@
       </div>
 
       <div class="nav-title">
-        {#if canSelectedWorkspace}
+        {#if canSelectWorkspace}
           <WorkspaceSelect
             bind:this={workspaceSelect}
+            bind:open={workspaceMenuOpen}
             on:create={() => {
               createWorkspaceModal?.show()
               setFocused(false)

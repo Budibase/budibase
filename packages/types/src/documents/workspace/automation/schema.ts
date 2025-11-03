@@ -80,6 +80,7 @@ import {
   ExtractStateStepOutputs,
   LoopV2StepInputs,
   LoopV2StepOutputs,
+  EmailTriggerInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -565,6 +566,12 @@ export function isCronTrigger(
   return trigger.stepId === AutomationTriggerStepId.CRON
 }
 
+export function isEmailTrigger(
+  trigger: AutomationStep | AutomationTrigger | null
+): trigger is EmailTrigger {
+  return trigger?.stepId === AutomationTriggerStepId.EMAIL
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
@@ -586,17 +593,19 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
         | (Record<string, any> & { fields?: Record<string, AutomationIOType> })
     : T extends AutomationTriggerStepId.CRON
       ? CronTriggerInputs
-      : T extends AutomationTriggerStepId.ROW_ACTION
-        ? RowActionTriggerInputs
-        : T extends AutomationTriggerStepId.ROW_DELETED
-          ? RowDeletedTriggerInputs
-          : T extends AutomationTriggerStepId.ROW_SAVED
-            ? RowCreatedTriggerInputs
-            : T extends AutomationTriggerStepId.ROW_UPDATED
-              ? RowUpdatedTriggerInputs
-              : T extends AutomationTriggerStepId.WEBHOOK
-                ? Record<string, any>
-                : never
+      : T extends AutomationTriggerStepId.EMAIL
+        ? EmailTriggerInputs
+        : T extends AutomationTriggerStepId.ROW_ACTION
+          ? RowActionTriggerInputs
+          : T extends AutomationTriggerStepId.ROW_DELETED
+            ? RowDeletedTriggerInputs
+            : T extends AutomationTriggerStepId.ROW_SAVED
+              ? RowCreatedTriggerInputs
+              : T extends AutomationTriggerStepId.ROW_UPDATED
+                ? RowUpdatedTriggerInputs
+                : T extends AutomationTriggerStepId.WEBHOOK
+                  ? Record<string, any>
+                  : never
 
 export type AutomationTriggerOutputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
@@ -634,11 +643,15 @@ export type AutomationTrigger =
   | RowSavedTrigger
   | RowUpdatedTrigger
   | WebhookTrigger
+  | EmailTrigger
 
 export type AppActionTrigger =
   AutomationTriggerSchema<AutomationTriggerStepId.APP>
 
 export type CronTrigger = AutomationTriggerSchema<AutomationTriggerStepId.CRON>
+
+export type EmailTrigger =
+  AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>
 
 export type RowActionTrigger =
   AutomationTriggerSchema<AutomationTriggerStepId.ROW_ACTION>
