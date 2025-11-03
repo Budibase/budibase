@@ -1,5 +1,4 @@
 <script>
-  import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore } from "@/stores/portal"
   import * as routify from "@roxi/routify"

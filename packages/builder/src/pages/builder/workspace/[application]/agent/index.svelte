@@ -4,7 +4,8 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
-  import { contextMenuStore } from "@/stores/builder"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import { contextMenuStore, workspaceFavouriteStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
     AbsTooltip,
@@ -14,18 +15,22 @@
     Icon,
     type ModalAPI,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
+  import { WorkspaceResource } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
   import { onMount } from "svelte"
 
-  let showHighlight = true
+  let showHighlight = false
   let upsertModal: AgentModal
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let selectedAgent: Agent | undefined = undefined
+
+  $: favourites = workspaceFavouriteStore.lookup
 
   async function deleteAgent() {
     const selectedId = selectedAgent?._id
@@ -70,9 +75,26 @@
     )
   }
 
-  $: agents = $agentsStore.agents.sort((a, b) => {
-    return b.updatedAt!.localeCompare(a.updatedAt!)
-  })
+  $: agents = $agentsStore.agents
+    .map(agent => {
+      return {
+        ...agent,
+        favourite: $favourites?.[agent._id!] ?? {
+          resourceType: WorkspaceResource.AGENT,
+          resourceId: agent._id!,
+        },
+      }
+    })
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
+      }
+
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 
   onMount(async () => {
     await agentsStore.fetchAgents()
@@ -123,6 +145,7 @@
       {#each agents as agent}
         <a
           class="agent"
+          class:favourite={agent.favourite?._id}
           href={$url(`./${agent._id}`)}
           on:contextmenu={e => openContextMenu(e, agent)}
           class:active={showHighlight && selectedAgent === agent}
@@ -146,6 +169,14 @@
                 on:click={e => openContextMenu(e, agent)}
               />
             </div>
+
+            <span class="favourite-btn">
+              <FavouriteResourceButton
+                favourite={agent.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
+            </span>
           </div>
         </a>
       {/each}
@@ -220,7 +251,7 @@
   .agent,
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 200px 200px 200px 50px;
+    grid-template-columns: 1fr 200px 50px;
     border-bottom: var(--border);
     align-items: center;
   }
@@ -259,6 +290,10 @@
   .actions > * {
     opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 
   .table-wrapper {
