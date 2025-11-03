@@ -15,8 +15,8 @@
     "./manifest.json": "./manifest.json"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "dev": "node scripts/build.mjs --watch --dev",
+    "build": "vite build",
+    "dev": "vite build --watch --mode=dev",
     "check:types": "yarn svelte-check"
   },
   "dependencies": {
