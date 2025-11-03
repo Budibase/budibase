@@ -23,7 +23,7 @@
   import AppsHero from "assets/automation-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
-  import UpdateAgentModal from "./UpdateAgentModal.svelte"
+  import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
   import { onMount } from "svelte"
 
   let showHighlight = false

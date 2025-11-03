@@ -17,6 +17,7 @@ interface AgentStoreState {
   chats: AgentChat[]
   currentChatId?: string
   toolSources: AgentToolSourceWithTools[]
+  agentsLoaded: boolean
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
@@ -25,6 +26,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       chats: [],
       toolSources: [],
+      agentsLoaded: false,
     })
   }
 
@@ -36,6 +38,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     const { agents } = await API.fetchAgents()
     this.update(state => {
       state.agents = agents
+      state.agentsLoaded = true
       return state
     })
     return agents

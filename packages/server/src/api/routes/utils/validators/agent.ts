@@ -103,6 +103,6 @@ export function updateAgentValidator() {
       description: OPTIONAL_STRING,
       aiconfig: Joi.string().required(),
       promptInstructions: OPTIONAL_STRING,
-    })
+    }).unknown(true)
   )
 }
