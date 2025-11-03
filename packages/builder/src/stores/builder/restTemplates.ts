@@ -115,18 +115,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       icon: "/builder/assets/rest-template-icons/stripe.svg",
     },
-    {
-      name: "Zendesk",
-      description:
-        "Zendesk Service API for tickets, users, help center, and support workflows",
-      specs: [
-        {
-          version: "latest",
-          url: "https://developer.zendesk.com/zendesk/oas.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/zendesk.svg",
-    },
   ],
 }
 
