@@ -15,7 +15,6 @@ import get from "lodash/get"
 import qs from "querystring"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
-import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
@@ -26,7 +25,7 @@ import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
-import { fetch, Response, RequestInit, Agent, Headers } from "undici"
+import { fetch, Response, RequestInit, Agent, Headers, FormData } from "undici"
 import environment from "../environment"
 
 const coreFields = {
@@ -120,7 +119,7 @@ const SCHEMA: Integration = {
 }
 
 interface ParsedResponse {
-  data: any
+  data: unknown
   info: {
     code: number
     size: string
@@ -131,7 +130,78 @@ interface ParsedResponse {
     headers: Record<string, string[] | string>
   }
   pagination?: {
-    cursor: any
+    cursor: unknown
+  }
+}
+
+interface NormalisedBody {
+  bodyString: string
+  bodyObject: Record<string, unknown>
+  parseError?: unknown
+}
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  return Object.prototype.toString.call(value) === "[object Object]"
+}
+
+const normaliseBody = (raw: unknown): NormalisedBody => {
+  if (raw == null) {
+    return { bodyString: "", bodyObject: {} }
+  }
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw)
+      if (isPlainRecord(parsed)) {
+        return {
+          bodyString: raw,
+          bodyObject: parsed,
+        }
+      }
+      return {
+        bodyString: raw,
+        bodyObject: {},
+      }
+    } catch (err) {
+      return {
+        bodyString: raw,
+        bodyObject: {},
+        parseError: err,
+      }
+    }
+  }
+
+  if (Buffer.isBuffer(raw)) {
+    return {
+      bodyString: raw.toString(),
+      bodyObject: {},
+    }
+  }
+
+  if (raw instanceof Uint8Array) {
+    return {
+      bodyString: Buffer.from(raw).toString(),
+      bodyObject: {},
+    }
+  }
+
+  if (isPlainRecord(raw)) {
+    return {
+      bodyString: JSON.stringify(raw),
+      bodyObject: raw,
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    return {
+      bodyString: JSON.stringify(raw),
+      bodyObject: {},
+    }
+  }
+
+  return {
+    bodyString: JSON.stringify(raw),
+    bodyObject: {},
   }
 }
 
@@ -150,7 +220,7 @@ export class RestIntegration implements IntegrationBase {
     response: Response,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
-    let data: any[] | string | undefined,
+    let data: unknown,
       raw: string | undefined,
       headers: Record<string, string[] | string> = {},
       filename: string | undefined
@@ -304,7 +374,7 @@ export class RestIntegration implements IntegrationBase {
 
   addBody(
     bodyType: string,
-    body: string | any,
+    body: string | unknown,
     input: RequestInit,
     pagination?: PaginationConfig,
     paginationValues?: PaginationValues
@@ -315,16 +385,15 @@ export class RestIntegration implements IntegrationBase {
     if (bodyType === BodyType.NONE) {
       return input
     }
-    let error,
-      object: any = {},
-      string = ""
-    try {
-      if (body) {
-        string = typeof body !== "string" ? JSON.stringify(body) : body
-        object = typeof body === "object" ? body : JSON.parse(body)
-      }
-    } catch (err) {
-      error = err
+    let error: unknown
+    let object: Record<string, unknown> = {}
+    let string = ""
+
+    if (typeof body !== "undefined") {
+      const { bodyString, bodyObject, parseError } = normaliseBody(body)
+      string = bodyString
+      object = bodyObject
+      error = parseError
     }
 
     // Util to add pagination values to a certain body type
@@ -349,23 +418,57 @@ export class RestIntegration implements IntegrationBase {
       case BodyType.ENCODED: {
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
-          params.append(key, value as string)
+          params.append(key, String(value))
         }
-        addPaginationToBody((key: string, value: any) => {
-          params.append(key, value)
-        })
+        addPaginationToBody(
+          (key: string, value: number | string | undefined) => {
+            if (value != null) {
+              params.append(key, String(value))
+            }
+          }
+        )
         input.body = params
         break
       }
       case BodyType.FORM_DATA: {
         const form = new FormData()
-        for (let [key, value] of Object.entries(object)) {
-          form.append(key, value)
+        const appendFormValue = (key: string, value: unknown) => {
+          if (value == null) {
+            form.append(key, "")
+            return
+          }
+          if (typeof value === "string") {
+            form.append(key, value)
+            return
+          }
+          if (value instanceof Blob) {
+            form.append(key, value)
+            return
+          }
+          if (Buffer.isBuffer(value)) {
+            form.append(key, Buffer.from(value).toString())
+            return
+          }
+          if (value instanceof Uint8Array) {
+            form.append(key, Buffer.from(value).toString())
+            return
+          }
+          form.append(key, String(value))
         }
-        addPaginationToBody((key: string, value: any) => {
-          form.append(key, value)
-        })
-        const formHeaders = form.getHeaders()
+        for (let [key, value] of Object.entries(object)) {
+          appendFormValue(key, value)
+        }
+        addPaginationToBody(
+          (key: string, value: number | string | undefined) => {
+            if (value != null) {
+              appendFormValue(key, value)
+            }
+          }
+        )
+        const nodeForm = form as FormData & {
+          getHeaders?: () => Record<string, string | string[]>
+        }
+        const formHeaders = nodeForm.getHeaders?.()
         if (formHeaders) {
           const ensureHeaderObject = (): Record<
             string,
@@ -431,9 +534,13 @@ export class RestIntegration implements IntegrationBase {
         if (error) {
           throw "Invalid JSON for request body"
         }
-        addPaginationToBody((key: string, value: any) => {
-          object[key] = value
-        })
+        addPaginationToBody(
+          (key: string, value: number | string | undefined) => {
+            if (value != null) {
+              object[key] = value
+            }
+          }
+        )
         input.body = JSON.stringify(object)
         // @ts-expect-error
         input.headers["Content-Type"] = "application/json"
@@ -445,7 +552,7 @@ export class RestIntegration implements IntegrationBase {
   async getAuthHeaders(
     authConfigId?: string,
     authConfigType?: RestAuthType
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<Record<string, string>> {
     if (!authConfigId) {
       return {}
     }
@@ -458,7 +565,7 @@ export class RestIntegration implements IntegrationBase {
       return {}
     }
 
-    let headers: any = {}
+    const headers: Record<string, string> = {}
     const authConfig = this.config.authConfigs.filter(
       c => c._id === authConfigId
     )[0]
@@ -572,32 +679,38 @@ export class RestIntegration implements IntegrationBase {
     let response: Response
     try {
       response = await fetch(url, input)
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as Error & {
+        cause?: {
+          code?: string
+          message?: string
+        }
+      }
       console.log("[rest integration] Fetch error details", {
         url,
-        error: err.message,
-        cause: err.cause?.message,
-        code: err.cause?.code,
+        error: error.message,
+        cause: error.cause?.message,
+        code: error.cause?.code,
         hasDispatcher: !!input.dispatcher,
         isHttpsUrl: url.startsWith("https://"),
         rejectUnauthorized,
       })
       if (
-        err.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
-        err.cause?.code === "CERT_UNTRUSTED" ||
-        err.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
+        error.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
+        error.cause?.code === "CERT_UNTRUSTED" ||
+        error.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
       ) {
         throw new Error(
-          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${err.message}`
+          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${error.message}`
         )
       }
 
-      if (err.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+      if (error.cause?.code === "ECONNREFUSED" && input.dispatcher) {
         throw new Error(
-          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${err.message}`
+          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${error.message}`
         )
       }
-      throw err
+      throw error
     }
     if (
       response.status === 401 &&
