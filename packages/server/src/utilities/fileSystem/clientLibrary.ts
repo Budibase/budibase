@@ -139,7 +139,7 @@ export async function updateClientLibrary(appId: string) {
       if (!key) {
         return
       }
-      if (key.startsWith(`${appId}/.bak/`)) {
+      if (!key.startsWith(`${appId}/chunks/`)) {
         return
       }
       if (!uploadedFiles.includes(key)) {
