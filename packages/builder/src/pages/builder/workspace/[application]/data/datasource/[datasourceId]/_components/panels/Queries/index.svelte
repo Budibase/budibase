@@ -6,6 +6,7 @@
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import RestImportQueriesModal from "./RestImportQueriesModal.svelte"
+  import RestTemplateImportModal from "./RestTemplateImportModal.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
@@ -45,10 +46,17 @@
 
 {#if isRestDatasource}
   <Modal bind:this={restImportModal}>
-    <RestImportQueriesModal
-      datasourceId={datasource._id}
-      createDatasource={false}
-    />
+    {#if datasource?.isRestTemplate}
+      <RestTemplateImportModal
+        datasourceId={datasource._id}
+        createDatasource={false}
+      />
+    {:else}
+      <RestImportQueriesModal
+        datasourceId={datasource._id}
+        createDatasource={false}
+      />
+    {/if}
   </Modal>
 {/if}
 
