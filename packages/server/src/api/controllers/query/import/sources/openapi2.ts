@@ -3,6 +3,7 @@ import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
+import { generateRequestBodyFromSchema } from "./utils/requestBody"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -181,13 +182,21 @@ export class OpenAPI2 extends OpenAPISource {
                 // future enhancement
                 break
               case "body": {
-                // set the request body to the example provided
-                // future enhancement: generate an example from the schema
                 let bodyParam: OpenAPIV2.InBodyParameterObject =
                   param as OpenAPIV2.InBodyParameterObject
-                if (param.schema.example) {
-                  const schema = bodyParam.schema as OpenAPIV2.SchemaObject
-                  requestBody = schema.example
+                const schema = bodyParam.schema as OpenAPIV2.SchemaObject
+                if (schema) {
+                  if (schema.example !== undefined) {
+                    requestBody = schema.example
+                  } else {
+                    const generated = generateRequestBodyFromSchema(
+                      schema,
+                      bodyParam.name || "body"
+                    )
+                    if (generated !== undefined) {
+                      requestBody = generated
+                    }
+                  }
                 }
                 break
               }

@@ -3,6 +3,7 @@ import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
+import { generateRequestBodyFromSchema } from "./utils/requestBody"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
@@ -54,7 +55,10 @@ const isParameter = (
   return !isOperation(key, pathItem)
 }
 
-const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
+const getRequestBody = (
+  operation: OpenAPIV3.OperationObject,
+  bindingRoot: string
+) => {
   if (requestBodyNotRef(operation.requestBody)) {
     const request: OpenAPIV3.RequestBodyObject = operation.requestBody
     const supportedMimeTypes = getMimeTypes(operation)
@@ -73,6 +77,7 @@ const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
         if (schema.example) {
           return schema.example
         }
+        return generateRequestBodyFromSchema(schema, bindingRoot)
       }
     }
   }
@@ -198,7 +203,10 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = getRequestBody(operation)
+        const requestBody = getRequestBody(
+          operation,
+          operation.operationId || path
+        )
         const parameters: QueryParameter[] = []
         const ensureParameter = (paramName: string, defaultValue = "") => {
           if (!parameters.some(parameter => parameter.name === paramName)) {

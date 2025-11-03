@@ -285,4 +285,123 @@ describe("Rest Importer", () => {
     )
     jest.clearAllMocks()
   })
+
+  it("populates request body for OpenAPI 3 POST endpoints without examples", async () => {
+    const openapi3Doc = {
+      openapi: "3.0.0",
+      info: {
+        title: "Bindings",
+        version: "1.0.0",
+      },
+      paths: {
+        "/users": {
+          post: {
+            operationId: "createUser",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["name", "email"],
+                    properties: {
+                      name: { type: "string" },
+                      email: { type: "string" },
+                      age: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description: "successful operation",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    await init(JSON.stringify(openapi3Doc))
+    const datasource = await config.createDatasource()
+    const { queries: importedQueries } = await config.doInContext(
+      config.devWorkspaceId,
+      () => restImporter.importQueries(datasource._id)
+    )
+
+    const createQuery = importedQueries.find(
+      query => query.name === "createUser"
+    )
+
+    expect(createQuery).toBeDefined()
+    expect(createQuery?.fields.requestBody).toBeDefined()
+
+    const parsedBody = JSON.parse(createQuery?.fields.requestBody as string)
+
+    expect(parsedBody).toEqual({
+      name: "{{createUser_name}}",
+      email: "{{createUser_email}}",
+    })
+  })
+
+  it("populates request body for OpenAPI 2 POST endpoints without examples", async () => {
+    const openapi2Doc = {
+      swagger: "2.0",
+      info: {
+        title: "Bindings",
+        version: "1.0.0",
+      },
+      paths: {
+        "/users": {
+          post: {
+            operationId: "createUserV2",
+            consumes: ["application/json"],
+            parameters: [
+              {
+                name: "user",
+                in: "body",
+                required: true,
+                schema: {
+                  type: "object",
+                  required: ["name", "email"],
+                  properties: {
+                    name: { type: "string" },
+                    email: { type: "string" },
+                    age: { type: "integer" },
+                  },
+                },
+              },
+            ],
+            responses: {
+              "200": {
+                description: "successful operation",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    await init(JSON.stringify(openapi2Doc))
+    const datasource = await config.createDatasource()
+    const { queries: importedQueries } = await config.doInContext(
+      config.devWorkspaceId,
+      () => restImporter.importQueries(datasource._id)
+    )
+
+    const createQuery = importedQueries.find(
+      query => query.name === "createUserV2"
+    )
+
+    expect(createQuery).toBeDefined()
+    expect(createQuery?.fields.requestBody).toBeDefined()
+
+    const parsedBody = JSON.parse(createQuery?.fields.requestBody as string)
+
+    expect(parsedBody).toEqual({
+      name: "{{user_name}}",
+      email: "{{user_email}}",
+    })
+  })
 })
