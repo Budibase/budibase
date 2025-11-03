@@ -393,16 +393,12 @@ export const serveClientLibrary = async function (
   if (!serveLocally) {
     const { stream } = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
-      await objectStore.clientLibraryPath(workspaceId!)
+      objectStore.clientLibraryPath(workspaceId!)
     )
     ctx.body = stream
     ctx.set("Content-Type", "application/javascript")
   } else {
-    if (!(await features.isEnabled(FeatureFlag.ESM_CLIENT))) {
-      return serveLocalFile(ctx, "budibase-client.js")
-    } else {
-      return serveLocalFile(ctx, "budibase-client.esm.js")
-    }
+    return serveLocalFile(ctx, "budibase-client.js")
   }
 }
 
