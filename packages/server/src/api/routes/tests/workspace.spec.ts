@@ -463,6 +463,60 @@ describe("/applications", () => {
         "manifest.json": "84459d28e16709c6c3edeabfc6912dbf",
       })
     })
+
+    it("preserves app scripts when creating from an import", async () => {
+      const sourceWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+      const scripts = [
+        {
+          id: "s1",
+          name: "Head script",
+          location: "Head" as const,
+          html: "<script>window.__testHead = true</script>",
+          cspWhitelist: "https://example.com",
+        },
+        {
+          id: "s2",
+          name: "Body script",
+          location: "Body" as const,
+          html: "<script>window.__testBody = true</script>",
+        },
+      ]
+      await config.withApp(sourceWorkspace, async () => {
+        await config.api.workspace.update(sourceWorkspace.appId, { scripts })
+      })
+
+      const exportPath = await sdk.backups.exportApp(sourceWorkspace.appId, {
+        tar: true,
+      })
+
+      const newWorkspace = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: exportPath,
+      })
+
+      const workspacePackage = await config.withApp(newWorkspace, async () => {
+        return await config.api.workspace.getAppPackage(newWorkspace.appId)
+      })
+      const importedScripts = workspacePackage.application.scripts || []
+      expect(importedScripts).toHaveLength(scripts.length)
+
+      const headScript = importedScripts.find(s => s.location === "Head")
+      expect(headScript).toMatchObject({
+        name: "Head script",
+        location: "Head",
+        html: "<script>window.__testHead = true</script>",
+        cspWhitelist: "https://example.com",
+      })
+
+      const bodyScript = importedScripts.find(s => s.location === "Body")
+      expect(bodyScript).toMatchObject({
+        name: "Body script",
+        location: "Body",
+        html: "<script>window.__testBody = true</script>",
+      })
+    })
   })
 
   describe("fetch", () => {
