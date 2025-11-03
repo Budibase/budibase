@@ -66,12 +66,10 @@ describe("API REST request", () => {
   })
 
   const mockRestResponse = (response: any) => {
-    jest
-      .spyOn(RestIntegration.prototype as any, "_req")
-      .mockResolvedValue({
-        data: response,
-        info: { code: 200, size: "", time: "" },
-      })
+    jest.spyOn(RestIntegration.prototype as any, "_req").mockResolvedValue({
+      data: response,
+      info: { code: 200, size: "", time: "" },
+    })
   }
 
   it("should be able to execute a query and relay the results", async () => {

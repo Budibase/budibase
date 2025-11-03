@@ -12,7 +12,11 @@ import {
 import { configs, context } from "@budibase/backend-core"
 import * as setup from "./utilities"
 import { setEnv } from "../../environment"
-import { installHttpMocking, resetHttpMocking, getPool } from "../../tests/jestEnv"
+import {
+  installHttpMocking,
+  resetHttpMocking,
+  getPool,
+} from "../../tests/jestEnv"
 import nock from "nock"
 
 const jsonHeaders = { "content-type": "application/json" }
@@ -113,7 +117,9 @@ describe("OAuth2 Automation Binding", () => {
         .intercept({ path: path => path.startsWith("/test"), method: "GET" })
         .reply(({ headers }) => {
           requestCount++
-          expect(getAuthHeader(headers as any)).toEqual("Bearer test_access_token")
+          expect(getAuthHeader(headers as any)).toEqual(
+            "Bearer test_access_token"
+          )
           return {
             statusCode: 200,
             data: { success: true, data: "OAuth token worked!" },
@@ -160,10 +166,15 @@ describe("OAuth2 Automation Binding", () => {
       let requestCount = 0
 
       pool
-        .intercept({ path: path => path.startsWith("/api-request"), method: "POST" })
+        .intercept({
+          path: path => path.startsWith("/api-request"),
+          method: "POST",
+        })
         .reply(({ headers, body }) => {
           requestCount++
-          expect(getAuthHeader(headers as any)).toEqual("Bearer test_access_token")
+          expect(getAuthHeader(headers as any)).toEqual(
+            "Bearer test_access_token"
+          )
           expect(parseJsonBody(body)).toEqual({ test: "data" })
           return {
             statusCode: 200,
@@ -239,7 +250,10 @@ describe("OAuth2 Automation Binding", () => {
       let firstCall = true
 
       apiPool
-        .intercept({ path: path => path.startsWith("/protected-endpoint"), method: "POST" })
+        .intercept({
+          path: path => path.startsWith("/protected-endpoint"),
+          method: "POST",
+        })
         .reply(({ headers }) => {
           const authHeader = getAuthHeader(headers as any)
           if (firstCall) {
