@@ -76,9 +76,7 @@ const getFormDataBuffer = (body: any): string | undefined => {
   return undefined
 }
 
-const extractFormEntries = (
-  body: any
-): Record<string, string> | undefined => {
+const extractFormEntries = (body: any): Record<string, string> | undefined => {
   if (!body) {
     return undefined
   }
