@@ -23,10 +23,12 @@
   import AppsHero from "assets/automation-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
+  import UpdateAgentModal from "./UpdateAgentModal.svelte"
   import { onMount } from "svelte"
 
   let showHighlight = false
   let upsertModal: AgentModal
+  let updateModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let selectedAgent: Agent | undefined = undefined
 
@@ -47,6 +49,12 @@
   }
 
   const getContextMenuItems = () => {
+    const edit = {
+      icon: "pencil",
+      name: "Edit",
+      visible: true,
+      callback: () => updateModal.show(),
+    }
     const del = {
       icon: "trash",
       name: "Delete",
@@ -54,7 +62,7 @@
       disabled: false,
       callback: () => confirmDeleteDialog.show(),
     }
-    return [del]
+    return [edit, del]
   }
 
   const openContextMenu = (e: MouseEvent, agent: Agent) => {
@@ -195,6 +203,7 @@
 
 <AgentModal bind:this={upsertModal} />
 {#if selectedAgent}
+  <UpdateAgentModal agent={selectedAgent} bind:this={updateModal} />
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
     okText="Delete Agent"
