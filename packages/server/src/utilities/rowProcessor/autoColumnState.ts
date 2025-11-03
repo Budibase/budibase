@@ -18,9 +18,11 @@ function buildDocId(tableId: string) {
 }
 
 function getSchemaSeed(table: Table, columnName: string): number {
-  const schema = table.schema[columnName] as {
-    lastID?: number
-  } | undefined
+  const schema = table.schema[columnName] as
+    | {
+        lastID?: number
+      }
+    | undefined
   if (schema?.lastID != null && !Number.isNaN(schema.lastID)) {
     return schema.lastID
   }
