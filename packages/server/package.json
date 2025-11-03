@@ -136,7 +136,7 @@
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
     "@types/json-schema": "^7.0.15",
-    "@types/koa": "2.13.4",
+    "@types/koa": "3.0.1",
     "@types/koa-send": "^4.1.6",
     "@types/koa__cors": "5.0.0",
     "@types/koa__router": "12.0.4",
