@@ -3,6 +3,7 @@ import { BudiStore } from "../BudiStore"
 import {
   Agent,
   AgentChat,
+  AgentToolSource,
   AgentToolSourceWithTools,
   CreateAgentRequest,
   CreateToolSourceRequest,
@@ -40,8 +41,39 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return agents
   }
 
-  removeChat = async (chatId: string) => {
-    return await API.removeChat(chatId)
+  fetchChats = async (agentId: string) => {
+    if (!agentId) {
+      this.update(state => {
+        state.chats = []
+        return state
+      })
+      return []
+    }
+    const chats = await API.fetchChats(agentId)
+    this.update(state => {
+      state.chats = chats
+      return state
+    })
+    return chats
+  }
+
+  removeChat = async (chatId: string, agentId?: string) => {
+    await API.removeChat(chatId)
+    if (agentId) {
+      await this.fetchChats(agentId)
+    }
+  }
+
+  selectAgent = (agentId: string | undefined) => {
+    this.update(state => {
+      state.currentAgentId = agentId
+      if (agentId) {
+        this.fetchChats(agentId)
+      } else {
+        state.chats = []
+      }
+      return state
+    })
   }
 
   fetchToolSources = async () => {

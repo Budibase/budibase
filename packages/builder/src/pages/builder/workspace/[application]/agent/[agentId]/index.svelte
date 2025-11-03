@@ -93,13 +93,13 @@
   $: chat = {
     title: "",
     messages: [],
-    agentId: $agentsStore.selectedAgentId || "",
+    agentId: "",
   }
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
 
   $: currentAgent = $agentsStore.agents.find(
-    a => a._id === $agentsStore.selectedAgentId
+    a => a._id === $agentsStore.currentAgentId
   )
 
   $: if (chat.messages.length) {
@@ -122,7 +122,11 @@
 
   async function prompt() {
     if (!chat) {
-      chat = { title: "", messages: [] }
+      chat = {
+        title: "",
+        messages: [],
+        agentId: $agentsStore.currentAgentId || "",
+      }
     }
 
     const userMessage: UserMessage = { role: "user", content: inputValue }
@@ -221,10 +225,10 @@
             if (chunk.chat) {
               chat = chunk.chat
 
-              if (chunk.chat._id) {
+              if (chunk.chat._id && $agentsStore.currentAgentId) {
                 agentsStore.setCurrentChatId(chunk.chat._id)
                 // Refresh chat history to include the new/updated chat
-                agentsStore.fetchChats()
+                agentsStore.fetchChats($agentsStore.currentAgentId)
               }
             }
 
@@ -255,13 +259,17 @@
   }
 
   const selectChat = async (selectedChat: AgentChat) => {
-    chat = { ...selectedChat }
+    chat = { ...selectedChat, agentId: $agentsStore.currentAgentId || "" }
     agentsStore.setCurrentChatId(selectedChat._id!)
     await scrollToBottom()
   }
 
   const startNewChat = () => {
-    chat = { title: "", messages: [] }
+    chat = {
+      title: "",
+      messages: [],
+      agentId: $agentsStore.currentAgentId || "",
+    }
     agentsStore.clearCurrentChatId()
   }
 
@@ -425,7 +433,15 @@
   onMount(async () => {
     await agentsStore.init()
 
-    chat = { title: "", messages: [] }
+    chat = {
+      title: "",
+      messages: [],
+      agentId: $agentsStore.currentAgentId || "",
+    }
+
+    if ($agentsStore.currentAgentId) {
+      await agentsStore.fetchChats($agentsStore.currentAgentId)
+    }
 
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {
@@ -450,7 +466,7 @@
   })
 
   onDestroy(() => {
-    observer.disconnect()
+    observer?.disconnect()
   })
 </script>
 

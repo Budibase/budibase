@@ -7,7 +7,7 @@
 
   const stopSyncing = syncURLToState({
     urlParam: "agentId",
-    stateKey: "selectedAgentId",
+    stateKey: "currentAgentId",
     validate: id => $agentsStore.agents.some(x => x._id === id),
     fallbackUrl: "../index",
     store: agentsStore,

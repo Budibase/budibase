@@ -9,6 +9,7 @@ export interface Agent extends Document {
 }
 
 export interface AgentChat extends Document {
+  agentId: string
   title: string
   messages: Message[]
 }

@@ -24,8 +24,8 @@ export interface AgentEndpoints {
     onError?: (error: Error) => void
   ) => Promise<void>
 
-  removeChat: (historyId: string) => Promise<void>
-  fetchChats: () => Promise<FetchAgentHistoryResponse>
+  removeChat: (chatId: string) => Promise<void>
+  fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
   fetchToolSources: () => Promise<AgentToolSourceWithTools[]>
   createToolSource: (
@@ -107,15 +107,15 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     }
   },
 
-  removeChat: async (historyId: string) => {
+  removeChat: async (chatId: string) => {
     return await API.delete({
-      url: `/api/agent/history/${historyId}`,
+      url: `/api/agent/chats/${chatId}`,
     })
   },
 
-  fetchChats: async () => {
+  fetchChats: async (agentId: string) => {
     return await API.get({
-      url: "/api/agent/history",
+      url: `/api/agent/${agentId}/chats`,
     })
   },
 

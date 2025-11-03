@@ -68,6 +68,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const model = await sdk.aiConfigs.getLLMOrThrow()
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
+  const agentId = chat.agentId
+
+  await sdk.ai.agents.getOrThrow(agentId)
 
   // Set SSE headers and status
   ctx.status = 200
@@ -159,6 +162,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       const newChat: AgentChat = {
         _id: chat._id,
         _rev: chat._rev,
+        agentId,
         title: chat.title,
         messages: addDebugInformation(finalMessages),
       }
@@ -185,9 +189,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 }
 
 export async function remove(ctx: UserCtx<void, void>) {
-  const db = context.getGlobalDB()
-  const historyId = ctx.params.historyId
-  await db.remove(historyId)
+  const db = context.getWorkspaceDB()
+
+  const chatId = ctx.params.chatId
+  if (!chatId) {
+    throw new HTTPError("chatId is required", 400)
+  }
+
+  const chat = await db.tryGet<AgentChat>(chatId)
+  if (!chat) {
+    throw new HTTPError("chat not found", 404)
+  }
+
+  await db.remove(chat)
   ctx.status = 201
 }
 
@@ -195,14 +209,18 @@ export async function fetchHistory(
   ctx: UserCtx<void, FetchAgentHistoryResponse>
 ) {
   const db = context.getWorkspaceDB()
-  const history = await db.allDocs<AgentChat>(
+  const agentId = ctx.params.agentId
+  await sdk.ai.agents.getOrThrow(agentId)
+
+  const allChats = await db.allDocs<AgentChat>(
     docIds.getDocParams(DocumentType.AGENT_CHAT, undefined, {
       include_docs: true,
     })
   )
-  // Sort by creation time, newest first
-  ctx.body = history.rows
+
+  ctx.body = allChats.rows
     .map(row => row.doc!)
+    .filter(chat => chat.agentId === agentId)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
