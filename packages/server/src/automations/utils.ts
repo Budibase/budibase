@@ -6,6 +6,7 @@ import {
   AutomationJob,
   CronTriggerInputs,
   isCronTrigger,
+  isEmailTrigger,
   MetadataType,
   TestAutomationRequest,
 } from "@budibase/types"
@@ -16,6 +17,8 @@ import { automationsEnabled } from "../features"
 import { Thread, ThreadType } from "../threads"
 import { updateEntityMetadata } from "../utilities"
 import { automationQueue } from "./bullboard"
+import { checkMail } from "./email"
+import { cloneDeep } from "lodash"
 
 let Runner: Thread
 if (automationsEnabled()) {
@@ -62,12 +65,38 @@ export async function processEvent(job: AutomationJob) {
       },
     })
 
+    const trigger = job.data.automation
+      ? job.data.automation.definition.trigger
+      : null
+
     const task = async () => {
       try {
         return await tracer.trace("task", async () => {
-          const trigger = job.data.automation
-            ? job.data.automation.definition.trigger
-            : null
+          if (isEmailTrigger(trigger)) {
+            const { proceed, ...checkMailResult } = await checkMail(
+              trigger,
+              job.data.automation._id!
+            )
+            if (proceed === false) {
+              return { skipped: true }
+            }
+
+            const { messages } = checkMailResult
+
+            if (!messages) return { skipped: true }
+
+            await Promise.all(
+              messages?.map(async m => {
+                const jobClone = cloneDeep(job)
+                jobClone.data.event = { ...jobClone.data.event, ...m }
+                const runFn = () => Runner.run(jobClone)
+                await quotas.addAutomation(runFn, {
+                  automationId,
+                })
+              })
+            )
+            return {}
+          }
           const isCron = trigger && isCronTrigger(trigger)
           if (isCron && !job.data.event.timestamp) {
             // Requires the timestamp at run time
@@ -121,7 +150,10 @@ export async function disableAllCrons(appId: string) {
   const promises = []
   const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {
-    if (job.key.includes(`${appId}_cron`)) {
+    if (
+      job.key.includes(`${appId}_cron`) ||
+      job.key.includes(`${appId}_email`)
+    ) {
       promises.push(
         automationQueue.getBullQueue().removeRepeatableByKey(job.key)
       )
@@ -170,21 +202,22 @@ export function isRebootTrigger(auto: Automation) {
 }
 
 /**
- * This function handles checking of any cron jobs that need to be enabled/updated.
+ * This function handles checking of any cron or email jobs that need to be enabled/updated.
  * @param appId The ID of the app in which we are checking for webhooks
  * @param automation The automation object to be updated.
  */
-export async function enableCronTrigger(appId: any, automation: Automation) {
+export async function enableCronOrEmailTrigger(
+  appId: string,
+  automation: Automation
+) {
   const trigger = automation ? automation.definition.trigger : null
   let enabled = false
 
-  // need to create cron job
-  if (
-    trigger &&
-    isCronTrigger(trigger) &&
-    !isRebootTrigger(automation) &&
-    !automation.disabled
-  ) {
+  if (!trigger || automation.disabled || isRebootTrigger(automation)) {
+    return { enabled, automation }
+  }
+
+  if (isCronTrigger(trigger)) {
     const inputs = trigger.inputs as CronTriggerInputs
     const cronExp = inputs.cron || ""
     const validation = helpers.cron.validate(cronExp)
@@ -193,27 +226,54 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
         `Invalid automation CRON "${cronExp}" - ${validation.err.join(", ")}`
       )
     }
-    // make a job id rather than letting Bull decide, makes it easier to handle on way out
-    const jobId = `${appId}_cron_${utils.newid()}`
-    const job = await automationQueue.add(
+
+    const existingJobId = trigger.cronJobId
+    const jobId = existingJobId || `${appId}_cron_${utils.newid()}`
+    await automationQueue.add(
       {
         automation,
         event: { appId },
       },
       { repeat: { cron: cronExp }, jobId }
     )
-    // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
-    trigger.cronJobId = job.id.toString()
-    // can't use getWorkspaceDB here as this is likely to be called from dev workspace,
-    // but this call could be for dev workspace or prod workspace, need to just use what
-    // was passed in
+
+    trigger.cronJobId = jobId
+
     await dbCore.doWithDB(appId, async db => {
       const response = await db.put(automation)
       automation._id = response.id
       automation._rev = response.rev
     })
+
     enabled = true
+    return { enabled, automation }
   }
+
+  if (isEmailTrigger(trigger)) {
+    const existingJobId = trigger.cronJobId
+    const jobId = existingJobId || `${appId}_email_${utils.newid()}`
+    await automationQueue.add(
+      {
+        automation,
+        event: { appId },
+      },
+      { repeat: { every: 30_000 }, jobId }
+    )
+
+    trigger.cronJobId = jobId
+
+    if (trigger.cronJobId !== existingJobId) {
+      await dbCore.doWithDB(appId, async db => {
+        const response = await db.put(automation)
+        automation._id = response.id
+        automation._rev = response.rev
+      })
+    }
+
+    enabled = true
+    return { enabled, automation }
+  }
+
   return { enabled, automation }
 }
 
