@@ -4,6 +4,7 @@ import {
   HttpMethod,
   Integration,
   IntegrationBase,
+  JSONValue,
   PaginationConfig,
   PaginationValues,
   QueryType,
@@ -119,7 +120,7 @@ const SCHEMA: Integration = {
 }
 
 interface ParsedResponse {
-  data: unknown
+  data: JSONValue | undefined
   info: {
     code: number
     size: string
@@ -130,37 +131,40 @@ interface ParsedResponse {
     headers: Record<string, string[] | string>
   }
   pagination?: {
-    cursor: unknown
+    cursor: JSONValue | undefined
   }
 }
 
 interface NormalisedBody {
   bodyString: string
-  bodyObject: Record<string, unknown>
+  bodyObject: Record<string, JSONValue>
+  jsonValue?: JSONValue
   parseError?: unknown
 }
 
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+const isPlainRecord = (value: unknown): value is Record<string, JSONValue> => {
   return Object.prototype.toString.call(value) === "[object Object]"
 }
 
 const normaliseBody = (raw: unknown): NormalisedBody => {
   if (raw == null) {
-    return { bodyString: "", bodyObject: {} }
+    return { bodyString: "", bodyObject: {}, jsonValue: undefined }
   }
 
   if (typeof raw === "string") {
     try {
-      const parsed = JSON.parse(raw)
+      const parsed = JSON.parse(raw) as JSONValue
       if (isPlainRecord(parsed)) {
         return {
           bodyString: raw,
           bodyObject: parsed,
+          jsonValue: parsed,
         }
       }
       return {
         bodyString: raw,
         bodyObject: {},
+        jsonValue: parsed,
       }
     } catch (err) {
       return {
@@ -175,6 +179,7 @@ const normaliseBody = (raw: unknown): NormalisedBody => {
     return {
       bodyString: raw.toString(),
       bodyObject: {},
+      jsonValue: raw.toString(),
     }
   }
 
@@ -182,13 +187,15 @@ const normaliseBody = (raw: unknown): NormalisedBody => {
     return {
       bodyString: Buffer.from(raw).toString(),
       bodyObject: {},
+      jsonValue: Buffer.from(raw).toString(),
     }
   }
 
   if (isPlainRecord(raw)) {
     return {
       bodyString: JSON.stringify(raw),
-      bodyObject: raw,
+      bodyObject: raw as Record<string, JSONValue>,
+      jsonValue: raw as JSONValue,
     }
   }
 
@@ -196,12 +203,14 @@ const normaliseBody = (raw: unknown): NormalisedBody => {
     return {
       bodyString: JSON.stringify(raw),
       bodyObject: {},
+      jsonValue: raw as JSONValue,
     }
   }
 
   return {
     bodyString: JSON.stringify(raw),
     bodyObject: {},
+    jsonValue: undefined,
   }
 }
 
@@ -220,7 +229,7 @@ export class RestIntegration implements IntegrationBase {
     response: Response,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
-    let data: unknown,
+    let data: JSONValue | undefined,
       raw: string | undefined,
       headers: Record<string, string[] | string> = {},
       filename: string | undefined
@@ -259,7 +268,7 @@ export class RestIntegration implements IntegrationBase {
           raw = ""
         } else if (hasContent && contentType.includes("application/json")) {
           triedParsing = true
-          data = JSON.parse(responseTxt)
+          data = JSON.parse(responseTxt) as JSONValue
           raw = responseTxt
         } else if (
           (hasContent && contentType.includes("text/xml")) ||
@@ -267,17 +276,17 @@ export class RestIntegration implements IntegrationBase {
         ) {
           triedParsing = true
           let xmlResponse = await handleXml(responseTxt)
-          data = xmlResponse.data
+          data = xmlResponse.data as JSONValue
           raw = xmlResponse.rawXml
         } else {
           data = responseTxt
-          raw = data as string
+          raw = responseTxt
         }
       }
     } catch (err) {
       if (triedParsing) {
         data = responseTxt
-        raw = data as string
+        raw = responseTxt
       } else {
         throw new Error(`Failed to parse response body: ${err}`)
       }
@@ -291,9 +300,9 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Check if a pagination cursor exists in the response
-    let nextCursor = null
+    let nextCursor: JSONValue | undefined
     if (pagination?.responseParam) {
-      nextCursor = get(data, pagination.responseParam)
+      nextCursor = get(data, pagination.responseParam) as JSONValue | undefined
     }
 
     return {
@@ -386,14 +395,17 @@ export class RestIntegration implements IntegrationBase {
       return input
     }
     let error: unknown
-    let object: Record<string, unknown> = {}
+    let object: Record<string, JSONValue> = {}
     let string = ""
+    let jsonValue: JSONValue | undefined
 
-    if (typeof body !== "undefined") {
-      const { bodyString, bodyObject, parseError } = normaliseBody(body)
+    if (body != null) {
+      const { bodyString, bodyObject, parseError, jsonValue: parsedJson } =
+        normaliseBody(body)
       string = bodyString
       object = bodyObject
       error = parseError
+      jsonValue = parsedJson
     }
 
     // Util to add pagination values to a certain body type
@@ -529,22 +541,58 @@ export class RestIntegration implements IntegrationBase {
         // @ts-expect-error
         input.headers["Content-Type"] = "application/xml"
         break
-      case BodyType.JSON:
-        // if JSON error, throw it
+      case BodyType.JSON: {
         if (error) {
           throw "Invalid JSON for request body"
         }
-        addPaginationToBody(
-          (key: string, value: number | string | undefined) => {
-            if (value != null) {
-              object[key] = value
-            }
+
+        let payload: JSONValue
+        if (typeof jsonValue !== "undefined") {
+          payload = jsonValue
+        } else if (string) {
+          try {
+            payload = JSON.parse(string) as JSONValue
+          } catch (_err) {
+            payload = object as JSONValue
           }
-        )
-        input.body = JSON.stringify(object)
+        } else {
+          payload = object as JSONValue
+        }
+
+        if (pagination?.location === "body" && isPlainRecord(payload)) {
+          const mutablePayload: Record<string, JSONValue> = {
+            ...payload,
+          }
+          if (pagination.pageParam && paginationValues?.page != null) {
+            mutablePayload[pagination.pageParam] =
+              paginationValues.page as JSONValue
+          }
+          if (pagination.sizeParam && paginationValues?.limit != null) {
+            mutablePayload[pagination.sizeParam] =
+              paginationValues.limit as JSONValue
+          }
+          payload = mutablePayload
+        } else if (pagination?.location === "body") {
+          const fallback: Record<string, JSONValue> = { ...object }
+          if (pagination.pageParam && paginationValues?.page != null) {
+            fallback[pagination.pageParam] =
+              paginationValues.page as JSONValue
+          }
+          if (pagination.sizeParam && paginationValues?.limit != null) {
+            fallback[pagination.sizeParam] =
+              paginationValues.limit as JSONValue
+          }
+          if (Object.keys(fallback).length > 0) {
+            payload = fallback
+          }
+        }
+
+        input.body =
+          typeof payload === "string" ? payload : JSON.stringify(payload)
         // @ts-expect-error
         input.headers["Content-Type"] = "application/json"
         break
+      }
     }
     return input
   }
