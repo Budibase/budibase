@@ -139,7 +139,9 @@
 >
   <Layout noPadding>
     <Heading size="S">Import</Heading>
-    <Body size="XS">Import your rest collection using one of the options below</Body>
+    <Body size="XS"
+      >Import your rest collection using one of the options below</Body
+    >
     <Tabs selected="File">
       <Tab title="File">
         <Dropzone

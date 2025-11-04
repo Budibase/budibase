@@ -1,8 +1,50 @@
 <script lang="ts">
   import "@spectrum-css/link/dist/index-vars.css"
   import { marked } from "marked"
+  import sanitizeHtml from "sanitize-html"
+  import type { IOptions } from "sanitize-html"
 
   const HTML_TAG_REGEX = /<([A-Za-z][\w-]*)(\s[^<>]*)?>/i
+
+  const ALLOWED_TAGS = [
+    "a",
+    "abbr",
+    "b",
+    "blockquote",
+    "br",
+    "code",
+    "del",
+    "em",
+    "hr",
+    "i",
+    "img",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "span",
+    "strong",
+    "sub",
+    "sup",
+    "table",
+    "tbody",
+    "td",
+    "th",
+    "thead",
+    "tr",
+    "u",
+    "ul",
+  ]
+
+  const ALLOWED_ATTRIBUTES: IOptions["allowedAttributes"] = {
+    a: ["href", "target", "rel", "class"],
+    span: ["class"],
+    p: ["class"],
+    code: ["class"],
+    pre: ["class"],
+    table: ["class"],
+    img: ["src", "alt", "title"],
+  }
 
   export let description: string | undefined = undefined
   export let label: string | undefined = "Description"
@@ -82,7 +124,13 @@
     const html = HTML_TAG_REGEX.test(content)
       ? content
       : marked.parse(content, { async: false })
-    return replaceLinks(html, base)
+    const withLinks = replaceLinks(html, base)
+    return sanitizeHtml(withLinks, {
+      allowedTags: ALLOWED_TAGS,
+      allowedAttributes: ALLOWED_ATTRIBUTES,
+      allowedSchemes: ["http", "https", "mailto", "tel"],
+      allowProtocolRelative: false,
+    })
   }
 
   $: descriptionHtml = toHtml(description, baseUrl)
@@ -103,6 +151,7 @@
       aria-live={ariaLive}
       style:max-height={maxHeight}
     >
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
       {@html descriptionHtml}
     </div>
   {:else}

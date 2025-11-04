@@ -90,7 +90,9 @@
       : undefined
 
     if (!match && source.uiMetadata?.iconUrl) {
-      match = templates.find(template => template.icon === source.uiMetadata?.iconUrl)
+      match = templates.find(
+        template => template.icon === source.uiMetadata?.iconUrl
+      )
     }
 
     if (!match && source.name) {
@@ -319,8 +321,8 @@
       <div class="template-modal">
         <Heading size="S">Template unavailable</Heading>
         <Body size="XS">
-          We couldn't find a template configuration for this datasource. Close the
-          modal and try importing a custom collection instead.
+          We couldn't find a template configuration for this datasource. Close
+          the modal and try importing a custom collection instead.
         </Body>
       </div>
     {/if}
@@ -343,5 +345,4 @@
     display: flex;
     justify-content: flex-start;
   }
-
 </style>

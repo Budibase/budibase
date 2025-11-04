@@ -14,23 +14,9 @@
   export let placeholder = "Choose an option or type"
   export let options: O[] = []
   export let helpText: string | undefined = undefined
-  export let getOptionLabel: (option: O) => string = option =>
-    extractProperty(option, "label")
-  export let getOptionValue: (option: O) => string = option =>
-    extractProperty(option, "value")
-
-  const dispatch = createEventDispatcher<{
-    change: string | undefined
-  }>()
-
-  const onChange = (event: CustomEvent<string | undefined>) => {
-    value = event.detail
-    dispatch("change", event.detail)
-  }
-
-  const extractProperty = (option: O, property: string): string => {
-    if (option && typeof option === "object" && property in option) {
-      const record = option as Record<string, unknown>
+  const extractProperty = (item: O, property: string): string => {
+    if (item && typeof item === "object" && property in item) {
+      const record = item as Record<string, unknown>
       const extracted = record[property]
       if (typeof extracted === "string") {
         return extracted
@@ -41,11 +27,28 @@
       return ""
     }
 
-    if (option === null || option === undefined) {
+    if (item === null || item === undefined) {
       return ""
     }
 
-    return String(option)
+    return String(item)
+  }
+
+  const defaultGetOptionLabel = (item: O) => extractProperty(item, "label")
+  const defaultGetOptionValue = (item: O) => extractProperty(item, "value")
+
+  type OptionFormatter = (_option: O) => string
+
+  export let getOptionLabel: OptionFormatter = defaultGetOptionLabel
+  export let getOptionValue: OptionFormatter = defaultGetOptionValue
+
+  const dispatch = createEventDispatcher<{
+    change: string | undefined
+  }>()
+
+  const onChange = (event: CustomEvent<string | undefined>) => {
+    value = event.detail
+    dispatch("change", event.detail)
   }
 </script>
 
