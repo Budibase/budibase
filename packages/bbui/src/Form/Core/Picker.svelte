@@ -193,7 +193,9 @@
   >
     {fieldText}
   </span>
-  <Icon name="caret-down" size="S" />
+  {#if !readonly}
+    <Icon name="caret-down" size="S" />
+  {/if}
 </button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
