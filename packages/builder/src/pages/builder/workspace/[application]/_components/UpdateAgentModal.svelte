@@ -3,7 +3,7 @@
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
 
-  export let agent: Agent | undefined
+  export let agent: Agent
 
   let name: string = ""
   let error = ""
@@ -28,7 +28,6 @@
         name,
       })
       notifications.success(`Agent ${name} updated successfully`)
-      hide()
     } catch (error) {
       notifications.error("Error saving agent")
     }
