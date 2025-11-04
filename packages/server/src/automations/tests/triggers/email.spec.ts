@@ -239,10 +239,7 @@ describe("checkMail behaviour", () => {
 
     expect(proceed).toBeTrue()
     expect(messages).toEqual([firstFields, secondFields])
-    expect(mocks.toOutputFieldsMock).toHaveBeenNthCalledWith(
-      1,
-      firstNewMessage
-    )
+    expect(mocks.toOutputFieldsMock).toHaveBeenNthCalledWith(1, firstNewMessage)
     expect(mocks.toOutputFieldsMock).toHaveBeenNthCalledWith(
       2,
       secondNewMessage
