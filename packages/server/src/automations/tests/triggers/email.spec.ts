@@ -120,12 +120,7 @@ describe("checkMail behaviour", () => {
     mocks.fetchMessagesMock.mockResolvedValue([message])
     mocks.getLastSeenUidMock.mockResolvedValueOnce(undefined)
 
-    const result = await checkMail(
-      {
-        inputs: {},
-      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
-      "automation-first"
-    )
+    const result = await checkMail("automation-first")
 
     expect(result).toEqual({ proceed: false, reason: "init, now waiting" })
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
@@ -157,18 +152,8 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(10)
 
-    await checkMail(
-      {
-        inputs: {},
-      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
-      "automation-new-mail"
-    )
-    const { messages, proceed } = await checkMail(
-      {
-        inputs: {},
-      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
-      "automation-new-mail"
-    )
+    await checkMail("automation-new-mail")
+    const { messages, proceed } = await checkMail("automation-new-mail")
 
     const result = messages?.[0]
 
@@ -224,18 +209,8 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(50)
 
-    await checkMail(
-      {
-        inputs: {},
-      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
-      "automation-multi-send"
-    )
-    const { proceed, messages } = await checkMail(
-      {
-        inputs: {},
-      } as AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>,
-      "automation-multi-send"
-    )
+    await checkMail("automation-multi-send")
+    const { proceed, messages } = await checkMail("automation-multi-send")
 
     expect(proceed).toBeTrue()
     expect(messages).toEqual([firstFields, secondFields])
