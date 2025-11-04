@@ -1,6 +1,7 @@
 import { FetchMessageObject } from "imapflow"
 import { simpleParser } from "mailparser"
 import type { EmailTriggerOutputs } from "@budibase/types"
+import { htmlToText } from "html-to-text"
 
 export const EMAIL_BODY_CHARACTER_LIMIT = 50_000
 export const EMAIL_BODY_TRUNCATION_SUFFIX =
@@ -40,7 +41,10 @@ const getBodyText = async (
 
   try {
     const parsed = await simpleParser(message.source)
-    return parsed.text
+    const plainText = parsed.text?.trim()
+    if (plainText) return plainText
+    if (parsed.html) return htmlToText(parsed.html)
+    return undefined
   } catch (err) {
     console.log("[email trigger] failed to parse message body", err)
     return undefined
@@ -50,14 +54,14 @@ const getBodyText = async (
 export const toOutputFields = async (
   message: FetchMessageObject
 ): Promise<EmailTriggerOutputs> => {
-  const { body, truncated } = applyBodyLimit(await getBodyText(message))
-
+  const text = await getBodyText(message)
+  const { body: bodyText, truncated: bodyTextTruncated } = applyBodyLimit(text)
   return {
     from: message.envelope?.from?.map(f => f.address).join(", ") || "unknown",
     to: message.envelope?.to?.map(f => f.address).join(", ") || "unknown",
     subject: message.envelope?.subject,
     sentAt: message.envelope?.date?.toISOString(),
-    bodyText: body,
-    bodyTextTruncated: truncated,
+    bodyText,
+    bodyTextTruncated,
   }
 }

@@ -1,79 +1,103 @@
 import type { FetchMessageObject } from "imapflow"
-import { simpleParser } from "mailparser"
-import type { ParsedMail } from "mailparser"
+import { htmlToText } from "html-to-text"
 import {
   EMAIL_BODY_CHARACTER_LIMIT,
   EMAIL_BODY_TRUNCATION_SUFFIX,
   toOutputFields,
 } from "./toOutputFields"
 
-jest.mock("mailparser", () => ({
-  simpleParser: jest.fn(),
-}))
-
-const simpleParserMock = simpleParser as jest.MockedFunction<
-  typeof simpleParser
->
-
-const createMessage = (): FetchMessageObject =>
-  ({
-    source: Buffer.from("message"),
+const buildMessage = (raw: string): FetchMessageObject => {
+  const source = Buffer.from(raw, "utf8")
+  return {
+    source,
+    seq: 1,
+    uid: 1,
     envelope: {
       from: [{ address: "sender@example.com" }],
       to: [{ address: "recipient@example.com" }],
       subject: "subject",
       date: new Date("2024-01-01T00:00:00.000Z"),
     },
-  }) as unknown as FetchMessageObject
+  }
+}
 
 describe("toOutputFields", () => {
-  beforeEach(() => {
-    simpleParserMock.mockReset()
-  })
-
   it("returns bodyText when under limit", async () => {
     const body = "Hello, world!"
-    simpleParserMock.mockResolvedValue({ text: body } as ParsedMail)
+    const message = buildMessage(
+      [
+        "Content-Type: text/plain; charset=utf-8",
+        "",
+        body,
+      ].join("\r\n")
+    )
 
-    const result = await toOutputFields(createMessage())
+    const result = await toOutputFields(message)
 
     expect(result.bodyText).toEqual(body)
-    expect(result.bodyTextTruncated).toBeFalse()
+    expect(result.bodyTextTruncated).toBe(false)
   })
 
-  it("formats HTML body to readable text", async () => {
+  it("formats HTML body to readable text when plain body is empty", async () => {
+    const boundary = "----=_Part_HTML"
     const html =
       "<h1>Welcome</h1><p>This is a <strong>test</strong> email.<br />Thanks!</p>"
-    simpleParserMock.mockResolvedValue({
-      text: undefined,
-      html,
-    } as ParsedMail)
-
-    const result = await toOutputFields(createMessage())
-
-    expect(result.bodyText).toEqual(
-      "Welcome\n\nThis is a test email.\nThanks!"
+    const message = buildMessage(
+      [
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        "",
+        `--${boundary}`,
+        "Content-Type: text/plain; charset=utf-8",
+        "",
+        "   ",
+        `--${boundary}`,
+        "Content-Type: text/html; charset=utf-8",
+        "",
+        html,
+        `--${boundary}--`,
+        "",
+      ].join("\r\n")
     )
-    expect(result.bodyTextTruncated).toBeFalse()
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyText).toEqual(htmlToText(html))
+    expect(result.bodyTextTruncated).toBe(false)
   })
 
   it("truncates bodyText when exceeding limit", async () => {
     const body = "a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)
-    simpleParserMock.mockResolvedValue({ text: body } as ParsedMail)
+    const message = buildMessage(
+      [
+        "Content-Type: text/plain; charset=utf-8",
+        "",
+        body,
+      ].join("\r\n")
+    )
 
-    const result = await toOutputFields(createMessage())
+    const result = await toOutputFields(message)
 
-    expect(result.bodyText?.endsWith(EMAIL_BODY_TRUNCATION_SUFFIX)).toBeTrue()
+    const expectedBody = `${
+      body.slice(
+        0,
+        EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
+      )
+    }${EMAIL_BODY_TRUNCATION_SUFFIX}`
+
+    expect(result.bodyText).toBe(expectedBody)
     expect(result.bodyText?.length).toBe(EMAIL_BODY_CHARACTER_LIMIT)
-    expect(result.bodyTextTruncated).toBeTrue()
+    expect(result.bodyTextTruncated).toBe(true)
   })
 
-  it("returns undefined body without truncation when parser fails", async () => {
-    simpleParserMock.mockResolvedValue({ text: undefined } as ParsedMail)
+  it("returns undefined body without truncation when source is missing", async () => {
+    const message: FetchMessageObject = {
+      ...buildMessage(""),
+      source: undefined,
+    }
 
-    const result = await toOutputFields(createMessage())
+    const result = await toOutputFields(message)
 
     expect(result.bodyText).toBeUndefined()
-    expect(result.bodyTextTruncated).toBeFalse()
+    expect(result.bodyTextTruncated).toBe(false)
   })
 })
