@@ -253,6 +253,13 @@
       contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
     }
 
+  const setCurrentChat = (event: CustomEvent<{ chatId: string }>) => {
+    const { chatId } = event.detail
+    agentsStore.setCurrentChatId(chatId)
+
+    agentsStore.fetchChats()
+  }
+
   onMount(async () => {
     await agentsStore.init()
 
@@ -292,7 +299,7 @@
 
     <div class="chat-wrapper">
       <!-- <div class="chat-area" bind:this={chatAreaElement}> -->
-      <Chatbox bind:chat />
+      <Chatbox bind:chat on:chatSaved={setCurrentChat} />
       <!-- </div> -->
     </div>
 

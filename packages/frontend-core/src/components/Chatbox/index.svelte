@@ -7,10 +7,13 @@
   import { onMount } from "svelte"
   import { params } from "@roxi/routify"
   import { createAPIClient } from "@budibase/frontend-core"
+  import { createEventDispatcher } from "svelte"
 
   export let API = createAPIClient()
 
   export let chat: AgentChat
+
+  const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
 
   let inputValue = ""
   let loading: boolean = false
@@ -132,6 +135,13 @@
             }
 
             scrollToBottom()
+          } else if (chunk.type === "chat_saved") {
+            if (chunk.chat) {
+              chat = chunk.chat
+              if (chunk.chat._id) {
+                dispatch("chatSaved", { chatId: chunk.chat._id })
+              }
+            }
           } else if (chunk.type === "done") {
             loading = false
             scrollToBottom()
