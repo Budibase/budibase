@@ -152,13 +152,15 @@ describe("checkMail behaviour", () => {
       to: "recipient@example.com",
       subject: "Hello",
       sentAt: "2024-01-01T00:00:00.000Z",
+      bodyText: "Parsed email body",
+      bodyTextTruncated: false,
     }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])
       .mockResolvedValueOnce([initialMessage, newMessage])
     mocks.checkSenderMock.mockReturnValue(true)
-    mocks.toOutputFieldsMock.mockReturnValue(fields)
+    mocks.toOutputFieldsMock.mockResolvedValue(fields)
     mocks.getLastSeenUidMock
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(10)
@@ -257,13 +259,15 @@ describe("checkMail behaviour", () => {
       to: "recipient@example.com",
       subject: "Hello from anyone",
       sentAt: "2024-02-02T00:00:00.000Z",
+      bodyText: "Default body",
+      bodyTextTruncated: false,
     }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])
       .mockResolvedValueOnce([initialMessage, newMessage])
     mocks.checkSenderMock.mockReturnValue(true)
-    mocks.toOutputFieldsMock.mockReturnValue(fields)
+    mocks.toOutputFieldsMock.mockResolvedValue(fields)
     mocks.getLastSeenUidMock
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(30)
@@ -306,13 +310,17 @@ describe("checkMail behaviour", () => {
       uid: 42,
       envelope: { from: [{ address: "other@example.com" }] },
     }
-    const fields = { from: "sender@example.com" }
+    const fields = {
+      from: "sender@example.com",
+      bodyText: "Matching body",
+      bodyTextTruncated: false,
+    }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])
       .mockResolvedValueOnce([matchingMessage, unexpectedMessage])
     mocks.checkSenderMock.mockReturnValueOnce(true).mockReturnValueOnce(false)
-    mocks.toOutputFieldsMock.mockReturnValueOnce(fields)
+    mocks.toOutputFieldsMock.mockResolvedValueOnce(fields)
     mocks.getLastSeenUidMock
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(40)
@@ -366,13 +374,17 @@ describe("checkMail behaviour", () => {
       uid: 52,
       envelope: { from: [{ address: "sender@example.com" }] },
     }
-    const fields = { from: "sender@example.com" }
+    const fields = {
+      from: "sender@example.com",
+      bodyText: "Filtered body",
+      bodyTextTruncated: false,
+    }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])
       .mockResolvedValueOnce([unexpectedMessage, matchingMessage])
     mocks.checkSenderMock.mockReturnValueOnce(false).mockReturnValueOnce(true)
-    mocks.toOutputFieldsMock.mockReturnValueOnce(fields)
+    mocks.toOutputFieldsMock.mockResolvedValueOnce(fields)
     mocks.getLastSeenUidMock
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(50)
