@@ -23,6 +23,6 @@ jobs:
           PAYLOAD_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.BRANCH || github.head_ref }}
           PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
         with:
-          repository: budibase/budibase-deploys
+          repository: budibase/featurebranches
           event: featurebranch-qa-close
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
