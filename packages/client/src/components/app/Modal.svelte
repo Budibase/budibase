@@ -8,7 +8,6 @@
 
   export let onClose
   export let ignoreClicksOutside
-  export let preventClose = false
   export let size
   let modal
 
@@ -57,14 +56,12 @@
   <Modal
     on:cancel={handleModalClose}
     bind:this={modal}
-    disableCancel={$builderStore.inBuilder ||
-      ignoreClicksOutside ||
-      preventClose}
+    disableCancel={$builderStore.inBuilder || ignoreClicksOutside}
     zIndex={2}
   >
     <div use:styleable={$component.styles} class={`modal-content ${size}`}>
       <div class="modal-header">
-        {#if !preventClose}
+        {#if !ignoreClicksOutside}
           <Icon
             color="var(--spectrum-global-color-gray-800)"
             name="x"

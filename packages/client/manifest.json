@@ -7926,18 +7926,8 @@
       {
         "type": "boolean",
         "key": "ignoreClicksOutside",
-        "label": "Ignore clicks outside",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
-        "key": "preventClose",
         "label": "Prevent manual closing",
-        "defaultValue": false,
-        "dependsOn": {
-          "setting": "ignoreClicksOutside",
-          "value": true
-        }
+        "defaultValue": false
       },
       {
         "type": "event",
