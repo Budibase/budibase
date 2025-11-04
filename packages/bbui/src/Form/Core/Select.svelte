@@ -42,7 +42,7 @@
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined
-  export let searchPlaceholder: string | undefined = undefined
+  export let searchPlaceholder: string = "Search"
 
   const dispatch = createEventDispatcher()
 
