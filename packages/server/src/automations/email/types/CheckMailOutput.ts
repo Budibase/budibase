@@ -1,3 +1,5 @@
+import { EmailTriggerOutputs } from "@budibase/types"
+
 // we need the nullable / undefined messages to make the descriminated union work
 export type CheckMailOutput =
   | {
@@ -7,6 +9,6 @@ export type CheckMailOutput =
     }
   | {
       proceed: true
-      messages: Record<string, string | Date | undefined>[]
+      messages: EmailTriggerOutputs[]
       reason?: undefined
     }
