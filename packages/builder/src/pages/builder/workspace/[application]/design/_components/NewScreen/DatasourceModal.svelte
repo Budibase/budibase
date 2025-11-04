@@ -120,12 +120,12 @@
       {/each}
     </Layout>
   {:else}
-    <Body size="S">
+    <Body size="M">
       You have no data tables.
-      <p>
+      <p class="no-tables">
         Go to the
-        <Link href={dataUrl || null}>Data</Link>
-        section to connect your database, or create a new internal Budibase table.
+        <Link size="L" href={dataUrl || null}>Data section</Link>
+        to connect your database or create a new internal Budibase table.
       </p></Body
     >
   {/if}
@@ -164,5 +164,16 @@
     font-weight: 400;
     margin: 0;
     margin-left: 10px;
+  }
+
+  .no-tables :global(.spectrum-Link) {
+    font-weight: 900;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .no-tables :global(.spectrum-Link:hover),
+  .no-tables :global(.spectrum-Link:focus) {
+    text-decoration: none;
   }
 </style>
