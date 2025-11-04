@@ -437,6 +437,7 @@ export type EmailTriggerOutputs = {
   to: string
   subject?: string
   sentAt?: string
+  body?: string
 }
 
 export type RowDeletedTriggerInputs = {

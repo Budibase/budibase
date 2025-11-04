@@ -66,9 +66,13 @@ export const checkMail = async (
       return { proceed: false, reason: "sender email does not match expected" }
     }
 
+    const outputMessages = await Promise.all(
+      filteredMessages.map(({ message }) => toOutputFields(message))
+    )
+
     return {
       proceed: true,
-      messages: filteredMessages.map(({ message }) => toOutputFields(message)),
+      messages: outputMessages,
     }
   } catch (err) {
     console.log(err)

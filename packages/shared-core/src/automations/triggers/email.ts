@@ -42,6 +42,10 @@ export const definition: AutomationTriggerDefinition = {
           type: AutomationIOType.DATETIME,
           description: "When the email was sent",
         },
+        body: {
+          type: AutomationIOType.STRING,
+          description: "Email content (plain text)",
+        },
       },
       required: ["from", "to"],
     },
