@@ -7926,7 +7926,7 @@
       {
         "type": "boolean",
         "key": "ignoreClicksOutside",
-        "label": "Ignore clicks outside",
+        "label": "Prevent manual closing",
         "defaultValue": false
       },
       {

@@ -78,6 +78,7 @@ class TriggerBuilder {
   onRowDeleted = this.trigger(AutomationTriggerStepId.ROW_DELETED)
   onWebhook = this.trigger(AutomationTriggerStepId.WEBHOOK)
   onCron = this.trigger(AutomationTriggerStepId.CRON)
+  onEmail = this.trigger(AutomationTriggerStepId.EMAIL)
   onRowAction = this.trigger(AutomationTriggerStepId.ROW_ACTION)
 }
 

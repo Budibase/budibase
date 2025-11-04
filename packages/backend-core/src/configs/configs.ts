@@ -4,6 +4,8 @@ import {
   ConfigType,
   GoogleConfig,
   GoogleInnerConfig,
+  IMAPConfig,
+  IMAPInnerConfig,
   OIDCConfig,
   OIDCInnerConfig,
   OIDCLogosConfig,
@@ -252,6 +254,15 @@ export async function getSMTPConfig(
       fallback: true,
     }
   }
+}
+
+export async function getIMAPConfigDoc(): Promise<IMAPConfig | undefined> {
+  return getConfig<IMAPConfig>(ConfigType.IMAP)
+}
+
+export async function getIMAPConfig(): Promise<IMAPInnerConfig | undefined> {
+  const config = await getIMAPConfigDoc()
+  return config?.config
 }
 
 // SCIM
