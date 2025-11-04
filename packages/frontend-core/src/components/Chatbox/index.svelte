@@ -1,7 +1,7 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
-  import BBAI from "@/components/common/Icons/BBAI.svelte"
   import { type AgentChat } from "@budibase/types"
+  import BBAI from "../../icons/BBAI.svelte"
 
   export let chat: AgentChat
   export let loading: boolean = false

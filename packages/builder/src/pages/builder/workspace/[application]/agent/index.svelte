@@ -23,7 +23,7 @@
     UserMessage,
   } from "@budibase/types"
   import { onDestroy, onMount, type ComponentType } from "svelte"
-  import Chatbox from "./Chatbox.svelte"
+  import { Chatbox } from "@budibase/frontend-core"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
