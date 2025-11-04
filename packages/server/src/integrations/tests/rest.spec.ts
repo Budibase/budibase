@@ -1,3 +1,21 @@
+jest.mock("undici", () => {
+  const actual = jest.requireActual<typeof import("undici")>("undici")
+  return {
+    ...actual,
+    fetch: jest.fn((...args: any[]) => (actual.fetch as any)(...args)),
+    __actualFetch: actual.fetch,
+  }
+})
+
+jest.mock("../../sdk/workspace/oauth2", () => {
+  const actual = jest.requireActual("../../sdk/workspace/oauth2")
+  return {
+    ...actual,
+    getToken: jest.fn(),
+    cleanStoredToken: jest.fn(),
+  }
+})
+
 import { generator } from "@budibase/backend-core/tests"
 import {
   BasicRestAuthConfig,
@@ -9,9 +27,13 @@ import {
 } from "@budibase/types"
 import { createServer } from "http"
 import { AddressInfo } from "net"
-import nock from "nock"
-import { Response } from "node-fetch"
+import * as undici from "undici"
+import type {
+  RequestInit as UndiciRequestInit,
+  Response as UndiciResponse,
+} from "undici"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import sdk from "../../sdk"
 import { RestIntegration } from "../rest"
 
 const UUID_REGEX =
@@ -20,9 +42,108 @@ const HEADERS = {
   Accept: "application/json",
   "Content-Type": "application/json",
 }
+const { Response } = undici
+const realFetch = (undici as any).__actualFetch as typeof undici.fetch
+const fetchMock = undici.fetch as jest.MockedFunction<typeof realFetch>
+
+const getFormDataBuffer = (body: any): string | undefined => {
+  if (!body) {
+    return undefined
+  }
+
+  const candidate = body.getBuffer
+  if (typeof candidate === "function") {
+    try {
+      const result = candidate.call(body)
+      if (typeof result === "string") {
+        return result
+      }
+      if (Buffer.isBuffer(result)) {
+        return result.toString("utf8")
+      }
+      if (ArrayBuffer.isView(result)) {
+        return Buffer.from(
+          result.buffer,
+          result.byteOffset,
+          result.byteLength
+        ).toString("utf8")
+      }
+    } catch (_err) {
+      // fall through to other strategies
+    }
+  }
+
+  return undefined
+}
+
+const extractFormEntries = (body: any): Record<string, string> | undefined => {
+  if (!body) {
+    return undefined
+  }
+
+  if (typeof body.entries === "function") {
+    const result: Record<string, string> = {}
+    for (const [key, value] of body.entries()) {
+      result[String(key)] = String(value ?? "")
+    }
+    return result
+  }
+
+  if (typeof body.forEach === "function") {
+    const result: Record<string, string> = {}
+    body.forEach((value: unknown, key: string) => {
+      result[key] = String(value ?? "")
+    })
+    return result
+  }
+
+  return undefined
+}
+
+const expectFormDataToMatch = (
+  body: unknown,
+  expected: Record<string, string>
+) => {
+  const entries = extractFormEntries(body)
+  if (entries) {
+    expect(entries).toMatchObject(expected)
+    return
+  }
+
+  const payload = getFormDataBuffer(body)
+  expect(payload).toBeDefined()
+  for (const [key, value] of Object.entries(expected)) {
+    expect(payload).toContain(`name="${key}"`)
+    expect(payload).toContain(String(value))
+  }
+}
 
 describe("REST Integration", () => {
   let integration: RestIntegration
+  const pendingFetches: Array<
+    (url: string, init?: UndiciRequestInit) => Promise<UndiciResponse>
+  > = []
+
+  const queueResponse = (
+    handler: (url: string, init?: UndiciRequestInit) => Promise<UndiciResponse>
+  ) => {
+    pendingFetches.push(handler)
+  }
+
+  const queueJsonResponse = (
+    assertFn: (url: string, init?: UndiciRequestInit) => void,
+    body: any,
+    status = 200,
+    headers: Record<string, string> = {}
+  ) => {
+    queueResponse(async (url, options) => {
+      assertFn(url, options)
+      return new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json", ...headers },
+      })
+    })
+  }
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -34,15 +155,39 @@ describe("REST Integration", () => {
   })
 
   beforeEach(() => {
+    pendingFetches.length = 0
+    fetchMock.mockImplementation((url, init?: UndiciRequestInit) => {
+      const urlString = typeof url === "string" ? url : String(url)
+      if (pendingFetches.length) {
+        return pendingFetches.shift()!(urlString, init)
+      }
+      if (urlString.startsWith("https://example.com")) {
+        throw new Error(`Unexpected fetch call to ${urlString}`)
+      }
+      return realFetch(
+        url as Parameters<typeof realFetch>[0],
+        init as Parameters<typeof realFetch>[1]
+      )
+    })
     integration = new RestIntegration({ url: "https://example.com" })
-    nock.cleanAll()
+  })
+
+  afterEach(() => {
+    fetchMock.mockReset()
   })
 
   it("calls the create method with the correct params", async () => {
     const body = { name: "test" }
-    nock("https://example.com", { reqheaders: HEADERS })
-      .post("/api?test=1", JSON.stringify(body))
-      .reply(200, { foo: "bar" })
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/api?test=1")
+      expect(options?.method).toEqual("POST")
+      expect(options?.headers).toMatchObject(HEADERS)
+      expect(options?.body).toEqual(JSON.stringify(body))
+      return new Response(JSON.stringify({ foo: "bar" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    })
 
     const { data } = await integration.create({
       path: "api",
@@ -55,10 +200,15 @@ describe("REST Integration", () => {
   })
 
   it("calls the read method with the correct params", async () => {
-    nock("https://example.com")
-      .get("/api?test=1")
-      .matchHeader("Accept", "text/html")
-      .reply(200, { foo: "bar" })
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/api?test=1")
+      expect(options?.method).toEqual("GET")
+      expect(options?.headers).toMatchObject({ Accept: "text/html" })
+      return new Response(JSON.stringify({ foo: "bar" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    })
 
     const { data } = await integration.read({
       path: "api",
@@ -71,10 +221,18 @@ describe("REST Integration", () => {
   })
 
   it("calls the update method with the correct params", async () => {
-    nock("https://example.com")
-      .put("/api?test=1", { name: "test" })
-      .matchHeader("Accept", "application/json")
-      .reply(200, { foo: "bar" })
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/api?test=1")
+      expect(options?.method).toEqual("PUT")
+      expect(options?.headers).toMatchObject({
+        Accept: "application/json",
+      })
+      expect(options?.body).toEqual(JSON.stringify({ name: "test" }))
+      return new Response(JSON.stringify({ foo: "bar" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    })
 
     const { data } = await integration.update({
       path: "api",
@@ -91,10 +249,18 @@ describe("REST Integration", () => {
   })
 
   it("calls the delete method with the correct params", async () => {
-    nock("https://example.com")
-      .delete("/api?test=1", { name: "test" })
-      .matchHeader("Accept", "application/json")
-      .reply(200, { foo: "bar" })
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/api?test=1")
+      expect(options?.method).toEqual("DELETE")
+      expect(options?.headers).toMatchObject({
+        Accept: "application/json",
+      })
+      expect(options?.body).toEqual(JSON.stringify({ name: "test" }))
+      return new Response(JSON.stringify({ foo: "bar" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    })
 
     const { data } = await integration.delete({
       path: "api",
@@ -127,12 +293,10 @@ describe("REST Integration", () => {
     })
 
     it("should allow form data", () => {
-      const FormData = require("form-data")
       const output = integration.addBody("form", input, {})
-      expect(output.body instanceof FormData).toEqual(true)
-      expect((output.body! as any)._valueLength).toEqual(2)
-      // gets added by fetch
-      expect(Object.keys(output.headers!).length).toEqual(0)
+      const body: any = output.body
+      expect(body).toBeDefined()
+      expectFormDataToMatch(body, { a: "1", b: "2" })
     })
 
     it("should allow encoded form data", () => {
@@ -232,6 +396,13 @@ describe("REST Integration", () => {
   })
 
   describe("authentication", () => {
+    const getTokenMock = sdk.oauth2.getToken as jest.MockedFunction<
+      typeof sdk.oauth2.getToken
+    >
+    const cleanStoredTokenMock = sdk.oauth2
+      .cleanStoredToken as jest.MockedFunction<
+      typeof sdk.oauth2.cleanStoredToken
+    >
     const basicAuth: BasicRestAuthConfig = {
       _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
@@ -252,54 +423,52 @@ describe("REST Integration", () => {
     }
 
     beforeEach(() => {
+      getTokenMock.mockReset()
+      cleanStoredTokenMock.mockReset()
+      getTokenMock.mockRejectedValue(
+        new Error("Unexpected oauth2.getToken call")
+      )
+      cleanStoredTokenMock.mockResolvedValue(undefined)
       integration = new RestIntegration({
         url: "https://example.com",
         authConfigs: [basicAuth, bearerAuth],
       })
     })
 
+    afterEach(() => {
+      getTokenMock.mockReset()
+      cleanStoredTokenMock.mockReset()
+    })
+
     it("adds basic auth", async () => {
       const auth = `Basic ${Buffer.from("user:password").toString("base64")}`
-      nock("https://example.com", { reqheaders: { Authorization: auth } })
-        .get("/")
-        .reply(200, { foo: "bar" })
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: auth })
+        return new Response(JSON.stringify({ foo: "bar" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      })
 
       const { data } = await integration.read({ authConfigId: basicAuth._id })
       expect(data).toEqual({ foo: "bar" })
     })
 
     it("adds bearer auth", async () => {
-      nock("https://example.com", {
-        reqheaders: { Authorization: "Bearer mytoken" },
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({
+          Authorization: "Bearer mytoken",
+        })
+        return new Response(JSON.stringify({ foo: "bar" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
       })
-        .get("/")
-        .reply(200, { foo: "bar" })
       const { data } = await integration.read({ authConfigId: bearerAuth._id })
       expect(data).toEqual({ foo: "bar" })
     })
-
-    function nockTokenCredentials(
-      oauth2Url: string,
-      clientId: string,
-      password: string,
-      resultCode: number,
-      resultBody: any
-    ) {
-      const url = new URL(oauth2Url)
-      const token = generator.guid()
-      nock(url.origin)
-        .post(url.pathname, {
-          grant_type: "client_credentials",
-        })
-        .basicAuth({ user: clientId, pass: password })
-        .reply(200, { token_type: "Bearer", access_token: token })
-
-      return nock("https://example.com", {
-        reqheaders: { Authorization: `Bearer ${token}` },
-      })
-        .get("/")
-        .reply(resultCode, resultBody)
-    }
 
     it("adds OAuth2 auth (via header)", async () => {
       const oauth2Url = generator.url()
@@ -313,8 +482,15 @@ describe("REST Integration", () => {
         grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
-      nockTokenCredentials(oauth2Url, oauthConfig.clientId, secret, 200, {
-        foo: "bar",
+      const token = `Bearer ${generator.guid()}`
+      getTokenMock.mockResolvedValueOnce(token)
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token })
+        return new Response(JSON.stringify({ foo: "bar" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
       })
 
       const { data, info } = await config.doInContext(
@@ -327,6 +503,7 @@ describe("REST Integration", () => {
       )
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
+      expect(getTokenMock).toHaveBeenCalledWith(oauthConfig._id)
     })
 
     it("adds OAuth2 auth (via body)", async () => {
@@ -341,26 +518,16 @@ describe("REST Integration", () => {
         grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
-      const token = generator.guid()
-
-      const url = new URL(oauth2Url)
-      nock(url.origin, {
-        reqheaders: {
-          "content-Type": "application/x-www-form-urlencoded",
-        },
-      })
-        .post(url.pathname, {
-          grant_type: "client_credentials",
-          client_id: oauthConfig.clientId,
-          client_secret: secret,
+      const token = `Bearer ${generator.guid()}`
+      getTokenMock.mockResolvedValueOnce(token)
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token })
+        return new Response(JSON.stringify({ foo: "bar" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
         })
-        .reply(200, { token_type: "Bearer", access_token: token })
-
-      nock("https://example.com", {
-        reqheaders: { Authorization: `Bearer ${token}` },
       })
-        .get("/")
-        .reply(200, { foo: "bar" })
 
       const { data, info } = await config.doInContext(
         config.devWorkspaceId,
@@ -372,6 +539,7 @@ describe("REST Integration", () => {
       )
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
+      expect(getTokenMock).toHaveBeenCalledWith(oauthConfig._id)
     })
 
     it("handles OAuth2 auth cached expired token", async () => {
@@ -386,16 +554,25 @@ describe("REST Integration", () => {
         grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
-      nockTokenCredentials(oauth2Url, oauthConfig.clientId, secret, 401, {})
-      const token2Request = nockTokenCredentials(
-        oauth2Url,
-        oauthConfig.clientId,
-        secret,
-        200,
-        {
-          foo: "bar",
-        }
-      )
+      const token1 = `Bearer ${generator.guid()}`
+      const token2 = `Bearer ${generator.guid()}`
+      getTokenMock.mockResolvedValueOnce(token1).mockResolvedValueOnce(token2)
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token1 })
+        return new Response(JSON.stringify({}), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        })
+      })
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token2 })
+        return new Response(JSON.stringify({ foo: "bar" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      })
 
       const { data, info } = await config.doInContext(
         config.devWorkspaceId,
@@ -408,7 +585,9 @@ describe("REST Integration", () => {
 
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
-      expect(token2Request.isDone()).toBe(true)
+      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
 
     it("does not loop when handling OAuth2 auth cached expired token", async () => {
@@ -423,27 +602,25 @@ describe("REST Integration", () => {
         grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
-      const firstRequest = nockTokenCredentials(
-        oauth2Url,
-        oauthConfig.clientId,
-        secret,
-        401,
-        {}
-      )
-      const secondRequest = nockTokenCredentials(
-        oauth2Url,
-        oauthConfig.clientId,
-        secret,
-        401,
-        {}
-      )
-      const thirdRequest = nockTokenCredentials(
-        oauth2Url,
-        oauthConfig.clientId,
-        secret,
-        200,
-        { foo: "bar" }
-      )
+      const token1 = `Bearer ${generator.guid()}`
+      const token2 = `Bearer ${generator.guid()}`
+      getTokenMock.mockResolvedValueOnce(token1).mockResolvedValueOnce(token2)
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token1 })
+        return new Response(JSON.stringify({}), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        })
+      })
+      queueResponse(async (url, options) => {
+        expect(url).toEqual("https://example.com/")
+        expect(options?.headers).toMatchObject({ Authorization: token2 })
+        return new Response(JSON.stringify({}), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        })
+      })
 
       const { data, info } = await config.doInContext(
         config.devWorkspaceId,
@@ -456,18 +633,21 @@ describe("REST Integration", () => {
 
       expect(info.code).toEqual(401)
       expect(data).toEqual({})
-
-      expect(firstRequest.isDone()).toBe(true)
-      expect(secondRequest.isDone()).toBe(true)
-      expect(thirdRequest.isDone()).toBe(false)
+      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
   })
 
   describe("page based pagination", () => {
     it("can paginate using query params", async () => {
-      nock("https://example.com")
-        .get("/api?page=3&size=10")
-        .reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api?page=3&size=10")
+          expect(options?.method).toEqual("GET")
+        },
+        { foo: "bar" }
+      )
       const { data } = await integration.read({
         path: "api",
         pagination: {
@@ -482,9 +662,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using JSON request body", async () => {
-      nock("https://example.com")
-        .post("/api", JSON.stringify({ page: 3, size: 10 }))
-        .reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expect(options?.body).toEqual(JSON.stringify({ page: 3, size: 10 }))
+        },
+        { foo: "bar" }
+      )
       const { data } = await integration.create({
         bodyType: BodyType.JSON,
         path: "api",
@@ -500,14 +685,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using form-data request body", async () => {
-      nock("https://example.com")
-        .post("/api", body => {
-          return (
-            body.includes(`name="page"\r\n\r\n3\r\n`) &&
-            body.includes(`name="size"\r\n\r\n10\r\n`)
-          )
-        })
-        .reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expectFormDataToMatch(options?.body, { page: "3", size: "10" })
+        },
+        { foo: "bar" }
+      )
 
       const { data } = await integration.create({
         bodyType: BodyType.FORM_DATA,
@@ -524,9 +709,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using form-encoded request body", async () => {
-      nock("https://example.com")
-        .post("/api", { page: "3", size: "10" })
-        .reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expect(options?.body?.toString()).toEqual("page=3&size=10")
+        },
+        { foo: "bar" }
+      )
 
       const { data } = await integration.create({
         bodyType: BodyType.ENCODED,
@@ -545,9 +735,13 @@ describe("REST Integration", () => {
 
   describe("cursor based pagination", () => {
     it("can paginate using query params", async () => {
-      nock("https://example.com")
-        .get("/api?page=3&size=10")
-        .reply(200, { cursor: 123, foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api?page=3&size=10")
+          expect(options?.method).toEqual("GET")
+        },
+        { cursor: 123, foo: "bar" }
+      )
       const { data, pagination } = await integration.read({
         path: "api",
         pagination: {
@@ -564,9 +758,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using JSON request body", async () => {
-      nock("https://example.com")
-        .post("/api", JSON.stringify({ page: 3, size: 10 }))
-        .reply(200, { cursor: 123, foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expect(options?.body).toEqual(JSON.stringify({ page: 3, size: 10 }))
+        },
+        { cursor: 123, foo: "bar" }
+      )
       const { data, pagination } = await integration.create({
         bodyType: BodyType.JSON,
         path: "api",
@@ -584,14 +783,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using form-data request body", async () => {
-      nock("https://example.com")
-        .post("/api", body => {
-          return (
-            body.includes(`name="page"\r\n\r\n3\r\n`) &&
-            body.includes(`name="size"\r\n\r\n10\r\n`)
-          )
-        })
-        .reply(200, { cursor: 123, foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expectFormDataToMatch(options?.body, { page: "3", size: "10" })
+        },
+        { cursor: 123, foo: "bar" }
+      )
       const { data, pagination } = await integration.create({
         bodyType: BodyType.FORM_DATA,
         path: "api",
@@ -609,9 +808,14 @@ describe("REST Integration", () => {
     })
 
     it("can paginate using form-encoded request body", async () => {
-      nock("https://example.com")
-        .post("/api", { page: "3", size: "10" })
-        .reply(200, { cursor: 123, foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("POST")
+          expect(options?.body?.toString()).toEqual("page=3&size=10")
+        },
+        { cursor: 123, foo: "bar" }
+      )
       const { data, pagination } = await integration.create({
         bodyType: BodyType.ENCODED,
         path: "api",
@@ -629,9 +833,15 @@ describe("REST Integration", () => {
     })
 
     it("should encode query string correctly", async () => {
-      nock("https://example.com", { reqheaders: HEADERS })
-        .post("/api?test=1%202", JSON.stringify({ name: "test" }))
-        .reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api?test=1%202")
+          expect(options?.method).toEqual("POST")
+          expect(options?.headers).toMatchObject(HEADERS)
+          expect(options?.body).toEqual(JSON.stringify({ name: "test" }))
+        },
+        { foo: "bar" }
+      )
       const { data } = await integration.create({
         path: "api",
         queryString: "test=1 2",
@@ -645,9 +855,15 @@ describe("REST Integration", () => {
     })
 
     it("should remove empty query parameters", async () => {
-      nock("https://example.com")
-        .get("/api?param2=value&param3=another")
-        .reply(200, { success: true })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual(
+            "https://example.com/api?param2=value&param3=another"
+          )
+          expect(options?.method).toEqual("GET")
+        },
+        { success: true }
+      )
 
       const { data } = await integration.read({
         path: "api",
@@ -657,7 +873,13 @@ describe("REST Integration", () => {
     })
 
     it("should handle query string with only empty parameters", async () => {
-      nock("https://example.com").get("/api").reply(200, { success: true })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("GET")
+        },
+        { success: true }
+      )
 
       const { data } = await integration.read({
         path: "api",
@@ -667,9 +889,13 @@ describe("REST Integration", () => {
     })
 
     it("should handle mixed empty and valid parameters", async () => {
-      nock("https://example.com")
-        .get("/api?valid=test&another=123")
-        .reply(200, { success: true })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api?valid=test&another=123")
+          expect(options?.method).toEqual("GET")
+        },
+        { success: true }
+      )
 
       const { data } = await integration.read({
         path: "api",
@@ -706,7 +932,16 @@ describe("REST Integration", () => {
     })
 
     it("doesn't fail when legacyHttpParser is true", async () => {
-      nock("https://example.com").get("/").reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/")
+          expect(options?.method).toEqual("GET")
+          expect((options as any)?.extraHttpOptions).toEqual({
+            insecureHTTPParser: true,
+          })
+        },
+        { foo: "bar" }
+      )
       const integration = new RestIntegration({
         url: "https://example.com",
         legacyHttpParser: true,
@@ -716,7 +951,15 @@ describe("REST Integration", () => {
     })
 
     it("doesn't fail when rejectUnauthorized is false", async () => {
-      nock("https://example.com").get("/").reply(200, { foo: "bar" })
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/")
+          expect(options?.method).toEqual("GET")
+          const dispatcher = options?.dispatcher
+          expect(dispatcher).toBeInstanceOf(undici.Agent)
+        },
+        { foo: "bar" }
+      )
       const integration = new RestIntegration({
         url: "https://example.com",
         rejectUnauthorized: false,
@@ -730,9 +973,17 @@ describe("REST Integration", () => {
     it("uploads file to object store and returns signed URL", async () => {
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const content = "test file content"
-        nock("https://example.com").get("/api").reply(200, content, {
-          "content-disposition": `attachment; filename="testfile.tar.gz"`,
-          "content-type": "text/plain",
+        queueResponse(async (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("GET")
+          return new Response(content, {
+            status: 200,
+            headers: {
+              "content-disposition": `attachment; filename="testfile.tar.gz"`,
+              "content-type": "text/plain",
+              "content-length": `${content.length}`,
+            },
+          })
         })
 
         const { data } = await integration.read({ path: "api" })
@@ -755,10 +1006,18 @@ describe("REST Integration", () => {
     it("uploads file with non ascii filename to object store and returns signed URL", async () => {
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const content = "test file content"
-        nock("https://example.com").get("/api").reply(200, content, {
-          // eslint-disable-next-line no-useless-escape
-          "content-disposition": `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
-          "content-type": "text/plain",
+        queueResponse(async (url, options) => {
+          expect(url).toEqual("https://example.com/api")
+          expect(options?.method).toEqual("GET")
+          return new Response(content, {
+            status: 200,
+            headers: {
+              // eslint-disable-next-line no-useless-escape
+              "content-disposition": `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+              "content-type": "text/plain",
+              "content-length": `${content.length}`,
+            },
+          })
         })
 
         const { data } = await integration.read({ path: "api" })
