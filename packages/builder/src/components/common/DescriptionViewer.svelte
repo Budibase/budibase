@@ -1,4 +1,5 @@
 <script lang="ts">
+  import "@spectrum-css/link/dist/index-vars.css"
   import { marked } from "marked"
 
   const HTML_TAG_REGEX = /<([A-Za-z][\w-]*)(\s[^<>]*)?>/i
@@ -52,21 +53,22 @@
     if (!html) {
       return html
     }
-    const resolvedBase = resolveBaseUrl(base)
-
-    if (!resolvedBase || typeof document === "undefined") {
-      return html
-    }
-
     const template = document.createElement("template")
     template.innerHTML = html
 
+    const resolvedBase = resolveBaseUrl(base)
+
     template.content.querySelectorAll("a").forEach(anchor => {
       const href = anchor.getAttribute("href") || undefined
-      const absolute = toAbsoluteUrl(href, resolvedBase)
-      if (absolute) {
-        anchor.setAttribute("href", absolute)
+      if (resolvedBase) {
+        const absolute = toAbsoluteUrl(href, resolvedBase)
+        if (absolute) {
+          anchor.setAttribute("href", absolute)
+        }
       }
+      anchor.setAttribute("target", "_blank")
+      anchor.setAttribute("rel", "noopener noreferrer")
+      anchor.classList.add("spectrum-Link", "spectrum-Link--sizeM")
     })
 
     return template.innerHTML
