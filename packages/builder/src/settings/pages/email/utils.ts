@@ -6,6 +6,22 @@ export function hasConfig<T = any>(doc: any): doc is Config<T> {
   return doc && typeof doc === "object" && "config" in doc
 }
 
+function ensureAuth(config: Config) {
+  if (!hasConfig(config)) {
+    ;(config as Config).config = {}
+  }
+  if (hasConfig(config) && config.config.auth == null) {
+    config.config.auth = {
+      type: "login",
+      user: "",
+      pass: "",
+    }
+  } else if (hasConfig(config) && config.config.auth) {
+    config.config.auth.user ??= ""
+    config.config.auth.pass ??= ""
+  }
+}
+
 export async function fetchSmtp() {
   let smtpConfig: FindConfigResponse | null = null
   try {
@@ -24,17 +40,35 @@ export async function fetchSmtp() {
 
     // Always attach the auth for the forms purpose -
     // this will be removed later if required
-    if (!hasConfig(smtpConfig)) {
-      ;(smtpConfig as Config).config = {}
-    }
-    if (hasConfig(smtpConfig) && smtpConfig.config.auth == null) {
-      smtpConfig.config.auth = {
-        type: "login",
-      }
-    }
+    ensureAuth(smtpConfig as Config)
   } catch (error) {
     notifications.error("Error fetching SMTP config")
     return null
   }
   return smtpConfig
+}
+
+export async function fetchImap() {
+  let imapConfig: FindConfigResponse | null = null
+  try {
+    const imapDoc = await API.getConfig(ConfigType.IMAP)
+    if (!("_id" in imapDoc)) {
+      imapConfig = {
+        type: ConfigType.IMAP,
+        config: {
+          secure: true,
+          port: 993,
+          mailbox: "INBOX",
+        },
+      }
+    } else {
+      imapConfig = imapDoc
+    }
+
+    ensureAuth(imapConfig as Config)
+  } catch (error) {
+    notifications.error("Error fetching IMAP config")
+    return null
+  }
+  return imapConfig
 }
