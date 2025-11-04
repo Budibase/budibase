@@ -20,18 +20,18 @@ interface CreateWorkspaceTranslationStoreOptions {
   appStore?: Readable<TranslationStoreValue> | null
 }
 
+interface SDKContext {
+  appStore?: Readable<TranslationStoreValue> | null
+}
+
 export const createWorkspaceTranslationStore = (
   category: TranslationCategory,
   options?: CreateWorkspaceTranslationStoreOptions
 ): WorkspaceTranslationStore => {
-  const sdk = (getContext("sdk") as any) ?? {}
-  const contextStore = sdk?.appStore as
-    | Readable<TranslationStoreValue>
-    | undefined
-  const providedStore = (options?.appStore ?? contextStore) as
-    | Readable<TranslationStoreValue>
-    | null
-    | undefined
+  const sdk = getContext<SDKContext | undefined>("sdk")
+  const contextStore = sdk?.appStore
+  const providedStore: Readable<TranslationStoreValue> | null =
+    options?.appStore ?? contextStore ?? null
 
   if (providedStore && typeof providedStore.subscribe === "function") {
     return derived(providedStore, value => {
