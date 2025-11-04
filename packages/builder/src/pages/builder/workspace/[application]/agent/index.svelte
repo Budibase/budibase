@@ -1,6 +1,10 @@
 <script lang="ts">
+  import NavHeader from "@/components/common/NavHeader.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import { contextMenuStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
     Body,
@@ -15,13 +19,14 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
+  import { Chatbox } from "@budibase/frontend-core"
   import type {
     AgentChat,
     AgentToolSourceWithTools,
     CreateToolSourceRequest,
   } from "@budibase/types"
+  import { params } from "@roxi/routify"
   import { onMount, type ComponentType } from "svelte"
-  import { Chatbox } from "@budibase/frontend-core"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
@@ -80,11 +85,6 @@
 
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
-
-  import NavHeader from "@/components/common/NavHeader.svelte"
-  import NavItem from "@/components/common/NavItem.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
-  import { contextMenuStore } from "@/stores/builder"
 
   const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat }
@@ -298,9 +298,11 @@
     </Panel>
 
     <div class="chat-wrapper">
-      <!-- <div class="chat-area" bind:this={chatAreaElement}> -->
-      <Chatbox bind:chat on:chatSaved={setCurrentChat} />
-      <!-- </div> -->
+      <Chatbox
+        bind:chat
+        workspaceId={$params.application}
+        on:chatSaved={setCurrentChat}
+      />
     </div>
 
     <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>

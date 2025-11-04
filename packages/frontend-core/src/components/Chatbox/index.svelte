@@ -5,12 +5,12 @@
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
   import { onMount } from "svelte"
-  import { params } from "@roxi/routify"
   import { createAPIClient } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
 
   export let API = createAPIClient()
 
+  export let workspaceId: string | null
   export let chat: AgentChat
 
   const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
@@ -40,6 +40,11 @@
   }
 
   async function prompt() {
+    if (!workspaceId) {
+      notifications.error("Workspace ID not available.")
+      return
+    }
+
     if (!chat) {
       chat = { title: "", messages: [] }
     }
@@ -67,7 +72,7 @@
     try {
       await API.agentChatStream(
         updatedChat,
-        $params.application,
+        workspaceId,
         chunk => {
           if (chunk.type === "content") {
             // Accumulate streaming content
