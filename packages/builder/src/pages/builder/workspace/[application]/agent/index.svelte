@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { API } from "@/api"
+  import NavHeader from "@/components/common/NavHeader.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import { contextMenuStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
     Body,
@@ -16,19 +19,14 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
+  import { Chatbox } from "@budibase/frontend-core"
   import type {
     AgentChat,
     AgentToolSourceWithTools,
     CreateToolSourceRequest,
   } from "@budibase/types"
-  import { onMount, type ComponentType } from "svelte"
-  import { AgentChatbox } from "@budibase/frontend-core"
-  import BBAI from "@/components/common/Icons/BBAI.svelte"
-  import NavHeader from "@/components/common/NavHeader.svelte"
-  import NavItem from "@/components/common/NavItem.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
-  import { contextMenuStore } from "@/stores/builder"
   import { params } from "@roxi/routify"
+  import { onMount, type ComponentType } from "svelte"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
@@ -96,28 +94,6 @@
   const startNewChat = () => {
     chat = { title: "", messages: [] }
     agentsStore.clearCurrentChatId()
-  }
-
-  const handleChatSaved = (event: CustomEvent<{ chat: AgentChat }>) => {
-    const savedChat = event.detail?.chat
-    if (!savedChat) {
-      return
-    }
-
-    chat = { ...savedChat }
-
-    if (savedChat._id) {
-      agentsStore.setCurrentChatId(savedChat._id)
-    } else {
-      agentsStore.clearCurrentChatId()
-    }
-
-    agentsStore.fetchChats()
-  }
-
-  const handleChatError = (event: CustomEvent<{ message: string }>) => {
-    const message = event.detail?.message || "An error occurred"
-    notifications.error(message)
   }
 
   const openToolConfig = (toolSource: any) => {
@@ -277,6 +253,13 @@
       contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
     }
 
+  const setCurrentChat = (event: CustomEvent<{ chatId: string }>) => {
+    const { chatId } = event.detail
+    agentsStore.setCurrentChatId(chatId)
+
+    agentsStore.fetchChats()
+  }
+
   onMount(async () => {
     await agentsStore.init()
     chat = { title: "", messages: [] }
@@ -314,19 +297,10 @@
     </Panel>
 
     <div class="chat-wrapper">
-      <AgentChatbox
+      <Chatbox
         bind:chat
         workspaceId={$params.application}
-        agentChatStream={API.agentChatStream}
-        botAvatar={BBAI}
-        placeholder="Ask anything"
-        intro={null}
-        showSendButton={false}
-        showErrorInline={false}
-        autoFocusInput={true}
-        maxHeight={null}
-        on:chatSaved={handleChatSaved}
-        on:error={handleChatError}
+        on:chatSaved={setCurrentChat}
       />
     </div>
 
@@ -639,7 +613,6 @@
   }
 
   .chat-wrapper {
-    overflow-y: auto;
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;

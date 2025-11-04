@@ -8893,10 +8893,9 @@
       ]
     }
   },
-  "agentchat": {
-    "name": "Agent Chat",
-    "friendlyName": "Agent Chat",
-    "description": "Embed the Budibase agent chat experience inside your app.",
+  "chatbox": {
+    "name": "Chatbox",
+    "description": "Embed the Budibase chat experience inside your app.",
     "icon": "chat",
     "new": true,
     "showSettingsBar": true,
