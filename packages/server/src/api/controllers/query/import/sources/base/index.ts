@@ -1,5 +1,6 @@
-import { Query, QueryParameter, QueryVerb } from "@budibase/types"
+import { BodyType, Query, QueryParameter, QueryVerb } from "@budibase/types"
 import { URL } from "url"
+import { serialiseRequestBody } from "../utils/requestBody"
 
 export interface ImportInfo {
   name: string
@@ -76,7 +77,9 @@ export abstract class ImportSource {
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
-    body: object | undefined = undefined
+    body: unknown = undefined,
+    bodyBindings: Record<string, string> = {},
+    explicitBodyType?: BodyType
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -99,17 +102,38 @@ export abstract class ImportSource {
       }
     }
     queryString = this.processQuery(queryString)
-    const requestBody = JSON.stringify(body, null, 2)
+    const requestBody = serialiseRequestBody(body)
+
+    const combinedParameters = [...parameters]
+    for (const [name, defaultValue] of Object.entries(bodyBindings)) {
+      if (!name) {
+        continue
+      }
+      const existing = combinedParameters.find(
+        parameter => parameter.name === name
+      )
+      if (existing) {
+        continue
+      }
+      combinedParameters.push({ name, default: defaultValue })
+    }
+
+    const resolvedBodyType = explicitBodyType
+      ? explicitBodyType
+      : requestBody
+        ? BodyType.JSON
+        : BodyType.NONE
 
     const query: Query = {
       datasourceId,
       name,
-      parameters,
+      parameters: combinedParameters,
       fields: {
         headers,
         queryString,
         path,
         requestBody,
+        bodyType: resolvedBodyType,
       },
       transformer,
       schema,

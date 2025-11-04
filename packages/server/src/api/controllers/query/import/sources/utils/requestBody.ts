@@ -4,7 +4,19 @@ type SchemaObject =
   | OpenAPIV3.SchemaObject
   | (OpenAPIV2.SchemaObject & { properties?: Record<string, any>; items?: any })
 
+type BindingPrimitiveType = "string" | "integer" | "number" | "boolean"
+
+export interface GeneratedRequestBody {
+  body: any
+  bindings: Record<string, string>
+}
+
 const MAX_DEPTH = 5
+const BINDING_TOKEN_PREFIX = "__BUDIBASE_BINDING__"
+const BINDING_TOKEN_REGEX = new RegExp(
+  `"${BINDING_TOKEN_PREFIX}(string|integer|number|boolean)__([A-Za-z0-9_]+)__"`,
+  "g"
+)
 
 const sanitizeSegment = (segment: string): string => {
   return segment.replace(/[^A-Za-z0-9_]/g, "_")
@@ -12,10 +24,43 @@ const sanitizeSegment = (segment: string): string => {
 
 const buildBindingName = (path: string[]): string => {
   const sanitized = path
+    .slice(1)
     .map(segment => sanitizeSegment(segment))
-    .filter(Boolean)
-    .join("_")
-  return sanitized || "value"
+    .filter(segment => segment && segment !== "item")
+
+  if (sanitized.length === 0) {
+    const last = path[path.length - 1] ?? "value"
+    sanitized.push(sanitizeSegment(last) || "value")
+  }
+
+  const joined = sanitized.join("_") || "value"
+  if (/^[0-9]/.test(joined)) {
+    return `_${joined}`
+  }
+  return joined
+}
+
+const createBindingPlaceholder = (
+  key: string,
+  type: BindingPrimitiveType
+): { toJSON: () => string } => {
+  return {
+    toJSON() {
+      return `${BINDING_TOKEN_PREFIX}${type}__${key}__`
+    },
+  }
+}
+
+const defaultValueForType = (type: BindingPrimitiveType): string => {
+  switch (type) {
+    case "boolean":
+      return "false"
+    case "integer":
+    case "number":
+      return "0"
+    default:
+      return ""
+  }
 }
 
 const asArray = <T>(value: T | T[] | undefined): T[] => {
@@ -131,25 +176,59 @@ const getItemsSchema = (schema: SchemaObject | undefined): SchemaObject | undefi
   return pickSchema(items as SchemaObject)
 }
 
-const primitiveFromSchema = (
+const normalisePrimitiveType = (type: string | undefined): BindingPrimitiveType => {
+  if (type === "integer" || type === "number" || type === "boolean") {
+    return type
+  }
+  return "string"
+}
+
+const getPrimitiveDefaultFromSchema = (
   schema: SchemaObject | undefined,
-  path: string[]
-): any => {
-  if (!schema) {
-    return `{{${buildBindingName(path)}}}`
+  type: BindingPrimitiveType
+): string => {
+  if (schema) {
+    const candidate = (schema as any).example ?? (schema as any).default
+    if (candidate !== undefined && candidate !== null) {
+      return String(candidate)
+    }
+    const enumValues = (schema as any).enum
+    if (Array.isArray(enumValues) && enumValues.length > 0) {
+      const [first] = enumValues
+      if (first !== undefined && first !== null) {
+        return String(first)
+      }
+    }
   }
+  return defaultValueForType(type)
+}
 
-  const candidate = (schema as any).example ?? (schema as any).default
-  if (candidate !== undefined) {
-    return candidate
+interface BuildResult {
+  value: any
+  bindings: Record<string, string>
+}
+
+const mergeBindings = (
+  target: Record<string, string>,
+  source: Record<string, string>
+) => {
+  for (const [key, value] of Object.entries(source)) {
+    if (!(key in target)) {
+      target[key] = value
+    }
   }
+}
 
-  const enumValues = (schema as any).enum
-  if (Array.isArray(enumValues) && enumValues.length > 0) {
-    return enumValues[0]
+const createPrimitiveBindingResult = (
+  path: string[],
+  type: BindingPrimitiveType,
+  defaultValue: string
+): BuildResult => {
+  const key = buildBindingName(path)
+  return {
+    value: createBindingPlaceholder(key, type),
+    bindings: { [key]: defaultValue },
   }
-
-  return `{{${buildBindingName(path)}}}`
 }
 
 const buildFromSchema = (
@@ -157,108 +236,233 @@ const buildFromSchema = (
   path: string[],
   depth: number,
   seen: Set<SchemaObject>
-): any => {
+): BuildResult => {
   const resolved = pickSchema(schema)
   if (!resolved) {
-    return undefined
+    const type = normalisePrimitiveType(undefined)
+    return createPrimitiveBindingResult(path, type, defaultValueForType(type))
   }
 
   if (seen.has(resolved)) {
-    return `{{${buildBindingName(path)}}}`
+    const type = normalisePrimitiveType(getSchemaType(resolved))
+    return createPrimitiveBindingResult(
+      path,
+      type,
+      getPrimitiveDefaultFromSchema(resolved, type)
+    )
   }
 
   if (depth > MAX_DEPTH) {
-    return `{{${buildBindingName(path)}}}`
+    const type = normalisePrimitiveType(getSchemaType(resolved))
+    return createPrimitiveBindingResult(
+      path,
+      type,
+      getPrimitiveDefaultFromSchema(resolved, type)
+    )
   }
 
   seen.add(resolved)
 
   const type = getSchemaType(resolved)
 
-  let result: any
-
   if (type === "object") {
     const properties = getProperties(resolved)
-    let required = getRequiredProperties(resolved)
-    if (required.length === 0) {
-      required = Object.keys(properties).slice(0, 1)
+    const propertyNames = Object.keys(properties)
+    const includeOptional = propertyNames.length > 0 && propertyNames.length <= 10
+
+    let selectedProperties = includeOptional
+      ? propertyNames
+      : getRequiredProperties(resolved).filter(property =>
+          propertyNames.includes(property)
+        )
+
+    if (selectedProperties.length === 0) {
+      selectedProperties = propertyNames.slice(0, 1)
     }
 
-    if (required.length === 0) {
-      result = {}
+    if (selectedProperties.length === 0) {
       seen.delete(resolved)
-      return result
+      return { value: {}, bindings: {} }
     }
 
     const objectValue: Record<string, any> = {}
+    const bindings: Record<string, string> = {}
 
-    for (const property of required) {
+    for (const property of selectedProperties) {
       const propertySchema = pickSchema(properties[property])
-      const value = buildFromSchema(
+      const child = buildFromSchema(
         propertySchema,
         [...path, property],
         depth + 1,
         seen
       )
-      objectValue[property] =
-        value === undefined ? `{{${buildBindingName([...path, property])}}}` : value
+      if (child.value === undefined) {
+        const fallback = createPrimitiveBindingResult(
+          [...path, property],
+          "string",
+          defaultValueForType("string")
+        )
+        objectValue[property] = fallback.value
+        mergeBindings(bindings, fallback.bindings)
+      } else {
+        objectValue[property] = child.value
+        mergeBindings(bindings, child.bindings)
+      }
     }
 
-    result = objectValue
     seen.delete(resolved)
-    return result
+    return { value: objectValue, bindings }
   }
 
   if (type === "array") {
     const itemSchema = getItemsSchema(resolved)
-    const itemValue = buildFromSchema(
+    const child = buildFromSchema(
       itemSchema,
       [...path, "item"],
       depth + 1,
       seen
     )
-    result = itemValue === undefined ? [] : [itemValue]
+    const arrayValue = child.value === undefined ? [] : [child.value]
     seen.delete(resolved)
-    return result
+    return { value: arrayValue, bindings: child.bindings }
   }
 
-  if (type === "boolean") {
-    const primitive = primitiveFromSchema(resolved, path)
-    if (typeof primitive === "boolean") {
-      result = primitive
-      seen.delete(resolved)
-      return result
-    }
-    result = primitive === undefined ? false : primitive
-    seen.delete(resolved)
-    return result
-  }
-
-  if (type === "integer" || type === "number") {
-    const primitive = primitiveFromSchema(resolved, path)
-    if (typeof primitive === "number") {
-      result = primitive
-      seen.delete(resolved)
-      return result
-    }
-    result = primitive
-    seen.delete(resolved)
-    return result
-  }
-
-  result = primitiveFromSchema(resolved, path)
+  const primitiveType = normalisePrimitiveType(type)
+  const result = createPrimitiveBindingResult(
+    path,
+    primitiveType,
+    getPrimitiveDefaultFromSchema(resolved, primitiveType)
+  )
   seen.delete(resolved)
   return result
+}
+
+const buildFromExample = (
+  example: unknown,
+  path: string[],
+  depth: number,
+  seen: WeakSet<object>
+): BuildResult => {
+  if (depth > MAX_DEPTH) {
+    return createPrimitiveBindingResult(
+      path,
+      "string",
+      defaultValueForType("string")
+    )
+  }
+
+  if (
+    example === null ||
+    example === undefined ||
+    typeof example === "bigint" ||
+    typeof example === "symbol" ||
+    typeof example === "function"
+  ) {
+    return { value: example, bindings: {} }
+  }
+
+  if (typeof example === "string") {
+    return createPrimitiveBindingResult(path, "string", example)
+  }
+
+  if (typeof example === "number") {
+    return createPrimitiveBindingResult(path, "number", String(example))
+  }
+
+  if (typeof example === "boolean") {
+    return createPrimitiveBindingResult(path, "boolean", example ? "true" : "false")
+  }
+
+  if (typeof example !== "object") {
+    return { value: example, bindings: {} }
+  }
+
+  if (seen.has(example as object)) {
+    return createPrimitiveBindingResult(
+      path,
+      "string",
+      defaultValueForType("string")
+    )
+  }
+
+  seen.add(example as object)
+
+  if (Array.isArray(example)) {
+    if (example.length === 0) {
+      seen.delete(example as object)
+      return { value: [], bindings: {} }
+    }
+    const child = buildFromExample(example[0], [...path, "item"], depth + 1, seen)
+    seen.delete(example as object)
+    return {
+      value: child.value === undefined ? [] : [child.value],
+      bindings: child.bindings,
+    }
+  }
+
+  const objectValue: Record<string, any> = {}
+  const bindings: Record<string, string> = {}
+
+  for (const [key, value] of Object.entries(example as Record<string, any>)) {
+    const child = buildFromExample(value, [...path, key], depth + 1, seen)
+    if (child.value !== undefined) {
+      objectValue[key] = child.value
+    } else {
+      objectValue[key] = value
+    }
+    mergeBindings(bindings, child.bindings)
+  }
+
+  seen.delete(example as object)
+  return { value: objectValue, bindings }
 }
 
 export const generateRequestBodyFromSchema = (
   schema: SchemaObject | undefined,
   rootName = "body"
-): any => {
-  const seen = new Set<SchemaObject>()
-  const value = buildFromSchema(schema, [rootName], 0, seen)
-  if (value === undefined) {
+): GeneratedRequestBody | undefined => {
+  if (!schema) {
     return undefined
   }
-  return value
+  const seen = new Set<SchemaObject>()
+  const result = buildFromSchema(schema, [rootName], 0, seen)
+  if (result.value === undefined) {
+    return undefined
+  }
+  return { body: result.value, bindings: result.bindings }
+}
+
+export const generateRequestBodyFromExample = (
+  example: unknown,
+  rootName = "body"
+): GeneratedRequestBody | undefined => {
+  if (example === undefined) {
+    return undefined
+  }
+  const seen = new WeakSet<object>()
+  const result = buildFromExample(example, [rootName], 0, seen)
+  if (result.value === undefined) {
+    return undefined
+  }
+  return { body: result.value, bindings: result.bindings }
+}
+
+export const serialiseRequestBody = (body: unknown): string | undefined => {
+  if (body === undefined) {
+    return undefined
+  }
+  if (typeof body === "string") {
+    return body
+  }
+  const json = JSON.stringify(body, null, 2)
+  if (typeof json !== "string") {
+    return undefined
+  }
+  return json.replace(BINDING_TOKEN_REGEX, (_match, type, key) => {
+    const binding = `{{ ${key} }}`
+    if (type === "string") {
+      return `"${binding}"`
+    }
+    return binding
+  })
 }

@@ -3,7 +3,12 @@ import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
-import { generateRequestBodyFromSchema } from "./utils/requestBody"
+import {
+  GeneratedRequestBody,
+  generateRequestBodyFromExample,
+  generateRequestBodyFromSchema,
+} from "./utils/requestBody"
+import { BodyType } from "@budibase/types"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
@@ -58,7 +63,7 @@ const isParameter = (
 const getRequestBody = (
   operation: OpenAPIV3.OperationObject,
   bindingRoot: string
-) => {
+): GeneratedRequestBody | undefined => {
   if (requestBodyNotRef(operation.requestBody)) {
     const request: OpenAPIV3.RequestBodyObject = operation.requestBody
     const supportedMimeTypes = getMimeTypes(operation)
@@ -68,14 +73,14 @@ const getRequestBody = (
       // try get example from request
       const content = request.content[mimeType]
       if (content.example) {
-        return content.example
+        return generateRequestBodyFromExample(content.example, bindingRoot)
       }
 
       // try get example from schema
       if (schemaNotRef(content.schema)) {
         const schema = content.schema
         if (schema.example) {
-          return schema.example
+          return generateRequestBodyFromExample(schema.example, bindingRoot)
         }
         return generateRequestBodyFromSchema(schema, bindingRoot)
       }
@@ -274,7 +279,9 @@ export class OpenAPI3 extends OpenAPISource {
           queryString,
           headers,
           parameters,
-          requestBody
+          requestBody?.body,
+          requestBody?.bindings ?? {},
+          requestBody ? BodyType.JSON : BodyType.NONE
         )
         queries.push(query)
       }

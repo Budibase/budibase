@@ -308,6 +308,7 @@ describe("Rest Importer", () => {
                       name: { type: "string" },
                       email: { type: "string" },
                       age: { type: "integer" },
+                      verified: { type: "boolean" },
                     },
                   },
                 },
@@ -337,12 +338,86 @@ describe("Rest Importer", () => {
     expect(createQuery).toBeDefined()
     expect(createQuery?.fields.requestBody).toBeDefined()
 
-    const parsedBody = JSON.parse(createQuery?.fields.requestBody as string)
+    const expectedBody = `{
+  "name": "{{ name }}",
+  "email": "{{ email }}",
+  "age": {{ age }},
+  "verified": {{ verified }}
+}`
 
-    expect(parsedBody).toEqual({
-      name: "{{createUser_name}}",
-      email: "{{createUser_email}}",
-    })
+    expect(createQuery?.fields.requestBody).toEqual(expectedBody)
+    expect(createQuery?.parameters).toEqual([
+      { name: "name", default: "" },
+      { name: "email", default: "" },
+      { name: "age", default: "0" },
+      { name: "verified", default: "false" },
+    ])
+  })
+
+  it("only includes required properties when more than 10 fields are available", async () => {
+    const allProperties = Object.fromEntries(
+      Array.from({ length: 11 }, (_, index) => [
+        `field${index + 1}`,
+        { type: "string" },
+      ])
+    ) as Record<string, unknown>
+
+    const openapi3Doc = {
+      openapi: "3.0.0",
+      info: {
+        title: "Bindings",
+        version: "1.0.0",
+      },
+      paths: {
+        "/resources": {
+          post: {
+            operationId: "createResource",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["field1", "field2"],
+                    properties: allProperties,
+                  },
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description: "successful operation",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    await init(JSON.stringify(openapi3Doc))
+    const datasource = await config.createDatasource()
+    const { queries: importedQueries } = await config.doInContext(
+      config.devWorkspaceId,
+      () => restImporter.importQueries(datasource._id)
+    )
+
+    const createQuery = importedQueries.find(
+      query => query.name === "createResource"
+    )
+
+    expect(createQuery).toBeDefined()
+    expect(createQuery?.fields.requestBody).toBeDefined()
+
+    const expectedBody = `{
+  "field1": "{{ field1 }}",
+  "field2": "{{ field2 }}"
+}`
+
+    expect(createQuery?.fields.requestBody).toEqual(expectedBody)
+    expect(createQuery?.parameters).toEqual([
+      { name: "field1", default: "" },
+      { name: "field2", default: "" },
+    ])
   })
 
   it("populates request body for OpenAPI 2 POST endpoints without examples", async () => {
@@ -369,6 +444,7 @@ describe("Rest Importer", () => {
                     name: { type: "string" },
                     email: { type: "string" },
                     age: { type: "integer" },
+                    verified: { type: "boolean" },
                   },
                 },
               },
@@ -397,11 +473,19 @@ describe("Rest Importer", () => {
     expect(createQuery).toBeDefined()
     expect(createQuery?.fields.requestBody).toBeDefined()
 
-    const parsedBody = JSON.parse(createQuery?.fields.requestBody as string)
+    const expectedBody = `{
+  "name": "{{ name }}",
+  "email": "{{ email }}",
+  "age": {{ age }},
+  "verified": {{ verified }}
+}`
 
-    expect(parsedBody).toEqual({
-      name: "{{user_name}}",
-      email: "{{user_email}}",
-    })
+    expect(createQuery?.fields.requestBody).toEqual(expectedBody)
+    expect(createQuery?.parameters).toEqual([
+      { name: "name", default: "" },
+      { name: "email", default: "" },
+      { name: "age", default: "0" },
+      { name: "verified", default: "false" },
+    ])
   })
 })

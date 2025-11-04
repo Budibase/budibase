@@ -3,7 +3,12 @@ import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
-import { generateRequestBodyFromSchema } from "./utils/requestBody"
+import {
+  GeneratedRequestBody,
+  generateRequestBodyFromExample,
+  generateRequestBodyFromSchema,
+} from "./utils/requestBody"
+import { BodyType } from "@budibase/types"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -155,7 +160,7 @@ export class OpenAPI2 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = undefined
+        let requestBody: GeneratedRequestBody | undefined = undefined
         const parameters: QueryParameter[] = []
 
         if (operation.consumes) {
@@ -192,7 +197,10 @@ export class OpenAPI2 extends OpenAPISource {
                 const schema = bodyParam.schema as OpenAPIV2.SchemaObject
                 if (schema) {
                   if (schema.example !== undefined) {
-                    requestBody = schema.example
+                    requestBody = generateRequestBodyFromExample(
+                      schema.example,
+                      bodyParam.name || "body"
+                    )
                   } else {
                     const generated = generateRequestBodyFromSchema(
                       schema,
@@ -226,7 +234,9 @@ export class OpenAPI2 extends OpenAPISource {
           queryString,
           headers,
           parameters,
-          requestBody
+          requestBody?.body,
+          requestBody?.bindings ?? {},
+          requestBody ? BodyType.JSON : BodyType.NONE
         )
         queries.push(query)
       }

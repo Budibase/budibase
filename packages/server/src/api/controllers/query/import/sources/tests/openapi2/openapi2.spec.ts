@@ -96,7 +96,13 @@ describe("OpenAPI2 Import", () => {
       )
 
       it.each([
-        ["createEntity", []],
+        [
+          "createEntity",
+          [
+            { name: "name", default: "name" },
+            { name: "type", default: "type" },
+          ],
+        ],
         [
           "getEntities",
           [
@@ -105,8 +111,24 @@ describe("OpenAPI2 Import", () => {
           ],
         ],
         ["getEntity", [{ name: "entityId", default: "" }]],
-        ["updateEntity", [{ name: "entityId", default: "" }]],
-        ["patchEntity", [{ name: "entityId", default: "" }]],
+        [
+          "updateEntity",
+          [
+            { name: "entityId", default: "" },
+            { name: "id", default: "1" },
+            { name: "name", default: "name" },
+            { name: "type", default: "type" },
+          ],
+        ],
+        [
+          "patchEntity",
+          [
+            { name: "entityId", default: "" },
+            { name: "id", default: "1" },
+            { name: "name", default: "name" },
+            { name: "type", default: "type" },
+          ],
+        ],
         [
           "deleteEntity",
           [
@@ -119,16 +141,34 @@ describe("OpenAPI2 Import", () => {
       })
 
       it.each([
-        ["createEntity", { name: "name", type: "type" }],
+        [
+          "createEntity",
+          `{
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
+        ],
         ["getEntities", undefined],
         ["getEntity", undefined],
-        ["updateEntity", { id: 1, name: "name", type: "type" }],
-        ["patchEntity", { id: 1, name: "name", type: "type" }],
+        [
+          "updateEntity",
+          `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
+        ],
+        [
+          "patchEntity",
+          `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
+        ],
         ["deleteEntity", undefined],
       ])(`should have correct body for %s`, (operationId, body) => {
-        expect(queries[operationId].fields.requestBody).toBe(
-          JSON.stringify(body, null, 2)
-        )
+        expect(queries[operationId].fields.requestBody).toBe(body)
       })
     })
   })

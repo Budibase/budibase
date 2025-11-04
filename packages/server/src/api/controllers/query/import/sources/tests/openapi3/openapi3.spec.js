@@ -247,7 +247,16 @@ describe("OpenAPI3 Import", () => {
 
     it("populates parameters", async () => {
       const assertions = {
-        createEntity: [],
+        createEntity: [
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
+          },
+        ],
         getEntities: [
           {
             name: "page",
@@ -269,11 +278,35 @@ describe("OpenAPI3 Import", () => {
             name: "entityId",
             default: "",
           },
+          {
+            name: "id",
+            default: "1",
+          },
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
+          },
         ],
         patchEntity: [
           {
             name: "entityId",
             default: "",
+          },
+          {
+            name: "id",
+            default: "1",
+          },
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
           },
         ],
         deleteEntity: [
@@ -293,29 +326,27 @@ describe("OpenAPI3 Import", () => {
     const testBody = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, body] of Object.entries(assertions)) {
-        expect(queries[operationId].fields.requestBody).toStrictEqual(
-          JSON.stringify(body, null, 2)
-        )
+        expect(queries[operationId].fields.requestBody).toStrictEqual(body)
       }
     }
     it("populates body", async () => {
       const assertions = {
-        createEntity: {
-          name: "name",
-          type: "type",
-        },
+        createEntity: `{
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
         getEntities: undefined,
         getEntity: undefined,
-        updateEntity: {
-          id: 1,
-          name: "name",
-          type: "type",
-        },
-        patchEntity: {
-          id: 1,
-          name: "name",
-          type: "type",
-        },
+        updateEntity: `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
+        patchEntity: `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
         deleteEntity: undefined,
       }
       await runTests("crud", testBody, assertions)
