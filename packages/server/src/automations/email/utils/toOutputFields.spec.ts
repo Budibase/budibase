@@ -41,6 +41,22 @@ describe("toOutputFields", () => {
     expect(result.bodyTextTruncated).toBeFalse()
   })
 
+  it("formats HTML body to readable text", async () => {
+    const html =
+      "<h1>Welcome</h1><p>This is a <strong>test</strong> email.<br />Thanks!</p>"
+    simpleParserMock.mockResolvedValue({
+      text: undefined,
+      html,
+    } as ParsedMail)
+
+    const result = await toOutputFields(createMessage())
+
+    expect(result.bodyText).toEqual(
+      "Welcome\n\nThis is a test email.\nThanks!"
+    )
+    expect(result.bodyTextTruncated).toBeFalse()
+  })
+
   it("truncates bodyText when exceeding limit", async () => {
     const body = "a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)
     simpleParserMock.mockResolvedValue({ text: body } as ParsedMail)
