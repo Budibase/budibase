@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { API } from "@/api"
+  import NavHeader from "@/components/common/NavHeader.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import { contextMenuStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
     Body,
@@ -16,14 +19,14 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
+  import { Chatbox } from "@budibase/frontend-core"
   import type {
     AgentChat,
     AgentToolSourceWithTools,
     CreateToolSourceRequest,
-    UserMessage,
   } from "@budibase/types"
-  import { onDestroy, onMount, type ComponentType } from "svelte"
-  import Chatbox from "./Chatbox.svelte"
+  import { params } from "@roxi/routify"
+  import { onMount, type ComponentType } from "svelte"
   import BambooHRLogo from "./logos/BambooHR.svelte"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
@@ -69,12 +72,7 @@
     },
   ]
 
-  let inputValue = ""
   let chat: AgentChat = { title: "", messages: [] }
-  let loading: boolean = false
-  let chatAreaElement: HTMLDivElement
-  let observer: MutationObserver
-  let textareaElement: HTMLTextAreaElement
   let toolSourceModal: Modal
   let toolConfigModal: Modal
   let deleteConfirmModal: Modal
@@ -88,169 +86,9 @@
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
 
-  import NavHeader from "@/components/common/NavHeader.svelte"
-  import NavItem from "@/components/common/NavItem.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
-  import { contextMenuStore } from "@/stores/builder"
-  import { params } from "@roxi/routify"
-  import { tick } from "svelte"
-
-  $: if (chat.messages.length) {
-    scrollToBottom()
-  }
-
-  async function scrollToBottom() {
-    await tick()
-    if (chatAreaElement) {
-      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-    }
-  }
-
-  async function handleKeyDown(event: any) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
-      await prompt()
-    }
-  }
-
-  async function prompt() {
-    if (!chat) {
-      chat = { title: "", messages: [] }
-    }
-
-    const userMessage: UserMessage = { role: "user", content: inputValue }
-
-    const updatedChat = {
-      ...chat,
-      messages: [...chat.messages, userMessage],
-    }
-
-    // Update local display immediately with user message
-    chat = updatedChat
-
-    // Ensure we scroll to the new message
-    await scrollToBottom()
-
-    inputValue = ""
-    loading = true
-
-    let streamingContent = ""
-    let isToolCall = false
-    let toolCallInfo: string = ""
-
-    try {
-      await API.agentChatStream(
-        updatedChat,
-        $params.application,
-        chunk => {
-          if (chunk.type === "content") {
-            // Accumulate streaming content
-            streamingContent += chunk.content || ""
-
-            // Update chat with partial content
-            const updatedMessages = [...updatedChat.messages]
-
-            // Find or create assistant message
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content =
-                streamingContent + (isToolCall ? toolCallInfo : "")
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + (isToolCall ? toolCallInfo : ""),
-              })
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            // Auto-scroll as content streams
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_start") {
-            isToolCall = true
-            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + toolCallInfo,
-              })
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_result") {
-            const resultInfo = chunk.toolResult?.error
-              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
-              : `\n**✅ Tool Result:** Complete`
-
-            toolCallInfo += resultInfo
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "chat_saved") {
-            // Update complete response
-            if (chunk.chat) {
-              chat = chunk.chat
-
-              if (chunk.chat._id) {
-                agentsStore.setCurrentChatId(chunk.chat._id)
-                // Refresh chat history to include the new/updated chat
-                agentsStore.fetchChats()
-              }
-            }
-
-            loading = false
-            scrollToBottom()
-          } else if (chunk.type === "error") {
-            notifications.error(chunk.content || "An error occurred")
-            loading = false
-          }
-        },
-        error => {
-          console.error("Streaming error:", error)
-          notifications.error(error.message)
-          loading = false
-        }
-      )
-    } catch (err: any) {
-      console.error(err)
-      notifications.error(err.message)
-      loading = false
-    }
-
-    // Return focus to textarea after the response
-    await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
-  }
-
   const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat }
     agentsStore.setCurrentChatId(selectedChat._id!)
-    await scrollToBottom()
   }
 
   const startNewChat = () => {
@@ -415,35 +253,17 @@
       contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
     }
 
+  const setCurrentChat = (event: CustomEvent<{ chatId: string }>) => {
+    const { chatId } = event.detail
+    agentsStore.setCurrentChatId(chatId)
+
+    agentsStore.fetchChats()
+  }
+
   onMount(async () => {
     await agentsStore.init()
 
     chat = { title: "", messages: [] }
-
-    // Ensure we always autoscroll to reveal new messages
-    observer = new MutationObserver(async () => {
-      await tick()
-      if (chatAreaElement) {
-        chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-      }
-    })
-
-    if (chatAreaElement) {
-      observer.observe(chatAreaElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      })
-    }
-
-    await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
-  })
-
-  onDestroy(() => {
-    observer.disconnect()
   })
 </script>
 
@@ -478,19 +298,11 @@
     </Panel>
 
     <div class="chat-wrapper">
-      <div class="chat-area" bind:this={chatAreaElement}>
-        <Chatbox bind:chat {loading} />
-        <div class="input-wrapper">
-          <textarea
-            bind:value={inputValue}
-            bind:this={textareaElement}
-            class="input spectrum-Textfield-input"
-            on:keydown={handleKeyDown}
-            placeholder="Ask anything"
-            disabled={loading}
-          />
-        </div>
-      </div>
+      <Chatbox
+        bind:chat
+        workspaceId={$params.application}
+        on:chatSaved={setCurrentChat}
+      />
     </div>
 
     <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
@@ -806,13 +618,6 @@
     display: flex;
     flex-direction: column;
   }
-  .chat-area {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 0;
-  }
 
   .tool-source-tiles {
     display: grid;
@@ -856,37 +661,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .input-wrapper {
-    position: sticky;
-    bottom: 0;
-    width: 600px;
-    margin: 0 auto;
-    background: var(--background-alt);
-    padding-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  textarea {
-    width: 100%;
-    height: 100px;
-    top: 0;
-    resize: none;
-    padding: 20px;
-    font-size: 16px;
-    background-color: var(--grey-3);
-    color: var(--grey-9);
-    border-radius: 16px;
-    border: none;
-    outline: none;
-    min-height: 100px;
-    margin-bottom: 8px;
-  }
-
-  textarea::placeholder {
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .config-form {
