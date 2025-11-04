@@ -4,6 +4,7 @@ import {
   HttpMethod,
   Integration,
   IntegrationBase,
+  JSONValue,
   PaginationConfig,
   PaginationValues,
   QueryType,
@@ -15,7 +16,6 @@ import get from "lodash/get"
 import qs from "querystring"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
-import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
@@ -26,12 +26,7 @@ import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
-import { fetch, Response, RequestInit, Agent } from "undici"
-import nodeFetch from "node-fetch"
-import type {
-  Response as NodeFetchResponse,
-  RequestInit as NodeFetchRequestInit,
-} from "node-fetch"
+import { fetch, Response, RequestInit, Agent, Headers, FormData } from "undici"
 import environment from "../environment"
 
 const coreFields = {
@@ -125,7 +120,7 @@ const SCHEMA: Integration = {
 }
 
 interface ParsedResponse {
-  data: any
+  data: JSONValue | undefined
   info: {
     code: number
     size: string
@@ -136,7 +131,86 @@ interface ParsedResponse {
     headers: Record<string, string[] | string>
   }
   pagination?: {
-    cursor: any
+    cursor: JSONValue | undefined
+  }
+}
+
+interface NormalisedBody {
+  bodyString: string
+  bodyObject: Record<string, JSONValue>
+  jsonValue?: JSONValue
+  parseError?: unknown
+}
+
+const isPlainRecord = (value: unknown): value is Record<string, JSONValue> => {
+  return Object.prototype.toString.call(value) === "[object Object]"
+}
+
+const normaliseBody = (raw: unknown): NormalisedBody => {
+  if (raw == null) {
+    return { bodyString: "", bodyObject: {}, jsonValue: undefined }
+  }
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw) as JSONValue
+      if (isPlainRecord(parsed)) {
+        return {
+          bodyString: raw,
+          bodyObject: parsed,
+          jsonValue: parsed,
+        }
+      }
+      return {
+        bodyString: raw,
+        bodyObject: {},
+        jsonValue: parsed,
+      }
+    } catch (err) {
+      return {
+        bodyString: raw,
+        bodyObject: {},
+        parseError: err,
+      }
+    }
+  }
+
+  if (Buffer.isBuffer(raw)) {
+    return {
+      bodyString: raw.toString(),
+      bodyObject: {},
+      jsonValue: raw.toString(),
+    }
+  }
+
+  if (raw instanceof Uint8Array) {
+    return {
+      bodyString: Buffer.from(raw).toString(),
+      bodyObject: {},
+      jsonValue: Buffer.from(raw).toString(),
+    }
+  }
+
+  if (isPlainRecord(raw)) {
+    return {
+      bodyString: JSON.stringify(raw),
+      bodyObject: raw as Record<string, JSONValue>,
+      jsonValue: raw as JSONValue,
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    return {
+      bodyString: JSON.stringify(raw),
+      bodyObject: {},
+      jsonValue: raw as JSONValue,
+    }
+  }
+
+  return {
+    bodyString: JSON.stringify(raw),
+    bodyObject: {},
+    jsonValue: undefined,
   }
 }
 
@@ -152,10 +226,10 @@ export class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(
-    response: Response | NodeFetchResponse,
+    response: Response,
     pagination?: PaginationConfig
   ): Promise<ParsedResponse> {
-    let data: any[] | string | undefined,
+    let data: JSONValue | undefined,
       raw: string | undefined,
       headers: Record<string, string[] | string> = {},
       filename: string | undefined
@@ -194,7 +268,7 @@ export class RestIntegration implements IntegrationBase {
           raw = ""
         } else if (hasContent && contentType.includes("application/json")) {
           triedParsing = true
-          data = JSON.parse(responseTxt)
+          data = JSON.parse(responseTxt) as JSONValue
           raw = responseTxt
         } else if (
           (hasContent && contentType.includes("text/xml")) ||
@@ -202,17 +276,17 @@ export class RestIntegration implements IntegrationBase {
         ) {
           triedParsing = true
           let xmlResponse = await handleXml(responseTxt)
-          data = xmlResponse.data
+          data = xmlResponse.data as JSONValue
           raw = xmlResponse.rawXml
         } else {
           data = responseTxt
-          raw = data as string
+          raw = responseTxt
         }
       }
     } catch (err) {
       if (triedParsing) {
         data = responseTxt
-        raw = data as string
+        raw = responseTxt
       } else {
         throw new Error(`Failed to parse response body: ${err}`)
       }
@@ -226,9 +300,9 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Check if a pagination cursor exists in the response
-    let nextCursor = null
+    let nextCursor: JSONValue | undefined
     if (pagination?.responseParam) {
-      nextCursor = get(data, pagination.responseParam)
+      nextCursor = get(data, pagination.responseParam) as JSONValue | undefined
     }
 
     return {
@@ -309,7 +383,7 @@ export class RestIntegration implements IntegrationBase {
 
   addBody(
     bodyType: string,
-    body: string | any,
+    body: string | unknown,
     input: RequestInit,
     pagination?: PaginationConfig,
     paginationValues?: PaginationValues
@@ -320,16 +394,22 @@ export class RestIntegration implements IntegrationBase {
     if (bodyType === BodyType.NONE) {
       return input
     }
-    let error,
-      object: any = {},
-      string = ""
-    try {
-      if (body) {
-        string = typeof body !== "string" ? JSON.stringify(body) : body
-        object = typeof body === "object" ? body : JSON.parse(body)
-      }
-    } catch (err) {
-      error = err
+    let error: unknown
+    let object: Record<string, JSONValue> = {}
+    let string = ""
+    let jsonValue: JSONValue | undefined
+
+    if (body != null) {
+      const {
+        bodyString,
+        bodyObject,
+        parseError,
+        jsonValue: parsedJson,
+      } = normaliseBody(body)
+      string = bodyString
+      object = bodyObject
+      error = parseError
+      jsonValue = parsedJson
     }
 
     // Util to add pagination values to a certain body type
@@ -354,22 +434,106 @@ export class RestIntegration implements IntegrationBase {
       case BodyType.ENCODED: {
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
-          params.append(key, value as string)
+          params.append(key, String(value))
         }
-        addPaginationToBody((key: string, value: any) => {
-          params.append(key, value)
-        })
+        addPaginationToBody(
+          (key: string, value: number | string | undefined) => {
+            if (value != null) {
+              params.append(key, String(value))
+            }
+          }
+        )
         input.body = params
         break
       }
       case BodyType.FORM_DATA: {
         const form = new FormData()
-        for (let [key, value] of Object.entries(object)) {
-          form.append(key, value)
+        const appendFormValue = (key: string, value: unknown) => {
+          if (value == null) {
+            form.append(key, "")
+            return
+          }
+          if (typeof value === "string") {
+            form.append(key, value)
+            return
+          }
+          if (value instanceof Blob) {
+            form.append(key, value)
+            return
+          }
+          if (Buffer.isBuffer(value)) {
+            form.append(key, Buffer.from(value).toString())
+            return
+          }
+          if (value instanceof Uint8Array) {
+            form.append(key, Buffer.from(value).toString())
+            return
+          }
+          form.append(key, String(value))
         }
-        addPaginationToBody((key: string, value: any) => {
-          form.append(key, value)
-        })
+        for (let [key, value] of Object.entries(object)) {
+          appendFormValue(key, value)
+        }
+        addPaginationToBody(
+          (key: string, value: number | string | undefined) => {
+            if (value != null) {
+              appendFormValue(key, value)
+            }
+          }
+        )
+        const nodeForm = form as FormData & {
+          getHeaders?: () => Record<string, string | string[]>
+        }
+        const formHeaders = nodeForm.getHeaders?.()
+        if (formHeaders) {
+          const ensureHeaderObject = (): Record<
+            string,
+            string | readonly string[]
+          > => {
+            if (!input.headers) {
+              const headerObject: Record<string, string> = {}
+              input.headers = headerObject
+              return headerObject
+            }
+            if (Array.isArray(input.headers)) {
+              const headerObject = input.headers.reduce<Record<string, string>>(
+                (acc, [name, value]) => {
+                  acc[name] = value
+                  return acc
+                },
+                {}
+              )
+              input.headers = headerObject
+              return headerObject
+            }
+            if (input.headers instanceof Headers) {
+              const headerObject: Record<string, string> = {}
+              input.headers.forEach((value, key) => {
+                headerObject[key] = value
+              })
+              input.headers = headerObject
+              return headerObject
+            }
+            return input.headers
+          }
+          const headers = ensureHeaderObject()
+          for (let [headerName, headerValue] of Object.entries(formHeaders)) {
+            const normalizedName = headerName.toLowerCase()
+            const existingKey = Object.keys(headers).find(
+              key => key.toLowerCase() === normalizedName
+            )
+            if (existingKey) {
+              continue
+            }
+            if (typeof headerValue === "undefined" || headerValue === null) {
+              continue
+            }
+            const headerString = Array.isArray(headerValue)
+              ? headerValue.join(", ")
+              : String(headerValue)
+            headers[headerName] = headerString
+          }
+        }
         input.body = form
         break
       }
@@ -378,21 +542,59 @@ export class RestIntegration implements IntegrationBase {
           string = new XmlBuilder().buildObject(object)
         }
         input.body = string
-        // @ts-ignore
+        // @ts-expect-error
         input.headers["Content-Type"] = "application/xml"
         break
-      case BodyType.JSON:
-        // if JSON error, throw it
+      case BodyType.JSON: {
         if (error) {
           throw "Invalid JSON for request body"
         }
-        addPaginationToBody((key: string, value: any) => {
-          object[key] = value
-        })
-        input.body = JSON.stringify(object)
-        // @ts-ignore
+
+        let payload: JSONValue
+        if (typeof jsonValue !== "undefined") {
+          payload = jsonValue
+        } else if (string) {
+          try {
+            payload = JSON.parse(string) as JSONValue
+          } catch (_err) {
+            payload = object as JSONValue
+          }
+        } else {
+          payload = object as JSONValue
+        }
+
+        if (pagination?.location === "body" && isPlainRecord(payload)) {
+          const mutablePayload: Record<string, JSONValue> = {
+            ...payload,
+          }
+          if (pagination.pageParam && paginationValues?.page != null) {
+            mutablePayload[pagination.pageParam] =
+              paginationValues.page as JSONValue
+          }
+          if (pagination.sizeParam && paginationValues?.limit != null) {
+            mutablePayload[pagination.sizeParam] =
+              paginationValues.limit as JSONValue
+          }
+          payload = mutablePayload
+        } else if (pagination?.location === "body") {
+          const fallback: Record<string, JSONValue> = { ...object }
+          if (pagination.pageParam && paginationValues?.page != null) {
+            fallback[pagination.pageParam] = paginationValues.page as JSONValue
+          }
+          if (pagination.sizeParam && paginationValues?.limit != null) {
+            fallback[pagination.sizeParam] = paginationValues.limit as JSONValue
+          }
+          if (Object.keys(fallback).length > 0) {
+            payload = fallback
+          }
+        }
+
+        input.body =
+          typeof payload === "string" ? payload : JSON.stringify(payload)
+        // @ts-expect-error
         input.headers["Content-Type"] = "application/json"
         break
+      }
     }
     return input
   }
@@ -400,7 +602,7 @@ export class RestIntegration implements IntegrationBase {
   async getAuthHeaders(
     authConfigId?: string,
     authConfigType?: RestAuthType
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<Record<string, string>> {
     if (!authConfigId) {
       return {}
     }
@@ -413,7 +615,7 @@ export class RestIntegration implements IntegrationBase {
       return {}
     }
 
-    let headers: any = {}
+    const headers: Record<string, string> = {}
     const authConfig = this.config.authConfigs.filter(
       c => c._id === authConfigId
     )[0]
@@ -524,41 +726,41 @@ export class RestIntegration implements IntegrationBase {
       input.dispatcher = agent
     }
 
-    let response: Response | NodeFetchResponse
+    let response: Response
     try {
-      // Use node-fetch in test environment for nock compatibility
-      if (process.env.NODE_ENV === "jest") {
-        const { dispatcher, ...nodeFetchInput } = input
-        response = await nodeFetch(url, nodeFetchInput as NodeFetchRequestInit)
-      } else {
-        response = await fetch(url, input)
+      response = await fetch(url, input)
+    } catch (err) {
+      const error = err as Error & {
+        cause?: {
+          code?: string
+          message?: string
+        }
       }
-    } catch (err: any) {
       console.log("[rest integration] Fetch error details", {
         url,
-        error: err.message,
-        cause: err.cause?.message,
-        code: err.cause?.code,
+        error: error.message,
+        cause: error.cause?.message,
+        code: error.cause?.code,
         hasDispatcher: !!input.dispatcher,
         isHttpsUrl: url.startsWith("https://"),
         rejectUnauthorized,
       })
       if (
-        err.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
-        err.cause?.code === "CERT_UNTRUSTED" ||
-        err.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
+        error.cause?.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE" ||
+        error.cause?.code === "CERT_UNTRUSTED" ||
+        error.cause?.code === "SELF_SIGNED_CERT_IN_CHAIN"
       ) {
         throw new Error(
-          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${err.message}`
+          `SSL certificate verification failed for ${url}. Consider setting rejectUnauthorized to false if using self-signed certificates. Original error: ${error.message}`
         )
       }
 
-      if (err.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+      if (error.cause?.code === "ECONNREFUSED" && input.dispatcher) {
         throw new Error(
-          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${err.message}`
+          `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${error.message}`
         )
       }
-      throw err
+      throw error
     }
     if (
       response.status === 401 &&
