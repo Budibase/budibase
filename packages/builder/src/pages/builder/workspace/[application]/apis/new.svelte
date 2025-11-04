@@ -5,6 +5,7 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import {
     Body,
     Heading,
@@ -13,7 +14,6 @@
     ModalContent,
     notifications,
     Select,
-    TextArea,
     ProgressCircle,
     keepOpen,
     ModalCancelFrom,
@@ -56,6 +56,8 @@
 
   $: disabled = externalDatasourceLoading
   $: templateDisabled = disabled || templateLoading
+
+  $: selectedEndpointDescription = selectedEndpoint?.description || ""
 
   const openRestModal = () => {
     if (!restIntegration) {
@@ -398,12 +400,9 @@
           placeholder="Select an action"
           on:change={onSelectEndpoint}
         />
-        <TextArea
-          label="Description"
-          value={selectedEndpoint?.description || ""}
-          readonly
-          minHeight={120}
-          placeholder="No description provided"
+        <DescriptionViewer
+          description={selectedEndpointDescription}
+          maxHeight="240px"
         />
       {:else}
         <Body size="XS">No actions available for this template.</Body>
@@ -483,4 +482,5 @@
     display: flex;
     justify-content: flex-start;
   }
+
 </style>

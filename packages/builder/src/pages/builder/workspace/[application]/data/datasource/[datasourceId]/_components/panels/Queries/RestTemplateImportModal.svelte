@@ -7,7 +7,6 @@
     Body,
     Layout,
     Heading,
-    TextArea,
     Select,
     InlineAlert,
     ProgressCircle,
@@ -20,6 +19,7 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
+  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import { customQueryIconColor } from "@/helpers/data/utils"
   import { IntegrationTypes } from "@/constants/backend"
   import type {
@@ -303,12 +303,9 @@
             autocomplete={true}
             on:change={onSelectEndpoint}
           />
-          <TextArea
-            label="Description"
-            value={templateEndpointDescription}
-            readonly
-            placeholder="No description provided"
-            minHeight={120}
+          <DescriptionViewer
+            description={templateEndpointDescription}
+            maxHeight="240px"
           />
         {:else}
           <Body size="XS">No actions were found for this template.</Body>
@@ -342,4 +339,5 @@
     display: flex;
     justify-content: flex-start;
   }
+
 </style>
