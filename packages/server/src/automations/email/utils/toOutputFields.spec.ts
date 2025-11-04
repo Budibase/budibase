@@ -25,11 +25,7 @@ describe("toOutputFields", () => {
   it("returns bodyText when under limit", async () => {
     const body = "Hello, world!"
     const message = buildMessage(
-      [
-        "Content-Type: text/plain; charset=utf-8",
-        "",
-        body,
-      ].join("\r\n")
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n")
     )
 
     const result = await toOutputFields(message)
@@ -68,21 +64,15 @@ describe("toOutputFields", () => {
   it("truncates bodyText when exceeding limit", async () => {
     const body = "a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)
     const message = buildMessage(
-      [
-        "Content-Type: text/plain; charset=utf-8",
-        "",
-        body,
-      ].join("\r\n")
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n")
     )
 
     const result = await toOutputFields(message)
 
-    const expectedBody = `${
-      body.slice(
-        0,
-        EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
-      )
-    }${EMAIL_BODY_TRUNCATION_SUFFIX}`
+    const expectedBody = `${body.slice(
+      0,
+      EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
+    )}${EMAIL_BODY_TRUNCATION_SUFFIX}`
 
     expect(result.bodyText).toBe(expectedBody)
     expect(result.bodyText?.length).toBe(EMAIL_BODY_CHARACTER_LIMIT)
