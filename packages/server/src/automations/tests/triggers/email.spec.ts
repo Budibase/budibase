@@ -152,7 +152,8 @@ describe("checkMail behaviour", () => {
       to: "recipient@example.com",
       subject: "Hello",
       sentAt: "2024-01-01T00:00:00.000Z",
-      body: "Parsed email body",
+      bodyText: "Parsed email body",
+      bodyTextTruncated: false,
     }
 
     mocks.fetchMessagesMock
@@ -258,7 +259,8 @@ describe("checkMail behaviour", () => {
       to: "recipient@example.com",
       subject: "Hello from anyone",
       sentAt: "2024-02-02T00:00:00.000Z",
-      body: "Default body",
+      bodyText: "Default body",
+      bodyTextTruncated: false,
     }
 
     mocks.fetchMessagesMock
@@ -308,7 +310,11 @@ describe("checkMail behaviour", () => {
       uid: 42,
       envelope: { from: [{ address: "other@example.com" }] },
     }
-    const fields = { from: "sender@example.com", body: "Matching body" }
+    const fields = {
+      from: "sender@example.com",
+      bodyText: "Matching body",
+      bodyTextTruncated: false,
+    }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])
@@ -368,7 +374,11 @@ describe("checkMail behaviour", () => {
       uid: 52,
       envelope: { from: [{ address: "sender@example.com" }] },
     }
-    const fields = { from: "sender@example.com", body: "Filtered body" }
+    const fields = {
+      from: "sender@example.com",
+      bodyText: "Filtered body",
+      bodyTextTruncated: false,
+    }
 
     mocks.fetchMessagesMock
       .mockResolvedValueOnce([initialMessage])

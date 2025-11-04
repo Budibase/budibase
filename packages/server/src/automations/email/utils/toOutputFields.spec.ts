@@ -31,22 +31,33 @@ describe("toOutputFields", () => {
     simpleParserMock.mockReset()
   })
 
-  it("returns body when under limit", async () => {
+  it("returns bodyText when under limit", async () => {
     const body = "Hello, world!"
     simpleParserMock.mockResolvedValue({ text: body } as ParsedMail)
 
     const result = await toOutputFields(createMessage())
 
-    expect(result.body).toEqual(body)
+    expect(result.bodyText).toEqual(body)
+    expect(result.bodyTextTruncated).toBeFalse()
   })
 
-  it("truncates body when exceeding limit", async () => {
+  it("truncates bodyText when exceeding limit", async () => {
     const body = "a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)
     simpleParserMock.mockResolvedValue({ text: body } as ParsedMail)
 
     const result = await toOutputFields(createMessage())
 
-    expect(result.body?.endsWith(EMAIL_BODY_TRUNCATION_SUFFIX)).toBeTrue()
-    expect(result.body?.length).toBe(EMAIL_BODY_CHARACTER_LIMIT)
+    expect(result.bodyText?.endsWith(EMAIL_BODY_TRUNCATION_SUFFIX)).toBeTrue()
+    expect(result.bodyText?.length).toBe(EMAIL_BODY_CHARACTER_LIMIT)
+    expect(result.bodyTextTruncated).toBeTrue()
+  })
+
+  it("returns undefined body without truncation when parser fails", async () => {
+    simpleParserMock.mockResolvedValue({ text: undefined } as ParsedMail)
+
+    const result = await toOutputFields(createMessage())
+
+    expect(result.bodyText).toBeUndefined()
+    expect(result.bodyTextTruncated).toBeFalse()
   })
 })

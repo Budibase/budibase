@@ -437,7 +437,8 @@ export type EmailTriggerOutputs = {
   to: string
   subject?: string
   sentAt?: string
-  body?: string
+  bodyText?: string
+  bodyTextTruncated: boolean
 }
 
 export type RowDeletedTriggerInputs = {

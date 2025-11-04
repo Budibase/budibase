@@ -6,13 +6,18 @@ export const EMAIL_BODY_CHARACTER_LIMIT = 50_000
 export const EMAIL_BODY_TRUNCATION_SUFFIX =
   "\n\n[Email body truncated due to size limit]"
 
-const applyBodyLimit = (body: string | undefined) => {
+interface BodyLimitResult {
+  body: string | undefined
+  truncated: boolean
+}
+
+const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   if (!body) {
-    return body
+    return { body, truncated: false }
   }
 
   if (body.length <= EMAIL_BODY_CHARACTER_LIMIT) {
-    return body
+    return { body, truncated: false }
   }
 
   const sliceLength = Math.max(
@@ -20,7 +25,10 @@ const applyBodyLimit = (body: string | undefined) => {
     EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
   )
 
-  return `${body.slice(0, sliceLength)}${EMAIL_BODY_TRUNCATION_SUFFIX}`
+  return {
+    body: `${body.slice(0, sliceLength)}${EMAIL_BODY_TRUNCATION_SUFFIX}`,
+    truncated: true,
+  }
 }
 
 const getBodyText = async (
@@ -42,11 +50,14 @@ const getBodyText = async (
 export const toOutputFields = async (
   message: FetchMessageObject
 ): Promise<EmailTriggerOutputs> => {
+  const { body, truncated } = applyBodyLimit(await getBodyText(message))
+
   return {
     from: message.envelope?.from?.map(f => f.address).join(", ") || "unknown",
     to: message.envelope?.to?.map(f => f.address).join(", ") || "unknown",
     subject: message.envelope?.subject,
     sentAt: message.envelope?.date?.toISOString(),
-    body: applyBodyLimit(await getBodyText(message)),
+    bodyText: body,
+    bodyTextTruncated: truncated,
   }
 }
