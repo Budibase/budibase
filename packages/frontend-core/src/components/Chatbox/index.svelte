@@ -10,7 +10,7 @@
 
   export let API = createAPIClient()
 
-  export let workspaceId: string | null
+  export let workspaceId: string
   export let chat: AgentChat
 
   const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
@@ -40,11 +40,6 @@
   }
 
   async function prompt() {
-    if (!workspaceId) {
-      notifications.error("Workspace ID not available.")
-      return
-    }
-
     if (!chat) {
       chat = { title: "", messages: [] }
     }

@@ -14,7 +14,9 @@
     <p class="agent-chat__intro">{intro}</p>
   {/if}
   <div class="chat-wrapper">
-    <Chatbox {chat} {workspaceId} />
+    {#if workspaceId}
+      <Chatbox {chat} {workspaceId} />
+    {/if}
   </div>
 </section>
 
