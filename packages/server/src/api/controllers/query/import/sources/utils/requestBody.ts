@@ -1,13 +1,32 @@
 import type { OpenAPIV2, OpenAPIV3 } from "openapi-types"
 
+type ReferenceObject = OpenAPIV3.ReferenceObject | OpenAPIV2.ReferenceObject
+
 type SchemaObject =
-  | OpenAPIV3.SchemaObject
-  | (OpenAPIV2.SchemaObject & { properties?: Record<string, any>; items?: any })
+  | (OpenAPIV3.SchemaObject & SchemaAugmentations)
+  | (OpenAPIV2.SchemaObject & SchemaAugmentations)
+
+interface SchemaAugmentations {
+  properties?: Record<string, SchemaObject | ReferenceObject>
+  items?: SchemaItems
+  allOf?: Array<SchemaObject | ReferenceObject>
+  oneOf?: Array<SchemaObject | ReferenceObject>
+  anyOf?: Array<SchemaObject | ReferenceObject>
+}
+
+type SchemaItems =
+  | SchemaObject
+  | ReferenceObject
+  | Array<SchemaObject | ReferenceObject>
 
 type BindingPrimitiveType = "string" | "integer" | "number" | "boolean"
 
+interface BindingPlaceholder {
+  toJSON: () => string
+}
+
 export interface GeneratedRequestBody {
-  body: any
+  body: unknown
   bindings: Record<string, string>
 }
 
@@ -20,6 +39,22 @@ const BINDING_TOKEN_REGEX = new RegExp(
 
 const sanitizeSegment = (segment: string): string => {
   return segment.replace(/[^A-Za-z0-9_]/g, "_")
+}
+
+const isReferenceObject = (value: unknown): value is ReferenceObject => {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+  return "$ref" in (value as Record<string, unknown>)
+}
+
+const toSchemaObject = (
+  value: SchemaObject | ReferenceObject | undefined
+): SchemaObject | undefined => {
+  if (!value || isReferenceObject(value)) {
+    return undefined
+  }
+  return value
 }
 
 const buildBindingName = (path: string[]): string => {
@@ -43,7 +78,7 @@ const buildBindingName = (path: string[]): string => {
 const createBindingPlaceholder = (
   key: string,
   type: BindingPrimitiveType
-): { toJSON: () => string } => {
+): BindingPlaceholder => {
   return {
     toJSON() {
       return `${BINDING_TOKEN_PREFIX}${type}__${key}__`
@@ -63,41 +98,50 @@ const defaultValueForType = (type: BindingPrimitiveType): string => {
   }
 }
 
-const asArray = <T>(value: T | T[] | undefined): T[] => {
-  if (!value) {
-    return []
-  }
-  return Array.isArray(value) ? value : [value]
-}
-
-const pickSchema = (schema: SchemaObject | undefined): SchemaObject | undefined => {
-  if (!schema) {
+const pickSchema = (
+  schema: SchemaObject | ReferenceObject | undefined
+): SchemaObject | undefined => {
+  const resolvedSchema = toSchemaObject(schema)
+  if (!resolvedSchema) {
     return undefined
   }
-  if (Array.isArray((schema as OpenAPIV3.SchemaObject).allOf)) {
-    const merged = (schema as OpenAPIV3.SchemaObject).allOf?.reduce(
-      (acc: SchemaObject | undefined, current) => {
-        const resolved = pickSchema(current as SchemaObject)
-        if (!resolved) {
-          return acc
+
+  if (Array.isArray(resolvedSchema.allOf) && resolvedSchema.allOf.length > 0) {
+    const merged = resolvedSchema.allOf.reduce<SchemaObject | undefined>(
+      (accumulator, current) => {
+        const candidate = pickSchema(current)
+        if (!candidate) {
+          return accumulator
         }
-        if (!acc) {
-          return { ...resolved }
+        if (!accumulator) {
+          return { ...candidate }
         }
-        const next: any = { ...acc }
-        if (resolved.properties) {
-          next.properties = { ...(next.properties || {}), ...resolved.properties }
+
+        const next: SchemaObject = { ...accumulator }
+
+        const mergedProperties = {
+          ...getProperties(accumulator),
+          ...getProperties(candidate),
         }
-        if (resolved.required) {
-          next.required = Array.from(
-            new Set([...(next.required || []), ...resolved.required])
-          )
+        if (Object.keys(mergedProperties).length > 0) {
+          next.properties = mergedProperties as SchemaObject["properties"]
         }
-        if (resolved.type && !next.type) {
-          next.type = resolved.type
+
+        const accumulatorRequired = accumulator.required ?? []
+        const candidateRequired = candidate.required ?? []
+        const mergedRequired = new Set([
+          ...accumulatorRequired,
+          ...candidateRequired,
+        ])
+        if (mergedRequired.size > 0) {
+          next.required = Array.from(mergedRequired)
         }
-        if (resolved.items && !next.items) {
-          next.items = resolved.items
+
+        if (!next.type && candidate.type) {
+          next.type = candidate.type
+        }
+        if (next.items === undefined && candidate.items !== undefined) {
+          next.items = candidate.items
         }
         return next
       },
@@ -107,76 +151,95 @@ const pickSchema = (schema: SchemaObject | undefined): SchemaObject | undefined 
       return merged
     }
   }
-  if (Array.isArray((schema as OpenAPIV3.SchemaObject).oneOf)) {
-    const [first] = asArray((schema as OpenAPIV3.SchemaObject).oneOf)
+
+  if (Array.isArray(resolvedSchema.oneOf)) {
+    const [first] = resolvedSchema.oneOf
     if (first) {
-      return pickSchema(first as SchemaObject)
+      return pickSchema(first)
     }
   }
-  if (Array.isArray((schema as OpenAPIV3.SchemaObject).anyOf)) {
-    const [first] = asArray((schema as OpenAPIV3.SchemaObject).anyOf)
+
+  if (Array.isArray(resolvedSchema.anyOf)) {
+    const [first] = resolvedSchema.anyOf
     if (first) {
-      return pickSchema(first as SchemaObject)
+      return pickSchema(first)
     }
   }
-  return schema
+
+  return resolvedSchema
 }
 
-const getSchemaType = (schema: SchemaObject | undefined): string | undefined => {
+const getSchemaType = (
+  schema: SchemaObject | undefined
+): string | undefined => {
   if (!schema) {
     return undefined
   }
-  const type = (schema as any).type
+  const { type } = schema
   if (Array.isArray(type)) {
     return type[0]
   }
   if (!type) {
-    if ((schema as any).properties) {
+    if (Object.keys(getProperties(schema)).length > 0) {
       return "object"
     }
-    if ((schema as any).items) {
+    if (getItemsSchema(schema)) {
       return "array"
     }
   }
-  return type
+  return typeof type === "string" ? type : undefined
 }
 
 const getRequiredProperties = (schema: SchemaObject | undefined): string[] => {
-  if (!schema) {
+  if (!schema?.required) {
     return []
   }
-  const required = (schema as any).required
-  return Array.isArray(required) ? required : []
+  return Array.isArray(schema.required) ? [...schema.required] : []
 }
 
 const getProperties = (
   schema: SchemaObject | undefined
 ): Record<string, SchemaObject> => {
-  if (!schema) {
+  if (!schema?.properties) {
     return {}
   }
-  const properties = (schema as any).properties
-  if (!properties || typeof properties !== "object") {
-    return {}
+  const entries = Object.entries(schema.properties)
+  const result: Record<string, SchemaObject> = {}
+  for (const [key, value] of entries) {
+    const propertySchema = toSchemaObject(value)
+    if (propertySchema) {
+      result[key] = propertySchema
+    }
   }
-  return properties as Record<string, SchemaObject>
+  return result
 }
 
-const getItemsSchema = (schema: SchemaObject | undefined): SchemaObject | undefined => {
+const getItemsSchema = (
+  schema: SchemaObject | undefined
+): SchemaObject | undefined => {
   if (!schema) {
     return undefined
   }
-  const items = (schema as any).items
+  const items = schema.items
   if (!items) {
     return undefined
   }
   if (Array.isArray(items)) {
-    return pickSchema(items[0] as SchemaObject)
+    const candidates = items as Array<SchemaObject | ReferenceObject>
+    for (const item of candidates) {
+      const schemaItem = pickSchema(item)
+      if (schemaItem) {
+        return schemaItem
+      }
+    }
+    return undefined
   }
-  return pickSchema(items as SchemaObject)
+  return pickSchema(items as SchemaObject | ReferenceObject)
 }
 
-const normalisePrimitiveType = (type: string | undefined): BindingPrimitiveType => {
+const normalisePrimitiveType = (
+  type: string | undefined
+): BindingPrimitiveType => {
   if (type === "integer" || type === "number" || type === "boolean") {
     return type
   }
@@ -188,11 +251,13 @@ const getPrimitiveDefaultFromSchema = (
   type: BindingPrimitiveType
 ): string => {
   if (schema) {
-    const candidate = (schema as any).example ?? (schema as any).default
-    if (candidate !== undefined && candidate !== null) {
-      return String(candidate)
+    if (schema.example !== undefined && schema.example !== null) {
+      return String(schema.example)
     }
-    const enumValues = (schema as any).enum
+    if (schema.default !== undefined && schema.default !== null) {
+      return String(schema.default)
+    }
+    const enumValues = schema.enum
     if (Array.isArray(enumValues) && enumValues.length > 0) {
       const [first] = enumValues
       if (first !== undefined && first !== null) {
@@ -204,7 +269,7 @@ const getPrimitiveDefaultFromSchema = (
 }
 
 interface BuildResult {
-  value: any
+  value: unknown
   bindings: Record<string, string>
 }
 
@@ -268,7 +333,8 @@ const buildFromSchema = (
   if (type === "object") {
     const properties = getProperties(resolved)
     const propertyNames = Object.keys(properties)
-    const includeOptional = propertyNames.length > 0 && propertyNames.length <= 10
+    const includeOptional =
+      propertyNames.length > 0 && propertyNames.length <= 10
 
     let selectedProperties = includeOptional
       ? propertyNames
@@ -285,7 +351,7 @@ const buildFromSchema = (
       return { value: {}, bindings: {} }
     }
 
-    const objectValue: Record<string, any> = {}
+    const objectValue: Record<string, unknown> = {}
     const bindings: Record<string, string> = {}
 
     for (const property of selectedProperties) {
@@ -322,7 +388,7 @@ const buildFromSchema = (
       depth + 1,
       seen
     )
-    const arrayValue = child.value === undefined ? [] : [child.value]
+    const arrayValue: unknown[] = child.value === undefined ? [] : [child.value]
     seen.delete(resolved)
     return { value: arrayValue, bindings: child.bindings }
   }
@@ -370,14 +436,19 @@ const buildFromExample = (
   }
 
   if (typeof example === "boolean") {
-    return createPrimitiveBindingResult(path, "boolean", example ? "true" : "false")
+    return createPrimitiveBindingResult(
+      path,
+      "boolean",
+      example ? "true" : "false"
+    )
   }
 
   if (typeof example !== "object") {
     return { value: example, bindings: {} }
   }
 
-  if (seen.has(example as object)) {
+  const exampleObject = example as object
+  if (seen.has(exampleObject)) {
     return createPrimitiveBindingResult(
       path,
       "string",
@@ -385,25 +456,31 @@ const buildFromExample = (
     )
   }
 
-  seen.add(example as object)
+  seen.add(exampleObject)
 
   if (Array.isArray(example)) {
     if (example.length === 0) {
-      seen.delete(example as object)
+      seen.delete(exampleObject)
       return { value: [], bindings: {} }
     }
-    const child = buildFromExample(example[0], [...path, "item"], depth + 1, seen)
-    seen.delete(example as object)
+    const child = buildFromExample(
+      example[0],
+      [...path, "item"],
+      depth + 1,
+      seen
+    )
+    seen.delete(exampleObject)
     return {
       value: child.value === undefined ? [] : [child.value],
       bindings: child.bindings,
     }
   }
 
-  const objectValue: Record<string, any> = {}
+  const objectValue: Record<string, unknown> = {}
   const bindings: Record<string, string> = {}
 
-  for (const [key, value] of Object.entries(example as Record<string, any>)) {
+  const exampleRecord = example as Record<string, unknown>
+  for (const [key, value] of Object.entries(exampleRecord)) {
     const child = buildFromExample(value, [...path, key], depth + 1, seen)
     if (child.value !== undefined) {
       objectValue[key] = child.value
@@ -413,19 +490,26 @@ const buildFromExample = (
     mergeBindings(bindings, child.bindings)
   }
 
-  seen.delete(example as object)
+  seen.delete(exampleObject)
   return { value: objectValue, bindings }
 }
 
 export const generateRequestBodyFromSchema = (
-  schema: SchemaObject | undefined,
+  schema:
+    | OpenAPIV2.SchemaObject
+    | OpenAPIV3.SchemaObject
+    | SchemaObject
+    | undefined,
   rootName = "body"
 ): GeneratedRequestBody | undefined => {
-  if (!schema) {
+  const resolvedSchema = pickSchema(
+    schema as SchemaObject | ReferenceObject | undefined
+  )
+  if (!resolvedSchema) {
     return undefined
   }
   const seen = new Set<SchemaObject>()
-  const result = buildFromSchema(schema, [rootName], 0, seen)
+  const result = buildFromSchema(resolvedSchema, [rootName], 0, seen)
   if (result.value === undefined) {
     return undefined
   }
