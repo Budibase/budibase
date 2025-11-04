@@ -8,20 +8,6 @@
   const dispatch = createEventDispatcher()
 
   let localValue = value ?? ""
-
-  $: localValue = value ?? ""
-
-  const emitChange = newValue => {
-    dispatch("buttonclick", {
-      key: row.key,
-      value: newValue,
-    })
-  }
-
-  const onInputChange = event => {
-    emitChange(event.detail ?? "")
-  }
-
   let defaultTooltip
 
   $: defaultTooltip = row?.defaultValue
@@ -36,7 +22,12 @@
         value={localValue}
         placeholder={row.defaultValue}
         quiet
-        on:change={onInputChange}
+        on:change={event => {
+          dispatch("buttonclick", {
+            key: row.key,
+            value: event.detail ?? "",
+          })
+        }}
       />
     </div>
     <AbsTooltip text={defaultTooltip}>

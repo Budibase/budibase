@@ -35,7 +35,7 @@
     })),
   ]
 
-  const schema = {
+  const translationTableSchema = {
     name: {
       width: "minmax(240px, 3fr)",
     },
@@ -118,8 +118,6 @@
     categoryLabel: categoryLabel(definition.category),
   }))
 
-  const sanitize = () => normaliseOverrides(overrides)
-
   const handleTranslationChange = (detail: { key: string; value: string }) => {
     const { key, value } = detail
     const trimmed = (value || "").trim()
@@ -140,7 +138,7 @@
   }
 
   const saveOverrides = async () => {
-    const payload = sanitize()
+    const payload = normaliseOverrides(overrides)
     const nextSignature = signature(payload)
     if (nextSignature === lastSyncedSignature) {
       return
@@ -198,7 +196,7 @@
       />
     </div>
     <Table
-      {schema}
+      schema={translationTableSchema}
       data={tableData.map(row => ({
         ...row,
         category: row.categoryLabel,
