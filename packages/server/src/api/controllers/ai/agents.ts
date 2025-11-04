@@ -1,4 +1,4 @@
-import { context, docIds, features, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   AgentChat,
@@ -7,7 +7,6 @@ import {
   ChatAgentRequest,
   CreateToolSourceRequest,
   DocumentType,
-  FeatureFlag,
   FetchAgentHistoryResponse,
   Message,
   Tool,
@@ -155,9 +154,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         _id: chat._id,
         _rev: chat._rev,
         title: chat.title,
-        messages: (await features.isEnabled(FeatureFlag.AGENTS_SHOW_DEBUG_INFO))
-          ? addDebugInformation(finalMessages)
-          : finalMessages,
+        messages: addDebugInformation(finalMessages),
       }
 
       const { rev } = await db.put(newChat)
