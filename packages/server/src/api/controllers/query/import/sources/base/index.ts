@@ -4,6 +4,7 @@ import { URL } from "url"
 export interface ImportInfo {
   name: string
   url?: string
+  docsUrl?: string
   endpoints: ImportEndpoint[]
 }
 

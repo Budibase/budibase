@@ -34,6 +34,7 @@ export interface ImportRestQueryInfoRequest {
 export interface ImportRestQueryInfoResponse {
   name: string
   url?: string
+  docsUrl?: string
   endpoints: QueryImportEndpoint[]
 }
 export interface ImportRestQueryResponse {

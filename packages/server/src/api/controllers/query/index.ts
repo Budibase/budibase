@@ -143,6 +143,7 @@ export async function importInfo(
   ctx.body = {
     name: info.name,
     url: info.url,
+    docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
   }
 }

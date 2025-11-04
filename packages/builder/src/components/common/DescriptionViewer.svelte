@@ -9,19 +9,81 @@
   export let maxHeight = "240px"
   export let groupLabel: string | undefined = undefined
   export let ariaLive: "off" | "polite" | "assertive" = "polite"
+  export let baseUrl: string | undefined = undefined
   export let className = ""
 
-  const toHtml = (value: string | undefined) => {
+  const resolveBaseUrl = (value: string | undefined) => {
+    const url = (value || "").trim()
+    if (!url) {
+      return undefined
+    }
+    try {
+      return new URL(url).toString()
+    } catch (_error) {
+      return undefined
+    }
+  }
+
+  const toAbsoluteUrl = (
+    href: string | null | undefined,
+    resolvedBase?: string
+  ) => {
+    if (!href) {
+      return undefined
+    }
+    try {
+      if (resolvedBase) {
+        return new URL(href, resolvedBase).toString()
+      }
+      return new URL(href).toString()
+    } catch (_error) {
+      if (resolvedBase) {
+        try {
+          return new URL(href, resolvedBase).toString()
+        } catch (_err) {
+          return undefined
+        }
+      }
+      return undefined
+    }
+  }
+
+  const replaceLinks = (html: string, base?: string): string => {
+    if (!html) {
+      return html
+    }
+    const resolvedBase = resolveBaseUrl(base)
+
+    if (!resolvedBase || typeof document === "undefined") {
+      return html
+    }
+
+    const template = document.createElement("template")
+    template.innerHTML = html
+
+    template.content.querySelectorAll("a").forEach(anchor => {
+      const href = anchor.getAttribute("href") || undefined
+      const absolute = toAbsoluteUrl(href, resolvedBase)
+      if (absolute) {
+        anchor.setAttribute("href", absolute)
+      }
+    })
+
+    return template.innerHTML
+  }
+
+  const toHtml = (value: string | undefined, base?: string) => {
     const content = (value || "").trim()
     if (!content) {
       return ""
     }
-    return HTML_TAG_REGEX.test(content)
+    const html = HTML_TAG_REGEX.test(content)
       ? content
       : marked.parse(content, { async: false })
+    return replaceLinks(html, base)
   }
 
-  $: descriptionHtml = toHtml(description)
+  $: descriptionHtml = toHtml(description, baseUrl)
   $: resolvedGroupLabel = groupLabel ?? label ?? undefined
 </script>
 

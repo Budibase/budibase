@@ -64,6 +64,7 @@
   let loadRequestId = 0
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
   let currentTemplateUrl: string | undefined
+  let templateDocsBaseUrl: string | undefined
 
   const getTemplateSpecUrl = (source: Datasource | undefined) => {
     if (!source?.isRestTemplate) {
@@ -106,6 +107,7 @@
     endpointsError = null
     endpointsLoading = false
     dataStringCache = undefined
+    templateDocsBaseUrl = undefined
   }
 
   const loadTemplateEndpoints = async (specUrl: string) => {
@@ -125,6 +127,7 @@
         return
       }
       dataStringCache = dataString
+      templateDocsBaseUrl = info.docsUrl
       endpointOptions = (info.endpoints || [])
         .slice()
         .sort((a, b) => compareEndpointOrder(a, b))
@@ -306,6 +309,7 @@
           <DescriptionViewer
             description={templateEndpointDescription}
             maxHeight="240px"
+            baseUrl={templateDocsBaseUrl}
           />
         {:else}
           <Body size="XS">No actions were found for this template.</Body>

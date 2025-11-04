@@ -148,9 +148,14 @@ export class OpenAPI3 extends OpenAPISource {
     if (this.document.servers?.length) {
       url = (this.document.servers[0] as ServerObject)?.url
     }
+    const docsUrl =
+      this.document.externalDocs?.url ||
+      this.document.info?.termsOfService ||
+      this.document.info?.contact?.url
     return {
       name,
       url,
+      docsUrl,
       endpoints: this.getEndpoints(),
     }
   }

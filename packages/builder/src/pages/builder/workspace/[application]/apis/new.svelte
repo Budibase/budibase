@@ -41,6 +41,7 @@
   let pendingSpecData: string | null = null
   let templateEndpoints: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
+  let templateDocsBaseUrl: string | undefined = undefined
   $: selectedEndpoint = templateEndpoints.find(
     endpoint => endpoint.id === selectedEndpointId
   )
@@ -103,6 +104,7 @@
       pendingTemplate = template
       pendingSpec = spec
       pendingSpecData = specData
+      templateDocsBaseUrl = info.docsUrl
       templateEndpoints = info.endpoints
         ?.slice()
         .sort((a, b) => compareEndpointOrder(a, b))
@@ -231,6 +233,7 @@
     pendingSpecData = null
     templateEndpoints = []
     selectedEndpointId = undefined
+    templateDocsBaseUrl = undefined
   }
 
   const cancelEndpointSelection = () => {
@@ -403,6 +406,7 @@
         <DescriptionViewer
           description={selectedEndpointDescription}
           maxHeight="240px"
+          baseUrl={templateDocsBaseUrl}
         />
       {:else}
         <Body size="XS">No actions available for this template.</Body>

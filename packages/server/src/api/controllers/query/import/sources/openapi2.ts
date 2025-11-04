@@ -107,9 +107,14 @@ export class OpenAPI2 extends OpenAPISource {
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
     const url = this.getUrl()?.href
+    const docsUrl =
+      this.document.externalDocs?.url ||
+      this.document.info?.termsOfService ||
+      this.document.info?.contact?.url
     return {
       name,
       url,
+      docsUrl,
       endpoints: this.getEndpoints(),
     }
   }
