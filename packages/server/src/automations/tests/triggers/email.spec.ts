@@ -2,12 +2,7 @@ import { configs } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import {
-  AutomationTriggerSchema,
-  AutomationTriggerStepId,
-  ConfigType,
-  IMAPInnerConfig,
-} from "@budibase/types"
+import { ConfigType, IMAPInnerConfig } from "@budibase/types"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
