@@ -1,12 +1,14 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type { UserMessage, AgentChat } from "@budibase/types"
-  import BBAI from "../../icons/BBAI.svelte"
-  import { tick } from "svelte"
-  import { onDestroy } from "svelte"
-  import { onMount } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import { createEventDispatcher } from "svelte"
+  import type {
+    AgentChat,
+    ComponentMessage,
+    UserMessage,
+  } from "@budibase/types"
+  import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
+  import BBAI from "../../icons/BBAI.svelte"
+  import Component from "./Component"
 
   export let API = createAPIClient()
 
@@ -20,6 +22,7 @@
   let chatAreaElement: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
+  let componentLoading = new Set<string>()
 
   $: if (chat.messages.length) {
     scrollToBottom()
@@ -39,14 +42,17 @@
     }
   }
 
-  async function prompt() {
+  async function prompt(message?: string) {
     if (!chat) {
       chat = { title: "", messages: [] }
     }
 
-    const userMessage: UserMessage = { role: "user", content: inputValue }
+    const userMessage: UserMessage = {
+      role: "user",
+      content: message ?? inputValue,
+    }
 
-    const updatedChat = {
+    let updatedChat = {
       ...chat,
       messages: [...chat.messages, userMessage],
     }
@@ -69,6 +75,27 @@
         updatedChat,
         workspaceId,
         chunk => {
+          if (chunk.type === "component") {
+            const previewMessage: ComponentMessage = {
+              role: "component",
+              component: chunk.component!,
+            }
+
+            chat = {
+              ...chat,
+              messages: [...chat.messages, previewMessage],
+            }
+
+            updatedChat = {
+              ...updatedChat,
+              messages: [...updatedChat.messages, previewMessage],
+            }
+
+            streamingContent = ""
+            scrollToBottom()
+            return
+          }
+
           if (chunk.type === "content") {
             // Accumulate streaming content
             streamingContent += chunk.content || ""
@@ -169,6 +196,24 @@
     }
   }
 
+  async function submitComponent(
+    event: CustomEvent<{
+      componentId: string
+      tableId: string
+      values: Record<string, unknown>
+    }>
+  ) {
+    const { componentId, tableId, values } = event.detail
+    componentLoading.add(componentId)
+    const data = {
+      type: "FORM_SUBMISSION",
+      componentId,
+      values,
+      tableId: tableId,
+    }
+    await prompt(JSON.stringify(data))
+  }
+
   onMount(async () => {
     chat = { title: "", messages: [] }
 
@@ -221,6 +266,25 @@
       {:else if message.role === "assistant" && message.content}
         <div class="message assistant">
           <MarkdownViewer value={message.content} />
+        </div>
+      {:else if message.role === "component"}
+        <div class="message assistant">
+          <div
+            class="component-message"
+            class:component-message--loading={componentLoading.has(
+              message.component.componentId
+            )}
+          >
+            <Component data={message.component} on:submit={submitComponent} />
+            {#if componentLoading.has(message.component.componentId)}
+              <div class="component-message__overlay">
+                <div class="component-message__status">
+                  <span class="component-message__status-dot" />
+                  <span>Submitting…</span>
+                </div>
+              </div>
+            {/if}
+          </div>
         </div>
       {/if}
     {/each}
@@ -333,5 +397,51 @@
     background-color: var(--grey-2);
     border: 1px solid var(--grey-3);
     border-radius: 4px;
+  }
+
+  .component-message {
+    position: relative;
+  }
+  .component-message--loading {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .component-message__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+  }
+  .component-message__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .component-message__status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--spectrum-global-color-blue-400, #3182ce);
+    animation: component-message-pulse 1s ease-in-out infinite;
+  }
+  @keyframes component-message-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.4);
+      opacity: 1;
+    }
   }
 </style>
