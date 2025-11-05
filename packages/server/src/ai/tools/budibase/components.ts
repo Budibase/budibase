@@ -156,8 +156,13 @@ When you include the tool result in your reply, write natural-language guidance,
         .describe(
           "Submitted form values. Accepts a JSON object or JSON string."
         ),
+      componentId: z
+        .string()
+        .describe(
+          "Component identifier associated with the form submission. Use the componentId from the FORM_SUBMISSION payload."
+        ),
     }),
-    handler: async ({ tableId, values, toolCallId }) => {
+    handler: async ({ tableId, values, componentId }) => {
       let parsedValues: Record<string, unknown>
       if (typeof values === "string") {
         try {
@@ -208,8 +213,8 @@ When you include the tool result in your reply, write natural-language guidance,
 
       const row = await sdk.rows.save(tableId, sanitized, undefined)
       return JSON.stringify({
-        toolCallId,
-        message: `Form submission processed successfully for component ${toolCallId}.`,
+        componentId,
+        message: `Form submission processed successfully for component ${componentId}.`,
         row,
       })
     },
