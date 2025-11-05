@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { API } from "@/api"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
