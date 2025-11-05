@@ -120,6 +120,7 @@ When you include the tool result in your reply, write natural-language guidance,
 
       const component: RequiredKeys<FormPayload> = {
         type: "Form",
+        componentId: toolCallId,
         props: {
           title: table.name,
           submitButtonText,
