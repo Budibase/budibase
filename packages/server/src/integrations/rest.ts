@@ -500,11 +500,7 @@ export class RestIntegration implements IntegrationBase {
             return headerObject
           }
           if (input.headers instanceof Headers) {
-            const headerObject: Record<string, string> = {}
-            input.headers.forEach((value, key) => {
-              headerObject[key] = value
-            })
-            return headerObject
+            return Object.fromEntries(input.headers)
           }
           return input.headers
         }
