@@ -4,7 +4,6 @@ import {
   FormFieldType,
   FormPayload,
   RequiredKeys,
-  type ComponentPayload,
   type FieldSchema,
   type FormFieldPayload,
 } from "@budibase/types"
@@ -12,56 +11,7 @@ import { newTool } from ".."
 import sdk from "../../../sdk"
 import { utils } from "@budibase/shared-core"
 
-const buttonComponentSchema: z.ZodType<ComponentPayload> = z.object({
-  componentId: z
-    .string()
-    .describe("A unique id to keep track of the component"),
-  type: z.literal("Button"),
-  props: z.object({
-    text: z.string(),
-    primary: z.boolean(),
-    onClick: z
-      .string()
-      .describe(
-        "A valid stringify function, without parameters. It will be executed on click"
-      ),
-  }),
-})
-
-const componentSchema: z.ZodType<ComponentPayload> = z.union([
-  buttonComponentSchema,
-  buttonComponentSchema,
-])
-
-export const componentToolResultSchema = z.object({
-  type: z.literal("component"),
-  component: componentSchema,
-  message: z.string().optional(),
-})
-
 export default [
-  newTool({
-    name: "build_component",
-    description:
-      "Allow rendering components from the Budibase UI. Call this when you want to present an interactive component to the user. This will return a payload that will be used in the frontend to render. Do not try to render or return plain HTML.",
-    parameters: z.object({
-      component: componentSchema.describe("The component to render."),
-      message: z
-        .string()
-        .describe(
-          "Optional short assistant message to accompany the component."
-        ),
-    }),
-    handler: async ({ component, message }) => {
-      return JSON.stringify(
-        componentToolResultSchema.parse({
-          type: "component",
-          component,
-          message,
-        })
-      )
-    },
-  }),
   newTool({
     name: "render_table_form",
     description:
