@@ -4,6 +4,7 @@
   import type {
     AgentChat,
     AssistantMessage,
+    SystemMessage,
     UserMessage,
   } from "@budibase/types"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
@@ -153,13 +154,13 @@
     }
   }
 
-  async function prompt(message?: string) {
+  async function prompt(message?: string, role: "system" | "user" = "user") {
     if (!chat) {
       chat = { title: "", messages: [], agentId: "" }
     }
 
-    const userMessage: UserMessage = {
-      role: "user",
+    const userMessage: UserMessage | SystemMessage = {
+      role,
       content: message ?? inputValue,
     }
 
@@ -276,7 +277,7 @@
       values,
       tableId,
     }
-    await prompt(JSON.stringify(data))
+    await prompt(JSON.stringify(data), "system")
   }
 
   onMount(async () => {
