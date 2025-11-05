@@ -32,6 +32,7 @@
     featureFlags,
     licensing,
     enrichedApps,
+    agentsStore,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
@@ -102,6 +103,7 @@
     [WorkspaceResource.WORKSPACE_APP]: "browser",
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
+    [WorkspaceResource.AGENT]: "cpu",
   }
 
   const datasourceLookup = datasources.lookup
@@ -152,15 +154,25 @@
         tables,
         queries,
         viewsV2,
+        agentsStore,
         workspaceFavouriteStore,
       ],
-      ([$automations, $apps, $datasources, $tables, $queries, $views]) => ({
+      ([
+        $automations,
+        $apps,
+        $datasources,
+        $tables,
+        $queries,
+        $views,
+        $agents,
+      ]) => ({
         automations: $automations.automations,
         apps: $apps.workspaceApps,
         datasources: $datasources.list,
         tables: $tables.list,
         queries: $queries.list,
         views: $views.list,
+        agents: $agents.agents,
       })
     )
 
@@ -261,6 +273,7 @@
         const view = $viewsV2.list.find(v => v.id === id)
         return `${appPrefix}/data/table/${view?.tableId}/${id}`
       },
+      [WorkspaceResource.AGENT]: (id: string) => `${appPrefix}/agent/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -440,7 +453,7 @@
             {#if $featureFlags.AI_AGENTS}
               <SideNavLink
                 icon="cpu"
-                text="Agent"
+                text="Agents"
                 url={$url("./agent")}
                 {collapsed}
                 on:click={keepCollapsed}

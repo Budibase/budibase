@@ -95,7 +95,7 @@
   $: pagerText = `Page ${currentPage} of ${totalPages} (${filteredIcons.length} icons)`
 </script>
 
-<div bind:this={buttonAnchor}>
+<div class="picker-wrap" bind:this={buttonAnchor}>
   <ActionButton fullWidth on:click={onDropdownShow}>
     {#if value}
       <i class="ph ph-{value}" style="margin-right: 8px;" />
@@ -104,7 +104,14 @@
   </ActionButton>
 </div>
 
-<Popover bind:this={dropdown} anchor={buttonAnchor} resizable={false}>
+<Popover
+  bind:this={dropdown}
+  anchor={buttonAnchor}
+  resizable={false}
+  align="left-outside"
+  maxHeight={600}
+  offset={30}
+>
   <div class="container">
     <div class="search-input">
       <Input bind:value={searchTerm} placeholder={"Search phosphor icons..."} />
@@ -260,5 +267,9 @@
   }
   .page-btn.disabled:hover {
     color: var(--spectrum-global-color-gray-400);
+  }
+  .picker-wrap
+    :global(button.spectrum-ActionButton .spectrum-ActionButton-label) {
+    text-align: center;
   }
 </style>

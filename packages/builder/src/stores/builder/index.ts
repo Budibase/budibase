@@ -45,6 +45,7 @@ import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
+import { agentsStore } from "../portal"
 
 export {
   componentTreeNodesStore,
@@ -140,6 +141,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
   workspaceFavouriteStore.sync()
+  agentsStore.init()
   resetBuilderHistory()
   await refreshBuilderData()
 }
