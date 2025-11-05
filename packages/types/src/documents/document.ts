@@ -39,6 +39,7 @@ export enum DocumentType {
   ROW_ACTIONS = "ra",
   OAUTH2_CONFIG = "oauth2",
   OAUTH2_CONFIG_LOG = "oauth2log",
+  AGENT = "agent",
   AGENT_CHAT = "agentchat",
   AGENT_TOOL_SOURCE = "agenttoolsource",
   AI_CONFIG = "aiconfig",
