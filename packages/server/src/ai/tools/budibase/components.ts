@@ -134,8 +134,9 @@ export default [
         instructions:
           `When replying to the user:\n` +
           `1. Acknowledge the form you are providing in natural language.\n` +
-          `2. Insert the placeholder {{toolResult:component:${toolCallId}}} exactly where the form should render. Do not wrap it in backticks or code fences.\n` +
-          `3. Continue your response if additional guidance is needed.\n`,
+          `2. Do not describe or list individual fields, inputs, or defaults—the UI component already shows them.\n` +
+          `3. Insert the placeholder {{toolResult:component:${toolCallId}}} exactly where the form should render. Do not wrap it in backticks or code fences.\n` +
+          `4. Continue your response if additional guidance is needed.\n`,
         type: "component",
         component,
       })
