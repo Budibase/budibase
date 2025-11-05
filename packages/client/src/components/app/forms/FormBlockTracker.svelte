@@ -3,6 +3,7 @@
   import { screenStore } from "@/stores/screens"
   import { findChildrenByType, findComponentById } from "@/utils/components"
   import { derived, get } from "svelte/store"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let form
   export let title
@@ -246,8 +247,21 @@
       // Global colors take precedence over per-step defaults
       completedColor: completedColor || stepConfig?.completedColor || "#22c55e",
       currentColor: currentColor || stepConfig?.currentColor || "#3b82f6",
-      incompleteColor: incompleteColor || stepConfig?.incompleteColor || "#94a3b8",
+      incompleteColor:
+        incompleteColor || stepConfig?.incompleteColor || "#94a3b8",
       errorColor: errorColor || stepConfig?.errorColor || "#ef4444",
+    }
+  }
+
+  // Safely evaluate a potential binding with the current app context
+  const evaluateBinding = (value: any) => {
+    if (typeof value !== "string") {
+      return value
+    }
+    try {
+      return processStringSync(value, $context)
+    } catch (_err) {
+      return value
     }
   }
 </script>
@@ -255,7 +269,10 @@
 <div use:styleable={$component.styles}>
   {#if form && selectedFormDetails}
     <div class="form-tracker">
-      <h3 class="form-title">{title || selectedFormDetails.instanceName}</h3>
+      <h3 class="form-title">
+        {evaluateBinding(title) ||
+          evaluateBinding(selectedFormDetails.instanceName)}
+      </h3>
 
       {#if selectedFormDetails.formAnalysis.stepCount > 0}
         <div class="step-progress-tracker">
@@ -279,10 +296,12 @@
                 </div>
                 <div class="step-info">
                   <div class="step-title">
-                    {step.title || step.instanceName}
+                    {evaluateBinding(step.title || step.instanceName)}
                   </div>
                   {#if step.description}
-                    <div class="step-description">{step.description}</div>
+                    <div class="step-description">
+                      {evaluateBinding(step.description)}
+                    </div>
                   {/if}
                 </div>
               </div>

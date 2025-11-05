@@ -3,6 +3,7 @@
   import { IconSelect } from "./IconSelect"
   import ColorPicker from "./ColorPicker.svelte"
   import { createEventDispatcher } from "svelte"
+  import { processStringSync } from "@budibase/string-templates"
   import { selectedScreen } from "@/stores/builder"
 
   export let componentInstance = {}
@@ -13,6 +14,8 @@
   let currentFormId = null
   let isInitializing = false
   let steps = []
+  let stepsSignature = ""
+  let providerKey = null
 
   // Watch for form changes and step count changes; recompute and initialize
   $: {
@@ -21,10 +24,20 @@
     const newSteps = formDetails?.steps || []
     const changedForm = formId !== currentFormId
     const countChanged = newSteps.length !== steps.length
-    if ((changedForm || countChanged) && !isInitializing) {
+    const newSignature = JSON.stringify(
+      (newSteps || []).map(s => ({ t: s.title, d: s.description }))
+    )
+    const titlesChanged = newSignature !== stepsSignature
+    if ((changedForm || countChanged || titlesChanged) && !isInitializing) {
       currentFormId = formId
       steps = newSteps
-      initializeStepCustomizations(newSteps.length)
+      stepsSignature = newSignature
+      providerKey = formDetails?.providerKey || null
+      // Only (re)initialise step customizations when the number of steps
+      // has changed or we switched forms. Title tweaks shouldn't reset config.
+      if (changedForm || countChanged) {
+        initializeStepCustomizations(newSteps.length)
+      }
     }
   }
 
@@ -38,7 +51,12 @@
 
     if (!component) return null
 
-    return analyzeFormComponent(component)
+    const analysis = analyzeFormComponent(component)
+    // Determine provider key to allow evaluating bindings in titles
+    analysis.providerKey = component._component?.endsWith("/form")
+      ? component._id
+      : `${component._id}-form`
+    return analysis
   }
 
   function findComponentById(component, targetId) {
@@ -86,6 +104,40 @@
     }
 
     return analysis
+  }
+
+  // Evaluate a step title against a minimal context so that default
+  // bindings like {{ [<id>-form].[__currentStep] }} render as numbers.
+  function evaluateTitle(title, stepNumber) {
+    if (typeof title !== "string" || !providerKey) {
+      return title
+    }
+    try {
+      const ctx = {
+        [providerKey]: { __currentStep: stepNumber },
+      }
+      return processStringSync(title, ctx)
+    } catch (e) {
+      return title
+    }
+  }
+
+  // Build a clean display title without duplicated prefixes like
+  // "Step 1: Step 1" when defaults are used.
+  function getDisplayStepTitle(step) {
+    const base = `Step ${step.stepNumber}`
+    const evaluated = (evaluateTitle(step.title, step.stepNumber) || "")
+      .toString()
+      .trim()
+    if (!evaluated) {
+      return base
+    }
+    const lower = evaluated.toLowerCase()
+    if (lower.startsWith(`${base.toLowerCase()}`)) {
+      // If evaluated title already starts with "Step N", avoid duplication
+      return evaluated
+    }
+    return `${base}: ${evaluated}`
   }
 
   function findChildrenByType(component, type, results = []) {
@@ -209,7 +261,7 @@
     {#each steps as step, index (componentInstance?.form + "-" + step.stepNumber)}
       <div class="step-section">
         <div class="step-header">
-          <h4>Step {step.stepNumber}: {step.title}</h4>
+          <Label>{getDisplayStepTitle(step)}</Label>
         </div>
 
         {#if step.description}
@@ -218,7 +270,6 @@
 
         <div class="step-settings">
           <div class="setting-row">
-            <Label>Icon</Label>
             <IconSelect
               value={getStepValue(index, "icon")}
               on:change={e => updateStepValue(index, "icon", e.detail)}
@@ -261,10 +312,12 @@
     align-items: center;
   }
 
-  .step-header h4 {
+  .step-header :global(.bbui-Label) {
     margin: 0;
     color: var(--spectrum-global-color-gray-800);
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0;
   }
 
   .step-description {

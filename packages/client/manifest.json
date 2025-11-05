@@ -8905,33 +8905,33 @@
         "placeholder": "Title"
       },
       {
-        "type": "icon",
-        "label": "Default Icon",
-        "key": "icon"
-      },
-      {
         "type": "color",
         "label": "Completed Color",
-        "key": "completedColor"
+        "key": "completedColor",
+        "dependsOn": "form"
       },
       {
         "type": "color",
         "label": "Current Color",
-        "key": "currentColor"
+        "key": "currentColor",
+        "dependsOn": "form"
       },
       {
         "type": "color",
         "label": "Incomplete Color",
-        "key": "incompleteColor"
+        "key": "incompleteColor",
+        "dependsOn": "form"
       },
       {
         "type": "color",
         "label": "Error Color",
-        "key": "errorColor"
+        "key": "errorColor",
+        "dependsOn": "form"
       },
       {
         "type": "formStepCustomization",
         "label": "Step Customization",
+        "labelHidden": true,
         "key": "stepCustomization",
         "dependsOn": "form"
       }
