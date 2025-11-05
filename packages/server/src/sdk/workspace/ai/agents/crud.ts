@@ -8,6 +8,7 @@ import {
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
+  allowedTools: agent.allowedTools || [],
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -48,6 +49,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     name: request.name,
     description: request.description,
     aiconfig: request.aiconfig,
+    allowedTools: request.allowedTools,
     promptInstructions: request.promptInstructions,
     createdAt: now,
   }
@@ -64,7 +66,7 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
   }
 
   const db = context.getWorkspaceDB()
-  const existing = await db.get<Agent>(_id)
+  const existing = await db.tryGet<Agent>(_id)
 
   const updated: Agent = {
     ...existing,

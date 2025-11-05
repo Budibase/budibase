@@ -283,8 +283,7 @@
   const editToolSource = (toolSource: any) => {
     selectedToolSource = {
       ...ToolSources.find(ts => ts.type === toolSource.type),
-      _id: toolSource._id,
-      _rev: toolSource._rev,
+      id: toolSource.id,
       existingToolSource: toolSource,
     }
     toolConfig = { ...toolSource.auth }
@@ -300,7 +299,7 @@
     if (!toolSourceToDelete) return
 
     try {
-      await agentsStore.deleteToolSource(toolSourceToDelete._id)
+      await agentsStore.deleteToolSource(toolSourceToDelete.id)
       notifications.success("Tool source deleted successfully.")
       deleteConfirmModal.hide()
       toolSourceToDelete = null
@@ -323,6 +322,8 @@
         // Update existing tool source
         const updatedToolSource = {
           ...selectedToolSource.existingToolSource,
+          id: selectedToolSource.existingToolSource.id,
+          agentId: $agentsStore.currentAgentId || "",
           auth: authConfig,
         }
         await agentsStore.updateToolSource(updatedToolSource)
@@ -384,9 +385,12 @@
   const saveToolConfig = async () => {
     if (!selectedConfigToolSource) return
     try {
-      selectedConfigToolSource = await agentsStore.updateToolSource(
-        selectedConfigToolSource
-      )
+      const updatedToolSource = {
+        ...selectedConfigToolSource,
+        agentId: $agentsStore.currentAgentId || "",
+      }
+      selectedConfigToolSource =
+        await agentsStore.updateToolSource(updatedToolSource)
       notifications.success("Tool configuration saved successfully.")
       toolConfigChanged = false
     } catch (err) {

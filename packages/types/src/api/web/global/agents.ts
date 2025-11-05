@@ -11,12 +11,16 @@ export interface FetchAgentsResponse {
 export type CreateToolSourceRequest = Omit<
   AgentToolSource,
   "_id" | "_rev" | "createdAt" | "updatedAt"
->
+> & {
+  agentId: string
+}
 
 export type UpdateToolSourceRequest = Omit<
   AgentToolSource,
   "createdAt" | "updatedAt"
->
+> & {
+  agentId: string
+}
 
 export type CreateAgentRequest = Omit<
   Agent,

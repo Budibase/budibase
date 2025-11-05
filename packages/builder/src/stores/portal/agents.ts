@@ -99,21 +99,20 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
     await API.createToolSource(toolSource)
+    if (toolSource.agentId) {
+      await this.fetchToolSources(toolSource.agentId)
+    }
     const newToolSourceWithTools = {
       ...toolSource,
       tools: [],
-    } as AgentToolSourceWithTools
-    this.update(state => {
-      state.toolSources = [...state.toolSources, newToolSourceWithTools]
-      return state
-    })
+    } as AgentToolSource
     return newToolSourceWithTools
   }
 
   updateToolSource = async (toolSource: AgentToolSource) => {
     const updatedToolSource = await API.updateToolSource(toolSource)
     this.update(state => {
-      const index = state.toolSources.findIndex(ts => ts._id === toolSource._id)
+      const index = state.toolSources.findIndex(ts => ts.id === toolSource.id)
       if (index !== -1) {
         state.toolSources[index] = {
           ...updatedToolSource,
@@ -128,9 +127,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteToolSource = async (toolSourceId: string) => {
     await API.deleteToolSource(toolSourceId)
     this.update(state => {
-      state.toolSources = state.toolSources.filter(
-        ts => ts._id !== toolSourceId
-      )
+      state.toolSources = state.toolSources.filter(ts => ts.id !== toolSourceId)
       return state
     })
   }

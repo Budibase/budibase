@@ -4,6 +4,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
+  allowedTools: AgentToolSource[]
   promptInstructions?: string
 }
 
@@ -42,29 +43,29 @@ export type AgentToolSourceAuth =
   | BambooHRToolAuth
 
 export interface GitHubToolSource extends Document {
+  id?: string
   type: "GITHUB"
-  agentId: string
   disabledTools: string[]
   auth: GitHubToolAuth
 }
 
 export interface ConfluenceToolSource extends Document {
+  id?: string
   type: "CONFLUENCE"
-  agentId: string
   disabledTools: string[]
   auth: ConfluenceToolAuth
 }
 
 export interface BudibaseToolSource extends Document {
+  id?: string
   type: "BUDIBASE"
-  agentId: string
   disabledTools: string[]
   auth: BudibaseToolAuth
 }
 
 export interface BambooHRToolSource extends Document {
+  id?: string
   type: "BAMBOOHR"
-  agentId: string
   disabledTools: string[]
   auth: BambooHRToolAuth
 }
