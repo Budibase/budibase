@@ -25,15 +25,29 @@
   let componentLoading = new Set<string>()
   let toolResponses: Record<string, string> = {}
 
-  $: toolResponses = chat.messages.reduce(
-    (acc, message) => {
-      if (message.role === "tool") {
-        acc[message.tool_call_id] = message.content
+  const extractToolResponses = (
+    messages: AgentChat["messages"] = []
+  ): Record<string, string> => {
+    return messages.reduce(
+      (acc, message) => {
+        if (message.role === "tool" && message.tool_call_id) {
+          acc[message.tool_call_id] = message.content
+        }
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  }
+
+  $: if (chat?.messages?.length) {
+    const extracted = extractToolResponses(chat.messages)
+    if (Object.keys(extracted).length) {
+      toolResponses = {
+        ...toolResponses,
+        ...extracted,
       }
-      return acc
-    },
-    {} as Record<string, string>
-  )
+    }
+  }
 
   type AssistantSegment =
     | { type: "text"; content: string }
@@ -49,9 +63,12 @@
 
   const getToolResponse = (runId: string) => {
     const resolved = toolResponses[runId.trim()]
+    if (!resolved) {
+      return undefined
+    }
     try {
       const parsed = JSON.parse(resolved || "")
-      if (typeof parsed === "object") {
+      if (parsed && typeof parsed === "object") {
         return parsed
       }
     } catch {
@@ -83,12 +100,13 @@
       const toolId = match[1]?.trim()
       if (toolId) {
         const componentResponse = getToolResponse(toolId)
+        const componentPayload = componentResponse?.component
         const hasComponent =
-          componentResponse !== undefined && componentResponse !== null
+          componentPayload !== undefined && componentPayload !== null
         segments.push({
           type: "component",
           componentId: toolId,
-          component: hasComponent ? componentResponse.component : undefined,
+          component: hasComponent ? componentPayload : undefined,
           loading: !hasComponent,
         })
       }
@@ -462,6 +480,7 @@
 
   .component-message {
     position: relative;
+    padding: 0 0 16px 0;
   }
   .component-message--loading {
     pointer-events: none;
