@@ -1,7 +1,6 @@
 import openai from "openai"
-import { EnrichedBinding } from "../../ui"
 import type { z } from "zod"
-import type { ComponentPayload } from "../../sdk/ai"
+import { EnrichedBinding } from "../../ui"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -27,18 +26,11 @@ export interface ToolMessage {
   content: string
 }
 
-export interface ComponentMessage {
-  role: "component"
-  component: ComponentPayload
-  message?: string | null
-}
-
 export type Message =
   | SystemMessage
   | UserMessage
   | AssistantMessage
   | ToolMessage
-  | ComponentMessage
 
 export type Tool<T extends z.ZodType = z.ZodType> = Required<ToolArgs<T>>
 

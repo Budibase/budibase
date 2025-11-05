@@ -1,6 +1,5 @@
 import { Message } from "../api"
 import { AgentChat, AIProvider } from "../documents"
-import { ComponentPayload } from "./ai/components"
 export * from "./ai/components"
 
 export enum AIOperationEnum {
@@ -111,7 +110,6 @@ export interface LLMProviderConfig extends LLMConfigOptions {
 export interface LLMStreamChunk {
   type:
     | "content"
-    | "component"
     | "component_complete"
     | "tool_call_start"
     | "tool_call_result"
@@ -119,8 +117,6 @@ export interface LLMStreamChunk {
     | "error"
     | "chat_saved"
   content?: string
-  component?: ComponentPayload
-  componentId?: string
   message?: string
   row?: unknown
   toolCall?: {
