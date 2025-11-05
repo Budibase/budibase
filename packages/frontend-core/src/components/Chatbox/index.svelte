@@ -226,9 +226,6 @@
                 [chunk.toolResult.id]: chunk.toolResult.result,
               }
             }
-          } else if (chunk.type === "component_complete") {
-            // TODO
-            // clearComponentLoading(chunk.componentId)
           } else if (chunk.type === "chat_saved") {
             if (chunk.chat) {
               chat = chunk.chat

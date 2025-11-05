@@ -110,15 +110,12 @@ export interface LLMProviderConfig extends LLMConfigOptions {
 export interface LLMStreamChunk {
   type:
     | "content"
-    | "component_complete"
     | "tool_call_start"
     | "tool_call_result"
     | "done"
     | "error"
     | "chat_saved"
   content?: string
-  message?: string
-  row?: unknown
   toolCall?: {
     id: string
     name: string

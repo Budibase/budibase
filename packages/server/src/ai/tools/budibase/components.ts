@@ -154,13 +154,8 @@ export default [
         .describe(
           "Submitted form values. Accepts a JSON object or JSON string."
         ),
-      componentId: z
-        .string()
-        .describe(
-          "Component identifier associated with the form submission. Use the componentId from the FORM_SUBMISSION payload."
-        ),
     }),
-    handler: async ({ tableId, values, componentId }) => {
+    handler: async ({ tableId, values, toolCallId }) => {
       let parsedValues: Record<string, unknown>
       if (typeof values === "string") {
         try {
@@ -211,9 +206,8 @@ export default [
 
       const row = await sdk.rows.save(tableId, sanitized, undefined)
       return JSON.stringify({
-        type: "component_complete",
-        componentId,
-        message: `Form submission processed successfully for component ${componentId}.`,
+        toolCallId,
+        message: `Form submission processed successfully for component ${toolCallId}.`,
         row,
       })
     },
