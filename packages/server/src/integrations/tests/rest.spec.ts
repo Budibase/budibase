@@ -28,9 +28,10 @@ import {
 import { createServer } from "http"
 import { AddressInfo } from "net"
 import * as undici from "undici"
-import type {
+import {
   RequestInit as UndiciRequestInit,
   Response as UndiciResponse,
+  FormData as UndiciFormData,
 } from "undici"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import sdk from "../../sdk"
@@ -297,6 +298,48 @@ describe("REST Integration", () => {
       const body: any = output.body
       expect(body).toBeDefined()
       expectFormDataToMatch(body, { a: "1", b: "2" })
+    })
+
+    it("should correctly clean conflicting Content-Type header for form data", async () => {
+      const input = { payload: "data", count: 42 }
+
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/api/submit")
+          expect(options?.method).toEqual("POST")
+          expect(options?.body).toBeInstanceOf(UndiciFormData)
+
+          const headers = options?.headers as Record<string, any>
+          const contentTypeHeader =
+            headers["Content-Type"] || headers["content-type"]
+          // The original Content-Type inserted in the test data below should be stripped so that
+          // undici can automatically insert the correct multipart/form-data header with boundary
+          expect(contentTypeHeader).toBeUndefined()
+        },
+        { success: true }
+      )
+
+      const { data } = await integration.create({
+        path: "api/submit",
+        bodyType: BodyType.FORM_DATA,
+        requestBody: input,
+        // Injects a conflicting header that the production code MUST delete
+        headers: {
+          "Content-Type": "application/json",
+          "X-Custom-Header": "KeepMe",
+        },
+      })
+
+      // Assert that the non-Content-Type header was kept
+      const lastFetchOptions = fetchMock.mock.calls[0][1]
+      expect((lastFetchOptions!.headers! as any)["X-Custom-Header"]).toEqual(
+        "KeepMe"
+      )
+      expect(
+        (lastFetchOptions!.headers! as any)["Content-Type"]
+      ).toBeUndefined()
+
+      expect(data).toEqual({ success: true })
     })
 
     it("should allow encoded form data", () => {

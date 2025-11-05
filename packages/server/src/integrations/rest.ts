@@ -481,59 +481,41 @@ export class RestIntegration implements IntegrationBase {
             }
           }
         )
-        const nodeForm = form as FormData & {
-          getHeaders?: () => Record<string, string | string[]>
-        }
-        const formHeaders = nodeForm.getHeaders?.()
-        if (formHeaders) {
-          const ensureHeaderObject = (): Record<
-            string,
-            string | readonly string[]
-          > => {
-            if (!input.headers) {
-              const headerObject: Record<string, string> = {}
-              input.headers = headerObject
-              return headerObject
-            }
-            if (Array.isArray(input.headers)) {
-              const headerObject = input.headers.reduce<Record<string, string>>(
-                (acc, [name, value]) => {
-                  acc[name] = value
-                  return acc
-                },
-                {}
-              )
-              input.headers = headerObject
-              return headerObject
-            }
-            if (input.headers instanceof Headers) {
-              const headerObject: Record<string, string> = {}
-              input.headers.forEach((value, key) => {
-                headerObject[key] = value
-              })
-              input.headers = headerObject
-              return headerObject
-            }
-            return input.headers
+        const ensureHeaderObject = (): Record<
+          string,
+          string | readonly string[]
+        > => {
+          if (!input.headers) {
+            const headerObject: Record<string, string> = {}
+            return headerObject
           }
-          const headers = ensureHeaderObject()
-          for (let [headerName, headerValue] of Object.entries(formHeaders)) {
-            const normalizedName = headerName.toLowerCase()
-            const existingKey = Object.keys(headers).find(
-              key => key.toLowerCase() === normalizedName
+          if (Array.isArray(input.headers)) {
+            const headerObject = input.headers.reduce<Record<string, string>>(
+              (acc, [name, value]) => {
+                acc[name] = value
+                return acc
+              },
+              {}
             )
-            if (existingKey) {
-              continue
-            }
-            if (typeof headerValue === "undefined" || headerValue === null) {
-              continue
-            }
-            const headerString = Array.isArray(headerValue)
-              ? headerValue.join(", ")
-              : String(headerValue)
-            headers[headerName] = headerString
+            return headerObject
           }
+          if (input.headers instanceof Headers) {
+            return Object.fromEntries(input.headers)
+          }
+          return input.headers
         }
+
+        const headers = ensureHeaderObject()
+
+        // Delete Content-Type to allow fetch to auto-generate the correct header/boundary.
+        const existingContentTypeKey = Object.keys(headers).find(
+          key => key.toLowerCase() === "content-type"
+        )
+        if (existingContentTypeKey) {
+          delete headers[existingContentTypeKey]
+        }
+
+        input.headers = headers
         input.body = form
         break
       }
