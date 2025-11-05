@@ -487,7 +487,6 @@ export class RestIntegration implements IntegrationBase {
         > => {
           if (!input.headers) {
             const headerObject: Record<string, string> = {}
-            input.headers = headerObject
             return headerObject
           }
           if (Array.isArray(input.headers)) {
@@ -498,7 +497,6 @@ export class RestIntegration implements IntegrationBase {
               },
               {}
             )
-            input.headers = headerObject
             return headerObject
           }
           if (input.headers instanceof Headers) {
@@ -506,7 +504,6 @@ export class RestIntegration implements IntegrationBase {
             input.headers.forEach((value, key) => {
               headerObject[key] = value
             })
-            input.headers = headerObject
             return headerObject
           }
           return input.headers
@@ -522,6 +519,7 @@ export class RestIntegration implements IntegrationBase {
           delete headers[existingContentTypeKey]
         }
 
+        input.headers = headers
         input.body = form
         break
       }
