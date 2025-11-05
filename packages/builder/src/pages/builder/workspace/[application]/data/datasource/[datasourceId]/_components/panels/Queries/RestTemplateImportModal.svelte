@@ -310,7 +310,6 @@
           />
           <DescriptionViewer
             description={templateEndpointDescription}
-            maxHeight="240px"
             baseUrl={templateDocsBaseUrl}
           />
         {:else}
