@@ -29,18 +29,8 @@ export default [
           "List of column to include in the form. It should from come from the table schema."
         ),
       componentId: z.string().describe("Explicit component identifier."),
-      message: z
-        .string()
-        .nullish()
-        .describe("Optional message to accompany the component."),
     }),
-    handler: async ({
-      tableId,
-      submitButtonText,
-      columns,
-      componentId,
-      message,
-    }) => {
+    handler: async ({ tableId, submitButtonText, columns, componentId }) => {
       const table = await sdk.tables.getTable(tableId)
       const tableColumns = Object.entries(table.schema ?? {}).filter(
         ([key, schema]) => {
@@ -129,7 +119,6 @@ export default [
         props: {
           title: table.name,
           submitButtonText,
-          message: message ?? undefined,
           tableId,
           fields: selectedColumns.map(([_, fieldSchema]) =>
             mapField(fieldSchema)

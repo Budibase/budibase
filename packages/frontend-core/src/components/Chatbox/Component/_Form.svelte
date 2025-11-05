@@ -33,9 +33,6 @@
   {#if props.title}
     <h3 class="form-preview__title">{props.title}</h3>
   {/if}
-  {#if props.message}
-    <p class="form-preview__description">{props.message}</p>
-  {/if}
 
   {#if props.fields.length}
     <div class="form-preview__fields">
@@ -72,12 +69,6 @@
     font-size: 18px;
     font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
-  }
-
-  .form-preview__description {
-    margin: 0;
-    font-size: 14px;
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .form-preview__fields {

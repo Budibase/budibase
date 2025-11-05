@@ -16,7 +16,6 @@ export interface FormPayload {
   props: {
     title: string
     submitButtonText: string
-    message?: string
     tableId: string
     fields: FormFieldPayload[]
   }
