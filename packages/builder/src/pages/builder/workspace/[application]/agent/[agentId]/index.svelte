@@ -24,11 +24,10 @@
     AgentChat,
     AgentToolSourceWithTools,
     CreateToolSourceRequest,
-    UserMessage,
   } from "@budibase/types"
   import { params } from "@roxi/routify"
-  import { onDestroy, onMount, tick, type ComponentType } from "svelte"
-  import Chatbox from "../Chatbox.svelte"
+  import { onMount, type ComponentType } from "svelte"
+  import { Chatbox } from "@budibase/frontend-core/src/components"
   import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import ConfluenceLogo from "../logos/Confluence.svelte"
@@ -74,12 +73,8 @@
     },
   ]
 
-  let inputValue = ""
   let chat: AgentChat
   let loading: boolean = false
-  let chatAreaElement: HTMLDivElement
-  let observer: MutationObserver
-  let textareaElement: HTMLTextAreaElement
   let toolSourceModal: Modal
   let toolConfigModal: Modal
   let deleteConfirmModal: Modal
@@ -102,166 +97,9 @@
     a => a._id === $agentsStore.currentAgentId
   )
 
-  $: if (chat.messages.length) {
-    scrollToBottom()
-  }
-
-  async function scrollToBottom() {
-    await tick()
-    if (chatAreaElement) {
-      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-    }
-  }
-
-  async function handleKeyDown(event: any) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
-      await prompt()
-    }
-  }
-
-  async function prompt() {
-    if (!chat) {
-      chat = {
-        title: "",
-        messages: [],
-        agentId: $agentsStore.currentAgentId || "",
-      }
-    }
-
-    const userMessage: UserMessage = { role: "user", content: inputValue }
-
-    const updatedChat = {
-      ...chat,
-      messages: [...chat.messages, userMessage],
-    }
-
-    // Update local display immediately with user message
-    chat = updatedChat
-
-    // Ensure we scroll to the new message
-    await scrollToBottom()
-
-    inputValue = ""
-    loading = true
-
-    let streamingContent = ""
-    let isToolCall = false
-    let toolCallInfo: string = ""
-
-    try {
-      await API.agentChatStream(
-        updatedChat,
-        $params.application,
-        chunk => {
-          if (chunk.type === "content") {
-            // Accumulate streaming content
-            streamingContent += chunk.content || ""
-
-            // Update chat with partial content
-            const updatedMessages = [...updatedChat.messages]
-
-            // Find or create assistant message
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content =
-                streamingContent + (isToolCall ? toolCallInfo : "")
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + (isToolCall ? toolCallInfo : ""),
-              })
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            // Auto-scroll as content streams
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_start") {
-            isToolCall = true
-            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + toolCallInfo,
-              })
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_result") {
-            const resultInfo = chunk.toolResult?.error
-              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
-              : `\n**✅ Tool Result:** Complete`
-
-            toolCallInfo += resultInfo
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "chat_saved") {
-            // Update complete response
-            if (chunk.chat) {
-              chat = chunk.chat
-
-              if (chunk.chat._id && $agentsStore.currentAgentId) {
-                agentsStore.setCurrentChatId(chunk.chat._id)
-                // Refresh chat history to include the new/updated chat
-                agentsStore.fetchChats($agentsStore.currentAgentId)
-              }
-            }
-
-            loading = false
-            scrollToBottom()
-          } else if (chunk.type === "error") {
-            notifications.error(chunk.content || "An error occurred")
-            loading = false
-          }
-        },
-        error => {
-          console.error("Streaming error:", error)
-          notifications.error(error.message)
-          loading = false
-        }
-      )
-    } catch (err: any) {
-      console.error(err)
-      notifications.error(err.message)
-      loading = false
-    }
-
-    // Return focus to textarea after the response
-    await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
-  }
-
   const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat, agentId: $agentsStore.currentAgentId || "" }
     agentsStore.setCurrentChatId(selectedChat._id!)
-    await scrollToBottom()
   }
 
   const startNewChat = () => {
@@ -437,6 +275,14 @@
       contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
     }
 
+  const handleChatSaved = async (event: CustomEvent<{ chatId: string }>) => {
+    const { chatId } = event.detail
+    if (chatId && $agentsStore.currentAgentId) {
+      agentsStore.setCurrentChatId(chatId)
+      await agentsStore.fetchChats($agentsStore.currentAgentId)
+    }
+  }
+
   onMount(async () => {
     await agentsStore.init()
 
@@ -450,31 +296,6 @@
       await agentsStore.fetchChats($agentsStore.currentAgentId)
       await agentsStore.fetchToolSources($agentsStore.currentAgentId)
     }
-
-    // Ensure we always autoscroll to reveal new messages
-    observer = new MutationObserver(async () => {
-      await tick()
-      if (chatAreaElement) {
-        chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-      }
-    })
-
-    if (chatAreaElement) {
-      observer.observe(chatAreaElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      })
-    }
-
-    await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
-  })
-
-  onDestroy(() => {
-    observer?.disconnect()
   })
 </script>
 
@@ -512,19 +333,12 @@
     </Panel>
 
     <div class="chat-wrapper">
-      <div class="chat-area" bind:this={chatAreaElement}>
-        <Chatbox bind:chat {loading} />
-        <div class="input-wrapper">
-          <textarea
-            bind:value={inputValue}
-            bind:this={textareaElement}
-            class="input spectrum-Textfield-input"
-            on:keydown={handleKeyDown}
-            placeholder="Ask anything"
-            disabled={loading}
-          />
-        </div>
-      </div>
+      <Chatbox
+        bind:chat
+        {loading}
+        workspaceId={$params.application}
+        on:chatSaved={handleChatSaved}
+      />
     </div>
 
     <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
@@ -840,13 +654,6 @@
     display: flex;
     flex-direction: column;
   }
-  .chat-area {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 0;
-  }
 
   .tool-source-tiles {
     display: grid;
@@ -890,37 +697,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .input-wrapper {
-    position: sticky;
-    bottom: 0;
-    width: 600px;
-    margin: 0 auto;
-    background: var(--background-alt);
-    padding-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  textarea {
-    width: 100%;
-    height: 100px;
-    top: 0;
-    resize: none;
-    padding: 20px;
-    font-size: 16px;
-    background-color: var(--grey-3);
-    color: var(--grey-9);
-    border-radius: 16px;
-    border: none;
-    outline: none;
-    min-height: 100px;
-    margin-bottom: 8px;
-  }
-
-  textarea::placeholder {
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .config-form {
