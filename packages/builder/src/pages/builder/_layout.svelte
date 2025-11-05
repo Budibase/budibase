@@ -165,6 +165,7 @@
       if ($auth.user?.forceResetPassword) {
         return { type: "redirect", path: "./auth/reset" }
       }
+
       // Authenticated user navigation
       if ($auth.user) {
         const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
