@@ -89,7 +89,7 @@
     border-radius: 4px;
     overflow: auto;
     color: var(--grey-8);
-    background-color: black;
+    background-color: var(--background);
     font-family: monospace;
   }
 
