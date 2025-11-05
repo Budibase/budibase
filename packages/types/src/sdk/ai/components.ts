@@ -12,7 +12,6 @@ export interface ButtonPayload {
 
 export interface FormPayload {
   type: "Form"
-  componentId: string
   props: {
     title: string
     submitButtonText: string

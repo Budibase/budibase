@@ -38,7 +38,7 @@ export interface ToolArgs<T extends z.ZodType> {
   name: string
   description: string
   parameters?: T
-  handler: (args: z.infer<T>) => Promise<string>
+  handler: (args: z.infer<T> & { toolCallId: string }) => Promise<string>
   strict?: boolean
 }
 

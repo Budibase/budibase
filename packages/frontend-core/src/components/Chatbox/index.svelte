@@ -3,7 +3,7 @@
   import { createAPIClient } from "@budibase/frontend-core"
   import type {
     AgentChat,
-    ComponentMessage,
+    AssistantMessage,
     UserMessage,
   } from "@budibase/types"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
@@ -23,6 +23,99 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
   let componentLoading = new Set<string>()
+  let toolResponses: Record<string, string> = {}
+
+  $: toolResponses = chat.messages.reduce(
+    (acc, message) => {
+      if (message.role === "tool") {
+        acc[message.tool_call_id] = message.content
+      }
+      return acc
+    },
+    {} as Record<string, string>
+  )
+
+  type AssistantSegment =
+    | { type: "text"; content: string }
+    | {
+        type: "component"
+        componentId: string
+        component?: any // TODO
+        loading: boolean
+      }
+
+  const toolResultComponentPlaceholderRegex =
+    /\{\{toolResult:component:([^}]+)\}\}/g
+
+  const getToolResponse = (runId: string) => {
+    const resolved = toolResponses[runId.trim()]
+    try {
+      const parsed = JSON.parse(resolved || "")
+      if (typeof parsed === "object") {
+        return parsed
+      }
+    } catch {
+      // not JSON, return as is
+    }
+    return resolved
+  }
+
+  const getAssistantSegments = (
+    message: AssistantMessage
+  ): AssistantSegment[] => {
+    let content = message.content
+    if (!content) {
+      return []
+    }
+
+    const segments: AssistantSegment[] = []
+    toolResultComponentPlaceholderRegex.lastIndex = 0
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = toolResultComponentPlaceholderRegex.exec(content))) {
+      const matchIndex = match.index ?? 0
+      const textBefore = content.slice(lastIndex, matchIndex).trim()
+      if (textBefore) {
+        segments.push({ type: "text", content: textBefore })
+      }
+
+      const toolId = match[1]?.trim()
+      if (toolId) {
+        const componentResponse = getToolResponse(toolId)
+        const hasComponent =
+          componentResponse !== undefined && componentResponse !== null
+        segments.push({
+          type: "component",
+          componentId: toolId,
+          component: hasComponent ? componentResponse.component : undefined,
+          loading: !hasComponent,
+        })
+      }
+
+      lastIndex = matchIndex + match[0].length
+    }
+
+    const remaining = content.slice(lastIndex).trim()
+    if (remaining) {
+      segments.push({ type: "text", content: remaining })
+    }
+
+    if (!segments.length) {
+      return [{ type: "text", content }]
+    }
+
+    return segments
+  }
+
+  const clearComponentLoading = (componentId?: string) => {
+    if (!componentId) {
+      return
+    }
+    if (componentLoading.has(componentId)) {
+      componentLoading.delete(componentId)
+    }
+  }
 
   $: if (chat.messages.length) {
     scrollToBottom()
@@ -35,7 +128,7 @@
     }
   }
 
-  async function handleKeyDown(event: any) {
+  async function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await prompt()
@@ -52,67 +145,49 @@
       content: message ?? inputValue,
     }
 
-    let updatedChat = {
+    let updatedChat: AgentChat = {
       ...chat,
       messages: [...chat.messages, userMessage],
     }
 
-    // Update local display immediately with user message
     chat = updatedChat
 
-    // Ensure we scroll to the new message
     await scrollToBottom()
 
     inputValue = ""
     loading = true
 
     let streamingContent = ""
-    let isToolCall = false
-    let toolCallInfo: string = ""
 
     try {
       await API.agentChatStream(
         updatedChat,
         workspaceId,
         chunk => {
-          if (chunk.type === "component") {
-            const previewMessage: ComponentMessage = {
-              role: "component",
-              component: chunk.component!,
-            }
-
-            chat = {
-              ...chat,
-              messages: [...chat.messages, previewMessage],
-            }
-
-            updatedChat = {
-              ...updatedChat,
-              messages: [...updatedChat.messages, previewMessage],
-            }
-
-            streamingContent = ""
-            scrollToBottom()
-            return
-          }
-
           if (chunk.type === "content") {
-            // Accumulate streaming content
             streamingContent += chunk.content || ""
 
-            // Update chat with partial content
             const updatedMessages = [...updatedChat.messages]
 
-            // Find or create assistant message
             const lastMessage = updatedMessages[updatedMessages.length - 1]
             if (lastMessage?.role === "assistant") {
-              lastMessage.content =
-                streamingContent + (isToolCall ? toolCallInfo : "")
+              lastMessage.content = streamingContent
+              for (const segment of getAssistantSegments(lastMessage)) {
+                if (segment.type === "component") {
+                  clearComponentLoading(segment.componentId)
+                }
+              }
             } else {
-              updatedMessages.push({
+              const newAssistant: AssistantMessage = {
                 role: "assistant",
-                content: streamingContent + (isToolCall ? toolCallInfo : ""),
-              })
+                content: streamingContent,
+              }
+              updatedMessages.push(newAssistant)
+              for (const segment of getAssistantSegments(newAssistant)) {
+                if (segment.type === "component") {
+                  clearComponentLoading(segment.componentId)
+                }
+              }
             }
 
             chat = {
@@ -120,51 +195,26 @@
               messages: updatedMessages,
             }
 
-            // Auto-scroll as content streams
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_start") {
-            isToolCall = true
-            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + toolCallInfo,
-              })
-            }
-
-            chat = {
-              ...chat,
+            updatedChat = {
+              ...updatedChat,
               messages: updatedMessages,
             }
 
             scrollToBottom()
           } else if (chunk.type === "tool_call_result") {
-            const resultInfo = chunk.toolResult?.error
-              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
-              : `\n**✅ Tool Result:** Complete`
-
-            toolCallInfo += resultInfo
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
+            if (chunk.toolResult?.result) {
+              toolResponses = {
+                ...toolResponses,
+                [chunk.toolResult.id]: chunk.toolResult.result,
+              }
             }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
+          } else if (chunk.type === "component_complete") {
+            // TODO
+            // clearComponentLoading(chunk.componentId)
           } else if (chunk.type === "chat_saved") {
             if (chunk.chat) {
               chat = chunk.chat
+              updatedChat = chunk.chat
               if (chunk.chat._id) {
                 dispatch("chatSaved", { chatId: chunk.chat._id })
               }
@@ -209,7 +259,7 @@
       type: "FORM_SUBMISSION",
       componentId,
       values,
-      tableId: tableId,
+      tableId,
     }
     await prompt(JSON.stringify(data))
   }
@@ -246,7 +296,7 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
-    {#each chat.messages as message}
+    {#each chat.messages as message, index (index)}
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer
@@ -263,28 +313,40 @@
                 : "[Empty message]"}
           />
         </div>
-      {:else if message.role === "assistant" && message.content}
+      {:else if message.role === "assistant"}
         <div class="message assistant">
-          <MarkdownViewer value={message.content} />
-        </div>
-      {:else if message.role === "component"}
-        <div class="message assistant">
-          <div
-            class="component-message"
-            class:component-message--loading={componentLoading.has(
-              message.component.componentId
-            )}
-          >
-            <Component data={message.component} on:submit={submitComponent} />
-            {#if componentLoading.has(message.component.componentId)}
-              <div class="component-message__overlay">
-                <div class="component-message__status">
-                  <span class="component-message__status-dot" />
-                  <span>Submitting…</span>
-                </div>
+          {#each getAssistantSegments(message) as segment, segmentIndex (`${index}-${segmentIndex}`)}
+            {#if segment.type === "text"}
+              <MarkdownViewer value={segment.content} />
+            {:else}
+              <div
+                class="component-message"
+                class:component-message--loading={segment.loading ||
+                  componentLoading.has(segment.componentId)}
+              >
+                {#if segment.component}
+                  <Component
+                    data={segment.component}
+                    on:submit={submitComponent}
+                  />
+                {:else}
+                  <div class="component-message__placeholder">
+                    Preparing component…
+                  </div>
+                {/if}
+                {#if segment.loading || componentLoading.has(segment.componentId)}
+                  <div class="component-message__overlay">
+                    <div class="component-message__status">
+                      <span class="component-message__status-dot" />
+                      <span
+                        >{segment.loading ? "Preparing…" : "Submitting…"}</span
+                      >
+                    </div>
+                  </div>
+                {/if}
               </div>
             {/if}
-          </div>
+          {/each}
         </div>
       {/if}
     {/each}
@@ -383,7 +445,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  /* Style the markdown tool sections in assistant messages */
   :global(.assistant strong) {
     color: var(--spectrum-global-color-static-seafoam-700);
   }
@@ -405,6 +466,17 @@
   .component-message--loading {
     pointer-events: none;
     opacity: 0.6;
+  }
+  .component-message__placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    border-radius: 12px;
+    border: 1px dashed var(--grey-4);
+    background: var(--grey-2);
+    color: var(--grey-7);
+    font-size: 14px;
   }
   .component-message__overlay {
     position: absolute;

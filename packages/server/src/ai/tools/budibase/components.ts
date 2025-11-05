@@ -14,8 +14,8 @@ import { utils } from "@budibase/shared-core"
 export default [
   newTool({
     name: "render_table_form",
-    description:
-      "Render a form component for a given table. Use this when the user wants to create or edit data for a specific table, to show an interactive form instead of replying with static text.",
+    description: `Used to render a form component for a given table. Use this when the user wants to create or edit data for a specific table, to show an interactive form instead of replying with static text. 
+      After this tool runs, use the {{toolResult:toolCallId}} as a placeholder for the form to be rendered; the client replaces that with the actual payload. The toolCallId comes from the params`,
     parameters: z.object({
       tableId: z
         .string()
@@ -28,9 +28,14 @@ export default [
         .describe(
           "List of column to include in the form. It should from come from the table schema."
         ),
-      componentId: z.string().describe("Explicit component identifier."),
     }),
-    handler: async ({ tableId, submitButtonText, columns, componentId }) => {
+    handler: async ({
+      tableId,
+      submitButtonText,
+      columns,
+
+      toolCallId,
+    }) => {
       const table = await sdk.tables.getTable(tableId)
       const tableColumns = Object.entries(table.schema ?? {}).filter(
         ([key, schema]) => {
@@ -115,7 +120,6 @@ export default [
 
       const component: RequiredKeys<FormPayload> = {
         type: "Form",
-        componentId,
         props: {
           title: table.name,
           submitButtonText,
@@ -126,7 +130,12 @@ export default [
         },
       }
 
-      return JSON.stringify({ type: "component", component })
+      return JSON.stringify({
+        instructions: `Reference the output of tool call using the placeholder {{toolResult:component:${toolCallId}}}.`,
+        type: "component",
+
+        component,
+      })
     },
   }),
   newTool({
