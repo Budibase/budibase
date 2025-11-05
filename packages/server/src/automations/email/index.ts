@@ -1,16 +1,13 @@
-import { EmailTrigger } from "@budibase/types"
 import { CheckMailOutput } from "./types/CheckMailOutput"
 import { toOutputFields } from "./utils/toOutputFields"
 import { getClient } from "./utils/getClient"
 import { fetchMessages } from "./utils/fetchMessages"
 import { getMessageId } from "./utils/getMessageId"
-import { checkSender } from "./utils/checkSender"
 import { getLastSeenUid, setLastSeenUid } from "./state"
 
 export const lockKey = "INBOX"
 
 export const checkMail = async (
-  trigger: EmailTrigger,
   automationId: string
 ): Promise<CheckMailOutput> => {
   const imapClient = await getClient()
@@ -56,19 +53,15 @@ export const checkMail = async (
       return { proceed: false, reason: "no new mail" }
     }
 
-    const filteredMessages = unseenMessages.filter(({ message }) =>
-      checkSender(trigger.inputs.from, message)
-    )
-
     await setLastSeenUid(stateKey, latestUid)
 
-    if (!filteredMessages.length) {
-      return { proceed: false, reason: "sender email does not match expected" }
-    }
+    const outputMessages = await Promise.all(
+      unseenMessages.map(({ message }) => toOutputFields(message))
+    )
 
     return {
       proceed: true,
-      messages: filteredMessages.map(({ message }) => toOutputFields(message)),
+      messages: outputMessages,
     }
   } catch (err) {
     console.log(err)
