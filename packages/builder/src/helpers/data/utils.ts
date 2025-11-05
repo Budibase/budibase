@@ -142,6 +142,11 @@ export function customQueryText(
     name = name.slice(0, -1)
   }
 
+  // Use the full path if there is no hostname
+  if (!name.includes(".")) {
+    return name
+  }
+
   // Only use path
   const split = name.split("/")
   if (split[1]) {
