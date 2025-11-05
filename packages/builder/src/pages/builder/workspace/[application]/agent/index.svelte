@@ -1,764 +1,319 @@
 <script lang="ts">
-  import NavHeader from "@/components/common/NavHeader.svelte"
-  import NavItem from "@/components/common/NavItem.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
-  import Panel from "@/components/design/Panel.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
-  import { contextMenuStore } from "@/stores/builder"
+  import { BannerType } from "@/constants/banners"
+  import { capitalise, durationFromNow } from "@/helpers"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import { contextMenuStore, workspaceFavouriteStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
+    AbsTooltip,
     Body,
     Button,
-    Heading,
+    Helpers,
     Icon,
-    Input,
-    Layout,
-    Modal,
-    ModalContent,
+    type ModalAPI,
     notifications,
-    TextArea,
-    Toggle,
+    TooltipPosition,
   } from "@budibase/bbui"
-  import { Chatbox } from "@budibase/frontend-core"
-  import type {
-    AgentChat,
-    AgentToolSourceWithTools,
-    CreateToolSourceRequest,
-  } from "@budibase/types"
-  import { params } from "@roxi/routify"
-  import { onMount, type ComponentType } from "svelte"
-  import BambooHRLogo from "./logos/BambooHR.svelte"
-  import BudibaseLogo from "./logos/Budibase.svelte"
-  import ConfluenceLogo from "./logos/Confluence.svelte"
-  import GithubLogo from "./logos/Github.svelte"
+  import type { Agent } from "@budibase/types"
+  import { WorkspaceResource } from "@budibase/types"
+  import { url } from "@roxi/routify"
+  import AppsHero from "assets/automation-hero-x1.png"
+  import NoResults from "../_components/NoResults.svelte"
+  import AgentModal from "./AgentModal.svelte"
+  import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
+  import { onMount } from "svelte"
 
-  const Logos: Record<string, ComponentType> = {
-    BUDIBASE: BudibaseLogo,
-    CONFLUENCE: ConfluenceLogo,
-    GITHUB: GithubLogo,
-    BAMBOOHR: BambooHRLogo,
-  }
+  let showHighlight = false
+  let upsertModal: AgentModal
+  let updateModal: Pick<ModalAPI, "show" | "hide">
+  let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
+  let selectedAgent: Agent | undefined = undefined
 
-  const ToolSources = [
-    {
-      name: "Budibase",
-      type: "BUDIBASE",
-      description: "Connect agent to your Budibase tools",
-    },
-    {
-      name: "Github",
-      type: "GITHUB",
-      description: "Automate development workflows.",
-    },
-    {
-      name: "Confluence",
-      type: "CONFLUENCE",
-      description: "Connect agent to your teams documentation",
-    },
-    {
-      name: "Sharepoint",
-      type: "SHAREPOINT",
-      description: "Sharepoint stuff",
-    },
-    {
-      name: "JIRA Service Manaagement",
-      type: "JIRA_SM",
-      description: "Automate ITSM Workflows",
-    },
-    {
-      name: "BambooHR",
-      type: "BAMBOOHR",
-      description: "Automate HR workflows and employee management",
-    },
-  ]
+  $: favourites = workspaceFavouriteStore.lookup
 
-  let chat: AgentChat = { title: "", messages: [] }
-  let toolSourceModal: Modal
-  let toolConfigModal: Modal
-  let deleteConfirmModal: Modal
-  let selectedToolSource: any = null
-  let selectedConfigToolSource: any = null
-  let toolSourceToDelete: any = null
-  let panelView: "tools" | "toolConfig" = "tools"
-  let toolConfig: Record<string, string> = {}
-  let toolConfigChanged = false
-
-  $: chatHistory = $agentsStore.chats || []
-  $: toolSources = $agentsStore.toolSources || []
-
-  const selectChat = async (selectedChat: AgentChat) => {
-    chat = { ...selectedChat }
-    agentsStore.setCurrentChatId(selectedChat._id!)
-  }
-
-  const startNewChat = () => {
-    chat = { title: "", messages: [] }
-    agentsStore.clearCurrentChatId()
-  }
-
-  const openToolConfig = (toolSource: any) => {
-    selectedToolSource = toolSource
-    toolConfig = {}
-    toolSourceModal.hide()
-    toolConfigModal.show()
-  }
-
-  const editToolSource = (toolSource: any) => {
-    selectedToolSource = {
-      ...ToolSources.find(ts => ts.type === toolSource.type),
-      _id: toolSource._id,
-      _rev: toolSource._rev,
-      existingToolSource: toolSource,
+  async function deleteAgent() {
+    const selectedId = selectedAgent?._id
+    if (!selectedId) {
+      return
     }
-    toolConfig = { ...toolSource.auth }
-    toolConfigModal.show()
-  }
-
-  const confirmDeleteToolSource = (toolSource: any) => {
-    toolSourceToDelete = toolSource
-    deleteConfirmModal.show()
-  }
-
-  const deleteToolSource = async () => {
-    if (!toolSourceToDelete) return
-
     try {
-      await agentsStore.deleteToolSource(toolSourceToDelete._id)
-      notifications.success("Tool source deleted successfully.")
-      deleteConfirmModal.hide()
-      toolSourceToDelete = null
-    } catch (err) {
-      console.error(err)
-      notifications.error("Error deleting tool source")
+      await agentsStore.deleteAgent(selectedId)
+      notifications.success("Agent deleted successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error deleting agent")
     }
   }
 
-  const handleConfigBack = () => {
-    toolConfigModal.hide()
-    toolSourceModal.show()
+  const getContextMenuItems = () => {
+    const edit = {
+      icon: "pencil",
+      name: "Edit",
+      visible: true,
+      callback: () => updateModal.show(),
+    }
+    const del = {
+      icon: "trash",
+      name: "Delete",
+      visible: true,
+      disabled: false,
+      callback: () => confirmDeleteDialog.show(),
+    }
+    return [edit, del]
   }
 
-  const handleConfigSave = async () => {
-    try {
-      const authConfig = { ...toolConfig }
+  const openContextMenu = (e: MouseEvent, agent: Agent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    selectedAgent = agent
+    showHighlight = true
+    contextMenuStore.open(
+      "agent",
+      getContextMenuItems(),
+      {
+        x: e.clientX,
+        y: e.clientY,
+      },
+      () => {
+        showHighlight = false
+      }
+    )
+  }
 
-      if (selectedToolSource.existingToolSource) {
-        // Update existing tool source
-        const updatedToolSource = {
-          ...selectedToolSource.existingToolSource,
-          auth: authConfig,
-        }
-        await agentsStore.updateToolSource(updatedToolSource)
-        notifications.success("Tool source updated successfully.")
-      } else {
-        // Create new tool source
-        const toolSourceData: CreateToolSourceRequest = {
-          type: selectedToolSource.type,
-          disabledTools: [],
-          auth: authConfig,
-        }
-        await agentsStore.createToolSource(toolSourceData)
-        notifications.success("Tool source saved successfully.")
+  $: agents = $agentsStore.agents
+    .map(agent => {
+      return {
+        ...agent,
+        favourite: $favourites?.[agent._id!] ?? {
+          resourceType: WorkspaceResource.AGENT,
+          resourceId: agent._id!,
+        },
+      }
+    })
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
       }
 
-      await agentsStore.fetchToolSources()
-      toolConfigModal.hide()
-    } catch (err: any) {
-      console.error(err)
-      const message = selectedToolSource.existingToolSource
-        ? "Error updating tool source"
-        : "Error saving tool source"
-      notifications.error(`${message}: ${err.message}`)
-    }
-  }
-
-  const openToolsConfig = (toolSource: any) => {
-    selectedConfigToolSource = { ...toolSource }
-    panelView = "toolConfig"
-  }
-
-  const backToToolsList = () => {
-    panelView = "tools"
-    selectedConfigToolSource = null
-    toolConfigChanged = false
-  }
-
-  const toggleTool = (toolName: string) => {
-    if (!selectedConfigToolSource) return
-
-    const currentDisabled = selectedConfigToolSource.disabledTools || []
-    const isDisabled = currentDisabled.includes(toolName)
-
-    if (isDisabled) {
-      // Enable the tool by removing from disabled list
-      selectedConfigToolSource.disabledTools = currentDisabled.filter(
-        (name: string) => name !== toolName
-      )
-    } else {
-      // Disable the tool by adding to disabled list
-      selectedConfigToolSource.disabledTools = [...currentDisabled, toolName]
-    }
-    toolConfigChanged = true
-  }
-
-  const saveToolConfig = async () => {
-    if (!selectedConfigToolSource) return
-    try {
-      selectedConfigToolSource = await agentsStore.updateToolSource(
-        selectedConfigToolSource
-      )
-      notifications.success("Tool configuration saved successfully.")
-      toolConfigChanged = false
-    } catch (err) {
-      console.error(err)
-      notifications.error("Error saving tool configuration")
-    }
-  }
-
-  const getChatPreview = (chat: AgentChat): string => {
-    const messageCount = chat.messages.length
-    if (!messageCount) {
-      return "No messages"
-    }
-    const msg = chat.messages[messageCount - 1]?.content?.slice(0, 50)
-    return typeof msg === "string" ? msg : "No preview available"
-  }
-
-  const getContextMenuItems = (toolSource: AgentToolSourceWithTools) => {
-    return [
-      {
-        icon: "Edit",
-        name: "Edit",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: () => editToolSource(toolSource),
-      },
-      {
-        icon: "Delete",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: () => confirmDeleteToolSource(toolSource),
-      },
-    ]
-  }
-
-  const createToolMenuCallback =
-    (toolSource: AgentToolSourceWithTools) => (e: MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const items = getContextMenuItems(toolSource)
-      contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
-    }
-
-  const setCurrentChat = (event: CustomEvent<{ chatId: string }>) => {
-    const { chatId } = event.detail
-    agentsStore.setCurrentChatId(chatId)
-
-    agentsStore.fetchChats()
-  }
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 
   onMount(async () => {
-    await agentsStore.init()
-
-    chat = { title: "", messages: [] }
+    await agentsStore.fetchAgents()
   })
 </script>
 
-<div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
-  <div class="page">
-    <Panel customWidth={260} borderRight noHeaderBorder>
-      <NavHeader
-        slot="panel-title-content"
-        title="Chats"
-        onAdd={startNewChat}
-        searchable={false}
-      />
+<div class="agents-index">
+  <HeroBanner
+    key={BannerType.AGENTS}
+    title="Transform workflows at scale with Budibase Agents and AI"
+    linkTitle="Agents explained"
+    linkHref="https://docs.budibase.com/docs/TODO"
+    image={AppsHero}
+    color="#1C3F62"
+  >
+    Automate more processes for your employees and customers with our visual
+    agent builder. Use agents to transform workflows with AI, automate manual
+    tasks, and add logic to apps.
+  </HeroBanner>
 
-      {#each chatHistory as chatItem}
-        <NavItem
-          text={chatItem.title || "Untitled Chat"}
-          subtext={getChatPreview(chatItem)}
-          on:click={() => selectChat(chatItem)}
-          selected={$agentsStore.currentChatId === chatItem._id}
-          withActions={false}
-        />
-      {/each}
-      {#if !chatHistory.length}
-        <div class="empty-state">
-          <Body size="S">
-            No chat history yet.<br />
-            Start a new conversation!
-          </Body>
-        </div>
-      {/if}
-    </Panel>
-
-    <div class="chat-wrapper">
-      <Chatbox
-        bind:chat
-        workspaceId={$params.application}
-        on:chatSaved={setCurrentChat}
-      />
+  <TopBar icon="cpu" breadcrumbs={[{ text: "Agents" }]} showPublish={false}
+  ></TopBar>
+  <div class="secondary-bar">
+    <div class="filter">
+      <!-- TODO -->
     </div>
-
-    <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
-      <NavHeader
-        slot="panel-title-content"
-        title="Tools"
-        onAdd={toolSourceModal?.show}
-        searchable={false}
-        showAddIcon={panelView === "tools"}
+    <div class="action-buttons">
+      <Button
+        icon="lightbulb"
+        secondary
+        on:click={() => {
+          window.open("https://docs.budibase.com/docs/TODO", "_blank")
+        }}
       >
-        {#if panelView === "tools"}
-          <Body size="S">Tools</Body>
-        {:else}
-          <div class="tool-config-header">
-            <Icon
-              name="BackAndroid"
-              size="XS"
-              hoverable
-              on:click={backToToolsList}
-            />
-            <svelte:component
-              this={Logos[selectedConfigToolSource.type]}
-              height="16"
-              width="16"
-            />
-            <Body size="S">
-              {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
-                ?.name}
-            </Body>
+        Learn
+      </Button>
+      <Button cta icon="plus" on:click={upsertModal.show}>New agent</Button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span>Name</span>
+      <span>Last updated</span>
+      <span></span>
+    </div>
+    <div class="agents">
+      {#each agents as agent}
+        <a
+          class="agent"
+          class:favourite={agent.favourite?._id}
+          href={$url(`./${agent._id}`)}
+          on:contextmenu={e => openContextMenu(e, agent)}
+          class:active={showHighlight && selectedAgent === agent}
+        >
+          <Body size="S" color="var(--spectrum-global-color-gray-900)">
+            <div class="auto-name">
+              {agent.name}
+            </div>
+          </Body>
+          <AbsTooltip text={Helpers.getDateDisplayValue(agent.updatedAt)}>
+            <span>
+              {capitalise(durationFromNow(agent.updatedAt || ""))}
+            </span>
+          </AbsTooltip>
+          <div class="actions">
+            <div class="ctx-btn">
+              <Icon
+                name="More"
+                size="M"
+                hoverable
+                on:click={e => openContextMenu(e, agent)}
+              />
+            </div>
+
+            <span class="favourite-btn">
+              <FavouriteResourceButton
+                favourite={agent.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
+            </span>
           </div>
-        {/if}
-        <div slot="right" style="display:contents;">
-          {#if panelView === "toolConfig"}
-            <Button
-              cta
-              size="S"
-              on:click={saveToolConfig}
-              disabled={!toolConfigChanged}>Save</Button
-            >
-          {/if}
-        </div>
-      </NavHeader>
-      {#if panelView === "tools"}
-        <Layout paddingX="L" paddingY="none" gap="S">
-          <InfoDisplay
-            body="Add tools to give your agent knowledge and allow it to take
-                action"
-          />
-          {#if toolSources.length > 0}
-            <div class="saved-tools-list">
-              {#each toolSources as toolSource}
-                {@const menuCallback = createToolMenuCallback(toolSource)}
-                <NavItem
-                  text={ToolSources.find(ts => ts.type === toolSource.type)
-                    ?.name || ""}
-                  on:click={() => openToolsConfig(toolSource)}
-                  on:contextmenu={menuCallback}
-                >
-                  <div class="tool-icon" slot="icon">
-                    <svelte:component
-                      this={Logos[toolSource.type]}
-                      height="16"
-                      width="16"
-                    />
-                  </div>
-                  <Icon
-                    on:click={menuCallback}
-                    hoverable
-                    name="MoreSmallList"
-                  />
-                  <Icon size="S" name="ChevronRight" slot="right" />
-                </NavItem>
-              {/each}
-            </div>
-          {:else}
-            <div class="empty-state">
-              <Body size="S">
-                No tools connected yet.
-                <br />
-                Click "Add Tools" to get started!
-              </Body>
-            </div>
-          {/if}
-        </Layout>
-      {:else if panelView === "toolConfig"}
-        <Layout paddingX="L" paddingY="L" gap="S">
-          {#if selectedConfigToolSource?.tools}
-            <div class="tools-list">
-              {#each selectedConfigToolSource.tools as tool}
-                <div class="tool-toggle-item">
-                  <div class="tool-toggle-info">
-                    <div class="tool-toggle-name">{tool.name}</div>
-                    <div class="tool-toggle-description">
-                      {tool.description}
-                    </div>
-                  </div>
-                  <div class="tool-toggle-switch">
-                    <Toggle
-                      value={!selectedConfigToolSource.disabledTools?.includes(
-                        tool.name
-                      )}
-                      on:change={() => toggleTool(tool.name)}
-                    />
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {:else}
-            <div class="empty-state">
-              <Body size="S">No tools available for this source.</Body>
-            </div>
-          {/if}
-        </Layout>
+        </a>
+      {/each}
+      {#if !agents.length}
+        <NoResults
+          ctaText="Create your first agent"
+          onCtaClick={() => upsertModal.show()}
+          resourceType="agent"
+        >
+          No agents yet! Build your first agent to get started.
+        </NoResults>
       {/if}
-    </Panel>
+    </div>
   </div>
 </div>
 
-<Modal bind:this={toolSourceModal}>
-  <ModalContent
-    title="Tools"
-    size="L"
-    showCancelButton={false}
-    showConfirmButton={false}
-    showCloseIcon
-    onCancel={() => toolSourceModal.hide()}
+<AgentModal bind:this={upsertModal} />
+{#if selectedAgent}
+  <UpdateAgentModal agent={selectedAgent} bind:this={updateModal} />
+  <ConfirmDialog
+    bind:this={confirmDeleteDialog}
+    okText="Delete Agent"
+    onOk={deleteAgent}
+    title="Confirm Deletion"
   >
-    <section class="tool-source-tiles">
-      {#each ToolSources as toolSource}
-        <div class="tool-source-tile">
-          <div class="tool-source-header">
-            {#if Logos[toolSource.type]}
-              <div class="tool-source-icon">
-                <svelte:component
-                  this={Logos[toolSource.type]}
-                  height="20"
-                  width="20"
-                />
-              </div>
-            {/if}
-            <Heading size="XS">{toolSource.name}</Heading>
-          </div>
-          <div class="tool-source-description">
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              {toolSource.description}
-            </Body>
-          </div>
-          {#if toolSources.some(ts => ts.type === toolSource.type)}
-            <div class="tile-connected">
-              <Icon size="S" name="CheckmarkCircle" />
-              Connected
-            </div>
-          {:else}
-            <div>
-              <Button cta size="S" on:click={() => openToolConfig(toolSource)}>
-                Connect
-              </Button>
-            </div>
-          {/if}
-        </div>
-      {/each}
-    </section>
-  </ModalContent>
-</Modal>
-
-<Modal bind:this={toolConfigModal}>
-  <ModalContent
-    title={`${selectedToolSource?.existingToolSource ? "Edit" : "Configure"} ${
-      selectedToolSource?.name || "Tool"
-    }`}
-    size="M"
-    showCancelButton={true}
-    cancelText="Back"
-    showConfirmButton={true}
-    confirmText="Save"
-    showCloseIcon
-    onCancel={handleConfigBack}
-    onConfirm={handleConfigSave}
-  >
-    <div class="config-form">
-      {#if selectedToolSource}
-        {#if selectedToolSource.type === "GITHUB"}
-          <Input
-            label="API Key"
-            bind:value={toolConfig.apiKey}
-            type="password"
-            placeholder="Enter your GitHub API token"
-          />
-          <Input
-            label="Base URL (Optional)"
-            bind:value={toolConfig.baseUrl}
-            type="text"
-            placeholder="https://api.github.com (leave empty for default)"
-          />
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={toolConfig.guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-          />
-        {:else if selectedToolSource.type === "CONFLUENCE"}
-          <Input
-            label="API Key"
-            bind:value={toolConfig.apiKey}
-            type="password"
-            placeholder="Enter your Confluence API token"
-          />
-          <Input
-            label="Email Address"
-            bind:value={toolConfig.email}
-            type="email"
-            placeholder="your.email@domain.com"
-            helpText="Your Atlassian account email address"
-          />
-          <Input
-            label="Base URL (Optional)"
-            bind:value={toolConfig.baseUrl}
-            type="text"
-            placeholder="https://your-domain.atlassian.net"
-          />
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={toolConfig.guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-          />
-        {:else if selectedToolSource.type === "BAMBOOHR"}
-          <Input
-            label="API Key"
-            bind:value={toolConfig.apiKey}
-            type="password"
-            placeholder="Enter your BambooHR API key"
-          />
-          <Input
-            label="Subdomain"
-            bind:value={toolConfig.subdomain}
-            type="text"
-            placeholder="your-company"
-            helpText="Your BambooHR subdomain (e.g., 'mycompany' for mycompany.bamboohr.com)"
-          />
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={toolConfig.guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-          />
-        {:else if selectedToolSource.type === "BUDIBASE"}
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={toolConfig.guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-          />
-        {/if}
-      {/if}
-    </div>
-  </ModalContent>
-</Modal>
-
-<Modal bind:this={deleteConfirmModal}>
-  <ModalContent
-    title="Delete Tool Source"
-    size="S"
-    showCancelButton={true}
-    cancelText="Cancel"
-    showConfirmButton={true}
-    confirmText="Delete"
-    showCloseIcon
-    onCancel={() => deleteConfirmModal.hide()}
-    onConfirm={deleteToolSource}
-  >
-    <div class="delete-confirm-content">
-      <Body size="S">
-        Are you sure you want to delete this tool source? This action cannot be
-        undone.
-      </Body>
-      {#if toolSourceToDelete}
-        <div class="tool-source-preview">
-          <div class="tool-icon">
-            <svelte:component
-              this={Logos[toolSourceToDelete.type]}
-              height="20"
-              width="20"
-            />
-          </div>
-          <span class="tool-name">
-            {ToolSources.find(ts => ts.type === toolSourceToDelete.type)?.name}
-          </span>
-        </div>
-      {/if}
-    </div>
-  </ModalContent>
-</Modal>
+    Are you sure you wish to delete the agent
+    <b>{selectedAgent.name}?</b>
+    This action cannot be undone.
+  </ConfirmDialog>
+{/if}
 
 <style>
-  .wrapper {
+  .auto-name {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+  .agents-index {
+    background: var(--background);
+    flex: 1 1 auto;
+    --border: 1px solid var(--spectrum-global-color-gray-200);
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    flex: 1 1 auto;
+  }
+  .secondary-bar {
+    padding: 10px 12px;
+    border-bottom: var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+  }
+  .filter {
+    display: flex;
+    gap: 10px;
+  }
+  .filter :global(.spectrum-ActionButton) {
+    border-radius: 8px;
+    transition:
+      border-color 130ms ease-out,
+      background 130ms ease-out;
+    border: 1px solid transparent;
+    padding: 3px 10px;
+    height: auto;
+
+    &.is-selected {
+      background: var(--spectrum-global-color-gray-200);
+      border-color: var(--spectrum-global-color-gray-300);
+    }
+  }
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .agent,
+  .table-header {
+    display: grid;
+    grid-template-columns: 1fr 200px 50px;
+    border-bottom: var(--border);
+    align-items: center;
+  }
+  .table-header {
+    padding: 5px 12px;
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .agent {
+    padding: 9px 12px;
+    color: var(--text-color);
+    transition: background 130ms ease-out;
+
+    &:hover,
+    &.active {
+      background: var(--spectrum-global-color-gray-200);
+
+      & .actions > * {
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
+      }
+    }
+  }
+  .actions {
+    justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    gap: var(--spacing-xs);
   }
 
-  .page {
+  .actions > * {
+    opacity: 0;
+    transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
+  }
+
+  .table-wrapper {
     flex: 1 1 auto;
     display: flex;
-    position: relative;
-    overflow-y: hidden;
-    overflow-x: hidden;
-    flex-direction: row;
+    flex-direction: column;
     height: 0;
-    width: 100%;
-    align-items: stretch;
   }
 
-  .chat-wrapper {
+  .agents {
+    overflow-y: auto;
     flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .tool-source-tiles {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .tool-source-tile {
-    padding: var(--spacing-xl);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
-    height: 110px;
-    border-radius: 4px;
-  }
-
-  .tool-source-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-  .tool-source-description {
-    flex: 1 1 auto;
-  }
-  .tool-source-description :global(p) {
-    overflow: hidden;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    display: -webkit-box;
-  }
-  .tile-connected {
-    color: var(--spectrum-global-color-green-400);
-    display: flex;
-    gap: 6px;
-    font-size: 12px;
-  }
-  .tool-source-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .config-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: var(--spacing-xl);
-  }
-  .empty-state :global(p) {
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .saved-tools-list {
-    margin: 0 calc(-1 * var(--spacing-l));
-    display: flex;
-    flex-direction: column;
-  }
-  .tool-icon {
-    display: grid;
-    place-items: center;
-    margin-right: 4px;
-  }
-
-  .tool-name {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .tool-config-header {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-m);
-    align-items: center;
-  }
-
-  .tools-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
-    overflow: hidden;
-  }
-
-  .tool-toggle-item {
-    display: flex;
-    align-items: center;
-    padding: var(--spacing-m);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    background-color: var(--background-alt);
-    gap: var(--spacing-m);
-  }
-  .tool-toggle-info {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow: hidden;
-  }
-  .tool-toggle-name {
-    color: var(--spectrum-global-color-gray-900);
-    margin-bottom: var(--spacing-xs);
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    word-break: break-all;
-  }
-  .tool-toggle-description {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .tool-toggle-switch {
-    margin-right: -14px;
-  }
-
-  .delete-confirm-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .tool-source-preview {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    padding: var(--spacing-m);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    background-color: var(--background-alt);
-  }
-
-  .tool-source-preview .tool-name {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
-    margin: 0;
   }
 </style>

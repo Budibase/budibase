@@ -12,11 +12,11 @@
 
   export let workspaceId: string
   export let chat: AgentChat
+  export let loading: boolean = false
 
   const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
 
   let inputValue = ""
-  let loading: boolean = false
   let chatAreaElement: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
@@ -41,7 +41,7 @@
 
   async function prompt() {
     if (!chat) {
-      chat = { title: "", messages: [] }
+      chat = { title: "", messages: [], agentId: "" }
     }
 
     const userMessage: UserMessage = { role: "user", content: inputValue }
@@ -170,7 +170,7 @@
   }
 
   onMount(async () => {
-    chat = { title: "", messages: [] }
+    chat = { title: "", messages: [], agentId: chat.agentId }
 
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {

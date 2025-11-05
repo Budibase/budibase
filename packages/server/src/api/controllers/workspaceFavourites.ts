@@ -1,6 +1,7 @@
 import {
   AddWorkspaceFavouriteRequest,
   AddWorkspaceFavouriteResponse,
+  Agent,
   Automation,
   Datasource,
   DeleteWorkspaceFavouriteResponse,
@@ -24,6 +25,7 @@ type WorkspaceResourceDoc =
   | Datasource
   | Query
   | ViewV2
+  | Agent
 
 export type ResourceGetter = (
   id: string
@@ -74,8 +76,8 @@ export async function create(
     [WorkspaceResource.DATASOURCE]: sdk.datasources.get,
     [WorkspaceResource.QUERY]: sdk.queries.find,
     [WorkspaceResource.VIEW]: sdk.views.get,
+    [WorkspaceResource.AGENT]: sdk.ai.agents.getOrThrow,
   }
-
   const verifyResource: ResourceGetter = check[body.resourceType]
 
   // Abort if it can't be verified

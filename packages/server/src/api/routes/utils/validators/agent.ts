@@ -51,8 +51,8 @@ function getAuthValidation() {
 export function createToolSourceValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      _id: OPTIONAL_STRING,
-      _rev: OPTIONAL_STRING,
+      id: OPTIONAL_STRING,
+      agentId: Joi.string().required(),
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
@@ -69,14 +69,40 @@ export function createToolSourceValidator() {
 export function updateToolSourceValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      _id: Joi.string().required(),
-      _rev: Joi.string().required(),
+      id: Joi.string().required(),
+      agentId: Joi.string().required(),
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
       description: OPTIONAL_STRING,
       disabledTools: OPTIONAL_ARRAY.items(Joi.string()),
       auth: getAuthValidation(),
+    }).unknown(true)
+  )
+}
+
+export function createAgentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      name: Joi.string().required(),
+      description: OPTIONAL_STRING,
+      aiconfig: Joi.string().required(),
+      promptInstructions: OPTIONAL_STRING,
+      allowedTools: OPTIONAL_ARRAY.items(Joi.object().unknown(true)),
+    })
+  )
+}
+
+export function updateAgentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      _id: Joi.string().required(),
+      _rev: Joi.string().required(),
+      name: Joi.string().required(),
+      description: OPTIONAL_STRING,
+      aiconfig: Joi.string().required(),
+      promptInstructions: OPTIONAL_STRING,
+      allowedTools: OPTIONAL_ARRAY.items(Joi.object().unknown(true)),
     }).unknown(true)
   )
 }
