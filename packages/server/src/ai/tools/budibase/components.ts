@@ -14,8 +14,8 @@ import { utils } from "@budibase/shared-core"
 export default [
   newTool({
     name: "render_table_form",
-    description: `Used to render a form component for a given table. Use this when the user wants to create or edit data for a specific table, to show an interactive form instead of replying with static text. 
-      After this tool runs, use the {{toolResult:toolCallId}} as a placeholder for the form to be rendered; the client replaces that with the actual payload. The toolCallId comes from the params`,
+    description: `Render an interactive form component for a Budibase table so the user can create or edit records directly in the UI. Call this tool when the user needs a form-driven workflow instead of plain-text instructions.
+When you include the tool result in your reply, write natural-language guidance, then place {{toolResult:component:<toolCallId>}} exactly where the form should appear (no code fences, no field lists). The client will replace that token with the actual component.`,
     parameters: z.object({
       tableId: z
         .string()
