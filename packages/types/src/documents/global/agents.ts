@@ -4,7 +4,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  allowedTools: AgentToolSource[]
+  allowedTools?: AgentToolSource[]
   promptInstructions?: string
 }
 
