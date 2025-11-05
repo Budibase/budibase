@@ -389,7 +389,15 @@ if (descriptions.length) {
 
             const persistedTable = await config.api.table.get(table._id!)
             const initialRev = persistedTable._rev
-            const initialSchema = persistedTable.schema["Row ID"] as {
+            const initialSchema = JSON.parse(
+              JSON.stringify(persistedTable.schema["Row ID"])
+            ) as {
+              name?: string
+              type?: FieldType
+              subtype?: AutoFieldSubType
+              icon?: string
+              autocolumn?: boolean
+              constraints?: FieldSchema["constraints"]
               lastID?: number
             }
             const initialLastId = initialSchema.lastID ?? 0
@@ -400,10 +408,8 @@ if (descriptions.length) {
             const updatedTable = await config.api.table.get(table._id!)
             expect(updatedTable._rev).toEqual(initialRev)
 
-            const updatedSchema = updatedTable.schema["Row ID"] as {
-              lastID?: number
-            }
-            expect(updatedSchema.lastID ?? 0).toEqual(initialLastId)
+            const updatedSchema = updatedTable.schema["Row ID"]
+            expect(updatedSchema).toEqual(initialSchema)
           })
 
         isInternal &&
