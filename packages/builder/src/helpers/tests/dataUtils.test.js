@@ -1,5 +1,10 @@
 import { expect, describe, it } from "vitest"
-import { breakQueryString, buildQueryString } from "../data/utils"
+import {
+  breakQueryString,
+  buildQueryString,
+  customQueryText,
+} from "../data/utils"
+import { IntegrationTypes } from "@/constants/backend"
 
 describe("check query string utils", () => {
   const obj1 = {
@@ -45,5 +50,43 @@ describe("check query string utils", () => {
       values: "a%2Cb%2Cc",
     })
     expect(queryString).toBe("values=a%2Cb%2Cc")
+  })
+
+  describe("customQueryText", () => {
+    it("should remove the protocol", () => {
+      const datasource = { source: IntegrationTypes.REST }
+      const query = { name: "https://www.example.com" }
+
+      const queryName = customQueryText(datasource, query)
+
+      expect(queryName).toEqual("www.example.com")
+    })
+
+    it("should remove a trailing slash", () => {
+      const datasource = { source: IntegrationTypes.REST }
+      const query = { name: "test/" }
+
+      const queryName = customQueryText(datasource, query)
+
+      expect(queryName).toEqual("test")
+    })
+
+    it("should only use the path given a base url", () => {
+      const datasource = { source: IntegrationTypes.REST }
+      const query = { name: "www.example.com/api/health" }
+
+      const queryName = customQueryText(datasource, query)
+
+      expect(queryName).toEqual("/api/health")
+    })
+
+    it("should use the full path if the base is not a hostname", () => {
+      const datasource = { source: IntegrationTypes.REST }
+      const query = { name: "example/api/health" }
+
+      const queryName = customQueryText(datasource, query)
+
+      expect(queryName).toEqual("example/api/health")
+    })
   })
 })
