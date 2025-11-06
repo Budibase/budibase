@@ -97,6 +97,11 @@ app.use(api.routes())
 
 const server = http.createServer(app.callback())
 
+server.timeout = env.HTTP_SERVER_TIMEOUT_MS || 600000
+server.headersTimeout = env.HTTP_HEADERS_TIMEOUT_MS || 120000
+server.requestTimeout = env.HTTP_REQUEST_TIMEOUT_MS || 1200000
+server.keepAliveTimeout = env.HTTP_KEEPALIVE_TIMEOUT_MS || 5000
+
 const shutdown = async (signal?: string) => {
   console.log(
     `Worker service shutting down gracefully... ${signal ? `Signal: ${signal}` : ""}`
