@@ -213,10 +213,9 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: { [key: string]: unknown } = {}
-        const requestBody =
-          this.normalizeMethod(methodName) !== "get"
-            ? getRequestBody(operation, operation.operationId || path)
-            : undefined
+        const requestBody = this.methodHasRequestBody(methodName)
+          ? getRequestBody(operation, operation.operationId || path)
+          : undefined
         const parameters: QueryParameter[] = []
         const ensureParameter = (paramName: string, defaultValue = "") => {
           if (!parameters.some(parameter => parameter.name === paramName)) {

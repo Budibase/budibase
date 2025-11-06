@@ -68,6 +68,14 @@ export abstract class ImportSource {
     return Object.prototype.hasOwnProperty.call(MethodToVerb, normalized)
   }
 
+  protected methodHasRequestBody = (method: string): boolean => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      return false
+    }
+    return ["post", "put", "patch"].includes(normalized)
+  }
+
   constructQuery = (
     datasourceId: string,
     name: string,
