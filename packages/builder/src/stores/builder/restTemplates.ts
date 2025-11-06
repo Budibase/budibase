@@ -56,18 +56,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/gitlab.svg",
     },
     {
-      name: "Jira",
-      description:
-        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/jira.svg",
-    },
-    {
       name: "PagerDuty",
       description:
         "PagerDuty REST resources for services, incidents, and incident automation",
