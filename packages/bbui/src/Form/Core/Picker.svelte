@@ -71,6 +71,7 @@
   export let indeterminate: boolean = false
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
+  export let hideChevron: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -193,7 +194,7 @@
   >
     {fieldText}
   </span>
-  {#if !readonly}
+  {#if !hideChevron}
     <Icon name="caret-down" size="S" />
   {/if}
 </button>

@@ -575,6 +575,7 @@
               getOptionLabel={option => option.label}
               getOptionColour={option => option.colour}
               readonly={isTemplateDatasource}
+              hideChevron={isTemplateDatasource}
             />
           </div>
           <div class="url">
