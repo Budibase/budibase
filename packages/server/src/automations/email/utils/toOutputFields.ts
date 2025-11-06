@@ -1,4 +1,4 @@
-import { FetchMessageObject } from "imapflow"
+import { FetchMessageObject, MessageAddressObject } from "imapflow"
 import { simpleParser } from "mailparser"
 import type { EmailTriggerOutputs } from "@budibase/types"
 import { htmlToText } from "html-to-text"
@@ -11,6 +11,12 @@ interface BodyLimitResult {
   body: string | undefined
   truncated: boolean
 }
+
+const extractAddresses = (addresses: MessageAddressObject[] = []): string[] =>
+  addresses.reduce<string[]>((acc, { address }) => {
+    if (address) acc.push(address)
+    return acc
+  }, [])
 
 const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   if (!body) {
@@ -56,9 +62,14 @@ export const toOutputFields = async (
 ): Promise<EmailTriggerOutputs> => {
   const text = await getBodyText(message)
   const { body: bodyText, truncated: bodyTextTruncated } = applyBodyLimit(text)
+
+  const toAddresses = extractAddresses(message.envelope?.to)
+  const cc = extractAddresses(message.envelope?.cc)
+  const fromAddresses = extractAddresses(message.envelope?.from)
   return {
-    from: message.envelope?.from?.map(f => f.address).join(", ") || "unknown",
-    to: message.envelope?.to?.map(f => f.address).join(", ") || "unknown",
+    from: fromAddresses.join(", ") || "unknown",
+    to: toAddresses.join(", ") || "unknown",
+    cc,
     subject: message.envelope?.subject,
     sentAt: message.envelope?.date?.toISOString(),
     bodyText,
