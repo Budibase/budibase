@@ -1,5 +1,6 @@
 import { Message } from "../api"
 import { AgentChat, AIProvider } from "../documents"
+export * from "./ai/components"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",

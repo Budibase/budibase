@@ -1,6 +1,6 @@
 import openai from "openai"
-import { EnrichedBinding } from "../../ui"
 import type { z } from "zod"
+import { EnrichedBinding } from "../../ui"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -38,7 +38,7 @@ export interface ToolArgs<T extends z.ZodType> {
   name: string
   description: string
   parameters?: T
-  handler: (args: z.infer<T>) => Promise<string>
+  handler: (args: z.infer<T> & { toolCallId: string }) => Promise<string>
   strict?: boolean
 }
 
