@@ -20,18 +20,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/github.svg",
     },
     {
-      name: "GitLab",
-      description:
-        "GitLab REST API for groups, projects, pipelines, and DevOps automation",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/doc/api/openapi/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gitlab.svg",
-    },
-    {
       name: "PagerDuty",
       description:
         "PagerDuty REST resources for services, incidents, and incident automation",
