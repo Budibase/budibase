@@ -1,6 +1,9 @@
 import { BodyType, Query, QueryParameter, QueryVerb } from "@budibase/types"
 import { URL } from "url"
-import { serialiseRequestBody } from "../utils/requestBody"
+import {
+  buildKeyValueRequestBody,
+  serialiseRequestBody,
+} from "../utils/requestBody"
 
 export interface ImportInfo {
   name: string
@@ -76,6 +79,40 @@ export abstract class ImportSource {
     return ["post", "put", "patch"].includes(normalized)
   }
 
+  protected bodyTypeFromMimeType = (mimeType?: string): BodyType => {
+    if (!mimeType) {
+      return BodyType.JSON
+    }
+
+    const normalized = mimeType.split(";")[0].trim().toLowerCase()
+
+    if (normalized === "application/x-www-form-urlencoded") {
+      return BodyType.ENCODED
+    }
+
+    if (normalized === "multipart/form-data") {
+      return BodyType.FORM_DATA
+    }
+
+    if (normalized === "text/plain" || normalized.startsWith("text/")) {
+      return BodyType.TEXT
+    }
+
+    if (
+      normalized === "application/xml" ||
+      normalized === "text/xml" ||
+      normalized.endsWith("+xml")
+    ) {
+      return BodyType.XML
+    }
+
+    if (normalized.endsWith("+json") || normalized === "application/json") {
+      return BodyType.JSON
+    }
+
+    return BodyType.JSON
+  }
+
   constructQuery = (
     datasourceId: string,
     name: string,
@@ -110,8 +147,6 @@ export abstract class ImportSource {
       }
     }
     queryString = this.processQuery(queryString)
-    const requestBody = serialiseRequestBody(body)
-
     const combinedParameters = [...parameters]
     for (const [name, defaultValue] of Object.entries(bodyBindings)) {
       if (!name) {
@@ -126,11 +161,42 @@ export abstract class ImportSource {
       combinedParameters.push({ name, default: defaultValue })
     }
 
-    const resolvedBodyType = explicitBodyType
-      ? explicitBodyType
-      : requestBody
-        ? BodyType.JSON
-        : BodyType.NONE
+    let requestBody: string | Record<string, string> | undefined
+    let resolvedBodyType: BodyType
+
+    const isKeyValueBodyType = (type: BodyType | undefined) => {
+      return type === BodyType.FORM_DATA || type === BodyType.ENCODED
+    }
+
+    if (isKeyValueBodyType(explicitBodyType)) {
+      requestBody = buildKeyValueRequestBody(body)
+      if ((!requestBody || Object.keys(requestBody).length === 0) && body) {
+        requestBody = Object.keys(bodyBindings).reduce<Record<string, string>>(
+          (acc, key) => {
+            acc[key] = `{{ ${key} }}`
+            return acc
+          },
+          {}
+        )
+      }
+      resolvedBodyType = explicitBodyType as BodyType
+    } else {
+      requestBody = serialiseRequestBody(body)
+      resolvedBodyType = explicitBodyType
+        ? (explicitBodyType as BodyType)
+        : requestBody
+          ? BodyType.JSON
+          : BodyType.NONE
+    }
+
+    if (
+      (!requestBody ||
+        (typeof requestBody === "object" &&
+          Object.keys(requestBody).length === 0)) &&
+      isKeyValueBodyType(explicitBodyType)
+    ) {
+      requestBody = undefined
+    }
 
     const query: Query = {
       datasourceId,

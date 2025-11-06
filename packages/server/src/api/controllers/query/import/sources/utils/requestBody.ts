@@ -31,10 +31,14 @@ export interface GeneratedRequestBody {
 }
 
 const MAX_DEPTH = 5
-const BINDING_TOKEN_PREFIX = "__BUDIBASE_BINDING__"
+export const BINDING_TOKEN_PREFIX = "__BUDIBASE_BINDING__"
 const BINDING_TOKEN_REGEX = new RegExp(
   `"${BINDING_TOKEN_PREFIX}(string|integer|number|boolean)__([A-Za-z0-9_]+)__"`,
   "g"
+)
+
+const BINDING_VALUE_REGEX = new RegExp(
+  `${BINDING_TOKEN_PREFIX}(string|integer|number|boolean)__([A-Za-z0-9_]+)__`
 )
 
 const sanitizeSegment = (segment: string): string => {
@@ -549,4 +553,96 @@ export const serialiseRequestBody = (body: unknown): string | undefined => {
     }
     return binding
   })
+}
+
+const extractBindingFromPlaceholder = (value: unknown): string | undefined => {
+  if (!value || typeof value !== "object") {
+    return undefined
+  }
+  const candidate = value as { toJSON?: () => unknown }
+  if (typeof candidate.toJSON !== "function") {
+    return undefined
+  }
+  const token = candidate.toJSON()
+  if (typeof token !== "string") {
+    return undefined
+  }
+  const match = token.match(BINDING_VALUE_REGEX)
+  if (!match) {
+    return undefined
+  }
+  return match[2]
+}
+
+const buildFormKey = (path: string[]): string => {
+  if (path.length === 0) {
+    return ""
+  }
+  const [first, ...rest] = path
+  let key = first
+  for (const segment of rest) {
+    if (segment === "item") {
+      key += "[]"
+      continue
+    }
+    key += `[${segment}]`
+  }
+  return key
+}
+
+const collectKeyValuePairs = (
+  value: unknown,
+  path: string[],
+  accumulator: Record<string, string>
+) => {
+  if (value === undefined || value === null) {
+    return
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach(item => collectKeyValuePairs(item, [...path, "item"], accumulator))
+    return
+  }
+
+  const binding = extractBindingFromPlaceholder(value)
+  if (binding) {
+    const key = buildFormKey(path)
+    if (key) {
+      accumulator[key] = `{{ ${binding} }}`
+    }
+    return
+  }
+
+  if (typeof value === "object") {
+    for (const [childKey, childValue] of Object.entries(
+      value as Record<string, unknown>
+    )) {
+      collectKeyValuePairs(childValue, [...path, childKey], accumulator)
+    }
+    return
+  }
+
+  const key = buildFormKey(path)
+  if (key) {
+    accumulator[key] = String(value)
+  }
+}
+
+export const buildKeyValueRequestBody = (
+  body: unknown
+): Record<string, string> | undefined => {
+  if (!body || typeof body !== "object") {
+    return undefined
+  }
+
+  const accumulator: Record<string, string> = {}
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    collectKeyValuePairs(value, [key], accumulator)
+  }
+
+  if (Object.keys(accumulator).length === 0) {
+    return undefined
+  }
+
+  return accumulator
 }

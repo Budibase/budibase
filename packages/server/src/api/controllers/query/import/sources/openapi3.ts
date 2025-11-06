@@ -226,9 +226,10 @@ export class OpenAPI3 extends OpenAPISource {
           }
         }
         const mimeTypes = getMimeTypes(operation)
+        const primaryMimeType = mimeTypes[0]
 
-        if (mimeTypes.length > 0) {
-          headers["Content-Type"] = mimeTypes[0]
+        if (primaryMimeType) {
+          headers["Content-Type"] = primaryMimeType
         }
 
         // combine the path parameters with the operation parameters
@@ -284,7 +285,9 @@ export class OpenAPI3 extends OpenAPISource {
           parameters,
           requestBody?.body,
           requestBody?.bindings ?? {},
-          requestBody ? BodyType.JSON : BodyType.NONE
+          mimeTypes.length > 0
+            ? this.bodyTypeFromMimeType(primaryMimeType)
+            : undefined
         )
         queries.push(query)
       }

@@ -160,11 +160,13 @@ export class OpenAPI2 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
+        let primaryMimeType: string | undefined
         let requestBody: GeneratedRequestBody | undefined = undefined
         const parameters: QueryParameter[] = []
 
         if (operation.consumes) {
-          headers["Content-Type"] = operation.consumes[0]
+          primaryMimeType = operation.consumes[0]
+          headers["Content-Type"] = primaryMimeType
         }
 
         // combine the path parameters with the operation parameters
@@ -236,7 +238,9 @@ export class OpenAPI2 extends OpenAPISource {
           parameters,
           requestBody?.body,
           requestBody?.bindings ?? {},
-          requestBody ? BodyType.JSON : BodyType.NONE
+          primaryMimeType
+            ? this.bodyTypeFromMimeType(primaryMimeType)
+            : undefined
         )
         queries.push(query)
       }

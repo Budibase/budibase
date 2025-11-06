@@ -1,6 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 const SwaggerParser = require("@apidevtools/swagger-parser")
+const { BodyType } = require("@budibase/types")
 
 const { OpenAPI3 } = require("../../openapi3")
 
@@ -215,6 +216,68 @@ describe("OpenAPI3 Import", () => {
       }
 
       await runTests("crud", testHeaders, assertions)
+    })
+
+    it("sets encoded body type for form content", async () => {
+      const spec = JSON.stringify({
+        openapi: "3.0.0",
+        info: {
+          title: "Form Import",
+        },
+        paths: {
+          "/customers": {
+            post: {
+              requestBody: {
+                required: true,
+                content: {
+                  "application/x-www-form-urlencoded": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        name: {
+                          type: "string",
+                        },
+                        address: {
+                          type: "object",
+                          properties: {
+                            city: {
+                              type: "string",
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: {
+                default: {
+                  description: "created",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi3.isSupported(spec)
+      expect(supported).toBe(true)
+
+      const [query] = await openapi3.getQueries("datasourceId")
+      expect(query.fields.bodyType).toBe(BodyType.ENCODED)
+      expect(query.fields.headers["Content-Type"]).toBe(
+        "application/x-www-form-urlencoded"
+      )
+      expect(query.fields.requestBody).toEqual({
+        name: "{{ name }}",
+        "address[city]": "{{ address_city }}",
+      })
+      expect(query.parameters).toEqual(
+        expect.arrayContaining([
+          { name: "name", default: "" },
+          { name: "address_city", default: "" },
+        ])
+      )
     })
 
     const testQuery = async (file, extension, assertions) => {
