@@ -169,104 +169,104 @@ describe("OpenAPI2 Import", () => {
         ["deleteEntity", undefined],
       ])(`should have correct body for %s`, (operationId, body) => {
         expect(queries[operationId].fields.requestBody).toBe(body)
-  })
-})
+      })
+    })
 
-  it("sets encoded body type for form content", async () => {
-    const spec = JSON.stringify({
-      swagger: "2.0",
-      info: {
-        title: "Form Import",
-        version: "1.0.0",
-      },
-      paths: {
-        "/customers": {
-          post: {
-            consumes: ["application/x-www-form-urlencoded"],
-            parameters: [
-              {
-                in: "body",
-                name: "payload",
-                schema: {
-                  type: "object",
-                  properties: {
-                    name: {
-                      type: "string",
-                    },
-                    address: {
-                      type: "object",
-                      properties: {
-                        city: {
-                          type: "string",
-                        },
-                        postal_code: {
-                          type: "string",
+    it("sets encoded body type for form content", async () => {
+      const spec = JSON.stringify({
+        swagger: "2.0",
+        info: {
+          title: "Form Import",
+          version: "1.0.0",
+        },
+        paths: {
+          "/customers": {
+            post: {
+              consumes: ["application/x-www-form-urlencoded"],
+              parameters: [
+                {
+                  in: "body",
+                  name: "payload",
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: {
+                        type: "string",
+                      },
+                      address: {
+                        type: "object",
+                        properties: {
+                          city: {
+                            type: "string",
+                          },
+                          postal_code: {
+                            type: "string",
+                          },
                         },
                       },
-                    },
-                    cash_balance: {
-                      type: "object",
-                      properties: {
-                        settings: {
-                          type: "object",
-                          properties: {
-                            reconciliation_mode: {
-                              type: "string",
+                      cash_balance: {
+                        type: "object",
+                        properties: {
+                          settings: {
+                            type: "object",
+                            properties: {
+                              reconciliation_mode: {
+                                type: "string",
+                              },
                             },
                           },
                         },
                       },
-                    },
-                    expand: {
-                      type: "array",
-                      items: {
+                      expand: {
+                        type: "array",
+                        items: {
+                          type: "string",
+                        },
+                      },
+                      description: {
                         type: "string",
                       },
                     },
-                    description: {
-                      type: "string",
-                    },
                   },
                 },
-              },
-            ],
-            responses: {
-              default: {
-                description: "created",
+              ],
+              responses: {
+                default: {
+                  description: "created",
+                },
               },
             },
           },
         },
-      },
-    })
+      })
 
-    const supported = await openapi2.isSupported(spec)
-    expect(supported).toBe(true)
+      const supported = await openapi2.isSupported(spec)
+      expect(supported).toBe(true)
 
-    const [query] = await openapi2.getQueries("datasourceId")
-    expect(query.fields.bodyType).toBe(BodyType.ENCODED)
-    expect(query.fields.headers["Content-Type"]).toBe(
-      "application/x-www-form-urlencoded"
-    )
-    expect(query.fields.requestBody).toEqual({
-      name: "{{ name }}",
-      "address[city]": "{{ address_city }}",
-      "address[postal_code]": "{{ address_postal_code }}",
-      description: "{{ description }}",
-      "cash_balance[settings][reconciliation_mode]":
-        "{{ cash_balance_settings_reconciliation_mode }}",
-      "expand[]": "{{ expand }}",
+      const [query] = await openapi2.getQueries("datasourceId")
+      expect(query.fields.bodyType).toBe(BodyType.ENCODED)
+      expect(query.fields.headers?.["Content-Type"]).toBe(
+        "application/x-www-form-urlencoded"
+      )
+      expect(query.fields.requestBody).toEqual({
+        name: "{{ name }}",
+        "address[city]": "{{ address_city }}",
+        "address[postal_code]": "{{ address_postal_code }}",
+        description: "{{ description }}",
+        "cash_balance[settings][reconciliation_mode]":
+          "{{ cash_balance_settings_reconciliation_mode }}",
+        "expand[]": "{{ expand }}",
+      })
+      expect(query.parameters).toEqual(
+        expect.arrayContaining([
+          { name: "name", default: "" },
+          { name: "address_city", default: "" },
+          { name: "address_postal_code", default: "" },
+          { name: "description", default: "" },
+          { name: "cash_balance_settings_reconciliation_mode", default: "" },
+          { name: "expand", default: "" },
+        ])
+      )
     })
-    expect(query.parameters).toEqual(
-      expect.arrayContaining([
-        { name: "name", default: "" },
-        { name: "address_city", default: "" },
-        { name: "address_postal_code", default: "" },
-        { name: "description", default: "" },
-        { name: "cash_balance_settings_reconciliation_mode", default: "" },
-        { name: "expand", default: "" },
-      ])
-    )
   })
-})
 })

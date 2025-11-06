@@ -59,16 +59,6 @@ const isParameter = (
   return !isOperation(key, pathItem)
 }
 
-const isKeyValueMimeType = (mimeType: string | undefined): boolean => {
-  if (!mimeType) {
-    return false
-  }
-  const normalised = mimeType.split(";")[0].trim().toLowerCase()
-  return ["application/x-www-form-urlencoded", "multipart/form-data"].includes(
-    normalised
-  )
-}
-
 const getRequestBody = (
   operation: OpenAPIV3.OperationObject,
   bindingRoot: string,
