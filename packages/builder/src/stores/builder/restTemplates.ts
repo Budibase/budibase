@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Datadog Metrics",
-      description:
-        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/datadog.svg",
-    },
-    {
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
