@@ -31,43 +31,53 @@ describe("email state persistence", () => {
   })
 
   describe("getLastSeenUid", () => {
-    it("returns undefined when no metadata document exists", async () => {
+    it("returns undefined when the mailbox state doc is missing", async () => {
       const automationId = "auto-none"
+      const mailbox = "dom"
       const tryGet = jest.fn().mockResolvedValue(undefined)
       getWorkspaceDBMock.mockReturnValueOnce({ tryGet })
 
-      const result = await getLastSeenUid(automationId)
+      const result = await getLastSeenUid(automationId, mailbox)
 
       expect(result).toBeUndefined()
+      expect(tryGet).toHaveBeenCalledTimes(1)
       expect(tryGet).toHaveBeenCalledWith(
-        `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}`
+        `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}:${Buffer.from(
+          mailbox,
+          "utf8"
+        ).toString("hex")}`
       )
     })
 
-    it("returns the stored UID when present", async () => {
+    it("returns the stored UID when present for a mailbox", async () => {
       const automationId = "auto-valid"
+      const mailbox = "alerts"
       const tryGet = jest.fn().mockResolvedValue({ lastSeenUid: 42 })
       getWorkspaceDBMock.mockReturnValueOnce({ tryGet })
 
-      const result = await getLastSeenUid(automationId)
+      const result = await getLastSeenUid(automationId, mailbox)
 
       expect(result).toBe(42)
       expect(tryGet).toHaveBeenCalledWith(
-        `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}`
+        `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}:${Buffer.from(
+          mailbox,
+          "utf8"
+        ).toString("hex")}`
       )
     })
   })
 
   describe("setLastSeenUid", () => {
-    it("persists the UID via updateEntityMetadata", async () => {
+    it("persists mailbox-specific state via updateEntityMetadata", async () => {
       const automationId = "auto-update"
-      updateEntityMetadataMock.mockResolvedValue({})
+      const mailbox = "dom"
+      updateEntityMetadataMock.mockResolvedValue({}) // allow chaining
 
-      await setLastSeenUid(automationId, 99)
+      await setLastSeenUid(automationId, mailbox, 99)
 
       expect(updateEntityMetadataMock).toHaveBeenCalledWith(
         MetadataType.AUTOMATION_EMAIL_STATE,
-        automationId,
+        `${automationId}:${Buffer.from(mailbox, "utf8").toString("hex")}`,
         expect.any(Function)
       )
 

@@ -25,11 +25,11 @@ export const checkMail = async (
         }
       : undefined
   )
-  const stateKey = automationId
   const mailbox = imapInputs?.mailbox || DEFAULT_MAILBOX
+  const stateKey = automationId
 
   try {
-    const lastSeenUid = await getLastSeenUid(stateKey)
+    const lastSeenUid = await getLastSeenUid(stateKey, mailbox)
     const messages = await fetchMessages(imapClient, mailbox, lastSeenUid)
     console.info(
       `[email trigger] fetched ${messages.length} messages from mailbox ${mailbox}`
@@ -58,7 +58,7 @@ export const checkMail = async (
     }
 
     if (!lastSeenUid) {
-      await setLastSeenUid(stateKey, latestUid)
+      await setLastSeenUid(stateKey, mailbox, latestUid)
       return { proceed: false, reason: "init, now waiting" }
     }
 
@@ -70,7 +70,7 @@ export const checkMail = async (
       return { proceed: false, reason: "no new mail" }
     }
 
-    await setLastSeenUid(stateKey, latestUid)
+    await setLastSeenUid(stateKey, mailbox, latestUid)
 
     const outputMessages = await Promise.all(
       unseenMessages.map(({ message }) => toOutputFields(message))

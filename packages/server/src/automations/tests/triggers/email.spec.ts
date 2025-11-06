@@ -146,7 +146,11 @@ describe("checkMail behaviour", () => {
       undefined
     )
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
-    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith("automation-first", 5)
+    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith(
+      "automation-first",
+      triggerInputs.mailbox,
+      5
+    )
     expect(mocks.logout).toHaveBeenCalledTimes(1)
   })
 
@@ -189,11 +193,13 @@ describe("checkMail behaviour", () => {
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       1,
       "automation-new-mail",
+      triggerInputs.mailbox,
       10
     )
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       2,
       "automation-new-mail",
+      triggerInputs.mailbox,
       11
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
@@ -253,11 +259,13 @@ describe("checkMail behaviour", () => {
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       1,
       "automation-multi-send",
+      triggerInputs.mailbox,
       50
     )
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       2,
       "automation-multi-send",
+      triggerInputs.mailbox,
       52
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)

@@ -19,7 +19,7 @@ export const fetchMessages = async (
   const mailbox = await client.mailboxOpen(mailboxKey)
 
   if (!mailbox.exists) {
-    throw new Error("Mailbox does not exist")
+    return []
   }
 
   if (lastSeenUid == null) {
