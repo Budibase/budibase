@@ -69,6 +69,11 @@ const environment = {
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   TOP_LEVEL_PATH: TOP_LEVEL_PATH,
   EMAIL_TEMPLATE_PATH: process.env.EMAIL_TEMPLATE_PATH,
+  // server
+  HTTP_SERVER_TIMEOUT_MS: process.env.HTTP_SERVER_TIMEOUT_MS,
+  HTTP_HEADERS_TIMEOUT_MS: process.env.HTTP_HEADERS_TIMEOUT_MS,
+  HTTP_REQUEST_TIMEOUT_MS: process.env.HTTP_REQUEST_TIMEOUT_MS,
+  HTTP_KEEPALIVE_TIMEOUT_MS: process.env.HTTP_KEEPALIVE_TIMEOUT_MS,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */
