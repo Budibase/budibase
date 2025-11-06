@@ -7,6 +7,7 @@ const fetchQuery = {
   bodyStructure: true,
   internalDate: true,
   size: true,
+  source: true,
 }
 
 export const fetchMessages = async (

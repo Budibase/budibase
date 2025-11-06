@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Email",
+  name: "Email Received",
   event: AutomationEventType.EMAIL_TRIGGER,
   icon: "envelope",
   tagline: "Email Trigger",
@@ -15,15 +15,7 @@ export const definition: AutomationTriggerDefinition = {
   stepId: AutomationTriggerStepId.EMAIL,
   inputs: {},
   schema: {
-    inputs: {
-      properties: {
-        from: {
-          type: AutomationIOType.STRING,
-          title: "From:",
-          description: "Leave empty to react to any sender",
-        },
-      },
-    },
+    inputs: { properties: {} },
     outputs: {
       properties: {
         from: {
@@ -41,6 +33,10 @@ export const definition: AutomationTriggerDefinition = {
         sentAt: {
           type: AutomationIOType.DATETIME,
           description: "When the email was sent",
+        },
+        bodyText: {
+          type: AutomationIOType.STRING,
+          description: "Email content (plain text)",
         },
       },
       required: ["from", "to"],

@@ -1,0 +1,106 @@
+export function getComponentStructure({ chatbox } = { chatbox: false }) {
+  const structure = [
+    {
+      name: "Blocks",
+      icon: "Article",
+      children: [
+        "cardsblock",
+        "repeaterblock",
+        "formblock",
+        "multistepformblock",
+        "chartblock",
+        "rowexplorer",
+      ],
+    },
+    {
+      name: "Layout",
+      icon: "ClassicGridView",
+      children: ["container", "sidepanel", "modal", "accordion"],
+    },
+    {
+      name: "Data",
+      icon: "Data",
+      children: [
+        "singlerowprovider",
+        "dataprovider",
+        "repeater",
+        "gridblock",
+        "pdftable",
+        "spreadsheet",
+        "dynamicfilter",
+        "filter",
+        "daterangepicker",
+      ],
+    },
+    {
+      name: "Basic",
+      icon: "TextParagraph",
+      children: [
+        "textv2",
+        "button",
+        "buttongroup",
+        "tag",
+        "spectrumcard",
+        "cardstat",
+        "divider",
+        "image",
+        "link",
+        "iconphosphor",
+        "embed",
+        "backgroundimage",
+        "embeddedmap",
+        "codegenerator",
+      ],
+    },
+    {
+      name: "Form",
+      icon: "list",
+      children: [
+        "form",
+        "formstep",
+        "fieldgroup",
+        "stringfield",
+        "numberfield",
+        "bigintfield",
+        "passwordfield",
+        "optionsfield",
+        "booleanfield",
+        "longformfield",
+        "attachmentsinglefield",
+        "attachmentfield",
+        "jsonfield",
+        "relationshipfield",
+        "datetimefield",
+        "multifieldselect",
+        "s3upload",
+        "codescanner",
+        "signaturesinglefield",
+        "bbreferencesinglefield",
+        "bbreferencefield",
+        "ratingfield",
+      ],
+    },
+    {
+      name: "Chart",
+      icon: "GraphBarVertical",
+      children: [
+        "bar",
+        "line",
+        "area",
+        "candlestick",
+        "pie",
+        "donut",
+        "histogram",
+      ],
+    },
+  ]
+
+  if (chatbox) {
+    structure.push({
+      name: "AI",
+      icon: "GraphBarVertical",
+      children: ["chatbox"],
+    })
+  }
+  return structure
+}

@@ -231,7 +231,7 @@
   showCancelButton={false}
 >
   {#if currentStep === Step.CONFIG}
-    <div>
+    <div class="modal-content">
       <Input
         autofocus={true}
         bind:value={$values.name}
@@ -302,5 +302,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .modal-content {
+    overflow: hidden;
   }
 </style>
