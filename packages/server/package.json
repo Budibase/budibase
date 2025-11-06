@@ -41,7 +41,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
-    "@apidevtools/swagger-parser": "10.0.3",
+    "@apidevtools/swagger-parser": "12.1.0",
     "@aws-sdk/client-dynamodb": "3.709.0",
     "@aws-sdk/client-s3": "3.709.0",
     "@aws-sdk/lib-dynamodb": "3.709.0",
@@ -138,6 +138,7 @@
     "@babel/preset-env": "7.16.11",
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
+    "@types/js-yaml": "^4.0.9",
     "@types/html-to-text": "^9.0.4",
     "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
