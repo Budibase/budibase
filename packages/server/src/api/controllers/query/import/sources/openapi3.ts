@@ -8,7 +8,6 @@ import {
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
 } from "./utils/requestBody"
-import { BodyType } from "@budibase/types"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
@@ -60,18 +59,31 @@ const isParameter = (
   return !isOperation(key, pathItem)
 }
 
+const isKeyValueMimeType = (mimeType: string | undefined): boolean => {
+  if (!mimeType) {
+    return false
+  }
+  const normalised = mimeType.split(";")[0].trim().toLowerCase()
+  return ["application/x-www-form-urlencoded", "multipart/form-data"].includes(
+    normalised
+  )
+}
+
 const getRequestBody = (
   operation: OpenAPIV3.OperationObject,
-  bindingRoot: string
+  bindingRoot: string,
+  mimeTypeOverride?: string
 ): GeneratedRequestBody | undefined => {
   if (requestBodyNotRef(operation.requestBody)) {
     const request: OpenAPIV3.RequestBodyObject = operation.requestBody
     const supportedMimeTypes = getMimeTypes(operation)
-    if (supportedMimeTypes.length > 0) {
-      const mimeType = supportedMimeTypes[0]
-
+    const mimeType = mimeTypeOverride || supportedMimeTypes[0]
+    if (mimeType) {
       // try get example from request
       const content = request.content[mimeType]
+      if (!content) {
+        return undefined
+      }
       if (content.example) {
         return generateRequestBodyFromExample(content.example, bindingRoot)
       }
@@ -213,8 +225,15 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: { [key: string]: unknown } = {}
+        const mimeTypes = getMimeTypes(operation)
+        const primaryMimeType = mimeTypes[0]
+
         const requestBody = this.methodHasRequestBody(methodName)
-          ? getRequestBody(operation, operation.operationId || path)
+          ? getRequestBody(
+              operation,
+              operation.operationId || path,
+              primaryMimeType
+            )
           : undefined
         const parameters: QueryParameter[] = []
         const ensureParameter = (paramName: string, defaultValue = "") => {
@@ -225,9 +244,6 @@ export class OpenAPI3 extends OpenAPISource {
             })
           }
         }
-        const mimeTypes = getMimeTypes(operation)
-        const primaryMimeType = mimeTypes[0]
-
         if (primaryMimeType) {
           headers["Content-Type"] = primaryMimeType
         }

@@ -272,6 +272,10 @@ const getPrimitiveDefaultFromSchema = (
   return defaultValueForType(type)
 }
 
+interface BuildOptions {
+  totalLimit?: number
+}
+
 interface BuildResult {
   value: unknown
   bindings: Record<string, string>
@@ -304,8 +308,10 @@ const buildFromSchema = (
   schema: SchemaObject | undefined,
   path: string[],
   depth: number,
-  seen: Set<SchemaObject>
+  seen: Set<SchemaObject>,
+  options: BuildOptions
 ): BuildResult => {
+  const { totalLimit = 12 } = options
   const resolved = pickSchema(schema)
   if (!resolved) {
     const type = normalisePrimitiveType(undefined)
@@ -337,22 +343,37 @@ const buildFromSchema = (
   if (type === "object") {
     const properties = getProperties(resolved)
     const propertyNames = Object.keys(properties)
-    const includeOptional =
-      propertyNames.length > 0 && propertyNames.length <= 10
+    if (propertyNames.length === 0) {
+      seen.delete(resolved)
+      return { value: {}, bindings: {} }
+    }
 
-    let selectedProperties = includeOptional
-      ? propertyNames
-      : getRequiredProperties(resolved).filter(property =>
-          propertyNames.includes(property)
-        )
+    const requiredProperties = getRequiredProperties(resolved).filter(
+      property => propertyNames.includes(property)
+    )
+
+    const optionalProperties = propertyNames.filter(
+      property => !requiredProperties.includes(property)
+    )
+
+    let optionalSelection: string[] = []
+    if (optionalProperties.length > 0) {
+      const remainingCapacity = Math.max(
+        totalLimit - requiredProperties.length,
+        0
+      )
+      if (remainingCapacity > 0) {
+        optionalSelection = optionalProperties.slice(0, remainingCapacity)
+      }
+    }
+
+    let selectedProperties = [...requiredProperties, ...optionalSelection]
+
+    const uniqueSelected = new Set(selectedProperties)
+    selectedProperties = Array.from(uniqueSelected)
 
     if (selectedProperties.length === 0) {
       selectedProperties = propertyNames.slice(0, 1)
-    }
-
-    if (selectedProperties.length === 0) {
-      seen.delete(resolved)
-      return { value: {}, bindings: {} }
     }
 
     const objectValue: Record<string, unknown> = {}
@@ -364,7 +385,8 @@ const buildFromSchema = (
         propertySchema,
         [...path, property],
         depth + 1,
-        seen
+        seen,
+        options
       )
       if (child.value === undefined) {
         const fallback = createPrimitiveBindingResult(
@@ -390,7 +412,8 @@ const buildFromSchema = (
       itemSchema,
       [...path, "item"],
       depth + 1,
-      seen
+      seen,
+      options
     )
     const arrayValue: unknown[] = child.value === undefined ? [] : [child.value]
     seen.delete(resolved)
@@ -504,7 +527,8 @@ export const generateRequestBodyFromSchema = (
     | OpenAPIV3.SchemaObject
     | SchemaObject
     | undefined,
-  rootName = "body"
+  rootName = "body",
+  options: BuildOptions = {}
 ): GeneratedRequestBody | undefined => {
   const resolvedSchema = pickSchema(
     schema as SchemaObject | ReferenceObject | undefined
@@ -513,7 +537,16 @@ export const generateRequestBodyFromSchema = (
     return undefined
   }
   const seen = new Set<SchemaObject>()
-  const result = buildFromSchema(resolvedSchema, [rootName], 0, seen)
+  const buildOptions: BuildOptions = {
+    totalLimit: options.totalLimit ?? 12,
+  }
+  const result = buildFromSchema(
+    resolvedSchema,
+    [rootName],
+    0,
+    seen,
+    buildOptions
+  )
   if (result.value === undefined) {
     return undefined
   }
@@ -600,7 +633,9 @@ const collectKeyValuePairs = (
   }
 
   if (Array.isArray(value)) {
-    value.forEach(item => collectKeyValuePairs(item, [...path, "item"], accumulator))
+    value.forEach(item =>
+      collectKeyValuePairs(item, [...path, "item"], accumulator)
+    )
     return
   }
 

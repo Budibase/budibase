@@ -8,7 +8,6 @@ import {
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
 } from "./utils/requestBody"
-import { BodyType } from "@budibase/types"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject

@@ -199,7 +199,32 @@ describe("OpenAPI2 Import", () => {
                         city: {
                           type: "string",
                         },
+                        postal_code: {
+                          type: "string",
+                        },
                       },
+                    },
+                    cash_balance: {
+                      type: "object",
+                      properties: {
+                        settings: {
+                          type: "object",
+                          properties: {
+                            reconciliation_mode: {
+                              type: "string",
+                            },
+                          },
+                        },
+                      },
+                    },
+                    expand: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                      },
+                    },
+                    description: {
+                      type: "string",
                     },
                   },
                 },
@@ -226,11 +251,20 @@ describe("OpenAPI2 Import", () => {
     expect(query.fields.requestBody).toEqual({
       name: "{{ name }}",
       "address[city]": "{{ address_city }}",
+      "address[postal_code]": "{{ address_postal_code }}",
+      description: "{{ description }}",
+      "cash_balance[settings][reconciliation_mode]":
+        "{{ cash_balance_settings_reconciliation_mode }}",
+      "expand[]": "{{ expand }}",
     })
     expect(query.parameters).toEqual(
       expect.arrayContaining([
         { name: "name", default: "" },
         { name: "address_city", default: "" },
+        { name: "address_postal_code", default: "" },
+        { name: "description", default: "" },
+        { name: "cash_balance_settings_reconciliation_mode", default: "" },
+        { name: "expand", default: "" },
       ])
     )
   })
