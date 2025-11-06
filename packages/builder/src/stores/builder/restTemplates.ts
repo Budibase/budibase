@@ -8,18 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Box",
-      description:
-        "Cloud content management for files, folders, collaboration, and metadata",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/speakeasy-sdks/box-sdks/main/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/box.svg",
-    },
-    {
       name: "Datadog Metrics",
       description:
         "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
