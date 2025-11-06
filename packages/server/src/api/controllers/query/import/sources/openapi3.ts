@@ -260,7 +260,11 @@ export class OpenAPI3 extends OpenAPISource {
 
             // add the parameter if it can be bound in our config
             if (["query", "header", "path"].includes(param.in)) {
-              ensureParameter(param.name)
+              let defaultValue = ""
+              if (schemaNotRef(param.schema) && param.schema.default) {
+                defaultValue = String(param.schema.default)
+              }
+              ensureParameter(param.name, defaultValue)
             }
           }
         }
