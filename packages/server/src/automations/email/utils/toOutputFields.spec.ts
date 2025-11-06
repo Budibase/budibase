@@ -6,7 +6,10 @@ import {
   toOutputFields,
 } from "./toOutputFields"
 
-const buildMessage = (raw: string): FetchMessageObject => {
+const buildMessage = (
+  raw: string,
+  envelopeOverrides: Partial<NonNullable<FetchMessageObject["envelope"]>> = {}
+): FetchMessageObject => {
   const source = Buffer.from(raw, "utf8")
   return {
     source,
@@ -17,6 +20,7 @@ const buildMessage = (raw: string): FetchMessageObject => {
       to: [{ address: "recipient@example.com" }],
       subject: "subject",
       date: new Date("2024-01-01T00:00:00.000Z"),
+      ...envelopeOverrides,
     },
   }
 }
@@ -32,6 +36,7 @@ describe("toOutputFields", () => {
 
     expect(result.bodyText).toEqual(body)
     expect(result.bodyTextTruncated).toBe(false)
+    expect(result.cc).toEqual([])
   })
 
   it("formats HTML body to readable text when plain body is empty", async () => {
@@ -59,6 +64,7 @@ describe("toOutputFields", () => {
 
     expect(result.bodyText).toEqual(htmlToText(html))
     expect(result.bodyTextTruncated).toBe(false)
+    expect(result.cc).toEqual([])
   })
 
   it("truncates bodyText when exceeding limit", async () => {
@@ -77,6 +83,7 @@ describe("toOutputFields", () => {
     expect(result.bodyText).toBe(expectedBody)
     expect(result.bodyText?.length).toBe(EMAIL_BODY_CHARACTER_LIMIT)
     expect(result.bodyTextTruncated).toBe(true)
+    expect(result.cc).toEqual([])
   })
 
   it("returns undefined body without truncation when source is missing", async () => {
@@ -88,6 +95,27 @@ describe("toOutputFields", () => {
     const result = await toOutputFields(message)
 
     expect(result.bodyText).toBeUndefined()
+    expect(result.bodyTextTruncated).toBe(false)
+    expect(result.cc).toEqual([])
+  })
+
+  it("returns all cc addresses as an array", async () => {
+    const body = "Body with CC"
+    const message = buildMessage(
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n"),
+      {
+        cc: [
+          { address: "first@example.com" },
+          { address: undefined },
+          { address: "second@example.com" },
+        ],
+      }
+    )
+
+    const result = await toOutputFields(message)
+
+    expect(result.cc).toEqual(["first@example.com", "second@example.com"])
+    expect(result.bodyText).toEqual(body)
     expect(result.bodyTextTruncated).toBe(false)
   })
 })
