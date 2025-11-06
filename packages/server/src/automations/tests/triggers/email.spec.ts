@@ -133,6 +133,7 @@ describe("checkMail behaviour", () => {
     const fields = {
       from: "sender@example.com",
       to: "recipient@example.com",
+      cc: [],
       subject: "Hello",
       sentAt: "2024-01-01T00:00:00.000Z",
       bodyText: "Parsed email body",
@@ -182,11 +183,13 @@ describe("checkMail behaviour", () => {
     const firstFields = {
       from: "sender@example.com",
       bodyText: "First body",
+      cc: [],
       bodyTextTruncated: false,
     }
     const secondFields = {
       from: "other@example.com",
       bodyText: "Second body",
+      cc: [],
       bodyTextTruncated: false,
     }
 
