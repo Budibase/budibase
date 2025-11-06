@@ -32,18 +32,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/pagerduty.svg",
     },
     {
-      name: "Salesforce",
-      description:
-        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
-      specs: [
-        {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/salesforce.svg",
-    },
-    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
