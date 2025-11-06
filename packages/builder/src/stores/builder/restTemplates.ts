@@ -56,18 +56,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/gitlab.svg",
     },
     {
-      name: "Gmail",
-      description:
-        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gmail.svg",
-    },
-    {
       name: "Jira",
       description:
         "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
