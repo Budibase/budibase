@@ -41,10 +41,10 @@ export default function createKoaApp() {
 
   const server = http.createServer(app.callback())
 
-  server.timeout = parseInt(env.HTTP_SERVER_TIMEOUT_MS || "600000")
-  server.headersTimeout = parseInt(env.HTTP_HEADERS_TIMEOUT_MS || "120000")
-  server.requestTimeout = parseInt(env.HTTP_REQUEST_TIMEOUT_MS || "1200000")
-  server.keepAliveTimeout = parseInt(env.HTTP_KEEPALIVE_TIMEOUT_MS || "5000")
+  server.timeout = parseInt(env.HTTP_SERVER_TIMEOUT_MS || "60000")
+  server.headersTimeout = parseInt(env.HTTP_HEADERS_TIMEOUT_MS || "12000")
+  server.requestTimeout = parseInt(env.HTTP_REQUEST_TIMEOUT_MS || "120000")
+  server.keepAliveTimeout = parseInt(env.HTTP_KEEPALIVE_TIMEOUT_MS || "15000")
 
   const shutdown = async () => {
     console.log("Server shutting down gracefully...")
