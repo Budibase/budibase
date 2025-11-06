@@ -20,11 +20,11 @@ function buildDocId(tableId: string) {
 function getSchemaSeed(table: Table, columnName: string): number {
   const schema = table.schema[columnName] as
     | {
-        lastID?: number
+        lastId?: number
       }
     | undefined
-  if (schema?.lastID != null && !Number.isNaN(schema.lastID)) {
-    return schema.lastID
+  if (schema?.lastId != null && !Number.isNaN(schema.lastId)) {
+    return schema.lastId
   }
   return 0
 }
