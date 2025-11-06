@@ -26,6 +26,11 @@ export const definition: AutomationTriggerDefinition = {
           type: AutomationIOType.STRING,
           description: "Who received the email",
         },
+        cc: {
+          type: AutomationIOType.ARRAY,
+          subtype: AutomationIOType.STRING,
+          description: "Who was CC'd on the email",
+        },
         subject: {
           type: AutomationIOType.STRING,
           description: "What was the subject of the email",

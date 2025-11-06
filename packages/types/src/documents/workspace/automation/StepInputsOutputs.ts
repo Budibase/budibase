@@ -433,6 +433,7 @@ export type CronTriggerOutputs = {
 export type EmailTriggerOutputs = {
   from: string
   to: string
+  cc: string[]
   subject?: string
   sentAt?: string
   bodyText?: string
