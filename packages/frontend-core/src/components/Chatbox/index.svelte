@@ -431,7 +431,6 @@
   }
 
   .input-wrapper {
-    position: sticky;
     bottom: 0;
     width: 600px;
     margin: 0 auto;
