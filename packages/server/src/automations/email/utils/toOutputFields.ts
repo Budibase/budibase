@@ -12,8 +12,11 @@ interface BodyLimitResult {
   truncated: boolean
 }
 
-const extractAddresses = (addresses: MessageAddressObject[] = []) =>
-  addresses.map(address => address.address).filter(address => !!address)
+const extractAddresses = (addresses: MessageAddressObject[] = []): string[] =>
+  addresses.reduce<string[]>((acc, { address }) => {
+    if (address) acc.push(address)
+    return acc
+  }, [])
 
 const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   if (!body) {
