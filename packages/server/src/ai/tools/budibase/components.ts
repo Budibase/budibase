@@ -217,6 +217,9 @@ When you include the tool result in your reply, write natural-language guidance,
         message: `Form submission processed successfully for component ${componentId}.`,
         row,
       })
+
+      // TODO: handle errors
+      // TODO: find a way to alter the chat messages, to remove the tools and calls related to this component. This will tidy the llm message and it will remove the component from the frontend.
     },
   }),
 ]
