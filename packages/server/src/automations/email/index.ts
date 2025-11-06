@@ -1,3 +1,4 @@
+import { EmailTriggerInputs } from "@budibase/types"
 import { CheckMailOutput } from "./types/CheckMailOutput"
 import { toOutputFields } from "./utils/toOutputFields"
 import { getClient } from "./utils/getClient"
@@ -5,18 +6,34 @@ import { fetchMessages } from "./utils/fetchMessages"
 import { getMessageId } from "./utils/getMessageId"
 import { getLastSeenUid, setLastSeenUid } from "./state"
 
-export const lockKey = "INBOX"
+export const DEFAULT_MAILBOX = "INBOX"
 
 export const checkMail = async (
-  automationId: string
+  automationId: string,
+  imapInputs?: EmailTriggerInputs
 ): Promise<CheckMailOutput> => {
-  const imapClient = await getClient()
+  const imapClient = await getClient(
+    imapInputs
+      ? {
+          host: imapInputs.host,
+          port: imapInputs.port,
+          secure: imapInputs.secure,
+          auth: {
+            user: imapInputs.username,
+            pass: imapInputs.password,
+          },
+        }
+      : undefined
+  )
   const stateKey = automationId
+  const mailbox = imapInputs?.mailbox || DEFAULT_MAILBOX
 
   try {
     const lastSeenUid = await getLastSeenUid(stateKey)
-    const messages = await fetchMessages(imapClient, lockKey, lastSeenUid)
-    console.info(`[email trigger] fetched ${messages.length} messages`)
+    const messages = await fetchMessages(imapClient, mailbox, lastSeenUid)
+    console.info(
+      `[email trigger] fetched ${messages.length} messages from mailbox ${mailbox}`
+    )
 
     if (!messages.length) {
       return { proceed: false, reason: "no new mail" }
