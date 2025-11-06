@@ -277,6 +277,7 @@
       values,
       tableId,
     }
+    // TODO: this should probably not be a system message. Can we call the tool submit_form_data directly instead?
     await prompt(JSON.stringify(data), "system")
   }
 
