@@ -44,7 +44,10 @@
 
 <div class="email-trigger">
   <div class="email-trigger__title">
-    <Label size="S">IMAP</Label>
+    <Label size="L">IMAP settings</Label>
+    <p class="email-trigger__subtitle">
+      Configure your inbox connection details below.
+    </p>
   </div>
   <div class="email-trigger__fields">
     {#each orderedFields as key}
@@ -83,8 +86,21 @@
 </div>
 
 <style>
+  .email-trigger {
+    padding-bottom: var(--spacing-xl);
+  }
+
   .email-trigger__title {
     margin-bottom: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .email-trigger__subtitle {
+    margin: 0;
+    color: var(--spectrum-alias-label-text-color);
+    font-size: 13px;
   }
 
   .email-trigger__fields {
