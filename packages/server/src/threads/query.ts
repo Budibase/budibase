@@ -1,5 +1,9 @@
 import { auth, cache, context } from "@budibase/backend-core"
-import { iifeWrapper, processStringSync } from "@budibase/string-templates"
+import {
+  findHBSBlocks,
+  iifeWrapper,
+  processStringSync,
+} from "@budibase/string-templates"
 import {
   Datasource,
   DatasourcePlus,
@@ -367,11 +371,17 @@ class QueryRunner {
     if (typeof value !== "string") {
       return false
     }
-    const match = value.match(/^{{\s*([^}]+)\s*}}$/)
-    if (!match) {
+    const trimmed = value.trim()
+    const [block] = findHBSBlocks(trimmed)
+    if (!block || block !== trimmed) {
       return false
     }
-    const binding = match[1].replace(/\s+/g, "")
+    const isTriple = block.startsWith("{{{") && block.endsWith("}}}")
+    const braceLength = isTriple ? 3 : 2
+    if (block.length <= braceLength * 2) {
+      return false
+    }
+    const binding = block.slice(braceLength, -braceLength).replace(/\s+/g, "")
     const target = staticBindingName.replace(/\s+/g, "")
     return binding === target
   }
