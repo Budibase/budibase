@@ -60,7 +60,7 @@
   let selectedEndpointId: string | undefined = undefined
   let endpointsLoading = false
   let endpointsError: string | null = null
-  let dataStringCache: string | undefined
+  let endpointsSourceUrl: string | undefined
   let loadRequestId = 0
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
   let currentTemplateUrl: string | undefined
@@ -108,7 +108,7 @@
     selectedEndpointId = undefined
     endpointsError = null
     endpointsLoading = false
-    dataStringCache = undefined
+    endpointsSourceUrl = undefined
     templateDocsBaseUrl = undefined
   }
 
@@ -119,16 +119,11 @@
     endpointsError = null
 
     try {
-      const response = await fetch(specUrl)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch template (${response.status})`)
-      }
-      const dataString = await response.text()
-      const info = await queries.fetchImportInfo({ data: dataString })
+      const info = await queries.fetchImportInfo({ url: specUrl })
       if (requestId !== loadRequestId) {
         return
       }
-      dataStringCache = dataString
+      endpointsSourceUrl = specUrl
       templateDocsBaseUrl = info.docsUrl
       endpointOptions = (info.endpoints || [])
         .slice()
@@ -141,7 +136,7 @@
       endpointsError = error?.message || "Failed to load endpoints"
       endpointOptions = []
       selectedEndpointId = undefined
-      dataStringCache = undefined
+      endpointsSourceUrl = undefined
     } finally {
       if (requestId === loadRequestId) {
         endpointsLoading = false
@@ -224,7 +219,7 @@
         return keepOpen
       }
 
-      if (!dataStringCache) {
+      if (!endpointsSourceUrl) {
         notifications.error("Import data is missing")
         return keepOpen
       }
@@ -234,7 +229,7 @@
       }
 
       const body: ImportRestQueryRequest = {
-        data: dataStringCache,
+        url: endpointsSourceUrl,
         datasourceId,
         datasource,
         selectedEndpointId,

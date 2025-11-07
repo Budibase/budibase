@@ -36,9 +36,9 @@
   let templateEndpointModal: Modal
   let selectedTemplate: RestTemplate | null = null
   let templateLoading = false
+  let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
   let pendingSpec: RestTemplate["specs"][number] | null = null
-  let pendingSpecData: string | null = null
   let templateEndpoints: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
@@ -87,15 +87,9 @@
     }
 
     templateLoading = true
+    templateLoadingPhase = "info"
     try {
-      const response = await fetch(spec.url)
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch template definition (${response.status})`
-        )
-      }
-      const specData = await response.text()
-      const info = await queries.fetchImportInfo({ data: specData })
+      const info = await queries.fetchImportInfo({ url: spec.url })
 
       if (!info.endpoints?.length) {
         throw new Error("No endpoints found in this template")
@@ -103,7 +97,6 @@
 
       pendingTemplate = template
       pendingSpec = spec
-      pendingSpecData = specData
       templateDocsBaseUrl = info.docsUrl
       templateEndpoints = info.endpoints
         ?.slice()
@@ -116,6 +109,7 @@
       )
     } finally {
       templateLoading = false
+      templateLoadingPhase = null
     }
   }
 
@@ -174,7 +168,6 @@
     if (
       !pendingTemplate ||
       !pendingSpec ||
-      !pendingSpecData ||
       !selectedEndpointId ||
       !restIntegration
     ) {
@@ -183,6 +176,7 @@
     }
 
     templateLoading = true
+    templateLoadingPhase = "import"
     try {
       const config = {
         ...configFromIntegration(restIntegration),
@@ -202,7 +196,7 @@
       }
 
       await queries.importQueries({
-        data: pendingSpecData,
+        url: pendingSpec.url,
         datasource,
         datasourceId: datasource._id,
         selectedEndpointId,
@@ -220,6 +214,7 @@
       return keepOpen
     } finally {
       templateLoading = false
+      templateLoadingPhase = null
     }
   }
 
@@ -230,7 +225,6 @@
   const resetEndpointSelection = () => {
     pendingTemplate = null
     pendingSpec = null
-    pendingSpecData = null
     templateEndpoints = []
     selectedEndpointId = undefined
     templateDocsBaseUrl = undefined
@@ -381,12 +375,12 @@
       <Body size="XS">
         Choose the action you want to import from {pendingTemplate?.name}.
       </Body>
-      {#if templateLoading && !pendingSpecData}
+      {#if templateLoading && templateLoadingPhase === "info"}
         <div class="endpoint-loading">
           <ProgressCircle size="S" />
           <Body size="XS">Loading actions…</Body>
         </div>
-      {:else if templateLoading}
+      {:else if templateLoading && templateLoadingPhase === "import"}
         <div class="endpoint-loading">
           <ProgressCircle size="S" />
           <Body size="XS">Importing selected action…</Body>

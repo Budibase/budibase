@@ -31,7 +31,7 @@ const writeRoutes = endpointGroupList.group(
 )
 
 builderRoutes
-  .get("/api/queries", queryController.fetch)
+  .get("/api/queries", queryController.fetchQueries)
   .post(
     "/api/queries",
     bodySubResource("datasourceId", "_id"),

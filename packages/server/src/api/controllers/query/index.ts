@@ -40,6 +40,7 @@ import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
+import fetch from "node-fetch"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -67,15 +68,44 @@ function validateQueryInputs(parameters: QueryEventParameters) {
   }
 }
 
-export async function fetch(ctx: UserCtx<void, FetchQueriesResponse>) {
+export async function fetchQueries(ctx: UserCtx<void, FetchQueriesResponse>) {
   ctx.body = await sdk.queries.fetch()
+}
+
+const resolveImportData = async (
+  ctx: UserCtx,
+  payload: { data?: string; url?: string }
+) => {
+  const data = payload.data?.trim()
+  if (data) {
+    return payload.data as string
+  }
+
+  const url = payload.url?.trim()
+  if (url) {
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        ctx.throw(
+          response.status,
+          `Failed to fetch import data (status ${response.status})`
+        )
+      }
+      return await response.text()
+    } catch (error: any) {
+      const message = error?.message || "Unknown error"
+      ctx.throw(502, `Failed to fetch import data - ${message}`)
+    }
+  }
+
+  ctx.throw(400, "Import data is required")
 }
 
 const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
   const body = ctx.request.body
-  const data = body.data
+  const data = await resolveImportData(ctx, body)
 
   const importer = new RestImporter(data)
   await importer.init()
@@ -133,10 +163,7 @@ export { _import as import }
 export async function importInfo(
   ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
 ) {
-  const { data } = ctx.request.body
-  if (!data) {
-    ctx.throw(400, "Import data is required")
-  }
+  const data = await resolveImportData(ctx, ctx.request.body)
   const importer = new RestImporter(data)
   await importer.init()
   const info = await importer.getInfo()

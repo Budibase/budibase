@@ -13,7 +13,8 @@ export interface SaveQueryResponse extends Query {}
 
 export interface ImportRestQueryRequest {
   datasourceId?: string
-  data: string
+  data?: string
+  url?: string
   datasource: Datasource
   selectedEndpointId?: string
 }
@@ -28,7 +29,8 @@ export interface QueryImportEndpoint {
 }
 
 export interface ImportRestQueryInfoRequest {
-  data: string
+  data?: string
+  url?: string
 }
 
 export interface ImportRestQueryInfoResponse {
