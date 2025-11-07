@@ -22,7 +22,7 @@ import {
 import {
   clearMetadata,
   disableAllCrons,
-  enableCronTrigger,
+  enableCronOrEmailTrigger,
 } from "../../../automations/utils"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import env from "../../../environment"
@@ -98,11 +98,12 @@ async function initDeployedApp(prodAppId: string) {
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
+
   for (let automation of automations) {
     promises.push(
-      enableCronTrigger(prodAppId, automation).catch(err => {
+      enableCronOrEmailTrigger(prodAppId, automation).catch(err => {
         throw new Error(
-          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
           { cause: err }
         )
       })

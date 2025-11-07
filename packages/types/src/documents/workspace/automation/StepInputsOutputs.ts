@@ -424,8 +424,20 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export type EmailTriggerInputs = Record<string, never>
+
 export type CronTriggerOutputs = {
   timestamp: number
+}
+
+export type EmailTriggerOutputs = {
+  from: string
+  to: string
+  cc: string[]
+  subject?: string
+  sentAt?: string
+  bodyText?: string
+  bodyTextTruncated: boolean
 }
 
 export type RowDeletedTriggerInputs = {

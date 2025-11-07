@@ -1,15 +1,23 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
+  Agent,
   AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
+  CreateAgentRequest,
+  CreateAgentResponse,
   CreateToolSourceRequest,
   DocumentType,
   FetchAgentHistoryResponse,
+  FetchAgentsResponse,
   Message,
+  RequiredKeys,
   Tool,
+  UpdateAgentRequest,
+  UpdateAgentResponse,
+  UpdateToolSourceRequest,
   UserCtx,
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
@@ -62,6 +70,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const model = await sdk.aiConfigs.getLLMOrThrow()
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
+  const agentId = chat.agentId
 
   // Set SSE headers and status
   ctx.status = 200
@@ -75,11 +84,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("X-Accel-Buffering", "no") // Nginx
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
-  const toolSources = await db.allDocs<AgentToolSource>(
-    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
-      include_docs: true,
-    })
-  )
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   let prompt = new ai.LLMRequest()
     .addSystemMessage(ai.agentSystemPrompt(ctx.user))
@@ -87,9 +92,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   let toolGuidelines = ""
 
-  for (const row of toolSources.rows) {
-    const toolSource = row.doc!
-    const toolSourceInstance = createToolSourceInstance(toolSource)
+  for (const toolSource of agent.allowedTools || []) {
+    const toolSourceInstance = createToolSourceInstance(
+      toolSource as AgentToolSource
+    )
 
     if (!toolSourceInstance) {
       continue
@@ -153,6 +159,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       const newChat: AgentChat = {
         _id: chat._id,
         _rev: chat._rev,
+        agentId,
         title: chat.title,
         messages: addDebugInformation(finalMessages),
       }
@@ -179,9 +186,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 }
 
 export async function remove(ctx: UserCtx<void, void>) {
-  const db = context.getGlobalDB()
-  const historyId = ctx.params.historyId
-  await db.remove(historyId)
+  const db = context.getWorkspaceDB()
+
+  const chatId = ctx.params.chatId
+  if (!chatId) {
+    throw new HTTPError("chatId is required", 400)
+  }
+
+  const chat = await db.tryGet<AgentChat>(chatId)
+  if (!chat) {
+    throw new HTTPError("chat not found", 404)
+  }
+
+  await db.remove(chat)
   ctx.status = 201
 }
 
@@ -189,14 +206,18 @@ export async function fetchHistory(
   ctx: UserCtx<void, FetchAgentHistoryResponse>
 ) {
   const db = context.getWorkspaceDB()
-  const history = await db.allDocs<AgentChat>(
+  const agentId = ctx.params.agentId
+  await sdk.ai.agents.getOrThrow(agentId)
+
+  const allChats = await db.allDocs<AgentChat>(
     docIds.getDocParams(DocumentType.AGENT_CHAT, undefined, {
       include_docs: true,
     })
   )
-  // Sort by creation time, newest first
-  ctx.body = history.rows
+
+  ctx.body = allChats.rows
     .map(row => row.doc!)
+    .filter(chat => chat.agentId === agentId)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -205,25 +226,25 @@ export async function fetchHistory(
 }
 
 export async function fetchToolSources(
-  ctx: UserCtx<void, AgentToolSourceWithTools[]>
+  ctx: UserCtx<void, AgentToolSourceWithTools[], { agentId: string }>
 ) {
-  const db = context.getWorkspaceDB()
-  const toolSources = await db.allDocs<AgentToolSource>(
-    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
-      include_docs: true,
-    })
-  )
+  const agentId = ctx.params.agentId
 
-  ctx.body = toolSources.rows.map(row => {
-    const doc = row.doc!
-    const toolSourceInstance = createToolSourceInstance(doc)
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  ctx.body = (agent.allowedTools || []).map(toolSource => {
+    const toolSourceInstance = createToolSourceInstance(toolSource)
 
     const tools: Tool[] = toolSourceInstance
       ? toolSourceInstance.getTools()
       : []
 
     return {
-      ...doc,
+      ...toolSource,
       tools,
     }
   })
@@ -232,48 +253,161 @@ export async function fetchToolSources(
 export async function createToolSource(
   ctx: UserCtx<CreateToolSourceRequest, { created: true }>
 ) {
-  const db = context.getWorkspaceDB()
-  const toolSource = ctx.request.body
-  toolSource._id = docIds.generateAgentToolSourceID()
+  const toolSourceRequest = ctx.request.body
 
-  await db.put(toolSource)
-  // TODO: handle PH events
-  // await events.toolsource.created(toolSource)
+  if (!toolSourceRequest.agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
+
+  // Generate a unique ID for the tool source
+  const toolSourceId = docIds.generateAgentToolSourceID()
+
+  // Remove agentId from tool source as it's not part of the tool source structure
+  const { agentId: _, ...toolSourceData } = toolSourceRequest
+
+  const toolSource: AgentToolSource = {
+    ...toolSourceData,
+    id: toolSourceId,
+  } as AgentToolSource
+
+  // Add tool source to agent's allowedTools
+  const updatedAgent: Agent = {
+    ...agent,
+    allowedTools: [...(agent.allowedTools || []), toolSource],
+  }
+
+  await sdk.ai.agents.update(updatedAgent)
+
   ctx.body = { created: true }
   ctx.status = 201
 }
 
 export async function updateToolSource(
-  ctx: UserCtx<CreateToolSourceRequest, AgentToolSource>
+  ctx: UserCtx<UpdateToolSourceRequest, AgentToolSource>
 ) {
-  const toolSource = ctx.request.body
+  const toolSourceRequest = ctx.request.body
 
-  if (!toolSource._id || !toolSource._rev) {
-    throw new HTTPError("_id or _rev fields missing", 400)
+  if (!toolSourceRequest.id) {
+    throw new HTTPError("id field missing", 400)
   }
 
-  const db = context.getWorkspaceDB()
+  if (!toolSourceRequest.agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
 
-  const response = await db.put(toolSource)
-  toolSource._rev = response.rev
+  const agent = await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
 
-  ctx.body = toolSource
+  // Remove agentId from tool source as it's not part of the tool source structure
+  const { agentId: _, ...toolSourceData } = toolSourceRequest
+
+  // Find and update the tool source in allowedTools
+  const updatedAllowedTools = (agent.allowedTools || []).map(ts => {
+    if ((ts as any).id === toolSourceRequest.id) {
+      return {
+        ...toolSourceData,
+        id: toolSourceRequest.id,
+      } as AgentToolSource
+    }
+    return ts
+  })
+
+  const updatedAgent: Agent = {
+    ...agent,
+    allowedTools: updatedAllowedTools,
+  }
+
+  await sdk.ai.agents.update(updatedAgent)
+
+  // Return the updated tool source
+  const updatedToolSource = updatedAllowedTools.find(
+    ts => (ts as any).id === toolSourceRequest.id
+  ) as AgentToolSource
+
+  ctx.body = updatedToolSource
   ctx.status = 200
 }
 
 export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const toolSourceId = ctx.params.toolSourceId
-  const db = context.getWorkspaceDB()
 
-  try {
-    const toolSource = await db.get<AgentToolSource>(toolSourceId)
-    await db.remove(toolSource)
-    ctx.body = { deleted: true }
-    ctx.status = 200
-  } catch (error: any) {
-    if (error.status === 404) {
-      throw new HTTPError("Tool source not found", 404)
-    }
-    throw error
+  // Find agent that contains this tool source
+  const agents = await sdk.ai.agents.fetch()
+  const agentWithToolSource = agents.find(agent =>
+    (agent.allowedTools || []).some(ts => (ts as any).id === toolSourceId)
+  )
+
+  if (!agentWithToolSource) {
+    throw new HTTPError("Tool source not found", 404)
   }
+
+  // Remove tool source from agent's allowedTools
+  const updatedAgent: Agent = {
+    ...agentWithToolSource,
+    allowedTools: (agentWithToolSource.allowedTools || []).filter(
+      ts => (ts as any).id !== toolSourceId
+    ),
+  }
+
+  await sdk.ai.agents.update(updatedAgent)
+
+  ctx.body = { deleted: true }
+  ctx.status = 200
+}
+
+export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
+  const agents = await sdk.ai.agents.fetch()
+  ctx.body = { agents }
+}
+
+export async function createAgent(
+  ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
+) {
+  const body = ctx.request.body
+
+  const createRequest: RequiredKeys<CreateAgentRequest> = {
+    name: body.name,
+    description: body.description,
+    aiconfig: body.aiconfig,
+    promptInstructions: body.promptInstructions,
+    allowedTools: body.allowedTools || [],
+    _deleted: false,
+  }
+
+  const agent = await sdk.ai.agents.create(createRequest)
+
+  ctx.body = agent
+  ctx.status = 201
+}
+
+export async function updateAgent(
+  ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
+) {
+  const body = ctx.request.body
+
+  const updateRequest: RequiredKeys<UpdateAgentRequest> = {
+    _id: body._id,
+    _rev: body._rev,
+    name: body.name,
+    description: body.description,
+    aiconfig: body.aiconfig,
+    promptInstructions: body.promptInstructions,
+    allowedTools: body.allowedTools,
+    _deleted: false,
+  }
+
+  const agent = await sdk.ai.agents.update(updateRequest)
+
+  ctx.body = agent
+  ctx.status = 200
+}
+
+export async function deleteAgent(
+  ctx: UserCtx<void, { deleted: true }, { agentId: string }>
+) {
+  const agentId = ctx.params.agentId
+  await sdk.ai.agents.remove(agentId ?? "")
+  ctx.body = { deleted: true }
+  ctx.status = 200
 }

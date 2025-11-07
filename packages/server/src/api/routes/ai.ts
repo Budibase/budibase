@@ -1,6 +1,8 @@
 import * as ai from "../controllers/ai"
 import {
+  createAgentValidator,
   createToolSourceValidator,
+  updateAgentValidator,
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
@@ -9,10 +11,16 @@ import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
 builderAdminRoutes
+  .get("/api/agent", ai.fetchAgents)
+  .post("/api/agent", createAgentValidator(), ai.createAgent)
+  .put("/api/agent", updateAgentValidator(), ai.updateAgent)
+  .delete("/api/agent/:agentId", ai.deleteAgent)
+
+builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .post("/api/agent/chat/stream", ai.agentChatStream)
-  .delete("/api/agent/history/:historyId", ai.remove)
-  .get("/api/agent/history", ai.fetchHistory)
+  .delete("/api/agent/chats/:chatId", ai.remove)
+  .get("/api/agent/:agentId/chats", ai.fetchHistory)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)
@@ -33,7 +41,7 @@ builderAdminRoutes
 
     ai.deleteToolSource
   )
-  .get("/api/agent/toolsource", ai.fetchToolSources)
+  .get("/api/agent/:agentId/toolsource", ai.fetchToolSources)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

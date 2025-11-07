@@ -63,6 +63,7 @@
     <IntegrationIcon
       integrationType={datasource.source}
       schema={datasource.schema}
+      iconUrl={datasource.uiMetadata?.iconUrl}
       size="18"
     />
   </div>
