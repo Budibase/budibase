@@ -8,6 +8,7 @@ import {
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
   buildRequestBodyFromFormDataParameters,
+  type FormDataParameter,
 } from "./utils/requestBody"
 
 const parameterNotRef = (
@@ -169,7 +170,7 @@ export class OpenAPI2 extends OpenAPISource {
           headers["Content-Type"] = primaryMimeType
         }
 
-        const formDataParams: OpenAPIV2.InFormDataParameterObject[] = []
+        const formDataParams: FormDataParameter[] = []
 
         // combine the path parameters with the operation parameters
         const operationParams = operation.parameters || []
@@ -193,7 +194,10 @@ export class OpenAPI2 extends OpenAPISource {
                 // do nothing: param is already in the path
                 break
               case "formData":
-                formDataParams.push(param as OpenAPIV2.InFormDataParameterObject)
+                formDataParams.push({
+                  ...(param as OpenAPIV2.ParameterObject),
+                  in: "formData",
+                } as FormDataParameter)
                 break
               case "body": {
                 let bodyParam: OpenAPIV2.InBodyParameterObject =

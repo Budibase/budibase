@@ -30,9 +30,10 @@ export interface GeneratedRequestBody {
   bindings: Record<string, string>
 }
 
-type FormDataParameter =
-  | OpenAPIV2.InFormDataParameterObject
-  | (OpenAPIV2.BaseParameterObject & { in: "formData" })
+export type FormDataParameter = OpenAPIV2.ParameterObject & {
+  in: "formData"
+  name: string
+}
 
 const MAX_DEPTH = 5
 export const BINDING_TOKEN_PREFIX = "__BUDIBASE_BINDING__"
@@ -686,11 +687,9 @@ export const buildKeyValueRequestBody = (
   return accumulator
 }
 
-const toFormDataParameter = (
-  param: FormDataParameter
-): OpenAPIV2.InFormDataParameterObject => {
-  if ("type" in param) {
-    return param as OpenAPIV2.InFormDataParameterObject
+const toFormDataParameter = (param: FormDataParameter): FormDataParameter => {
+  if (param.type) {
+    return param
   }
   return {
     ...param,
