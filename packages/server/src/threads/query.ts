@@ -317,7 +317,12 @@ class QueryRunner {
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
     for (let [key, value] of Object.entries(staticVars)) {
-      if (!parameters[key]) {
+      const paramValue = parameters[key]
+      const shouldOverride =
+        paramValue == null ||
+        paramValue === "" ||
+        this.isSelfReferencingBinding(paramValue, key)
+      if (shouldOverride) {
         parameters[key] = value
       }
     }
@@ -354,6 +359,19 @@ class QueryRunner {
       }
     }
     return parameters
+  }
+
+  isSelfReferencingBinding(value: unknown, name: string) {
+    if (typeof value !== "string") {
+      return false
+    }
+    const match = value.match(/^{{\s*([^}]+)\s*}}$/)
+    if (!match) {
+      return false
+    }
+    const binding = match[1].replace(/\s+/g, "")
+    const target = name.replace(/\s+/g, "")
+    return binding === target
   }
 }
 
