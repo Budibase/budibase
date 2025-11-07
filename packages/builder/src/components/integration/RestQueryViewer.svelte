@@ -61,7 +61,10 @@
     requestBindings = {}
   let saveId
   let response, schema, enabledHeaders
-  let dynamicVariables = {}, addVariableModal, varBinding, globalDynamicBindings = {}
+  let dynamicVariables = {},
+    addVariableModal,
+    varBinding,
+    globalDynamicBindings = {}
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
   let saving
@@ -90,7 +93,10 @@
   )
 
   const getBindingContext = objects => {
-    return objects.reduce((acc, current) => ({ ...acc, ...(current || {}) }), {})
+    return objects.reduce(
+      (acc, current) => ({ ...acc, ...(current || {}) }),
+      {}
+    )
   }
 
   $: mergedBindings = [
