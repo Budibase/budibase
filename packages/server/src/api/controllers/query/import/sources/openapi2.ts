@@ -234,9 +234,8 @@ export class OpenAPI2 extends OpenAPISource {
         }
 
         if (!requestBody && formDataParams.length > 0) {
-          const formDataBody = buildRequestBodyFromFormDataParameters(
-            formDataParams
-          )
+          const formDataBody =
+            buildRequestBodyFromFormDataParameters(formDataParams)
           if (formDataBody) {
             requestBody = formDataBody
             if (!primaryMimeType) {
