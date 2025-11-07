@@ -268,5 +268,44 @@ describe("OpenAPI2 Import", () => {
         ])
       )
     })
+
+    it("avoids bodies for GET operations even when consumes is defined", async () => {
+      const spec = JSON.stringify({
+        swagger: "2.0",
+        info: {
+          title: "Slack",
+          version: "1.0.0",
+        },
+        paths: {
+          "/bots.info": {
+            get: {
+              operationId: "getBotInfo",
+              consumes: ["application/x-www-form-urlencoded"],
+              parameters: [
+                {
+                  name: "bot",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                },
+              ],
+              responses: {
+                200: {
+                  description: "OK",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi2.isSupported(spec)
+      expect(supported).toBe(true)
+
+      const [query] = await openapi2.getQueries("datasourceId")
+      expect(query.queryVerb).toBe("read")
+      expect(query.fields.bodyType).toBe(BodyType.NONE)
+      expect(query.fields.requestBody).toBeUndefined()
+    })
   })
 })

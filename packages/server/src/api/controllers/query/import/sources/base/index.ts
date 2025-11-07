@@ -198,6 +198,10 @@ export abstract class ImportSource {
       requestBody = undefined
     }
 
+    if (requestBody === undefined) {
+      resolvedBodyType = BodyType.NONE
+    }
+
     const query: Query = {
       datasourceId,
       name,
