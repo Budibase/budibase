@@ -30,6 +30,10 @@ export interface GeneratedRequestBody {
   bindings: Record<string, string>
 }
 
+type FormDataParameter =
+  | OpenAPIV2.InFormDataParameterObject
+  | (OpenAPIV2.BaseParameterObject & { in: "formData" })
+
 const MAX_DEPTH = 5
 export const BINDING_TOKEN_PREFIX = "__BUDIBASE_BINDING__"
 const BINDING_TOKEN_REGEX = new RegExp(
@@ -680,4 +684,51 @@ export const buildKeyValueRequestBody = (
   }
 
   return accumulator
+}
+
+const toFormDataParameter = (
+  param: FormDataParameter
+): OpenAPIV2.InFormDataParameterObject => {
+  if ("type" in param) {
+    return param as OpenAPIV2.InFormDataParameterObject
+  }
+  return {
+    ...param,
+    type: "string",
+  }
+}
+
+export const buildRequestBodyFromFormDataParameters = (
+  params: FormDataParameter[]
+): GeneratedRequestBody | undefined => {
+  if (!Array.isArray(params) || params.length === 0) {
+    return undefined
+  }
+
+  const body: Record<string, unknown> = {}
+  const bindings: Record<string, string> = {}
+
+  for (const param of params) {
+    const normalized = toFormDataParameter(param)
+    if (!normalized?.name) {
+      continue
+    }
+    const type = normalisePrimitiveType(normalized.type)
+    const defaultValue = normalized.default
+      ? String(normalized.default)
+      : defaultValueForType(type)
+    const { value, bindings: paramBindings } = createPrimitiveBindingResult(
+      ["form", normalized.name],
+      type,
+      defaultValue
+    )
+    body[normalized.name] = value
+    mergeBindings(bindings, paramBindings)
+  }
+
+  if (Object.keys(body).length === 0) {
+    return undefined
+  }
+
+  return { body, bindings }
 }

@@ -269,6 +269,80 @@ describe("OpenAPI2 Import", () => {
       )
     })
 
+    it("builds form-data bodies from parameters", async () => {
+      const spec = JSON.stringify({
+        swagger: "2.0",
+        info: {
+          title: "Slack",
+          version: "1.0.0",
+        },
+        paths: {
+          "/stars.add": {
+            post: {
+              operationId: "starsAdd",
+              parameters: [
+                {
+                  name: "token",
+                  in: "header",
+                  type: "string",
+                  required: true,
+                },
+                {
+                  name: "channel",
+                  in: "formData",
+                  type: "string",
+                },
+                {
+                  name: "file",
+                  in: "formData",
+                  type: "string",
+                },
+                {
+                  name: "file_comment",
+                  in: "formData",
+                  type: "string",
+                },
+                {
+                  name: "timestamp",
+                  in: "formData",
+                  type: "string",
+                },
+              ],
+              responses: {
+                200: {
+                  description: "OK",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi2.isSupported(spec)
+      expect(supported).toBe(true)
+
+      const [query] = await openapi2.getQueries("datasourceId")
+      expect(query.fields.bodyType).toBe(BodyType.ENCODED)
+      expect(query.fields.headers?.["Content-Type"]).toBe(
+        "application/x-www-form-urlencoded"
+      )
+      expect(query.fields.requestBody).toEqual({
+        channel: "{{ channel }}",
+        file: "{{ file }}",
+        file_comment: "{{ file_comment }}",
+        timestamp: "{{ timestamp }}",
+      })
+      expect(query.parameters).toEqual(
+        expect.arrayContaining([
+          { name: "token", default: "" },
+          { name: "channel", default: "" },
+          { name: "file", default: "" },
+          { name: "file_comment", default: "" },
+          { name: "timestamp", default: "" },
+        ])
+      )
+    })
+
     it("avoids bodies for GET operations even when consumes is defined", async () => {
       const spec = JSON.stringify({
         swagger: "2.0",

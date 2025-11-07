@@ -32,6 +32,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/pagerduty.svg",
     },
     {
+      name: "Slack Web API",
+      description:
+        "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
+      specs: [
+        {
+          version: "v2",
+          url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/slack.svg",
+    },
+    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",

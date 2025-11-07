@@ -7,6 +7,7 @@ import {
   GeneratedRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
+  buildRequestBodyFromFormDataParameters,
 } from "./utils/requestBody"
 
 const parameterNotRef = (
@@ -168,6 +169,8 @@ export class OpenAPI2 extends OpenAPISource {
           headers["Content-Type"] = primaryMimeType
         }
 
+        const formDataParams: OpenAPIV2.InFormDataParameterObject[] = []
+
         // combine the path parameters with the operation parameters
         const operationParams = operation.parameters || []
         const allParams = [...pathParams, ...operationParams]
@@ -190,7 +193,7 @@ export class OpenAPI2 extends OpenAPISource {
                 // do nothing: param is already in the path
                 break
               case "formData":
-                // future enhancement
+                formDataParams.push(param as OpenAPIV2.InFormDataParameterObject)
                 break
               case "body": {
                 let bodyParam: OpenAPIV2.InBodyParameterObject =
@@ -217,11 +220,30 @@ export class OpenAPI2 extends OpenAPISource {
             }
 
             // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
+            if (["query", "header", "path", "formData"].includes(param.in)) {
               parameters.push({
                 name: param.name,
                 default: param.default || "",
               })
+            }
+          }
+        }
+
+        if (!requestBody && formDataParams.length > 0) {
+          const formDataBody = buildRequestBodyFromFormDataParameters(
+            formDataParams
+          )
+          if (formDataBody) {
+            requestBody = formDataBody
+            if (!primaryMimeType) {
+              primaryMimeType = formDataParams.some(
+                param => param.type === "file"
+              )
+                ? "multipart/form-data"
+                : "application/x-www-form-urlencoded"
+            }
+            if (primaryMimeType) {
+              headers["Content-Type"] = primaryMimeType
             }
           }
         }
