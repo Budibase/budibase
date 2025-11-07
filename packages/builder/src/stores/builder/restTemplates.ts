@@ -8,30 +8,6 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Box",
-      description:
-        "Cloud content management for files, folders, collaboration, and metadata",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/speakeasy-sdks/box-sdks/main/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/box.svg",
-    },
-    {
-      name: "Datadog Metrics",
-      description:
-        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/datadog.svg",
-    },
-    {
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
@@ -42,42 +18,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: "/builder/assets/rest-template-icons/github.svg",
-    },
-    {
-      name: "GitLab",
-      description:
-        "GitLab REST API for groups, projects, pipelines, and DevOps automation",
-      specs: [
-        {
-          version: "latest",
-          url: "https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gitlab.svg",
-    },
-    {
-      name: "Gmail",
-      description:
-        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gmail.svg",
-    },
-    {
-      name: "Jira",
-      description:
-        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/jira.svg",
     },
     {
       name: "PagerDuty",
@@ -92,16 +32,16 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: "/builder/assets/rest-template-icons/pagerduty.svg",
     },
     {
-      name: "Salesforce",
+      name: "Slack Web API",
       description:
-        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
+        "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
         {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
+          version: "v2",
+          url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/salesforce.svg",
+      icon: "/builder/assets/rest-template-icons/slack.svg",
     },
     {
       name: "Stripe",
@@ -114,18 +54,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: "/builder/assets/rest-template-icons/stripe.svg",
-    },
-    {
-      name: "Zendesk",
-      description:
-        "Zendesk Service API for tickets, users, help center, and support workflows",
-      specs: [
-        {
-          version: "latest",
-          url: "https://developer.zendesk.com/zendesk/oas.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/zendesk.svg",
     },
   ],
 }
