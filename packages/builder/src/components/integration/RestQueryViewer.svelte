@@ -1,6 +1,7 @@
 <script>
   import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
+  import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
   import {
     Banner,
@@ -53,6 +54,7 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
+  let lastViewedQueryId = null
 
   let query, datasource
   let breakQs = {},
@@ -67,6 +69,9 @@
   let mounted = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
+  $: if (queryId) {
+    lastViewedQueryId = queryId
+  }
 
   $: customRequestBindings = toBindingsArray(
     requestBindings,
@@ -500,7 +505,7 @@
   })
 
   $beforeUrlChange(async () => {
-    if (!isModified) {
+    if (!isModified || consumeSkipUnsavedPrompt(lastViewedQueryId)) {
       return true
     }
 
