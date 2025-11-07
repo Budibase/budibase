@@ -316,14 +316,16 @@ class QueryRunner {
     }
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
-    for (let [key, value] of Object.entries(staticVars)) {
-      const paramValue = parameters[key]
+    for (let [staticBindingKey, staticBindingValue] of Object.entries(
+      staticVars
+    )) {
+      const paramValue = parameters[staticBindingKey]
       const shouldOverride =
         paramValue == null ||
         paramValue === "" ||
-        this.isSelfReferencingBinding(paramValue, key)
+        this.doesStaticBindingMatchLocal(paramValue, staticBindingKey)
       if (shouldOverride) {
-        parameters[key] = value
+        parameters[staticBindingKey] = staticBindingValue
       }
     }
     if (!this.noRecursiveQuery) {
@@ -361,7 +363,7 @@ class QueryRunner {
     return parameters
   }
 
-  isSelfReferencingBinding(value: unknown, name: string) {
+  doesStaticBindingMatchLocal(value: unknown, staticBindingName: string) {
     if (typeof value !== "string") {
       return false
     }
@@ -370,7 +372,7 @@ class QueryRunner {
       return false
     }
     const binding = match[1].replace(/\s+/g, "")
-    const target = name.replace(/\s+/g, "")
+    const target = staticBindingName.replace(/\s+/g, "")
     return binding === target
   }
 }
