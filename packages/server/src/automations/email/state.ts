@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { Document, MetadataType } from "@budibase/types"
-import { generateMetadataID } from "../../db/utils"
+import { UNICODE_MAX, generateMetadataID } from "../../db/utils"
 import { updateEntityMetadata } from "../../utilities"
 
 interface MailboxStateDoc extends Document {
@@ -46,4 +46,45 @@ export const setLastSeenUid = async (
       lastSeenUid,
     })
   )
+}
+
+export const deleteAutomationMailboxState = async (automationId: string) => {
+  const db = context.getWorkspaceDB()
+  const startkey = generateMetadataID(
+    MetadataType.AUTOMATION_EMAIL_STATE,
+    `${automationId}:`
+  )
+  const endkey = `${startkey}${UNICODE_MAX}`
+
+  const response = await db.allDocs<MailboxStateDoc>({
+    startkey,
+    endkey,
+    include_docs: false,
+  })
+
+  if (!response.rows.length) {
+    return
+  }
+
+  const docsToDelete = response.rows
+    .map(row => {
+      const rev = row.value?._rev
+      if (!rev) {
+        return undefined
+      }
+      return {
+        _id: row.id,
+        _rev: rev,
+        _deleted: true,
+      }
+    })
+    .filter(
+      (doc): doc is { _id: string; _rev: string; _deleted: true } => !!doc
+    )
+
+  if (!docsToDelete.length) {
+    return
+  }
+
+  await db.bulkDocs(docsToDelete)
 }

@@ -18,6 +18,7 @@ import automations from "."
 import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
+import { deleteAutomationMailboxState } from "../../../automations/email/state"
 
 export interface PersistedAutomation extends Automation {
   _id: string
@@ -172,10 +173,7 @@ export async function update(automation: Automation) {
       MetadataType.AUTOMATION_TEST_INPUT,
       automation._id!
     )
-    await deleteEntityMetadata(
-      MetadataType.AUTOMATION_EMAIL_STATE,
-      automation._id!
-    )
+    await deleteAutomationMailboxState(automation._id!)
   }
 
   await handleStepEvents(oldAutomation, automation)
@@ -197,7 +195,7 @@ export async function remove(automationId: string, rev: string) {
   // delete metadata first
   await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_INPUT, automationId)
   await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_HISTORY, automationId)
-  await deleteEntityMetadata(MetadataType.AUTOMATION_EMAIL_STATE, automationId)
+  await deleteAutomationMailboxState(automationId)
 
   const result = await db.remove(automationId, rev)
 

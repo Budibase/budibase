@@ -19,8 +19,13 @@ jest.mock("../../../utilities", () => {
 
 import { context } from "@budibase/backend-core"
 import { MetadataType } from "@budibase/types"
-import { getLastSeenUid, setLastSeenUid } from "../../email/state"
+import {
+  deleteAutomationMailboxState,
+  getLastSeenUid,
+  setLastSeenUid,
+} from "../../email/state"
 import { updateEntityMetadata } from "../../../utilities"
+import { UNICODE_MAX } from "../../../db/utils"
 
 const getWorkspaceDBMock = context.getWorkspaceDB as jest.Mock
 const updateEntityMetadataMock = updateEntityMetadata as jest.Mock
@@ -82,11 +87,64 @@ describe("email state persistence", () => {
       )
 
       const [, , updater] = updateEntityMetadataMock.mock.calls[0]
-      const existing = { someField: "value" }
+      const existing = { someField: "value", _rev: "2-def" }
       expect(updater(existing)).toEqual({
         someField: "value",
+        _rev: "2-def",
         lastSeenUid: 99,
       })
+    })
+  })
+
+  describe("deleteAutomationMailboxState", () => {
+    it("removes all mailbox state docs for an automation", async () => {
+      const automationId = "auto-clean"
+      const allDocs = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            id: "metadata_automationEmailState_auto-clean:abcd",
+            value: { _rev: "1-a" },
+          },
+          {
+            id: "metadata_automationEmailState_auto-clean:efgh",
+            value: { _rev: "1-b" },
+          },
+        ],
+      })
+      const bulkDocs = jest.fn().mockResolvedValue(undefined)
+      getWorkspaceDBMock.mockReturnValueOnce({ allDocs, bulkDocs })
+
+      await deleteAutomationMailboxState(automationId)
+
+      expect(allDocs).toHaveBeenCalledWith({
+        startkey: `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}:`,
+        endkey: `metadata_${MetadataType.AUTOMATION_EMAIL_STATE}_${automationId}:${UNICODE_MAX}`,
+        include_docs: false,
+      })
+      expect(bulkDocs).toHaveBeenCalledWith([
+        {
+          _id: "metadata_automationEmailState_auto-clean:abcd",
+          _rev: "1-a",
+          _deleted: true,
+        },
+        {
+          _id: "metadata_automationEmailState_auto-clean:efgh",
+          _rev: "1-b",
+          _deleted: true,
+        },
+      ])
+    })
+
+    it("is a no-op when no state docs exist", async () => {
+      const automationId = "auto-clean-empty"
+      const allDocs = jest.fn().mockResolvedValue({ rows: [] })
+      const bulkDocs = jest.fn()
+      getWorkspaceDBMock.mockReturnValueOnce({ allDocs, bulkDocs })
+
+      await deleteAutomationMailboxState(automationId)
+
+      expect(allDocs).toHaveBeenCalled()
+      expect(bulkDocs).not.toHaveBeenCalled()
     })
   })
 })
