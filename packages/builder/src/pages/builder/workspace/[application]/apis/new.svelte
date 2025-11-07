@@ -26,6 +26,7 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { configFromIntegration } from "@/stores/selectors"
   import { customQueryIconColor } from "@/helpers/data/utils"
+  import { formatEndpointLabel } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
   import type { RestTemplate, QueryImportEndpoint } from "@budibase/types"
@@ -111,17 +112,6 @@
       templateLoading = false
       templateLoadingPhase = null
     }
-  }
-
-  const formatEndpointLabel = (endpoint: QueryImportEndpoint) => {
-    const path = endpoint.path || ""
-    if (!path) {
-      return endpoint.name
-    }
-    if (endpoint.name && endpoint.name !== path) {
-      return `${path} – ${endpoint.name}`
-    }
-    return path
   }
 
   const getEndpointIcon = (endpoint: QueryImportEndpoint) => {

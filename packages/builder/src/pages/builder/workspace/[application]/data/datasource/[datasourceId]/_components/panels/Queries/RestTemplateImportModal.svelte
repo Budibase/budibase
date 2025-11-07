@@ -21,6 +21,7 @@
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import { customQueryIconColor } from "@/helpers/data/utils"
+  import { formatEndpointLabel } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import type {
     Datasource,
@@ -152,15 +153,6 @@
     }
   } else if (currentTemplateUrl) {
     currentTemplateUrl = undefined
-  }
-
-  const formatEndpointLabel = (endpoint: QueryImportEndpoint) => {
-    const path = endpoint.path || ""
-    const label = path || endpoint.name
-    if (label && endpoint.name && endpoint.name !== path) {
-      return `${label} – ${endpoint.name}`
-    }
-    return label
   }
 
   const getEndpointId = (endpoint: QueryImportEndpoint) => endpoint.id
