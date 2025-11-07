@@ -8,11 +8,14 @@ import { automations as sharedAutomations } from "@budibase/shared-core"
 import {
   Automation,
   MetadataType,
+  PASSWORD_REPLACEMENT,
   RequiredKeys,
   Webhook,
   WebhookActionType,
+  isEmailTrigger,
 } from "@budibase/types"
 import automations from "."
+import cloneDeep from "lodash/cloneDeep"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 
@@ -20,6 +23,8 @@ export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
+
+const PASSWORD_DISPLAY_MASK = "********"
 
 function getDb() {
   return context.getWorkspaceDB()
@@ -90,19 +95,21 @@ export async function fetch() {
   const automations: PersistedAutomation[] = response.rows
     .filter(row => !!row.doc)
     .map(row => row.doc!)
-  return automations.map(trimUnexpectedObjectFields)
+  return automations
+    .map(trimUnexpectedObjectFields)
+    .map(maskAutomationSecrets)
 }
 
 export async function get(automationId: string) {
   const db = getDb()
   const result = await db.get<PersistedAutomation>(automationId)
-  return trimUnexpectedObjectFields(result)
+  return maskAutomationSecrets(trimUnexpectedObjectFields(result))
 }
 
 export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
   const db = getDb()
   const result = await db.getMultiple<PersistedAutomation>(ids, opts)
-  return result.map(trimUnexpectedObjectFields)
+  return result.map(trimUnexpectedObjectFields).map(maskAutomationSecrets)
 }
 
 export async function create(automation: Automation) {
@@ -115,6 +122,7 @@ export async function create(automation: Automation) {
   }
 
   automation.type = "automation"
+  automation = hydrateAutomationSecrets(automation)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     newAuto: automation,
@@ -127,7 +135,7 @@ export async function create(automation: Automation) {
   automation._rev = response.rev
   automation._id = response.id
 
-  return automation
+  return maskAutomationSecrets(automation)
 }
 
 export async function update(automation: Automation) {
@@ -142,6 +150,7 @@ export async function update(automation: Automation) {
 
   guardInvalidUpdatesAndThrow(automation, oldAutomation)
 
+  automation = hydrateAutomationSecrets(automation, oldAutomation)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     oldAuto: oldAutomation,
@@ -173,11 +182,11 @@ export async function update(automation: Automation) {
 
   await handleStepEvents(oldAutomation, automation)
 
-  return {
+  return maskAutomationSecrets({
     ...automation,
     _rev: response.rev,
     _id: response.id,
-  }
+  })
 }
 
 export async function remove(automationId: string, rev: string) {
@@ -326,4 +335,43 @@ function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
     }
   }
   return result as T
+}
+
+function hydrateAutomationSecrets(
+  automation: Automation,
+  existing?: Automation
+): Automation {
+  const trigger = automation.definition?.trigger
+  if (!isEmailTrigger(trigger) || !trigger.inputs) {
+    return automation
+  }
+
+  if (!isMaskedPassword(trigger.inputs.password)) {
+    return automation
+  }
+
+  if (!existing || !isEmailTrigger(existing.definition?.trigger)) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  const previousPassword = existing.definition.trigger.inputs?.password
+  if (!previousPassword) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  const hydratedAutomation = cloneDeep(automation)
+  hydratedAutomation.definition.trigger.inputs!.password = previousPassword
+  return hydratedAutomation
+}
+
+function maskAutomationSecrets<T extends Automation>(automation: T): T {
+  const trigger = automation.definition?.trigger
+  if (isEmailTrigger(trigger) && trigger.inputs?.password) {
+    trigger.inputs.password = PASSWORD_DISPLAY_MASK
+  }
+  return automation
+}
+
+function isMaskedPassword(value?: string) {
+  return value === PASSWORD_REPLACEMENT || value === PASSWORD_DISPLAY_MASK
 }

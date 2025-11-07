@@ -1,16 +1,17 @@
 import { configs, context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
+  Automation,
   AutomationResults,
   ConfigType,
   FieldType,
   FilterCondition,
-  isDidNotTriggerResponse,
   RowActionTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
   SettingsConfig,
   Table,
+  isDidNotTriggerResponse,
 } from "@budibase/types"
 import {
   BUILTIN_ACTION_DEFINITIONS,
@@ -755,5 +756,78 @@ describe("/automations", () => {
         }
       }
     )
+  })
+
+  describe("email trigger secrets", () => {
+    const buildEmailAutomation = (password = "imap-secret") =>
+      newAutomation({
+        definition: {
+          trigger: {
+            ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+            inputs: {
+              host: "imap.gmail.com",
+              port: 993,
+              secure: true,
+              username: "dom",
+              password,
+              mailbox: "dom",
+            },
+          },
+          steps: [],
+        },
+      })
+
+    const fetchStoredAutomation = async (automationId: string) => {
+      return context.doInWorkspaceContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        return db.get<Automation>(automationId)
+      })
+    }
+
+    it("masks the trigger password in API responses", async () => {
+      const payload = buildEmailAutomation()
+      const {
+        automation: createdAutomation,
+        message,
+      } = await config.api.automation.post(payload)
+
+      expect(message).toEqual("Automation created successfully")
+      expect(
+        createdAutomation.definition.trigger.inputs?.password
+      ).toMatch(/^\*+$/)
+
+      const stored = await fetchStoredAutomation(createdAutomation._id!)
+      expect(stored.definition.trigger.inputs?.password).toEqual("imap-secret")
+
+      const { automations } = await config.api.automation.fetch()
+      const fetched = automations.find(
+        automation => automation._id === createdAutomation._id
+      )
+      expect(fetched?.definition.trigger.inputs?.password).toMatch(/^\*+$/)
+    })
+
+    it("reuses the stored password when the placeholder is submitted", async () => {
+      const payload = buildEmailAutomation("mail-secret")
+      const { automation: createdAutomation } = await config.api.automation.post(
+        payload
+      )
+
+      createdAutomation.name = "Updated Email Monitor"
+      if (createdAutomation.definition.trigger.inputs) {
+        createdAutomation.definition.trigger.inputs.mailbox = "alerts"
+      }
+
+      const { automation: updatedAutomation } = await config.api.automation.update(
+        createdAutomation
+      )
+
+      expect(
+        updatedAutomation.definition.trigger.inputs?.password
+      ).toMatch(/^\*+$/)
+
+      const stored = await fetchStoredAutomation(updatedAutomation._id!)
+      expect(stored.definition.trigger.inputs?.password).toEqual("mail-secret")
+      expect(stored.definition.trigger.inputs?.mailbox).toEqual("alerts")
+    })
   })
 })
