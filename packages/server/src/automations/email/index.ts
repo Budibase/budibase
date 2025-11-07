@@ -10,25 +10,18 @@ export const DEFAULT_MAILBOX = "INBOX"
 
 export const checkMail = async (
   automationId: string,
-  imapInputs?: EmailTriggerInputs
+  imapInputs: EmailTriggerInputs
 ): Promise<CheckMailOutput> => {
-  const imapClient = await getClient(
-    imapInputs
-      ? {
-          host: imapInputs.host,
-          port: imapInputs.port,
-          secure: imapInputs.secure,
-          auth: {
-            user: imapInputs.username,
-            pass: imapInputs.password,
-          },
-        }
-      : undefined
-  )
-  const mailbox = imapInputs?.mailbox || DEFAULT_MAILBOX
+  if (!imapInputs) {
+    throw new Error("Email trigger inputs are required")
+  }
+
+  let imapClient: Awaited<ReturnType<typeof getClient>> | null = null
+  const mailbox = imapInputs.mailbox || DEFAULT_MAILBOX
   const stateKey = automationId
 
   try {
+    imapClient = await getClient(imapInputs)
     const lastSeenUid = await getLastSeenUid(stateKey, mailbox)
     const messages = await fetchMessages(imapClient, mailbox, lastSeenUid)
     console.info(
@@ -83,7 +76,9 @@ export const checkMail = async (
   } catch (err) {
     console.log(err)
   } finally {
-    await imapClient.logout().catch(console.log)
+    if (imapClient) {
+      await imapClient.logout().catch(console.log)
+    }
   }
   return { proceed: false, reason: "unknown" }
 }

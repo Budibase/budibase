@@ -778,23 +778,24 @@ describe("/automations", () => {
       })
 
     const fetchStoredAutomation = async (automationId: string) => {
-      return context.doInWorkspaceContext(config.getDevWorkspaceId(), async () => {
-        const db = context.getWorkspaceDB()
-        return db.get<Automation>(automationId)
-      })
+      return context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          return db.get<Automation>(automationId)
+        }
+      )
     }
 
     it("masks the trigger password in API responses", async () => {
       const payload = buildEmailAutomation()
-      const {
-        automation: createdAutomation,
-        message,
-      } = await config.api.automation.post(payload)
+      const { automation: createdAutomation, message } =
+        await config.api.automation.post(payload)
 
       expect(message).toEqual("Automation created successfully")
-      expect(
-        createdAutomation.definition.trigger.inputs?.password
-      ).toMatch(/^\*+$/)
+      expect(createdAutomation.definition.trigger.inputs?.password).toMatch(
+        /^\*+$/
+      )
 
       const stored = await fetchStoredAutomation(createdAutomation._id!)
       expect(stored.definition.trigger.inputs?.password).toEqual("imap-secret")
@@ -808,22 +809,20 @@ describe("/automations", () => {
 
     it("reuses the stored password when the placeholder is submitted", async () => {
       const payload = buildEmailAutomation("mail-secret")
-      const { automation: createdAutomation } = await config.api.automation.post(
-        payload
-      )
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
 
       createdAutomation.name = "Updated Email Monitor"
       if (createdAutomation.definition.trigger.inputs) {
         createdAutomation.definition.trigger.inputs.mailbox = "alerts"
       }
 
-      const { automation: updatedAutomation } = await config.api.automation.update(
-        createdAutomation
-      )
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(createdAutomation)
 
-      expect(
-        updatedAutomation.definition.trigger.inputs?.password
-      ).toMatch(/^\*+$/)
+      expect(updatedAutomation.definition.trigger.inputs?.password).toMatch(
+        /^\*+$/
+      )
 
       const stored = await fetchStoredAutomation(updatedAutomation._id!)
       expect(stored.definition.trigger.inputs?.password).toEqual("mail-secret")

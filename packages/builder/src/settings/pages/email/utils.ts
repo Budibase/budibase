@@ -47,28 +47,3 @@ export async function fetchSmtp() {
   }
   return smtpConfig
 }
-
-export async function fetchImap() {
-  let imapConfig: FindConfigResponse | null = null
-  try {
-    const imapDoc = await API.getConfig(ConfigType.IMAP)
-    if (!("_id" in imapDoc)) {
-      imapConfig = {
-        type: ConfigType.IMAP,
-        config: {
-          secure: true,
-          port: 993,
-          mailbox: "INBOX",
-        },
-      }
-    } else {
-      imapConfig = imapDoc
-    }
-
-    ensureAuth(imapConfig as Config)
-  } catch (error) {
-    notifications.error("Error fetching IMAP config")
-    return null
-  }
-  return imapConfig
-}

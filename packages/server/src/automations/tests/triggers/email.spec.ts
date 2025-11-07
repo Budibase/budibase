@@ -1,26 +1,11 @@
-import { configs } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import {
-  ConfigType,
-  EmailTriggerInputs,
-  IMAPInnerConfig,
-} from "@budibase/types"
+import { EmailTriggerInputs } from "@budibase/types"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
 }))
-
-const imapConfig: IMAPInnerConfig = {
-  host: "localhost",
-  port: 993,
-  secure: false,
-  auth: {
-    user: "dom",
-    pass: "dom",
-  },
-}
 
 const triggerInputs: EmailTriggerInputs = {
   host: "localhost",
@@ -44,12 +29,6 @@ describe("email trigger", () => {
   })
 
   beforeEach(async () => {
-    await config.doInTenant(() =>
-      configs.save({
-        type: ConfigType.IMAP,
-        config: imapConfig,
-      })
-    )
     const { automations } = await config.api.automation.fetch()
     for (const automation of automations) {
       await config.api.automation.delete(automation)
@@ -131,15 +110,7 @@ describe("checkMail behaviour", () => {
     const result = await checkMail("automation-first", triggerInputs)
 
     expect(result).toEqual({ proceed: false, reason: "init, now waiting" })
-    expect(mocks.getClientMock).toHaveBeenCalledWith({
-      host: triggerInputs.host,
-      port: triggerInputs.port,
-      secure: triggerInputs.secure,
-      auth: {
-        user: triggerInputs.username,
-        pass: triggerInputs.password,
-      },
-    })
+    expect(mocks.getClientMock).toHaveBeenCalledWith(triggerInputs)
     expect(mocks.fetchMessagesMock).toHaveBeenCalledWith(
       expect.any(Object),
       triggerInputs.mailbox,
