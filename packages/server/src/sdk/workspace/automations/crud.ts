@@ -95,9 +95,7 @@ export async function fetch() {
   const automations: PersistedAutomation[] = response.rows
     .filter(row => !!row.doc)
     .map(row => row.doc!)
-  return automations
-    .map(trimUnexpectedObjectFields)
-    .map(maskAutomationSecrets)
+  return automations.map(trimUnexpectedObjectFields).map(maskAutomationSecrets)
 }
 
 export async function get(automationId: string) {
@@ -342,7 +340,7 @@ function hydrateAutomationSecrets(
   existing?: Automation
 ): Automation {
   const trigger = automation.definition?.trigger
-  if (!isEmailTrigger(trigger) || !trigger.inputs) {
+  if (!trigger || !isEmailTrigger(trigger) || !trigger.inputs) {
     return automation
   }
 
@@ -360,7 +358,11 @@ function hydrateAutomationSecrets(
   }
 
   const hydratedAutomation = cloneDeep(automation)
-  hydratedAutomation.definition.trigger.inputs!.password = previousPassword
+  const hydratedTrigger = hydratedAutomation.definition?.trigger
+  if (!isEmailTrigger(hydratedTrigger) || !hydratedTrigger.inputs) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+  hydratedTrigger.inputs.password = previousPassword
   return hydratedAutomation
 }
 

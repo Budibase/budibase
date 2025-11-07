@@ -16,7 +16,14 @@
 
   type SecurityOption = { label: string; value: boolean }
 
-  const orderedFields = ["host", "port", "secure", "username", "password", "mailbox"]
+  const orderedFields = [
+    "host",
+    "port",
+    "secure",
+    "username",
+    "password",
+    "mailbox",
+  ]
   const securityOptions: SecurityOption[] = [
     { label: "SSL/TLS", value: true },
     { label: "None/STARTTLS", value: false },
@@ -70,9 +77,8 @@
             {bindings}
             {context}
             value={getInputValue(key)}
-            key={key}
+            {key}
             updateOnChange={false}
-            type={schema[key].customType}
             placeholder={schema[key].description}
             on:change={event => handleChange(key, event.detail)}
           />
