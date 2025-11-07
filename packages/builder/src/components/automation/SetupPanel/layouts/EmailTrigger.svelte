@@ -3,7 +3,7 @@
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import { PropField } from ".."
   import { automationStore } from "@/stores/builder"
-  import { Checkbox, Label, Helpers } from "@budibase/bbui"
+  import { Label, Helpers, Select } from "@budibase/bbui"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -14,7 +14,15 @@
   export let bindings: any[] | undefined
   export let context: {} | undefined
 
+  type SecurityOption = { label: string; value: boolean }
+
   const orderedFields = ["host", "port", "secure", "username", "password", "mailbox"]
+  const securityOptions: SecurityOption[] = [
+    { label: "SSL/TLS", value: true },
+    { label: "None/STARTTLS", value: false },
+  ]
+  const getSecurityOptionLabel = (option: SecurityOption) => option.label
+  const getSecurityOptionValue = (option: SecurityOption) => option.value
 
   $: inputData = automationStore.actions.getInputData(block)
   $: schema = block?.schema.inputs?.properties || {}
@@ -75,8 +83,12 @@
           labelTooltip={schema[key].description || ""}
           fullWidth
         >
-          <Checkbox
+          <Select
             value={Boolean(getInputValue(key))}
+            options={securityOptions}
+            placeholder={false}
+            getOptionLabel={getSecurityOptionLabel}
+            getOptionValue={getSecurityOptionValue}
             on:change={event => handleChange(key, event.detail)}
           />
         </PropField>
