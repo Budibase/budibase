@@ -865,7 +865,7 @@
                   disabled={value.readonly}
                 />
               </div>
-            {:else if value.type === "date"}
+            {:else if value.type === "date" || value.type === "datetime"}
               <DrawerBindableSlot
                 title={value.title ?? label}
                 panel={AutomationBindingPanel}

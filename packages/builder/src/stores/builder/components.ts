@@ -1100,6 +1100,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
       return true
     }
 
+    // Check if the datasource resource actually changed
+    if (current?.type === "table" && update.type === "table") {
+      return current.tableId !== update.tableId || current._id !== update._id
+    }
+
     // Legacy support.
     if (current?.type === "view" && update.type === "view") {
       // Could have the same tableId but the view name is different

@@ -1,7 +1,6 @@
 import { structures } from "../../../../tests"
 import { testEnv } from "../../../../tests/extra"
 import * as context from "../../../context"
-import * as features from "../../../features"
 import * as app from "../app"
 
 describe("app", () => {
@@ -9,36 +8,20 @@ describe("app", () => {
     testEnv.nodeJest()
   })
 
-  function baseCheck(url: string, useNewBundle: boolean, tenantId?: string) {
+  function baseCheck(url: string, tenantId?: string) {
     let expectedUrl = "/api/assets/app_123/client?version=2.0.0"
     if (tenantId) {
       expectedUrl += `&tenantId=${tenantId}`
     }
-    expectedUrl += `&dynamic=${useNewBundle}`
     expect(url).toBe(expectedUrl)
   }
 
-  describe.each([
-    ["serving old bundle", false],
-    ["serving new bundle", true],
-  ])("clientLibraryUrl (%s)", (_, useNewBundle) => {
+  describe("clientLibraryUrl", () => {
     async function getClientUrl() {
       return await app.clientLibraryUrl("app_123", "2.0.0")
     }
 
     describe("single tenant", () => {
-      let cleanup: () => void
-
-      beforeAll(() => {
-        cleanup = features.testutils.setFeatureFlags("default", {
-          ESM_CLIENT: useNewBundle,
-        })
-      })
-
-      afterAll(() => {
-        cleanup()
-      })
-
       beforeAll(() => {
         testEnv.singleTenant()
       })
@@ -46,43 +29,34 @@ describe("app", () => {
       it("gets url in dev", async () => {
         testEnv.nodeDev()
         const url = await getClientUrl()
-        baseCheck(url, useNewBundle)
+        baseCheck(url)
       })
 
       it("gets url with custom S3", async () => {
         testEnv.withS3()
         const url = await getClientUrl()
-        baseCheck(url, useNewBundle)
+        baseCheck(url)
       })
 
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
         const url = await getClientUrl()
-        baseCheck(url, useNewBundle)
+        baseCheck(url)
       })
     })
 
     describe("multi tenant", () => {
       const tenantId = structures.tenant.id()
 
-      let cleanup: () => void
-
       beforeAll(() => {
         testEnv.multiTenant()
-        cleanup = features.testutils.setFeatureFlags(tenantId, {
-          ESM_CLIENT: useNewBundle,
-        })
-      })
-
-      afterAll(() => {
-        cleanup()
       })
 
       it("gets url in dev", async () => {
         testEnv.nodeDev()
         await context.doInTenant(tenantId, async () => {
           const url = await getClientUrl()
-          baseCheck(url, useNewBundle, tenantId)
+          baseCheck(url, tenantId)
         })
       })
 
@@ -90,7 +64,7 @@ describe("app", () => {
         await context.doInTenant(tenantId, async () => {
           testEnv.withMinio()
           const url = await getClientUrl()
-          baseCheck(url, useNewBundle, tenantId)
+          baseCheck(url, tenantId)
         })
       })
 
@@ -98,7 +72,7 @@ describe("app", () => {
         await context.doInTenant(tenantId, async () => {
           testEnv.withS3()
           const url = await getClientUrl()
-          baseCheck(url, useNewBundle, tenantId)
+          baseCheck(url, tenantId)
         })
       })
 
@@ -106,7 +80,7 @@ describe("app", () => {
         await context.doInTenant(tenantId, async () => {
           testEnv.withCloudfront()
           const url = await getClientUrl()
-          baseCheck(url, useNewBundle, tenantId)
+          baseCheck(url, tenantId)
         })
       })
     })

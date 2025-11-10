@@ -3,6 +3,8 @@ import { API } from "@/api"
 import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
+import { reset as resetBuilderStores } from "@/stores/builder"
+import { CookieUtils, Constants } from "@budibase/frontend-core"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -33,7 +35,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     })
   }
 
-  setUser(user?: GetGlobalSelfResponse) {
+  setUser(user?: GetGlobalSelfResponse, sessionTerminated = false) {
     this.set({
       loaded: true,
       user: user,
@@ -41,7 +43,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       tenantId: user?.tenantId || "default",
       tenantSet: !!user,
       isSSO: user != null && isSSOUser(user),
-      postLogout: false,
+      postLogout: sessionTerminated,
     })
 
     if (user) {
@@ -58,7 +60,12 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     }
   }
 
-  async setOrganisation(tenantId: string) {
+  clearSession() {
+    // sessionTerminated true prevents saving return URL for invalid URLs
+    this.setUser(undefined, true)
+  }
+
+  async setOrganisation(tenantId = "default") {
     const prevId = get(this.store).tenantId
     auth.update(store => {
       store.tenantId = tenantId
@@ -133,10 +140,32 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   }
 
   async logout() {
+    // Save current URL as return URL before logging out, unless we're on pre-login pages
+    const currentPath = window.location.pathname
+    const isPreLoginPage =
+      currentPath.startsWith("/builder/auth") ||
+      currentPath.startsWith("/builder/invite") ||
+      currentPath.startsWith("/builder/admin")
+
+    if (
+      !isPreLoginPage &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+    ) {
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, currentPath)
+    }
+
     await API.logOut()
     this.setPostLogout()
     this.setUser()
-    await this.setInitInfo({})
+    try {
+      await this.setInitInfo({})
+    } catch (error) {
+      // Ignore errors clearing init info after logout
+      // User is already logged out, this is just cleanup
+    }
+    // App info needs to be cleared on logout.
+    // Invalid app context will cause init failures for users logging back in.
+    resetBuilderStores()
   }
 
   async updateSelf(fields: UpdateSelfRequest) {
@@ -167,6 +196,56 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   async fetchAPIKey() {
     const info = await API.fetchDeveloperInfo()
     return info?.apiKey
+  }
+
+  /**
+   * Determine the tenantId and set it
+   * This is required for checklist requests on load or logout.
+   * If it can't be determined, "default" is used.
+   */
+  async validateTenantId() {
+    const store = get(this.store)
+    const adminStore = get(admin)
+    const host = window.location.host
+    if (host.includes("localhost:") || !adminStore.baseUrl) {
+      // ignore local dev
+      return
+    }
+    const mainHost = new URL(adminStore.baseUrl).host
+    let urlTenantId
+    // remove the main host part
+    const hostParts = host.split(mainHost).filter(part => part !== "")
+    // if there is a part left, it has to be the tenant ID subdomain
+    if (hostParts.length === 1) {
+      urlTenantId = hostParts[0].replace(/\./g, "")
+    }
+
+    if (store.user && store.user?.tenantId) {
+      if (!urlTenantId) {
+        // redirect to correct tenantId subdomain
+        if (!window.location.host.includes("localhost")) {
+          let redirectUrl = window.location.href
+          redirectUrl = redirectUrl.replace("://", `://${store.user.tenantId}.`)
+          window.location.href = redirectUrl
+        }
+        return
+      }
+
+      if (urlTenantId && store.user.tenantId !== urlTenantId) {
+        // user should not be here - play it safe and log them out
+        try {
+          await this.logout()
+          await this.setOrganisation()
+        } catch (error) {
+          console.error(
+            `Tenant mis-match - "${urlTenantId}" and "${store.user.tenantId}" - logout`
+          )
+        }
+      }
+    } else {
+      // no user - set the org according to the url
+      await this.setOrganisation(urlTenantId)
+    }
   }
 }
 

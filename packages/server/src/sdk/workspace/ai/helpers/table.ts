@@ -53,7 +53,9 @@ export async function generateTables(
         if (field.type === FieldType.LINK) {
           field.tableId = tableIds[field.tableId]
         } else if (field.type === FieldType.FORMULA) {
-          field.formula = `{{ js "${btoa(field.formula)}" }}`
+          // There seems to be an intermittent issue with openai returning unicode characters that
+          // btoa cannot handle at all.
+          field.formula = `{{ js "${Buffer.from(field.formula).toString("base64")}" }}`
         }
       }
     }
@@ -76,6 +78,7 @@ export async function generateTables(
       })
     }
   } catch (e) {
+    console.log("Error generating tables, cleaning up created tables", e)
     const tables = await sdk.tables.getTables(createdTables.map(t => t.id))
     await Promise.all(tables.map(sdk.tables.internal.destroy))
 

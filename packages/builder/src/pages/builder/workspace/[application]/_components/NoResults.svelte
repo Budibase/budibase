@@ -5,6 +5,7 @@
   enum ResourceType {
     App = "app",
     Automation = "automation",
+    Agent = "agent",
   }
   /* eslint-enable no-unused-vars */
 
@@ -15,6 +16,7 @@
   const iconByType = {
     [ResourceType.App]: "browser",
     [ResourceType.Automation]: "path",
+    [ResourceType.Agent]: "cpu",
   }
 </script>
 
@@ -23,6 +25,7 @@
     class="icon-container"
     class:automation={resourceType === ResourceType.Automation}
     class:app={resourceType === ResourceType.App}
+    class:agent={resourceType === ResourceType.Agent}
   >
     <Icon
       name={iconByType[resourceType]}
@@ -48,5 +51,10 @@
   .icon-container.app {
     border: 0.5px solid #c96442;
     background: #aa4321;
+  }
+
+  .icon-container.agent {
+    border: 0.5px solid #e9e6ff;
+    background: #806fde;
   }
 </style>

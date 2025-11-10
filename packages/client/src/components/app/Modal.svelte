@@ -61,12 +61,14 @@
   >
     <div use:styleable={$component.styles} class={`modal-content ${size}`}>
       <div class="modal-header">
-        <Icon
-          color="var(--spectrum-global-color-gray-800)"
-          name="x"
-          hoverable
-          on:click={handleModalClose}
-        />
+        {#if !ignoreClicksOutside}
+          <Icon
+            color="var(--spectrum-global-color-gray-800)"
+            name="x"
+            hoverable
+            on:click={handleModalClose}
+          />
+        {/if}
       </div>
       <div class="modal-main">
         <div class="modal-main-inner">

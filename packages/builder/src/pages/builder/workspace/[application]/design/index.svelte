@@ -7,7 +7,7 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
   import { buildLiveUrl } from "@/helpers/urls"
-  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import {
     appStore,
@@ -309,63 +309,67 @@
     </div>
   </div>
 
-  <div class="table-header">
-    <span>Name</span>
-    <span>Status</span>
-    <span>Last updated</span>
-    <span></span>
-  </div>
-  {#each filteredWorkspaceApps as app}
-    <a
-      class="app"
-      class:favourite={app.favourite?._id}
-      href={`./design/${app._id}`}
-      on:contextmenu={e => openContextMenu(e, app)}
-      class:active={showHighlight && selectedWorkspaceApp === app}
-    >
-      <Body size="S" color="var(--spectrum-global-color-gray-900)"
-        >{app.name}</Body
-      >
-      <div>
-        <PublishStatusBadge
-          status={app.publishStatus.state}
-          loading={appChangingStatus === app._id}
-        />
-      </div>
-      <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
-        <span>
-          {capitalise(durationFromNow(app.updatedAt || ""))}
-        </span>
-      </AbsTooltip>
-      <div class="actions">
-        <div class="ctx-btn">
-          <Icon
-            name="More"
-            size="M"
-            hoverable
-            on:click={e => openContextMenu(e, app)}
-          />
-        </div>
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span>Name</span>
+      <span>Status</span>
+      <span>Last updated</span>
+      <span></span>
+    </div>
+    <div class="apps">
+      {#each filteredWorkspaceApps as app}
+        <a
+          class="app"
+          class:favourite={app.favourite?._id}
+          href={`./design/${app._id}`}
+          on:contextmenu={e => openContextMenu(e, app)}
+          class:active={showHighlight && selectedWorkspaceApp === app}
+        >
+          <Body size="S" color="var(--spectrum-global-color-gray-900)"
+            >{app.name}</Body
+          >
+          <div>
+            <PublishStatusBadge
+              status={app.publishStatus.state}
+              loading={appChangingStatus === app._id}
+            />
+          </div>
+          <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
+            <span>
+              {capitalise(durationFromNow(app.updatedAt || ""))}
+            </span>
+          </AbsTooltip>
+          <div class="actions">
+            <div class="ctx-btn">
+              <Icon
+                name="More"
+                size="M"
+                hoverable
+                on:click={e => openContextMenu(e, app)}
+              />
+            </div>
 
-        <span class="favourite-btn">
-          <FavouriteResourceButton
-            favourite={app.favourite}
-            position={TooltipPosition.Left}
-            noWrap
-          />
-        </span>
-      </div>
-    </a>
-  {/each}
-  {#if !workspaceApps.length}
-    <NoResults
-      ctaText="Create your first app"
-      onCtaClick={createApp}
-      resourceType="app"
-    >
-      No apps yet! Build your first app to get started.
-    </NoResults>
-  {/if}
+            <span class="favourite-btn">
+              <FavouriteResourceButton
+                favourite={app.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
+            </span>
+          </div>
+        </a>
+      {/each}
+      {#if !workspaceApps.length}
+        <NoResults
+          ctaText="Create your first app"
+          onCtaClick={createApp}
+          resourceType="app"
+        >
+          No apps yet! Build your first app to get started.
+        </NoResults>
+      {/if}
+    </div>
+  </div>
 </div>
 
 <WorkspaceAppModal
@@ -392,7 +396,8 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
   }
   .secondary-bar {
     padding: 10px 12px;
@@ -474,5 +479,17 @@
   .update-version :global(.spectrum-ActionButton-label) {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .table-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+  }
+
+  .apps {
+    overflow-y: auto;
+    flex: 1 1 auto;
   }
 </style>

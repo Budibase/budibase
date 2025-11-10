@@ -12,9 +12,11 @@ import {
   AIOperationEnum,
   AttachmentSubType,
   ConfigType,
+  CustomAIProviderConfig,
   Feature,
   FieldType,
   License,
+  PASSWORD_REPLACEMENT,
   PlanModel,
   PlanType,
   ProviderConfig,
@@ -29,6 +31,7 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import environment from "../../../environment"
 
 function dedent(str: string) {
   return str
@@ -480,6 +483,159 @@ describe("BudibaseAI", () => {
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+  })
+
+  describe("custom provider configs", () => {
+    const defaultRequest = {
+      name: "Support Chat",
+      provider: "OpenAI",
+      baseUrl: "https://api.openai.com",
+      model: "gpt-4o-mini",
+      apiKey: "sk-test-key",
+      isDefault: true,
+      liteLLMModelId: "",
+    }
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+    })
+
+    it("creates a custom config and sanitizes the API key", async () => {
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-1", key: "secret-1" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-1" })
+        .post("/key/update", body => {
+          expect(body).toMatchObject({
+            models: ["model-1"],
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({ ...defaultRequest })
+      expect(created._id).toBeDefined()
+      expect(created.liteLLMModelId).toBe("model-1")
+      expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(created.isDefault).toBe(true)
+      expect(liteLLMScope.isDone()).toBe(true)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(1)
+      expect(configsResponse[0]._id).toBe(created._id)
+      expect(configsResponse[0].apiKey).toBe(PASSWORD_REPLACEMENT)
+    })
+
+    it("updates a custom config while preserving the stored API key", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-2", key: "secret-2" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-2" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({ ...defaultRequest })
+      expect(creationScope.isDone()).toBe(true)
+
+      const updateScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(200, { status: "success" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const updated = await config.api.ai.updateConfig({
+        ...created,
+        name: "Updated Chat",
+        isDefault: false,
+        apiKey: PASSWORD_REPLACEMENT,
+      })
+
+      expect(updateScope.isDone()).toBe(true)
+      expect(updated.name).toBe("Updated Chat")
+      expect(updated.isDefault).toBe(false)
+      expect(updated.apiKey).toBe(PASSWORD_REPLACEMENT)
+
+      const storedConfig = await config.doInTenant(async () => {
+        return await context
+          .getGlobalDB()
+          .get<CustomAIProviderConfig>(created._id!)
+      })
+      expect(storedConfig.apiKey).toBe(defaultRequest.apiKey)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(1)
+      expect(configsResponse[0].name).toBe("Updated Chat")
+      expect(configsResponse[0].apiKey).toBe(PASSWORD_REPLACEMENT)
+    })
+
+    it("deletes a custom config and syncs LiteLLM models", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-3", key: "secret-3" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-3" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({ ...defaultRequest })
+      expect(creationScope.isDone()).toBe(true)
+
+      const deleteScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body).toMatchObject({
+            models: [],
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      const { deleted } = await config.api.ai.deleteConfig(created._id!)
+      expect(deleted).toBe(true)
+      expect(deleteScope.isDone()).toBe(true)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(0)
+    })
+
+    it("validates configuration", async () => {
+      const failingScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-4", key: "secret-4" })
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: {
+            error: "Connection refused\nTraceback...",
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.createConfig(
+        {
+          ...defaultRequest,
+          name: "Broken Config",
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(failingScope.isDone()).toBe(true)
+      expect(errorResponse.message).toContain("Error validating configuration")
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(0)
     })
   })
 

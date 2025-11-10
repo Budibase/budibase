@@ -2,7 +2,7 @@
   import Panel from "@/components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
-  import structure from "./componentStructure.json"
+  import { getComponentStructure } from "./componentStructure"
   import {
     previewStore,
     selectedScreen,
@@ -13,6 +13,7 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
   import NewPill from "@/components/common/NewPill.svelte"
+  import { featureFlags } from "@/stores/portal"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -34,6 +35,7 @@
     $selectedScreen,
     $selectedComponent
   )
+  $: structure = getComponentStructure({ chatbox: $featureFlags.AI_AGENTS })
   $: enrichedStructure = enrichStructure(
     structure,
     $componentStore.components,
