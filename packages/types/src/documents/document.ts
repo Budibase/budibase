@@ -45,6 +45,7 @@ export enum DocumentType {
   AI_CONFIG = "aiconfig",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
+  AUTO_COLUMN_STATE = "autocolumn_state",
 }
 
 // these are the core documents that make up the data, design

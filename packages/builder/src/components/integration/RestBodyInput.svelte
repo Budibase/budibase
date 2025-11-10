@@ -37,11 +37,27 @@
   }
 
   function updateRequestBody(type, text, json) {
+    if (!query?.fields) {
+      return
+    }
+
+    const currentValue = query.fields.requestBody
+
     if (type === RawRestBodyTypes.NONE) {
-      query.fields.requestBody = null
-    } else if (objectTypes.includes(type)) {
-      query.fields.requestBody = json
-    } else {
+      if (currentValue != null) {
+        query.fields.requestBody = null
+      }
+      return
+    }
+
+    if (objectTypes.includes(type)) {
+      if (currentValue !== json) {
+        query.fields.requestBody = json
+      }
+      return
+    }
+
+    if (currentValue !== text) {
       query.fields.requestBody = text
     }
   }

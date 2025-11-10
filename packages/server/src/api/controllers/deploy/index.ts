@@ -15,11 +15,11 @@ import {
   FieldType,
   FetchDeploymentResponse,
   FormulaType,
-  Workspace,
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
 import {
   clearMetadata,
