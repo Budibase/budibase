@@ -150,6 +150,13 @@ class Replication {
         if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
           return true
         }
+        if (
+          direction === ReplicationDirection.TO_PRODUCTION &&
+          !isCreation &&
+          startsWithID(doc._id, DocumentType.AUTO_COLUMN_STATE)
+        ) {
+          return false
+        }
         if (isData(doc._id)) {
           return (
             !!tableSyncList?.find(id => doc._id.includes(id)) || syncAllTables
