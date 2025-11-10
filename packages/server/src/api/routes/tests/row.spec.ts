@@ -364,6 +364,55 @@ if (descriptions.length) {
           })
 
         isInternal &&
+          it("does not update the table document when creating rows", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  "Row ID": {
+                    name: "Row ID",
+                    type: FieldType.NUMBER,
+                    subtype: AutoFieldSubType.AUTO_ID,
+                    icon: "ri-magic-line",
+                    autocolumn: true,
+                    constraints: {
+                      type: "number",
+                      presence: true,
+                      numericality: {
+                        greaterThanOrEqualTo: "",
+                        lessThanOrEqualTo: "",
+                      },
+                    },
+                  },
+                },
+              })
+            )
+
+            const persistedTable = await config.api.table.get(table._id!)
+            const initialRev = persistedTable._rev
+            const initialSchema = JSON.parse(
+              JSON.stringify(persistedTable.schema["Row ID"])
+            ) as {
+              name?: string
+              type?: FieldType
+              subtype?: AutoFieldSubType
+              icon?: string
+              autocolumn?: boolean
+              constraints?: FieldSchema["constraints"]
+              lastID?: number
+            }
+            const initialLastId = initialSchema.lastID ?? 0
+
+            const row = await config.api.row.save(table._id!, {})
+            expect(row["Row ID"]).toEqual(initialLastId + 1)
+
+            const updatedTable = await config.api.table.get(table._id!)
+            expect(updatedTable._rev).toEqual(initialRev)
+
+            const updatedSchema = updatedTable.schema["Row ID"]
+            expect(updatedSchema).toEqual(initialSchema)
+          })
+
+        isInternal &&
           it("doesn't allow creating in user table", async () => {
             const response = await config.api.row.save(
               InternalTable.USER_METADATA,
