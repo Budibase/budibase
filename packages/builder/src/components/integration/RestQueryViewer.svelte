@@ -1,6 +1,7 @@
 <script>
   import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
+  import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
   import {
     Banner,
@@ -53,13 +54,17 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
+  let lastViewedQueryId = null
 
   let query, datasource
   let breakQs = {},
     requestBindings = {}
   let saveId
   let response, schema, enabledHeaders
-  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
+  let dynamicVariables = {},
+    addVariableModal,
+    varBinding,
+    globalDynamicBindings = {}
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
   let saving
@@ -67,6 +72,9 @@
   let mounted = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
+  $: if (queryId) {
+    lastViewedQueryId = queryId
+  }
 
   $: customRequestBindings = toBindingsArray(
     requestBindings,
@@ -84,12 +92,26 @@
     "Datasource Static"
   )
 
+  const getBindingContext = objects => {
+    return objects.reduce(
+      (acc, current) => ({ ...acc, ...(current || {}) }),
+      {}
+    )
+  }
+
   $: mergedBindings = [
+    ...dataSourceStaticBindings,
     ...restBindings,
     ...customRequestBindings,
     ...globalDynamicRequestBindings,
-    ...dataSourceStaticBindings,
   ]
+
+  $: bindingPreviewContext = getBindingContext([
+    requestBindings,
+    globalDynamicBindings,
+    dynamicVariables,
+    staticVariables,
+  ])
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -378,10 +400,10 @@
     )
 
     const prettyBindings = [
+      ...dataSourceStaticBindings,
       ...restBindings,
       ...customRequestBindings,
       ...dynamicRequestBindings,
-      ...dataSourceStaticBindings,
     ]
 
     //Parse the body here as now all bindings have been updated.
@@ -473,7 +495,7 @@
     }
     // if query doesn't have ID then its new - don't try to copy existing dynamic variables
     if (!queryId) {
-      dynamicVariables = []
+      dynamicVariables = {}
       globalDynamicBindings = getDynamicVariables(datasource)
     } else {
       dynamicVariables = getDynamicVariables(
@@ -500,7 +522,7 @@
   })
 
   $beforeUrlChange(async () => {
-    if (!isModified) {
+    if (!isModified || consumeSkipUnsavedPrompt(lastViewedQueryId)) {
       return true
     }
 
@@ -599,10 +621,11 @@
               keyPlaceholder="Binding name"
               valuePlaceholder="Default"
               bindings={[
+                ...dataSourceStaticBindings,
                 ...restBindings,
                 ...globalDynamicRequestBindings,
-                ...dataSourceStaticBindings,
               ]}
+              context={bindingPreviewContext}
             />
           </Tab>
           <Tab title="Params">
@@ -612,6 +635,7 @@
                 defaults={breakQs}
                 headings
                 bindings={mergedBindings}
+                context={bindingPreviewContext}
                 on:change={e => {
                   let newQs = {}
                   e.detail.forEach(({ name, value }) => {
@@ -631,6 +655,7 @@
               name="header"
               headings
               bindings={mergedBindings}
+              context={bindingPreviewContext}
             />
           </Tab>
           <Tab title="Body">
