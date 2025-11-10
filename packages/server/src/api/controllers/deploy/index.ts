@@ -26,10 +26,7 @@ import {
   disableAllCrons,
   enableCronOrEmailTrigger,
 } from "../../../automations/utils"
-import {
-  DocumentType,
-  getAutomationParams,
-} from "../../../db/utils"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -142,7 +139,6 @@ async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
     }
   })
 }
-
 
 export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
