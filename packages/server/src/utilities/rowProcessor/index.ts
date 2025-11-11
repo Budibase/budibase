@@ -38,6 +38,7 @@ import {
   processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
+import { allocateAutoColumnValues } from "./autoColumnState"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
 
@@ -73,7 +74,24 @@ export async function processAutoColumn(
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
     !isUserTable && !opts?.reprocessing && !opts?.noAutoRelationships && !noUser
-  let tableMutated = false
+
+  let autoIdAllocations: Record<string, number> = {}
+  if (creating) {
+    const autoIdColumns = Object.entries(table.schema)
+      .filter(([_, schema]) => {
+        if (!schema.autocolumn) {
+          return false
+        }
+        const processedSchema = fixAutoColumnSubType(schema)
+        return processedSchema.subtype === AutoFieldSubType.AUTO_ID
+      })
+      .map(([columnName]) => columnName)
+
+    if (autoIdColumns.length) {
+      autoIdAllocations = await allocateAutoColumnValues(table, autoIdColumns)
+    }
+  }
+
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
@@ -102,20 +120,19 @@ export async function processAutoColumn(
         break
       case AutoFieldSubType.AUTO_ID:
         if (creating) {
-          schema.lastID = schema.lastID || 0
-          row[key] = schema.lastID + 1
-          schema.lastID++
+          const nextId = autoIdAllocations[key]
+          if (nextId == null) {
+            schema.lastID = schema.lastID || 0
+            row[key] = schema.lastID + 1
+            schema.lastID++
+          } else {
+            row[key] = nextId
+            schema.lastID = nextId
+          }
           table.schema[key] = schema
-          tableMutated = true
         }
         break
     }
-  }
-
-  if (tableMutated) {
-    const db = context.getWorkspaceDB()
-    const resp = await db.put(table)
-    table._rev = resp.rev
   }
 }
 

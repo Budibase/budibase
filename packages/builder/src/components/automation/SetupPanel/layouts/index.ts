@@ -1,4 +1,5 @@
 import APIRequest from "./APIRequest.svelte"
+import EmailTrigger from "./EmailTrigger.svelte"
 import { DrawerBindableInput } from "@/components/common/bindings"
 import { automationStore, selectedAutomation } from "@/stores/builder"
 import { Divider, Helpers, Select } from "@budibase/bbui"
@@ -8,6 +9,7 @@ import {
   AutomationStep,
   AutomationStepType,
   AutomationTrigger,
+  AutomationTriggerStepId,
   BaseIOStructure,
   isTrigger,
   Row,
@@ -171,6 +173,15 @@ export const getCustomStepLayout = (
           value: row?.tableId ?? "",
           disabled: isTest,
         }),
+      },
+    ]
+  }
+
+  if (block.stepId === AutomationTriggerStepId.EMAIL) {
+    return [
+      {
+        comp: EmailTrigger,
+        wrapped: false,
       },
     ]
   }

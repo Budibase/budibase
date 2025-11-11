@@ -1,15 +1,22 @@
-import { configs } from "@budibase/backend-core"
-import { IMAPInnerConfig } from "@budibase/types"
+import { EmailTriggerInputs } from "@budibase/types"
 import { ImapFlow } from "imapflow"
 
-export const getClient = async (config?: IMAPInnerConfig) => {
-  const imapConfig = config || (await configs.getIMAPConfig())
-  if (!imapConfig) throw new Error("no available IMAP config")
+export const getClient = async (inputs: EmailTriggerInputs) => {
+  if (!inputs) {
+    throw new Error("Email trigger inputs are required")
+  }
 
   const client = new ImapFlow({
-    ...imapConfig,
+    host: inputs.host,
+    port: inputs.port,
+    secure: inputs.secure,
+    auth: {
+      user: inputs.username,
+      pass: inputs.password,
+    },
     // imap flow has its own pino instance enabled by default and is very very chatty!
     logger: false,
   })
+
   return client
 }

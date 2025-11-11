@@ -25,26 +25,34 @@
 
   export let open = false
   let sortOpen = false
-
   let workspaceMenu: ActionMenu | undefined
   let filter = ""
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
 
-  const navigateToWorkspace = (devId: string | undefined) => {
-    if (!devId) return
-    const path = `/builder/workspace/${devId}`
-    try {
-      const result = $goto(path)
-      if (result instanceof Promise) {
-        result.catch(() => {
-          window.location.href = path
-        })
-      }
-    } catch {
-      window.location.href = path
+  $: apps = $enrichedApps
+  $: appId = $appStore.appId
+  $: currentSort = $sortBy
+
+  $: filtered = apps?.filter(app => matchesFilter(app.name, filter)) || []
+  $: favourites = filtered.filter(app => app.favourite)
+  $: nonFavourites = filtered.filter(app => !app.favourite)
+  $: displayApps = [...favourites, ...nonFavourites]
+  $: activeIndex = displayApps.length ? 0 : -1
+
+  $: if (open && activeIndex >= 0) {
+    itemEls[activeIndex]?.scrollIntoView({ block: "nearest" })
+  }
+
+  const navigateToWorkspace = (ws: EnrichedApp) => {
+    const wsUrl = getWorkspaceUrl(ws)
+    if (!ws.editable) {
+      window.open(wsUrl, "_blank")
+      return
     }
+    if (appId === ws.devId) return
+    $goto(wsUrl)
   }
 
   const onFilterKeydown = (e: KeyboardEvent) => {
@@ -62,27 +70,17 @@
       e.preventDefault()
       const app = displayApps[activeIndex]
       if (app) {
-        navigateToWorkspace(app.devId)
+        navigateToWorkspace(app)
       }
     }
   }
 
-  $: apps = $enrichedApps
-  $: appId = $appStore.appId
-  $: currentSort = $sortBy
+  const getWorkspaceUrl = (app: any) => {
+    return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
+  }
 
   const matchesFilter = (name: string, term: string) =>
     !term || name?.toLowerCase().includes(term.trim().toLowerCase())
-
-  $: filtered = apps?.filter(app => matchesFilter(app.name, filter)) || []
-  $: favourites = filtered.filter(app => app.favourite)
-  $: nonFavourites = filtered.filter(app => !app.favourite)
-  $: displayApps = [...favourites, ...nonFavourites]
-  $: activeIndex = displayApps.length ? 0 : -1
-
-  $: if (open && activeIndex >= 0) {
-    itemEls[activeIndex]?.scrollIntoView({ block: "nearest" })
-  }
 
   const onMenuOpen = () => {
     open = true
@@ -201,45 +199,47 @@
   </div>
 
   <div class="app-items">
-    {#each displayApps as app, i (app.devId)}
-      {@const selected = appId === app.devId}
+    {#each displayApps as ws, i (ws.devId)}
+      {@const selected = appId === ws.devId}
       <span
         class="menu-item"
         class:selected
-        class:favourite={app.favourite}
+        class:favourite={ws.favourite}
         class:active={i === activeIndex}
-        title={getTitleText(app)}
+        title={getTitleText(ws)}
         bind:this={itemEls[i]}
       >
         <MenuItem
           icon={selected ? "check" : undefined}
           on:click={() => {
-            if (selected) return
-            navigateToWorkspace(app.devId)
+            navigateToWorkspace(ws)
+          }}
+          on:auxclick={() => {
+            window.open(getWorkspaceUrl(ws), "_blank")
           }}
         >
-          {app.name}
+          {ws.name}
           <div slot="right" class="fav-slot">
             <button
               type="button"
               class="fav-icon-button fav-icon"
-              aria-label={app.favourite
+              aria-label={ws.favourite
                 ? "Remove from favourites"
                 : "Add to favourites"}
               on:click={e => {
                 e.stopPropagation()
                 e.preventDefault()
-                toggleFavourite(app.appId, !app.favourite)
+                toggleFavourite(ws.appId, !ws.favourite)
               }}
             >
               <Icon
                 name="star"
                 size="XS"
-                weight={app.favourite ? "fill" : "regular"}
-                color={app.favourite
+                weight={ws.favourite ? "fill" : "regular"}
+                color={ws.favourite
                   ? "var(--spectrum-global-color-yellow-1000)"
                   : "var(--spectrum-global-color-gray-700)"}
-                hoverColor={app.favourite
+                hoverColor={ws.favourite
                   ? "var(--spectrum-global-color-yellow-700)"
                   : "var(--spectrum-global-color-gray-900)"}
                 hoverable

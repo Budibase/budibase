@@ -74,7 +74,8 @@ export async function processEvent(job: AutomationJob) {
         return await tracer.trace("task", async () => {
           if (isEmailTrigger(trigger)) {
             const { proceed, ...checkMailResult } = await checkMail(
-              job.data.automation._id!
+              job.data.automation._id!,
+              trigger.inputs
             )
             if (proceed === false) {
               return { skipped: true }

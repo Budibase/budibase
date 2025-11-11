@@ -11,6 +11,7 @@ import {
   tables,
   roles,
   workspaceAppStore,
+  workspaceDeploymentStore,
 } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, appsStore } from "@/stores/portal"
@@ -121,7 +122,10 @@ export const createBuilderWebsocket = (appId: string) => {
     async ({ user, published }: { user: UIUser; published: boolean }) => {
       await appsStore.load()
       if (published) {
-        await deploymentStore.load()
+        await Promise.all([
+          deploymentStore.load(),
+          workspaceDeploymentStore.fetch(),
+        ])
       }
       const verb = published ? "published" : "unpublished"
       notifications.success(`${helpers.getUserLabel(user)} ${verb} this app`)
