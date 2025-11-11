@@ -6,6 +6,7 @@ import {
   Datasource,
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
+  Row,
   prefixed,
   Query,
   ResourceType,
@@ -15,7 +16,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
-import { extractTableIdFromRowActionsID } from "../../../db/utils"
+import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 
 export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
@@ -262,6 +263,57 @@ function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   return type === ResourceType.WORKSPACE_APP
 }
 
+function isTable(doc: AnyDocument): doc is Table {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.TABLE
+}
+
+async function duplicateInternalTableRows(
+  tables: Table[],
+  destinationDb: ReturnType<typeof db.getDB>,
+  fromWorkspace: string
+) {
+  if (!tables.length) {
+    return
+  }
+
+  const sourceDb = context.getWorkspaceDB()
+  for (const table of tables) {
+    if (table.sourceId !== INTERNAL_TABLE_SOURCE_ID) {
+      continue
+    }
+
+    const rowsResponse = await sourceDb.allDocs<Row>(
+      getRowParams(table._id, null, {
+        include_docs: true,
+      })
+    )
+
+    const docs = rowsResponse.rows
+      .map(row => row.doc)
+      .filter((doc): doc is Row => !!doc)
+    if (!docs.length) {
+      continue
+    }
+
+    await destinationDb.bulkDocs(
+      docs.map(row => {
+        const sanitizedRow: AnyDocument = {
+          ...row,
+          fromWorkspace,
+        }
+        delete sanitizedRow._rev
+        delete sanitizedRow.createdAt
+        delete sanitizedRow.updatedAt
+        return sanitizedRow
+      })
+    )
+  }
+}
+
 export async function duplicateResourcesToWorkspace(
   resources: string[],
   toWorkspace: string
@@ -288,13 +340,20 @@ export async function duplicateResourcesToWorkspace(
     .getMultiple<AnyDocument>(resources, {
       allowMissing: false,
     })
+  const docsToInsert = documentToCopy.filter(
+    doc => doc._id && toCopy.includes(doc._id)
+  )
+
+  if (!docsToInsert.length) {
+    return
+  }
 
   const fromWorkspace = context.getWorkspaceId()
   if (!fromWorkspace) {
     throw new Error("Could not get workspaceId")
   }
   await destinationDb.bulkDocs(
-    documentToCopy.map<AnyDocument>(doc => {
+    docsToInsert.map<AnyDocument>(doc => {
       const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
       delete sanitizedDoc._rev
       delete sanitizedDoc.createdAt
@@ -309,6 +368,12 @@ export async function duplicateResourcesToWorkspace(
     })
   )
 
+  await duplicateInternalTableRows(
+    docsToInsert.filter(isTable),
+    destinationDb,
+    fromWorkspace
+  )
+
   const fromWorkspaceName =
     (await sdk.workspaces.metadata.tryGet())?.name || fromWorkspace
   const toWorkspaceName = await context.doInContext(
@@ -316,7 +381,7 @@ export async function duplicateResourcesToWorkspace(
     async () => (await sdk.workspaces.metadata.tryGet())?.name || toWorkspace
   )
 
-  for (const doc of documentToCopy) {
+  for (const doc of docsToInsert) {
     let name: string, displayType: string
     const type = getResourceType(doc._id)
 
