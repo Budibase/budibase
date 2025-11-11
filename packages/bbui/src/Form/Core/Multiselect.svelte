@@ -143,7 +143,7 @@
   {loading}
   {onOptionMouseenter}
   {onOptionMouseleave}
-  searchPlaceholder={searchPlaceholder ?? "Search"}
+  {searchPlaceholder}
   {showSelectAll}
   {selectAllText}
   {indeterminate}

@@ -128,5 +128,5 @@
   onSelectOption={selectOption}
   {loading}
   {customPopoverHeight}
-  searchPlaceholder={searchPlaceholder ?? "Search"}
+  {searchPlaceholder}
 />
