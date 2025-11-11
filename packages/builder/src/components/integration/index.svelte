@@ -24,7 +24,7 @@
     [IntegrationTypes.MYSQL]: "text/x-mysql",
     [IntegrationTypes.POSTGRES]: "text/x-pgsql",
     [IntegrationTypes.SQL_SERVER]: "text/x-mssql",
-    [IntegrationTypes.ORACLE]: "text/x-plsql",
+    [IntegrationTypes.ORACLE]: "text/x-sql",
   }
 
   export let query
