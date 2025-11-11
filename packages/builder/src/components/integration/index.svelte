@@ -36,10 +36,7 @@
 
   let stepEditors = []
 
-  $: sqlEditorMode =
-    schema?.type === QueryTypes.SQL
-      ? SQLModes[datasource?.source] || DEFAULT_SQL_MODE
-      : DEFAULT_SQL_MODE
+  $: sqlEditorMode = SQLModes[datasource?.source] || DEFAULT_SQL_MODE
 
   $: urlDisplay =
     schema.urlDisplay &&
