@@ -109,6 +109,7 @@ export function isSupportedUserSearch(
 ): query is SearchFilters {
   const allowed = [
     { op: BasicOperator.STRING, key: "email" },
+    { op: BasicOperator.FUZZY, key: "email" },
     { op: BasicOperator.EQUAL, key: "_id" },
     { op: ArrayOperator.ONE_OF, key: "_id" },
   ]
