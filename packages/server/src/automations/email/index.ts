@@ -1,25 +1,32 @@
-import { EmailTrigger } from "@budibase/types"
+import { EmailTriggerInputs } from "@budibase/types"
 import { CheckMailOutput } from "./types/CheckMailOutput"
 import { toOutputFields } from "./utils/toOutputFields"
 import { getClient } from "./utils/getClient"
 import { fetchMessages } from "./utils/fetchMessages"
 import { getMessageId } from "./utils/getMessageId"
-import { checkSender } from "./utils/checkSender"
 import { getLastSeenUid, setLastSeenUid } from "./state"
 
-export const lockKey = "INBOX"
+export const DEFAULT_MAILBOX = "INBOX"
 
 export const checkMail = async (
-  trigger: EmailTrigger,
-  automationId: string
+  automationId: string,
+  imapInputs: EmailTriggerInputs
 ): Promise<CheckMailOutput> => {
-  const imapClient = await getClient()
+  if (!imapInputs) {
+    throw new Error("Email trigger inputs are required")
+  }
+
+  let imapClient: Awaited<ReturnType<typeof getClient>> | null = null
+  const mailbox = imapInputs.mailbox || DEFAULT_MAILBOX
   const stateKey = automationId
 
   try {
-    const lastSeenUid = await getLastSeenUid(stateKey)
-    const messages = await fetchMessages(imapClient, lockKey, lastSeenUid)
-    console.info(`[email trigger] fetched ${messages.length} messages`)
+    imapClient = await getClient(imapInputs)
+    const lastSeenUid = await getLastSeenUid(stateKey, mailbox)
+    const messages = await fetchMessages(imapClient, mailbox, lastSeenUid)
+    console.info(
+      `[email trigger] fetched ${messages.length} messages from mailbox ${mailbox}`
+    )
 
     if (!messages.length) {
       return { proceed: false, reason: "no new mail" }
@@ -44,7 +51,7 @@ export const checkMail = async (
     }
 
     if (!lastSeenUid) {
-      await setLastSeenUid(stateKey, latestUid)
+      await setLastSeenUid(stateKey, mailbox, latestUid)
       return { proceed: false, reason: "init, now waiting" }
     }
 
@@ -56,24 +63,22 @@ export const checkMail = async (
       return { proceed: false, reason: "no new mail" }
     }
 
-    const filteredMessages = unseenMessages.filter(({ message }) =>
-      checkSender(trigger.inputs.from, message)
+    await setLastSeenUid(stateKey, mailbox, latestUid)
+
+    const outputMessages = await Promise.all(
+      unseenMessages.map(({ message }) => toOutputFields(message))
     )
-
-    await setLastSeenUid(stateKey, latestUid)
-
-    if (!filteredMessages.length) {
-      return { proceed: false, reason: "sender email does not match expected" }
-    }
 
     return {
       proceed: true,
-      messages: filteredMessages.map(({ message }) => toOutputFields(message)),
+      messages: outputMessages,
     }
   } catch (err) {
     console.log(err)
   } finally {
-    await imapClient.logout().catch(console.log)
+    if (imapClient) {
+      await imapClient.logout().catch(console.log)
+    }
   }
   return { proceed: false, reason: "unknown" }
 }

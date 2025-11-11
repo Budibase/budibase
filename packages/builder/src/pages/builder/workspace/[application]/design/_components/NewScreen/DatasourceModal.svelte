@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Body, ModalContent, Layout } from "@budibase/bbui"
-  import { datasources as datasourcesStore } from "@/stores/builder"
+  import { Body, ModalContent, Layout, Link } from "@budibase/bbui"
+  import { appStore, datasources as datasourcesStore } from "@/stores/builder"
   import ICONS from "@/components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "@/constants"
   import { createEventDispatcher } from "svelte"
@@ -75,6 +75,11 @@
   const toggleSelection = (tableOrView: SourceOption) => {
     dispatch("toggle", tableOrView)
   }
+
+  let dataUrl = ""
+  $: dataUrl = $appStore.appId
+    ? `/builder/workspace/${$appStore.appId}/data`
+    : ""
 </script>
 
 <ModalContent
@@ -85,34 +90,45 @@
   disabled={!selectedTablesAndViews.length}
   size="L"
 >
-  <Body size="S">
-    Select which datasources you would like to use to create your screens
-  </Body>
-  <Layout noPadding gap="S">
-    {#each datasources as datasource}
-      <div class="datasource">
-        <div class="header">
-          <svelte:component
-            this={datasource.iconComponent}
-            height="18"
-            width="18"
-          />
-          <h2>{datasource.name}</h2>
+  {#if datasources?.length}
+    <Body size="S">
+      Select which tables you would like to use to create your screens
+    </Body>
+    <Layout noPadding gap="S">
+      {#each datasources as datasource}
+        <div class="datasource">
+          <div class="header">
+            <svelte:component
+              this={datasource.iconComponent}
+              height="18"
+              width="18"
+            />
+            <h2>{datasource.name}</h2>
+          </div>
+          <!-- List all tables -->
+          {#each datasource.tablesAndViews as tableOrView}
+            {@const selected = selectedTablesAndViews.some(
+              selected => selected.id === tableOrView.id
+            )}
+            <TableOrViewOption
+              on:click={() => toggleSelection(tableOrView)}
+              {selected}
+              {tableOrView}
+            />
+          {/each}
         </div>
-        <!-- List all tables -->
-        {#each datasource.tablesAndViews as tableOrView}
-          {@const selected = selectedTablesAndViews.some(
-            selected => selected.id === tableOrView.id
-          )}
-          <TableOrViewOption
-            on:click={() => toggleSelection(tableOrView)}
-            {selected}
-            {tableOrView}
-          />
-        {/each}
-      </div>
-    {/each}
-  </Layout>
+      {/each}
+    </Layout>
+  {:else}
+    <Body size="M">
+      You have no data tables.
+      <p class="no-tables">
+        Go to the
+        <Link size="L" href={dataUrl || null}>Data section</Link>
+        to connect your database or create a new internal Budibase table.
+      </p></Body
+    >
+  {/if}
 </ModalContent>
 
 <style>
@@ -148,5 +164,16 @@
     font-weight: 400;
     margin: 0;
     margin-left: 10px;
+  }
+
+  .no-tables :global(.spectrum-Link) {
+    font-weight: 900;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .no-tables :global(.spectrum-Link:hover),
+  .no-tables :global(.spectrum-Link:focus) {
+    text-decoration: none;
   }
 </style>
