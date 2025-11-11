@@ -765,6 +765,35 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("duplicates basic table rows into the destination workspace", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable({ name: "Rows source" })
+      const createdRow = await config.api.row.save(table._id!, {
+        tableId: table._id!,
+        name: "Budget holder",
+        description: "Original row",
+      })
+
+      await duplicateResources([table._id!], newWorkspace.appId)
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const rows = await config.api.row.fetch(table._id!)
+          expect(rows).toEqual([
+            expect.objectContaining({
+              _id: createdRow._id,
+              name: createdRow.name,
+              description: createdRow.description,
+            }),
+          ])
+        }
+      )
+    })
+
     it("throws when destination workspace does not exist", async () => {
       const basicApp = await createApp()
 
