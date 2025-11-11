@@ -10,11 +10,21 @@
     Button,
     ActionButton,
   } from "@budibase/bbui"
+  import { IntegrationTypes } from "@/constants/backend"
 
   const QueryTypes = {
     SQL: "sql",
     JSON: "json",
     FIELDS: "fields",
+  }
+
+  const DEFAULT_SQL_MODE = "sql"
+
+  const SQLModes = {
+    [IntegrationTypes.MYSQL]: "text/x-mysql",
+    [IntegrationTypes.POSTGRES]: "text/x-pgsql",
+    [IntegrationTypes.SQL_SERVER]: "text/x-mssql",
+    [IntegrationTypes.ORACLE]: "text/x-plsql",
   }
 
   export let query
@@ -25,6 +35,11 @@
   export let noLabel = false
 
   let stepEditors = []
+
+  $: sqlEditorMode =
+    schema?.type === QueryTypes.SQL
+      ? SQLModes[datasource?.source] || DEFAULT_SQL_MODE
+      : DEFAULT_SQL_MODE
 
   $: urlDisplay =
     schema.urlDisplay &&
@@ -76,7 +91,7 @@
       <Editor
         editorHeight={height}
         label={noLabel ? null : "Query"}
-        mode="sql"
+        mode={sqlEditorMode}
         on:change={updateQuery}
         readOnly={!editable}
         value={query.fields.sql}
