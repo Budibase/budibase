@@ -88,8 +88,10 @@ export async function status() {
   ) => {
     const id = resource._id!
     const resourcePublishedAt = metadata?.resourcesPublishedAt?.[id]
+    const isPublished = prodIds.has(id) || !!resourcePublishedAt
+
     map[id] = {
-      published: prodIds.has(id),
+      published: isPublished,
       name: resource.name,
       publishedAt: resourcePublishedAt,
       unpublishedChanges:

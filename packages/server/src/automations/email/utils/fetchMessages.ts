@@ -12,14 +12,14 @@ const fetchQuery = {
 
 export const fetchMessages = async (
   client: ImapFlow,
-  lockKey: string,
+  mailboxKey: string,
   lastSeenUid?: number
 ): Promise<FetchMessageObject[]> => {
   await client.connect()
-  const mailbox = await client.mailboxOpen(lockKey)
+  const mailbox = await client.mailboxOpen(mailboxKey)
 
   if (!mailbox.exists) {
-    throw new Error("Mailbox does not exist")
+    return []
   }
 
   if (lastSeenUid == null) {
