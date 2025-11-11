@@ -1,16 +1,21 @@
 import { configs, context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
+  Automation,
   AutomationResults,
+  AutomationTriggerStepId,
   ConfigType,
+  EmailTrigger,
+  EmailTriggerInputs,
   FieldType,
   FilterCondition,
-  isDidNotTriggerResponse,
   RowActionTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
   SettingsConfig,
   Table,
+  isDidNotTriggerResponse,
+  isEmailTrigger,
 } from "@budibase/types"
 import {
   BUILTIN_ACTION_DEFINITIONS,
@@ -755,5 +760,96 @@ describe("/automations", () => {
         }
       }
     )
+  })
+
+  describe("email trigger secrets", () => {
+    const ensureEmailTrigger = (
+      trigger?: Automation["definition"]["trigger"]
+    ): EmailTrigger => {
+      if (!trigger || !isEmailTrigger(trigger)) {
+        throw new Error("Expected email trigger")
+      }
+      return trigger
+    }
+
+    const buildEmailAutomation = (password = "imap-secret") => {
+      const trigger: EmailTrigger = {
+        ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+        stepId: AutomationTriggerStepId.EMAIL,
+        inputs: {
+          host: "imap.gmail.com",
+          port: 993,
+          secure: true,
+          username: "dom",
+          password,
+          mailbox: "dom",
+        } satisfies EmailTriggerInputs,
+      }
+      return newAutomation({
+        trigger,
+        steps: [],
+      })
+    }
+
+    const fetchStoredAutomation = async (automationId: string) => {
+      return context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const db = context.getWorkspaceDB()
+          return db.get<Automation>(automationId)
+        }
+      )
+    }
+
+    it("masks the trigger password in API responses", async () => {
+      const payload = buildEmailAutomation()
+      const { automation: createdAutomation, message } =
+        await config.api.automation.post(payload)
+
+      expect(message).toEqual("Automation created successfully")
+      const createdTrigger = ensureEmailTrigger(
+        createdAutomation.definition.trigger
+      )
+      expect(createdTrigger.inputs.password).toMatch(/^\*+$/)
+
+      const stored = await fetchStoredAutomation(createdAutomation._id!)
+      const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
+      expect(storedTrigger.inputs.password).toEqual("imap-secret")
+
+      const { automations } = await config.api.automation.fetch()
+      const fetched = automations.find(
+        automation => automation._id === createdAutomation._id
+      )
+      if (!fetched) {
+        throw new Error("Expected automation to be returned from fetch()")
+      }
+      const fetchedTrigger = ensureEmailTrigger(fetched.definition.trigger)
+      expect(fetchedTrigger.inputs.password).toMatch(/^\*+$/)
+    })
+
+    it("reuses the stored password when the placeholder is submitted", async () => {
+      const payload = buildEmailAutomation("mail-secret")
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
+
+      createdAutomation.name = "Updated Email Monitor"
+      const createdTrigger = ensureEmailTrigger(
+        createdAutomation.definition.trigger
+      )
+      createdTrigger.inputs.mailbox = "alerts"
+
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(createdAutomation)
+
+      const updatedTrigger = ensureEmailTrigger(
+        updatedAutomation.definition.trigger
+      )
+      expect(updatedTrigger.inputs.password).toMatch(/^\*+$/)
+
+      const stored = await fetchStoredAutomation(updatedAutomation._id!)
+      const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
+      expect(storedTrigger.inputs.password).toEqual("mail-secret")
+      expect(storedTrigger.inputs.mailbox).toEqual("alerts")
+    })
   })
 })

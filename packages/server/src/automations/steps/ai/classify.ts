@@ -35,6 +35,7 @@ export async function run({
     if (determinedCategory && categories.includes(determinedCategory)) {
       return {
         response: determinedCategory,
+        category: determinedCategory,
         success: true,
       }
     }

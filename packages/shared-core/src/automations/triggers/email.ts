@@ -13,9 +13,44 @@ export const definition: AutomationTriggerDefinition = {
   tagline: "Email Trigger",
   description: "Triggers automation when an email is received",
   stepId: AutomationTriggerStepId.EMAIL,
-  inputs: {},
+  inputs: {
+    host: "",
+    port: 993,
+    secure: true,
+    username: "",
+    password: "",
+    mailbox: "INBOX",
+  },
   schema: {
-    inputs: { properties: {} },
+    inputs: {
+      properties: {
+        host: {
+          type: AutomationIOType.STRING,
+          description: "IMAP host address",
+        },
+        port: {
+          type: AutomationIOType.NUMBER,
+          description: "IMAP port",
+        },
+        secure: {
+          type: AutomationIOType.BOOLEAN,
+          description: "Use TLS/SSL for the IMAP connection",
+        },
+        username: {
+          type: AutomationIOType.STRING,
+          description: "IMAP username",
+        },
+        password: {
+          type: AutomationIOType.STRING,
+          description: "IMAP password",
+        },
+        mailbox: {
+          type: AutomationIOType.STRING,
+          description: "Mailbox to monitor",
+        },
+      },
+      required: ["host", "port", "secure", "username", "password"],
+    },
     outputs: {
       properties: {
         from: {
