@@ -124,6 +124,54 @@ describe("Replication", () => {
       expect((opts.filter as Function)(appMetadataDoc, {})).toBe(false)
     })
 
+    it("should skip auto column state docs when replicating to production after creation", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      const autoColumnStateDoc = {
+        _id: `${DocumentType.AUTO_COLUMN_STATE}_tableId`,
+        type: "auto_column_state",
+      }
+
+      expect((opts.filter as Function)(autoColumnStateDoc, {})).toBe(false)
+    })
+
+    it("should include auto column state docs when creating production workspace", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      const autoColumnStateDoc = {
+        _id: `${DocumentType.AUTO_COLUMN_STATE}_tableId`,
+        type: "auto_column_state",
+      }
+
+      expect((opts.filter as Function)(autoColumnStateDoc, {})).toBe(true)
+    })
+
+    it("should include auto column state docs when replicating to dev", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      const autoColumnStateDoc = {
+        _id: `${DocumentType.AUTO_COLUMN_STATE}_tableId`,
+        type: "auto_column_state",
+      }
+
+      expect((opts.filter as Function)(autoColumnStateDoc, {})).toBe(true)
+    })
+
     it("should filter out design documents when replicating to dev", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE}_source`,

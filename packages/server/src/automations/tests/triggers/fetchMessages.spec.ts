@@ -16,12 +16,12 @@ const createClient = (mailboxExists: number) => {
 }
 
 describe("fetchMessages", () => {
-  it("throws when the mailbox does not exist", async () => {
+  it("returns empty array when the mailbox does not exist", async () => {
     const client = createClient(0)
-    await expect(
-      fetchMessages(client as unknown as ImapFlow, "INBOX")
-    ).rejects.toThrow("Mailbox does not exist")
 
+    const res = await fetchMessages(client as unknown as ImapFlow, "INBOX")
+
+    expect(res).toEqual([])
     expect(client.connect).toHaveBeenCalledTimes(1)
     expect(client.mailboxOpen).toHaveBeenCalledWith("INBOX")
     expect(client.fetchOne).not.toHaveBeenCalled()

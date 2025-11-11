@@ -1,21 +1,19 @@
-import { configs } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationMessages } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { ConfigType, IMAPInnerConfig } from "@budibase/types"
+import { EmailTriggerInputs } from "@budibase/types"
 
 jest.mock("../../email/utils/fetchMessages", () => ({
   fetchMessages: jest.fn(),
 }))
 
-const imapConfig: IMAPInnerConfig = {
+const triggerInputs: EmailTriggerInputs = {
   host: "localhost",
   port: 993,
   secure: false,
-  auth: {
-    user: "dom",
-    pass: "dom",
-  },
+  username: "dom",
+  password: "dom",
+  mailbox: "INBOX",
 }
 
 describe("email trigger", () => {
@@ -31,12 +29,6 @@ describe("email trigger", () => {
   })
 
   beforeEach(async () => {
-    await config.doInTenant(() =>
-      configs.save({
-        type: ConfigType.IMAP,
-        config: imapConfig,
-      })
-    )
     const { automations } = await config.api.automation.fetch()
     for (const automation of automations) {
       await config.api.automation.delete(automation)
@@ -49,7 +41,7 @@ describe("email trigger", () => {
 
   it("should queue a Bull cron job", async () => {
     const { automation } = await createAutomationBuilder(config)
-      .onEmail({})
+      .onEmail(triggerInputs)
       .serverLog({
         text: "Hello, world!",
       })
@@ -115,11 +107,21 @@ describe("checkMail behaviour", () => {
     mocks.fetchMessagesMock.mockResolvedValue([message])
     mocks.getLastSeenUidMock.mockResolvedValueOnce(undefined)
 
-    const result = await checkMail("automation-first")
+    const result = await checkMail("automation-first", triggerInputs)
 
     expect(result).toEqual({ proceed: false, reason: "init, now waiting" })
+    expect(mocks.getClientMock).toHaveBeenCalledWith(triggerInputs)
+    expect(mocks.fetchMessagesMock).toHaveBeenCalledWith(
+      expect.any(Object),
+      triggerInputs.mailbox,
+      undefined
+    )
     expect(mocks.toOutputFieldsMock).not.toHaveBeenCalled()
-    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith("automation-first", 5)
+    expect(mocks.setLastSeenUidMock).toHaveBeenCalledWith(
+      "automation-first",
+      triggerInputs.mailbox,
+      5
+    )
     expect(mocks.logout).toHaveBeenCalledTimes(1)
   })
 
@@ -148,8 +150,11 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(10)
 
-    await checkMail("automation-new-mail")
-    const { messages, proceed } = await checkMail("automation-new-mail")
+    await checkMail("automation-new-mail", triggerInputs)
+    const { messages, proceed } = await checkMail(
+      "automation-new-mail",
+      triggerInputs
+    )
 
     const result = messages?.[0]
 
@@ -159,11 +164,13 @@ describe("checkMail behaviour", () => {
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       1,
       "automation-new-mail",
+      triggerInputs.mailbox,
       10
     )
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       2,
       "automation-new-mail",
+      triggerInputs.mailbox,
       11
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
@@ -207,8 +214,11 @@ describe("checkMail behaviour", () => {
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(50)
 
-    await checkMail("automation-multi-send")
-    const { proceed, messages } = await checkMail("automation-multi-send")
+    await checkMail("automation-multi-send", triggerInputs)
+    const { proceed, messages } = await checkMail(
+      "automation-multi-send",
+      triggerInputs
+    )
 
     expect(proceed).toBeTrue()
     expect(messages).toEqual([firstFields, secondFields])
@@ -220,11 +230,13 @@ describe("checkMail behaviour", () => {
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       1,
       "automation-multi-send",
+      triggerInputs.mailbox,
       50
     )
     expect(mocks.setLastSeenUidMock).toHaveBeenNthCalledWith(
       2,
       "automation-multi-send",
+      triggerInputs.mailbox,
       52
     )
     expect(mocks.logout).toHaveBeenCalledTimes(2)
