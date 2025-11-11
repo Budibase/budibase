@@ -8,7 +8,10 @@ import {
   type FormDataParameter,
 } from "./requestBody"
 
-const createPlaceholder = (key: string, type: "string" | "integer" = "string") => ({
+const createPlaceholder = (
+  key: string,
+  type: "string" | "integer" = "string"
+) => ({
   toJSON: () => `${BINDING_TOKEN_PREFIX}${type}__${key}__`,
 })
 
@@ -23,7 +26,9 @@ describe("generateRequestBodyFromSchema", () => {
       required: ["user-name"],
     }
 
-    const result = generateRequestBodyFromSchema(schema, "body", { totalLimit: 1 })
+    const result = generateRequestBodyFromSchema(schema, "body", {
+      totalLimit: 1,
+    })
 
     expect(result).toBeDefined()
     expect(result?.bindings).toEqual({ user_name: "Jane" })
