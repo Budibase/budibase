@@ -10,7 +10,6 @@ import GroupsPage from "@/settings/pages/people/groups/index.svelte"
 import PluginsPage from "@/settings/pages/plugins/index.svelte"
 import EmailPage from "@/settings/pages/email.svelte"
 import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
-import EmailImapPage from "@/settings/pages/email/Imap.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
 import AIPage from "@/settings/pages/ai/index.svelte"
@@ -43,7 +42,6 @@ const componentMap: Record<string, ComponentType> = {
   groups: GroupsPage,
   plugins: PluginsPage,
   email: EmailPage,
-  email_imap: EmailImapPage,
   email_templates: EmailTemplatesPage,
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
