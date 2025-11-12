@@ -7,7 +7,6 @@
 
   const dispatch = createEventDispatcher()
 
-  let localValue = value ?? ""
   let defaultTooltip
 
   $: defaultTooltip = row?.defaultValue
@@ -19,7 +18,7 @@
   <div class="input-wrapper">
     <div class="input-field">
       <Input
-        value={localValue}
+        value={value ?? ""}
         placeholder={row.defaultValue}
         quiet
         on:change={event => {
