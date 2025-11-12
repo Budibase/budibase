@@ -1,9 +1,6 @@
 <script>
   import { Select, Multiselect } from "@budibase/bbui"
-  import {
-    fetchData,
-    createWorkspaceTranslationStore,
-  } from "@budibase/frontend-core"
+  import { fetchData, loadTranslationsByGroup } from "@budibase/frontend-core"
   import { createAPIClient } from "../api"
 
   export let API = createAPIClient()
@@ -25,7 +22,7 @@
   $: options = $fetch.rows
 
   $: component = multiselect ? Multiselect : Select
-  const pickerLabels = createWorkspaceTranslationStore("picker")
+  const pickerLabels = loadTranslationsByGroup("picker")
 </script>
 
 <div class="user-control">
@@ -38,6 +35,6 @@
     getOptionLabel={option => option.email}
     getOptionValue={option => option._id}
     {disabled}
-    searchPlaceholder={$pickerLabels.searchPlaceholder}
+    searchPlaceholder={pickerLabels.searchPlaceholder}
   />
 </div>

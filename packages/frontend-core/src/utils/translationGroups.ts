@@ -1,5 +1,5 @@
 import { getContext } from "svelte"
-import { derived, readable, type Readable } from "svelte/store"
+import { get, type Readable } from "svelte/store"
 import {
   resolveTranslationGroup,
   resolveWorkspaceTranslations,
@@ -7,40 +7,34 @@ import {
   type TranslationOverrides,
 } from "@budibase/shared-core"
 
-type TranslationGroup = Record<string, string>
-
-interface WorkspaceTranslationStore extends Readable<TranslationGroup> {}
-
 type TranslationStoreValue = {
   translationOverrides?: TranslationOverrides | null
   application?: { translationOverrides?: TranslationOverrides | null } | null
 }
 
-interface CreateWorkspaceTranslationStoreOptions {
+interface LoadTranslationsByGroupOptions {
   appStore?: Readable<TranslationStoreValue> | null
+  overrides?: TranslationOverrides | null
 }
 
 interface SDKContext {
   appStore?: Readable<TranslationStoreValue> | null
 }
 
-export const createWorkspaceTranslationStore = (
+export const loadTranslationsByGroup = (
   category: TranslationCategory,
-  options?: CreateWorkspaceTranslationStoreOptions
-): WorkspaceTranslationStore => {
+  options?: LoadTranslationsByGroupOptions
+): Record<string, string> => {
   const sdk = getContext<SDKContext | undefined>("sdk")
-  const contextStore = sdk?.appStore
-  const providedStore: Readable<TranslationStoreValue> | null =
-    options?.appStore ?? contextStore ?? null
+  const appStore = options?.appStore ?? sdk?.appStore
+  const storeValue = appStore ? get(appStore) : undefined
 
-  if (providedStore && typeof providedStore.subscribe === "function") {
-    return derived(providedStore, value => {
-      const overrides = resolveWorkspaceTranslations(
-        value?.translationOverrides ?? value?.application?.translationOverrides
+  const overrides = options?.overrides
+    ? resolveWorkspaceTranslations(options.overrides)
+    : resolveWorkspaceTranslations(
+        storeValue?.translationOverrides ??
+          storeValue?.application?.translationOverrides
       )
-      return resolveTranslationGroup(category, overrides)
-    })
-  }
 
-  return readable(resolveTranslationGroup(category))
+  return resolveTranslationGroup(category, overrides)
 }

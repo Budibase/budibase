@@ -4,11 +4,11 @@
   import { debounce } from "../../../utils/utils"
   import GridPopover from "../overlays/GridPopover.svelte"
   import { OptionColours } from "../../../constants"
-  import { createWorkspaceTranslationStore } from "../../../utils/translationGroups"
+  import { loadTranslationsByGroup } from "../../../utils/translationGroups"
 
   const { API, cache } = getContext("grid")
 
-  const pickerLabels = createWorkspaceTranslationStore("picker")
+  const pickerLabels = loadTranslationsByGroup("picker")
 
   export let value = []
   export let api
@@ -44,8 +44,8 @@
   }
 
   $: relationshipSearchPlaceholder = primaryDisplay
-    ? $pickerLabels.searchByFieldPlaceholder.replace("{field}", primaryDisplay)
-    : $pickerLabels.searchPlaceholder
+    ? pickerLabels.searchByFieldPlaceholder.replace("{field}", primaryDisplay)
+    : pickerLabels.searchPlaceholder
 
   $: relationFields = fieldValue?.reduce((acc, f) => {
     const fields = {}

@@ -23,7 +23,7 @@
   import {
     fetchData,
     Utils,
-    createWorkspaceTranslationStore,
+    loadTranslationsByGroup,
     Constants,
   } from "@budibase/frontend-core"
   import Field from "./Field.svelte"
@@ -56,7 +56,7 @@
   const sdk = (getContext("sdk") as any) ?? {}
   const { API } = sdk
 
-  const pickerLabels = createWorkspaceTranslationStore("picker")
+  const pickerLabels = loadTranslationsByGroup("picker")
   // Limit datasourceType "user" to app users only
   export let workspaceUsersOnly: boolean | undefined = false
 
@@ -109,11 +109,11 @@
       ? tableDefinition.primaryDisplay
       : undefined)
   $: relationshipPickerPlaceholder = primaryDisplayField
-    ? $pickerLabels.searchByFieldPlaceholder.replace(
+    ? pickerLabels.searchByFieldPlaceholder.replace(
         "{field}",
         primaryDisplayField
       )
-    : $pickerLabels.searchPlaceholder
+    : pickerLabels.searchPlaceholder
 
   // Build our options map
   $: rows = $fetch?.rows || []
