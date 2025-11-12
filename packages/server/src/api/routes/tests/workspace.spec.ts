@@ -865,9 +865,7 @@ describe("/applications", () => {
 
     it("should allow users in multiple groups with different roles to access all permitted screens", async () => {
       const hrRole = await config.api.roles.save({
-        name: `HR_${structures.generator
-          .guid()
-          .replace(/[^a-zA-Z0-9]/g, "")}`,
+        name: `HR_${structures.generator.guid().replace(/[^a-zA-Z0-9]/g, "")}`,
         inherits: [roles.BUILTIN_ROLE_IDS.BASIC],
         permissionId: BuiltinPermissionID.WRITE,
         version: "name",
