@@ -23,6 +23,7 @@
   export let appendTo = undefined
   export let api = null
   export let align: PopoverAlignment = PopoverAlignment.Left
+  export let startDayOfWeek = "Monday"
 
   let isOpen = false
   let anchor: HTMLElement
@@ -80,6 +81,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      {startDayOfWeek}
       value={parsedValue}
       on:change
     />

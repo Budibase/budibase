@@ -4540,6 +4540,25 @@
         "defaultValue": false
       },
       {
+        "type": "select",
+        "label": "Week starts on",
+        "key": "startDayOfWeek",
+        "defaultValue": "Monday",
+        "options": [
+          { "label": "Monday", "value": "Monday" },
+          { "label": "Tuesday", "value": "Tuesday" },
+          { "label": "Wednesday", "value": "Wednesday" },
+          { "label": "Thursday", "value": "Thursday" },
+          { "label": "Friday", "value": "Friday" },
+          { "label": "Saturday", "value": "Saturday" },
+          { "label": "Sunday", "value": "Sunday" }
+        ],
+        "dependsOn": {
+          "setting": "timeOnly",
+          "value": false
+        }
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue",

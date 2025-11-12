@@ -9,6 +9,7 @@
   export let enableTime: boolean | undefined = false
   export let timeOnly: boolean | undefined = false
   export let ignoreTimezones: boolean | undefined = false
+  export let startDayOfWeek: string | undefined = "Monday"
   export let value: string[] | undefined = []
 
   const dispatch = createEventDispatcher()
@@ -72,6 +73,7 @@
     {enableTime}
     {timeOnly}
     {ignoreTimezones}
+    {startDayOfWeek}
   />
   <div class="arrow">
     <Icon name="caret-right" />
@@ -82,6 +84,7 @@
     {enableTime}
     {timeOnly}
     {ignoreTimezones}
+    {startDayOfWeek}
   />
 </div>
 
