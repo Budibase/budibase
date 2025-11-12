@@ -6,7 +6,7 @@ import {
   logging,
   objectStore,
 } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
+import chunk from "lodash/chunk"
 import {
   AnyDocument,
   Automation,
@@ -14,8 +14,10 @@ import {
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
   FieldType,
+  DatabaseQueryOpts,
   Row,
   RowAttachment,
+  WithDocMetadata,
   prefixed,
   Query,
   ResourceType,
@@ -273,7 +275,7 @@ function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   return type === ResourceType.WORKSPACE_APP
 }
 
-function isTable(doc: AnyDocument): doc is Table {
+function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
   if (!doc._id) {
     return false
   }
@@ -436,8 +438,76 @@ async function remapRowAttachments(
   }
 }
 
+const ROW_PAGE_SIZE = 1000
+const ROW_CHUNK_SIZE = 250
+const ROW_WRITE_RETRIES = 3
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+async function fetchTableRowsPage(
+  tableId: string,
+  startAfter?: string
+): Promise<{
+  rows: Row[]
+  nextStartAfter?: string
+}> {
+  const sourceDb = context.getWorkspaceDB()
+  const params: Partial<DatabaseQueryOpts> = {
+    include_docs: true,
+    limit: ROW_PAGE_SIZE + (startAfter ? 1 : 0),
+  }
+  if (startAfter) {
+    params.startkey = startAfter
+    params.skip = 1
+  }
+  const response = await sourceDb.allDocs<Row>(
+    getRowParams(tableId, null, params)
+  )
+
+  const docs = response.rows
+    .map(row => row.doc)
+    .filter((doc): doc is Row => !!doc)
+  const rows = docs.length > ROW_PAGE_SIZE ? docs.slice(0, ROW_PAGE_SIZE) : docs
+  const nextStartAfter =
+    rows.length === ROW_PAGE_SIZE ? rows[rows.length - 1]._id : undefined
+  return { rows, nextStartAfter }
+}
+
+async function bulkInsertRows(
+  destinationDb: ReturnType<typeof db.getDB>,
+  docs: AnyDocument[]
+) {
+  const chunks = chunk(docs, ROW_CHUNK_SIZE)
+  for (const chunk of chunks) {
+    let pending = chunk
+    let attempts = 0
+    while (pending.length && attempts < ROW_WRITE_RETRIES) {
+      attempts++
+      const response = await destinationDb.bulkDocs(pending)
+      const failed: AnyDocument[] = []
+      response.forEach((result: any, idx: number) => {
+        if (result.error) {
+          failed.push(pending[idx])
+        }
+      })
+
+      if (!failed.length) {
+        break
+      }
+
+      if (attempts >= ROW_WRITE_RETRIES) {
+        throw new Error(
+          `Failed to copy ${failed.length} row(s) after ${ROW_WRITE_RETRIES} attempts.`
+        )
+      }
+
+      await delay(attempts * 250)
+      pending = failed
+    }
+  }
+}
+
 async function duplicateInternalTableRows(
-  tables: Table[],
+  tables: WithDocMetadata<Table>[],
   destinationDb: ReturnType<typeof db.getDB>,
   fromWorkspace: string,
   toWorkspace: string
@@ -446,7 +516,6 @@ async function duplicateInternalTableRows(
     return
   }
 
-  const sourceDb = context.getWorkspaceDB()
   const sourceProdWorkspaceId = db.getProdWorkspaceID(fromWorkspace)
   const destinationProdWorkspaceId = db.getProdWorkspaceID(toWorkspace)
   const attachmentCopyCache = new Map<string, Promise<string | undefined>>()
@@ -456,38 +525,39 @@ async function duplicateInternalTableRows(
       continue
     }
 
-    const rowsResponse = await sourceDb.allDocs<Row>(
-      getRowParams(table._id, null, {
-        include_docs: true,
-      })
-    )
-
-    const docs = rowsResponse.rows
-      .map(row => row.doc)
-      .filter((doc): doc is Row => !!doc)
-    if (!docs.length) {
-      continue
-    }
-
     const attachmentColumns = getAttachmentColumns(table)
-    const sanitizedRows: AnyDocument[] = []
-    for (const row of docs) {
-      await remapRowAttachments(row, attachmentColumns, {
-        sourceProdWorkspaceId,
-        destinationProdWorkspaceId,
-        cache: attachmentCopyCache,
-      })
-      const sanitizedRow: AnyDocument = {
-        ...row,
-        fromWorkspace,
-      }
-      delete sanitizedRow._rev
-      delete sanitizedRow.createdAt
-      delete sanitizedRow.updatedAt
-      sanitizedRows.push(sanitizedRow)
-    }
+    let startAfter: string | undefined = undefined
 
-    await destinationDb.bulkDocs(sanitizedRows)
+    do {
+      const { rows, nextStartAfter } = await fetchTableRowsPage(
+        table._id!,
+        startAfter
+      )
+      startAfter = nextStartAfter
+
+      if (!rows.length) {
+        break
+      }
+
+      const sanitizedRows: AnyDocument[] = []
+      for (const row of rows) {
+        await remapRowAttachments(row, attachmentColumns, {
+          sourceProdWorkspaceId,
+          destinationProdWorkspaceId,
+          cache: attachmentCopyCache,
+        })
+        const sanitizedRow: AnyDocument = {
+          ...row,
+          fromWorkspace,
+        }
+        delete sanitizedRow._rev
+        delete sanitizedRow.createdAt
+        delete sanitizedRow.updatedAt
+        sanitizedRows.push(sanitizedRow)
+      }
+
+      await bulkInsertRows(destinationDb, sanitizedRows)
+    } while (startAfter)
   }
 }
 
@@ -595,7 +665,7 @@ export async function duplicateResourcesToWorkspace(
       case undefined:
         throw new Error("Resource type could not be infered")
       default:
-        throw utils.unreachable(type)
+        throw new Error("Unreachable")
     }
 
     const resource = {

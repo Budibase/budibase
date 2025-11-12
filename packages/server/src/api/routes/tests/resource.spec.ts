@@ -859,12 +859,18 @@ describe("/api/resources/usage", () => {
             expect.objectContaining({
               attachment: expect.objectContaining({
                 key: `${destinationProdId}/attachments/${fileName}`,
-                url: "",
+                url: expect.stringContaining(destinationProdId),
+                size: attachmentSize,
+                extension: "txt",
+                name: fileName,
               }),
               gallery: [
                 expect.objectContaining({
                   key: `${destinationProdId}/attachments/${fileName}`,
-                  url: "",
+                  url: expect.stringContaining(destinationProdId),
+                  size: attachmentSize,
+                  extension: "txt",
+                  name: fileName,
                 }),
               ],
             }),
