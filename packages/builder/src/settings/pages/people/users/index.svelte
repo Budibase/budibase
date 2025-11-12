@@ -165,7 +165,7 @@
     }
     fetch.update({
       query: {
-        string: {
+        fuzzy: {
           email,
         },
       },
