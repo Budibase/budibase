@@ -1,6 +1,7 @@
 import {
   auth as authCore,
   db as dbCore,
+  configs,
   encryption,
   features,
   tenancy,
@@ -95,6 +96,7 @@ const getUserSessionAttributes = (ctx: UserCtx) => ({
 })
 
 export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
+  ///
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
@@ -123,11 +125,15 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
       }
     : undefined
 
+  // add locked reason if proceed
+  const settingsConfig = await configs.getSettingsConfig()
+
   ctx.body = {
     ...enrichedUser,
     ...sessionAttributes,
     flags,
     llm: sanitisedLLMConfig,
+    lockedBy: settingsConfig?.lockedBy,
   }
 }
 
