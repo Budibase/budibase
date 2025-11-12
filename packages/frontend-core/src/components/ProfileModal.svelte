@@ -42,6 +42,7 @@
 <ModalContent
   title={resolvedLabels.title}
   confirmText={resolvedLabels.saveText}
+  cancelText={resolvedLabels.cancelText}
   onConfirm={updateInfo}
 >
   <Body size="S">
