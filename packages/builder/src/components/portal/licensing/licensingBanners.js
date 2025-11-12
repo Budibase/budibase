@@ -111,7 +111,7 @@ const buildLockedBanner = EXPIRY_KEY => {
       defaultCacheFn(EXPIRY_KEY)
     },
     criteria: () => {
-      return userLicensing.errUserLimit || get(auth).user.lockedBy
+      return userLicensing.errUserLimit || get(auth).user?.lockedBy
     },
     message: "Your Budibase account is de-activated. Upgrade your plan",
     ...{
