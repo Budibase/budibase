@@ -31,7 +31,7 @@
         for cloud users. Your tenant has been temporarily locked. Please upgrade
         to a paid plan to keep your data — otherwise it will be removed soon.
       {:else}
-        Due to the free plan user limit being exceeded, your account has been
+        Due to the Free plan user limit being exceeded, your account has been
         de-activated. Upgrade your plan to re-activate your account.
       {/if}
     </Body>
