@@ -63,7 +63,7 @@
 
   $: lockAction =
     $licensing?.errUserLimit || $auth?.user?.lockedBy
-      ? () => accountLockedModal.show()
+      ? accountLockedModal.show
       : null
 
   $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
