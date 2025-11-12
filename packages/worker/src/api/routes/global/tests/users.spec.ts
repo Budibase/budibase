@@ -857,6 +857,17 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should support fuzzy email fragments", async () => {
+      const email = `search-like-user-${Date.now()}@example.com`
+      await config.createUser({ email })
+      const fragment = email.slice(3, 12)
+      const response = await config.api.users.searchUsers({
+        query: { fuzzy: { email: fragment } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(email)
+    })
+
     it("should be able to search by email with numeric prefixing", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({

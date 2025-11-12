@@ -175,8 +175,11 @@
           return { type: "returnUrl", url: returnUrl }
         }
 
+        // Review if builder users have workspaces. If not, redirect them to get-started
+        const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
         if (
-          $appsStore.apps.length === 0 &&
+          ($appsStore.apps.length === 0 ||
+            (isBuilder && !hasEditableWorkspaces)) &&
           !$isActive("./apps") &&
           !$isActive("./onboarding") &&
           !$isActive("./get-started")
@@ -203,8 +206,9 @@
           !$isActive("./workspace/:application") &&
           !$isActive("./apps")
         ) {
-          const defaultApp = $enrichedApps[0]
-          // Only redirect if enriched apps are loaded
+          // Find first editable app to redirect to
+          const defaultApp = $enrichedApps.find(app => app.editable)
+          // Only redirect if enriched apps are loaded and app is editable
           if (defaultApp?.devId) {
             return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
           }
