@@ -27,7 +27,7 @@
   >
     <Body size="S">
       {#if lockedBy === LockReason.FREE_TIER}
-        You’re currently on Budibase’s Free plan, which is no longer available
+        You’re currently on the Budibase Free plan, which is no longer available
         for cloud users. Your tenant has been temporarily locked. Please upgrade
         to a paid plan to keep your data — otherwise it will be removed soon.
       {:else}
