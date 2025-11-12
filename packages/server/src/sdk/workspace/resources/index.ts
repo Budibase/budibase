@@ -1,4 +1,11 @@
-import { context, db, events, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  events,
+  HTTPError,
+  logging,
+  objectStore,
+} from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AnyDocument,
@@ -6,7 +13,9 @@ import {
   Datasource,
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
+  FieldType,
   Row,
+  RowAttachment,
   prefixed,
   Query,
   ResourceType,
@@ -16,6 +25,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
+import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 
 export async function getResourcesInfo(): Promise<
@@ -271,16 +281,176 @@ function isTable(doc: AnyDocument): doc is Table {
   return type === ResourceType.TABLE
 }
 
+const ATTACHMENT_FIELD_TYPES = new Set<FieldType>([
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+])
+
+type AttachmentColumn = { field: string; type: FieldType }
+
+const isAttachmentColumn = (column: { type?: FieldType } | undefined) =>
+  !!column?.type && ATTACHMENT_FIELD_TYPES.has(column.type)
+
+const getAttachmentColumns = (table: Table): AttachmentColumn[] => {
+  if (!table.schema) {
+    return []
+  }
+  return Object.entries(table.schema)
+    .filter(([, column]) => isAttachmentColumn(column))
+    .map(([field, column]) => ({ field, type: column.type as FieldType }))
+}
+
+interface AttachmentCopyContext {
+  sourceProdWorkspaceId: string
+  destinationProdWorkspaceId: string
+  cache: Map<string, Promise<string | undefined>>
+}
+
+const buildDestinationAttachmentKey = (
+  key: string,
+  sourceProdWorkspaceId: string,
+  destinationProdWorkspaceId: string
+) => {
+  if (!key?.startsWith(`${sourceProdWorkspaceId}/`)) {
+    return key
+  }
+  if (sourceProdWorkspaceId === destinationProdWorkspaceId) {
+    return key
+  }
+  const suffix = key.slice(sourceProdWorkspaceId.length)
+  return `${destinationProdWorkspaceId}${suffix}`
+}
+
+async function copyAttachmentToWorkspace(
+  key: string,
+  destinationKey: string,
+  cache: Map<string, Promise<string | undefined>>
+): Promise<string | undefined> {
+  if (!key || key === destinationKey) {
+    return key
+  }
+  if (!cache.has(key)) {
+    cache.set(
+      key,
+      (async () => {
+        try {
+          const { stream, contentType } = await objectStore.getReadStream(
+            ObjectStoreBuckets.APPS,
+            key
+          )
+          await objectStore.streamUpload({
+            bucket: ObjectStoreBuckets.APPS,
+            stream,
+            filename: destinationKey,
+            type: contentType,
+          })
+          return destinationKey
+        } catch (err) {
+          logging.logWarn("Resource duplication: failed to copy attachment", {
+            err,
+            key,
+            destinationKey,
+          })
+          return undefined
+        }
+      })()
+    )
+  }
+  const copiedKey = await cache.get(key)!
+  if (copiedKey === undefined) {
+    cache.delete(key)
+  }
+  return copiedKey
+}
+
+async function remapAttachmentValue(
+  attachment: RowAttachment,
+  context: AttachmentCopyContext
+): Promise<RowAttachment> {
+  if (
+    !attachment?.key ||
+    !context.sourceProdWorkspaceId ||
+    !context.destinationProdWorkspaceId ||
+    context.sourceProdWorkspaceId === context.destinationProdWorkspaceId
+  ) {
+    return attachment
+  }
+
+  const destinationKey = buildDestinationAttachmentKey(
+    attachment.key,
+    context.sourceProdWorkspaceId,
+    context.destinationProdWorkspaceId
+  )
+  if (!destinationKey || destinationKey === attachment.key) {
+    return attachment
+  }
+
+  const copiedKey = await copyAttachmentToWorkspace(
+    attachment.key,
+    destinationKey,
+    context.cache
+  )
+
+  if (!copiedKey) {
+    return attachment
+  }
+
+  return {
+    ...attachment,
+    key: copiedKey,
+    url: "",
+  }
+}
+
+async function remapRowAttachments(
+  row: Row,
+  columns: AttachmentColumn[],
+  context: AttachmentCopyContext
+) {
+  if (!columns.length) {
+    return
+  }
+
+  const rowData = row as Record<string, any>
+
+  for (const column of columns) {
+    const value = rowData[column.field]
+    if (!value) {
+      continue
+    }
+    if (column.type === FieldType.ATTACHMENTS && Array.isArray(value)) {
+      const updated: RowAttachment[] = []
+      for (const attachment of value) {
+        const remapped = await remapAttachmentValue(attachment, context)
+        updated.push(remapped)
+      }
+      rowData[column.field] = updated
+    } else if (
+      (column.type === FieldType.ATTACHMENT_SINGLE ||
+        column.type === FieldType.SIGNATURE_SINGLE) &&
+      value
+    ) {
+      rowData[column.field] = await remapAttachmentValue(value, context)
+    }
+  }
+}
+
 async function duplicateInternalTableRows(
   tables: Table[],
   destinationDb: ReturnType<typeof db.getDB>,
-  fromWorkspace: string
+  fromWorkspace: string,
+  toWorkspace: string
 ) {
   if (!tables.length) {
     return
   }
 
   const sourceDb = context.getWorkspaceDB()
+  const sourceProdWorkspaceId = db.getProdWorkspaceID(fromWorkspace)
+  const destinationProdWorkspaceId = db.getProdWorkspaceID(toWorkspace)
+  const attachmentCopyCache = new Map<string, Promise<string | undefined>>()
+
   for (const table of tables) {
     if (table.sourceId !== INTERNAL_TABLE_SOURCE_ID) {
       continue
@@ -299,18 +469,25 @@ async function duplicateInternalTableRows(
       continue
     }
 
-    await destinationDb.bulkDocs(
-      docs.map(row => {
-        const sanitizedRow: AnyDocument = {
-          ...row,
-          fromWorkspace,
-        }
-        delete sanitizedRow._rev
-        delete sanitizedRow.createdAt
-        delete sanitizedRow.updatedAt
-        return sanitizedRow
+    const attachmentColumns = getAttachmentColumns(table)
+    const sanitizedRows: AnyDocument[] = []
+    for (const row of docs) {
+      await remapRowAttachments(row, attachmentColumns, {
+        sourceProdWorkspaceId,
+        destinationProdWorkspaceId,
+        cache: attachmentCopyCache,
       })
-    )
+      const sanitizedRow: AnyDocument = {
+        ...row,
+        fromWorkspace,
+      }
+      delete sanitizedRow._rev
+      delete sanitizedRow.createdAt
+      delete sanitizedRow.updatedAt
+      sanitizedRows.push(sanitizedRow)
+    }
+
+    await destinationDb.bulkDocs(sanitizedRows)
   }
 }
 
@@ -371,7 +548,8 @@ export async function duplicateResourcesToWorkspace(
   await duplicateInternalTableRows(
     docsToInsert.filter(isTable),
     destinationDb,
-    fromWorkspace
+    fromWorkspace,
+    toWorkspace
   )
 
   const fromWorkspaceName =
