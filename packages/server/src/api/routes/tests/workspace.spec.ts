@@ -863,6 +863,68 @@ describe("/applications", () => {
       )
     })
 
+    it("should allow users in multiple groups with different roles to access all permitted screens", async () => {
+      const hrRole = await config.api.roles.save({
+        name: `HR_${structures.generator.guid().replace(/[^a-zA-Z0-9]/g, "")}`,
+        inherits: [roles.BUILTIN_ROLE_IDS.BASIC],
+        permissionId: BuiltinPermissionID.WRITE,
+        version: "name",
+      })
+
+      const expensesScreen = await config.api.screen.save(
+        customScreen({
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          route: "/expenses",
+        })
+      )
+      const employeesScreen = await config.api.screen.save(
+        customScreen({
+          roleId: hrRole._id!,
+          route: "/employees",
+        })
+      )
+
+      await config.publish()
+
+      const appUserGroup = await config.createGroup(
+        roles.BUILTIN_ROLE_IDS.BASIC
+      )
+      const hrGroup = await config.createGroup(hrRole._id!)
+
+      const groupUser = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+        roles: {},
+      })
+
+      await config.addUserToGroup(appUserGroup._id!, groupUser._id!)
+      await config.addUserToGroup(hrGroup._id!, groupUser._id!)
+
+      await config.withUser(groupUser, async () => {
+        await config.withHeaders(
+          { referer: `http://localhost:10000/app${workspace.url}` },
+          async () => {
+            const res = await config.api.workspace.getAppPackage(
+              config.getProdWorkspaceId(),
+              {
+                useProdApp: true,
+              }
+            )
+            const routes = res.screens.map(screen => screen.routing.route)
+            expect(routes).toEqual(
+              expect.arrayContaining(["/expenses", "/employees"])
+            )
+            expect(res.screens).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ _id: expensesScreen._id }),
+                expect.objectContaining({ _id: employeesScreen._id }),
+              ])
+            )
+          }
+        )
+      })
+    })
+
     describe("workspace apps", () => {
       it("should retrieve all the screens for builder calls", async () => {
         await config.api.workspaceApp.create(
