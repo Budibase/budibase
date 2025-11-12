@@ -1,4 +1,4 @@
-import { db, events } from "@budibase/backend-core"
+import { db, events, objectStore } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -14,6 +14,9 @@ import {
   Table,
   WorkspaceApp,
 } from "@budibase/types"
+import fs from "fs"
+import os from "os"
+import path from "path"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
@@ -24,6 +27,7 @@ import {
   createQueryScreen,
 } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { ObjectStoreBuckets } from "../../../constants"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
@@ -792,6 +796,91 @@ describe("/api/resources/usage", () => {
           ])
         }
       )
+    })
+
+    it("copies attachment files when duplicating tables with attachments", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable({
+        name: "Attachments table",
+        schema: {
+          attachment: {
+            type: FieldType.ATTACHMENT_SINGLE,
+            name: "attachment",
+          },
+          gallery: {
+            type: FieldType.ATTACHMENTS,
+            name: "gallery",
+          },
+        },
+      })
+
+      const sourceProdId = db.getProdWorkspaceID(config.getDevWorkspaceId())
+      const fileName = `attachment-${generator.guid()}.txt`
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-attachments-"))
+      const tmpFile = path.join(tmpDir, fileName)
+      fs.writeFileSync(tmpFile, "budibase attachment")
+
+      const attachmentKey = `${sourceProdId}/attachments/${fileName}`
+      await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: attachmentKey,
+        path: tmpFile,
+        type: "text/plain",
+      })
+
+      const attachmentSize = fs.statSync(tmpFile).size
+
+      const attachment = {
+        key: attachmentKey,
+        name: fileName,
+        url: "",
+        size: attachmentSize,
+        extension: "txt",
+      }
+
+      await config.api.row.save(table._id!, {
+        tableId: table._id!,
+        attachment,
+        gallery: [{ ...attachment }],
+      })
+
+      await duplicateResources([table._id!], newWorkspace.appId)
+
+      const destinationProdId = db.getProdWorkspaceID(newWorkspace.appId)
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const rows = await config.api.row.fetch(table._id!)
+          expect(rows).toEqual([
+            expect.objectContaining({
+              attachment: expect.objectContaining({
+                key: `${destinationProdId}/attachments/${fileName}`,
+                url: "",
+              }),
+              gallery: [
+                expect.objectContaining({
+                  key: `${destinationProdId}/attachments/${fileName}`,
+                  url: "",
+                }),
+              ],
+            }),
+          ])
+        }
+      )
+
+      expect(
+        await objectStore.objectExists(ObjectStoreBuckets.APPS, attachmentKey)
+      ).toBe(true)
+      expect(
+        await objectStore.objectExists(
+          ObjectStoreBuckets.APPS,
+          `${destinationProdId}/attachments/${fileName}`
+        )
+      ).toBe(true)
     })
 
     it("throws when destination workspace does not exist", async () => {
