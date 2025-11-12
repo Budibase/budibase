@@ -6,6 +6,7 @@
     Select,
     Search,
     Table,
+    Button,
     notifications,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
@@ -15,7 +16,7 @@
     filterValidTranslationOverrides,
     type TranslationCategory,
   } from "@budibase/shared-core"
-  import { onDestroy } from "svelte"
+  import { routeActions } from "@/settings/pages"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
 
   const categoryLabels: Record<TranslationCategory, string> = {
@@ -90,7 +91,8 @@
   let searchTerm = ""
   let overrides = { ...$appStore.translationOverrides }
   let lastSyncedSignature = signature(overrides)
-  let debouncedHandle: ReturnType<typeof setTimeout> | undefined
+  let saving = false
+  $: hasPendingChanges = signature(overrides) !== lastSyncedSignature
   const refreshFromStore = () => {
     const storeOverrides = $appStore.translationOverrides
     const storeSignature = signature(storeOverrides)
@@ -127,20 +129,18 @@
     } else {
       overrides[key] = trimmed
     }
-    scheduleSave()
-  }
-
-  const scheduleSave = () => {
-    if (debouncedHandle) {
-      clearTimeout(debouncedHandle)
-    }
-    debouncedHandle = setTimeout(saveOverrides, 1200)
   }
 
   const saveOverrides = async () => {
+    if (saving || !hasPendingChanges) {
+      return
+    }
+
+    saving = true
     const payload = normaliseOverrides(overrides)
     const nextSignature = signature(payload)
     if (nextSignature === lastSyncedSignature) {
+      saving = false
       return
     }
     try {
@@ -151,12 +151,14 @@
         ...state,
         translationOverrides: payload,
       }))
-      lastSyncedSignature = signature(payload)
+      lastSyncedSignature = nextSignature
       overrides = { ...payload }
       notifications.success("Translations saved successfully")
     } catch (error) {
       notifications.error("Failed to save translations")
       console.error(error)
+    } finally {
+      saving = false
     }
   }
   type TranslationDetail = {
@@ -166,12 +168,6 @@
   const onButtonClick = (event: CustomEvent<TranslationDetail>) => {
     handleTranslationChange(event.detail)
   }
-
-  onDestroy(() => {
-    if (debouncedHandle) {
-      clearTimeout(debouncedHandle)
-    }
-  })
 </script>
 
 <Layout noPadding>
@@ -208,6 +204,17 @@
       placeholderText="No translations found"
       on:buttonclick={onButtonClick}
     />
+    <div class="actions">
+      <div use:routeActions class="controls">
+        <Button
+          cta
+          on:click={saveOverrides}
+          disabled={saving || !hasPendingChanges}
+        >
+          {saving ? "Saving..." : "Save"}
+        </Button>
+      </div>
+    </div>
   </div>
 </Layout>
 
@@ -226,5 +233,10 @@
 
   .filters :global(.spectrum-Form-item) {
     flex: 1 1 220px;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>
