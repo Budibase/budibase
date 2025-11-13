@@ -27,7 +27,6 @@
     Datasource,
     ImportRestQueryRequest,
     QueryImportEndpoint,
-    RestTemplate,
   } from "@budibase/types"
 
   export let navigateDatasource = false
