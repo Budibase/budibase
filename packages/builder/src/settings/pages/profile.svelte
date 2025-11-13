@@ -20,7 +20,7 @@
   import { admin } from "@/stores/portal/admin"
   import { themeStore } from "@/stores/portal/theme"
   import { type UpdateSelfRequest } from "@budibase/types"
-  import { ThemeOptions, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
+import { ThemeOptions, helpers } from "@budibase/shared-core"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
 
   const values = writable<UpdateSelfRequest>({})
@@ -108,7 +108,10 @@
                 secondary
                 on:click={() => {
                   if (isOwner) {
-                    window.location.href = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.ACCOUNT}`
+                    window.location.href = buildAccountPortalUrl(
+                      $admin.accountPortalUrl,
+                      "/portal/account"
+                    )
                   } else {
                     updatePasswordModal.show()
                   }
@@ -170,3 +173,4 @@
     align-items: center;
   }
 </style>
+  const { buildAccountPortalUrl } = helpers
