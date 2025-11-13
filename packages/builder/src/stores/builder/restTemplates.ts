@@ -8,6 +8,18 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
+      name: "BambooHR",
+      description:
+        "HRIS platform for employee records, time off, and performance management",
+      specs: [
+        {
+          version: "latest",
+          url: "https://raw.githubusercontent.com/kevinoid/bamboohr-openapi/main/openapi.yaml",
+        },
+      ],
+      icon: "/builder/assets/rest-template-icons/bamboohr.svg",
+    },
+    {
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
