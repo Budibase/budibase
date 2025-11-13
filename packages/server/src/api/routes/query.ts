@@ -31,13 +31,14 @@ const writeRoutes = endpointGroupList.group(
 )
 
 builderRoutes
-  .get("/api/queries", queryController.fetch)
+  .get("/api/queries", queryController.fetchQueries)
   .post(
     "/api/queries",
     bodySubResource("datasourceId", "_id"),
     generateQueryValidation(),
     queryController.save
   )
+  .post("/api/queries/import/info", queryController.importInfo)
   .post("/api/queries/import", queryController.import)
   .post(
     "/api/queries/preview",
