@@ -14,7 +14,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "latest",
-          url: "https://raw.githubusercontent.com/kevinoid/bamboohr-openapi/main/openapi.yaml",
+          url: "https://openapi.bamboohr.io/main/latest/docs/openapi/public-openapi.yaml",
         },
       ],
       icon: "/builder/assets/rest-template-icons/bamboohr.svg",
