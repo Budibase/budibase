@@ -1,6 +1,7 @@
 import {
   auth as authCore,
   db as dbCore,
+  configs,
   encryption,
   features,
   tenancy,
@@ -123,11 +124,14 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
       }
     : undefined
 
+  const settingsConfig = await configs.getSettingsConfig()
+
   ctx.body = {
     ...enrichedUser,
     ...sessionAttributes,
     flags,
     llm: sanitisedLLMConfig,
+    lockedBy: settingsConfig?.lockedBy,
   }
 }
 

@@ -3,6 +3,13 @@ import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
+import {
+  GeneratedRequestBody,
+  generateRequestBodyFromExample,
+  generateRequestBodyFromSchema,
+  buildRequestBodyFromFormDataParameters,
+  type FormDataParameter,
+} from "./utils/requestBody"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -56,17 +63,65 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  getUrl = (): URL => {
+  getUrl = (): URL | undefined => {
     const scheme = this.document.schemes?.includes("https") ? "https" : "http"
     const basePath = this.document.basePath || ""
-    const host = this.document.host || "<host>"
-    return new URL(`${scheme}://${host}${basePath}`)
+    const host = this.document.host
+
+    if (!host) {
+      return undefined
+    }
+
+    const normalizedBasePath = basePath
+      ? basePath.startsWith("/")
+        ? basePath
+        : `/${basePath}`
+      : ""
+    try {
+      return new URL(`${scheme}://${host}${normalizedBasePath}`)
+    } catch (_err) {
+      return undefined
+    }
+  }
+
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const endpoints: ImportInfo["endpoints"] = []
+    for (let [path, pathItem] of Object.entries(this.document.paths)) {
+      for (let [key, opOrParams] of Object.entries(pathItem || {})) {
+        if (isParameter(key, opOrParams)) {
+          continue
+        }
+        const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const operation = opOrParams as OpenAPIV2.OperationObject
+        const name = operation.operationId || path
+        endpoints.push({
+          id: this.buildEndpointId(methodName, path),
+          name,
+          method: methodName.toUpperCase(),
+          path,
+          description: operation.summary || operation.description,
+          queryVerb: this.verbFromMethod(methodName),
+        })
+      }
+    }
+    return endpoints
   }
 
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
+    const url = this.getUrl()?.href
+    const docsUrl =
+      this.document.externalDocs?.url ||
+      this.document.info?.termsOfService ||
+      this.document.info?.contact?.url
     return {
       name,
+      url,
+      docsUrl,
+      endpoints: this.getEndpoints(),
     }
   }
 
@@ -74,9 +129,13 @@ export class OpenAPI2 extends OpenAPISource {
     return "openapi2.0"
   }
 
-  getQueries = async (datasourceId: string): Promise<Query[]> => {
+  getQueries = async (
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]> => {
     const url = this.getUrl()
     const queries = []
+    const filterIds = options?.filterIds
 
     for (let [path, pathItem] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -92,15 +151,26 @@ export class OpenAPI2 extends OpenAPISource {
         const operation = opOrParams as OpenAPIV2.OperationObject
 
         const methodName = key
+        if (!this.isSupportedMethod(methodName)) {
+          continue
+        }
+        const endpointId = this.buildEndpointId(methodName, path)
+        if (filterIds && !filterIds.has(endpointId)) {
+          continue
+        }
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = undefined
+        let primaryMimeType: string | undefined
+        let requestBody: GeneratedRequestBody | undefined = undefined
         const parameters: QueryParameter[] = []
 
         if (operation.consumes) {
-          headers["Content-Type"] = operation.consumes[0]
+          primaryMimeType = operation.consumes[0]
+          headers["Content-Type"] = primaryMimeType
         }
+
+        const formDataParams: FormDataParameter[] = []
 
         // combine the path parameters with the operation parameters
         const operationParams = operation.parameters || []
@@ -124,27 +194,59 @@ export class OpenAPI2 extends OpenAPISource {
                 // do nothing: param is already in the path
                 break
               case "formData":
-                // future enhancement
+                formDataParams.push({
+                  ...(param as OpenAPIV2.ParameterObject),
+                  in: "formData",
+                } as FormDataParameter)
                 break
               case "body": {
-                // set the request body to the example provided
-                // future enhancement: generate an example from the schema
                 let bodyParam: OpenAPIV2.InBodyParameterObject =
                   param as OpenAPIV2.InBodyParameterObject
-                if (param.schema.example) {
-                  const schema = bodyParam.schema as OpenAPIV2.SchemaObject
-                  requestBody = schema.example
+                const schema = bodyParam.schema as OpenAPIV2.SchemaObject
+                if (schema) {
+                  if (schema.example !== undefined) {
+                    requestBody = generateRequestBodyFromExample(
+                      schema.example,
+                      bodyParam.name || "body"
+                    )
+                  } else {
+                    const generated = generateRequestBodyFromSchema(
+                      schema,
+                      bodyParam.name || "body"
+                    )
+                    if (generated !== undefined) {
+                      requestBody = generated
+                    }
+                  }
                 }
                 break
               }
             }
 
             // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
+            if (["query", "header", "path", "formData"].includes(param.in)) {
               parameters.push({
                 name: param.name,
                 default: param.default || "",
               })
+            }
+          }
+        }
+
+        if (!requestBody && formDataParams.length > 0) {
+          const formDataBody =
+            buildRequestBodyFromFormDataParameters(formDataParams)
+          if (formDataBody) {
+            requestBody = formDataBody
+            if (!primaryMimeType) {
+              primaryMimeType = formDataParams.some(
+                param => param.type === "file"
+              )
+                ? "multipart/form-data"
+                : "application/x-www-form-urlencoded"
+            }
+            if (primaryMimeType) {
+              headers["Content-Type"] = primaryMimeType
             }
           }
         }
@@ -158,7 +260,11 @@ export class OpenAPI2 extends OpenAPISource {
           queryString,
           headers,
           parameters,
-          requestBody
+          requestBody?.body,
+          requestBody?.bindings ?? {},
+          primaryMimeType
+            ? this.bodyTypeFromMimeType(primaryMimeType)
+            : undefined
         )
         queries.push(query)
       }

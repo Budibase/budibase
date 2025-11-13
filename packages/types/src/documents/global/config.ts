@@ -36,6 +36,10 @@ export interface SettingsBrandingConfig {
   metaTitle?: string
 }
 
+export enum LockReason {
+  FREE_TIER = "free_tier", // Locked because grace period in free tier has ended
+}
+
 export interface SettingsInnerConfig {
   platformUrl?: string
   company?: string
@@ -46,6 +50,7 @@ export interface SettingsInnerConfig {
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
   createdVersion?: string
+  lockedBy?: LockReason
   liteLLM?: { keyId: string; secretKey: string }
 }
 
