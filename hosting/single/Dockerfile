@@ -44,7 +44,7 @@ ENV TARGETBUILD=$TARGETBUILD
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1
+  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 gettext-base
 
 # Install postgres client for pg_dump utils
 RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \

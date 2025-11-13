@@ -61,9 +61,10 @@
     hasAuthenticated = isAuthenticated
   }
 
-  $: usersLimitLockAction = $licensing?.errUserLimit
-    ? () => accountLockedModal.show()
-    : null
+  $: lockAction =
+    $licensing?.errUserLimit || $auth?.user?.lockedBy
+      ? accountLockedModal.show
+      : null
 
   $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
 
@@ -244,8 +245,8 @@
 
         await auth.getInitInfo()
 
-        if (usersLimitLockAction) {
-          usersLimitLockAction()
+        if (lockAction) {
+          lockAction()
         }
       }
 
@@ -294,6 +295,7 @@
 
 <AccountLockedModal
   bind:this={accountLockedModal}
+  lockedBy={$auth.user?.lockedBy}
   onConfirm={() =>
     isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />
