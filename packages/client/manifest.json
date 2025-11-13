@@ -4543,7 +4543,7 @@
         "type": "select",
         "label": "Week starts on",
         "key": "startDayOfWeek",
-        "defaultValue": "Monday",
+        "placeholder": "Browser locale",
         "options": [
           { "label": "Monday", "value": "Monday" },
           { "label": "Tuesday", "value": "Tuesday" },
