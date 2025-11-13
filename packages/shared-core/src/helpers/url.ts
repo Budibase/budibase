@@ -32,18 +32,23 @@ const joinBaseAndPath = (base?: string | null, path?: string) => {
 }
 
 export const buildAccountPortalUrl = <
-  T extends LiteralString | keyof typeof ACCOUNT_PORTAL_PATHS
->(accountPortalUrl?: string | null, path?: T) => {
+  T extends LiteralString | keyof typeof ACCOUNT_PORTAL_PATHS,
+>(
+  accountPortalUrl?: string | null,
+  path?: T
+) => {
   const resolvedPath =
     path == null
       ? ""
       : hasOwn(ACCOUNT_PORTAL_PATHS, path)
-      ? ACCOUNT_PORTAL_PATHS[path as keyof typeof ACCOUNT_PORTAL_PATHS]
-      : (path as LiteralString)
+        ? ACCOUNT_PORTAL_PATHS[path as keyof typeof ACCOUNT_PORTAL_PATHS]
+        : (path as LiteralString)
   return joinBaseAndPath(accountPortalUrl, resolvedPath)
 }
 
-export const buildBuilderUrl = <T extends LiteralString | keyof typeof BUILDER_URLS>(
+export const buildBuilderUrl = <
+  T extends LiteralString | keyof typeof BUILDER_URLS,
+>(
   builderBaseUrl?: string | null,
   path?: T
 ) => {
@@ -51,8 +56,8 @@ export const buildBuilderUrl = <T extends LiteralString | keyof typeof BUILDER_U
     path == null
       ? ""
       : hasOwn(BUILDER_URLS, path)
-      ? BUILDER_URLS[path as keyof typeof BUILDER_URLS]
-      : (path as LiteralString)
+        ? BUILDER_URLS[path as keyof typeof BUILDER_URLS]
+        : (path as LiteralString)
   return joinBaseAndPath(builderBaseUrl, resolvedPath)
 }
 

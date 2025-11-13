@@ -7,7 +7,7 @@
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
-import { helpers, sdk, BUILDER_URLS } from "@budibase/shared-core"
+  import { helpers, sdk, BUILDER_URLS } from "@budibase/shared-core"
   import { API } from "@/api"
 
   export let compact: boolean = false

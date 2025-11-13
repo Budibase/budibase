@@ -15,10 +15,7 @@
       on:click
       on:click={() => {
         window.open(
-          buildAccountPortalUrl(
-            $admin.accountPortalUrl,
-            "/portal/upgrade"
-          ),
+          buildAccountPortalUrl($admin.accountPortalUrl, "/portal/upgrade"),
           "_blank"
         )
       }}

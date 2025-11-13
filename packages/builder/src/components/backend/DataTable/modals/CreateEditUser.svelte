@@ -101,7 +101,9 @@
     <div>
       A user's email, role, first and last names cannot be changed from within
       the app builder. Please go to the
-      <Link on:click={$goto(BUILDER_URLS.SETTINGS_PEOPLE_USERS)}>user portal</Link>
+      <Link on:click={$goto(BUILDER_URLS.SETTINGS_PEOPLE_USERS)}
+        >user portal</Link
+      >
       to do this.
     </div>
   {/if}
