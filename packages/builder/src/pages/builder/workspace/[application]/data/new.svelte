@@ -16,6 +16,7 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -94,7 +95,7 @@
   </div>
 
   <div class="options">
-    {#each $integrations as integration}
+    {#each $integrations.filter(integration => integration.name !== IntegrationTypes.REST) as integration}
       <DatasourceOption
         on:click={() => externalDatasourceModal.show(integration)}
         title={integration.friendlyName}

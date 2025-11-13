@@ -2,20 +2,23 @@
   import { Body, Label } from "@budibase/bbui"
 
   export let title
-  export let description
+  export let description = undefined
   export let disabled
+  export let centered = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click class:disabled class="option">
+<div on:click class:disabled class:centred={centered} class="option">
   <div class="header">
     <div class="icon">
       <slot />
     </div>
     <Body>{title}</Body>
   </div>
-  <Label>{description}</Label>
+  {#if description}
+    <Label>{description}</Label>
+  {/if}
 </div>
 
 <style>
@@ -49,5 +52,14 @@
   .disabled {
     opacity: 0.5;
     pointer-events: none;
+  }
+
+  .option.centred {
+    padding: 12px;
+  }
+
+  .option.centred .header {
+    justify-content: center;
+    margin-bottom: 0;
   }
 </style>
