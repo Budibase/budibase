@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Icon, Input, Drawer, Button, TextArea } from "@budibase/bbui"
+  import type { HTMLInputTypeAttribute } from "svelte/elements"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -27,6 +28,7 @@
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
   export let allowHTML: boolean = false
+  export let inputType: HTMLInputTypeAttribute | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -79,6 +81,7 @@
     placeholder={placeholder || undefined}
     {updateOnChange}
     {autocomplete}
+    type={multiline ? undefined : inputType}
   >
     {#if !disabled && !disableBindings}
       <div
