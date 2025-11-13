@@ -259,26 +259,33 @@
     {}
   )
 
+  const matchesSearch = (action: AutomationStepDefinition, term: string) => {
+    const lowerTerm = term.trim().toLowerCase()
+    if (!lowerTerm) return true
+    const name = action.name?.toLowerCase() || ""
+    const stepTitle = action.stepTitle?.toLowerCase() || ""
+    const tagline = action.tagline?.toLowerCase() || ""
+    const description = action.description?.toLowerCase() || ""
+    return (
+      name.includes(lowerTerm) ||
+      stepTitle.includes(lowerTerm) ||
+      tagline.includes(lowerTerm) ||
+      description.includes(lowerTerm)
+    )
+  }
+
   $: filteredCategories = categories
     .map(category => ({
       ...category,
-      items: category.items.filter(([_, action]) => {
-        const term = searchString.trim().toLowerCase()
-        if (!term) return true
-        const name = action.name?.toLowerCase() || ""
-        const stepTitle = action.stepTitle?.toLowerCase() || ""
-        return name.includes(term) || stepTitle.includes(term)
-      }),
+      items: category.items.filter(([_, action]) =>
+        matchesSearch(action, searchString)
+      ),
     }))
     .filter(category => category.items.length > 0)
 
-  $: filteredPlugins = Object.entries(plugins).filter(([_, action]) => {
-    const term = searchString.trim().toLowerCase()
-    if (!term) return true
-    const name = action.name?.toLowerCase() || ""
-    const stepTitle = action.stepTitle?.toLowerCase() || ""
-    return name.includes(term) || stepTitle.includes(term)
-  })
+  $: filteredPlugins = Object.entries(plugins).filter(([_, action]) =>
+    matchesSearch(action, searchString)
+  )
 
   const selectAction = async (action: AutomationStepDefinition) => {
     selectedAction = action.name
