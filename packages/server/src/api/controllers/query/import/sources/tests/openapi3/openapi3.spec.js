@@ -1,5 +1,7 @@
 const fs = require("fs")
 const path = require("path")
+const SwaggerParser = require("@apidevtools/swagger-parser")
+const { BodyType } = require("@budibase/types")
 
 const { OpenAPI3 } = require("../../openapi3")
 
@@ -17,6 +19,10 @@ describe("OpenAPI3 Import", () => {
     openapi3 = new OpenAPI3()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("validates unsupported data", async () => {
     let data
     let supported
@@ -30,6 +36,85 @@ describe("OpenAPI3 Import", () => {
     data = ""
     supported = await openapi3.isSupported(data)
     expect(supported).toBe(false)
+  })
+
+  it("falls back when validation fails", async () => {
+    const parseSpy = jest.spyOn(SwaggerParser, "parse")
+    const validateSpy = jest.spyOn(SwaggerParser, "validate")
+    const dereferenceSpy = jest.spyOn(SwaggerParser, "dereference")
+
+    const document = {
+      openapi: "3.0.0",
+      info: {},
+      paths: {},
+    }
+
+    parseSpy.mockResolvedValue(document)
+    validateSpy.mockRejectedValue(new Error("validation failed"))
+    const dereferenced = { ...document, dereferenced: true }
+    dereferenceSpy.mockResolvedValue(dereferenced)
+
+    const supported = await openapi3.isSupported("{}")
+    expect(supported).toBe(true)
+    expect(openapi3.document).toBe(dereferenced)
+
+    expect(parseSpy).toHaveBeenCalled()
+    expect(validateSpy).toHaveBeenCalled()
+    expect(dereferenceSpy).toHaveBeenCalled()
+  })
+
+  it("creates bindings for server variables", async () => {
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: {
+        title: "Server Variables",
+      },
+      servers: [
+        {
+          url: "https://{subdomain}.{domain}.com/api",
+          variables: {
+            subdomain: {
+              default: "example",
+            },
+            domain: {
+              default: "zendesk",
+            },
+          },
+        },
+      ],
+      paths: {
+        "/trigger_categories/jobs": {
+          post: {
+            operationId: "BatchOperateTriggerCategories",
+            responses: {
+              default: {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const supported = await openapi3.isSupported(spec)
+    expect(supported).toBe(true)
+
+    const [query] = await openapi3.getQueries("datasourceId")
+    expect(query.fields.path).toBe(
+      "https://{{subdomain}}.{{domain}}.com/api/trigger_categories/jobs"
+    )
+    expect(query.parameters).toEqual(
+      expect.arrayContaining([
+        {
+          name: "subdomain",
+          default: "example",
+        },
+        {
+          name: "domain",
+          default: "zendesk",
+        },
+      ])
+    )
   })
 
   const runTests = async (filename, test, assertions) => {
@@ -133,6 +218,102 @@ describe("OpenAPI3 Import", () => {
       await runTests("crud", testHeaders, assertions)
     })
 
+    it("sets encoded body type for form content", async () => {
+      const spec = JSON.stringify({
+        openapi: "3.0.0",
+        info: {
+          title: "Form Import",
+        },
+        paths: {
+          "/customers": {
+            post: {
+              requestBody: {
+                required: true,
+                content: {
+                  "application/x-www-form-urlencoded": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        name: {
+                          type: "string",
+                        },
+                        address: {
+                          type: "object",
+                          properties: {
+                            city: {
+                              type: "string",
+                            },
+                            postal_code: {
+                              type: "string",
+                            },
+                          },
+                        },
+                        cash_balance: {
+                          type: "object",
+                          properties: {
+                            settings: {
+                              type: "object",
+                              properties: {
+                                reconciliation_mode: {
+                                  type: "string",
+                                },
+                              },
+                            },
+                          },
+                        },
+                        expand: {
+                          type: "array",
+                          items: {
+                            type: "string",
+                          },
+                        },
+                        description: {
+                          type: "string",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: {
+                default: {
+                  description: "created",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi3.isSupported(spec)
+      expect(supported).toBe(true)
+
+      const [query] = await openapi3.getQueries("datasourceId")
+      expect(query.fields.bodyType).toBe(BodyType.ENCODED)
+      expect(query.fields.headers["Content-Type"]).toBe(
+        "application/x-www-form-urlencoded"
+      )
+      expect(query.fields.requestBody).toEqual({
+        name: "{{ name }}",
+        "address[city]": "{{ address_city }}",
+        "address[postal_code]": "{{ address_postal_code }}",
+        description: "{{ description }}",
+        "cash_balance[settings][reconciliation_mode]":
+          "{{ cash_balance_settings_reconciliation_mode }}",
+        "expand[]": "{{ expand }}",
+      })
+      expect(query.parameters).toEqual(
+        expect.arrayContaining([
+          { name: "name", default: "" },
+          { name: "address_city", default: "" },
+          { name: "address_postal_code", default: "" },
+          { name: "cash_balance_settings_reconciliation_mode", default: "" },
+          { name: "expand", default: "" },
+          { name: "description", default: "" },
+        ])
+      )
+    })
+
     const testQuery = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, queryString] of Object.entries(assertions)) {
@@ -163,7 +344,16 @@ describe("OpenAPI3 Import", () => {
 
     it("populates parameters", async () => {
       const assertions = {
-        createEntity: [],
+        createEntity: [
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
+          },
+        ],
         getEntities: [
           {
             name: "page",
@@ -185,11 +375,35 @@ describe("OpenAPI3 Import", () => {
             name: "entityId",
             default: "",
           },
+          {
+            name: "id",
+            default: "1",
+          },
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
+          },
         ],
         patchEntity: [
           {
             name: "entityId",
             default: "",
+          },
+          {
+            name: "id",
+            default: "1",
+          },
+          {
+            name: "name",
+            default: "name",
+          },
+          {
+            name: "type",
+            default: "type",
           },
         ],
         deleteEntity: [
@@ -209,29 +423,27 @@ describe("OpenAPI3 Import", () => {
     const testBody = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, body] of Object.entries(assertions)) {
-        expect(queries[operationId].fields.requestBody).toStrictEqual(
-          JSON.stringify(body, null, 2)
-        )
+        expect(queries[operationId].fields.requestBody).toStrictEqual(body)
       }
     }
     it("populates body", async () => {
       const assertions = {
-        createEntity: {
-          name: "name",
-          type: "type",
-        },
+        createEntity: `{
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
         getEntities: undefined,
         getEntity: undefined,
-        updateEntity: {
-          id: 1,
-          name: "name",
-          type: "type",
-        },
-        patchEntity: {
-          id: 1,
-          name: "name",
-          type: "type",
-        },
+        updateEntity: `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
+        patchEntity: `{
+  "id": {{ id }},
+  "name": "{{ name }}",
+  "type": "{{ type }}"
+}`,
         deleteEntity: undefined,
       }
       await runTests("crud", testBody, assertions)

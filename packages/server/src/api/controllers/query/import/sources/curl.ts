@@ -66,8 +66,21 @@ export class Curl extends ImportSource {
 
   getInfo = async (): Promise<ImportInfo> => {
     const url = this.getUrl()
+    const method = this.curl.method
+    const path = url.pathname
     return {
       name: url.hostname,
+      url: url.origin,
+      endpoints: [
+        {
+          id: this.buildEndpointId(method, path),
+          name: path || url.hostname,
+          method: method?.toUpperCase(),
+          path,
+          description: this.curl.description,
+          queryVerb: this.verbFromMethod(method),
+        },
+      ],
     }
   }
 
@@ -75,7 +88,10 @@ export class Curl extends ImportSource {
     return "curl"
   }
 
-  getQueries = async (datasourceId: string): Promise<Query[]> => {
+  getQueries = async (
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]> => {
     const url = this.getUrl()
     const name = url.pathname
     const path = url.origin + url.pathname
@@ -83,6 +99,12 @@ export class Curl extends ImportSource {
     const queryString = url.search
     const headers = this.curl.headers
     const requestBody = parseBody(this.curl)
+    const filterIds = options?.filterIds
+    const endpointId = this.buildEndpointId(method, url.pathname)
+
+    if (filterIds && !filterIds.has(endpointId)) {
+      return []
+    }
 
     const cookieHeader = parseCookie(this.curl)
     if (cookieHeader) {
