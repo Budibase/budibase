@@ -288,6 +288,7 @@
         on:click={openRestModal}
         title="Custom REST API"
         disabled={templateDisabled}
+        centered
       >
         <IntegrationIcon
           integrationType={restIntegration.name}
@@ -422,6 +423,7 @@
   }
   .bb-options {
     max-width: calc(3 * 235px + 2 * 24px);
+    margin-bottom: 24px;
   }
   .templateOptions {
     margin-bottom: 24px;
