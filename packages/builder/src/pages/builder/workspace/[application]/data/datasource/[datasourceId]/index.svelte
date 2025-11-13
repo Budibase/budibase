@@ -16,6 +16,13 @@
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
 
+  const REST_PANEL_SECTIONS = [
+    { title: "Queries", component: QueriesPanel },
+    { title: "Headers", component: RestHeadersPanel },
+    { title: "Authentication", component: RestAuthenticationPanel },
+    { title: "Variables", component: RestVariablesPanel },
+  ]
+
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
 
@@ -23,9 +30,16 @@
 
   $: isCloud = $admin.cloud
   $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
+  $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
 
   const getOptions = datasource => {
+    if (!datasource) {
+      panelOptions = []
+      selectedPanel = null
+      return
+    }
+
     if (datasource.plus) {
       // Google Sheets' integration definition specifies `relationships: false` as it doesn't support relationships like other plus datasources
       panelOptions =
@@ -35,17 +49,13 @@
       selectedPanel = panelOptions.includes(selectedPanel)
         ? selectedPanel
         : "Tables"
-    } else if (datasource.source === "REST") {
-      panelOptions = ["Queries", "Headers", "Authentication", "Variables"]
-      selectedPanel = panelOptions.includes(selectedPanel)
-        ? selectedPanel
-        : "Queries"
     } else {
-      panelOptions = ["Queries"]
-      selectedPanel = "Queries"
+      const isRest = datasource.source === "REST"
+      panelOptions = isRest ? [] : ["Queries"]
+      selectedPanel = isRest ? null : "Queries"
     }
     // always the last option for SQL
-    if (helpers.isSQL(datasource)) {
+    if (!isRestDatasource && helpers.isSQL(datasource)) {
       if (isCloud && isPostgres) {
         // We don't show the settings panel for Postgres on Budicloud because
         // it requires pg_dump to work and we don't want to enable shell injection
@@ -73,35 +83,42 @@
       </header>
     </Layout>
     <EditDatasourceConfig {datasource} />
-    <div class="tabs">
-      <Tabs size="L" noPadding noHorizPadding selected={selectedPanel}>
-        {#each panelOptions as panelOption}
-          <Tab
-            title={panelOption}
-            on:click={() => (selectedPanel = panelOption)}
-          />
+    {#if isRestDatasource}
+      <div class="rest-sections">
+        {#each REST_PANEL_SECTIONS as restPanel (restPanel.title)}
+          <div class="rest-section">
+            <Heading size="S" class="rest-section__heading">
+              {restPanel.title}
+            </Heading>
+            <svelte:component this={restPanel.component} {datasource} />
+          </div>
         {/each}
-      </Tabs>
-    </div>
-
-    {#if selectedPanel === null}
-      <Body>loading...</Body>
-    {:else if selectedPanel === "Tables"}
-      <TablesPanel {datasource} />
-    {:else if selectedPanel === "Relationships"}
-      <RelationshipsPanel {datasource} />
-    {:else if selectedPanel === "Queries"}
-      <QueriesPanel {datasource} />
-    {:else if selectedPanel === "Headers"}
-      <RestHeadersPanel {datasource} />
-    {:else if selectedPanel === "Authentication"}
-      <RestAuthenticationPanel {datasource} />
-    {:else if selectedPanel === "Variables"}
-      <RestVariablesPanel {datasource} />
-    {:else if selectedPanel === "Settings"}
-      <SettingsPanel {datasource} />
+      </div>
     {:else}
-      <Body>Something went wrong</Body>
+      <div class="tabs">
+        <Tabs size="L" noPadding noHorizPadding selected={selectedPanel}>
+          {#each panelOptions as panelOption}
+            <Tab
+              title={panelOption}
+              on:click={() => (selectedPanel = panelOption)}
+            />
+          {/each}
+        </Tabs>
+      </div>
+
+      {#if selectedPanel === null}
+        <Body>loading...</Body>
+      {:else if selectedPanel === "Tables"}
+        <TablesPanel {datasource} />
+      {:else if selectedPanel === "Relationships"}
+        <RelationshipsPanel {datasource} />
+      {:else if selectedPanel === "Queries"}
+        <QueriesPanel {datasource} />
+      {:else if selectedPanel === "Settings"}
+        <SettingsPanel {datasource} />
+      {:else}
+        <Body>Something went wrong</Body>
+      {/if}
     {/if}
   </Layout>
 </section>
@@ -118,5 +135,12 @@
     gap: var(--spacing-l);
     align-items: center;
     margin-bottom: 12px;
+  }
+
+  .rest-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxl);
+    margin-top: var(--spacing-xl);
   }
 </style>
