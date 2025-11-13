@@ -337,6 +337,24 @@ async function copyAttachmentToWorkspace(
       key,
       (async () => {
         try {
+          const alreadyExists = await objectStore.objectExists(
+            ObjectStoreBuckets.APPS,
+            destinationKey
+          )
+          if (alreadyExists) {
+            return destinationKey
+          }
+        } catch (err) {
+          logging.logWarn(
+            "Resource duplication: failed to check attachment existence",
+            {
+              err,
+              key,
+              destinationKey,
+            }
+          )
+        }
+        try {
           const { stream, contentType } = await objectStore.getReadStream(
             ObjectStoreBuckets.APPS,
             key
@@ -525,6 +543,22 @@ async function duplicateInternalTableRows(
       continue
     }
 
+    const destinationHasRows = !!(
+      await destinationDb.allDocs(
+        getRowParams(table._id!, null, {
+          include_docs: false,
+          limit: 1,
+        })
+      )
+    ).rows.length
+    if (destinationHasRows) {
+      logging.logWarn(
+        "Resource duplication: destination table already contains rows, skipping copy",
+        { tableId: table._id, tableName: table.name }
+      )
+      continue
+    }
+
     const attachmentColumns = getAttachmentColumns(table)
     let startAfter: string | undefined = undefined
 
@@ -563,7 +597,10 @@ async function duplicateInternalTableRows(
 
 export async function duplicateResourcesToWorkspace(
   resources: string[],
-  toWorkspace: string
+  toWorkspace: string,
+  options?: {
+    copyRows?: boolean
+  }
 ) {
   resources = Array.from(new Set(resources).keys())
 
@@ -615,12 +652,14 @@ export async function duplicateResourcesToWorkspace(
     })
   )
 
-  await duplicateInternalTableRows(
-    docsToInsert.filter(isTable),
-    destinationDb,
-    fromWorkspace,
-    toWorkspace
-  )
+  if (options?.copyRows ?? true) {
+    await duplicateInternalTableRows(
+      docsToInsert.filter(isTable),
+      destinationDb,
+      fromWorkspace,
+      toWorkspace
+    )
+  }
 
   const fromWorkspaceName =
     (await sdk.workspaces.metadata.tryGet())?.name || fromWorkspace
