@@ -177,8 +177,7 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(pendingTemplate, pendingSpec),
-        uiMetadata: { iconUrl: pendingTemplate.icon },
-        isRestTemplate: true,
+        restTemplate: pendingTemplate.name,
       })
 
       if (!datasource?._id) {

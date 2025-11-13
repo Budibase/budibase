@@ -28,7 +28,8 @@
       ? QueryVerbRenderer
       : CapitaliseRenderer
   $: isRestDatasource = datasource?.source === "REST"
-  $: showImportButton = isRestDatasource && !datasource?.isRestTemplate
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
+  $: showImportButton = isRestDatasource && !isTemplateDatasource
   $: createQueryLabel = isRestDatasource ? "Add action" : "Create new query"
 </script>
 
@@ -46,7 +47,7 @@
 
 {#if isRestDatasource}
   <Modal bind:this={restImportModal}>
-    {#if datasource?.isRestTemplate}
+    {#if isTemplateDatasource}
       <RestTemplateImportModal
         datasourceId={datasource._id}
         createDatasource={false}
@@ -65,7 +66,7 @@
     <Button
       cta
       on:click={() =>
-        datasource?.isRestTemplate
+        isTemplateDatasource
           ? restImportModal?.show()
           : $goto(`../../query/new/${datasource._id}`)}
     >

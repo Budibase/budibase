@@ -54,7 +54,7 @@
     : undefined
   $: templateName = template?.name
   $: templateIcon = template?.icon
-  $: isTemplateDatasource = Boolean(datasource?.isRestTemplate && template)
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
   $: templateEndpointDescription = selectedEndpoint?.description || ""
   let endpointOptions: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
@@ -67,11 +67,8 @@
   let templateDocsBaseUrl: string | undefined
 
   const getTemplateSpecUrl = (source: Datasource | undefined) => {
-    if (!source?.isRestTemplate) {
-      return undefined
-    }
-    const config = (source.config || {}) as Partial<RestConfig>
-    return typeof config.url === "string" ? config.url : undefined
+    const config = (source?.config || {}) as Partial<RestConfig>
+    return typeof config?.url === "string" ? config.url : undefined
   }
 
   const getMatchingTemplate = (
@@ -79,27 +76,18 @@
     templates: RestTemplate[],
     specUrl: string | undefined
   ) => {
-    if (!source?.isRestTemplate) {
+    if (!source?.restTemplate) {
       return undefined
     }
 
-    let match = specUrl
-      ? templates.find(template =>
-          template.specs?.some(spec => spec.url === specUrl)
-        )
-      : undefined
-
-    if (!match && source.uiMetadata?.iconUrl) {
-      match = templates.find(
-        template => template.icon === source.uiMetadata?.iconUrl
-      )
-    }
-
-    if (!match && source.name) {
-      match = templates.find(template => template.name === source.name)
-    }
-
-    return match
+    return (
+      templates.find(template => template.name === source.restTemplate) ||
+      (specUrl
+        ? templates.find(template =>
+            template.specs?.some(spec => spec.url === specUrl)
+          )
+        : undefined)
+    )
   }
 
   const resetEndpoints = () => {
@@ -260,7 +248,7 @@
       <div class="template-modal">
         <div class="endpoint-heading">
           <IntegrationIcon
-            iconUrl={templateIcon || datasource?.uiMetadata?.iconUrl}
+            iconUrl={templateIcon}
             integrationType={datasource?.source || IntegrationTypes.REST}
             schema={restIntegration}
             size="32"

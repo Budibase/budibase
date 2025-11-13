@@ -9,6 +9,7 @@ import {
   Datasource,
   DatasourceFeature,
   Integration,
+  RestTemplateName,
   SourceName,
   Table,
   UIIntegration,
@@ -197,14 +198,12 @@ export class DatasourceStore extends DerivedBudiStore<
     integration,
     config,
     name,
-    uiMetadata,
-    isRestTemplate,
+    restTemplate,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
-    uiMetadata?: Datasource["uiMetadata"]
-    isRestTemplate?: boolean
+    restTemplate?: RestTemplateName
   }) {
     const count = this.sourceCount(integration.name)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
@@ -216,8 +215,7 @@ export class DatasourceStore extends DerivedBudiStore<
       name: name || `${integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
-      ...(uiMetadata && { uiMetadata }),
-      ...(isRestTemplate && { isRestTemplate: true }),
+      ...(restTemplate && { restTemplate }),
     }
 
     const { valid, error } = await this.checkDatasourceValidity(

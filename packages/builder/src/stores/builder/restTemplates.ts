@@ -1,4 +1,4 @@
-import { RestTemplate } from "@budibase/types"
+import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface RestTemplatesState {
@@ -69,6 +69,13 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       templates = state.templates
     })()
     return templates
+  }
+
+  getByName(name?: RestTemplateName) {
+    if (!name) {
+      return undefined
+    }
+    return this.templates.find(template => template.name === name)
   }
 }
 

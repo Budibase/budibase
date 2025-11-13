@@ -7,8 +7,14 @@ interface OpenAPI {
   url: string
 }
 
+export type RestTemplateName =
+  | "GitHub"
+  | "PagerDuty"
+  | "Slack Web API"
+  | "Stripe"
+
 export interface RestTemplate {
-  name: string
+  name: RestTemplateName
   description: string
   specs: OpenAPI[]
   icon: string
