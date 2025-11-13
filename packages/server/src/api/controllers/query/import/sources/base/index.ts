@@ -1,8 +1,24 @@
-import { Query, QueryParameter } from "@budibase/types"
+import { BodyType, Query, QueryParameter, QueryVerb } from "@budibase/types"
 import { URL } from "url"
+import {
+  buildKeyValueRequestBody,
+  serialiseRequestBody,
+} from "../utils/requestBody"
 
 export interface ImportInfo {
   name: string
+  url?: string
+  docsUrl?: string
+  endpoints: ImportEndpoint[]
+}
+
+export interface ImportEndpoint {
+  id: string
+  name: string
+  method?: string
+  path?: string
+  description?: string
+  queryVerb?: QueryVerb
 }
 
 enum MethodToVerb {
@@ -16,8 +32,86 @@ enum MethodToVerb {
 export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
-  abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getQueries(
+    datasourceId: string,
+    options?: { filterIds?: Set<string> }
+  ): Promise<Query[]>
   abstract getImportSource(): string
+
+  protected buildEndpointId = (method: string, path: string): string => {
+    const normalized = this.normalizeMethod(method) || method.toLowerCase()
+    return `${normalized}::${path}`
+  }
+
+  protected convertPathVariables = (value: string): string => {
+    if (!value) {
+      return value
+    }
+
+    return value.replace(/\{([^{}]+)\}/g, (_match, token) => {
+      const variable = token.trim()
+      const sanitized = variable.match(/^[A-Za-z0-9._-]+/)
+      const name = sanitized ? sanitized[0] : variable
+      return `{{${name}}}`
+    })
+  }
+
+  protected normalizeMethod = (method?: string): string | undefined => {
+    if (!method) {
+      return undefined
+    }
+    return method.toLowerCase()
+  }
+
+  protected isSupportedMethod = (method: string): boolean => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      return false
+    }
+    return Object.prototype.hasOwnProperty.call(MethodToVerb, normalized)
+  }
+
+  protected methodHasRequestBody = (method: string): boolean => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
+      return false
+    }
+    return ["post", "put", "patch"].includes(normalized)
+  }
+
+  protected bodyTypeFromMimeType = (mimeType?: string): BodyType => {
+    if (!mimeType) {
+      return BodyType.JSON
+    }
+
+    const normalized = mimeType.split(";")[0].trim().toLowerCase()
+
+    if (normalized === "application/x-www-form-urlencoded") {
+      return BodyType.ENCODED
+    }
+
+    if (normalized === "multipart/form-data") {
+      return BodyType.FORM_DATA
+    }
+
+    if (normalized === "text/plain" || normalized.startsWith("text/")) {
+      return BodyType.TEXT
+    }
+
+    if (
+      normalized === "application/xml" ||
+      normalized === "text/xml" ||
+      normalized.endsWith("+xml")
+    ) {
+      return BodyType.XML
+    }
+
+    if (normalized.endsWith("+json") || normalized === "application/json") {
+      return BodyType.JSON
+    }
+
+    return BodyType.JSON
+  }
 
   constructQuery = (
     datasourceId: string,
@@ -28,7 +122,9 @@ export abstract class ImportSource {
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
-    body: object | undefined = undefined
+    body: unknown = undefined,
+    bodyBindings: Record<string, string> = {},
+    explicitBodyType?: BodyType
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -37,27 +133,85 @@ export abstract class ImportSource {
     path = this.processPath(path)
     if (url) {
       if (typeof url === "string") {
-        path = `${url}/${path}`
+        let base = this.convertPathVariables(url)
+        if (base.endsWith("/")) {
+          base = base.slice(0, -1)
+        }
+        path = path ? `${base}/${path}` : base
       } else {
         let href = url.href
         if (href.endsWith("/")) {
           href = href.slice(0, -1)
         }
-        path = `${href}/${path}`
+        path = path ? `${href}/${path}` : href
       }
     }
     queryString = this.processQuery(queryString)
-    const requestBody = JSON.stringify(body, null, 2)
+    const combinedParameters = [...parameters]
+    for (const [name, defaultValue] of Object.entries(bodyBindings)) {
+      if (!name) {
+        continue
+      }
+      const existing = combinedParameters.find(
+        parameter => parameter.name === name
+      )
+      if (existing) {
+        continue
+      }
+      combinedParameters.push({ name, default: defaultValue })
+    }
+
+    let requestBody: string | Record<string, string> | undefined
+    let resolvedBodyType: BodyType
+
+    const isKeyValueBodyType = (type: BodyType | undefined) => {
+      return type === BodyType.FORM_DATA || type === BodyType.ENCODED
+    }
+
+    if (isKeyValueBodyType(explicitBodyType)) {
+      requestBody = buildKeyValueRequestBody(body)
+      if ((!requestBody || Object.keys(requestBody).length === 0) && body) {
+        requestBody = Object.keys(bodyBindings).reduce<Record<string, string>>(
+          (acc, key) => {
+            acc[key] = `{{ ${key} }}`
+            return acc
+          },
+          {}
+        )
+      }
+      resolvedBodyType = explicitBodyType as BodyType
+    } else {
+      requestBody = serialiseRequestBody(body)
+      resolvedBodyType = explicitBodyType
+        ? (explicitBodyType as BodyType)
+        : requestBody
+          ? BodyType.JSON
+          : BodyType.NONE
+    }
+
+    if (
+      (!requestBody ||
+        (typeof requestBody === "object" &&
+          Object.keys(requestBody).length === 0)) &&
+      isKeyValueBodyType(explicitBodyType)
+    ) {
+      requestBody = undefined
+    }
+
+    if (requestBody === undefined) {
+      resolvedBodyType = BodyType.NONE
+    }
 
     const query: Query = {
       datasourceId,
       name,
-      parameters,
+      parameters: combinedParameters,
       fields: {
         headers,
         queryString,
         path,
         requestBody,
+        bodyType: resolvedBodyType,
       },
       transformer,
       schema,
@@ -68,12 +222,12 @@ export abstract class ImportSource {
     return query
   }
 
-  verbFromMethod = (method: string) => {
-    const verb = (<any>MethodToVerb)[method]
-    if (!verb) {
+  verbFromMethod = (method: string): QueryVerb => {
+    const normalized = this.normalizeMethod(method)
+    if (!normalized) {
       throw new Error(`Unsupported method: ${method}`)
     }
-    return verb
+    return MethodToVerb[normalized as keyof typeof MethodToVerb]
   }
 
   processPath = (path: string): string => {
@@ -81,9 +235,7 @@ export abstract class ImportSource {
       path = path.substring(1)
     }
 
-    // add extra braces around params for binding
-    path = path.replace(/[{]/g, "{{")
-    path = path.replace(/[}]/g, "}}")
+    path = this.convertPathVariables(path)
 
     return path
   }

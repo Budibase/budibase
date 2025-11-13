@@ -36,9 +36,21 @@ export class RestImporter {
     return this.source.getInfo()
   }
 
-  importQueries = async (datasourceId: string): Promise<ImportResult> => {
+  importQueries = async (
+    datasourceId: string,
+    selectedEndpointId?: string
+  ): Promise<ImportResult> => {
+    const filterIds = selectedEndpointId
+      ? new Set<string>([selectedEndpointId])
+      : undefined
     // construct the queries
-    let queries = await this.source.getQueries(datasourceId)
+    let queries = await this.source.getQueries(datasourceId, {
+      filterIds,
+    })
+
+    if (filterIds && queries.length === 0) {
+      throw new Error("Selected endpoint could not be imported")
+    }
 
     // validate queries
     const errorQueries: Query[] = []

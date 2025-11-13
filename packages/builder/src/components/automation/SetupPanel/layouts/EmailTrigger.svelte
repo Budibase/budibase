@@ -80,6 +80,7 @@
             {key}
             updateOnChange={false}
             placeholder={schema[key].description}
+            inputType={key === "password" ? "password" : undefined}
             on:change={event => handleChange(key, event.detail)}
           />
         </PropField>
