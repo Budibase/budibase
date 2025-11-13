@@ -26,7 +26,7 @@
     ProfileModal,
     UserAvatar,
   } from "@budibase/frontend-core"
-  import { helpers, sdk, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
+  import { helpers, sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -37,6 +37,8 @@
   let loaded: boolean = false
   let userInfoModal: Modal
   let changePasswordModal: Modal
+
+  const { buildAccountPortalUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
@@ -89,7 +91,10 @@
                 icon="lock"
                 on:click={() => {
                   if (isOwner) {
-                    window.location.href = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.ACCOUNT}`
+                    window.location.href = buildAccountPortalUrl(
+                      $admin.accountPortalUrl,
+                      "/portal/account"
+                    )
                   } else {
                     changePasswordModal.show()
                   }
