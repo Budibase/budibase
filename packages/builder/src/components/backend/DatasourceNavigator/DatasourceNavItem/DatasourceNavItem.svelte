@@ -12,8 +12,6 @@
 
   export let datasource
 
-  let templateIcon
-
   $: templateIcon = datasource?.restTemplate
     ? $restTemplates.templates.find(
         template => template.name === datasource.restTemplate

@@ -19,7 +19,6 @@
 
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
-  let templateIcon
 
   $: datasource = $datasources.selected
   $: templateIcon = datasource?.restTemplate
