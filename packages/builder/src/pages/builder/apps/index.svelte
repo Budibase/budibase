@@ -26,7 +26,7 @@
     ProfileModal,
     UserAvatar,
   } from "@budibase/frontend-core"
-  import { helpers, sdk } from "@budibase/shared-core"
+  import { helpers, sdk, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -89,7 +89,7 @@
                 icon="lock"
                 on:click={() => {
                   if (isOwner) {
-                    window.location.href = `${$admin.accountPortalUrl}/portal/account`
+                    window.location.href = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.ACCOUNT}`
                   } else {
                     changePasswordModal.show()
                   }

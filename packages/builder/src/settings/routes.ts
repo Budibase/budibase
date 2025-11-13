@@ -1,4 +1,4 @@
-import { sdk } from "@budibase/shared-core"
+import { sdk, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
 import { GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
@@ -181,7 +181,7 @@ export const orgRoutes = (
       access: () => cloud && user?.accountPortalAccess,
       icon: "arrow-circle-up",
       href: {
-        url: admin?.accountPortalUrl + "/portal/upgrade",
+        url: admin?.accountPortalUrl + ACCOUNT_PORTAL_PATHS.UPGRADE,
         target: Target.Blank,
       },
     },
@@ -200,7 +200,7 @@ export const orgRoutes = (
       path: "billing",
       icon: "credit-card",
       href: {
-        url: admin?.accountPortalUrl + "/portal/billing",
+        url: admin?.accountPortalUrl + ACCOUNT_PORTAL_PATHS.BILLING,
         target: Target.Blank,
       },
     },

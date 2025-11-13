@@ -7,7 +7,11 @@
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
-  import { sdk } from "@budibase/shared-core"
+import {
+  sdk,
+  BUILDER_URLS,
+  ACCOUNT_PORTAL_PATHS,
+} from "@budibase/shared-core"
   import { API } from "@/api"
 
   export let compact: boolean = false
@@ -41,7 +45,7 @@
 
   const goToPortal = () => {
     window.location.href = isBuilder
-      ? "/builder/portal/workspaces"
+      ? BUILDER_URLS.WORKSPACES
       : "/builder/apps"
   }
 
@@ -72,7 +76,7 @@
         icon="lock"
         on:click={() => {
           if (isOwner) {
-            window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
+            window.location.href = `${$environmentStore.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.ACCOUNT}`
           } else {
             changePasswordModal?.show()
           }

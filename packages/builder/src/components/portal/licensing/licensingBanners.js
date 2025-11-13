@@ -2,6 +2,7 @@ import { ExpiringKeys } from "./constants"
 import { admin, auth, licensing, temporalStore } from "@/stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
 
 const oneDayInSeconds = 86400
 
@@ -13,7 +14,7 @@ const upgradeAction = key => {
   return defaultNavigateAction(
     key,
     "Upgrade",
-    `${get(admin).accountPortalUrl}/portal/upgrade`
+    `${get(admin).accountPortalUrl}${ACCOUNT_PORTAL_PATHS.UPGRADE}`
   )
 }
 
@@ -21,7 +22,7 @@ const billingAction = key => {
   return defaultNavigateAction(
     key,
     "Billing",
-    `${get(admin).accountPortalUrl}/portal/billing`
+    `${get(admin).accountPortalUrl}${ACCOUNT_PORTAL_PATHS.BILLING}`
   )
 }
 

@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { StripeStatus } from "@/components/portal/licensing/constants"
 import { admin, auth } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
+import { ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
 import { bb } from "@/stores/bb"
 import {
   License,
@@ -169,7 +170,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const authStore = get(auth)
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
-      window.location.href = `${adminStore.accountPortalUrl}/portal/upgrade`
+      window.location.href = `${adminStore.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.UPGRADE}`
     } else {
       bb.settings("/upgrade")
     }

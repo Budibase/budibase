@@ -1,7 +1,7 @@
 <script>
   import { Button } from "@budibase/bbui"
   import { auth, admin, licensing } from "@/stores/portal"
-  import { sdk } from "@budibase/shared-core"
+  import { sdk, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
 </script>
 
@@ -12,7 +12,10 @@
       size="M"
       on:click
       on:click={() => {
-        window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
+        window.open(
+          $admin.accountPortalUrl + ACCOUNT_PORTAL_PATHS.UPGRADE,
+          "_blank"
+        )
       }}
     >
       Upgrade

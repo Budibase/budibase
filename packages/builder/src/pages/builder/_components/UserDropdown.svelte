@@ -1,6 +1,7 @@
 <script>
   import { admin, auth } from "@/stores/portal"
-  import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
+import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
+import { ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
   import { goto } from "@roxi/routify"
   import ProfileModal from "@budibase/frontend-core/src/components/ProfileModal.svelte"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
@@ -48,7 +49,7 @@
       icon="lock"
       on:click={() => {
         if (isOwner) {
-          window.location.href = `${$admin.accountPortalUrl}/portal/account`
+          window.location.href = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.ACCOUNT}`
         } else {
           updatePasswordModal.show()
         }

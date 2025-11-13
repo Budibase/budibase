@@ -1,5 +1,6 @@
 <script>
   import { Modal, ModalContent, Body } from "@budibase/bbui"
+  import { ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
   import { auth, admin } from "@/stores/portal"
 
   export let onDismiss = () => {}
@@ -7,7 +8,7 @@
   let appLimitModal
 
   $: accountUrl = $admin.accountPortalUrl
-  $: upgradeUrl = `${accountUrl}/portal/upgrade`
+  $: upgradeUrl = `${accountUrl}${ACCOUNT_PORTAL_PATHS.UPGRADE}`
 
   export function show() {
     appLimitModal.show()
