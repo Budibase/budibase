@@ -36,7 +36,6 @@
   export let createDatasource = false
   export let onCancel: (() => void) | undefined = undefined
 
-  let datasource: Datasource
   $: datasource = $datasources.selected as Datasource
   $: restTemplateList = $restTemplates.templates
   let selectedEndpoint: QueryImportEndpoint | undefined

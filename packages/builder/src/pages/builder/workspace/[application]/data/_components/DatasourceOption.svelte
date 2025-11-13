@@ -4,11 +4,12 @@
   export let title
   export let description = undefined
   export let disabled
+  export let centered = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click class:disabled class="option">
+<div on:click class:disabled class:centred={centered} class="option">
   <div class="header">
     <div class="icon">
       <slot />
@@ -51,5 +52,14 @@
   .disabled {
     opacity: 0.5;
     pointer-events: none;
+  }
+
+  .option.centred {
+    padding: 12px;
+  }
+
+  .option.centred .header {
+    justify-content: center;
+    margin-bottom: 0;
   }
 </style>
