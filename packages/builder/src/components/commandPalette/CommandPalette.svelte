@@ -25,6 +25,7 @@
   import { getContext } from "svelte"
   import { ThemeOptions } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
+  import { IntegrationTypes } from "@/constants/backend"
 
   const modalContext = getContext(Context.Modal)
 
@@ -133,16 +134,24 @@
     }))
   }
 
-  const datasourceCommands = datasources => {
-    return datasources.map(datasource => ({
+  const datasourceCommands = datasourceList => {
+    return datasourceList.map(datasource => ({
       type: "Datasource",
       name: datasource.name,
-      icon: "database",
+      icon:
+        datasource.source === IntegrationTypes.REST
+          ? "webhooks-logo"
+          : "database",
       action: () =>
-        $goto(`/builder/workspace/:application/data/datasource/:id`, {
-          application: $params.application,
-          id: datasource._id,
-        }),
+        $goto(
+          datasource.source === IntegrationTypes.REST
+            ? `/builder/workspace/:application/apis/datasource/:id`
+            : `/builder/workspace/:application/data/datasource/:id`,
+          {
+            application: $params.application,
+            id: datasource._id,
+          }
+        ),
       requiresApp: true,
     }))
   }
@@ -193,17 +202,29 @@
   }
 
   const queryCommands = queries => {
-    return queries.map(query => ({
-      type: "Query",
-      name: query.name,
-      icon: "database",
-      action: () =>
-        $goto(`/builder/workspace/:application/data/query/:id`, {
-          application: $params.application,
-          id: query._id,
-        }),
-      requiresApp: true,
-    }))
+    const datasourceLookup = new Map(
+      ($datasources.list || []).map(datasource => [datasource._id, datasource])
+    )
+    return queries.map(query => {
+      const datasource = datasourceLookup.get(query.datasourceId)
+      const isRest = datasource?.source === IntegrationTypes.REST
+      return {
+        type: "Query",
+        name: query.name,
+        icon: isRest ? "globe-hemisphere-west" : "database",
+        action: () =>
+          $goto(
+            isRest
+              ? `/builder/workspace/:application/apis/query/:id`
+              : `/builder/workspace/:application/data/query/:id`,
+            {
+              application: $params.application,
+              id: query._id,
+            }
+          ),
+        requiresApp: true,
+      }
+    })
   }
 
   const screenCommands = screens => {
