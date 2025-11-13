@@ -27,6 +27,7 @@
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
   export let allowHTML: boolean = false
+  export let inputType: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -79,6 +80,7 @@
     placeholder={placeholder || undefined}
     {updateOnChange}
     {autocomplete}
+    type={multiline ? undefined : inputType}
   >
     {#if !disabled && !disableBindings}
       <div
