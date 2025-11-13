@@ -17,7 +17,7 @@
   import { Constants } from "@budibase/frontend-core"
   import { Usage } from "@/components/usage"
   import { PlanModel } from "@/constants"
-  import { sdk, ACCOUNT_PORTAL_PATHS } from "@budibase/shared-core"
+  import { sdk, helpers } from "@budibase/shared-core"
   import { getFormattedPlanName } from "@/helpers/planTitle"
 
   let staticUsage = []
@@ -28,8 +28,10 @@
   let daysRemainingInMonth
   let primaryActionText
 
-  $: upgradeUrl = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.UPGRADE}`
-  $: manageUrl = `${$admin.accountPortalUrl}${ACCOUNT_PORTAL_PATHS.BILLING}`
+  const { buildAccountPortalUrl } = helpers
+
+  $: upgradeUrl = buildAccountPortalUrl($admin.accountPortalUrl, "UPGRADE")
+  $: manageUrl = buildAccountPortalUrl($admin.accountPortalUrl, "BILLING")
 
   const WARN_USAGE = ["Queries", "Automations", "Rows", "Users"]
   const oneDayInSeconds = 86400

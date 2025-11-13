@@ -20,8 +20,10 @@
   import { admin } from "@/stores/portal/admin"
   import { themeStore } from "@/stores/portal/theme"
   import { type UpdateSelfRequest } from "@budibase/types"
-import { ThemeOptions, helpers } from "@budibase/shared-core"
+  import { ThemeOptions, helpers } from "@budibase/shared-core"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
+
+  const { buildAccountPortalUrl } = helpers
 
   const values = writable<UpdateSelfRequest>({})
   let updating = false
@@ -173,4 +175,3 @@ import { ThemeOptions, helpers } from "@budibase/shared-core"
     align-items: center;
   }
 </style>
-  const { buildAccountPortalUrl } = helpers
