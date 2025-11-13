@@ -423,7 +423,10 @@
   }
   .bb-options {
     max-width: calc(3 * 235px + 2 * 24px);
-    margin-bottom: 24px;
+    margin-bottom: 12px;
+  }
+  .bb-options + .subHeading {
+    margin-top: 8px;
   }
   .templateOptions {
     margin-bottom: 24px;
