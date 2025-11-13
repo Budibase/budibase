@@ -90,10 +90,11 @@
   }
   .twoColumns,
   .columns-2 {
-    grid-template-columns: repeat(2, calc((100% - var(--gap)) / 2));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .threeColumns {
-    grid-template-columns: repeat(3, calc((100% - var(--gap)) / 3));
+  .threeColumns,
+  .columns-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .placeholder {
     border: 2px dashed var(--spectrum-global-color-gray-600);
