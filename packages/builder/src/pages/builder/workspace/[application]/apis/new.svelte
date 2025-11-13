@@ -168,16 +168,14 @@
     templateLoading = true
     templateLoadingPhase = "import"
     try {
-      const config = {
-        ...configFromIntegration(restIntegration),
-        url: pendingSpec.url,
-      }
+      const config = configFromIntegration(restIntegration)
 
       const datasource = await datasources.create({
         integration: restIntegration,
         config,
         name: buildDatasourceName(pendingTemplate, pendingSpec),
         restTemplate: pendingTemplate.name,
+        restTemplateVersion: pendingSpec.version,
       })
 
       if (!datasource?._id) {

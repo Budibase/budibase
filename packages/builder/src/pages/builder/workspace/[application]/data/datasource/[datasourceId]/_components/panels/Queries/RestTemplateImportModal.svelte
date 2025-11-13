@@ -27,7 +27,6 @@
     Datasource,
     ImportRestQueryRequest,
     QueryImportEndpoint,
-    RestConfig,
     RestTemplate,
   } from "@budibase/types"
 
@@ -42,16 +41,17 @@
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === datasource?.source
   )
-  $: datasourceTemplateUrl = getTemplateSpecUrl(datasource)
-  $: template = getMatchingTemplate(
-    datasource,
-    restTemplateList,
-    datasourceTemplateUrl
-  )
-  $: resolvedTemplateSpecUrl = template
-    ? template.specs?.find(spec => spec.url === datasourceTemplateUrl)?.url ||
-      template.specs?.[0]?.url
+  $: template = datasource?.restTemplate
+    ? restTemplateList.find(
+        template => template.name === datasource.restTemplate
+      )
     : undefined
+  $: selectedTemplateSpec = template
+    ? template.specs?.find(
+        spec => spec.version === datasource?.restTemplateVersion
+      ) || template.specs?.[0]
+    : undefined
+  $: resolvedTemplateSpecUrl = selectedTemplateSpec?.url
   $: templateName = template?.name
   $: templateIcon = template?.icon
   $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
@@ -65,30 +65,6 @@
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
   let currentTemplateUrl: string | undefined
   let templateDocsBaseUrl: string | undefined
-
-  const getTemplateSpecUrl = (source: Datasource | undefined) => {
-    const config = (source?.config || {}) as Partial<RestConfig>
-    return typeof config?.url === "string" ? config.url : undefined
-  }
-
-  const getMatchingTemplate = (
-    source: Datasource | undefined,
-    templates: RestTemplate[],
-    specUrl: string | undefined
-  ) => {
-    if (!source?.restTemplate) {
-      return undefined
-    }
-
-    return (
-      templates.find(template => template.name === source.restTemplate) ||
-      (specUrl
-        ? templates.find(template =>
-            template.specs?.some(spec => spec.url === specUrl)
-          )
-        : undefined)
-    )
-  }
 
   const resetEndpoints = () => {
     loadRequestId += 1

@@ -1,7 +1,7 @@
 import { Document } from "../document"
 import { SourceName } from "../../sdk"
 import { Table } from "./table"
-import { RestTemplateName } from "../../ui/rest"
+import { RestTemplateName, RestTemplateSpecVersion } from "../../ui/rest"
 
 export interface Datasource extends Document {
   type: string
@@ -15,6 +15,7 @@ export interface Datasource extends Document {
   plus?: boolean
   isSQL?: boolean
   restTemplate?: RestTemplateName
+  restTemplateVersion?: RestTemplateSpecVersion
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
 }

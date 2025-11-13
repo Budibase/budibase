@@ -10,6 +10,7 @@ import {
   DatasourceFeature,
   Integration,
   RestTemplateName,
+  RestTemplateSpecVersion,
   SourceName,
   Table,
   UIIntegration,
@@ -199,11 +200,13 @@ export class DatasourceStore extends DerivedBudiStore<
     config,
     name,
     restTemplate,
+    restTemplateVersion,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
     restTemplate?: RestTemplateName
+    restTemplateVersion?: RestTemplateSpecVersion
   }) {
     const count = this.sourceCount(integration.name)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
@@ -216,6 +219,7 @@ export class DatasourceStore extends DerivedBudiStore<
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
       ...(restTemplate && { restTemplate }),
+      ...(restTemplateVersion && { restTemplateVersion }),
     }
 
     const { valid, error } = await this.checkDatasourceValidity(
