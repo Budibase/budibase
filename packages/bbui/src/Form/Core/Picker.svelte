@@ -71,6 +71,7 @@
   export let indeterminate: boolean = false
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
+  export let hideChevron: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -193,7 +194,9 @@
   >
     {fieldText}
   </span>
-  <Icon name="caret-down" size="S" />
+  {#if !hideChevron}
+    <Icon name="caret-down" size="S" />
+  {/if}
 </button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -265,7 +268,7 @@
         </li>
       {/if}
       {#if filteredOptions.length}
-        {#each filteredOptions as option, idx}
+        {#each filteredOptions as option, idx (getOptionValue(option, idx) ?? idx)}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
