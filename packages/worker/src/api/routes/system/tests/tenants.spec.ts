@@ -1,5 +1,13 @@
 import { TestConfiguration } from "../../../../tests"
 import { tenancy } from "@budibase/backend-core"
+import { LockReason } from "@budibase/types"
+import * as tenantSdk from "../../../../sdk/tenants"
+
+jest.mock("../../../../sdk/tenants", () => ({
+  lockTenant: jest.fn(),
+  unlockTenant: jest.fn(),
+  deleteTenant: jest.fn(),
+}))
 
 describe("/api/global/tenants", () => {
   const config = new TestConfiguration()
@@ -56,6 +64,87 @@ describe("/api/global/tenants", () => {
       })
 
       expect(res.body).toEqual(config.adminOnlyResponse())
+    })
+  })
+
+  describe("PUT /api/system/tenants/:tenantId/lock", () => {
+    it("allows locking tenant with valid reason", async () => {
+      const user = await config.createTenant()
+
+      await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: LockReason.FREE_TIER,
+        },
+        {
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(tenantSdk.lockTenant).toHaveBeenCalledWith(
+        user.tenantId,
+        LockReason.FREE_TIER
+      )
+      expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
+    })
+
+    it("unlocks tenant when no reason provided", async () => {
+      const user = await config.createTenant()
+
+      await config.api.tenants.lock(
+        user.tenantId,
+        {},
+        {
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(tenantSdk.unlockTenant).toHaveBeenCalledWith(user.tenantId)
+      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+    })
+
+    it("rejects invalid lock reason", async () => {
+      const user = await config.createTenant()
+
+      const status = 400
+      const res = await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: "invalid_reason" as any,
+        },
+        {
+          status,
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(res.body.message).toContain("Invalid lock reason. Valid values:")
+      expect(res.body.message).toContain(LockReason.FREE_TIER)
+      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+      expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
+    })
+
+    it("rejects non-internal user", async () => {
+      const user = await config.createTenant()
+
+      const status = 403
+      const res = await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: LockReason.FREE_TIER,
+        },
+        {
+          status,
+          headers: config.authHeaders(user),
+        }
+      )
+
+      expect(res.body).toEqual({
+        message: "Only internal user can lock a tenant",
+        status,
+      })
+      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+      expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
     })
   })
 })

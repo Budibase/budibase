@@ -1,11 +1,39 @@
-import { db as dbCore, platform, tenancy } from "@budibase/backend-core"
+import {
+  configs,
+  db as dbCore,
+  platform,
+  tenancy,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { ConfigType, LockReason, SettingsConfig } from "@budibase/types"
 
 export async function deleteTenant(tenantId: string) {
   await quotas.bustCache()
   await removeTenantUsers(tenantId)
   await removeTenantApps(tenantId)
   await removeGlobalDB(tenantId)
+}
+
+export async function lockTenant(tenantId: string, lockReason: LockReason) {
+  return await setLock(tenantId, lockReason)
+}
+
+export async function unlockTenant(tenantId: string) {
+  return await setLock(tenantId)
+}
+
+async function setLock(tenantId: string, lockReason?: LockReason) {
+  const db = tenancy.getTenantDB(tenantId)
+  const settingsConfig = await db.tryGet<SettingsConfig>(
+    configs.generateConfigID(ConfigType.SETTINGS)
+  )
+  if (!settingsConfig?.config) {
+    throw new Error(
+      `Cannot lock. Settings config not found for tenant ${tenantId}`
+    )
+  }
+  settingsConfig.config.lockedBy = lockReason
+  await db.put(settingsConfig)
 }
 
 async function removeGlobalDB(tenantId: string) {
