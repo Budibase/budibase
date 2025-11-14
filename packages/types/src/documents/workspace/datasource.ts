@@ -69,6 +69,7 @@ export interface RestConfig {
   staticVariables?: {
     [key: string]: string
   }
+  templateStaticVariables?: string[]
   dynamicVariables?: DynamicVariable[]
 }
 

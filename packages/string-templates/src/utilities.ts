@@ -71,6 +71,23 @@ export const removeHandlebarsStatements = (
   return string
 }
 
+export const stripHandlebars = (block?: string) => {
+  if (!block || typeof block !== "string") {
+    return block
+  }
+  const trimmed = block.trim()
+  const isTriple = trimmed.startsWith("{{{") && trimmed.endsWith("}}}")
+  const isDouble = trimmed.startsWith("{{") && trimmed.endsWith("}}")
+  if (!isTriple && !isDouble) {
+    return trimmed
+  }
+  const braceLength = isTriple ? 3 : 2
+  if (trimmed.length <= braceLength * 2) {
+    return ""
+  }
+  return trimmed.slice(braceLength, -braceLength).trim()
+}
+
 export const btoa = (plainText: string) => {
   return Buffer.from(plainText, "utf-8").toString("base64")
 }

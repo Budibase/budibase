@@ -5,8 +5,13 @@
 
   export let datasource
   export let updatedDatasource
+  export let onSaved
+  export let isDirty
 
-  $: hasChanged = !isEqual(datasource, updatedDatasource)
+  $: hasChanged =
+    typeof isDirty === "boolean"
+      ? isDirty
+      : !isEqual(datasource, updatedDatasource)
 
   const save = async () => {
     try {
@@ -14,6 +19,7 @@
       notifications.success(
         `Datasource ${updatedDatasource.name} updated successfully`
       )
+      onSaved?.()
     } catch (error) {
       notifications.error(`Error saving datasource: ${error.message}`)
     }

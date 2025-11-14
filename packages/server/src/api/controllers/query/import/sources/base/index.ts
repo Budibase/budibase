@@ -29,12 +29,17 @@ enum MethodToVerb {
   delete = "delete",
 }
 
+export interface GetQueriesOptions {
+  filterIds?: Set<string>
+  staticVariables?: Record<string, string>
+}
+
 export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]>
   abstract getImportSource(): string
 

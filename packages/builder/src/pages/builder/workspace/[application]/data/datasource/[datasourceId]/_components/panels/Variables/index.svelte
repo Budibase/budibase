@@ -5,29 +5,84 @@
   import { getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
   import { queries } from "@/stores/builder"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
   import { onMount } from "svelte"
+  import { findHBSBlocks } from "@budibase/string-templates"
 
   export let datasource
+  export let updatedDatasource
+  export let markDirty
 
-  $: updatedDatasource = cloneDeep(datasource)
+  // Use parent-provided updatedDatasource when available
+  let localUpdatedDatasource
+  let templateStaticVariableKeys = []
+  $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
 
   $: queriesForDatasource = $queries.list.filter(
     query => query.datasourceId === datasource?._id
   )
 
-  const handleChange = newUnparsedStaticVariables => {
-    const newStaticVariables = {}
+  const stripHandlebars = block =>
+    block
+      .replace(/^{{\s*/, "")
+      .replace(/\s*}}$/, "")
+      .trim()
 
-    newUnparsedStaticVariables.forEach(({ name, value }) => {
-      newStaticVariables[name] = value
+  const extractHandlebarTokens = value => {
+    if (!value) {
+      return []
+    }
+    const tokens = new Set()
+    findHBSBlocks(value).forEach(block => {
+      const token = stripHandlebars(block)
+      if (token) {
+        tokens.add(token)
+      }
     })
-
-    updatedDatasource.config.staticVariables = newStaticVariables
+    return Array.from(tokens)
   }
+
+  const getTemplateStaticVariableKeys = datasource => {
+    if (!datasource?.restTemplate) {
+      return []
+    }
+    const configured = datasource?.config?.templateStaticVariables || []
+    if (configured.length) {
+      return Array.from(new Set(configured.filter(Boolean)))
+    }
+    return extractHandlebarTokens(datasource?.config?.url)
+  }
+
+  const buildStaticVariablesObject = values => {
+    const next = {}
+    values.forEach(({ name, value }) => {
+      const key = (name ?? "").toString().trim()
+      const valStr = value == null ? "" : value.toString ? value.toString() : ""
+      const val = valStr.trim()
+      if (key !== "" || val !== "") {
+        next[key] = value
+      }
+    })
+    return next
+  }
+
+  const handleStaticChange = newUnparsedStaticVariables => {
+    if (!localUpdatedDatasource) {
+      return
+    }
+    localUpdatedDatasource.config = localUpdatedDatasource.config || {}
+    const prev = localUpdatedDatasource.config.staticVariables || {}
+    const newStaticVariables = buildStaticVariablesObject(
+      newUnparsedStaticVariables
+    )
+    if (!isEqual(prev, newStaticVariables)) {
+      localUpdatedDatasource.config.staticVariables = newStaticVariables
+      markDirty && markDirty()
+    }
+  }
+
+  $: templateStaticVariableKeys = getTemplateStaticVariableKeys(datasource)
 
   onMount(async () => {
     try {
@@ -39,13 +94,6 @@
 </script>
 
 <Panel>
-  <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
-  <Tooltip
-    slot="tooltip"
-    title="REST variables"
-    href="https://docs.budibase.com/docs/rest-variables"
-  />
-
   <Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Static</Heading>
@@ -53,8 +101,9 @@
         name="Variable"
         keyPlaceholder="Name"
         headings
-        object={updatedDatasource.config.staticVariables}
-        on:change={({ detail }) => handleChange(detail)}
+        object={localUpdatedDatasource?.config?.staticVariables || {}}
+        lockedKeys={templateStaticVariableKeys}
+        on:change={({ detail }) => handleStaticChange(detail)}
         bindings={$licensing.environmentVariablesEnabled
           ? getEnvironmentBindings()
           : []}

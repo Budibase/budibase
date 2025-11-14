@@ -43,9 +43,12 @@ export class RestImporter {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
       : undefined
+    const staticVariables =
+      await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
     let queries = await this.source.getQueries(datasourceId, {
       filterIds,
+      staticVariables,
     })
 
     if (filterIds && queries.length === 0) {
@@ -107,5 +110,33 @@ export class RestImporter {
       errorQueries,
       queries: successQueries,
     }
+  }
+
+  getStaticServerVariables = (): Record<string, string> => {
+    const source: any = this.source
+    if (source && typeof source.getServerVariableBindings === "function") {
+      return source.getServerVariableBindings()
+    }
+    return {}
+  }
+
+  private async getDatasourceStaticVariables(
+    datasourceId: string
+  ): Promise<Record<string, string>> {
+    if (!datasourceId) {
+      return {}
+    }
+    const db = context.getWorkspaceDB()
+    let datasource: Datasource | undefined
+    try {
+      datasource = await db.get<Datasource>(datasourceId)
+    } catch (_err) {
+      return {}
+    }
+    const staticVariables = datasource?.config?.staticVariables
+    if (!staticVariables || typeof staticVariables !== "object") {
+      return {}
+    }
+    return { ...staticVariables }
   }
 }

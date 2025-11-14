@@ -1,4 +1,4 @@
-import { ImportSource, ImportInfo } from "./base"
+import { ImportSource, ImportInfo, GetQueriesOptions } from "./base"
 import { Query } from "../../../../../definitions/common"
 import { URL } from "url"
 
@@ -90,7 +90,7 @@ export class Curl extends ImportSource {
 
   getQueries = async (
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]> => {
     const url = this.getUrl()
     const name = url.pathname
