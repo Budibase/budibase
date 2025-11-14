@@ -66,6 +66,7 @@
     >
       {createQueryLabel}
     </Button>
+    <slot name="global-save" />
     {#if supportsViews}
       <Button secondary on:click={viewSelectionModal.show}>Fetch views</Button>
     {/if}

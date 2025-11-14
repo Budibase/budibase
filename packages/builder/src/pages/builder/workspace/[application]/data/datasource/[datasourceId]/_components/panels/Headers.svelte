@@ -6,32 +6,46 @@
     readableToRuntimeBinding,
     runtimeToReadableMap,
   } from "@/dataBinding"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "./Panel.svelte"
 
   export let datasource
+  export let updatedDatasource
+  export let markDirty
   let restBindings = getRestBindings()
   let addHeader
 
-  $: updatedDatasource = cloneDeep(datasource)
+  // Use parent-provided updatedDatasource when available
+  let localUpdatedDatasource
+  $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
   $: parsedHeaders = runtimeToReadableMap(
     restBindings,
-    updatedDatasource?.config?.defaultHeaders
+    localUpdatedDatasource?.config?.defaultHeaders
   )
 
   const onDefaultHeaderUpdate = headers => {
     const flatHeaders = cloneDeep(headers).reduce((acc, entry) => {
-      acc[entry.name] = readableToRuntimeBinding(restBindings, entry.value)
+      const name = (entry?.name ?? "").toString().trim()
+      const valueRaw = entry?.value
+      const valueStr =
+        valueRaw == null ? "" : valueRaw.toString ? valueRaw.toString() : ""
+      const value = valueStr.trim()
+
+      if (name !== "" || value !== "") {
+        acc[name] = readableToRuntimeBinding(restBindings, entry.value)
+      }
       return acc
     }, {})
 
-    updatedDatasource.config.defaultHeaders = flatHeaders
+    const prev = localUpdatedDatasource.config.defaultHeaders || {}
+    if (!isEqual(prev, flatHeaders)) {
+      localUpdatedDatasource.config.defaultHeaders = flatHeaders
+      markDirty && markDirty()
+    }
   }
 </script>
 
 <Panel>
-  <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
   <KeyValueBuilder
     bind:this={addHeader}
     object={parsedHeaders}

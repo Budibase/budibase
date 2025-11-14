@@ -5,14 +5,17 @@
   import { getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
   import { queries } from "@/stores/builder"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "../Panel.svelte"
   import { onMount } from "svelte"
 
   export let datasource
+  export let updatedDatasource
+  export let markDirty
 
-  $: updatedDatasource = cloneDeep(datasource)
+  // Use parent-provided updatedDatasource when available
+  let localUpdatedDatasource
+  $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
 
   $: queriesForDatasource = $queries.list.filter(
     query => query.datasourceId === datasource?._id
@@ -22,10 +25,19 @@
     const newStaticVariables = {}
 
     newUnparsedStaticVariables.forEach(({ name, value }) => {
-      newStaticVariables[name] = value
+      const key = (name ?? "").toString().trim()
+      const valStr = value == null ? "" : value.toString ? value.toString() : ""
+      const val = valStr.trim()
+      if (key !== "" || val !== "") {
+        newStaticVariables[key] = value
+      }
     })
 
-    updatedDatasource.config.staticVariables = newStaticVariables
+    const prev = localUpdatedDatasource.config.staticVariables || {}
+    if (!isEqual(prev, newStaticVariables)) {
+      localUpdatedDatasource.config.staticVariables = newStaticVariables
+      markDirty && markDirty()
+    }
   }
 
   onMount(async () => {
@@ -38,7 +50,6 @@
 </script>
 
 <Panel>
-  <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
   <Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Static</Heading>
@@ -46,7 +57,7 @@
         name="Variable"
         keyPlaceholder="Name"
         headings
-        object={updatedDatasource.config.staticVariables}
+        object={localUpdatedDatasource.config.staticVariables}
         on:change={({ detail }) => handleChange(detail)}
         bindings={$licensing.environmentVariablesEnabled
           ? getEnvironmentBindings()

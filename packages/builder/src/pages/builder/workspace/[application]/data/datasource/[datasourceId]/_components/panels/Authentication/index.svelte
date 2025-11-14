@@ -6,15 +6,18 @@
   import { notifications } from "@budibase/bbui"
 
   export let datasource
-  $: updatedDatasource = cloneDeep(datasource)
+  export let updatedDatasource
+  let localUpdatedDatasource
+  $: localUpdatedDatasource = cloneDeep(datasource ?? updatedDatasource)
 
   const updateAuthConfigs = async newAuthConfigs => {
-    updatedDatasource.config.authConfigs = newAuthConfigs
+    localUpdatedDatasource.config.authConfigs = newAuthConfigs
 
+    // Auto-save authentication changes
     try {
-      await integrations.saveDatasource(updatedDatasource)
+      await integrations.saveDatasource(localUpdatedDatasource)
       notifications.success(
-        `Datasource ${updatedDatasource.name} updated successfully`
+        `Datasource ${localUpdatedDatasource.name} updated successfully`
       )
     } catch (error) {
       notifications.error(`Error saving datasource: ${error.message}`)
@@ -25,6 +28,6 @@
 <Panel>
   <RestAuthenticationBuilder
     on:change={({ detail }) => updateAuthConfigs(detail)}
-    authConfigs={updatedDatasource.config.authConfigs}
+    authConfigs={localUpdatedDatasource.config.authConfigs}
   />
 </Panel>

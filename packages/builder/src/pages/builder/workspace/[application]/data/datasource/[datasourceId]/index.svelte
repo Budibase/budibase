@@ -17,24 +17,18 @@
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
   import Tooltip from "./_components/panels/Tooltip.svelte"
+  import SaveDatasourceButton from "./_components/panels/SaveDatasourceButton.svelte"
+  import { cloneDeep } from "lodash/fp"
 
   const REST_PANEL_SECTIONS = [
     { title: "", component: QueriesPanel },
     {
       title: "Authentication",
       component: RestAuthenticationPanel,
-      tooltip: {
-        title: "REST Authentication",
-        href: "https://docs.budibase.com/docs/rest-authentication",
-      },
     },
     {
       title: "Headers",
       component: RestHeadersPanel,
-      tooltip: {
-        title: "REST Headers",
-        href: "https://docs.budibase.com/docs/rest-queries#headers",
-      },
     },
     {
       title: "Variables",
@@ -60,6 +54,34 @@
   $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
+
+  // Central updated datasource state for REST config edits
+  let updatedDatasource
+  let restConfigDirty = false
+  $: if (
+    datasource &&
+    (!updatedDatasource || updatedDatasource._id !== datasource._id)
+  ) {
+    updatedDatasource = cloneDeep(datasource)
+    restConfigDirty = false
+  }
+
+  const markDirty = () => {
+    if (!updatedDatasource) {
+      return
+    }
+    restConfigDirty = true
+    // trigger reactivity for children like Save button
+    updatedDatasource = { ...updatedDatasource }
+  }
+
+  const handleRestConfigSaved = () => {
+    if (!updatedDatasource) {
+      return
+    }
+    restConfigDirty = false
+    updatedDatasource = cloneDeep(datasource ?? updatedDatasource)
+  }
 
   const getOptions = datasource => {
     if (!datasource) {
@@ -129,7 +151,24 @@
                 {/if}
               </div>
             {/if}
-            <svelte:component this={restPanel.component} {datasource} />
+            {#if restPanel.component === QueriesPanel}
+              <svelte:component this={restPanel.component} {datasource}>
+                <SaveDatasourceButton
+                  slot="global-save"
+                  {datasource}
+                  {updatedDatasource}
+                  isDirty={restConfigDirty}
+                  onSaved={handleRestConfigSaved}
+                />
+              </svelte:component>
+            {:else}
+              <svelte:component
+                this={restPanel.component}
+                {datasource}
+                {updatedDatasource}
+                {markDirty}
+              />
+            {/if}
           </div>
         {/each}
       </div>
