@@ -118,7 +118,7 @@
       </div>
     {/if}
 
-    <div class="content">
+    <div class="content drawer-container">
       <slot />
     </div>
   </div>
