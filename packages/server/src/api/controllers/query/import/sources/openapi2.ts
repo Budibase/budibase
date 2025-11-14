@@ -1,4 +1,4 @@
-import { ImportInfo } from "./base"
+import { GetQueriesOptions, ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
@@ -132,7 +132,7 @@ export class OpenAPI2 extends OpenAPISource {
 
   getQueries = async (
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]> => {
     const url = this.getUrl()
     const queries = []

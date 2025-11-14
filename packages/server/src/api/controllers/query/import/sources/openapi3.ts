@@ -1,4 +1,4 @@
-import { ImportInfo } from "./base"
+import { GetQueriesOptions, ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
@@ -180,7 +180,7 @@ export class OpenAPI3 extends OpenAPISource {
 
   getQueries = async (
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
@@ -196,6 +196,7 @@ export class OpenAPI3 extends OpenAPISource {
 
     const queries: Query[] = []
     const filterIds = options?.filterIds
+    const staticVariables = options?.staticVariables || {}
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -286,8 +287,14 @@ export class OpenAPI3 extends OpenAPISource {
           }
         }
 
-        for (let [variableName] of Object.entries(serverVariables)) {
-          const defaultValue = `{{ Datasource.Static.${variableName} }}`
+        for (let [variableName, variable] of Object.entries(serverVariables)) {
+          const hasStaticVariable = Object.prototype.hasOwnProperty.call(
+            staticVariables,
+            variableName
+          )
+          const defaultValue = hasStaticVariable
+            ? `{{ Datasource.Static.${variableName} }}`
+            : variable?.default ?? ""
           ensureParameter(variableName, defaultValue)
         }
 
