@@ -1,6 +1,7 @@
 <script>
   import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
+  import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
   import {
     Banner,
@@ -53,20 +54,28 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
+  let lastViewedQueryId = null
 
   let query, datasource
   let breakQs = {},
     requestBindings = {}
   let saveId
   let response, schema, enabledHeaders
-  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
+  let dynamicVariables = {},
+    addVariableModal,
+    varBinding,
+    globalDynamicBindings = {}
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
   let saving
   let queryNameLabel
   let mounted = false
+  let isTemplateDatasource = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
+  $: if (queryId) {
+    lastViewedQueryId = queryId
+  }
 
   $: customRequestBindings = toBindingsArray(
     requestBindings,
@@ -84,12 +93,27 @@
     "Datasource Static"
   )
 
+  const getBindingContext = objects => {
+    return objects.reduce(
+      (acc, current) => ({ ...acc, ...(current || {}) }),
+      {}
+    )
+  }
+
   $: mergedBindings = [
+    ...dataSourceStaticBindings,
     ...restBindings,
     ...customRequestBindings,
     ...globalDynamicRequestBindings,
-    ...dataSourceStaticBindings,
   ]
+
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
+  $: bindingPreviewContext = getBindingContext([
+    requestBindings,
+    globalDynamicBindings,
+    dynamicVariables,
+    staticVariables,
+  ])
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -378,10 +402,10 @@
     )
 
     const prettyBindings = [
+      ...dataSourceStaticBindings,
       ...restBindings,
       ...customRequestBindings,
       ...dynamicRequestBindings,
-      ...dataSourceStaticBindings,
     ]
 
     //Parse the body here as now all bindings have been updated.
@@ -394,6 +418,9 @@
   }
 
   const urlChanged = evt => {
+    if (isTemplateDatasource) {
+      return
+    }
     breakQs = {}
     const fullUrl = evt.detail
     if (!fullUrl) return
@@ -473,7 +500,7 @@
     }
     // if query doesn't have ID then its new - don't try to copy existing dynamic variables
     if (!queryId) {
-      dynamicVariables = []
+      dynamicVariables = {}
       globalDynamicBindings = getDynamicVariables(datasource)
     } else {
       dynamicVariables = getDynamicVariables(
@@ -500,7 +527,7 @@
   })
 
   $beforeUrlChange(async () => {
-    if (!isModified) {
+    if (!isModified || consumeSkipUnsavedPrompt(lastViewedQueryId)) {
       return true
     }
 
@@ -569,6 +596,8 @@
               getOptionValue={option => option.value}
               getOptionLabel={option => option.label}
               getOptionColour={option => option.colour}
+              readonly={isTemplateDatasource}
+              hideChevron={isTemplateDatasource}
             />
           </div>
           <div class="url">
@@ -576,6 +605,7 @@
               on:blur={urlChanged}
               value={url}
               placeholder="http://www.api.com/endpoint"
+              readonly={isTemplateDatasource}
             />
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
@@ -599,10 +629,11 @@
               keyPlaceholder="Binding name"
               valuePlaceholder="Default"
               bindings={[
+                ...dataSourceStaticBindings,
                 ...restBindings,
                 ...globalDynamicRequestBindings,
-                ...dataSourceStaticBindings,
               ]}
+              context={bindingPreviewContext}
             />
           </Tab>
           <Tab title="Params">
@@ -612,6 +643,7 @@
                 defaults={breakQs}
                 headings
                 bindings={mergedBindings}
+                context={bindingPreviewContext}
                 on:change={e => {
                   let newQs = {}
                   e.detail.forEach(({ name, value }) => {
@@ -631,6 +663,7 @@
               name="header"
               headings
               bindings={mergedBindings}
+              context={bindingPreviewContext}
             />
           </Tab>
           <Tab title="Body">

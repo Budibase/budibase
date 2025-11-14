@@ -152,7 +152,7 @@
     await usersFetch.update({
       query: query
         ? {
-            string: { email: query },
+            fuzzy: { email: query },
           }
         : undefined,
       limit: 50,

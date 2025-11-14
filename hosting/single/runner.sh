@@ -9,6 +9,10 @@ export BUDIBASE_ENVIRONMENT="${BUDIBASE_ENVIRONMENT:-PRODUCTION}"
 export CLUSTER_PORT="${CLUSTER_PORT:-80}"
 export DEPLOYMENT_ENVIRONMENT="${DEPLOYMENT_ENVIRONMENT:-docker}"
 
+# set defaults for proxy rate limiting (matching production defaults)
+export PROXY_RATE_LIMIT_API_PER_SECOND="${PROXY_RATE_LIMIT_API_PER_SECOND:-50}"
+export PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND="${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND:-10}"
+
 # only set MINIO_URL if neither MINIO_URL nor USE_S3 is set
 if [[ -z "${MINIO_URL}" && -z "${USE_S3}" ]]; then
   export MINIO_URL="http://127.0.0.1:9000"
@@ -108,6 +112,9 @@ if [[ -z "${USE_S3}" ]]; then
         /minio/minio server --console-address ":9001" ${DATA_DIR}/minio >/dev/stdout 2>&1 &
     fi
 fi
+
+echo "Processing nginx configuration templates..."
+envsubst '${PROXY_RATE_LIMIT_API_PER_SECOND} ${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf
 
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
