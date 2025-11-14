@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { auth, licensing } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
-  import { sdk } from "@budibase/shared-core"
+  import { sdk, BUILDER_URLS } from "@budibase/shared-core"
   import { ConfigType, type RecaptchaConfig } from "@budibase/types"
   import { API } from "@/api"
   import { writable, get } from "svelte/store"
@@ -23,7 +23,7 @@
   // Only admins allowed here
   $: {
     if (!sdk.users.isAdmin($auth.user)) {
-      $redirect("../../portal")
+      $redirect(BUILDER_URLS.WORKSPACES)
     }
   }
 

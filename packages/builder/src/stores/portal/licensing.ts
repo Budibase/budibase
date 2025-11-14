@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { StripeStatus } from "@/components/portal/licensing/constants"
 import { admin, auth } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
+import { helpers } from "@budibase/shared-core"
 import { bb } from "@/stores/bb"
 import {
   License,
@@ -12,6 +13,8 @@ import {
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
+
+const { buildAccountPortalUrl } = helpers
 
 const UNLIMITED = -1
 const ONE_DAY_MILLIS = 86400000
@@ -169,7 +172,10 @@ class LicensingStore extends BudiStore<LicensingState> {
     const authStore = get(auth)
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
-      window.location.href = `${adminStore.accountPortalUrl}/portal/upgrade`
+      window.location.href = buildAccountPortalUrl(
+        adminStore.accountPortalUrl,
+        "UPGRADE"
+      )
     } else {
       bb.settings("/upgrade")
     }

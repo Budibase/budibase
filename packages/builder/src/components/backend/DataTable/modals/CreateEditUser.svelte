@@ -8,6 +8,7 @@
     Select,
     Link,
   } from "@budibase/bbui"
+  import { BUILDER_URLS } from "@budibase/shared-core"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "@/api"
   import ErrorsBox from "@/components/common/ErrorsBox.svelte"
@@ -100,7 +101,9 @@
     <div>
       A user's email, role, first and last names cannot be changed from within
       the app builder. Please go to the
-      <Link on:click={$goto("/builder/portal/users/users")}>user portal</Link>
+      <Link on:click={$goto(BUILDER_URLS.SETTINGS_PEOPLE_USERS)}
+        >user portal</Link
+      >
       to do this.
     </div>
   {/if}

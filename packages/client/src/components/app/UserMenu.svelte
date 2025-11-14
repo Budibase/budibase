@@ -7,7 +7,7 @@
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
-  import { sdk } from "@budibase/shared-core"
+  import { helpers, sdk, BUILDER_URLS } from "@budibase/shared-core"
   import { API } from "@/api"
 
   export let compact: boolean = false
@@ -23,6 +23,8 @@
   $: isSSO = $authStore != null && isSSOUser($authStore)
   $: isOwner = $authStore?.accountPortalAccess && $environmentStore.cloud
   $: embedded = $appStore.embedded || $appStore.inIframe
+
+  const { buildAccountPortalUrl, buildBuilderUrl } = helpers
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
@@ -40,9 +42,11 @@
   }
 
   const goToPortal = () => {
-    window.location.href = isBuilder
-      ? "/builder/portal/workspaces"
-      : "/builder/apps"
+    const target = isBuilder ? BUILDER_URLS.WORKSPACES : BUILDER_URLS.APPS
+    window.location.href = buildBuilderUrl(
+      $environmentStore.accountPortalUrl,
+      target
+    )
   }
 
   $: user = $authStore as User
@@ -72,7 +76,10 @@
         icon="lock"
         on:click={() => {
           if (isOwner) {
-            window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
+            window.location.href = buildAccountPortalUrl(
+              $environmentStore.accountPortalUrl,
+              "/portal/account"
+            )
           } else {
             changePasswordModal?.show()
           }

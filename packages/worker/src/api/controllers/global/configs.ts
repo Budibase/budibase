@@ -10,6 +10,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
+import { BUILDER_URLS } from "@budibase/shared-core"
 import {
   AIInnerConfig,
   Config,
@@ -676,23 +677,23 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
           apps: {
             checked: workspaces.length > 0,
             label: "Create your first app",
-            link: "/builder/portal/workspaces",
+            link: BUILDER_URLS.WORKSPACES,
           },
           smtp: {
             checked: !!smtpConfig,
             label: "Set up email",
-            link: "/builder/portal/settings/email",
+            link: BUILDER_URLS.SETTINGS_EMAIL,
             fallback: smtpConfig?.fallback || false,
           },
           adminUser: {
             checked: userExists,
             label: "Create your first user",
-            link: "/builder/portal/users/users",
+            link: BUILDER_URLS.SETTINGS_PEOPLE_USERS,
           },
           sso: {
             checked: !!googleConfig || !!oidcConfig,
             label: "Set up single sign-on",
-            link: "/builder/portal/settings/auth",
+            link: BUILDER_URLS.SETTINGS_AUTH,
           },
           branding,
         }

@@ -23,7 +23,7 @@
   } from "@/stores/builder"
   import { themeStore, featureFlags } from "@/stores/portal"
   import { getContext } from "svelte"
-  import { ThemeOptions } from "@budibase/shared-core"
+  import { ThemeOptions, BUILDER_URLS } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
 
@@ -104,8 +104,8 @@
   const navigationCommands = () => {
     const routes = [
       {
-        name: "Portal",
-        url: "/builder/portal",
+        name: "Workspaces",
+        url: BUILDER_URLS.WORKSPACES,
       },
       {
         name: "Data",

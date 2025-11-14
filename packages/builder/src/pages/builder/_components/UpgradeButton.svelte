@@ -1,8 +1,10 @@
 <script>
   import { Button } from "@budibase/bbui"
   import { auth, admin, licensing } from "@/stores/portal"
-  import { sdk } from "@budibase/shared-core"
+  import { helpers, sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
+
+  const { buildAccountPortalUrl } = helpers
 </script>
 
 {#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
@@ -12,7 +14,10 @@
       size="M"
       on:click
       on:click={() => {
-        window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
+        window.open(
+          buildAccountPortalUrl($admin.accountPortalUrl, "/portal/upgrade"),
+          "_blank"
+        )
       }}
     >
       Upgrade

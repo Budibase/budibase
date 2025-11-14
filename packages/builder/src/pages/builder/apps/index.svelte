@@ -38,6 +38,8 @@
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
+  const { buildAccountPortalUrl } = helpers
+
   $: userApps = $clientAppsStore.apps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
@@ -89,7 +91,10 @@
                 icon="lock"
                 on:click={() => {
                   if (isOwner) {
-                    window.location.href = `${$admin.accountPortalUrl}/portal/account`
+                    window.location.href = buildAccountPortalUrl(
+                      $admin.accountPortalUrl,
+                      "/portal/account"
+                    )
                   } else {
                     changePasswordModal.show()
                   }

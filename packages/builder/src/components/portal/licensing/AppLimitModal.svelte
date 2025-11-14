@@ -1,13 +1,18 @@
 <script>
   import { Modal, ModalContent, Body } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import { auth, admin } from "@/stores/portal"
 
   export let onDismiss = () => {}
 
   let appLimitModal
 
-  $: accountUrl = $admin.accountPortalUrl
-  $: upgradeUrl = `${accountUrl}/portal/upgrade`
+  const { buildAccountPortalUrl } = helpers
+
+  $: upgradeUrl = buildAccountPortalUrl(
+    $admin.accountPortalUrl,
+    "/portal/upgrade"
+  )
 
   export function show() {
     appLimitModal.show()

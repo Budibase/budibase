@@ -8,6 +8,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
+  import { BUILDER_URLS } from "@budibase/shared-core"
   import { goto, params } from "@roxi/routify"
   import { users, organisation, auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
@@ -67,7 +68,7 @@
     try {
       await auth.login(formData.email.trim(), formData.password.trim())
       notifications.success("Logged in successfully")
-      $goto("../portal")
+      $goto(BUILDER_URLS.WORKSPACES)
     } catch (err) {
       notifications.error(err.message ? err.message : "Something went wrong")
     }
