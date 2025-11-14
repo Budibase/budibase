@@ -21,19 +21,19 @@
   const REST_PANEL_SECTIONS = [
     { title: "", component: QueriesPanel },
     {
-      title: "Headers",
-      component: RestHeadersPanel,
-      tooltip: {
-        title: "REST Headers",
-        href: "https://docs.budibase.com/docs/rest-queries#headers",
-      },
-    },
-    {
       title: "Authentication",
       component: RestAuthenticationPanel,
       tooltip: {
         title: "REST Authentication",
         href: "https://docs.budibase.com/docs/rest-authentication",
+      },
+    },
+    {
+      title: "Headers",
+      component: RestHeadersPanel,
+      tooltip: {
+        title: "REST Headers",
+        href: "https://docs.budibase.com/docs/rest-queries#headers",
       },
     },
     {
@@ -181,6 +181,10 @@
     flex-direction: column;
     gap: var(--spacing-xxl);
     margin-top: var(--spacing-xl);
+  }
+
+  .rest-section {
+    margin-bottom: 35px;
   }
 
   .rest-section__title {
