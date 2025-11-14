@@ -2,6 +2,7 @@
   import { isActive } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import NavItem from "@/components/common/NavItem.svelte"
 
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
@@ -10,6 +11,12 @@
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
   export let datasource
+
+  $: templateIcon = datasource?.restTemplate
+    ? $restTemplates.templates.find(
+        template => template.name === datasource.restTemplate
+      )?.icon
+    : undefined
 
   let editModal
   let deleteConfirmationModal
@@ -63,7 +70,7 @@
     <IntegrationIcon
       integrationType={datasource.source}
       schema={datasource.schema}
-      iconUrl={datasource.uiMetadata?.iconUrl}
+      iconUrl={templateIcon}
       size="18"
     />
   </div>
