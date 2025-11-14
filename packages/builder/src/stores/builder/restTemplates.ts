@@ -1,4 +1,4 @@
-import { RestTemplate } from "@budibase/types"
+import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface RestTemplatesState {
@@ -13,8 +13,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "GitHub REST API for repositories, issues, pull requests, and actions",
       specs: [
         {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.yaml",
+          version: "1.1.4",
+          url: "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.2022-11-28.yaml",
         },
       ],
       icon: "/builder/assets/rest-template-icons/github.svg",
@@ -25,8 +25,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "PagerDuty REST resources for services, incidents, and incident automation",
       specs: [
         {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/pagerduty/v00.00.00000/services/services.yaml",
+          version: "2.0.0",
+          url: "https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json",
         },
       ],
       icon: "/builder/assets/rest-template-icons/pagerduty.svg",
@@ -37,7 +37,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
         {
-          version: "v2",
+          version: "1.7.0",
           url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
         },
       ],
@@ -69,6 +69,13 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       templates = state.templates
     })()
     return templates
+  }
+
+  getByName(name?: RestTemplateName) {
+    if (!name) {
+      return undefined
+    }
+    return this.templates.find(template => template.name === name)
   }
 }
 
