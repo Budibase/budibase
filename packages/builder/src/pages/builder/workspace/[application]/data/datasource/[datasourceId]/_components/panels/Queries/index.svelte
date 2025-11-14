@@ -2,7 +2,6 @@
   import { goto } from "@roxi/routify"
   import { Button, Table, Modal } from "@budibase/bbui"
   import { queries } from "@/stores/builder"
-  import QueryVerbRenderer from "@/components/common/renderers/QueryVerbRenderer.svelte"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import RestImportQueriesModal from "./RestImportQueriesModal.svelte"
@@ -10,7 +9,6 @@
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
-  import { IntegrationTypes } from "@/constants/backend"
 
   export let datasource
 
@@ -23,10 +21,6 @@
 
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
-  $: methodRenderer =
-    datasource?.source === IntegrationTypes.REST
-      ? QueryVerbRenderer
-      : CapitaliseRenderer
   $: isRestDatasource = datasource?.source === "REST"
   $: isTemplateDatasource = Boolean(datasource?.restTemplate)
   $: showImportButton = isRestDatasource && !isTemplateDatasource
@@ -79,28 +73,34 @@
       <RestImportButton datasourceId={datasource._id} />
     {/if}
   </div>
-  <Tooltip
-    slot="tooltip"
-    title="Custom queries"
-    href="https://docs.budibase.com/docs/data-sources#custom-queries "
-  />
-  <Table
-    on:click={({ detail }) => $goto(`../../query/${detail._id}`)}
-    schema={{
-      name: {},
-      queryVerb: { displayName: "Method" },
-    }}
-    data={queryList}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={false}
-    customRenderers={[{ column: "queryVerb", component: methodRenderer }]}
-  />
+  <svelte:fragment slot="tooltip">
+    {#if !isRestDatasource}
+      <Tooltip
+        title="Custom queries"
+        href="https://docs.budibase.com/docs/data-sources#custom-queries "
+      />
+    {/if}
+  </svelte:fragment>
+  {#if !isRestDatasource}
+    <Table
+      on:click={({ detail }) => $goto(`../../query/${detail._id}`)}
+      schema={{
+        name: {},
+        queryVerb: { displayName: "Method" },
+      }}
+      data={queryList}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      customRenderers={[{ column: "queryVerb", component: CapitaliseRenderer }]}
+    />
+  {/if}
 </Panel>
 
 <style>
   .controls {
     display: flex;
     gap: var(--spacing-m);
+    align-items: center;
   }
 </style>

@@ -18,7 +18,7 @@
   import { IntegrationTypes } from "@/constants/backend"
 
   const REST_PANEL_SECTIONS = [
-    { title: "Queries", component: QueriesPanel },
+    { title: "", component: QueriesPanel },
     { title: "Headers", component: RestHeadersPanel },
     { title: "Authentication", component: RestAuthenticationPanel },
     { title: "Variables", component: RestVariablesPanel },
