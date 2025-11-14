@@ -10,6 +10,7 @@
   export let focused = false
   export let readonly = false
   export let api
+  export let startDayOfWeek = "Monday"
 
   let isOpen
   let anchor
@@ -118,6 +119,7 @@
       {enableTime}
       {timeOnly}
       {ignoreTimezones}
+      {startDayOfWeek}
     />
   </GridPopover>
 {/if}

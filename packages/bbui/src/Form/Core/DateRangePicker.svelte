@@ -5,10 +5,13 @@
   import Icon from "../../Icon/Icon.svelte"
   import { parseDate } from "../../helpers"
   import { writable } from "svelte/store"
+  import { getLocaleStartDayOfWeek, type Weekday } from "./DatePicker/utils"
 
   export let enableTime: boolean | undefined = false
   export let timeOnly: boolean | undefined = false
   export let ignoreTimezones: boolean | undefined = false
+  const browserStartDayOfWeek = getLocaleStartDayOfWeek()
+  export let startDayOfWeek: Weekday | undefined = undefined
   export let value: string[] | undefined = []
 
   const dispatch = createEventDispatcher()
@@ -19,6 +22,7 @@
 
   $: valueStore.set(value || [])
   $: parseValue($valueStore)
+  $: resolvedStartDayOfWeek = startDayOfWeek ?? browserStartDayOfWeek
 
   $: parsedFrom = fromDate ? parseDate(fromDate, { enableTime }) : undefined
   $: parsedTo = toDate ? parseDate(toDate, { enableTime }) : undefined
@@ -72,6 +76,7 @@
     {enableTime}
     {timeOnly}
     {ignoreTimezones}
+    startDayOfWeek={resolvedStartDayOfWeek}
   />
   <div class="arrow">
     <Icon name="caret-right" />
@@ -82,6 +87,7 @@
     {enableTime}
     {timeOnly}
     {ignoreTimezones}
+    startDayOfWeek={resolvedStartDayOfWeek}
   />
 </div>
 

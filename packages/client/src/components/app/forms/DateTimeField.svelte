@@ -11,6 +11,7 @@
   export let timeOnly = false
   export let time24hr = false
   export let ignoreTimezones = false
+  export let startDayOfWeek = "Monday"
   export let validation
   export let defaultValue
   export let onChange
@@ -75,6 +76,7 @@
       {timeOnly}
       {time24hr}
       {ignoreTimezones}
+      {startDayOfWeek}
       {placeholder}
     />
   {/if}

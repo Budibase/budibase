@@ -4,12 +4,10 @@
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
-  import isoWeek from "dayjs/plugin/isoWeek"
   import Icon from "../../../Icon/Icon.svelte"
 
-  dayjs.extend(isoWeek)
-
   export let value
+  export let startDayOfWeek = "Monday"
 
   const dispatch = createEventDispatcher()
   const DaysOfWeek = [
@@ -21,6 +19,15 @@
     "Saturday",
     "Sunday",
   ]
+  const DayIndex = {
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+  }
   const MonthsOfYear = [
     "January",
     "February",
@@ -40,21 +47,31 @@
   let calendarDate
 
   $: calendarDate = dayjs(value || dayjs()).startOf("month")
-  $: mondays = getMondays(calendarDate)
+  $: dayHeaders = getDayHeaders(startDayOfWeek)
+  $: weekStarts = getWeekStarts(calendarDate, DayIndex[startDayOfWeek])
 
-  const getMondays = monthStart => {
+  const getWeekStarts = (monthStart, startDayIndex) => {
     if (!monthStart?.isValid()) {
       return []
     }
     let monthEnd = monthStart.endOf("month")
-    let calendarStart = monthStart.startOf("isoWeek")
+    const offset = (((monthStart.day() - startDayIndex) % 7) + 7) % 7
+    let calendarStart = monthStart.subtract(offset, "day")
     const numWeeks = Math.ceil((monthEnd.diff(calendarStart, "day") + 1) / 7)
 
-    let mondays = []
+    let starts = []
     for (let i = 0; i < numWeeks; i++) {
-      mondays.push(calendarStart.add(i, "weeks"))
+      starts.push(calendarStart.add(i, "weeks"))
     }
-    return mondays
+    return starts
+  }
+
+  const getDayHeaders = startDay => {
+    const index = DaysOfWeek.indexOf(startDay)
+    if (index === -1) {
+      return DaysOfWeek
+    }
+    return [...DaysOfWeek.slice(index), ...DaysOfWeek.slice(0, index)]
   }
 
   const handleCalendarYearChange = e => {
@@ -126,7 +143,7 @@
     <table role="presentation" class="spectrum-Calendar-table">
       <thead role="presentation">
         <tr>
-          {#each DaysOfWeek as day}
+          {#each dayHeaders as day}
             <th scope="col" class="spectrum-Calendar-tableCell">
               <abbr class="spectrum-Calendar-dayOfWeek" title={day}>
                 {day[0]}
@@ -136,10 +153,10 @@
         </tr>
       </thead>
       <tbody role="presentation">
-        {#each mondays as monday}
+        {#each weekStarts as weekStart}
           <tr>
             {#each [0, 1, 2, 3, 4, 5, 6] as dayOffset}
-              {@const date = monday.add(dayOffset, "days")}
+              {@const date = weekStart.add(dayOffset, "days")}
               {@const outsideMonth = date.month() !== calendarDate.month()}
               <td
                 class="spectrum-Calendar-tableCell"

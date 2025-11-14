@@ -9,6 +9,7 @@
   import DatePickerPopoverContents from "./DatePickerPopoverContents.svelte"
   import { PopoverAlignment } from "../../../constants"
   import type dayjs from "dayjs"
+  import { getLocaleStartDayOfWeek, type Weekday } from "./utils"
 
   export let id = null
   export let disabled = false
@@ -23,10 +24,14 @@
   export let appendTo = undefined
   export let api = null
   export let align: PopoverAlignment = PopoverAlignment.Left
+  const browserStartDayOfWeek = getLocaleStartDayOfWeek()
+  export let startDayOfWeek: Weekday | undefined = undefined
 
   let isOpen = false
   let anchor: HTMLElement
   let popover: Popover
+
+  $: resolvedStartDayOfWeek = startDayOfWeek ?? browserStartDayOfWeek
 
   $: parsedValue = parseDate(value as string | dayjs.Dayjs | null, {
     enableTime,
@@ -80,6 +85,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      startDayOfWeek={resolvedStartDayOfWeek}
       value={parsedValue}
       on:change
     />
