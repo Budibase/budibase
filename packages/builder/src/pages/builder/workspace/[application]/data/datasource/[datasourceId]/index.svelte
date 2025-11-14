@@ -16,12 +16,34 @@
   import { helpers } from "@budibase/shared-core"
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
+  import Tooltip from "./_components/panels/Tooltip.svelte"
 
   const REST_PANEL_SECTIONS = [
     { title: "", component: QueriesPanel },
-    { title: "Headers", component: RestHeadersPanel },
-    { title: "Authentication", component: RestAuthenticationPanel },
-    { title: "Variables", component: RestVariablesPanel },
+    {
+      title: "Headers",
+      component: RestHeadersPanel,
+      tooltip: {
+        title: "REST Headers",
+        href: "https://docs.budibase.com/docs/rest-queries#headers",
+      },
+    },
+    {
+      title: "Authentication",
+      component: RestAuthenticationPanel,
+      tooltip: {
+        title: "REST Authentication",
+        href: "https://docs.budibase.com/docs/rest-authentication",
+      },
+    },
+    {
+      title: "Variables",
+      component: RestVariablesPanel,
+      tooltip: {
+        title: "REST variables",
+        href: "https://docs.budibase.com/docs/rest-variables",
+      },
+    },
   ]
 
   let selectedPanel = $params.tab ?? null
@@ -93,9 +115,20 @@
       <div class="rest-sections">
         {#each REST_PANEL_SECTIONS as restPanel (restPanel.title)}
           <div class="rest-section">
-            <Heading size="S" class="rest-section__heading">
-              {restPanel.title}
-            </Heading>
+            {#if restPanel.title}
+              <div class="rest-section__title">
+                <Heading size="S" class="rest-section__heading">
+                  {restPanel.title}
+                </Heading>
+                {#if restPanel.tooltip}
+                  <Tooltip
+                    title={restPanel.tooltip.title}
+                    href={restPanel.tooltip.href}
+                    showLabel={false}
+                  />
+                {/if}
+              </div>
+            {/if}
             <svelte:component this={restPanel.component} {datasource} />
           </div>
         {/each}
@@ -148,5 +181,12 @@
     flex-direction: column;
     gap: var(--spacing-xxl);
     margin-top: var(--spacing-xl);
+  }
+
+  .rest-section__title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-m);
   }
 </style>

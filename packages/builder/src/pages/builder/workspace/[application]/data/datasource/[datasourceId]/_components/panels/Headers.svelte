@@ -9,7 +9,6 @@
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
   import Panel from "./Panel.svelte"
-  import Tooltip from "./Tooltip.svelte"
 
   export let datasource
   let restBindings = getRestBindings()
@@ -33,11 +32,6 @@
 
 <Panel>
   <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
-  <Tooltip
-    slot="tooltip"
-    title="REST Headers"
-    href="https://docs.budibase.com/docs/rest-queries#headers"
-  />
   <KeyValueBuilder
     bind:this={addHeader}
     object={parsedHeaders}

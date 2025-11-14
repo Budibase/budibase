@@ -8,7 +8,6 @@
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
   import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
   import { onMount } from "svelte"
 
   export let datasource
@@ -40,12 +39,6 @@
 
 <Panel>
   <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
-  <Tooltip
-    slot="tooltip"
-    title="REST variables"
-    href="https://docs.budibase.com/docs/rest-variables"
-  />
-
   <Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Static</Heading>
