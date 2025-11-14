@@ -30,7 +30,7 @@ import {
   SSOProviderType,
   UserCtx,
 } from "@budibase/types"
-import { cloneDeep, merge } from "lodash"
+import { cloneDeep, isEqual, merge } from "lodash"
 import { ObjectId } from "mongodb"
 import { generateQueryID } from "../../../db/utils"
 import env from "../../../environment"
@@ -296,12 +296,24 @@ async function ensureDatasourceStaticVariables(
     return
   }
   datasource.config.staticVariables = datasource.config.staticVariables || {}
-  const changed = assignStaticVariableDefaults(
+  const staticVariablesChanged = assignStaticVariableDefaults(
     datasource.config.staticVariables,
     tokens,
     defaults
   )
-  if (!changed && !templateUrl) {
+  let templateStaticVariablesChanged = false
+  if (datasource.restTemplate && tokens.length) {
+    const existingTemplateVariables =
+      datasource.config.templateStaticVariables || []
+    const updatedTemplateVariables = Array.from(
+      new Set([...existingTemplateVariables, ...tokens])
+    )
+    if (!isEqual(existingTemplateVariables, updatedTemplateVariables)) {
+      datasource.config.templateStaticVariables = updatedTemplateVariables
+      templateStaticVariablesChanged = true
+    }
+  }
+  if (!staticVariablesChanged && !templateStaticVariablesChanged && !templateUrl) {
     return
   }
   const response = await db.put(datasource as Datasource)
