@@ -105,12 +105,14 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
  */
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
+  serverVariableBindings: Record<string, string> = {}
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
+        this.serverVariableBindings = {}
         return true
       } else {
         return false
@@ -118,6 +120,10 @@ export class OpenAPI3 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  getServerVariableBindings = () => {
+    return { ...this.serverVariableBindings }
   }
 
   private getEndpoints = (): ImportInfo["endpoints"] => {
@@ -153,7 +159,8 @@ export class OpenAPI3 extends OpenAPISource {
     const name = this.document.info.title || "OpenAPI Import"
     let url: string | undefined
     if (this.document.servers?.length) {
-      url = (this.document.servers[0] as ServerObject)?.url
+      const serverUrl = (this.document.servers[0] as ServerObject)?.url
+      url = serverUrl ? this.convertPathVariables(serverUrl) : undefined
     }
     const docsUrl =
       this.document.externalDocs?.url ||
@@ -177,10 +184,14 @@ export class OpenAPI3 extends OpenAPISource {
   ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
+    this.serverVariableBindings = {}
     if (this.document.servers?.length) {
       const server = this.document.servers[0] as ServerObject
       url = server.url
       serverVariables = server.variables || {}
+      for (let [variableName, variable] of Object.entries(serverVariables)) {
+        this.serverVariableBindings[variableName] = variable?.default || ""
+      }
     }
 
     const queries: Query[] = []
@@ -275,8 +286,8 @@ export class OpenAPI3 extends OpenAPISource {
           }
         }
 
-        for (let [variableName, variable] of Object.entries(serverVariables)) {
-          const defaultValue = variable?.default || ""
+        for (let [variableName] of Object.entries(serverVariables)) {
+          const defaultValue = `{{ Datasource.Static.${variableName} }}`
           ensureParameter(variableName, defaultValue)
         }
 

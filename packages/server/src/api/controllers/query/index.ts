@@ -1,7 +1,7 @@
 import { constants, context, events, utils } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
-import { findHBSBlocks } from "@budibase/string-templates"
+import { findHBSBlocks, stripHandlebars } from "@budibase/string-templates"
 import {
   ContextUser,
   CreateDatasourceRequest,
@@ -45,6 +45,39 @@ import fetch from "node-fetch"
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
+
+const extractHandlebarTokens = (value?: string) => {
+  if (!value) {
+    return []
+  }
+  const tokens = new Set<string>()
+  for (const block of findHBSBlocks(value)) {
+    const stripped = stripHandlebars(block)
+    if (!stripped || typeof stripped !== "string") {
+      continue
+    }
+    const name = stripped.trim()
+    if (name) {
+      tokens.add(name)
+    }
+  }
+  return Array.from(tokens)
+}
+
+const assignStaticVariableDefaults = (
+  target: Record<string, string>,
+  tokens: string[],
+  defaults: Record<string, string>
+) => {
+  let changed = false
+  for (const token of tokens) {
+    if (target[token] == null) {
+      target[token] = defaults[token] ?? ""
+      changed = true
+    }
+  }
+  return changed
+}
 
 function sanitiseUserStructure(user: ContextUser) {
   const copiedUser = cloneDeep(user)
@@ -109,20 +142,31 @@ const _import = async (
 
   const importer = new RestImporter(data)
   await importer.init()
+  const importInfo = await importer.getInfo()
+  const staticVariableDefaults = importer.getStaticServerVariables()
 
   let datasourceId
   if (!body.datasourceId) {
     // construct new datasource
-    const info: any = await importer.getInfo()
     let datasource: Datasource = {
       type: "datasource",
       source: SourceName.REST,
       config: {
-        url: info.url,
+        url: importInfo?.url,
         defaultHeaders: [],
         rejectUnauthorized: true,
       },
-      name: info.name,
+      name: importInfo?.name,
+    }
+    const datasourceConfig = datasource.config || (datasource.config = {})
+    const urlTokens = extractHandlebarTokens(datasourceConfig.url)
+    if (urlTokens.length) {
+      datasourceConfig.staticVariables = datasourceConfig.staticVariables || {}
+      assignStaticVariableDefaults(
+        datasourceConfig.staticVariables,
+        urlTokens,
+        staticVariableDefaults
+      )
     }
     // save the datasource
     const datasourceCtx: UserCtx<CreateDatasourceRequest> = merge(ctx, {
@@ -138,6 +182,11 @@ const _import = async (
   } else {
     // use existing datasource
     datasourceId = body.datasourceId
+    await ensureDatasourceStaticVariables(
+      datasourceId,
+      staticVariableDefaults,
+      importInfo?.url
+    )
   }
 
   let importResult
@@ -226,6 +275,38 @@ function getAuthConfig(ctx: UserCtx) {
     configId: getOAuthConfigCookieId(ctx),
     sessionId: authCookie ? authCookie.sessionId : undefined,
   }
+}
+
+async function ensureDatasourceStaticVariables(
+  datasourceId: string,
+  defaults: Record<string, string>,
+  templateUrl?: string
+) {
+  if (!datasourceId) {
+    return
+  }
+  const db = context.getWorkspaceDB()
+  const datasource = await db.get<Datasource>(datasourceId)
+  datasource.config = datasource.config || {}
+  if (!datasource.config.url && templateUrl) {
+    datasource.config.url = templateUrl
+  }
+  const tokens = extractHandlebarTokens(datasource.config.url)
+  if (!tokens.length) {
+    return
+  }
+  datasource.config.staticVariables = datasource.config.staticVariables || {}
+  const changed = assignStaticVariableDefaults(
+    datasource.config.staticVariables,
+    tokens,
+    defaults
+  )
+  if (!changed && !templateUrl) {
+    return
+  }
+  const response = await db.put(datasource as Datasource)
+  await events.datasource.updated(datasource)
+  datasource._rev = response.rev
 }
 
 function enrichParameters(

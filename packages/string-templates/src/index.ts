@@ -24,6 +24,7 @@ export type { Log, LogType } from "./types"
 export { setTestingBackendJS } from "./environment"
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
+export { stripHandlebars } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 export { iifeWrapper } from "./iife"
 

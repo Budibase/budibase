@@ -108,4 +108,12 @@ export class RestImporter {
       queries: successQueries,
     }
   }
+
+  getStaticServerVariables = (): Record<string, string> => {
+    const source: any = this.source
+    if (source && typeof source.getServerVariableBindings === "function") {
+      return source.getServerVariableBindings()
+    }
+    return {}
+  }
 }
