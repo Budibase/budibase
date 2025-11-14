@@ -313,7 +313,11 @@ async function ensureDatasourceStaticVariables(
       templateStaticVariablesChanged = true
     }
   }
-  if (!staticVariablesChanged && !templateStaticVariablesChanged && !templateUrl) {
+  if (
+    !staticVariablesChanged &&
+    !templateStaticVariablesChanged &&
+    !templateUrl
+  ) {
     return
   }
   const response = await db.put(datasource as Datasource)

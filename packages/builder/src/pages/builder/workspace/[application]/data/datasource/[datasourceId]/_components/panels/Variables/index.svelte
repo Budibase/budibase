@@ -24,7 +24,10 @@
   )
 
   const stripHandlebars = block =>
-    block.replace(/^{{\s*/, "").replace(/\s*}}$/, "").trim()
+    block
+      .replace(/^{{\s*/, "")
+      .replace(/\s*}}$/, "")
+      .trim()
 
   const extractHandlebarTokens = value => {
     if (!value) {

@@ -131,7 +131,7 @@
     class="container"
     class:container-active={toggle}
     class:container-menu={showMenu}
-    class:readOnly={readOnly}
+    class:readOnly
     class:readOnly-menu={readOnly && showMenu}
   >
     {#each fields as field, idx}
