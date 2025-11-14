@@ -43,7 +43,8 @@ export class RestImporter {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
       : undefined
-    const staticVariables = await this.getDatasourceStaticVariables(datasourceId)
+    const staticVariables =
+      await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
     let queries = await this.source.getQueries(datasourceId, {
       filterIds,
