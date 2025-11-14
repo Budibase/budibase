@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Tags, Tag } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
@@ -187,7 +187,22 @@
           }}
         />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true" />
+        <div class="premium-lock">
+          <Tags>
+            <Tag icon="lock" emphasized>Premium</Tag>
+          </Tags>
+          <Icon
+            name="plus"
+            size="M"
+            hoverable
+            tooltip="Create workspace"
+            disabled
+            on:click={() => {
+              dispatch("create")
+              workspaceMenu?.hide()
+            }}
+          />
+        </div>
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -371,12 +386,13 @@
     outline: none;
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
+    width: 100px;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
   .header-actions > :global(*),
   .header-actions-spacer {
@@ -385,5 +401,13 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .premium-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: auto;
+    height: auto;
   }
 </style>
