@@ -2,6 +2,7 @@
   import { params } from "@roxi/routify"
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
   import { datasources, integrations } from "@/stores/builder"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"
@@ -27,6 +28,11 @@
   let panelOptions = []
 
   $: datasource = $datasources.selected
+  $: templateIcon = datasource?.restTemplate
+    ? $restTemplates.templates.find(
+        template => template.name === datasource.restTemplate
+      )?.icon
+    : undefined
 
   $: isCloud = $admin.cloud
   $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
@@ -76,7 +82,7 @@
         <IntegrationIcon
           integrationType={datasource?.source}
           schema={$integrations?.[datasource?.source]}
-          iconUrl={datasource?.uiMetadata?.iconUrl}
+          iconUrl={templateIcon}
           size="26"
         />
         <Heading size="M">{$datasources.selected?.name}</Heading>
