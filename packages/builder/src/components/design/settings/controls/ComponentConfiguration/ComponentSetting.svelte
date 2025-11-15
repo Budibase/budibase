@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
   import EditComponentPopover from "../EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
   import { componentStore } from "@/stores/builder"
+  import type { ComponentSetting } from "@budibase/types"
 
   export let item
   export let bindings
@@ -9,28 +10,38 @@
   export let removeComponent
   export let nested
   export let showInstanceName = false
+  export let settings
 
   $: componentDef = componentStore.getDefinition(item._component)
-  $: displayName = showInstanceName
-    ? item._instanceName ||
-      componentDef?.friendlyName ||
-      componentDef?.name ||
-      "Component"
-    : componentDef?.friendlyName ||
-      componentDef?.name ||
-      item._instanceName ||
-      "Component"
+  $: displayName = getDisplayName(showInstanceName, item, componentDef)
+
+  function getDisplayName(
+    showInstanceName: boolean,
+    item: any,
+    componentDef: any
+  ) {
+    return showInstanceName
+      ? item._instanceName ||
+          componentDef?.friendlyName ||
+          componentDef?.name ||
+          "Component"
+      : componentDef?.friendlyName ||
+          componentDef?.name ||
+          item._instanceName ||
+          "Component"
+  }
 
   // If this is a nested setting (for example inside a grid or form block) then
   // we need to mark all the settings of the actual components as nested too, to
   // allow us to reference context provided by the block.
   // We will need to update this in future if the component gets broken into
   // multiple settings sections, as we assume a flat array.
-  const updatedNestedFlags = settings => {
-    if (!nested || !settings?.length) {
-      return settings
+  const updatedNestedFlags = (originalSettings: ComponentSetting[]) => {
+    const effectiveSettings = settings || originalSettings
+    if (!nested || !effectiveSettings?.length) {
+      return effectiveSettings
     }
-    let newSettings = settings.map(setting => ({
+    let newSettings = effectiveSettings.map((setting: ComponentSetting) => ({
       ...setting,
       nested: true,
     }))

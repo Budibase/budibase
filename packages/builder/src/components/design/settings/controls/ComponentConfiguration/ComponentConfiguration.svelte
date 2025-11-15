@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import DraggableList from "../DraggableList.svelte"
   import ComponentSetting from "./ComponentSetting.svelte"
   import { createEventDispatcher } from "svelte"
@@ -6,19 +6,25 @@
   import { componentStore } from "@/stores/builder"
   import { getEventContextBindings } from "@/dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
+  import type {
+    Component,
+    ComponentDefinition,
+    UIBinding,
+  } from "@budibase/types"
 
-  export let componentInstance
-  export let componentBindings
-  export let bindings
-  export let value
-  export let key
-  export let nested
-  export let max
-  export let component // The component type to configure (e.g., "dataprovider", "plugin/my-plugin")
+  export let componentInstance: Component
+  export let componentBindings: UIBinding[]
+  export let bindings: UIBinding[]
+  export let value: Component[]
+  export let key: string
+  export let nested: boolean
+  export let max: number | null
+  export let component: string // The component type to configure (e.g., "dataprovider", "plugin/my-plugin")
 
   const dispatch = createEventDispatcher()
 
-  let cachedValue
+  let cachedValue: Component[]
+  let componentDefinition: ComponentDefinition | null
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
@@ -28,6 +34,9 @@
   $: eventContextBindings = getEventContextBindings({
     componentInstance,
     settingKey: key,
+    componentId: componentInstance._id,
+    componentDefinition: undefined,
+    asset: undefined,
   })
   $: allBindings = [...bindings, ...eventContextBindings]
   $: itemProps = {
@@ -55,7 +64,7 @@
     }
   }
 
-  const sanitizeValue = val => {
+  const sanitizeValue = (val: Component[]): Component[] | null => {
     if (!Array.isArray(val)) {
       return null
     }
@@ -66,7 +75,7 @@
       .filter(comp => comp != null)
   }
 
-  const resolveComponentType = componentType => {
+  const resolveComponentType = (componentType: string): string | null => {
     if (!componentType) return null
 
     // If it's already a full component reference, use it
@@ -78,7 +87,7 @@
     return `@budibase/standard-components/${componentType}`
   }
 
-  const processItemUpdate = e => {
+  const processItemUpdate = (e: { detail: Component }) => {
     const updatedComponent = e.detail
     const newComponentList = [...componentList]
     const componentIdx = newComponentList.findIndex(c => {
@@ -93,31 +102,25 @@
     dispatch("change", newComponentList)
   }
 
-  const listUpdated = e => {
+  const listUpdated = (e: { detail: Component[] }) => {
     cachedValue = cloneDeep(e.detail)
     dispatch("change", [...e.detail])
   }
 
-  const buildPseudoInstance = cfg => {
+  const buildPseudoInstance = (cfg: Partial<Component>) => {
     const componentType = resolvedComponentType
     if (!componentType) {
-      console.warn(
-        "No component type resolved for componentConfiguration, component prop:",
-        component
-      )
       return null
     }
 
     const definition = componentStore.getDefinition(componentType)
     if (!definition) {
-      console.warn(
-        `Component definition not found for ${componentType}, creating basic instance`
-      )
       // Create a basic instance for plugin components that might not be loaded yet
       return {
         _id: Helpers.uuid(),
         _component: componentType,
         _instanceName: cfg._instanceName || Helpers.uuid(),
+        _styles: {},
         ...cfg,
       }
     }
@@ -128,12 +131,10 @@
         ...cfg,
       })
       if (!instance || !instance._id) {
-        console.warn(`Failed to create valid instance of ${componentType}`)
         return null
       }
       return instance
     } catch (error) {
-      console.error(`Error creating instance of ${componentType}:`, error)
       return null
     }
   }
@@ -149,7 +150,7 @@
     }
   }
 
-  const removeComponent = id => {
+  const removeComponent = (id: string) => {
     const newList = componentList.filter(component => component._id !== id)
     cachedValue = cloneDeep(newList)
     dispatch("change", newList)
