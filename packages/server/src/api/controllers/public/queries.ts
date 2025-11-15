@@ -4,7 +4,7 @@ import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
 
 export async function search(ctx: UserCtx, next: Next) {
-  await queryController.fetch(ctx)
+  await queryController.fetchQueries(ctx)
   const { name } = ctx.request.body
   ctx.body = stringSearch(ctx.body, name)
   await next()
