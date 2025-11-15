@@ -26,6 +26,7 @@
   export let helpText: string | undefined = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let searchPlaceholder: string | undefined = undefined
 
   $: arrayValue = value && !Array.isArray(value) ? [value] : (value as string[])
 
@@ -52,6 +53,7 @@
     {onOptionMouseenter}
     {onOptionMouseleave}
     bind:searchTerm
+    {searchPlaceholder}
     on:change={onChange}
     on:click
   />

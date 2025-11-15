@@ -28,6 +28,7 @@ import GeneralInfoPage from "@/settings/pages/general.svelte"
 import AutomationsPage from "@/settings/pages/automations/automations.svelte"
 import BackupsPage from "@/settings/pages/backups/index.svelte"
 import PWAPage from "@/settings/pages/pwa.svelte"
+import Translations from "@/settings/pages/translations/translations.svelte"
 import EmbedPage from "@/settings/pages/embed.svelte"
 import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
@@ -61,6 +62,7 @@ const componentMap: Record<string, ComponentType> = {
   pwa: PWAPage,
   embed: EmbedPage,
   scripts: ScriptsPage,
+  translations: Translations,
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
 }

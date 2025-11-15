@@ -43,6 +43,7 @@
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let loading: boolean | undefined = false
+  export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
 
   const dispatch = createEventDispatcher()
@@ -86,6 +87,7 @@
     {onOptionMouseenter}
     {onOptionMouseleave}
     {tooltipMessage}
+    {searchPlaceholder}
     on:change={onChange}
     on:click
   />
