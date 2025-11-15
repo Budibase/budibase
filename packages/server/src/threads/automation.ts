@@ -128,8 +128,54 @@ async function branchMatches(
   ctx: AutomationContext,
   branch: Readonly<Branch>
 ): Promise<boolean> {
+  const requiresEvaluation = (condition: any): boolean => {
+    if (!condition || typeof condition !== "object") {
+      return false
+    }
+
+    const keys = Object.keys(condition)
+    if (keys.length === 0) {
+      return false
+    }
+
+    if (keys.length === 1 && keys[0] === "onEmptyFilter") {
+      return false
+    }
+
+    for (const key of keys) {
+      if (key === "onEmptyFilter") {
+        continue
+      }
+
+      const value = condition[key]
+      if (value && typeof value === "object") {
+        if (key === "$and" || key === "$or") {
+          if (
+            value.conditions &&
+            Array.isArray(value.conditions) &&
+            value.conditions.length > 0
+          ) {
+            return true
+          }
+        } else if (Object.keys(value).length > 0) {
+          return true
+        }
+      } else if (value !== undefined && value !== null) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  if (!requiresEvaluation(branch.condition)) {
+    return true
+  }
+
   const toFilter: Record<string, any> = {}
 
+  // If the condition requires evaluation (has actual filtering logic), evaluate it.
+  // If not (empty condition), it's a default/ELSE branch that should always match.
   // Because we allow bindings on both the left and right of each condition in
   // automation branches, we can't pass the BranchSearchFilters directly to
   // dataFilters.runQuery as-is. We first need to walk the filter tree and
