@@ -107,7 +107,7 @@
     ...globalDynamicRequestBindings,
   ]
 
-  $: isTemplateDatasource = Boolean(datasource?.isRestTemplate)
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
   $: bindingPreviewContext = getBindingContext([
     requestBindings,
     globalDynamicBindings,

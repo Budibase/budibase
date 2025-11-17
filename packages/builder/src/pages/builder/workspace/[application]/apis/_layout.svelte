@@ -63,10 +63,13 @@
   )
   $: hasRestDatasources = restDatasources.length > 0
 
-  $: {
-    if (!hasRestDatasources && !$isActive("./new")) {
-      $redirect("./new")
-    }
+  const APIS_BASE_ROUTE = "/builder/workspace/:application/apis"
+
+  $: shouldRedirectToNew =
+    !hasRestDatasources && !$isActive("./new") && $isActive(APIS_BASE_ROUTE)
+
+  $: if (shouldRedirectToNew) {
+    $redirect("./new")
   }
 </script>
 

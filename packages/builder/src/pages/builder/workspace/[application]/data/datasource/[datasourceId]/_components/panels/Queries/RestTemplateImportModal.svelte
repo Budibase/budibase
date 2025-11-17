@@ -27,8 +27,6 @@
     Datasource,
     ImportRestQueryRequest,
     QueryImportEndpoint,
-    RestConfig,
-    RestTemplate,
   } from "@budibase/types"
 
   export let navigateDatasource = false
@@ -42,19 +40,20 @@
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === datasource?.source
   )
-  $: datasourceTemplateUrl = getTemplateSpecUrl(datasource)
-  $: template = getMatchingTemplate(
-    datasource,
-    restTemplateList,
-    datasourceTemplateUrl
-  )
-  $: resolvedTemplateSpecUrl = template
-    ? template.specs?.find(spec => spec.url === datasourceTemplateUrl)?.url ||
-      template.specs?.[0]?.url
+  $: template = datasource?.restTemplate
+    ? restTemplateList.find(
+        template => template.name === datasource.restTemplate
+      )
     : undefined
+  $: selectedTemplateSpec = template
+    ? template.specs?.find(
+        spec => spec.version === datasource?.restTemplateVersion
+      ) || template.specs?.[0]
+    : undefined
+  $: resolvedTemplateSpecUrl = selectedTemplateSpec?.url
   $: templateName = template?.name
   $: templateIcon = template?.icon
-  $: isTemplateDatasource = Boolean(datasource?.isRestTemplate && template)
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
   $: templateEndpointDescription = selectedEndpoint?.description || ""
   let endpointOptions: QueryImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
@@ -65,42 +64,6 @@
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
   let currentTemplateUrl: string | undefined
   let templateDocsBaseUrl: string | undefined
-
-  const getTemplateSpecUrl = (source: Datasource | undefined) => {
-    if (!source?.isRestTemplate) {
-      return undefined
-    }
-    const config = (source.config || {}) as Partial<RestConfig>
-    return typeof config.url === "string" ? config.url : undefined
-  }
-
-  const getMatchingTemplate = (
-    source: Datasource | undefined,
-    templates: RestTemplate[],
-    specUrl: string | undefined
-  ) => {
-    if (!source?.isRestTemplate) {
-      return undefined
-    }
-
-    let match = specUrl
-      ? templates.find(template =>
-          template.specs?.some(spec => spec.url === specUrl)
-        )
-      : undefined
-
-    if (!match && source.uiMetadata?.iconUrl) {
-      match = templates.find(
-        template => template.icon === source.uiMetadata?.iconUrl
-      )
-    }
-
-    if (!match && source.name) {
-      match = templates.find(template => template.name === source.name)
-    }
-
-    return match
-  }
 
   const resetEndpoints = () => {
     loadRequestId += 1
@@ -260,7 +223,7 @@
       <div class="template-modal">
         <div class="endpoint-heading">
           <IntegrationIcon
-            iconUrl={templateIcon || datasource?.uiMetadata?.iconUrl}
+            iconUrl={templateIcon}
             integrationType={datasource?.source || IntegrationTypes.REST}
             schema={restIntegration}
             size="32"
