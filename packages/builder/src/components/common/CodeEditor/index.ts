@@ -308,10 +308,8 @@ export function jsInsert(
     parsedInsert = text
   } else if (helper) {
     parsedInsert = `helpers.${text}()`
-  } else if (!left.includes('$("') || !right.includes('")')) {
-    parsedInsert = `$("${text}")`
   } else {
-    parsedInsert = text
+    parsedInsert = `$("${text}")`
   }
 
   return parsedInsert
