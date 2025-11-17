@@ -1,5 +1,9 @@
-import { RestTemplate } from "@budibase/types"
+import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import GitHubLogo from "assets/rest-template-icons/github.svg"
+import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import SlackLogo from "assets/rest-template-icons/slack.svg"
+import StripeLogo from "assets/rest-template-icons/stripe.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -8,76 +12,16 @@ interface RestTemplatesState {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Box",
-      description:
-        "Cloud content management for files, folders, collaboration, and metadata",
-      specs: [
-        {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/speakeasy-sdks/box-sdks/main/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/box.svg",
-    },
-    {
-      name: "Datadog Metrics",
-      description:
-        "Datadog metrics API for timeseries ingestion, queries, and monitor integration",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/datadog/v00.00.00000/services/metrics.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/datadog.svg",
-    },
-    {
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
       specs: [
         {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.yaml",
+          version: "1.1.4",
+          url: "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.2022-11-28.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/github.svg",
-    },
-    {
-      name: "GitLab",
-      description:
-        "GitLab REST API for groups, projects, pipelines, and DevOps automation",
-      specs: [
-        {
-          version: "latest",
-          url: "https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gitlab.svg",
-    },
-    {
-      name: "Gmail",
-      description:
-        "Google Workspace Gmail API for email, labels, drafts, and message metadata",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/googleapis.com/gmail/v1/openapi.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/gmail.svg",
-    },
-    {
-      name: "Jira",
-      description:
-        "Atlassian Jira Cloud REST API for issues, projects, and agile boards",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/jira.local/1.0.0/swagger.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/jira.svg",
+      icon: GitHubLogo,
     },
     {
       name: "PagerDuty",
@@ -85,23 +29,23 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "PagerDuty REST resources for services, incidents, and incident automation",
       specs: [
         {
-          version: "latest",
-          url: "https://raw.githubusercontent.com/stackql/stackql-provider-registry/main/providers/src/pagerduty/v00.00.00000/services/services.yaml",
+          version: "2.0.0",
+          url: "https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/pagerduty.svg",
+      icon: PagerDutyLogo,
     },
     {
-      name: "Salesforce",
+      name: "Slack Web API",
       description:
-        "CRM data, analytics, and automation via Salesforce Einstein Platform Services",
+        "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
         {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/salesforce.local/einstein/2.0.1/openapi.yaml",
+          version: "1.7.0",
+          url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/salesforce.svg",
+      icon: SlackLogo,
     },
     {
       name: "Stripe",
@@ -113,19 +57,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/stripe.svg",
-    },
-    {
-      name: "Zendesk",
-      description:
-        "Zendesk Service API for tickets, users, help center, and support workflows",
-      specs: [
-        {
-          version: "latest",
-          url: "https://developer.zendesk.com/zendesk/oas.yaml",
-        },
-      ],
-      icon: "/builder/assets/rest-template-icons/zendesk.svg",
+      icon: StripeLogo,
     },
   ],
 }
@@ -141,6 +73,13 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       templates = state.templates
     })()
     return templates
+  }
+
+  getByName(name?: RestTemplateName) {
+    if (!name) {
+      return undefined
+    }
+    return this.templates.find(template => template.name === name)
   }
 }
 

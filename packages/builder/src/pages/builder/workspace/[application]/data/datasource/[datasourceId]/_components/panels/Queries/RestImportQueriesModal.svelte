@@ -14,48 +14,97 @@
   } from "@budibase/bbui"
   import { datasources, queries } from "@/stores/builder"
   import { writable } from "svelte/store"
-  import type { Datasource } from "@budibase/types"
+  import type {
+    Datasource,
+    ImportRestQueryRequest,
+    UIFile,
+  } from "@budibase/types"
 
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
   export let createDatasource = false
   export let onCancel: (() => void) | undefined = undefined
 
-  const data = writable<{ url: string; raw: string; file?: any }>({
+  interface ImportFormData {
+    url: string
+    raw: string
+    file?: File
+  }
+
+  const data = writable<ImportFormData>({
     url: "",
     raw: "",
-    file: undefined,
   })
 
-  let lastTouched = "url"
+  let lastTouched: "url" | "file" | "raw" = "url"
 
+  let datasource: Datasource
   $: datasource = $datasources.selected as Datasource
+  let dataStringCache: string | undefined
+
+  const resetCache = () => {
+    dataStringCache = undefined
+  }
 
   const getData = async (): Promise<string> => {
+    if (dataStringCache) {
+      return dataStringCache
+    }
+
     let dataString
 
-    // parse the file into memory and send as string
     if (lastTouched === "file") {
       dataString = await $data.file?.text()
     } else if (lastTouched === "url") {
+      if (!$data.url) {
+        return ""
+      }
       const response = await fetch($data.url)
       dataString = await response.text()
     } else if (lastTouched === "raw") {
       dataString = $data.raw
     }
 
+    if (typeof dataString !== "string") {
+      return ""
+    }
+
+    const trimmed = dataString.trim()
+    if (!trimmed) {
+      return ""
+    }
+
+    dataStringCache = dataString
     return dataString
+  }
+
+  const onFileChange = async (
+    event: CustomEvent<(File | UIFile | undefined)[]>
+  ) => {
+    const [file] = event.detail ?? []
+    $data.file = file instanceof File ? file : undefined
+    lastTouched = "file"
+    resetCache()
+  }
+
+  const onRawChange = async () => {
+    lastTouched = "raw"
+    resetCache()
   }
 
   async function importQueries() {
     try {
       const dataString = await getData()
+      if (!dataString) {
+        notifications.error("Import data is missing")
+        return keepOpen
+      }
 
       if (!datasourceId && !createDatasource) {
         throw new Error("No datasource id")
       }
 
-      const body = {
+      const body: ImportRestQueryRequest = {
         data: dataString,
         datasourceId,
         datasource,
@@ -65,7 +114,6 @@
         datasourceId = importResult.datasourceId
       }
 
-      // reload
       await datasources.fetch()
       await queries.fetch()
 
@@ -86,7 +134,7 @@
   onConfirm={() => importQueries()}
   {onCancel}
   confirmText={"Import"}
-  cancelText="Back"
+  cancelText={createDatasource ? "Cancel" : "Back"}
   size="L"
 >
   <Layout noPadding>
@@ -95,23 +143,11 @@
       >Import your rest collection using one of the options below</Body
     >
     <Tabs selected="File">
-      <!-- Commenting until nginx csp issue resolved -->
-      <!-- <Tab title="Link">
-        <Input
-          bind:value={$data.url}
-          on:change={() => (lastTouched = "url")}
-          label="Enter a URL"
-          placeholder="e.g. https://petstore.swagger.io/v2/swagger.json"
-        />
-      </Tab> -->
       <Tab title="File">
         <Dropzone
           gallery={false}
           value={$data.file ? [$data.file] : []}
-          on:change={e => {
-            $data.file = e.detail?.[0]
-            lastTouched = "file"
-          }}
+          on:change={onFileChange}
           fileTags={[
             "OpenAPI 3.0",
             "OpenAPI 2.0",
@@ -126,7 +162,7 @@
       <Tab title="Raw Text">
         <TextArea
           bind:value={$data.raw}
-          on:change={() => (lastTouched = "raw")}
+          on:change={onRawChange}
           label={"Paste raw text"}
           placeholder={'e.g. curl --location --request GET "https://example.com"'}
         />
