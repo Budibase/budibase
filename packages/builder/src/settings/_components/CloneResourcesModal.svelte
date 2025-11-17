@@ -268,13 +268,10 @@
       getOptionIcon={() => undefined}
     />
     <div class="copy-data-section">
-      <Checkbox
-        bind:value={copyRows}
-        text="Copy internal table data"
-      />
+      <Checkbox bind:value={copyRows} text="Copy internal table data" />
       <p class="copy-data-warning">
-        Copying data between workspaces can be tricky, especially for attachments and linked resources.
-        Disable this if you only need schemas.
+        Copying data between workspaces can be tricky, especially for
+        attachments and linked resources. Disable this if you only need schemas.
       </p>
     </div>
 
