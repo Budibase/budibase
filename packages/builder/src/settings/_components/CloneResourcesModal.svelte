@@ -12,6 +12,7 @@
   } from "@/stores/builder"
   import { appsStore } from "@/stores/portal"
   import {
+    Checkbox,
     Modal,
     ModalContent,
     notifications,
@@ -31,6 +32,7 @@
   export const show = () => {
     isOpen = true
     toWorkspaceId = undefined
+    copyRows = true
     selectedResources = {
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
@@ -51,6 +53,7 @@
   }
 
   let toWorkspaceId: string | undefined
+  let copyRows = true
 
   let selectedResources: Record<ResourceType, DataType[]> = {
     [ResourceType.DATASOURCE]: [],
@@ -69,6 +72,7 @@
       .duplicateResourceToWorkspace({
         resources: resourcesToBeCopied.map(r => r._id),
         toWorkspace: toWorkspaceId!,
+        copyRows,
       })
       .then(() => {
         notifications.success("Resources copied successfully")
@@ -263,6 +267,16 @@
       getOptionValue={w => w.devId}
       getOptionIcon={() => undefined}
     />
+    <div class="copy-data-section">
+      <Checkbox
+        bind:value={copyRows}
+        text="Copy internal table data"
+      />
+      <p class="copy-data-warning">
+        Copying data between workspaces can be tricky, especially for attachments and linked resources.
+        Disable this if you only need schemas.
+      </p>
+    </div>
 
     {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
       {#if data.length}
@@ -287,5 +301,19 @@
 <style>
   .workspace-selection-label {
     margin-bottom: var(--bb-spacing-xs);
+  }
+
+  .copy-data-section {
+    margin: var(--bb-spacing-m) 0;
+    padding: var(--bb-spacing-m);
+    border-radius: var(--bb-border-radius-m);
+    background: var(--bb-color-surface-subtle);
+  }
+
+  .copy-data-warning {
+    margin: var(--bb-spacing-xs) 0 0;
+    color: var(--bb-color-text-muted);
+    font-size: var(--bb-font-size-s);
+    line-height: 1.4;
   }
 </style>
