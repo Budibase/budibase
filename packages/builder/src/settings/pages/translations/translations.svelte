@@ -10,6 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
+  import { licensing } from "@/stores/portal/licensing"
   import { API } from "@/api"
   import {
     UI_TRANSLATIONS,
@@ -17,6 +18,7 @@
     type TranslationCategory,
   } from "@budibase/shared-core"
   import { routeActions } from "@/settings/pages"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
 
   const categoryLabels: Record<TranslationCategory, string> = {
@@ -170,53 +172,60 @@
   }
 </script>
 
-<Layout noPadding>
-  <div class="settings">
-    <Body size="S">
-      Define custom text for user-facing elements across apps in this workspace.
-      Blank fields will fall back to Budibase defaults.
-    </Body>
-    <Divider noMargin />
-    <div class="filters">
-      <Select
-        value={selectedCategory}
-        options={categoryOptions}
-        placeholder={false}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        on:change={event => (selectedCategory = event.detail)}
+<LockedFeature
+  planType={"Enterprise"}
+  description={"Define custom text for user-facing elements across apps in this workspace."}
+  enabled={$licensing.translationsEnabled}
+  upgradeButtonClick={licensing.goToUpgradePage}
+>
+  <Layout noPadding>
+    <div class="settings">
+      <Body size="S">
+        Define custom text for user-facing elements across apps in this
+        workspace. Blank fields will fall back to Budibase defaults.
+      </Body>
+      <Divider noMargin />
+      <div class="filters">
+        <Select
+          value={selectedCategory}
+          options={categoryOptions}
+          placeholder={false}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+          on:change={event => (selectedCategory = event.detail)}
+        />
+        <Search
+          placeholder="Search translations"
+          on:change={event => (searchTerm = (event.detail || "").trim())}
+        />
+      </div>
+      <Table
+        schema={translationTableSchema}
+        data={tableData.map(row => ({
+          ...row,
+          category: row.categoryLabel,
+        }))}
+        allowEditColumns={false}
+        allowEditRows={false}
+        allowSelectRows={false}
+        {customRenderers}
+        placeholderText="No translations found"
+        on:buttonclick={onButtonClick}
       />
-      <Search
-        placeholder="Search translations"
-        on:change={event => (searchTerm = (event.detail || "").trim())}
-      />
-    </div>
-    <Table
-      schema={translationTableSchema}
-      data={tableData.map(row => ({
-        ...row,
-        category: row.categoryLabel,
-      }))}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-      {customRenderers}
-      placeholderText="No translations found"
-      on:buttonclick={onButtonClick}
-    />
-    <div class="actions">
-      <div use:routeActions class="controls">
-        <Button
-          cta
-          on:click={saveOverrides}
-          disabled={saving || !hasPendingChanges}
-        >
-          {saving ? "Saving..." : "Save"}
-        </Button>
+      <div class="actions">
+        <div use:routeActions class="controls">
+          <Button
+            cta
+            on:click={saveOverrides}
+            disabled={saving || !hasPendingChanges}
+          >
+            {saving ? "Saving..." : "Save"}
+          </Button>
+        </div>
       </div>
     </div>
-  </div>
-</Layout>
+  </Layout>
+</LockedFeature>
 
 <style>
   .settings {

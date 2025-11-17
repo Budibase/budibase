@@ -42,6 +42,7 @@ interface LicensingState {
   recaptchaEnabled: boolean
   pkceOidcEnabled: boolean
   pdfEnabled: boolean
+  translationsEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -90,6 +91,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       recaptchaEnabled: false,
       pkceOidcEnabled: false,
       pdfEnabled: false,
+      translationsEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used
@@ -216,6 +218,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const recaptchaEnabled = features.includes(Constants.Features.RECAPTCHA)
     const pkceOidcEnabled = features.includes(Constants.Features.PKCE_OIDC)
     const pdfEnabled = features.includes(Constants.Features.PDF)
+    const translationsEnabled = features.includes(
+      Constants.Features.TRANSLATIONS
+    )
     this.update(state => {
       return {
         ...state,
@@ -240,6 +245,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         pdfEnabled,
         recaptchaEnabled,
         pkceOidcEnabled,
+        translationsEnabled,
       }
     })
   }
