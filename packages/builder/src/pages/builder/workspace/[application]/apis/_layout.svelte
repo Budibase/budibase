@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Layout } from "@budibase/bbui"
   import DatasourceNavigator from "@/components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -9,10 +9,12 @@
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { IntegrationTypes } from "@/constants/backend"
   import { onMount, onDestroy } from "svelte"
+  import APIModal from "./_components/APIModal.svelte"
 
-  let searchValue
+  let searchValue: string
   let maxWidth = window.innerWidth / 3
   let panelWidth = 260
+  let apiModal: APIModal
 
   const loadPanelWidth = () => {
     const saved = localStorage.getItem("api-panel-width")
@@ -28,32 +30,21 @@
     maxWidth = window.innerWidth / 3
   }
 
-  let gridDispatch = null
-
-  const sortByDatasourceName = (a, b) =>
+  // TODO: typing
+  const sortByDatasourceName = (a: any, b: any) =>
     (a.name || "").localeCompare(b.name || "", undefined, {
       sensitivity: "base",
     })
 
+  const datasourceFilter = (datasource: any) =>
+    datasource.source === IntegrationTypes.REST
+
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     panelWidth,
-    width => {
-      if (width > maxWidth) {
-        const element = document.querySelector(".panel-container")
-        if (element) {
-          element.style.width = `${maxWidth}px`
-          width = maxWidth
-        }
-      }
-
+    (width: number) => {
       if (width) {
         localStorage.setItem("api-panel-width", width.toString())
         panelWidth = width
-      }
-    },
-    () => {
-      if (gridDispatch) {
-        gridDispatch("close-edit-column", {})
       }
     }
   )
@@ -79,6 +70,8 @@
   }
 </script>
 
+<APIModal bind:this={apiModal} />
+
 <!-- routify:options index=1 -->
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar icon="webhooks-logo" breadcrumbs={[{ text: "APIs" }]}></TopBar>
@@ -91,14 +84,15 @@
               title="APIs"
               placeholder="Search APIs"
               bind:value={searchValue}
-              onAdd={() => $goto("./new")}
+              onAdd={() => {
+                apiModal.show()
+              }}
             />
           </span>
           <Layout paddingX="L" paddingY="none" gap="S">
             <DatasourceNavigator
               searchTerm={searchValue}
-              datasourceFilter={datasource =>
-                datasource.source === IntegrationTypes.REST}
+              {datasourceFilter}
               datasourceSort={sortByDatasourceName}
               showAppUsers={false}
               showManageRoles={false}
@@ -143,6 +137,7 @@
     max-width: 33.33vw;
     height: 100%;
     overflow: visible;
+    transition: width 300ms ease-out;
   }
   .content {
     padding: 28px 40px 40px 40px;
