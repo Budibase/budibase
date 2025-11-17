@@ -5,6 +5,8 @@
   import QueryVerbRenderer from "@/components/common/renderers/QueryVerbRenderer.svelte"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
+  import RestImportQueriesModal from "./RestImportQueriesModal.svelte"
+  import RestTemplateImportModal from "./RestTemplateImportModal.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
@@ -17,6 +19,7 @@
   )
 
   let viewSelectionModal
+  let restImportModal
 
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
@@ -25,7 +28,8 @@
       ? QueryVerbRenderer
       : CapitaliseRenderer
   $: isRestDatasource = datasource?.source === "REST"
-  $: showImportButton = isRestDatasource && !datasource?.isRestTemplate
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
+  $: showImportButton = isRestDatasource && !isTemplateDatasource
   $: createQueryLabel = isRestDatasource ? "Add action" : "Create new query"
 </script>
 
@@ -41,9 +45,31 @@
   </Modal>
 {/if}
 
+{#if isRestDatasource}
+  <Modal bind:this={restImportModal}>
+    {#if isTemplateDatasource}
+      <RestTemplateImportModal
+        datasourceId={datasource._id}
+        createDatasource={false}
+      />
+    {:else}
+      <RestImportQueriesModal
+        datasourceId={datasource._id}
+        createDatasource={false}
+      />
+    {/if}
+  </Modal>
+{/if}
+
 <Panel>
   <div class="controls" slot="controls">
-    <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
+    <Button
+      cta
+      on:click={() =>
+        isTemplateDatasource
+          ? restImportModal?.show()
+          : $goto(`../../query/new/${datasource._id}`)}
+    >
       {createQueryLabel}
     </Button>
     {#if supportsViews}

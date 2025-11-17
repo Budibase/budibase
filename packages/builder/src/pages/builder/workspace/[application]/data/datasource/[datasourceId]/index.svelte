@@ -2,7 +2,8 @@
   import { params } from "@roxi/routify"
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
   import { datasources, integrations } from "@/stores/builder"
-  import ICONS from "@/components/backend/DatasourceNavigator/icons"
+  import { restTemplates } from "@/stores/builder/restTemplates"
+  import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"
   import RelationshipsPanel from "./_components/panels/Relationships.svelte"
@@ -20,6 +21,11 @@
   let panelOptions = []
 
   $: datasource = $datasources.selected
+  $: templateIcon = datasource?.restTemplate
+    ? $restTemplates.templates.find(
+        template => template.name === datasource.restTemplate
+      )?.icon
+    : undefined
 
   $: isCloud = $admin.cloud
   $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
@@ -63,10 +69,11 @@
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <header>
-        <svelte:component
-          this={ICONS[datasource.source]}
-          height="26"
-          width="26"
+        <IntegrationIcon
+          integrationType={datasource?.source}
+          schema={$integrations?.[datasource?.source]}
+          iconUrl={templateIcon}
+          size="26"
         />
         <Heading size="M">{$datasources.selected?.name}</Heading>
       </header>
