@@ -679,7 +679,12 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Configure dispatcher for proxy and/or TLS settings
-    const rejectUnauthorized = !!environment.REST_REJECT_UNAUTHORIZED
+    // Use datasource config if set, otherwise fall back to environment variable
+    const rejectUnauthorized =
+      this.config.rejectUnauthorized !== undefined
+        ? this.config.rejectUnauthorized
+        : environment.REST_REJECT_UNAUTHORIZED
+
     const proxyDispatcher = getProxyDispatcher({
       rejectUnauthorized,
     })
@@ -698,8 +703,8 @@ export class RestIntegration implements IntegrationBase {
       })
       // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
       input.dispatcher = proxyDispatcher
-    } else if (rejectUnauthorized) {
-      // No proxy, but need to disable TLS verification
+    } else if (!rejectUnauthorized) {
+      // No proxy, but need to disable TLS verification for self-signed certificates
       const agent = new Agent({
         connect: {
           rejectUnauthorized: false,
