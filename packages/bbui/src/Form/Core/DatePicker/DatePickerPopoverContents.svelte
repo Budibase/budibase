@@ -11,6 +11,7 @@
   export let enableTime
   export let timeOnly
   export let value
+  export let startDayOfWeek = "Monday"
 
   const dispatch = createEventDispatcher()
   let calendar
@@ -55,6 +56,7 @@
   {#if showCalendar}
     <Calendar
       {value}
+      {startDayOfWeek}
       on:change={e => handleChange(e.detail)}
       bind:this={calendar}
     />
