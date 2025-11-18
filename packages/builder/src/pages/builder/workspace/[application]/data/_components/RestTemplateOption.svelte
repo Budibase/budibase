@@ -11,7 +11,7 @@
 <div on:click class:disabled class="option">
   <div class="header">
     <div class="icon">
-      <img src={template.icon} width="20px" alt={template.name} />
+      <img src={template.icon} alt={template.name} />
     </div>
     <Body>{template.name}</Body>
   </div>
@@ -63,6 +63,13 @@
     display: flex;
     margin-right: 8px;
     flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon img {
+    width: 100%;
+    height: 100%;
   }
 
   .disabled {

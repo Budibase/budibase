@@ -1,15 +1,19 @@
-interface OpenAPI {
-  version:
-    | `v${number}`
-    | "latest"
-    | `${number}-${number}-${number}`
-    | `${number}.${number}`
+export interface RestTemplateSpec {
+  version: `${number}-${number}-${number}` | `${number}.${number}`
   url: string
 }
 
+export type RestTemplateSpecVersion = RestTemplateSpec["version"]
+
+export type RestTemplateName =
+  | "GitHub"
+  | "PagerDuty"
+  | "Slack Web API"
+  | "Stripe"
+
 export interface RestTemplate {
-  name: string
+  name: RestTemplateName
   description: string
-  specs: OpenAPI[]
+  specs: RestTemplateSpec[]
   icon: string
 }
