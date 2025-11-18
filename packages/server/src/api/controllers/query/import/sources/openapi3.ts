@@ -107,6 +107,20 @@ export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
   serverVariableBindings: Record<string, string> = {}
 
+  private getPrimaryServer = (): ServerObject | undefined => {
+    if (this.document?.servers?.length) {
+      return this.document.servers[0] as ServerObject
+    }
+  }
+
+  private setServerVariableBindings = (server?: ServerObject) => {
+    this.serverVariableBindings = {}
+    const variables = server?.variables || {}
+    for (let [variableName, variable] of Object.entries(variables)) {
+      this.serverVariableBindings[variableName] = variable?.default || ""
+    }
+  }
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
@@ -123,6 +137,9 @@ export class OpenAPI3 extends OpenAPISource {
   }
 
   getServerVariableBindings = () => {
+    if (!Object.keys(this.serverVariableBindings).length) {
+      this.setServerVariableBindings(this.getPrimaryServer())
+    }
     return { ...this.serverVariableBindings }
   }
 
@@ -184,15 +201,12 @@ export class OpenAPI3 extends OpenAPISource {
   ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
-    this.serverVariableBindings = {}
-    if (this.document.servers?.length) {
-      const server = this.document.servers[0] as ServerObject
-      url = server.url
-      serverVariables = server.variables || {}
-      for (let [variableName, variable] of Object.entries(serverVariables)) {
-        this.serverVariableBindings[variableName] = variable?.default || ""
-      }
+    const primaryServer = this.getPrimaryServer()
+    if (primaryServer) {
+      url = primaryServer.url
+      serverVariables = primaryServer.variables || {}
     }
+    this.setServerVariableBindings(primaryServer)
 
     const queries: Query[] = []
     const filterIds = options?.filterIds

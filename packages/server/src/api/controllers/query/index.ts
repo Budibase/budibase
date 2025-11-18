@@ -158,16 +158,25 @@ const _import = async (
 
   let datasourceId
   if (!body.datasourceId) {
-    // construct new datasource
-    let datasource: Datasource = {
+    const {
+      _id: _discardId,
+      _rev: _discardRev,
+      config: suppliedConfig,
+      ...rest
+    } = body.datasource ? cloneDeep(body.datasource) : ({} as Datasource)
+    const config = suppliedConfig || {}
+    const datasource: Datasource = {
+      ...rest,
       type: "datasource",
-      source: SourceName.REST,
+      source: rest.source || SourceName.REST,
+      name: rest.name || importInfo?.name,
       config: {
-        url: importInfo?.url,
-        defaultHeaders: [],
-        rejectUnauthorized: true,
+        ...config,
+        defaultHeaders: config.defaultHeaders ?? {},
+        rejectUnauthorized: config.rejectUnauthorized ?? true,
+        downloadImages: config.downloadImages ?? true,
+        url: config.url ?? importInfo?.url,
       },
-      name: importInfo?.name,
     }
     const datasourceConfig = datasource.config || (datasource.config = {})
     const tokens = resolveStaticVariableTokens(
@@ -180,6 +189,13 @@ const _import = async (
         datasourceConfig.staticVariables,
         tokens,
         staticVariableDefaults
+      )
+      const templateStaticVariables = new Set(
+        datasourceConfig.templateStaticVariables || []
+      )
+      tokens.forEach(token => templateStaticVariables.add(token))
+      datasourceConfig.templateStaticVariables = Array.from(
+        templateStaticVariables
       )
     }
     // save the datasource
@@ -196,11 +212,6 @@ const _import = async (
   } else {
     // use existing datasource
     datasourceId = body.datasourceId
-    await ensureDatasourceStaticVariables(
-      datasourceId,
-      staticVariableDefaults,
-      importInfo?.url
-    )
   }
 
   let importResult
@@ -289,38 +300,6 @@ function getAuthConfig(ctx: UserCtx) {
     configId: getOAuthConfigCookieId(ctx),
     sessionId: authCookie ? authCookie.sessionId : undefined,
   }
-}
-
-async function ensureDatasourceStaticVariables(
-  datasourceId: string,
-  defaults: Record<string, string>,
-  templateUrl?: string
-) {
-  if (!datasourceId) {
-    return
-  }
-  const db = context.getWorkspaceDB()
-  const datasource = await db.get<Datasource>(datasourceId)
-  datasource.config = datasource.config || {}
-  if (!datasource.config.url && templateUrl) {
-    datasource.config.url = templateUrl
-  }
-  const tokens = resolveStaticVariableTokens(defaults, datasource.config.url)
-  if (!tokens.length) {
-    return
-  }
-  datasource.config.staticVariables = datasource.config.staticVariables || {}
-  const staticVariablesChanged = assignStaticVariableDefaults(
-    datasource.config.staticVariables,
-    tokens,
-    defaults
-  )
-  if (!staticVariablesChanged && !templateUrl) {
-    return
-  }
-  const response = await db.put(datasource as Datasource)
-  await events.datasource.updated(datasource)
-  datasource._rev = response.rev
 }
 
 function enrichParameters(
