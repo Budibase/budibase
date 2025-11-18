@@ -7945,7 +7945,18 @@
       {
         "type": "boolean",
         "key": "ignoreClicksOutside",
-        "label": "Prevent manual closing",
+        "label": "Ignore clicks outside",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "hideCloseIcon",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "boolean",
+        "key": "hideCloseIcon",
+        "label": "Hide close button",
         "defaultValue": false
       },
       {
