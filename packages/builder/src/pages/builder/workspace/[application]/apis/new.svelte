@@ -33,8 +33,8 @@
     RestTemplate,
     QueryImportEndpoint,
     Datasource,
-    SourceName,
   } from "@budibase/types"
+  import { SourceName } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
