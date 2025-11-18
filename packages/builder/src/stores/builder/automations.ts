@@ -11,7 +11,6 @@ import {
 } from "@/dataBinding"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { getSequentialName } from "@/helpers/duplicate"
-import { isEnabled } from "@/helpers/featureFlags"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
   appStore,
@@ -62,7 +61,6 @@ import {
   BranchStep,
   EmptyFilterOption,
   EnrichedBinding,
-  FeatureFlag,
   GetAutomationActionDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
   isActionStep,
@@ -113,15 +111,11 @@ const getFinalDefinitions = (
   actions: GetAutomationActionDefinitionsResponse
 ): BlockDefinitions => {
   const creatable: Partial<GetAutomationTriggerDefinitionsResponse> = {}
-  const emailTriggerEnabled = isEnabled(FeatureFlag.EMAIL_TRIGGER)
   for (const [key, trigger] of Object.entries(triggers)) {
     if (key === AutomationTriggerStepId.ROW_ACTION) {
       continue
     }
     if (trigger.deprecated === true) {
-      continue
-    }
-    if (key === AutomationTriggerStepId.EMAIL && !emailTriggerEnabled) {
       continue
     }
     creatable[key as keyof GetAutomationTriggerDefinitionsResponse] = trigger
