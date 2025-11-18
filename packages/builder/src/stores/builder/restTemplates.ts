@@ -1,5 +1,9 @@
 import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import GitHubLogo from "assets/rest-template-icons/github.svg"
+import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import SlackLogo from "assets/rest-template-icons/slack.svg"
+import StripeLogo from "assets/rest-template-icons/stripe.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -17,7 +21,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.2022-11-28.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/github.svg",
+      icon: GitHubLogo,
     },
     {
       name: "PagerDuty",
@@ -29,7 +33,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/pagerduty.svg",
+      icon: PagerDutyLogo,
     },
     {
       name: "Slack Web API",
@@ -41,7 +45,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/slack.svg",
+      icon: SlackLogo,
     },
     {
       name: "Stripe",
@@ -53,7 +57,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
         },
       ],
-      icon: "/builder/assets/rest-template-icons/stripe.svg",
+      icon: StripeLogo,
     },
   ],
 }
