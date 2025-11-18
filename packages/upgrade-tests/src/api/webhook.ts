@@ -5,7 +5,7 @@ export class WebhookAPI {
   constructor(private client: BudibaseClient) {}
 
   async fetch(): Promise<Webhook[]> {
-    const { data } = await this.client.get<Webhook[]>("/api/webhooks")
+    const { data } = await this.client.get<Webhook[]>("/api/webhooks/")
     return data
   }
 
