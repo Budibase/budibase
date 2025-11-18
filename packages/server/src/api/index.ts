@@ -73,6 +73,7 @@ if (apiEnabled()) {
         noTenancyRequired: true,
       })
     )
+    .use(middleware.activeTenant())
     .use(pro.licensing())
     .use(currentWorkspace)
 
