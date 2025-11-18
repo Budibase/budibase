@@ -300,8 +300,7 @@
                 <Checkbox
                   value={isResourceSelected(type, resource._id)}
                   on:change={({ detail }) =>
-                    toggleResourceSelection(type, resource, detail)
-                  }
+                    toggleResourceSelection(type, resource, detail)}
                   text={resource.name}
                   disabled={resource.__disabled}
                 />
@@ -342,25 +341,25 @@
   }
 
   .copy-data-section {
-    margin: var(--bb-spacing-m) 0;
-    padding: var(--bb-spacing-m);
-    border-radius: var(--bb-border-radius-m);
-    background: var(--bb-color-surface-subtle);
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-s);
+    background: var(--spectrum-global-color-gray-200);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 
   .copy-data-warning {
-    margin: var(--bb-spacing-xs) 0 0;
+    margin: var(--spacing-xs) 0 0;
     color: var(--bb-color-text-muted);
     font-size: var(--bb-font-size-s);
     line-height: 1.4;
   }
 
   .resource-section {
-    margin: var(--bb-spacing-l) 0;
+    margin: var(--spacing-l) 0;
   }
 
   .resource-title {
-    margin: 0 0 var(--bb-spacing-s);
+    margin: 0 0 var(--spacing-s);
     color: var(--bb-color-text-muted);
     font-weight: var(--bb-font-weight-medium);
     font-size: var(--bb-font-size-m);
@@ -368,7 +367,7 @@
 
   .resource-list {
     display: grid;
-    gap: var(--bb-spacing-xs);
+    gap: var(--spacing-xs);
   }
 
   .resource-item {
@@ -378,7 +377,7 @@
   }
 
   .resource-note {
-    margin-left: var(--bb-spacing-s);
+    margin-left: var(--spacing-s);
     color: var(--bb-color-text-muted);
     font-size: var(--bb-font-size-s);
   }
