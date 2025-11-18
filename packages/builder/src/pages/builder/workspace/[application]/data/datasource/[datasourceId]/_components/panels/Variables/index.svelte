@@ -47,10 +47,6 @@
     if (!datasource?.restTemplate) {
       return []
     }
-    const configured = datasource?.config?.templateStaticVariables || []
-    if (configured.length) {
-      return Array.from(new Set(configured.filter(Boolean)))
-    }
     return extractHandlebarTokens(datasource?.config?.url)
   }
 

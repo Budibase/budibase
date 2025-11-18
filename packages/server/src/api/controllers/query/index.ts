@@ -30,7 +30,7 @@ import {
   SSOProviderType,
   UserCtx,
 } from "@budibase/types"
-import { cloneDeep, isEqual, merge } from "lodash"
+import { cloneDeep, merge } from "lodash"
 import { ObjectId } from "mongodb"
 import { generateQueryID } from "../../../db/utils"
 import env from "../../../environment"
@@ -77,6 +77,17 @@ const assignStaticVariableDefaults = (
     }
   }
   return changed
+}
+
+const resolveStaticVariableTokens = (
+  defaults: Record<string, string>,
+  url?: string
+) => {
+  const defaultKeys = Object.keys(defaults || {}).filter(Boolean)
+  if (defaultKeys.length) {
+    return defaultKeys
+  }
+  return extractHandlebarTokens(url)
 }
 
 function sanitiseUserStructure(user: ContextUser) {
@@ -159,12 +170,15 @@ const _import = async (
       name: importInfo?.name,
     }
     const datasourceConfig = datasource.config || (datasource.config = {})
-    const urlTokens = extractHandlebarTokens(datasourceConfig.url)
-    if (urlTokens.length) {
+    const tokens = resolveStaticVariableTokens(
+      staticVariableDefaults,
+      datasourceConfig.url
+    )
+    if (tokens.length) {
       datasourceConfig.staticVariables = datasourceConfig.staticVariables || {}
       assignStaticVariableDefaults(
         datasourceConfig.staticVariables,
-        urlTokens,
+        tokens,
         staticVariableDefaults
       )
     }
@@ -291,7 +305,7 @@ async function ensureDatasourceStaticVariables(
   if (!datasource.config.url && templateUrl) {
     datasource.config.url = templateUrl
   }
-  const tokens = extractHandlebarTokens(datasource.config.url)
+  const tokens = resolveStaticVariableTokens(defaults, datasource.config.url)
   if (!tokens.length) {
     return
   }
@@ -301,21 +315,8 @@ async function ensureDatasourceStaticVariables(
     tokens,
     defaults
   )
-  let templateStaticVariablesChanged = false
-  if (datasource.restTemplate && tokens.length) {
-    const existingTemplateVariables =
-      datasource.config.templateStaticVariables || []
-    const updatedTemplateVariables = Array.from(
-      new Set([...existingTemplateVariables, ...tokens])
-    )
-    if (!isEqual(existingTemplateVariables, updatedTemplateVariables)) {
-      datasource.config.templateStaticVariables = updatedTemplateVariables
-      templateStaticVariablesChanged = true
-    }
-  }
   if (
     !staticVariablesChanged &&
-    !templateStaticVariablesChanged &&
     !templateUrl
   ) {
     return
