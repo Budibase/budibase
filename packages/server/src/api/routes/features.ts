@@ -4,7 +4,7 @@ import { publicRoutes } from "./endpointGroups"
 import { z } from "zod"
 
 const validator = z.object({
-  flags: z.record(z.boolean()),
+  flags: z.record(z.string(), z.boolean()),
 })
 
 publicRoutes.patch(

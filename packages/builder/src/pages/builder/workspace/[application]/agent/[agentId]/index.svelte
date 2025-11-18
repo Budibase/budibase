@@ -241,7 +241,14 @@
     if (!messageCount) {
       return "No messages"
     }
-    const msg = chat.messages[messageCount - 1]?.content?.slice(0, 50)
+    const msg = chat.messages[messageCount - 1]?.parts?.some(
+      part => part.type === "text"
+    )
+      ? chat.messages[messageCount - 1]?.parts
+          ?.filter(part => part.type === "text")
+          .map(part => part.text)
+          .join("")
+      : "No preview available"
     return typeof msg === "string" ? msg : "No preview available"
   }
 

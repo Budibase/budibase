@@ -2,13 +2,11 @@ import {
   AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
-  ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
-  LLMStreamChunk,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -20,7 +18,7 @@ export interface AgentEndpoints {
   agentChatStream: (
     chat: AgentChat,
     workspaceId: string,
-    onChunk: (chunk: LLMStreamChunk) => void,
+    onChunk: (chunk: any) => void,
     onError?: (error: Error) => void
   ) => Promise<void>
 
@@ -41,7 +39,7 @@ export interface AgentEndpoints {
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   agentChatStream: async (chat, workspaceId, onChunk, onError) => {
-    const body: ChatAgentRequest = chat
+    const body = chat as any
 
     try {
       // TODO: add support for streaming into the frontend-core API object
@@ -88,8 +86,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
           if (line.startsWith("data: ")) {
             try {
               const data = line.slice(6) // Remove 'data: ' prefix
-              if (data.trim()) {
-                const chunk: LLMStreamChunk = JSON.parse(data)
+              const trimmedData = data.trim()
+              if (trimmedData && trimmedData !== "[DONE]") {
+                const chunk: any = JSON.parse(data)
                 onChunk(chunk)
               }
             } catch (parseError) {
