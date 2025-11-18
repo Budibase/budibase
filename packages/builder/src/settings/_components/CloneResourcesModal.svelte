@@ -17,7 +17,6 @@
     ModalContent,
     notifications,
     Select,
-    Table,
   } from "@budibase/bbui"
   import type { AnyDocument, UsedResource } from "@budibase/types"
   import {
@@ -95,6 +94,38 @@
     direct: true,
     __disabled: false,
   })
+
+  const sortResources = (resources: DataType[]) =>
+    [...resources].sort((a, b) =>
+      a.name.toLocaleLowerCase().localeCompare(b.name.toLowerCase())
+    )
+
+  const isResourceSelected = (type: ResourceType, id: string) =>
+    selectedResources[type].some(resource => resource._id === id)
+
+  const toggleResourceSelection = (
+    type: ResourceType,
+    resource: DataType,
+    value: boolean
+  ) => {
+    if (resource.__disabled) {
+      return
+    }
+
+    const selected = selectedResources[type]
+    const exists = selected.find(item => item._id === resource._id)
+
+    if (value && !exists) {
+      selectedResources[type] = [...selected, { ...resource, direct: true }]
+      return
+    }
+
+    if (!value && exists) {
+      selectedResources[type] = selected.filter(
+        item => item._id !== resource._id
+      )
+    }
+  }
 
   $: $tables.list.forEach(t => rowActions.refreshRowActions(t._id!))
 
@@ -259,29 +290,38 @@
     {disabled}
     {confirmText}
   >
-    <div class="copy-data-section">
-      <Checkbox bind:value={copyRows} text="Copy internal table data" />
-      <p class="copy-data-warning">
-        Copying data between workspaces can be tricky, especially for
-        attachments and linked resources. Disable this if you only need schemas.
-      </p>
-    </div>
-
     {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
       {#if data.length}
-        <Table
-          bind:selectedRows={selectedResources[type]}
-          data={data.sort((a, b) =>
-            a.name.toLocaleLowerCase().localeCompare(b.name.toLowerCase())
-          )}
-          disableSorting
-          schema={{ name: { type: "string", displayName } }}
-          allowEditColumns={false}
-          allowEditRows={false}
-          allowSelectRows
-          compact
-          quiet
-        />
+        <div class="resource-section">
+          <p class="resource-title">{displayName}</p>
+          <div class="resource-list">
+            {#each sortResources(data) as resource}
+              <div class="resource-item">
+                <Checkbox
+                  value={isResourceSelected(type, resource._id)}
+                  on:change={({ detail }) =>
+                    toggleResourceSelection(type, resource, detail)
+                  }
+                  text={resource.name}
+                  disabled={resource.__disabled}
+                />
+                {#if resource.__disabled}
+                  <span class="resource-note">Included automatically</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          {#if type === ResourceType.TABLE}
+            <div class="copy-data-section">
+              <Checkbox bind:value={copyRows} text="Copy internal table data" />
+              <p class="copy-data-warning">
+                Copying data between workspaces can be tricky, especially for
+                attachments and linked resources. Disable this if you only need
+                schemas.
+              </p>
+            </div>
+          {/if}
+        </div>
       {/if}
     {/each}
 
@@ -313,5 +353,33 @@
     color: var(--bb-color-text-muted);
     font-size: var(--bb-font-size-s);
     line-height: 1.4;
+  }
+
+  .resource-section {
+    margin: var(--bb-spacing-l) 0;
+  }
+
+  .resource-title {
+    margin: 0 0 var(--bb-spacing-s);
+    color: var(--bb-color-text-muted);
+    font-weight: var(--bb-font-weight-medium);
+    font-size: var(--bb-font-size-m);
+  }
+
+  .resource-list {
+    display: grid;
+    gap: var(--bb-spacing-xs);
+  }
+
+  .resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .resource-note {
+    margin-left: var(--bb-spacing-s);
+    color: var(--bb-color-text-muted);
+    font-size: var(--bb-font-size-s);
   }
 </style>
