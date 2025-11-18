@@ -7,7 +7,6 @@
 
   export let datasource
   export let updatedDatasource
-  let localUpdatedDatasource
   $: localUpdatedDatasource = cloneDeep(datasource ?? updatedDatasource)
 
   const updateAuthConfigs = async newAuthConfigs => {

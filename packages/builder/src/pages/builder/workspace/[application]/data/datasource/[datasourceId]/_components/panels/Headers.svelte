@@ -16,7 +16,6 @@
   let addHeader
 
   // Use parent-provided updatedDatasource when available
-  let localUpdatedDatasource
   $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
   $: parsedHeaders = runtimeToReadableMap(
     restBindings,
