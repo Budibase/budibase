@@ -106,13 +106,8 @@
     }
   }
   $: resourceTypesToDisplay = {
-    [ResourceType.WORKSPACE_APP]: {
-      displayName: "Apps",
-      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
-      type: ResourceType.WORKSPACE_APP,
-    },
     [ResourceType.TABLE]: {
-      displayName: "BB tables",
+      displayName: "Tables",
       data: $tables.list
         .filter(
           t =>
@@ -122,17 +117,22 @@
         .map(mapToDataType),
       type: ResourceType.TABLE,
     },
+    [ResourceType.WORKSPACE_APP]: {
+      displayName: "Apps",
+      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
+      type: ResourceType.WORKSPACE_APP,
+    },
+    [ResourceType.AUTOMATION]: {
+      displayName: "Automations",
+      data: $automationStore.automations.map(mapToDataType),
+      type: ResourceType.AUTOMATION,
+    },
     [ResourceType.DATASOURCE]: {
       displayName: "Datasources",
       data: $datasources.list
         .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
         .map(mapToDataType),
       type: ResourceType.DATASOURCE,
-    },
-    [ResourceType.AUTOMATION]: {
-      displayName: "Automations",
-      data: $automationStore.automations.map(mapToDataType),
-      type: ResourceType.AUTOMATION,
     },
     [ResourceType.QUERY]: {
       displayName: "Queries",
@@ -253,20 +253,12 @@
   }}
 >
   <ModalContent
-    title={`Copy resources`}
+    title={`Copy resources between workspaces`}
     {onConfirm}
-    size="M"
+    size="L"
     {disabled}
     {confirmText}
   >
-    <p class="workspace-selection-label">Select the destination workspace:</p>
-    <Select
-      bind:value={toWorkspaceId}
-      options={otherWorkspaces.sort((a, b) => a.name.localeCompare(b.name))}
-      getOptionLabel={w => w.name.trim()}
-      getOptionValue={w => w.devId}
-      getOptionIcon={() => undefined}
-    />
     <div class="copy-data-section">
       <Checkbox bind:value={copyRows} text="Copy internal table data" />
       <p class="copy-data-warning">
@@ -292,12 +284,21 @@
         />
       {/if}
     {/each}
+
+    <p class="workspace-selection-label">Select the destination workspace:</p>
+    <Select
+      bind:value={toWorkspaceId}
+      options={otherWorkspaces.sort((a, b) => a.name.localeCompare(b.name))}
+      getOptionLabel={w => w.name.trim()}
+      getOptionValue={w => w.devId}
+      getOptionIcon={() => undefined}
+    />
   </ModalContent>
 </Modal>
 
 <style>
   .workspace-selection-label {
-    margin-bottom: var(--bb-spacing-xs);
+    margin-bottom: -0.5rem;
   }
 
   .copy-data-section {
