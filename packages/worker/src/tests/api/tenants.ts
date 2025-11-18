@@ -1,6 +1,6 @@
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
-import { LockRequest } from "@budibase/types"
+import { LockRequest, ActivationRequest } from "@budibase/types"
 
 export class TenantAPI extends TestAPI {
   config: TestConfiguration
@@ -19,6 +19,18 @@ export class TenantAPI extends TestAPI {
   lock = (tenantId: string, body: LockRequest, opts?: TestAPIOpts) => {
     return this.request
       .put(`/api/system/tenants/${tenantId}/lock`)
+      .send(body)
+      .set(opts?.headers)
+      .expect(opts?.status ? opts.status : 204)
+  }
+
+  activation = (
+    tenantId: string,
+    body: ActivationRequest,
+    opts?: TestAPIOpts
+  ) => {
+    return this.request
+      .put(`/api/system/tenants/${tenantId}/activation`)
       .send(body)
       .set(opts?.headers)
       .expect(opts?.status ? opts.status : 204)
