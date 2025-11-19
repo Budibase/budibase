@@ -32,7 +32,7 @@
     const next = {}
     values.forEach(({ name, value }) => {
       const key = (name ?? "").toString().trim()
-      const valStr = value == null ? "" : value.toString ? value.toString() : ""
+      const valStr = value?.toString?.() || ""
       const val = valStr.trim()
       if (key !== "" || val !== "") {
         next[key] = value
