@@ -283,13 +283,11 @@
     isOpen = false
   }}
 >
-  <ModalContent
-    title={`Copy resources between workspaces`}
-    {onConfirm}
-    size="L"
-    {disabled}
-    {confirmText}
-  >
+  <ModalContent {onConfirm} size="L" {disabled} {confirmText}>
+    <div class="copy-resources-title">Copy resources between workspaces</div>
+    <div class="copy-resources-subtitle">
+      Select resources from this workspace
+    </div>
     {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
       {#if data.length}
         <div class="resource-section">
@@ -312,12 +310,13 @@
           </div>
           {#if type === ResourceType.TABLE}
             <div class="copy-data-section">
-              <Checkbox bind:value={copyRows} text="Copy internal table data" />
               <p class="copy-data-warning">
-                Copying data between workspaces can be tricky, especially for
-                attachments and linked resources. Disable this if you only need
-                schemas.
+                By default only the table schemas are copied. To include row
+                data, select the box below - but note that copying large
+                attachments and relationship data can be complex and sometimes
+                not reliable.
               </p>
+              <Checkbox bind:value={copyRows} text="Copy row data" />
             </div>
           {/if}
         </div>
@@ -340,34 +339,29 @@
     margin-bottom: -0.5rem;
   }
 
+  .copy-resources-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+  }
+
+  .copy-resources-subtitle {
+    font-size: var(--font-size-l);
+  }
+
   .copy-data-section {
     padding: var(--spacing-l);
     border-radius: var(--border-radius-s);
     background: var(--spectrum-global-color-gray-200);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 
   .copy-data-warning {
     margin: var(--spacing-xs) 0 0;
-    color: var(--bb-color-text-muted);
-    font-size: var(--bb-font-size-s);
     line-height: 1.4;
-  }
-
-  .resource-section {
-    margin: var(--spacing-l) 0;
   }
 
   .resource-title {
     margin: 0 0 var(--spacing-s);
-    color: var(--bb-color-text-muted);
-    font-weight: var(--bb-font-weight-medium);
-    font-size: var(--bb-font-size-m);
-  }
-
-  .resource-list {
-    display: grid;
-    gap: var(--spacing-xs);
+    font-size: var(--font-size-l);
   }
 
   .resource-item {
@@ -378,7 +372,5 @@
 
   .resource-note {
     margin-left: var(--spacing-s);
-    color: var(--bb-color-text-muted);
-    font-size: var(--bb-font-size-s);
   }
 </style>
