@@ -681,9 +681,9 @@ export class RestIntegration implements IntegrationBase {
     // Configure dispatcher for proxy and/or TLS settings
     // Use datasource config if set, otherwise fall back to environment variable
     const rejectUnauthorized =
-      this.config.rejectUnauthorized !== undefined
-        ? this.config.rejectUnauthorized
-        : environment.REST_REJECT_UNAUTHORIZED
+      this.config.rejectUnauthorized === undefined
+        ? environment.REST_REJECT_UNAUTHORIZED
+        : this.config.rejectUnauthorized
 
     const proxyDispatcher = getProxyDispatcher({
       rejectUnauthorized,
