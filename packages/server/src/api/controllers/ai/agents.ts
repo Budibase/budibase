@@ -80,6 +80,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   try {
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+
     const openai = createOpenAI({
       apiKey,
       baseURL: baseUrl,
@@ -87,7 +88,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const model = openai(modelId)
 
     const aiTools = toAiSdkTools(allTools)
-    console.log("aiTools", aiTools)
     const result = await streamText({
       model,
       messages: convertToModelMessages(chat.messages),
@@ -95,17 +95,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools: aiTools,
     })
 
-    let title: string
-    if (!chat.title) {
-      const { text } = await generateText({
-        model,
-        messages: [convertToModelMessages(chat.messages)[0]],
-        system: ai.agentHistoryTitleSystemPrompt(),
-      })
-      title = text
-    } else {
-      title = chat.title
-    }
+    const title =
+      chat.title ||
+      (
+        await generateText({
+          model,
+          messages: [convertToModelMessages(chat.messages)[0]],
+          system: ai.agentHistoryTitleSystemPrompt(),
+        })
+      ).text
 
     ctx.respond = false
     result.pipeUIMessageStreamToResponse(ctx.res, {
