@@ -36,6 +36,11 @@ describe("getAttachmentHeaders", () => {
     expect(contentDisposition).toBe(`inline; filename="report.pdf"`)
   })
 
+  it("should leave inline content disposition without parameters alone", () => {
+    const { contentDisposition } = getAttachmentHeaders(headers("inline"))
+    expect(contentDisposition).toBe("inline")
+  })
+
   it("should handle an image", () => {
     const { contentDisposition } = getAttachmentHeaders(
       headers("", "image/png"),

@@ -12,15 +12,23 @@ export function getAttachmentHeaders(
   // all content-disposition headers should be format disposition-type; parameters
   // but some APIs do not provide a type, causing the parse below to fail - add one to fix this
   if (contentDisposition) {
-    const quotesRegex = /"(?:[^"\\]|\\.)*"|;/g
-    let match: RegExpMatchArray | null = null,
-      found = false
-    while ((match = quotesRegex.exec(contentDisposition)) !== null) {
+    const tokenRegex = /"(?:[^"\\]|\\.)*"|[;=]/g
+    // Example match: parses "filename=\"report.pdf\"; size=123" into the quoted filename token and the ; or = separators
+    let match: RegExpMatchArray | null = null
+    let hasSeparator = false
+    let hasParameters = false
+
+    while ((match = tokenRegex.exec(contentDisposition)) !== null) {
       if (match[0] === ";") {
-        found = true
+        hasSeparator = true
+        break
+      }
+      if (match[0] === "=") {
+        hasParameters = true
       }
     }
-    if (!found) {
+
+    if (!hasSeparator && hasParameters) {
       return {
         contentDisposition: `attachment; ${contentDisposition}`,
         contentType,
