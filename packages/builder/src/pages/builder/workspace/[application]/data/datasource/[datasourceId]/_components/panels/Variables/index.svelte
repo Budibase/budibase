@@ -8,7 +8,6 @@
   import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "../Panel.svelte"
   import { onMount } from "svelte"
-  import { findHBSBlocks } from "@budibase/string-templates"
 
   export let datasource
   export let updatedDatasource
@@ -23,35 +22,12 @@
     query => query.datasourceId === datasource?._id
   )
 
-  const stripHandlebars = block =>
-    block
-      .replace(/^{{\s*/, "")
-      .replace(/\s*}}$/, "")
-      .trim()
-
-  const extractHandlebarTokens = value => {
-    if (!value) {
-      return []
-    }
-    const tokens = new Set()
-    findHBSBlocks(value).forEach(block => {
-      const token = stripHandlebars(block)
-      if (token) {
-        tokens.add(token)
-      }
-    })
-    return Array.from(tokens)
-  }
-
   const getTemplateStaticVariableKeys = datasource => {
     if (!datasource?.restTemplate) {
       return []
     }
     const configured = datasource?.config?.templateStaticVariables || []
-    if (configured.length) {
-      return Array.from(new Set(configured.filter(Boolean)))
-    }
-    return extractHandlebarTokens(datasource?.config?.url)
+    return Array.from(new Set(configured.filter(Boolean)))
   }
 
   const buildStaticVariablesObject = values => {
