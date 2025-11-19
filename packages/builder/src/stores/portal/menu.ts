@@ -1,4 +1,5 @@
 import { Readable, readable } from "svelte/store"
+import { BUILDER_URLS } from "@budibase/shared-core"
 
 interface MenuItem {
   title: string
@@ -10,6 +11,6 @@ interface MenuItem {
 export const menu: Readable<MenuItem[]> = readable([
   {
     title: "Workspaces",
-    href: "/builder/portal/workspaces",
+    href: BUILDER_URLS.WORKSPACES,
   },
 ])
