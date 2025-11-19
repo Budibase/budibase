@@ -16,7 +16,6 @@
   let addHeader
 
   // Use parent-provided updatedDatasource when available
-  let localUpdatedDatasource
   $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
   $: parsedHeaders = runtimeToReadableMap(
     restBindings,
@@ -27,8 +26,7 @@
     const flatHeaders = cloneDeep(headers).reduce((acc, entry) => {
       const name = (entry?.name ?? "").toString().trim()
       const valueRaw = entry?.value
-      const valueStr =
-        valueRaw == null ? "" : valueRaw.toString ? valueRaw.toString() : ""
+      const valueStr = valueRaw?.toString?.() || ""
       const value = valueStr.trim()
 
       if (name !== "" || value !== "") {
