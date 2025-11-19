@@ -6,7 +6,6 @@
   import { onDestroy } from "svelte"
   import { onMount } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import { createEventDispatcher } from "svelte"
   import type { UIMessage, UIMessageChunk } from "ai"
 
   export let API = createAPIClient()
@@ -14,8 +13,6 @@
   export let workspaceId: string
   export let chat: AgentChat
   export let loading: boolean = false
-
-  const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
 
   let inputValue = ""
   let chatAreaElement: HTMLDivElement

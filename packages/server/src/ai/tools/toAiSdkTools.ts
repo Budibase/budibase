@@ -1,18 +1,21 @@
 import { Tool as BudibaseTool } from "@budibase/types"
-import { tool } from "ai"
+import { tool, zodSchema, type ToolSet } from "ai"
 import { z } from "zod"
 
-export function toAiSdkTools(tools: BudibaseTool[]) {
-  const mapped: Record<string, ReturnType<typeof tool>> = {}
+export function toAiSdkTools(tools: BudibaseTool[]): ToolSet {
+  const mapped: ToolSet = {}
+
   for (const t of tools) {
-    const inputSchema = t.parameters ?? z.object({})
+    const schema = t.parameters ?? z.object({})
+
     mapped[t.name] = tool({
       description: t.description,
-      inputSchema: inputSchema as z.ZodType<any, any, any>,
-      execute: async args => {
-        return await t.handler(args)
+      inputSchema: zodSchema(schema),
+      execute: async (input: unknown) => {
+        return await t.handler(input)
       },
     })
   }
+
   return mapped
 }

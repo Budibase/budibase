@@ -87,7 +87,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const model = openai(modelId)
 
     const aiTools = toAiSdkTools(allTools)
-
+    console.log("aiTools", aiTools)
     const result = await streamText({
       model,
       messages: convertToModelMessages(chat.messages),
