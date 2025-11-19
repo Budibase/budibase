@@ -5,28 +5,47 @@
   import { getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
   import { queries } from "@/stores/builder"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
   import { onMount } from "svelte"
 
   export let datasource
+  export let updatedDatasource
+  export let markDirty
 
-  $: updatedDatasource = cloneDeep(datasource)
+  // Use parent-provided updatedDatasource when available
+  $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
 
   $: queriesForDatasource = $queries.list.filter(
     query => query.datasourceId === datasource?._id
   )
 
-  const handleChange = newUnparsedStaticVariables => {
-    const newStaticVariables = {}
-
-    newUnparsedStaticVariables.forEach(({ name, value }) => {
-      newStaticVariables[name] = value
+  const buildStaticVariablesObject = values => {
+    const next = {}
+    values.forEach(({ name, value }) => {
+      const key = (name ?? "").toString().trim()
+      const valStr = value?.toString?.() || ""
+      const val = valStr.trim()
+      if (key !== "" || val !== "") {
+        next[key] = value
+      }
     })
+    return next
+  }
 
-    updatedDatasource.config.staticVariables = newStaticVariables
+  const handleStaticChange = newUnparsedStaticVariables => {
+    if (!localUpdatedDatasource) {
+      return
+    }
+    localUpdatedDatasource.config = localUpdatedDatasource.config || {}
+    const prev = localUpdatedDatasource.config.staticVariables || {}
+    const newStaticVariables = buildStaticVariablesObject(
+      newUnparsedStaticVariables
+    )
+    if (!isEqual(prev, newStaticVariables)) {
+      localUpdatedDatasource.config.staticVariables = newStaticVariables
+      markDirty && markDirty()
+    }
   }
 
   onMount(async () => {
@@ -39,13 +58,6 @@
 </script>
 
 <Panel>
-  <SaveDatasourceButton slot="controls" {datasource} {updatedDatasource} />
-  <Tooltip
-    slot="tooltip"
-    title="REST variables"
-    href="https://docs.budibase.com/docs/rest-variables"
-  />
-
   <Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Static</Heading>
@@ -53,8 +65,8 @@
         name="Variable"
         keyPlaceholder="Name"
         headings
-        object={updatedDatasource.config.staticVariables}
-        on:change={({ detail }) => handleChange(detail)}
+        object={localUpdatedDatasource?.config?.staticVariables || {}}
+        on:change={({ detail }) => handleStaticChange(detail)}
         bindings={$licensing.environmentVariablesEnabled
           ? getEnvironmentBindings()
           : []}
