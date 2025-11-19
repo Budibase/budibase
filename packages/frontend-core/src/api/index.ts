@@ -96,14 +96,11 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     const accountLocked = response.headers.get("X-Account-Locked") === "1"
     const retryAfter = response.headers.get("Retry-After")
     if (accountLocked) {
-      const seconds = retryAfter ? parseInt(retryAfter) : undefined
-      if (seconds && !isNaN(seconds)) {
-        const minutes = Math.ceil(seconds / 60)
-        message = `Account temporarily locked. Try again in ${
-          minutes >= 1
-            ? `${minutes} minute${minutes > 1 ? "s" : ""}`
-            : `${seconds} seconds`
-        }.`
+      const seconds = Number(retryAfter)
+      if (Number.isFinite(seconds)) {
+        const remainingTime = seconds < 60 ? seconds : Math.ceil(seconds / 60)
+        const timeUnit = seconds < 60 ? "second" : "minute"
+        message = `Account temporarily locked. Try again in ${remainingTime} ${timeUnit}${remainingTime === 1 ? "" : "s"}.`
       } else {
         message = "Account temporarily locked. Try again later."
       }
