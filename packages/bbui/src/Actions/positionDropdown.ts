@@ -94,9 +94,13 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
         const overflows = styles.left + elementBounds.width > winWidth
         return overflows && anchorBounds.left > winWidth - anchorBounds.right
       }
-      const doesYOverflow = () => {
+      const doesYOverflowBottom = () => {
         const overflows = styles.top + elementBounds.height > winHeight
         return overflows && anchorBounds.top > winHeight - anchorBounds.bottom
+      }
+      const doesYOverflowTop = () => {
+        const overflows = styles.top < screenOffset
+        return overflows && anchorBounds.bottom < winHeight - anchorBounds.top
       }
 
       // Applies a dynamic max height constraint if appropriate
@@ -167,6 +171,12 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
         }
       }
 
+      // Applies top edge sticking when popover overflows above viewport
+      const applyTopEdgeStick = () => {
+        styles.top = screenOffset
+        applyMaxHeight(winHeight - 2 * screenOffset)
+      }
+
       // Determine X strategy
       if (align === PopoverAlignment.Right) {
         applyXStrategy("EndToEnd")
@@ -215,12 +225,12 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
           applyXStrategy("EndToStart")
         }
       }
-      if (doesYOverflow()) {
+      if (doesYOverflowBottom()) {
         // If wrapping, lock to the bottom of the screen and also reposition to
         // the side to not block the anchor
         if (wrap) {
           applyYStrategy("MidPoint")
-          if (doesYOverflow()) {
+          if (doesYOverflowBottom()) {
             applyYStrategy("ScreenEdge")
           }
           applyXStrategy("StartToEnd")
@@ -241,6 +251,15 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
           else {
             applyYStrategy("EndToStart")
           }
+        }
+      }
+      // Handle top overflow for outside alignments
+      if (doesYOverflowTop()) {
+        if (
+          align === PopoverAlignment.LeftOutside ||
+          align === PopoverAlignment.RightOutside
+        ) {
+          applyTopEdgeStick()
         }
       }
     }

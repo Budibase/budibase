@@ -48,7 +48,6 @@ describe("/backups", () => {
       const encodeIfNeeded = (value: string) =>
         opts.isEncrypted ? `${value}.enc` : value
       const expectedFiles = [
-        "budibase-client.esm.js",
         "budibase-client.js",
         "db.txt",
         "manifest.json",

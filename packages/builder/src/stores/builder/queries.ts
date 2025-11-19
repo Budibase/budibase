@@ -10,6 +10,8 @@ import {
   PreviewQueryResponse,
   SaveQueryRequest,
   ImportRestQueryRequest,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   QuerySchema,
 } from "@budibase/types"
 
@@ -18,6 +20,9 @@ const sortQueries = (queryList: Query[]) => {
     return q1.name.localeCompare(q2.name)
   })
 }
+
+const skipUnsavedPromptIds = new Set<string>()
+let skipNextUnsavedPrompt = false
 
 interface BuilderQueryStore {
   list: Query[]
@@ -88,6 +93,7 @@ export class QueryStore extends DerivedBudiStore<
       }
       sortQueries(queries)
       return {
+        ...state,
         list: queries,
         selectedQueryId: savedQuery._id || null,
       }
@@ -97,6 +103,12 @@ export class QueryStore extends DerivedBudiStore<
 
   async importQueries(data: ImportRestQueryRequest) {
     return await API.importQueries(data)
+  }
+
+  async fetchImportInfo(
+    data: ImportRestQueryInfoRequest
+  ): Promise<ImportRestQueryInfoResponse> {
+    return await API.getImportInfo(data)
   }
 
   select(id: string | null) {
@@ -126,6 +138,7 @@ export class QueryStore extends DerivedBudiStore<
       ...state,
       list: state.list.filter(existing => existing._id !== query._id),
     }))
+    skipUnsavedPromptIds.delete(query._id)
   }
 
   async duplicate(query: Query) {
@@ -144,13 +157,48 @@ export class QueryStore extends DerivedBudiStore<
   }
 
   removeDatasourceQueries(datasourceId: string) {
-    this.store.update(state => ({
-      ...state,
-      list: state.list.filter(table => table.datasourceId !== datasourceId),
-    }))
+    this.store.update(state => {
+      state.list
+        .filter(query => query.datasourceId === datasourceId)
+        .forEach(query => {
+          if (query._id) {
+            skipUnsavedPromptIds.delete(query._id)
+          }
+        })
+      return {
+        ...state,
+        list: state.list.filter(table => table.datasourceId !== datasourceId),
+      }
+    })
   }
 
   init = this.fetch
 }
 
 export const queries = new QueryStore()
+
+export const markSkipUnsavedPrompt = (queryId?: string | null) => {
+  skipNextUnsavedPrompt = true
+  if (!queryId) {
+    return
+  }
+  skipUnsavedPromptIds.add(queryId)
+}
+
+export const consumeSkipUnsavedPrompt = (queryId?: string | null) => {
+  if (skipNextUnsavedPrompt) {
+    skipNextUnsavedPrompt = false
+    if (queryId) {
+      skipUnsavedPromptIds.delete(queryId)
+    }
+    return true
+  }
+  if (!queryId) {
+    return false
+  }
+  const shouldSkip = skipUnsavedPromptIds.has(queryId)
+  if (shouldSkip) {
+    skipUnsavedPromptIds.delete(queryId)
+  }
+  return shouldSkip
+}

@@ -4540,6 +4540,25 @@
         "defaultValue": false
       },
       {
+        "type": "select",
+        "label": "Week starts on",
+        "key": "startDayOfWeek",
+        "placeholder": "Browser locale",
+        "options": [
+          { "label": "Monday", "value": "Monday" },
+          { "label": "Tuesday", "value": "Tuesday" },
+          { "label": "Wednesday", "value": "Wednesday" },
+          { "label": "Thursday", "value": "Thursday" },
+          { "label": "Friday", "value": "Friday" },
+          { "label": "Saturday", "value": "Saturday" },
+          { "label": "Sunday", "value": "Sunday" }
+        ],
+        "dependsOn": {
+          "setting": "timeOnly",
+          "value": false
+        }
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue",
@@ -7927,6 +7946,17 @@
         "type": "boolean",
         "key": "ignoreClicksOutside",
         "label": "Ignore clicks outside",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "hideCloseIcon",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "boolean",
+        "key": "hideCloseIcon",
+        "label": "Hide close button",
         "defaultValue": false
       },
       {
@@ -8892,5 +8922,41 @@
         }
       ]
     }
+  },
+  "chatbox": {
+    "name": "Chatbox",
+    "description": "Embed the Budibase chat experience inside your app.",
+    "icon": "chat",
+    "new": true,
+    "showSettingsBar": true,
+    "size": {
+      "width": 640,
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "styles": ["padding", "background", "border"],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Intro text",
+        "key": "intro",
+        "defaultValue": "Ask our assistant anything about this app."
+      },
+      {
+        "type": "text",
+        "label": "Input placeholder",
+        "key": "placeholder",
+        "defaultValue": "Ask Budibase..."
+      },
+      {
+        "type": "text",
+        "label": "Send button label",
+        "key": "sendButtonLabel",
+        "defaultValue": "Send"
+      }
+    ]
   }
 }

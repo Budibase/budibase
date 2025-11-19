@@ -5,6 +5,7 @@ import { UpdateWorkspaceRequest, Workspace } from "@budibase/types"
 import { derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
+import { sdk } from "@budibase/shared-core"
 
 export interface PortalAppsStore {
   apps: StoreApp[]
@@ -174,6 +175,7 @@ export const enrichedApps = derived(
         lockedYou: app.lockedBy != null && app.lockedBy.email === user?.email,
         lockedOther: app.lockedBy != null && app.lockedBy.email !== user?.email,
         favourite: !!user?.appFavourites?.includes(app.appId),
+        editable: sdk.users.isBuilder(user, app?.devId),
       }
     })
 

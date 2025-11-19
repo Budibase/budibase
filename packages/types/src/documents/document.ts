@@ -39,11 +39,13 @@ export enum DocumentType {
   ROW_ACTIONS = "ra",
   OAUTH2_CONFIG = "oauth2",
   OAUTH2_CONFIG_LOG = "oauth2log",
+  AGENT = "agent",
   AGENT_CHAT = "agentchat",
   AGENT_TOOL_SOURCE = "agenttoolsource",
   AI_CONFIG = "aiconfig",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
+  AUTO_COLUMN_STATE = "autocolumn_state",
 }
 
 // these are the core documents that make up the data, design

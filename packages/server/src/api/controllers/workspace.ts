@@ -447,6 +447,7 @@ async function performWorkspaceCreate(
         "customTheme",
         "icon",
         "snippets",
+        "scripts",
         "creationVersion",
       ]
       keys.forEach(key => {

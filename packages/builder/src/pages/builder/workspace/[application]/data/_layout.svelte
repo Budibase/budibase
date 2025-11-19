@@ -8,6 +8,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { onMount, onDestroy, setContext } from "svelte"
+  import { IntegrationTypes } from "@/constants/backend"
 
   let searchValue
   const MIN_PANEL_WIDTH = 320
@@ -108,7 +109,11 @@
             />
           </span>
           <Layout paddingX="L" paddingY="none" gap="S">
-            <DatasourceNavigator searchTerm={searchValue} />
+            <DatasourceNavigator
+              searchTerm={searchValue}
+              datasourceFilter={datasource =>
+                datasource.source !== IntegrationTypes.REST}
+            />
           </Layout>
         </Panel>
         <div class="divider">
@@ -121,7 +126,7 @@
       </div>
     {/if}
 
-    <div class="content">
+    <div class="content drawer-container">
       <slot />
     </div>
   </div>

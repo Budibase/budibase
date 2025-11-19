@@ -155,9 +155,9 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
       width: 220,
     },
     Status: {
-      type: FieldType.ARRAY,
+      type: FieldType.OPTIONS,
       constraints: {
-        type: JsonFieldSubType.ARRAY,
+        type: FieldType.STRING,
         presence: {
           allowEmpty: false,
         },
@@ -296,9 +296,9 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
       },
     },
     "Employee Level": {
-      type: FieldType.ARRAY,
+      type: FieldType.OPTIONS,
       constraints: {
-        type: JsonFieldSubType.ARRAY,
+        type: FieldType.STRING,
         presence: false,
         inclusion: ["Manager", "Junior", "Senior", "Apprentice", "Contractor"],
       },
