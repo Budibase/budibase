@@ -13,6 +13,7 @@ export function getAttachmentHeaders(
   // but some APIs do not provide a type, causing the parse below to fail - add one to fix this
   if (contentDisposition) {
     const tokenRegex = /"(?:[^"\\]|\\.)*"|[;=]/g
+    // Example match: parses "filename=\"report.pdf\"; size=123" into the quoted filename token and the ; or = separators
     let match: RegExpMatchArray | null = null
     let hasSeparator = false
     let hasParameters = false
