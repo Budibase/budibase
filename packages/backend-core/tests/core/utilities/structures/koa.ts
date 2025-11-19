@@ -1,4 +1,5 @@
 import { createMockContext, createMockCookies } from "@shopify/jest-koa-mocks"
+import UserAgent from "koa-useragent/dist/lib/useragent"
 import { Ctx } from "@budibase/types"
 
 export const newContext = (): Ctx => {
@@ -6,15 +7,20 @@ export const newContext = (): Ctx => {
     throw: jest.fn().mockImplementation(() => {
       throw new Error()
     }),
-  }) as Ctx
-  return {
-    ...ctx,
-    path: "/",
-    cookies: createMockCookies(),
-    request: {
-      ...ctx.request,
-      headers: {},
-      body: {},
-    },
+  }) as unknown as Ctx
+
+  ctx.back = jest.fn()
+  ctx.path = "/"
+  ctx.params = (ctx.params ?? {}) as Ctx["params"]
+  ctx.state = (ctx.state ?? {}) as Ctx["state"]
+  ctx.cookies = createMockCookies()
+  ctx.request = {
+    ...ctx.request,
+    headers: ctx.request.headers ?? {},
+    body: ctx.request.body ?? {},
   }
+  ctx.userAgent = new UserAgent()
+  ctx.body = ctx.body ?? {}
+
+  return ctx
 }
