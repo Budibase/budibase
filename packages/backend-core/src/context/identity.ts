@@ -26,7 +26,7 @@ export function doInUserContext(user: User, ctx: Ctx, task: any) {
     type: IdentityType.USER,
     hostInfo: {
       ipAddress: ctx.request.ip,
-      // filled in by koa-useragent package
+      // filled in by the user agent middleware
       userAgent: ctx.userAgent.source,
     },
   }

@@ -1,8 +1,7 @@
 import { Server, Socket } from "socket.io"
 import http from "http"
 import Koa from "koa"
-import { userAgent } from "koa-useragent"
-import { auth, Header, redis } from "@budibase/backend-core"
+import { auth, Header, middleware, redis } from "@budibase/backend-core"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { getSocketPubSubClients } from "../utilities/redis"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
@@ -47,7 +46,7 @@ export class BaseSocket {
       publicAllowed: true,
     })
     const middlewares = [
-      userAgent,
+      middleware.userAgent,
       authenticate,
       ...(additionalMiddlewares || []),
     ]

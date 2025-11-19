@@ -1,4 +1,4 @@
-import { auth, context, permissions } from "@budibase/backend-core"
+import { auth, context, middleware, permissions } from "@budibase/backend-core"
 import { GridSocketEvent } from "@budibase/shared-core"
 import {
   decodeJSBinding,
@@ -8,7 +8,6 @@ import {
 import { Ctx, Row, Table, View, ViewV2, WorkspaceApp } from "@budibase/types"
 import http from "http"
 import Koa from "koa"
-import { userAgent } from "koa-useragent"
 import { Socket } from "socket.io"
 import { getSourceId } from "../api/controllers/row/utils"
 import { authorizedMiddleware as authorized } from "../middleware/authorized"
@@ -76,7 +75,7 @@ export default class GridSocket extends BaseSocket {
 
       // Construct full middleware chain to assess permissions
       const middlewares = [
-        userAgent,
+        middleware.userAgent,
         auth.buildAuthMiddleware([], {
           publicAllowed: true,
         }),

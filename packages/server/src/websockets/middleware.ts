@@ -40,7 +40,7 @@ export const createContext = (
       )
     },
 
-    // Needed for koa-useragent middleware
+    // Needed for user agent middleware
     headers: socket.request.headers,
     header: socket.request.headers,
   }

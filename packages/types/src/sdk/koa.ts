@@ -12,7 +12,12 @@ import {
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
 import { EventType } from "../core"
-import { UserAgentContext } from "koa-useragent"
+
+export interface UserAgentDetails {
+  source: string
+  browser: string
+  [key: string]: unknown
+}
 
 export enum LoginMethod {
   API_KEY = "api_key",
@@ -51,7 +56,7 @@ export interface Ctx<
   params: Params
   request: BBRequest<RequestBody>
   body: ResponseBody
-  userAgent: UserAgentContext["userAgent"]
+  userAgent: UserAgentDetails
   state: { nonce?: string }
 }
 

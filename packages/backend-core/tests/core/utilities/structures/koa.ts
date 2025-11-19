@@ -1,5 +1,5 @@
 import { createMockContext, createMockCookies } from "@shopify/jest-koa-mocks"
-import UserAgent from "koa-useragent/dist/lib/useragent"
+import { createUserAgent } from "../../../src/middleware/userAgent"
 import { Ctx } from "@budibase/types"
 
 export const newContext = (): Ctx => {
@@ -19,7 +19,7 @@ export const newContext = (): Ctx => {
     headers: ctx.request.headers ?? {},
     body: ctx.request.body ?? {},
   }
-  ctx.userAgent = new UserAgent()
+  ctx.userAgent = createUserAgent()
   ctx.body = ctx.body ?? {}
 
   return ctx

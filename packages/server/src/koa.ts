@@ -7,7 +7,6 @@ import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
-import { userAgent } from "koa-useragent"
 import gracefulShutdown from "http-graceful-shutdown"
 
 export default function createKoaApp() {
@@ -37,7 +36,7 @@ export default function createKoaApp() {
   app.use(middleware.correlation)
   app.use(middleware.pino)
   app.use(middleware.ip)
-  app.use(userAgent)
+  app.use(middleware.userAgent)
 
   const server = http.createServer(app.callback())
 

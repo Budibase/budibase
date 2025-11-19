@@ -31,8 +31,6 @@ db.init()
 
 const koaSession = require("koa-session")
 
-import { userAgent } from "koa-useragent"
-
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
 
@@ -86,7 +84,7 @@ app.use(middleware.ip)
 if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
   app.use(middleware.csp)
 }
-app.use(userAgent)
+app.use(middleware.userAgent)
 
 // authentication
 app.use(auth.passport.initialize())
