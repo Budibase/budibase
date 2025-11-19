@@ -2,6 +2,7 @@ import {
   AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
+  ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
   CreateToolSourceRequest,
@@ -13,12 +14,13 @@ import {
 
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
+import { UIMessageChunk } from "ai"
 
 export interface AgentEndpoints {
   agentChatStream: (
     chat: AgentChat,
     workspaceId: string,
-    onChunk: (chunk: any) => void,
+    onChunk: (chunk: UIMessageChunk) => void,
     onError?: (error: Error) => void
   ) => Promise<void>
 
@@ -39,10 +41,9 @@ export interface AgentEndpoints {
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   agentChatStream: async (chat, workspaceId, onChunk, onError) => {
-    const body = chat as any
+    const body: ChatAgentRequest = chat
 
     try {
-      // TODO: add support for streaming into the frontend-core API object
       const response = await fetch("/api/agent/chat/stream", {
         method: "POST",
         headers: {
@@ -88,7 +89,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
               const data = line.slice(6) // Remove 'data: ' prefix
               const trimmedData = data.trim()
               if (trimmedData && trimmedData !== "[DONE]") {
-                const chunk: any = JSON.parse(data)
+                const chunk: UIMessageChunk = JSON.parse(data)
                 onChunk(chunk)
               }
             } catch (parseError) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MarkdownViewer, notifications } from "@budibase/bbui"
+  import { Helpers, MarkdownViewer, notifications } from "@budibase/bbui"
   import type { AgentChat } from "@budibase/types"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
@@ -7,6 +7,7 @@
   import { onMount } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import type { UIMessage, UIMessageChunk } from "ai"
+  import { v4 as uuidv4 } from "uuid"
 
   export let API = createAPIClient()
 
@@ -43,9 +44,7 @@
     }
 
     const userMessage: UIMessage = {
-      id: crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random()}`,
+      id: uuidv4(),
       role: "user",
       parts: [{ type: "text", text: inputValue }],
     }
@@ -74,9 +73,7 @@
         (chunk: UIMessageChunk) => {
           if (chunk.type === "text-start") {
             const assistantMessage: UIMessage = {
-              id: crypto.randomUUID
-                ? crypto.randomUUID()
-                : `${Date.now()}-${Math.random()}`,
+              id: Helpers.uuid(),
               role: "assistant",
               parts: [{ type: "text", text: "", state: "streaming" }],
             }
