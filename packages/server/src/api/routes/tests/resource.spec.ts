@@ -798,6 +798,36 @@ describe("/api/resources/usage", () => {
       )
     })
 
+    it("allows disabling row copy when duplicating tables", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable({ name: "No row copy source" })
+      await config.api.row.save(table._id!, {
+        tableId: table._id!,
+        name: "Budget holder",
+      })
+
+      tk.freeze(new Date())
+      await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resources: [table._id!],
+          toWorkspace: newWorkspace.appId,
+          copyRows: false,
+        },
+        { status: 204 }
+      )
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const rows = await config.api.row.fetch(table._id!)
+          expect(rows).toEqual([])
+        }
+      )
+    })
+
     it("copies attachment files when duplicating tables with attachments", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,
