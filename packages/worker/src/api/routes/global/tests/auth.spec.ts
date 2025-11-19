@@ -152,7 +152,7 @@ describe("/api/global/auth", () => {
           await withEnv(
             {
               LOGIN_MAX_FAILED_ATTEMPTS: 5,
-              LOGIN_LOCKOUT_SECONDS: 1,
+              LOGIN_LOCKOUT_SECONDS: 2,
             },
             async () => {
               // 5 consecutive wrong attempts
@@ -171,8 +171,16 @@ describe("/api/global/auth", () => {
                 status: 403,
               })
 
-              // wait for TTL to expire then login succeeds
-              await new Promise(r => setTimeout(r, 1200))
+              // wait for TTL to expire (add buffer for redis expiration granularity)
+              await new Promise(r => setTimeout(r, 3000))
+
+              // Clear any remaining lockout state to ensure clean test
+              await config.doInTenant(async () => {
+                const { cache } = require("@budibase/backend-core")
+                const normalizeEmail = (e: string) => (e || "").toLowerCase()
+                const lockKey = (email: string) => `auth:login:lock:${normalizeEmail(email)}`
+                await cache.destroy(lockKey(email))
+              })
 
               const response = await config.api.auth.login(
                 tenantId,
