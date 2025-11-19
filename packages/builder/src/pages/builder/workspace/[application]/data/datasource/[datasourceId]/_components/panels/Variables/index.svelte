@@ -14,8 +14,6 @@
   export let markDirty
 
   // Use parent-provided updatedDatasource when available
-  let localUpdatedDatasource
-  let templateStaticVariableKeys = []
   $: localUpdatedDatasource = updatedDatasource ?? cloneDeep(datasource)
 
   $: queriesForDatasource = $queries.list.filter(
