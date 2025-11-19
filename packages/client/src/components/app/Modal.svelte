@@ -8,6 +8,7 @@
 
   export let onClose
   export let ignoreClicksOutside
+  export let hideCloseIcon
   export let size
   let modal
 
@@ -30,6 +31,9 @@
   }
 
   $: open = $modalStore.contentId === $component.id
+
+  $: resolvedHideCloseIcon =
+    hideCloseIcon === undefined ? !!ignoreClicksOutside : hideCloseIcon
 
   const handleModalClose = async () => {
     if (onClose) {
@@ -56,12 +60,14 @@
   <Modal
     on:cancel={handleModalClose}
     bind:this={modal}
-    disableCancel={$builderStore.inBuilder || ignoreClicksOutside}
+    disableCancel={$builderStore.inBuilder ||
+      ignoreClicksOutside ||
+      resolvedHideCloseIcon}
     zIndex={2}
   >
     <div use:styleable={$component.styles} class={`modal-content ${size}`}>
       <div class="modal-header">
-        {#if !ignoreClicksOutside}
+        {#if !resolvedHideCloseIcon}
           <Icon
             color="var(--spectrum-global-color-gray-800)"
             name="x"

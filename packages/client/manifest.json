@@ -4540,6 +4540,25 @@
         "defaultValue": false
       },
       {
+        "type": "select",
+        "label": "Week starts on",
+        "key": "startDayOfWeek",
+        "placeholder": "Browser locale",
+        "options": [
+          { "label": "Monday", "value": "Monday" },
+          { "label": "Tuesday", "value": "Tuesday" },
+          { "label": "Wednesday", "value": "Wednesday" },
+          { "label": "Thursday", "value": "Thursday" },
+          { "label": "Friday", "value": "Friday" },
+          { "label": "Saturday", "value": "Saturday" },
+          { "label": "Sunday", "value": "Sunday" }
+        ],
+        "dependsOn": {
+          "setting": "timeOnly",
+          "value": false
+        }
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue",
@@ -7926,7 +7945,18 @@
       {
         "type": "boolean",
         "key": "ignoreClicksOutside",
-        "label": "Prevent manual closing",
+        "label": "Ignore clicks outside",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "hideCloseIcon",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "boolean",
+        "key": "hideCloseIcon",
+        "label": "Hide close button",
         "defaultValue": false
       },
       {
