@@ -1,5 +1,6 @@
 <script>
   import { CoreSelect, CoreRadioGroup } from "@budibase/bbui"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
 
@@ -36,6 +37,7 @@
     valueColumn,
     customOptions
   )
+  const pickerLabels = loadTranslationsByGroup("picker")
 
   const handleChange = e => {
     const changed = fieldApi.setValue(e.detail)
@@ -74,6 +76,7 @@
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
         {sort}
+        searchPlaceholder={pickerLabels.searchPlaceholder}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup

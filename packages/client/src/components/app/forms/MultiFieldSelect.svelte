@@ -7,6 +7,7 @@
     type FieldSchema,
     FieldType,
   } from "@budibase/types"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import type { FieldApi, FieldState } from "@/types"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
@@ -46,6 +47,7 @@
     valueColumn,
     customOptions
   )
+  const pickerLabels = loadTranslationsByGroup("picker")
 
   const expand = (values?: string[] | string): string[] => {
     if (!values) {
@@ -96,6 +98,7 @@
         {placeholder}
         {options}
         {autocomplete}
+        searchPlaceholder={pickerLabels.searchPlaceholder}
         {showSelectAll}
         {selectAllText}
       />

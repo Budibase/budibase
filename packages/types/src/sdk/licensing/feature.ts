@@ -15,6 +15,7 @@ export enum Feature {
   EXPANDED_PUBLIC_API = "expandedPublicApi",
   CUSTOM_APP_SCRIPTS = "customAppScripts",
   PDF = "pdf",
+  TRANSLATIONS = "translations",
   // deprecated - no longer licensed
   VIEW_PERMISSIONS = "viewPermissions",
   VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
