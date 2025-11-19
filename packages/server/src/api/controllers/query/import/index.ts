@@ -13,6 +13,21 @@ interface ImportResult {
   queries: Query[]
 }
 
+const assignStaticVariableDefaults = (
+  target: Record<string, string>,
+  tokens: string[],
+  defaults: Record<string, string>
+) => {
+  let changed = false
+  for (const token of tokens) {
+    if (target[token] == null) {
+      target[token] = defaults[token] ?? ""
+      changed = true
+    }
+  }
+  return changed
+}
+
 export class RestImporter {
   data: string
   sources: ImportSource[]
@@ -110,6 +125,25 @@ export class RestImporter {
       errorQueries,
       queries: successQueries,
     }
+  }
+
+  prepareDatasourceConfig = (datasource: Datasource | undefined) => {
+    if (!datasource) {
+      return
+    }
+    const config = datasource.config || (datasource.config = {})
+    const defaults = this.getStaticServerVariables()
+    const tokens = Object.keys(defaults || {}).filter(Boolean)
+    if (!tokens.length) {
+      return
+    }
+    config.staticVariables = config.staticVariables || {}
+    assignStaticVariableDefaults(config.staticVariables, tokens, defaults)
+    const templateStaticVariables = new Set(
+      config.templateStaticVariables || []
+    )
+    tokens.forEach(token => templateStaticVariables.add(token))
+    config.templateStaticVariables = Array.from(templateStaticVariables)
   }
 
   getStaticServerVariables = (): Record<string, string> => {

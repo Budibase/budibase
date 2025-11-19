@@ -1,7 +1,7 @@
 import { constants, context, events, utils } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
-import { findHBSBlocks, stripHandlebars } from "@budibase/string-templates"
+import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ContextUser,
   CreateDatasourceRequest,
@@ -45,50 +45,6 @@ import fetch from "node-fetch"
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
-
-const extractHandlebarTokens = (value?: string) => {
-  if (!value) {
-    return []
-  }
-  const tokens = new Set<string>()
-  for (const block of findHBSBlocks(value)) {
-    const stripped = stripHandlebars(block)
-    if (!stripped || typeof stripped !== "string") {
-      continue
-    }
-    const name = stripped.trim()
-    if (name) {
-      tokens.add(name)
-    }
-  }
-  return Array.from(tokens)
-}
-
-const assignStaticVariableDefaults = (
-  target: Record<string, string>,
-  tokens: string[],
-  defaults: Record<string, string>
-) => {
-  let changed = false
-  for (const token of tokens) {
-    if (target[token] == null) {
-      target[token] = defaults[token] ?? ""
-      changed = true
-    }
-  }
-  return changed
-}
-
-const resolveStaticVariableTokens = (
-  defaults: Record<string, string>,
-  url?: string
-) => {
-  const defaultKeys = Object.keys(defaults || {}).filter(Boolean)
-  if (defaultKeys.length) {
-    return defaultKeys
-  }
-  return extractHandlebarTokens(url)
-}
 
 function sanitiseUserStructure(user: ContextUser) {
   const copiedUser = cloneDeep(user)
@@ -154,7 +110,6 @@ const _import = async (
   const importer = new RestImporter(data)
   await importer.init()
   const importInfo = await importer.getInfo()
-  const staticVariableDefaults = importer.getStaticServerVariables()
 
   let datasourceId
   if (!body.datasourceId) {
@@ -178,26 +133,7 @@ const _import = async (
         url: config.url ?? importInfo?.url,
       },
     }
-    const datasourceConfig = datasource.config || (datasource.config = {})
-    const tokens = resolveStaticVariableTokens(
-      staticVariableDefaults,
-      datasourceConfig.url
-    )
-    if (tokens.length) {
-      datasourceConfig.staticVariables = datasourceConfig.staticVariables || {}
-      assignStaticVariableDefaults(
-        datasourceConfig.staticVariables,
-        tokens,
-        staticVariableDefaults
-      )
-      const templateStaticVariables = new Set(
-        datasourceConfig.templateStaticVariables || []
-      )
-      tokens.forEach(token => templateStaticVariables.add(token))
-      datasourceConfig.templateStaticVariables = Array.from(
-        templateStaticVariables
-      )
-    }
+    importer.prepareDatasourceConfig(datasource)
     // save the datasource
     const datasourceCtx: UserCtx<CreateDatasourceRequest> = merge(ctx, {
       request: {
