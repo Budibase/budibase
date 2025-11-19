@@ -150,6 +150,7 @@ router
   .use("/health", ctx => (ctx.status = 200))
   .use(auth.buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(auth.buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
+  .use(middleware.activeTenant())
   .use(auth.buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
   .use(pro.licensing())
   // for now no public access is allowed to worker (bar health check)

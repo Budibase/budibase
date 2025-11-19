@@ -18,6 +18,7 @@ export * as oidc from "./passport/sso/oidc"
 export { authError, ssoCallbackUrl } from "./passport/utils"
 export { querystringToBody } from "./querystringToBody"
 export { tenancy } from "./tenancy"
+export { activeTenant } from "./activation"
 export { workspaceBuilderOrAdmin } from "./workspaceBuilderOrAdmin"
 import * as datasourceGoogle from "./passport/datasource/google"
 
