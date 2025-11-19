@@ -26,7 +26,7 @@
     return (usage.used / usage.total) * 100
   }
 
-$: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   onMount(() => {
     unlimited = isUnlimited()

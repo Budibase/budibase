@@ -14,10 +14,7 @@
       size="M"
       on:click
       on:click={() => {
-        window.open(
-          accountPortalUpgradeUrl($admin.accountPortalUrl),
-          "_blank"
-        )
+        window.open(accountPortalUpgradeUrl($admin.accountPortalUrl), "_blank")
       }}
     >
       Upgrade

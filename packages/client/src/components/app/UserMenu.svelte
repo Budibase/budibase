@@ -24,11 +24,8 @@
   $: isOwner = $authStore?.accountPortalAccess && $environmentStore.cloud
   $: embedded = $appStore.embedded || $appStore.inIframe
 
-  const {
-    accountPortalAccountUrl,
-    builderWorkspacesUrl,
-    builderAppsUrl,
-  } = helpers
+  const { accountPortalAccountUrl, builderWorkspacesUrl, builderAppsUrl } =
+    helpers
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {

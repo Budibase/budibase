@@ -43,9 +43,8 @@ export const builderSettingsEmailUrl = (builderBaseUrl?: string | null) =>
 export const builderSettingsAuthUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_AUTH)
 
-export const builderSettingsPeopleUsersUrl = (
-  builderBaseUrl?: string | null
-) => joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_PEOPLE_USERS)
+export const builderSettingsPeopleUsersUrl = (builderBaseUrl?: string | null) =>
+  joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_PEOPLE_USERS)
 
 export const builderAppsUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.APPS)
