@@ -35,17 +35,7 @@ export type Message =
 export interface ToolArgs<T extends z.ZodTypeAny = z.ZodTypeAny> {
   name: string
   description: string
-  /**
-   * Zod schema describing the tool arguments. Consumers should treat this as
-   * documentation / validation only – the shared Tool type always exposes
-   * a handler that accepts unknown.
-   */
   parameters?: T
-  /**
-   * From the perspective of callers (LLMs, SDKs, HTTP), tool handlers accept
-   * arbitrary JSON-compatible input. Server-side wrappers are responsible
-   * for validating and parsing this input according to the schema.
-   */
   handler: (args: unknown) => Promise<string>
   strict?: boolean
 }
