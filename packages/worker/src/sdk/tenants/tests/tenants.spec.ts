@@ -1,5 +1,5 @@
 import { structures } from "../../../tests"
-import { lockTenant, unlockTenant } from "../tenants"
+import { lockTenant, unlockTenant, setActivation } from "../tenants"
 import { configs, tenancy } from "@budibase/backend-core"
 import { LockReason, ConfigType, SettingsConfig } from "@budibase/types"
 
@@ -156,6 +156,85 @@ describe("tenants", () => {
 
       await expect(unlockTenant(tenantId)).rejects.toThrow(
         `Cannot lock. Settings config not found for tenant ${tenantId}`
+      )
+    })
+  })
+
+  describe("setActivation", () => {
+    it("should activate tenant", async () => {
+      const tenantId = structures.tenant.id()
+
+      const settingsConfig: SettingsConfig = {
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {},
+      }
+
+      mockDb.tryGet.mockResolvedValue(settingsConfig)
+
+      await setActivation(tenantId, true)
+
+      expect(mockDb.tryGet).toHaveBeenCalledWith(
+        configs.generateConfigID(ConfigType.SETTINGS)
+      )
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          ...settingsConfig.config,
+          active: true,
+        },
+      })
+    })
+
+    it("should deactivate tenant", async () => {
+      const tenantId = structures.tenant.id()
+
+      const settingsConfig: SettingsConfig = {
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          active: true,
+        },
+      }
+
+      mockDb.tryGet.mockResolvedValue(settingsConfig)
+
+      await setActivation(tenantId, false)
+
+      expect(mockDb.tryGet).toHaveBeenCalledWith(
+        configs.generateConfigID(ConfigType.SETTINGS)
+      )
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          ...settingsConfig.config,
+          active: false,
+        },
+      })
+    })
+
+    it("should throw error when settings config not found", async () => {
+      const tenantId = structures.tenant.id()
+
+      mockDb.tryGet.mockResolvedValue(null)
+
+      await expect(setActivation(tenantId, true)).rejects.toThrow(
+        `Cannot set activation. Settings config not found for tenant ${tenantId}`
+      )
+    })
+
+    it("should throw error when settings config has no config property", async () => {
+      const tenantId = structures.tenant.id()
+
+      const settingsConfig = {
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+      }
+
+      mockDb.tryGet.mockResolvedValue(settingsConfig)
+
+      await expect(setActivation(tenantId, true)).rejects.toThrow(
+        `Cannot set activation. Settings config not found for tenant ${tenantId}`
       )
     })
   })

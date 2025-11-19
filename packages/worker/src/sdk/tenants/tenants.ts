@@ -22,6 +22,20 @@ export async function unlockTenant(tenantId: string) {
   return await setLock(tenantId)
 }
 
+export async function setActivation(tenantId: string, active: boolean) {
+  const db = tenancy.getTenantDB(tenantId)
+  const settingsConfig = await db.tryGet<SettingsConfig>(
+    configs.generateConfigID(ConfigType.SETTINGS)
+  )
+  if (!settingsConfig?.config) {
+    throw new Error(
+      `Cannot set activation. Settings config not found for tenant ${tenantId}`
+    )
+  }
+  settingsConfig.config.active = active
+  await db.put(settingsConfig)
+}
+
 async function setLock(tenantId: string, lockReason?: LockReason) {
   const db = tenancy.getTenantDB(tenantId)
   const settingsConfig = await db.tryGet<SettingsConfig>(

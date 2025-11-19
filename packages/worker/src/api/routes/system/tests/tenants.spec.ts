@@ -7,6 +7,7 @@ jest.mock("../../../../sdk/tenants", () => ({
   lockTenant: jest.fn(),
   unlockTenant: jest.fn(),
   deleteTenant: jest.fn(),
+  setActivation: jest.fn(),
 }))
 
 describe("/api/global/tenants", () => {
@@ -145,6 +146,84 @@ describe("/api/global/tenants", () => {
       })
       expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
       expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("PUT /api/system/tenants/:tenantId/activation", () => {
+    it("allows activating tenant", async () => {
+      const user = await config.createTenant()
+
+      await config.api.tenants.activation(
+        user.tenantId,
+        {
+          active: true,
+        },
+        {
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(tenantSdk.setActivation).toHaveBeenCalledWith(user.tenantId, true)
+    })
+
+    it("allows deactivating tenant", async () => {
+      const user = await config.createTenant()
+
+      await config.api.tenants.activation(
+        user.tenantId,
+        {
+          active: false,
+        },
+        {
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(tenantSdk.setActivation).toHaveBeenCalledWith(user.tenantId, false)
+    })
+
+    it("rejects non-boolean active value", async () => {
+      const user = await config.createTenant()
+
+      const status = 403
+      const res = await config.api.tenants.activation(
+        user.tenantId,
+        {
+          active: "invalid" as any,
+        },
+        {
+          status,
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(res.body).toEqual({
+        message: "Only boolean values allowed for 'active' property",
+        status,
+      })
+      expect(tenantSdk.setActivation).not.toHaveBeenCalled()
+    })
+
+    it("rejects non-internal user", async () => {
+      const user = await config.createTenant()
+
+      const status = 403
+      const res = await config.api.tenants.activation(
+        user.tenantId,
+        {
+          active: true,
+        },
+        {
+          status,
+          headers: config.authHeaders(user),
+        }
+      )
+
+      expect(res.body).toEqual({
+        message: "Only internal user can set activation for a tenant",
+        status,
+      })
+      expect(tenantSdk.setActivation).not.toHaveBeenCalled()
     })
   })
 })
