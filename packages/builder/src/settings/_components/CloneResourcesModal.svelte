@@ -31,7 +31,7 @@
   export const show = () => {
     isOpen = true
     toWorkspaceId = undefined
-    copyRows = true
+    copyRows = false
     selectedResources = {
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
@@ -52,7 +52,7 @@
   }
 
   let toWorkspaceId: string | undefined
-  let copyRows = true
+  let copyRows = false
 
   let selectedResources: Record<ResourceType, DataType[]> = {
     [ResourceType.DATASOURCE]: [],
