@@ -23,7 +23,7 @@
   import { ThemeOptions, helpers } from "@budibase/shared-core"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalAccountUrl } = helpers
 
   const values = writable<UpdateSelfRequest>({})
   let updating = false
@@ -110,9 +110,8 @@
                 secondary
                 on:click={() => {
                   if (isOwner) {
-                    window.location.href = buildAccountPortalUrl(
-                      $admin.accountPortalUrl,
-                      "/portal/account"
+                    window.location.href = accountPortalAccountUrl(
+                      $admin.accountPortalUrl
                     )
                   } else {
                     updatePasswordModal.show()

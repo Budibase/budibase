@@ -24,8 +24,8 @@
   import { getFormattedPlanName } from "@/helpers/planTitle"
 
   $: license = $auth.user.license
-  const { buildAccountPortalUrl } = helpers
-  $: upgradeUrl = buildAccountPortalUrl($admin.accountPortalUrl, "UPGRADE")
+  const { accountPortalUpgradeUrl } = helpers
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   // LICENSE KEY
 

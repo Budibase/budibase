@@ -11,11 +11,8 @@
   let pastDueEndDate
 
   const paymentFailedTitle = "Payment failed"
-  const { buildAccountPortalUrl } = helpers
-  $: billingUrl = buildAccountPortalUrl(
-    $admin.accountPortalUrl,
-    "/portal/billing"
-  )
+  const { accountPortalBillingUrl } = helpers
+  $: billingUrl = accountPortalBillingUrl($admin.accountPortalUrl)
 
   export function show() {
     paymentFailedModal.show()

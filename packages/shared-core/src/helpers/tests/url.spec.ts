@@ -1,28 +1,27 @@
-import { buildAccountPortalUrl, buildBuilderUrl } from "../url"
+import {
+  accountPortalBillingUrl,
+  accountPortalUpgradeUrl,
+  builderWorkspacesUrl,
+} from "../url"
 
 const BASE = "https://budibase.com"
 
 describe("url helpers", () => {
-  describe("buildAccountPortalUrl", () => {
-    it("joins base url with literal path", () => {
-      const url = buildAccountPortalUrl(BASE, "/portal/billing")
+  describe("account portal", () => {
+    it("builds billing url", () => {
+      const url = accountPortalBillingUrl(BASE)
       expect(url).toEqual(`${BASE}/portal/billing`)
     })
 
-    it("supports account portal path keys", () => {
-      const url = buildAccountPortalUrl(BASE, "ACCOUNT")
-      expect(url).toEqual(`${BASE}/portal/account`)
-    })
-
     it("falls back to path when base missing", () => {
-      const url = buildAccountPortalUrl(undefined, "/portal/upgrade")
+      const url = accountPortalUpgradeUrl(undefined)
       expect(url).toEqual("/portal/upgrade")
     })
   })
 
-  describe("buildBuilderUrl", () => {
+  describe("builder", () => {
     it("normalizes base when joining", () => {
-      const url = buildBuilderUrl(`${BASE}/`, "/builder/workspaces")
+      const url = builderWorkspacesUrl(`${BASE}/`)
       expect(url).toEqual(`${BASE}/builder/workspaces`)
     })
   })

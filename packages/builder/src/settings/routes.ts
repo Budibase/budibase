@@ -24,7 +24,7 @@ export const globalRoutes = (user: GetGlobalSelfResponse) => {
 }
 
 // Route definitions
-const { buildAccountPortalUrl } = helpers
+const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
 
 export const orgRoutes = (
   user: GetGlobalSelfResponse,
@@ -183,7 +183,7 @@ export const orgRoutes = (
       access: () => cloud && user?.accountPortalAccess,
       icon: "arrow-circle-up",
       href: {
-        url: buildAccountPortalUrl(admin?.accountPortalUrl, "UPGRADE"),
+        url: accountPortalUpgradeUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },
@@ -202,7 +202,7 @@ export const orgRoutes = (
       path: "billing",
       icon: "credit-card",
       href: {
-        url: buildAccountPortalUrl(admin?.accountPortalUrl, "BILLING"),
+        url: accountPortalBillingUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },

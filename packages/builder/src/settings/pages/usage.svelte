@@ -28,10 +28,10 @@
   let daysRemainingInMonth
   let primaryActionText
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
 
-  $: upgradeUrl = buildAccountPortalUrl($admin.accountPortalUrl, "UPGRADE")
-  $: manageUrl = buildAccountPortalUrl($admin.accountPortalUrl, "BILLING")
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
+  $: manageUrl = accountPortalBillingUrl($admin.accountPortalUrl)
 
   const WARN_USAGE = ["Queries", "Automations", "Rows", "Users"]
   const oneDayInSeconds = 86400

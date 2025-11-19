@@ -14,7 +14,7 @@ import {
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 
-const { buildAccountPortalUrl } = helpers
+const { accountPortalUpgradeUrl } = helpers
 
 const UNLIMITED = -1
 const ONE_DAY_MILLIS = 86400000
@@ -172,9 +172,8 @@ class LicensingStore extends BudiStore<LicensingState> {
     const authStore = get(auth)
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
-      window.location.href = buildAccountPortalUrl(
-        adminStore.accountPortalUrl,
-        "UPGRADE"
+      window.location.href = accountPortalUpgradeUrl(
+        adminStore.accountPortalUrl
       )
     } else {
       bb.settings("/upgrade")

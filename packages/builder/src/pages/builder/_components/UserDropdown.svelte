@@ -17,7 +17,7 @@
   let updatePasswordModal
   let apiKeyModal
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalAccountUrl } = helpers
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
@@ -51,9 +51,8 @@
       icon="lock"
       on:click={() => {
         if (isOwner) {
-          window.location.href = buildAccountPortalUrl(
-            $admin.accountPortalUrl,
-            "/portal/account"
+          window.location.href = accountPortalAccountUrl(
+            $admin.accountPortalUrl
           )
         } else {
           updatePasswordModal.show()

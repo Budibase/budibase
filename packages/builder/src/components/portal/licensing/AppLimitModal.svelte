@@ -7,12 +7,9 @@
 
   let appLimitModal
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalUpgradeUrl } = helpers
 
-  $: upgradeUrl = buildAccountPortalUrl(
-    $admin.accountPortalUrl,
-    "/portal/upgrade"
-  )
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   export function show() {
     appLimitModal.show()

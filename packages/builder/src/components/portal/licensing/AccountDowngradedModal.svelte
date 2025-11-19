@@ -8,12 +8,9 @@
 
   let accountDowngradeModal
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalBillingUrl } = helpers
 
-  $: billingUrl = buildAccountPortalUrl(
-    $admin.accountPortalUrl,
-    "/portal/billing"
-  )
+  $: billingUrl = accountPortalBillingUrl($admin.accountPortalUrl)
 
   export function show() {
     accountDowngradeModal.show()

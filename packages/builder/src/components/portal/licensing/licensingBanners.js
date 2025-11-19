@@ -10,13 +10,13 @@ const defaultCacheFn = key => {
   temporalStore.setExpiring(key, {}, oneDayInSeconds)
 }
 
-const { buildAccountPortalUrl } = helpers
+const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
 
 const upgradeAction = key => {
   return defaultNavigateAction(
     key,
     "Upgrade",
-    buildAccountPortalUrl(get(admin).accountPortalUrl, "UPGRADE")
+    accountPortalUpgradeUrl(get(admin).accountPortalUrl)
   )
 }
 
@@ -24,7 +24,7 @@ const billingAction = key => {
   return defaultNavigateAction(
     key,
     "Billing",
-    buildAccountPortalUrl(get(admin).accountPortalUrl, "BILLING")
+    accountPortalBillingUrl(get(admin).accountPortalUrl)
   )
 }
 

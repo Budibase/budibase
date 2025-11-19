@@ -13,7 +13,7 @@
   let showWarning = false
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalUpgradeUrl } = helpers
 
   const isUnlimited = () => {
     if (usage.total === -1) {
@@ -26,7 +26,7 @@
     return (usage.used / usage.total) * 100
   }
 
-  $: upgradeUrl = buildAccountPortalUrl($admin.accountPortalUrl, "UPGRADE")
+$: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   onMount(() => {
     unlimited = isUnlimited()

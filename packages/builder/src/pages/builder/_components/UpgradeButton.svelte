@@ -4,7 +4,7 @@
   import { helpers, sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
 
-  const { buildAccountPortalUrl } = helpers
+  const { accountPortalUpgradeUrl } = helpers
 </script>
 
 {#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
@@ -15,7 +15,7 @@
       on:click
       on:click={() => {
         window.open(
-          buildAccountPortalUrl($admin.accountPortalUrl, "/portal/upgrade"),
+          accountPortalUpgradeUrl($admin.accountPortalUrl),
           "_blank"
         )
       }}
