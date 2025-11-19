@@ -5,6 +5,7 @@ import {
   events,
   utils as utilsCore,
   configs,
+  cache,
 } from "@budibase/backend-core"
 import {
   ConfigType,
@@ -36,6 +37,33 @@ const { passport, ssoCallbackUrl, google, oidc } = authCore
 const { setCookie, getCookie, clearCookie } = utilsCore
 
 // LOGIN / LOGOUT
+
+const normalizeEmail = (e: string) => (e || "").toLowerCase()
+const failKey = (email: string) => `auth:login:fail:${normalizeEmail(email)}`
+const lockKey = (email: string) => `auth:login:lock:${normalizeEmail(email)}`
+const isLocked = async (email: string) => !!(await cache.get(lockKey(email)))
+const onFailed = async (email: string) => {
+  if (!email) return
+  const key = failKey(email)
+  const current = Number((await cache.get(key)) || 0) || 0
+  const next = current + 1
+  await cache.store(key, next, env.LOGIN_LOCKOUT_SECONDS)
+  console.log(
+    `[auth] failed login email=${normalizeEmail(email)} count=${next}`
+  )
+  if (next >= env.LOGIN_MAX_FAILED_ATTEMPTS) {
+    await cache.store(lockKey(email), 1, env.LOGIN_LOCKOUT_SECONDS)
+    await cache.destroy(key)
+    console.log(
+      `[auth] account locked email=${normalizeEmail(email)} for ${env.LOGIN_LOCKOUT_SECONDS}s`
+    )
+  }
+}
+const clearFailureState = async (email: string) => {
+  if (!email) return
+  await cache.destroy(failKey(email))
+  await cache.destroy(lockKey(email))
+}
 
 async function passportCallback(
   ctx: Ctx,
@@ -75,14 +103,52 @@ export const login = async (
 ) => {
   const email = ctx.request.body.username
 
-  const user = await userSdk.db.getUserByEmail(email)
-  if (user && (await userSdk.db.isPreventPasswordActions(user))) {
+  const dbUser = await userSdk.db.getUserByEmail(email)
+  if (dbUser && (await userSdk.db.isPreventPasswordActions(dbUser))) {
+    console.log(
+      `[auth] login prevented due to sso enforcement email=${normalizeEmail(email)}`
+    )
     ctx.throw(403, "Invalid credentials")
+  }
+  if (dbUser && (await isLocked(email))) {
+    console.log(
+      `[auth] login blocked due to lock email=${normalizeEmail(email)}`
+    )
+    ctx.set("X-Account-Locked", "1")
+    ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
+    ctx.throw(403, "Account temporarily locked. Try again later.")
   }
 
   return passport.authenticate(
     "local",
     async (err: any, user: User, info: any) => {
+      if (err || !user) {
+        if (dbUser) {
+          await onFailed(email)
+        }
+        if (await isLocked(email)) {
+          ctx.set("X-Account-Locked", "1")
+          ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
+          console.log(
+            `[auth] login blocked (post-failure) due to lock email=${normalizeEmail(
+              email
+            )}`
+          )
+          return ctx.throw(403, "Account temporarily locked. Try again later.")
+        }
+        const reason =
+          (info && info.message) || (err && err.message) || "unknown"
+        console.log(
+          `[auth] password auth failed email=${normalizeEmail(email)} reason=${reason}`
+        )
+        // delegate to shared passport failure handling to preserve specific messages (e.g. expired)
+        return passportCallback(ctx, user as any, err, info)
+      }
+
+      await clearFailureState(email)
+      console.log(
+        `[auth] password auth success email=${normalizeEmail(user.email)}`
+      )
       await passportCallback(ctx, user, err, info)
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("local", user.email)
@@ -132,6 +198,57 @@ export const reset = async (
   ctx: Ctx<PasswordResetRequest, PasswordResetResponse>
 ) => {
   const { email } = ctx.request.body
+
+  const lcEmail = (email || "").toLowerCase()
+  const ip = (ctx.ip || "").toString()
+
+  // rate limit keys
+  const emailKey = `auth:pwdreset:email:${lcEmail}`
+  const ipKey = `auth:pwdreset:ip:${ip}`
+
+  const incr = async (key: string, windowSeconds: number) => {
+    const current = Number((await cache.get(key)) || 0) || 0
+    const next = current + 1
+    await cache.store(key, next, windowSeconds)
+    return next
+  }
+
+  // apply per-email and per-ip rate limits
+  const nextEmail = await incr(
+    emailKey,
+    env.PASSWORD_RESET_RATE_EMAIL_WINDOW_SECONDS
+  )
+  const nextIp = await incr(ipKey, env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS)
+
+  const emailLimited = nextEmail > env.PASSWORD_RESET_RATE_EMAIL_LIMIT
+  const ipLimited = nextIp > env.PASSWORD_RESET_RATE_IP_LIMIT
+
+  if (emailLimited || ipLimited) {
+    // surfaced for ui to display
+    ctx.set(
+      "X-RateLimit-Email-Limit",
+      String(env.PASSWORD_RESET_RATE_EMAIL_LIMIT)
+    )
+    ctx.set(
+      "X-RateLimit-Email-Remaining",
+      String(Math.max(env.PASSWORD_RESET_RATE_EMAIL_LIMIT - nextEmail, 0))
+    )
+    ctx.set("X-RateLimit-IP-Limit", String(env.PASSWORD_RESET_RATE_IP_LIMIT))
+    ctx.set(
+      "X-RateLimit-IP-Remaining",
+      String(Math.max(env.PASSWORD_RESET_RATE_IP_LIMIT - nextIp, 0))
+    )
+    // best-effort retry window
+    const retryAfter = Math.max(
+      env.PASSWORD_RESET_RATE_EMAIL_WINDOW_SECONDS,
+      env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS
+    )
+    ctx.set("Retry-After", String(retryAfter))
+    console.log(
+      `[auth] password reset rate limited email=${lcEmail} ip=${ip} emailCount=${nextEmail} ipCount=${nextIp}`
+    )
+    return ctx.throw(429, "Too many password reset requests. Try again later.")
+  }
 
   await authSdk.reset(email)
 
