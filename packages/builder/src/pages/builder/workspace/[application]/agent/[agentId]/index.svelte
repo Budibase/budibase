@@ -283,10 +283,8 @@
 
   const handleChatSaved = async (event: CustomEvent<{ chatId: string }>) => {
     const { chatId } = event.detail
-    if ($agentsStore.currentAgentId) {
-      if (chatId) {
-        agentsStore.setCurrentChatId(chatId)
-      }
+    if (chatId && $agentsStore.currentAgentId) {
+      agentsStore.setCurrentChatId(chatId)
       await agentsStore.fetchChats($agentsStore.currentAgentId)
     }
   }
