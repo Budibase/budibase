@@ -26,7 +26,16 @@ import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getProxyDispatcher } from "../utilities"
-import { fetch, Response, RequestInit, Agent, Headers, FormData } from "undici"
+import {
+  fetch,
+  Response,
+  RequestInit,
+  Agent,
+  Headers,
+  FormData,
+  getGlobalDispatcher,
+  MockAgent,
+} from "undici"
 import environment from "../environment"
 
 const coreFields = {
@@ -685,32 +694,37 @@ export class RestIntegration implements IntegrationBase {
         ? environment.REST_REJECT_UNAUTHORIZED
         : this.config.rejectUnauthorized
 
-    const proxyDispatcher = getProxyDispatcher({
-      rejectUnauthorized,
-    })
-    if (proxyDispatcher) {
-      console.log("[rest integration] Using proxy for request", {
-        url,
-        hasDispatcher: true,
-        isHttpsUrl: url.startsWith("https://"),
+    const globalDispatcher = getGlobalDispatcher()
+    const isHttpMockingActive = globalDispatcher instanceof MockAgent
+
+    if (!isHttpMockingActive) {
+      const proxyDispatcher = getProxyDispatcher({
         rejectUnauthorized,
-        configRejectUnauthorized: this.config.rejectUnauthorized,
-        proxyUri:
-          process.env.GLOBAL_AGENT_HTTPS_PROXY ||
-          process.env.GLOBAL_AGENT_HTTP_PROXY ||
-          process.env.HTTPS_PROXY ||
-          process.env.HTTP_PROXY,
       })
-      // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
-      input.dispatcher = proxyDispatcher
-    } else if (!rejectUnauthorized) {
-      // No proxy, but need to disable TLS verification for self-signed certificates
-      const agent = new Agent({
-        connect: {
-          rejectUnauthorized: false,
-        },
-      })
-      input.dispatcher = agent
+      if (proxyDispatcher) {
+        console.log("[rest integration] Using proxy for request", {
+          url,
+          hasDispatcher: true,
+          isHttpsUrl: url.startsWith("https://"),
+          rejectUnauthorized,
+          configRejectUnauthorized: this.config.rejectUnauthorized,
+          proxyUri:
+            process.env.GLOBAL_AGENT_HTTPS_PROXY ||
+            process.env.GLOBAL_AGENT_HTTP_PROXY ||
+            process.env.HTTPS_PROXY ||
+            process.env.HTTP_PROXY,
+        })
+        // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
+        input.dispatcher = proxyDispatcher
+      } else if (!rejectUnauthorized) {
+        // No proxy, but need to disable TLS verification for self-signed certificates
+        const agent = new Agent({
+          connect: {
+            rejectUnauthorized: false,
+          },
+        })
+        input.dispatcher = agent
+      }
     }
 
     let response: Response
