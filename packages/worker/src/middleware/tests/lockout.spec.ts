@@ -52,7 +52,9 @@ describe("lockout middleware", () => {
 
   it("should call next if user exists but not locked", async () => {
     ctx.request.body = { username: "test@example.com" }
-    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({ email: "test@example.com" })
+    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
+      email: "test@example.com",
+    })
     ;(cache.get as jest.Mock).mockResolvedValue(null)
 
     await lockout(ctx, next)
@@ -63,9 +65,11 @@ describe("lockout middleware", () => {
 
   it("should throw 403 if user is locked", async () => {
     ctx.request.body = { username: "test@example.com" }
-    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({ email: "test@example.com" })
+    ;(userSdk.db.getUserByEmail as jest.Mock).mockResolvedValue({
+      email: "test@example.com",
+    })
     ;(cache.get as jest.Mock).mockResolvedValue("1")
-    
+
     // Mock ctx.throw to actually throw
     ctx.throw = jest.fn().mockImplementation((status, message) => {
       const error = new Error(message)
@@ -73,11 +77,19 @@ describe("lockout middleware", () => {
       throw error
     })
 
-    await expect(lockout(ctx, next)).rejects.toThrow("Account temporarily locked. Try again later.")
+    await expect(lockout(ctx, next)).rejects.toThrow(
+      "Account temporarily locked. Try again later."
+    )
 
     expect(next).not.toHaveBeenCalled()
     expect(ctx.set).toHaveBeenCalledWith("X-Account-Locked", "1")
-    expect(ctx.set).toHaveBeenCalledWith("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
-    expect(ctx.throw).toHaveBeenCalledWith(403, "Account temporarily locked. Try again later.")
+    expect(ctx.set).toHaveBeenCalledWith(
+      "Retry-After",
+      String(env.LOGIN_LOCKOUT_SECONDS)
+    )
+    expect(ctx.throw).toHaveBeenCalledWith(
+      403,
+      "Account temporarily locked. Try again later."
+    )
   })
 })

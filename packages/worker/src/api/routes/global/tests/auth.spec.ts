@@ -178,7 +178,8 @@ describe("/api/global/auth", () => {
               await config.doInTenant(async () => {
                 const { cache } = require("@budibase/backend-core")
                 const normalizeEmail = (e: string) => (e || "").toLowerCase()
-                const lockKey = (email: string) => `auth:login:lock:${normalizeEmail(email)}`
+                const lockKey = (email: string) =>
+                  `auth:login:lock:${normalizeEmail(email)}`
                 await cache.destroy(lockKey(email))
               })
 
