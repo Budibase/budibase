@@ -44,6 +44,15 @@ const lockKey = (email: string) => `auth:login:lock:${normalizeEmail(email)}`
 const isLocked = async (email: string) => {
   return !!(await cache.get(lockKey(email)))
 }
+
+const handleLockoutResponse = (ctx: Ctx, email: string) => {
+  ctx.set("X-Account-Locked", "1")
+  ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
+  console.log(
+    `[auth] login blocked (post-failure) due to lock email=${normalizeEmail(email)}`
+  )
+  return ctx.throw(403, "Account temporarily locked. Try again later.")
+}
 const onFailed = async (email: string) => {
   if (!email) return
   const key = failKey(email)
@@ -112,14 +121,6 @@ export const login = async (
     )
     ctx.throw(403, "Invalid credentials")
   }
-  if (dbUser && (await isLocked(email))) {
-    console.log(
-      `[auth] login blocked due to lock email=${normalizeEmail(email)}`
-    )
-    ctx.set("X-Account-Locked", "1")
-    ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
-    ctx.throw(403, "Account temporarily locked. Try again later.")
-  }
 
   return passport.authenticate(
     "local",
@@ -129,14 +130,7 @@ export const login = async (
           await onFailed(email)
         }
         if (await isLocked(email)) {
-          ctx.set("X-Account-Locked", "1")
-          ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
-          console.log(
-            `[auth] login blocked (post-failure) due to lock email=${normalizeEmail(
-              email
-            )}`
-          )
-          return ctx.throw(403, "Account temporarily locked. Try again later.")
+          return handleLockoutResponse(ctx, email)
         }
         const reason =
           (info && info.message) || (err && err.message) || "unknown"
