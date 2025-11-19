@@ -5,6 +5,7 @@
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
   import { onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import type { UIMessage, UIMessageChunk } from "ai"
   import { v4 as uuidv4 } from "uuid"
@@ -14,6 +15,8 @@
   export let workspaceId: string
   export let chat: AgentChat
   export let loading: boolean = false
+
+  const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
 
   let inputValue = ""
   let chatAreaElement: HTMLDivElement
@@ -65,6 +68,7 @@
 
     let streamingText = ""
     let assistantIndex = -1
+    let streamCompleted = false
 
     try {
       await API.agentChatStream(
@@ -100,6 +104,7 @@
             scrollToBottom()
           } else if (chunk.type === "text-end") {
             loading = false
+            streamCompleted = true
             if (assistantIndex >= 0) {
               const messages = [...chat.messages]
               const assistant = { ...messages[assistantIndex] }
@@ -124,6 +129,13 @@
           loading = false
         }
       )
+
+      if (streamCompleted && chat) {
+        setTimeout(() => {
+          const chatId = chat._id || ""
+          dispatch("chatSaved", { chatId })
+        }, 500)
+      }
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
