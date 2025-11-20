@@ -338,10 +338,7 @@ class QueryRunner {
           continue
         }
         if (
-          this.doesStaticBindingMatchLocal(
-            localBindingValue,
-            staticBindingKey
-          )
+          this.doesStaticBindingMatchLocal(localBindingValue, staticBindingKey)
         ) {
           parameters[localBindingName] = staticBindingValue
         }
@@ -396,7 +393,9 @@ class QueryRunner {
     if (block.length <= braceLength * 2) {
       return false
     }
-    const cleanedBinding = block.slice(braceLength, -braceLength).replace(/\s+/g, "")
+    const cleanedBinding = block
+      .slice(braceLength, -braceLength)
+      .replace(/\s+/g, "")
     const binding = cleanedBinding.replace(/^Datasource\.Static\./i, "")
     const target = staticBindingName.replace(/\s+/g, "")
     return binding === target
