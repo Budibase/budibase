@@ -8,6 +8,7 @@ import {
   LogicalOperator,
   RangeOperator,
   SearchFilterKey,
+  SearchFilters,
 } from "../../../../sdk"
 import { PaginationResponse, SortOrder, SortType } from "../../pagination"
 
@@ -60,6 +61,7 @@ const searchRowRequest = z.object({
       onEmptyFilter: z.nativeEnum(EmptyFilterOption).optional(),
       ...queryFilterValidation,
     })
+    .passthrough()
     .optional(),
   paginate: z.boolean().optional(),
   bookmark: z.union([z.string(), z.number()]).nullish(),
@@ -74,7 +76,12 @@ const searchRowRequest = z.object({
 
 export const searchRowRequestValidator = searchRowRequest
 
-export type SearchRowRequest = z.infer<typeof searchRowRequest>
+type InferredSearchRowRequest = z.infer<typeof searchRowRequest>
+
+export type SearchRowRequest = Omit<InferredSearchRowRequest, "query"> & {
+  query?: SearchFilters
+}
+
 export type SearchViewRowRequest = Pick<
   SearchRowRequest,
   | "sort"
