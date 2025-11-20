@@ -1,4 +1,4 @@
-import { ImportInfo } from "./base"
+import { GetQueriesOptions, ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
@@ -112,7 +112,8 @@ export class OpenAPI2 extends OpenAPISource {
 
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
-    const url = this.getUrl()?.href
+    const rawUrl = this.getUrl()?.href
+    const url = rawUrl ? this.convertPathVariables(rawUrl) : undefined
     const docsUrl =
       this.document.externalDocs?.url ||
       this.document.info?.termsOfService ||
@@ -131,7 +132,7 @@ export class OpenAPI2 extends OpenAPISource {
 
   getQueries = async (
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]> => {
     const url = this.getUrl()
     const queries = []
