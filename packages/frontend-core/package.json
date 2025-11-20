@@ -12,6 +12,7 @@
     "@budibase/bbui": "*",
     "@budibase/shared-core": "*",
     "@budibase/types": "*",
+    "ai": "^5.0.93",
     "dayjs": "^1.10.8",
     "lodash": "4.17.21",
     "shortid": "2.2.15",
