@@ -47,7 +47,7 @@ describe("/authenticate", () => {
       })
 
       // Create a user with the custom role
-      const email = "customroleuser@test.com"
+      const email = "customroleuser@example.com"
       const user = await config.createUser({
         email,
         roles: {
@@ -75,7 +75,7 @@ describe("/authenticate", () => {
         // Verify that the roleId is the custom role, not PUBLIC
         expect(res.body.roleId).toEqual(customRole._id)
         expect(res.body.roleId).not.toEqual(roles.BUILTIN_ROLE_IDS.PUBLIC)
-        expect(res.body._id).toEqual(generateUserMetadataID(user._id))
+        expect(res.body._id).toEqual(generateUserMetadataID(user._id!))
       })
     })
   })
