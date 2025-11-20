@@ -20,6 +20,7 @@ export const patchAPI = (API: APIClient) => {
         let rowTableId = row.tableId || tableId
         let table = tables[rowTableId]
         if (!table) {
+          // Fetch table schema so we can check column types
           table = await API.fetchTableDefinition(rowTableId)
           tables[rowTableId] = table
         }
