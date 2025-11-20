@@ -9,6 +9,7 @@
     Button,
     Heading,
     Icon,
+    StatusLight,
     type ModalAPI,
     notifications,
     Tabs,
@@ -184,7 +185,7 @@
       </div>
 
       {#if activeSubTab === "All"}
-        <div class="agents-grid">
+        <div class="agents-grid" class:empty={!agents.length}>
           {#each agents as agent, index}
             {@const iconName = getAgentIcon(agent)}
             {@const iconColor = getAgentIconColor(agent, index)}
@@ -198,8 +199,20 @@
                 <Icon name={iconName} size="XL" color={iconColor} />
               </div>
               <div class="card-content">
-                <div class="card-name">
-                  <Body size="M">{agent.name}</Body>
+                <div class="card-header-row">
+                  <div class="card-name">
+                    <Body size="M">{agent.name}</Body>
+                  </div>
+                  <StatusLight
+                    size="S"
+                    color={agent.live
+                      ? "var(--spectrum-global-color-static-green-600)"
+                      : "var(--spectrum-global-color-static-gray-500)"}
+                  >
+                    <Body size="XS">
+                      {agent.live ? "Live" : "Draft"}
+                    </Body>
+                  </StatusLight>
                 </div>
                 <div class="card-creator">
                   <Body size="S">Created by Budibase</Body>
@@ -233,7 +246,7 @@
           {/if}
         </div>
       {:else if activeSubTab === "Live" || activeSubTab === "Draft"}
-        <div class="agents-grid">
+        <div class="agents-grid" class:empty={!agents.length}>
           {#each agents as agent, index}
             {@const iconName = getAgentIcon(agent)}
             {@const iconColor = getAgentIconColor(agent, index)}
@@ -247,8 +260,20 @@
                 <Icon name={iconName} size="XL" color={iconColor} />
               </div>
               <div class="card-content">
-                <div class="card-name">
-                  <Body size="M">{agent.name}</Body>
+                <div class="card-header-row">
+                  <div class="card-name">
+                    <Body size="M">{agent.name}</Body>
+                  </div>
+                  <StatusLight
+                    size="S"
+                    color={agent.live
+                      ? "var(--spectrum-global-color-static-green-600)"
+                      : "var(--spectrum-global-color-static-gray-500)"}
+                  >
+                    <Body size="XS">
+                      {agent.live ? "Live" : "Draft"}
+                    </Body>
+                  </StatusLight>
                 </div>
                 <div class="card-creator">
                   <Body size="S">Created by Budibase</Body>
@@ -384,6 +409,13 @@
     gap: calc(var(--spacing-xl) * 3);
   }
 
+  .agents-grid.empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 320px;
+  }
+
   .agent-card {
     background: var(--spectrum-alias-background-color-primary);
     border: 1px solid var(--spectrum-global-color-gray-300);
@@ -421,6 +453,13 @@
     flex-direction: column;
     gap: var(--spacing-xs);
     flex: 1;
+  }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 
   .card-name {

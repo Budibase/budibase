@@ -214,6 +214,8 @@
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
     background: var(--background);
     overflow-y: auto;
   }
