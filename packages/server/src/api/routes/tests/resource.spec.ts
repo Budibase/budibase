@@ -828,6 +828,57 @@ describe("/api/resources/usage", () => {
       )
     })
 
+    it("copies table rows on subsequent duplications when destination tables are empty", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+
+      const table = await createInternalTable({ name: "Rows retry" })
+      const createdRow = await config.api.row.save(table._id!, {
+        tableId: table._id!,
+        name: "Budget holder",
+      })
+
+      await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resources: [table._id!],
+          toWorkspace: newWorkspace.appId,
+          copyRows: false,
+        },
+        { status: 204 }
+      )
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const rows = await config.api.row.fetch(table._id!)
+          expect(rows).toEqual([])
+        }
+      )
+
+      await config.api.resource.duplicateResourceToWorkspace(
+        {
+          resources: [table._id!],
+          toWorkspace: newWorkspace.appId,
+          copyRows: true,
+        },
+        { status: 204 }
+      )
+
+      await config.withHeaders(
+        { [Header.APP_ID]: newWorkspace.appId },
+        async () => {
+          const rows = await config.api.row.fetch(table._id!)
+          expect(rows).toEqual([
+            expect.objectContaining({
+              _id: createdRow._id,
+              name: createdRow.name,
+            }),
+          ])
+        }
+      )
+    })
+
     it("copies attachment files when duplicating tables with attachments", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,

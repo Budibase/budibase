@@ -615,10 +615,6 @@ export async function duplicateResourcesToWorkspace(
   const existingIds = new Set(existingDocuments.map(doc => doc._id))
   const toCopy = resources.filter(id => !existingIds.has(id))
 
-  if (!toCopy.length) {
-    return
-  }
-
   const documentToCopy = await context
     .getWorkspaceDB()
     .getMultiple<AnyDocument>(resources, {
@@ -628,37 +624,39 @@ export async function duplicateResourcesToWorkspace(
     doc => doc._id && toCopy.includes(doc._id)
   )
 
-  if (!docsToInsert.length) {
-    return
-  }
-
   const fromWorkspace = context.getWorkspaceId()
   if (!fromWorkspace) {
     throw new Error("Could not get workspaceId")
   }
-  await destinationDb.bulkDocs(
-    docsToInsert.map<AnyDocument>(doc => {
-      const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
-      delete sanitizedDoc._rev
-      delete sanitizedDoc.createdAt
-      delete sanitizedDoc.updatedAt
-      if (isAutomation(sanitizedDoc) || isWorkspaceApp(sanitizedDoc)) {
-        sanitizedDoc.disabled = true
-      }
-      if (isAutomation(sanitizedDoc)) {
-        sanitizedDoc.appId = toWorkspace
-      }
-      return sanitizedDoc
-    })
-  )
+  if (docsToInsert.length) {
+    await destinationDb.bulkDocs(
+      docsToInsert.map<AnyDocument>(doc => {
+        const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
+        delete sanitizedDoc._rev
+        delete sanitizedDoc.createdAt
+        delete sanitizedDoc.updatedAt
+        if (isAutomation(sanitizedDoc) || isWorkspaceApp(sanitizedDoc)) {
+          sanitizedDoc.disabled = true
+        }
+        if (isAutomation(sanitizedDoc)) {
+          sanitizedDoc.appId = toWorkspace
+        }
+        return sanitizedDoc
+      })
+    )
+  }
 
   if (options?.copyRows ?? true) {
     await duplicateInternalTableRows(
-      docsToInsert.filter(isTable),
+      documentToCopy.filter(isTable),
       destinationDb,
       fromWorkspace,
       toWorkspace
     )
+  }
+
+  if (!docsToInsert.length) {
+    return
   }
 
   const fromWorkspaceName =
