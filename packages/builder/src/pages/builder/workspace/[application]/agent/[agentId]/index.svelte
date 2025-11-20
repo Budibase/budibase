@@ -241,11 +241,11 @@
     if (!messageCount) {
       return "No messages"
     }
-    const msg = chat.messages[messageCount - 1]?.parts?.some(
-      part => part.type === "text"
-    )
-      ? chat.messages[messageCount - 1]?.parts
-          ?.filter(part => part.type === "text")
+
+    let lastMessage = chat.messages[messageCount - 1].parts
+    const msg = lastMessage.some(part => part.type === "text")
+      ? lastMessage
+          .filter(part => part.type === "text")
           .map(part => part.text)
           .join("")
       : "No preview available"

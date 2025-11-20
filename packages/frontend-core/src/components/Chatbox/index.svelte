@@ -94,7 +94,7 @@
               const assistant = { ...messages[assistantIndex] }
               const parts = [...assistant.parts]
               const textPart = parts.find(p => p.type === "text")
-              if (textPart && textPart.type === "text") {
+              if (textPart) {
                 textPart.text = streamingText
               }
               assistant.parts = parts
@@ -110,7 +110,7 @@
               const assistant = { ...messages[assistantIndex] }
               const parts = [...assistant.parts]
               const textPart = parts.find(p => p.type === "text")
-              if (textPart && textPart.type === "text") {
+              if (textPart) {
                 textPart.state = "done"
               }
               assistant.parts = parts

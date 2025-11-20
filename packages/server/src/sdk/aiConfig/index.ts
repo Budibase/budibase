@@ -192,14 +192,14 @@ export async function getLiteLLMModelConfigOrThrow(): Promise<{
 }> {
   const aiConfig = await getDefault()
   if (!aiConfig) {
-    throw new HTTPError("Chat config not found", 422)
+    throw new HTTPError("Chat config not found", 400)
   }
 
   const secretKey = await getLiteLLMSecretKey()
   if (!secretKey) {
     throw new HTTPError(
       "LiteLLM should be configured. Contact support if the issue persists.",
-      422
+      500
     )
   }
 
