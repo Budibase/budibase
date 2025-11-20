@@ -635,9 +635,7 @@ describe("rest", () => {
     await config.api.query.preview({
       datasourceId: staticDatasource._id!,
       name: generator.guid(),
-      parameters: [
-        { name: "companyDomain", default: "{{ companyDomain }}" },
-      ],
+      parameters: [{ name: "companyDomain", default: "{{ companyDomain }}" }],
       queryVerb: "read",
       transformer: "",
       schema: {},
