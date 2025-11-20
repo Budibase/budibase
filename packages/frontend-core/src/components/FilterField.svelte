@@ -117,15 +117,16 @@
 
   /**
    * Converts arrays into strings. The CodeEditor expects a string or encoded JS
-   * FilterValueType.VALUE values are emptied when first loaded in the binding drawer.
+   * value, so normalise everything to a readable string but preserve whatever the
+   * user last entered when reopening the drawer.
    *
    * @param{string} fieldValue
    */
   const toDrawerValue = fieldValue => {
-    if (filter.valueType == FilterValueType.VALUE) {
-      return ""
-    }
-    return Array.isArray(fieldValue) ? fieldValue.join(",") : readableValue
+    const normalised = Array.isArray(fieldValue)
+      ? fieldValue.join(",")
+      : readableValue
+    return normalised ?? ""
   }
 </script>
 
