@@ -18,15 +18,22 @@ import {
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  Row,
+  Table,
   UserCtx,
   Workspace,
 } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronOrEmailTrigger,
 } from "../../../automations/utils"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import {
+  DocumentType,
+  getAutomationParams,
+  getRowParams,
+} from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -121,6 +128,59 @@ async function initDeployedApp(prodAppId: string) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function applyPendingColumnRenames(
+  workspaceId: string,
+  opts: { applyRows: boolean }
+) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      const pending = table.pendingRenames
+      if (!pending?.length) {
+        continue
+      }
+
+      if (opts.applyRows) {
+        const rows = await db.allDocs<Row>(
+          getRowParams(table._id, null, {
+            include_docs: true,
+          })
+        )
+
+        const docs = rows.rows
+          .map(({ doc }) => doc)
+          .filter((doc): doc is Row => !!doc)
+
+        if (docs.length > 0) {
+          const updatedRows = docs.map(original => {
+            const row = cloneDeep(original) as Row
+            for (const rename of pending) {
+              if (Object.prototype.hasOwnProperty.call(row, rename.old)) {
+                row[rename.updated] = row[rename.old]
+                delete row[rename.old]
+              }
+            }
+            return row
+          })
+
+          await db.bulkDocs(updatedRows)
+        }
+      }
+
+      const updatedTable: Table = {
+        ...table,
+        pendingRenames: [],
+      }
+      await db.put(updatedTable)
+    }
   })
 }
 
@@ -269,6 +329,9 @@ export const publishWorkspace = async function (
             checkpoint: !seedProductionTables,
           })
         )
+
+        await applyPendingColumnRenames(prodId, { applyRows: true })
+        await applyPendingColumnRenames(devId, { applyRows: false })
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({
