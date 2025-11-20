@@ -7,6 +7,8 @@ export interface Agent extends Document {
   aiconfig: string
   allowedTools?: AgentToolSource[]
   promptInstructions?: string
+  live?: boolean
+  icon?: string
 }
 
 export interface AgentChat extends Document {

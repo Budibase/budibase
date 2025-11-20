@@ -9,6 +9,7 @@ import {
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   allowedTools: agent.allowedTools || [],
+  live: agent.live ?? false,
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -51,6 +52,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     aiconfig: request.aiconfig,
     allowedTools: request.allowedTools,
     promptInstructions: request.promptInstructions,
+    live: request.live ?? false,
+    icon: request.icon,
     createdAt: now,
   }
 

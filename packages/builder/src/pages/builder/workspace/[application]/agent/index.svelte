@@ -98,7 +98,14 @@
     return colors[index % colors.length]
   }
 
-  $: agents = $agentsStore.agents
+  $: filteredAgents = $agentsStore.agents.filter(agent => {
+    if (activeSubTab === "All") return true
+    if (activeSubTab === "Live") return agent.live === true
+    if (activeSubTab === "Draft") return agent.live !== true
+    return true
+  })
+
+  $: agents = filteredAgents
     .map(agent => {
       return {
         ...agent,
@@ -183,7 +190,7 @@
             {@const iconColor = getAgentIconColor(agent, index)}
             <a
               class="agent-card"
-              href={$url(`./${agent._id}`)}
+              href={$url(`./${agent._id}${agent.live ? "" : "/config"}`)}
               on:contextmenu={e => openContextMenu(e, agent)}
               class:active={showHighlight && selectedAgent === agent}
             >
@@ -225,13 +232,56 @@
             </NoResults>
           {/if}
         </div>
-      {:else if activeSubTab === "Live"}
-        <div class="empty-state">
-          <Body size="M">Live agents will appear here</Body>
-        </div>
-      {:else if activeSubTab === "Draft"}
-        <div class="empty-state">
-          <Body size="M">Draft agents will appear here</Body>
+      {:else if activeSubTab === "Live" || activeSubTab === "Draft"}
+        <div class="agents-grid">
+          {#each agents as agent, index}
+            {@const iconName = getAgentIcon(agent)}
+            {@const iconColor = getAgentIconColor(agent, index)}
+            <a
+              class="agent-card"
+              href={$url(`./${agent._id}${agent.live ? "" : "/config"}`)}
+              on:contextmenu={e => openContextMenu(e, agent)}
+              class:active={showHighlight && selectedAgent === agent}
+            >
+              <div class="card-icon" style="background-color: {iconColor}20;">
+                <Icon name={iconName} size="XL" color={iconColor} />
+              </div>
+              <div class="card-content">
+                <div class="card-name">
+                  <Body size="M">{agent.name}</Body>
+                </div>
+                <div class="card-creator">
+                  <Body size="S">Created by Budibase</Body>
+                </div>
+              </div>
+              <div class="card-actions">
+                <div class="ctx-btn">
+                  <Icon
+                    name="dots-three"
+                    size="M"
+                    hoverable
+                    on:click={e => openContextMenu(e, agent)}
+                  />
+                </div>
+                <FavouriteResourceButton
+                  favourite={agent.favourite}
+                  position={TooltipPosition.Left}
+                  noWrap
+                />
+              </div>
+            </a>
+          {/each}
+          {#if !agents.length}
+            <NoResults
+              ctaText="Create your first agent"
+              onCtaClick={() => upsertModal.show()}
+              resourceType="agent"
+            >
+              {activeSubTab === "Live"
+                ? "No live agents yet!"
+                : "No draft agents yet!"}
+            </NoResults>
+          {/if}
         </div>
       {/if}
     {:else if activeTab === "Inspiration"}
