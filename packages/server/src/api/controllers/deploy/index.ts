@@ -163,7 +163,7 @@ async function applyPendingColumnRenames(
           const updatedRows = docs.map(original => {
             const row = cloneDeep(original) as Row
             for (const rename of pending) {
-              if (Object.prototype.hasOwnProperty.call(row, rename.old)) {
+              if (Object.hasOwn(row, rename.old)) {
                 row[rename.updated] = row[rename.old]
                 delete row[rename.old]
               }
