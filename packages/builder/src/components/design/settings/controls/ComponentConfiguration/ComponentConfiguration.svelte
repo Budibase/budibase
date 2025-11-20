@@ -19,7 +19,7 @@
   export let key: string
   export let nested: boolean
   export let max: number | null
-  export let component: string // The component type to configure (e.g., "dataprovider", "plugin/my-plugin")
+  export let componentType: string // The component type to configure (e.g., "dataprovider", "plugin/my-plugin")
 
   const dispatch = createEventDispatcher()
 
@@ -47,7 +47,7 @@
     showInstanceName: true,
   }
   $: canAddComponents = max == null || componentList.length < max
-  $: resolvedComponentType = resolveComponentType(component)
+  $: resolvedComponentType = resolveComponentType(componentType)
   $: componentDefinition = resolvedComponentType
     ? componentStore.getDefinition(resolvedComponentType)
     : null

@@ -20,15 +20,15 @@
     item: any,
     componentDef: any
   ) {
-    return showInstanceName
-      ? item._instanceName ||
-          componentDef?.friendlyName ||
-          componentDef?.name ||
-          "Component"
-      : componentDef?.friendlyName ||
-          componentDef?.name ||
-          item._instanceName ||
-          "Component"
+    if (showInstanceName && item._instanceName) {
+      return item._instanceName
+    }
+    return (
+      componentDef?.friendlyName ||
+      componentDef?.name ||
+      item._instanceName ||
+      "Component"
+    )
   }
 
   // If this is a nested setting (for example inside a grid or form block) then

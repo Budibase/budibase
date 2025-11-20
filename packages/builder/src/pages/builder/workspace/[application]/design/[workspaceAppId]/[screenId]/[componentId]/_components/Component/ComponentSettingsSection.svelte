@@ -169,7 +169,7 @@
                 allowHTML: setting.allowHTML,
 
                 // Component configuration
-                component: setting.component,
+                componentType: setting.componentType,
                 wide: setting.wide,
               }}
               {bindings}
