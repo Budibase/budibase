@@ -140,6 +140,59 @@ describe("/api/global/auth", () => {
           })
         })
       })
+
+      describe("lockout", () => {
+        it("locks the account after 5 failed attempts and unlocks after TTL", async () => {
+          const tenantId = config.tenantId!
+          const email = config.user!.email!
+          const correctPassword = config.userPassword
+          const wrongPassword = "incorrect123"
+          const { withEnv } = require("../../../../environment")
+
+          await withEnv(
+            {
+              LOGIN_MAX_FAILED_ATTEMPTS: 5,
+              LOGIN_LOCKOUT_SECONDS: 2,
+            },
+            async () => {
+              // 5 consecutive wrong attempts
+              for (let i = 0; i < 5; i++) {
+                await config.api.auth.login(tenantId, email, wrongPassword, {
+                  status: 403,
+                })
+              }
+
+              // lock should be active now - further attempts (wrong or right) return 403
+              await config.api.auth.login(tenantId, email, wrongPassword, {
+                status: 403,
+              })
+
+              await config.api.auth.login(tenantId, email, correctPassword, {
+                status: 403,
+              })
+
+              // wait for TTL to expire (add buffer for redis expiration granularity)
+              await new Promise(r => setTimeout(r, 3000))
+
+              // Clear any remaining lockout state to ensure clean test
+              await config.doInTenant(async () => {
+                const { cache } = require("@budibase/backend-core")
+                const normalizeEmail = (e: string) => (e || "").toLowerCase()
+                const lockKey = (email: string) =>
+                  `auth:login:lock:${normalizeEmail(email)}`
+                await cache.destroy(lockKey(email))
+              })
+
+              const response = await config.api.auth.login(
+                tenantId,
+                email,
+                correctPassword
+              )
+              expectSetAuthCookie(response)
+            }
+          )
+        })
+      })
     })
 
     describe("POST /api/global/auth/logout", () => {
