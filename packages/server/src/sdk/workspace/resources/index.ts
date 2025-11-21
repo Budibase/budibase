@@ -503,9 +503,9 @@ async function bulkInsertRows(
     let attempts = 0
     while (pending.length && attempts < ROW_WRITE_RETRIES) {
       attempts++
-      const response = (await destinationDb.bulkDocs(
-        pending
-      )) as Array<{ error?: unknown }>
+      const response = (await destinationDb.bulkDocs(pending)) as Array<{
+        error?: unknown
+      }>
       const failed: AnyDocument[] = []
       response.forEach((result, idx) => {
         if (result.error) {
