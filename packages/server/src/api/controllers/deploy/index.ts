@@ -18,22 +18,16 @@ import {
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
-  Row,
   Table,
   UserCtx,
   Workspace,
 } from "@budibase/types"
-import { cloneDeep } from "lodash/fp"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronOrEmailTrigger,
 } from "../../../automations/utils"
-import {
-  DocumentType,
-  getAutomationParams,
-  getRowParams,
-} from "../../../db/utils"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -136,7 +130,6 @@ async function applyPendingColumnRenames(
   opts: { applyRows: boolean }
 ) {
   await context.doInWorkspaceContext(workspaceId, async () => {
-    const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
 
     for (const table of tables) {
@@ -149,37 +142,19 @@ async function applyPendingColumnRenames(
       }
 
       if (opts.applyRows) {
-        const rows = await db.allDocs<Row>(
-          getRowParams(table._id, null, {
-            include_docs: true,
-          })
-        )
-
-        const docs = rows.rows
-          .map(({ doc }) => doc)
-          .filter((doc): doc is Row => !!doc)
-
-        if (docs.length > 0) {
-          const updatedRows = docs.map(original => {
-            const row = cloneDeep(original) as Row
-            for (const rename of pending) {
-              if (Object.hasOwn(row, rename.old)) {
-                row[rename.updated] = row[rename.old]
-                delete row[rename.old]
-              }
-            }
-            return row
-          })
-
-          await db.bulkDocs(updatedRows)
+        // Process each rename through the SDK to handle row updates
+        for (const rename of pending) {
+          await sdk.tables.update(table, rename)
         }
+      } else {
+        // Just clear pending renames without processing rows
+        const updatedTable: Table = {
+          ...table,
+          pendingRenames: [],
+        }
+        const db = context.getWorkspaceDB()
+        await db.put(updatedTable)
       }
-
-      const updatedTable: Table = {
-        ...table,
-        pendingRenames: [],
-      }
-      await db.put(updatedTable)
     }
   })
 }
