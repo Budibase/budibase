@@ -674,7 +674,7 @@ describe("rest", () => {
       parameters: [
         {
           name: "localDomain",
-          default: "{{ Datasource.Static.companyDomain }}",
+          default: "{{ companyDomain }}",
         },
       ],
       queryVerb: "read",
@@ -714,7 +714,7 @@ describe("rest", () => {
       parameters: [
         {
           name: "companyDomain",
-          default: "{{ Datasource.Static.companyDomain }}",
+          default: "{{ companyDomain }}",
         },
       ],
       queryVerb: "read",
