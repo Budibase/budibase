@@ -87,7 +87,7 @@
   <div class="config-page">
     <div class="config-content">
       <div class="config-form">
-        <Layout paddingY="L" gap="S">
+        <Layout paddingY="XL" gap="L">
           <div class="name-row">
             <div class="name-input">
               <Input
@@ -128,7 +128,7 @@
             />
           </div>
 
-          <div class="section">
+          <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Variables / Bindings</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -141,7 +141,7 @@
             </div>
           </div>
 
-          <div class="section">
+          <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Tools</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -154,7 +154,7 @@
             </div>
           </div>
 
-          <div class="section">
+          <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Guardrails</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -168,19 +168,21 @@
           </div>
 
           <div class="section">
-            <Heading size="XS">Goal</Heading>
             <Input
+              label="Goal"
+              labelPosition="left"
               bind:value={draft.goal}
               placeholder="Raise a security alert."
             />
           </div>
 
           <div class="section">
-            <Heading size="XS">Agent instructions</Heading>
             <TextArea
+              label="Agent instructions"
+              labelPosition="left"
               bind:value={draft.promptInstructions}
               placeholder="You are the Security Agent. When a user reports a possible incident, guide them to provide type, severity, and description. After collecting inputs, call the automation raise_security_alert. Respond concisely and confirm submission."
-              minHeight={100}
+              minHeight={140}
             />
           </div>
         </Layout>
@@ -214,25 +216,24 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
     height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0 var(--spacing-l);
+    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
     box-sizing: border-box;
   }
 
   .config-content {
-    flex: 0 0 auto;
-    max-width: 900px;
+    max-width: 840px;
     width: 100%;
-    margin: var(--spacing-l) auto;
-    padding: var(--spacing-m) var(--spacing-m) 0 var(--spacing-m);
+    margin: 0 auto;
+    padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
-    border-radius: var(--spacing-xl);
+    border-radius: 16px;
     border: 1px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-alias-background-color-primary);
   }
 
   .config-form {
@@ -268,7 +269,7 @@
   /* Align left-position labels into a clean column */
   :global(.config-form .spectrum-Form-item:not(.above)) {
     display: grid;
-    grid-template-columns: 70px 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
     column-gap: var(--spacing-m);
   }
@@ -280,30 +281,46 @@
   .section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+  }
+
+  .section.section-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--spacing-m);
+    border-radius: 12px;
+    background-color: var(--background-alt);
+    border: 1px dashed var(--spectrum-global-color-gray-300);
   }
 
   .section-header {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    max-width: 70%;
   }
 
   .add-button {
     display: flex;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .config-footer {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    padding-top: var(--spacing-l);
-    border-top: 1px solid var(--spectrum-global-color-gray-300);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-l);
+    border-radius: 12px;
+    background-color: var(--background-alt);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     align-items: center;
+    text-align: center;
   }
 
   .live-banner {
-    padding: var(--spacing-m) 0 0;
+    padding: 0;
   }
 </style>
