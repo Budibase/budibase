@@ -20,6 +20,14 @@
     query => query.datasourceId === datasource?._id
   )
 
+  const getTemplateStaticVariableKeys = datasource => {
+    if (!datasource?.restTemplate) {
+      return []
+    }
+    const configured = datasource?.config?.templateStaticVariables || []
+    return Array.from(new Set(configured.filter(Boolean)))
+  }
+
   const buildStaticVariablesObject = values => {
     const next = {}
     values.forEach(({ name, value }) => {
@@ -48,6 +56,8 @@
     }
   }
 
+  $: templateStaticVariableKeys = getTemplateStaticVariableKeys(datasource)
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -66,6 +76,7 @@
         keyPlaceholder="Name"
         headings
         object={localUpdatedDatasource?.config?.staticVariables || {}}
+        lockedKeys={templateStaticVariableKeys}
         on:change={({ detail }) => handleStaticChange(detail)}
         bindings={$licensing.environmentVariablesEnabled
           ? getEnvironmentBindings()

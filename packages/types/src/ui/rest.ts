@@ -6,6 +6,7 @@ export interface RestTemplateSpec {
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
+  | "BambooHR"
   | "GitHub"
   | "PagerDuty"
   | "Slack Web API"
