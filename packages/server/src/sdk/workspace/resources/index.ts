@@ -432,7 +432,7 @@ async function remapRowAttachments(
     return
   }
 
-  const rowData = row as Record<string, any>
+  const rowData: Record<string, unknown> = row
 
   for (const column of columns) {
     const value = rowData[column.field]
@@ -441,7 +441,7 @@ async function remapRowAttachments(
     }
     if (column.type === FieldType.ATTACHMENTS && Array.isArray(value)) {
       const updated: RowAttachment[] = []
-      for (const attachment of value) {
+      for (const attachment of value as RowAttachment[]) {
         const remapped = await remapAttachmentValue(attachment, context)
         updated.push(remapped)
       }
@@ -451,7 +451,10 @@ async function remapRowAttachments(
         column.type === FieldType.SIGNATURE_SINGLE) &&
       value
     ) {
-      rowData[column.field] = await remapAttachmentValue(value, context)
+      rowData[column.field] = await remapAttachmentValue(
+        value as RowAttachment,
+        context
+      )
     }
   }
 }
@@ -500,9 +503,11 @@ async function bulkInsertRows(
     let attempts = 0
     while (pending.length && attempts < ROW_WRITE_RETRIES) {
       attempts++
-      const response = await destinationDb.bulkDocs(pending)
+      const response = (await destinationDb.bulkDocs(
+        pending
+      )) as Array<{ error?: unknown }>
       const failed: AnyDocument[] = []
-      response.forEach((result: any, idx: number) => {
+      response.forEach((result, idx) => {
         if (result.error) {
           failed.push(pending[idx])
         }
