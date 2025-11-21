@@ -125,8 +125,8 @@ export const generateAgentID = () => {
   return `${DocumentType.AGENT}${SEPARATOR}${newid()}`
 }
 
-export const generateAgentChatID = () => {
-  return `${DocumentType.AGENT_CHAT}${SEPARATOR}${newid()}`
+export const generateAgentChatID = (agentId: string) => {
+  return `${DocumentType.AGENT_CHAT}${SEPARATOR}${DocumentType.AGENT}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
 }
 
 export const generateAgentToolSourceID = () => {

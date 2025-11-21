@@ -89,6 +89,7 @@ export function createAgentValidator() {
       aiconfig: Joi.string().required(),
       promptInstructions: OPTIONAL_STRING,
       allowedTools: OPTIONAL_ARRAY.items(Joi.object().unknown(true)),
+      live: Joi.boolean().optional(),
     })
   )
 }
