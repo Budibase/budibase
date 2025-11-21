@@ -488,4 +488,47 @@ describe("/api/deploy", () => {
 
     expect(prodRowAfterPublish[formulaFieldName]).toBe(6)
   })
+
+  it("migrates production row data when a column is renamed in development", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      name: "Test Row",
+      description: "original value",
+    })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const renamedSchema = {
+      ...table.schema,
+      details: {
+        ...table.schema.description,
+        name: "details",
+      },
+    }
+
+    // casting to any here because TS can't infer the description property properly.
+    delete (renamedSchema as any).description
+
+    const renamedTable = await config.api.table.save({
+      ...table,
+      schema: renamedSchema,
+      _rename: { old: "description", updated: "details" },
+    })
+
+    const devRows = await config.api.row.search(renamedTable._id!, {
+      query: {},
+    })
+    expect(devRows.rows[0].details).toBe("original value")
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    await config.withProdApp(async () => {
+      const prodRows = await config.api.row.search(renamedTable._id!, {
+        query: {},
+      })
+
+      expect(prodRows.rows[0].details).toBe("original value")
+      expect(prodRows.rows[0].description).toBeUndefined()
+    })
+  })
 })

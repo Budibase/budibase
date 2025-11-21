@@ -25,6 +25,15 @@ import * as viewsSdk from "../../views"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
 
+function mergePendingRenames(
+  existing: RenameColumn[] | undefined,
+  renaming: RenameColumn
+) {
+  const pending = existing ? [...existing] : []
+  pending.push(renaming)
+  return pending
+}
+
 export async function create(
   table: WithoutDocMetadata<Table>,
   rows?: Row[],
@@ -116,6 +125,16 @@ export async function save(
   // rename row fields when table column is renamed
   if (renaming && table.schema[renaming.updated].type === FieldType.LINK) {
     throw new Error("Cannot rename a linked column.")
+  }
+
+  let pendingRenames = oldTable?.pendingRenames ? oldTable.pendingRenames : []
+  if (renaming) {
+    pendingRenames = mergePendingRenames(pendingRenames, renaming)
+  }
+  if (pendingRenames.length > 0) {
+    table.pendingRenames = pendingRenames
+  } else {
+    delete table.pendingRenames
   }
 
   table = await tableSaveFunctions.mid(table, renaming)
