@@ -16,7 +16,9 @@ export async function getResourceDependencies(
 export async function duplicateResourceToWorkspace(
   ctx: UserCtx<DuplicateResourceToWorkspaceRequest, void>
 ) {
-  const { toWorkspace, resources } = ctx.request.body
-  await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace)
+  const { toWorkspace, resources, copyRows } = ctx.request.body
+  await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace, {
+    copyRows,
+  })
   ctx.status = 204
 }
