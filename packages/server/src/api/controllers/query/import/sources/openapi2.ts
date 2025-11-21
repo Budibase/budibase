@@ -1,5 +1,9 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
-import { Query, QueryParameter, RestTemplateQueryMetadata } from "@budibase/types"
+import {
+  Query,
+  QueryParameter,
+  RestTemplateQueryMetadata,
+} from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
