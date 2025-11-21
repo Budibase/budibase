@@ -362,6 +362,7 @@ describe("Rest Importer", () => {
 
     expect(createQuery?.fields.requestBody).toEqual(expectedBody)
     expect(createQuery?.parameters).toEqual([
+      { name: "verbose", default: "false" },
       { name: "name", default: "" },
       { name: "email", default: "" },
       { name: "age", default: "0" },

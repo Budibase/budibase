@@ -271,9 +271,11 @@ export class OpenAPI2 extends OpenAPISource {
 
             // add the parameter if it can be bound in our config
             if (["query", "header", "path", "formData"].includes(param.in)) {
+              const defaultValue =
+                param.default !== undefined ? String(param.default) : ""
               parameters.push({
                 name: param.name,
-                default: param.default || "",
+                default: defaultValue,
               })
             }
           }
