@@ -25,6 +25,7 @@ export interface Query extends Document {
   queryVerb: QueryVerb
   // flag to state whether the default bindings are empty strings (old behaviour) or null
   nullDefaultSupport?: boolean
+  restTemplateMetadata?: RestTemplateQueryMetadata
 }
 
 export interface QueryPreview extends Omit<Query, "_id"> {
@@ -114,4 +115,13 @@ export enum HttpMethod {
   PUT = "PUT",
   HEAD = "HEAD",
   DELETE = "DELETE",
+}
+
+export interface RestTemplateQueryMetadata {
+  operationId?: string
+  docsUrl?: string
+  description?: string
+  originalPath?: string
+  originalRequestBody?: unknown
+  defaultBindings?: Record<string, string>
 }

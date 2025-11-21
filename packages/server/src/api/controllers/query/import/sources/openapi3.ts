@@ -1,10 +1,15 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
-import { Query, QueryParameter } from "@budibase/types"
+import {
+  Query,
+  QueryParameter,
+  RestTemplateQueryMetadata,
+} from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 import {
   GeneratedRequestBody,
+  buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
 } from "./utils/requestBody"
@@ -106,6 +111,46 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
   serverVariableBindings: Record<string, string> = {}
+
+  private getDocsUrl = (
+    operation: OpenAPIV3.OperationObject
+  ): string | undefined => {
+    return (
+      operation.externalDocs?.url ||
+      this.document.externalDocs?.url ||
+      this.document.info?.termsOfService ||
+      this.document.info?.contact?.url
+    )
+  }
+
+  private buildRestTemplateMetadata = (
+    operation: OpenAPIV3.OperationObject,
+    path: string,
+    requestBody: GeneratedRequestBody | undefined,
+    parameters: QueryParameter[]
+  ): RestTemplateQueryMetadata => {
+    const metadata: RestTemplateQueryMetadata = {
+      operationId: operation.operationId,
+      docsUrl: this.getDocsUrl(operation),
+      description: operation.description || operation.summary,
+      originalPath: path,
+    }
+
+    const parsedBody = buildSerializableRequestBody(requestBody?.body)
+    if (parsedBody !== undefined) {
+      metadata.originalRequestBody = parsedBody
+    }
+
+    const defaultBindings = this.buildDefaultBindings(
+      parameters,
+      requestBody?.bindings
+    )
+    if (defaultBindings) {
+      metadata.defaultBindings = defaultBindings
+    }
+
+    return metadata
+  }
 
   private getPrimaryServer = (): ServerObject | undefined => {
     if (this.document?.servers?.length) {
@@ -293,7 +338,10 @@ export class OpenAPI3 extends OpenAPISource {
             // add the parameter if it can be bound in our config
             if (["query", "header", "path"].includes(param.in)) {
               let defaultValue = ""
-              if (schemaNotRef(param.schema) && param.schema.default) {
+              if (
+                schemaNotRef(param.schema) &&
+                param.schema.default !== undefined
+              ) {
                 defaultValue = String(param.schema.default)
               }
               ensureParameter(param.name, defaultValue)
@@ -312,6 +360,13 @@ export class OpenAPI3 extends OpenAPISource {
           ensureParameter(variableName, defaultValue)
         }
 
+        const restTemplateMetadata = this.buildRestTemplateMetadata(
+          operation,
+          path,
+          requestBody,
+          parameters
+        )
+
         const query = this.constructQuery(
           datasourceId,
           name,
@@ -325,7 +380,8 @@ export class OpenAPI3 extends OpenAPISource {
           requestBody?.bindings ?? {},
           mimeTypes.length > 0
             ? this.bodyTypeFromMimeType(primaryMimeType)
-            : undefined
+            : undefined,
+          restTemplateMetadata
         )
         queries.push(query)
       }

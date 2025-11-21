@@ -1,13 +1,18 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
-import { Query, QueryParameter } from "@budibase/types"
+import {
+  Query,
+  QueryParameter,
+  RestTemplateQueryMetadata,
+} from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 import {
   GeneratedRequestBody,
+  buildRequestBodyFromFormDataParameters,
+  buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
-  buildRequestBodyFromFormDataParameters,
   type FormDataParameter,
 } from "./utils/requestBody"
 
@@ -48,6 +53,46 @@ const isParameter = (
  */
 export class OpenAPI2 extends OpenAPISource {
   document!: OpenAPIV2.Document
+
+  private getDocsUrl = (
+    operation: OpenAPIV2.OperationObject
+  ): string | undefined => {
+    return (
+      operation.externalDocs?.url ||
+      this.document.externalDocs?.url ||
+      this.document.info?.termsOfService ||
+      this.document.info?.contact?.url
+    )
+  }
+
+  private buildRestTemplateMetadata = (
+    operation: OpenAPIV2.OperationObject,
+    path: string,
+    requestBody: GeneratedRequestBody | undefined,
+    parameters: QueryParameter[]
+  ): RestTemplateQueryMetadata => {
+    const metadata: RestTemplateQueryMetadata = {
+      operationId: operation.operationId,
+      docsUrl: this.getDocsUrl(operation),
+      description: operation.summary || operation.description,
+      originalPath: path,
+    }
+
+    const parsedBody = buildSerializableRequestBody(requestBody?.body)
+    if (parsedBody !== undefined) {
+      metadata.originalRequestBody = parsedBody
+    }
+
+    const defaultBindings = this.buildDefaultBindings(
+      parameters,
+      requestBody?.bindings
+    )
+    if (defaultBindings) {
+      metadata.defaultBindings = defaultBindings
+    }
+
+    return metadata
+  }
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
@@ -226,9 +271,11 @@ export class OpenAPI2 extends OpenAPISource {
 
             // add the parameter if it can be bound in our config
             if (["query", "header", "path", "formData"].includes(param.in)) {
+              const defaultValue =
+                param.default !== undefined ? String(param.default) : ""
               parameters.push({
                 name: param.name,
-                default: param.default || "",
+                default: defaultValue,
               })
             }
           }
@@ -252,6 +299,13 @@ export class OpenAPI2 extends OpenAPISource {
           }
         }
 
+        const restTemplateMetadata = this.buildRestTemplateMetadata(
+          operation,
+          path,
+          requestBody,
+          parameters
+        )
+
         const query = this.constructQuery(
           datasourceId,
           name,
@@ -265,7 +319,8 @@ export class OpenAPI2 extends OpenAPISource {
           requestBody?.bindings ?? {},
           primaryMimeType
             ? this.bodyTypeFromMimeType(primaryMimeType)
-            : undefined
+            : undefined,
+          restTemplateMetadata
         )
         queries.push(query)
       }

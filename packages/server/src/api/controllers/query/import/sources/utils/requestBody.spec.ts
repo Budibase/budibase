@@ -2,6 +2,7 @@ import {
   BINDING_TOKEN_PREFIX,
   buildKeyValueRequestBody,
   buildRequestBodyFromFormDataParameters,
+  buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
   serialiseRequestBody,
@@ -118,6 +119,39 @@ describe("serialiseRequestBody", () => {
 
     expect(serialised).toMatch(/"message":\s*"\{\{ message \}\}"/)
     expect(serialised).toMatch(/"attempts":\s*\{\{ attempts \}\}/)
+  })
+})
+
+describe("buildSerializableRequestBody", () => {
+  it("returns undefined when no body is provided", () => {
+    expect(buildSerializableRequestBody(undefined)).toBeUndefined()
+  })
+
+  it("preserves structure and converts bindings into moustache tokens", () => {
+    const schema = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        nested: {
+          type: "object",
+          properties: {
+            count: { type: "integer" },
+          },
+          required: ["count"],
+        },
+      },
+      required: ["name", "nested"],
+    }
+
+    const generated = generateRequestBodyFromSchema(schema)
+    const serializable = buildSerializableRequestBody(generated?.body)
+
+    expect(serializable).toEqual({
+      name: "{{ name }}",
+      nested: {
+        count: "{{ nested_count }}",
+      },
+    })
   })
 })
 

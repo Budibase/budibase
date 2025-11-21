@@ -1,4 +1,10 @@
-import { BodyType, Query, QueryParameter, QueryVerb } from "@budibase/types"
+import {
+  BodyType,
+  Query,
+  QueryParameter,
+  QueryVerb,
+  RestTemplateQueryMetadata,
+} from "@budibase/types"
 import { URL } from "url"
 import {
   buildKeyValueRequestBody,
@@ -129,7 +135,8 @@ export abstract class ImportSource {
     parameters: QueryParameter[] = [],
     body: unknown = undefined,
     bodyBindings: Record<string, string> = {},
-    explicitBodyType?: BodyType
+    explicitBodyType?: BodyType,
+    restTemplateMetadata?: RestTemplateQueryMetadata
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -224,6 +231,10 @@ export abstract class ImportSource {
       queryVerb,
     }
 
+    if (restTemplateMetadata) {
+      query.restTemplateMetadata = restTemplateMetadata
+    }
+
     return query
   }
 
@@ -251,5 +262,30 @@ export abstract class ImportSource {
     }
 
     return queryString
+  }
+
+  protected buildDefaultBindings(
+    parameters: QueryParameter[],
+    extraBindings?: Record<string, string>
+  ): Record<string, string> | undefined {
+    const defaults: Record<string, string> = {}
+
+    for (const parameter of parameters) {
+      if (!parameter?.name) {
+        continue
+      }
+      defaults[parameter.name] = `${parameter.default ?? ""}`
+    }
+
+    if (extraBindings) {
+      for (const [key, value] of Object.entries(extraBindings)) {
+        if (!key) {
+          continue
+        }
+        defaults[key] = value
+      }
+    }
+
+    return Object.keys(defaults).length ? defaults : undefined
   }
 }
