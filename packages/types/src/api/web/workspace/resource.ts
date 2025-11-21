@@ -26,6 +26,7 @@ export interface ResourceDependenciesResponse {
 export interface DuplicateResourceToWorkspaceRequest {
   toWorkspace: string
   resources: string[]
+  copyRows?: boolean
 }
 
 export interface DuplicateResourceToWorkspaceResponse {

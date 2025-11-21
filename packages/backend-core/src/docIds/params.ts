@@ -28,10 +28,12 @@ export function getDocParams(
   if (docId == null) {
     docId = ""
   }
+  const startkey = `${docType}${SEPARATOR}${docId}`
+  const endkey = `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`
   return {
+    startkey,
+    endkey,
     ...otherProps,
-    startkey: `${docType}${SEPARATOR}${docId}`,
-    endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
 }
 
