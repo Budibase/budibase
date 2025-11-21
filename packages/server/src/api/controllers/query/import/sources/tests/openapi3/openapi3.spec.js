@@ -163,11 +163,11 @@ describe("OpenAPI3 Import", () => {
       expect.arrayContaining([
         {
           name: "subdomain",
-          default: "{{ Datasource.Static.subdomain }}",
+          default: "{{ subdomain }}",
         },
         {
           name: "domain",
-          default: "{{ Datasource.Static.domain }}",
+          default: "{{ domain }}",
         },
       ])
     )

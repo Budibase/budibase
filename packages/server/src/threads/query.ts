@@ -396,9 +396,8 @@ class QueryRunner {
     const cleanedBinding = block
       .slice(braceLength, -braceLength)
       .replace(/\s+/g, "")
-    const binding = cleanedBinding.replace(/^Datasource\.Static\./i, "")
     const target = staticBindingName.replace(/\s+/g, "")
-    return binding === target
+    return cleanedBinding === target
   }
 }
 
