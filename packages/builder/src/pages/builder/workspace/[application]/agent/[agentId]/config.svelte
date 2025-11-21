@@ -14,7 +14,6 @@
     ActionButton,
     IconPicker,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
 
@@ -86,125 +85,119 @@
     ]}
     icon="Effect"
   />
-  <div class="config-content">
-    <div class="config-header">
-      <div class="header-left">
-        <Icon name={currentAgent?.icon || "Effect"} size="L" color="#8B5CF6" />
-        <Heading size="L">Agents / {currentAgent?.name || "New agent"}</Heading>
-      </div>
-      <Button cta on:click={saveAgent}>Publish</Button>
-    </div>
-
-    <div class="config-form">
-      <Layout paddingY="L" gap="L">
-        <div class="name-row">
-          <div class="name-input">
-            <Input
-              label="Name"
-              labelPosition="left"
-              bind:value={draft.name}
-              placeholder="Give your agent a name"
+  <div class="config-page">
+    <div class="config-content">
+      <div class="config-form">
+        <Layout paddingY="L" gap="S">
+          <div class="name-row">
+            <div class="name-input">
+              <Input
+                label="Name"
+                labelPosition="left"
+                bind:value={draft.name}
+                placeholder="Give your agent a name"
+              />
+            </div>
+            <IconPicker
+              value={draft.icon}
+              on:change={e => (draft.icon = e.detail)}
             />
           </div>
-          <IconPicker
-            value={draft.icon}
-            on:change={e => (draft.icon = e.detail)}
-          />
-        </div>
 
-        <Input
-          label="Description"
-          labelPosition="left"
-          bind:value={draft.description}
-          placeholder="Give your agent a description"
-        />
-
-        <div class="model-row">
-          <div class="model-select">
-            <Select
-              label="Model"
-              labelPosition="left"
-              bind:value={draft.aiconfig}
-              options={modelOptions}
-              placeholder="Select a model"
-            />
-          </div>
-          <ActionButton
-            size="M"
-            icon="sliders-horizontal"
-            tooltip="Manage AI configurations"
-            on:click={() => bb.settings("/ai")}
-          />
-        </div>
-
-        <div class="section">
-          <div class="section-header">
-            <Heading size="M">Variables / Bindings</Heading>
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              Add variables to your agent. For example, employee_name, product,
-              ticket_status.
-            </Body>
-          </div>
-          <div class="add-button">
-            <ActionButton icon="plus">Add</ActionButton>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-header">
-            <Heading size="M">Tools</Heading>
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              Give your agent access to internal and external tools so it can
-              complete tasks.
-            </Body>
-          </div>
-          <div class="add-button">
-            <ActionButton icon="plus">Add</ActionButton>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-header">
-            <Heading size="M">Guardrails</Heading>
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              Train your agent to deliver accurate, consistent answers across
-              every workflow.
-            </Body>
-          </div>
-          <div class="add-button">
-            <ActionButton icon="plus">Add</ActionButton>
-          </div>
-        </div>
-
-        <div class="section">
-          <Heading size="M">Goal</Heading>
           <Input
-            bind:value={draft.goal}
-            placeholder="Raise a security alert."
+            label="Description"
+            labelPosition="left"
+            bind:value={draft.description}
+            placeholder="Give your agent a description"
           />
-        </div>
 
-        <div class="section">
-          <Heading size="M">Agent instructions</Heading>
-          <TextArea
-            bind:value={draft.promptInstructions}
-            placeholder="You are the Security Agent. When a user reports a possible incident, guide them to provide type, severity, and description. After collecting inputs, call the automation raise_security_alert. Respond concisely and confirm submission."
-            minHeight={160}
-          />
-        </div>
-      </Layout>
-    </div>
+          <div class="model-row">
+            <div class="model-select">
+              <Select
+                label="Model"
+                labelPosition="left"
+                bind:value={draft.aiconfig}
+                options={modelOptions}
+                placeholder="Select a model"
+              />
+            </div>
+            <ActionButton
+              size="M"
+              icon="sliders-horizontal"
+              tooltip="Manage AI configurations"
+              on:click={() => bb.settings("/ai")}
+            />
+          </div>
 
-    <div class="config-footer">
-      <div class="live-banner">
-        <Button cta icon="play" on:click={setAgentLive}>
-          Set your agent live
-        </Button>
+          <div class="section">
+            <div class="section-header">
+              <Heading size="XS">Variables / Bindings</Heading>
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                Add variables to your agent. For example, employee_name,
+                product, ticket_status.
+              </Body>
+            </div>
+            <div class="add-button">
+              <ActionButton size="S" icon="plus">Add</ActionButton>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <Heading size="XS">Tools</Heading>
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                Give your agent access to internal and external tools so it can
+                complete tasks.
+              </Body>
+            </div>
+            <div class="add-button">
+              <ActionButton size="S" icon="plus">Add</ActionButton>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <Heading size="XS">Guardrails</Heading>
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                Train your agent to deliver accurate, consistent answers across
+                every workflow.
+              </Body>
+            </div>
+            <div class="add-button">
+              <ActionButton size="S" icon="plus">Add</ActionButton>
+            </div>
+          </div>
+
+          <div class="section">
+            <Heading size="XS">Goal</Heading>
+            <Input
+              bind:value={draft.goal}
+              placeholder="Raise a security alert."
+            />
+          </div>
+
+          <div class="section">
+            <Heading size="XS">Agent instructions</Heading>
+            <TextArea
+              bind:value={draft.promptInstructions}
+              placeholder="You are the Security Agent. When a user reports a possible incident, guide them to provide type, severity, and description. After collecting inputs, call the automation raise_security_alert. Respond concisely and confirm submission."
+              minHeight={100}
+            />
+          </div>
+        </Layout>
       </div>
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
-        Once your agent is live, it will be available to use within automations.
-        You can pause your agent at any time.
-      </Body>
+
+      <div class="config-footer">
+        <div class="live-banner">
+          <Button cta icon="play" on:click={setAgentLive}>
+            Set your agent live
+          </Button>
+        </div>
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          Once your agent is live, it will be available to use within
+          automations. You can pause your agent at any time.
+        </Body>
+      </div>
     </div>
   </div>
 </div>
@@ -213,19 +206,29 @@
   .config-wrapper {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     flex: 1 1 auto;
-    height: 100%;
-    min-height: 0;
     background: var(--background);
+  }
+
+  .config-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 var(--spacing-l);
+    box-sizing: border-box;
   }
 
   .config-content {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     max-width: 900px;
     width: 100%;
     margin: var(--spacing-l) auto;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-m) var(--spacing-m) 0 var(--spacing-m);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
@@ -251,7 +254,7 @@
 
   .model-row {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: var(--spacing-m);
   }
 
@@ -278,7 +281,7 @@
   /* Align left-position labels into a clean column */
   :global(.config-form .spectrum-Form-item:not(.above)) {
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 70px 1fr;
     align-items: center;
     column-gap: var(--spacing-m);
   }
