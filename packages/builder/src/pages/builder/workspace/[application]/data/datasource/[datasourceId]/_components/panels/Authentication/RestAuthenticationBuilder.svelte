@@ -6,6 +6,8 @@
 
   export let authConfigs = []
 
+  $: normalizedAuthConfigs = authConfigs ?? []
+
   const dispatch = createEventDispatcher()
   let currentConfig = null
   let modal
@@ -24,7 +26,7 @@
     let newAuthConfigs
 
     if (currentConfig) {
-      newAuthConfigs = authConfigs.map(c => {
+      newAuthConfigs = normalizedAuthConfigs.map(c => {
         // replace the current config with the new one
         if (c._id === currentConfig._id) {
           return config
@@ -33,14 +35,14 @@
       })
     } else {
       config._id = Helpers.uuid()
-      newAuthConfigs = [...authConfigs, config]
+      newAuthConfigs = [...normalizedAuthConfigs, config]
     }
 
     dispatch("change", newAuthConfigs)
   }
 
   const onRemove = () => {
-    const newAuthConfigs = authConfigs.filter(c => {
+    const newAuthConfigs = normalizedAuthConfigs.filter(c => {
       return c._id !== currentConfig._id
     })
 
@@ -50,7 +52,7 @@
 
 <Modal bind:this={modal}>
   <RestAuthenticationModal
-    configs={authConfigs}
+    configs={normalizedAuthConfigs}
     {currentConfig}
     {onConfirm}
     {onRemove}
@@ -58,11 +60,11 @@
 </Modal>
 
 <Layout gap="S" noPadding>
-  {#if authConfigs && authConfigs.length > 0}
+  {#if normalizedAuthConfigs && normalizedAuthConfigs.length > 0}
     <Table
       on:click={({ detail }) => openConfigModal(detail)}
       {schema}
-      data={authConfigs}
+      data={normalizedAuthConfigs}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
