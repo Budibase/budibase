@@ -307,7 +307,7 @@ export class OpenAPI3 extends OpenAPISource {
             variableName
           )
           const defaultValue = hasStaticVariable
-            ? `{{ Datasource.Static.${variableName} }}`
+            ? `{{ ${variableName} }}`
             : (variable?.default ?? "")
           ensureParameter(variableName, defaultValue)
         }
