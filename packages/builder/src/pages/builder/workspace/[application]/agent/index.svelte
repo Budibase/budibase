@@ -1,6 +1,5 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { contextMenuStore, workspaceFavouriteStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import {
@@ -9,19 +8,17 @@
     Button,
     Heading,
     Icon,
-    StatusLight,
     type ModalAPI,
     notifications,
     Tabs,
     Tab,
-    TooltipPosition,
   } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
   import { WorkspaceResource } from "@budibase/types"
-  import { url } from "@roxi/routify"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
+  import AgentCard from "./AgentCard.svelte"
   import { onMount } from "svelte"
 
   let showHighlight = false
@@ -81,22 +78,6 @@
         showHighlight = false
       }
     )
-  }
-
-  const getAgentIcon = (_agent: Agent) => {
-    // default for now, will update when storing agent icon properly
-    return "SideKick"
-  }
-
-  const getAgentIconColor = (agent: Agent, index: number) => {
-    const colors = [
-      "#6366F1", // purple
-      "#F59E0B", // orange
-      "#10B981", // green
-      "#8B5CF6", // purple
-      "#EF4444", // red
-    ]
-    return colors[index % colors.length]
   }
 
   $: filteredAgents = $agentsStore.agents.filter(agent => {
@@ -187,53 +168,13 @@
       {#if activeSubTab === "All"}
         <div class="agents-grid" class:empty={!agents.length}>
           {#each agents as agent, index}
-            {@const iconName = getAgentIcon(agent)}
-            {@const iconColor = getAgentIconColor(agent, index)}
-            <a
-              class="agent-card"
-              href={$url(`./${agent._id}${agent.live ? "" : "/config"}`)}
-              on:contextmenu={e => openContextMenu(e, agent)}
-              class:active={showHighlight && selectedAgent === agent}
-            >
-              <div class="card-icon" style="background-color: {iconColor}20;">
-                <Icon name={iconName} size="XL" color={iconColor} />
-              </div>
-              <div class="card-content">
-                <div class="card-header-row">
-                  <div class="card-name">
-                    <Body size="M">{agent.name}</Body>
-                  </div>
-                  <StatusLight
-                    size="S"
-                    color={agent.live
-                      ? "var(--spectrum-global-color-static-green-600)"
-                      : "var(--spectrum-global-color-static-gray-500)"}
-                  >
-                    <Body size="XS">
-                      {agent.live ? "Live" : "Draft"}
-                    </Body>
-                  </StatusLight>
-                </div>
-                <div class="card-creator">
-                  <Body size="S">Created by Budibase</Body>
-                </div>
-              </div>
-              <div class="card-actions">
-                <div class="ctx-btn">
-                  <Icon
-                    name="dots-three"
-                    size="M"
-                    hoverable
-                    on:click={e => openContextMenu(e, agent)}
-                  />
-                </div>
-                <FavouriteResourceButton
-                  favourite={agent.favourite}
-                  position={TooltipPosition.Left}
-                  noWrap
-                />
-              </div>
-            </a>
+            <AgentCard
+              {agent}
+              {index}
+              isHighlighted={showHighlight && selectedAgent === agent}
+              favourite={agent.favourite}
+              onContextMenu={openContextMenu}
+            />
           {/each}
           {#if !agents.length}
             <NoResults
@@ -248,53 +189,13 @@
       {:else if activeSubTab === "Live" || activeSubTab === "Draft"}
         <div class="agents-grid" class:empty={!agents.length}>
           {#each agents as agent, index}
-            {@const iconName = getAgentIcon(agent)}
-            {@const iconColor = getAgentIconColor(agent, index)}
-            <a
-              class="agent-card"
-              href={$url(`./${agent._id}${agent.live ? "" : "/config"}`)}
-              on:contextmenu={e => openContextMenu(e, agent)}
-              class:active={showHighlight && selectedAgent === agent}
-            >
-              <div class="card-icon" style="background-color: {iconColor}20;">
-                <Icon name={iconName} size="XL" color={iconColor} />
-              </div>
-              <div class="card-content">
-                <div class="card-header-row">
-                  <div class="card-name">
-                    <Body size="M">{agent.name}</Body>
-                  </div>
-                  <StatusLight
-                    size="S"
-                    color={agent.live
-                      ? "var(--spectrum-global-color-static-green-600)"
-                      : "var(--spectrum-global-color-static-gray-500)"}
-                  >
-                    <Body size="XS">
-                      {agent.live ? "Live" : "Draft"}
-                    </Body>
-                  </StatusLight>
-                </div>
-                <div class="card-creator">
-                  <Body size="S">Created by Budibase</Body>
-                </div>
-              </div>
-              <div class="card-actions">
-                <div class="ctx-btn">
-                  <Icon
-                    name="dots-three"
-                    size="M"
-                    hoverable
-                    on:click={e => openContextMenu(e, agent)}
-                  />
-                </div>
-                <FavouriteResourceButton
-                  favourite={agent.favourite}
-                  position={TooltipPosition.Left}
-                  noWrap
-                />
-              </div>
-            </a>
+            <AgentCard
+              {agent}
+              {index}
+              isHighlighted={showHighlight && selectedAgent === agent}
+              favourite={agent.favourite}
+              onContextMenu={openContextMenu}
+            />
           {/each}
           {#if !agents.length}
             <NoResults
@@ -405,8 +306,8 @@
 
   .agents-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: calc(var(--spacing-xl) * 3);
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-xl);
   }
 
   .agents-grid.empty {
@@ -414,79 +315,6 @@
     justify-content: center;
     align-items: center;
     min-height: 320px;
-  }
-
-  .agent-card {
-    background: var(--spectrum-alias-background-color-primary);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--border-radius-s);
-    padding: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    text-decoration: none;
-    color: var(--text-color);
-    transition:
-      transform 130ms ease-out,
-      box-shadow 130ms ease-out,
-      border-color 130ms ease-out;
-    position: relative;
-  }
-
-  .agent-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: var(--spectrum-global-color-gray-400);
-  }
-
-  .card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--border-radius-s);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .card-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    flex: 1;
-  }
-
-  .card-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .card-name {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .card-creator {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .card-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing-xs);
-    opacity: 0;
-    transition: opacity 130ms ease-out;
-  }
-
-  .agent-card:hover .card-actions {
-    opacity: 1;
-  }
-
-  .ctx-btn {
-    display: flex;
-    align-items: center;
   }
 
   .empty-state {

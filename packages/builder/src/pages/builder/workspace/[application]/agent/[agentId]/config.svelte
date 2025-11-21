@@ -5,7 +5,6 @@
     Body,
     Button,
     Heading,
-    Icon,
     Input,
     Layout,
     notifications,
@@ -36,24 +35,24 @@
     value: config._id || "",
   }))
 
-  async function saveAgent() {
-    if (!currentAgent) return
+  // async function saveAgent() {
+  //   if (!currentAgent) return
 
-    try {
-      await agentsStore.updateAgent({
-        ...currentAgent,
-        name: draft.name,
-        description: draft.description,
-        aiconfig: draft.aiconfig,
-        promptInstructions: draft.promptInstructions,
-        icon: draft.icon,
-      })
-      notifications.success("Agent saved successfully")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error saving agent")
-    }
-  }
+  //   try {
+  //     await agentsStore.updateAgent({
+  //       ...currentAgent,
+  //       name: draft.name,
+  //       description: draft.description,
+  //       aiconfig: draft.aiconfig,
+  //       promptInstructions: draft.promptInstructions,
+  //       icon: draft.icon,
+  //     })
+  //     notifications.success("Agent saved successfully")
+  //   } catch (error) {
+  //     console.error(error)
+  //     notifications.error("Error saving agent")
+  //   }
+  // }
 
   async function setAgentLive() {
     if (!currentAgent) return
@@ -234,18 +233,6 @@
     gap: var(--spacing-xl);
     border-radius: var(--spacing-xl);
     border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-
-  .config-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
   }
 
   .config-form {
