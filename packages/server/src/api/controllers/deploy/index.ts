@@ -125,11 +125,9 @@ async function initDeployedApp(prodAppId: string) {
   })
 }
 
-async function applyPendingColumnRenames(
-  workspaceId: string,
-  opts: { applyRows: boolean }
-) {
+async function applyPendingColumnRenames(workspaceId: string) {
   await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
 
     for (const table of tables) {
@@ -141,20 +139,36 @@ async function applyPendingColumnRenames(
         continue
       }
 
-      if (opts.applyRows) {
-        // Process each rename through the SDK to handle row updates
-        for (const rename of pending) {
-          await sdk.tables.update(table, rename)
-        }
-      } else {
-        // Just clear pending renames without processing rows
-        const updatedTable: Table = {
-          ...table,
-          pendingRenames: [],
-        }
-        const db = context.getWorkspaceDB()
-        await db.put(updatedTable)
+      for (const rename of pending) {
+        await sdk.tables.update(table, rename)
       }
+
+      const updatedTable: Table = {
+        ...table,
+        pendingRenames: [],
+      }
+      await db.put(updatedTable)
+    }
+  })
+}
+
+async function clearPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      if (!table.pendingRenames?.length) {
+        continue
+      }
+      const updatedTable: Table = {
+        ...table,
+        pendingRenames: [],
+      }
+      await db.put(updatedTable)
     }
   })
 }
@@ -305,8 +319,8 @@ export const publishWorkspace = async function (
           })
         )
 
-        await applyPendingColumnRenames(prodId, { applyRows: true })
-        await applyPendingColumnRenames(devId, { applyRows: false })
+        await applyPendingColumnRenames(prodId)
+        await clearPendingColumnRenames(devId)
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({

@@ -74,7 +74,11 @@ export async function checkForColumnUpdates(
     updatedRows = rawRows.map((row: any) => {
       row = cloneDeep(row)
       if (columnRename) {
-        row[columnRename.updated] = row[columnRename.old]
+        const hasUpdated = row[columnRename.updated] !== undefined
+        const hasOld = row[columnRename.old] !== undefined
+        if (!hasUpdated && hasOld) {
+          row[columnRename.updated] = row[columnRename.old]
+        }
         delete row[columnRename.old]
       } else if (deletedColumns.length !== 0) {
         deletedColumns.forEach((colName: any) => delete row[colName])

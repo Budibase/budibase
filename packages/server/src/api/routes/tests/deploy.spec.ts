@@ -506,6 +506,9 @@ describe("/api/deploy", () => {
       },
     }
 
+    // casting to any here because TS can't infer the description property properly.
+    delete (renamedSchema as any).description
+
     const renamedTable = await config.api.table.save({
       ...table,
       schema: renamedSchema,
