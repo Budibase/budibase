@@ -24,7 +24,7 @@
   })
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} closeOnOutsideClick={false}>
   <CreateTableModal />
 </Modal>
 
