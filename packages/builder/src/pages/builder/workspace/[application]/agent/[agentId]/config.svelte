@@ -207,7 +207,7 @@
             />
           </div>
 
-          <div class="section section-banner">
+          <!-- <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Variables / Bindings</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -218,7 +218,7 @@
                 <ActionButton size="S" icon="plus">Add</ActionButton>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <div class="section section-banner">
             <div class="section-header">
@@ -262,7 +262,7 @@
             </div>
           </div>
 
-          <div class="section section-banner">
+          <!-- <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Guardrails</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -274,7 +274,7 @@
               </div>
             </div>
           </div>
-
+ -->
           <div class="section">
             <Input
               label="Goal"
