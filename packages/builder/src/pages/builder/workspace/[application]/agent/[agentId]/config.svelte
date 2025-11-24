@@ -13,6 +13,8 @@
     ModalContent,
     Tags,
     Tag,
+    Icon,
+    Helpers,
   } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
@@ -136,6 +138,22 @@
     }
   }
 
+  const agentUrl = "budibase.app/chat/3432343dff34334334dfd"
+
+  async function copyAgentUrl() {
+    try {
+      await Helpers.copyToClipboard(agentUrl)
+      notifications.success("URL copied to clipboard")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to copy URL")
+    }
+  }
+
+  function openAgentUrl() {
+    window.open(`https://${agentUrl}`, "_blank")
+  }
+
   onMount(async () => {
     await Promise.all([
       agentsStore.init(),
@@ -157,7 +175,9 @@
       { text: currentAgent?.name || "Agent" },
     ]}
     icon="Effect"
-  />
+  >
+    <Button cta icon="save" on:click={saveAgent}>Save Changes</Button>
+  </TopBar>
   <div class="config-page">
     <div class="config-content">
       <div class="config-form">
@@ -296,23 +316,53 @@
         </Layout>
       </div>
 
-      <div class="config-footer">
-        <div class="footer-buttons">
-          <Button icon="save" on:click={saveAgent}>Save Changes</Button>
-          <Button
-            cta
-            icon={currentAgent?.live ? "pause" : "play"}
-            on:click={toggleAgentLive}
-          >
-            {currentAgent?.live ? "Pause Agent" : "Set your agent live"}
-          </Button>
+      {#if currentAgent?.live}
+        <div class="agent-live-card">
+          <div class="live-header">
+            <div class="live-icon">
+              <Icon name="activity" size="M" />
+            </div>
+            <Heading size="S">Your agent is live.</Heading>
+          </div>
+          <div class="url-section">
+            <div class="url">
+              <Input readonly disabled value={agentUrl} />
+            </div>
+            <div class="url-actions">
+              <div class="url-action-button">
+                <Icon name="copy" size="S" on:click={copyAgentUrl} />
+              </div>
+              <div class="url-action-button">
+                <Icon
+                  name="arrow-square-out"
+                  size="S"
+                  on:click={openAgentUrl}
+                />
+              </div>
+            </div>
+          </div>
+          <div class="live-actions">
+            <Button secondary icon="pause" on:click={toggleAgentLive}
+              >Pause agent</Button
+            >
+          </div>
         </div>
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          {currentAgent?.live
-            ? "Your agent is currently live. Pause it to make changes and take it offline."
-            : "Once your agent is live, it will be available to use within automations. You can pause your agent at any time."}
-        </Body>
-      </div>
+      {:else}
+        <div class="agent-live-card">
+          <Button
+            quiet
+            icon="play"
+            iconColor="var(--bb-blue)"
+            on:click={toggleAgentLive}>Set your agent live</Button
+          >
+          <div class="live-description">
+            <Body size="S">
+              Once your agent is live, it will be available to use.
+            </Body>
+            <Body size="S">You can pause your agent at any time.</Body>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -449,24 +499,80 @@
     margin-top: var(--spacing-s);
   }
 
-  .config-footer {
+  .agent-live-card {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     margin-top: var(--spacing-xl);
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl);
     border-radius: 12px;
-    background-color: var(--background-alt);
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: #212121;
     align-items: center;
+  }
+
+  .live-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+    padding: var(--spacing-xl);
+    margin: calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl)) 0;
+    background-color: #1a1a1a;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .live-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
+    width: 100%;
+  }
+
+  .live-header :global(.spectrum-Heading) {
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .live-icon {
+    color: #4caf50;
+    display: flex;
+    align-items: center;
+  }
+
+  .url-section {
+    width: 100%;
+    display: flex;
+  }
+
+  .url {
+    width: 100%;
+  }
+
+  .url-actions {
+    margin-left: var(--spacing-m);
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+
+  .url-action-button {
+    cursor: pointer;
+  }
+
+  .url-action-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .live-description {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
     text-align: center;
   }
 
-  .footer-buttons {
-    display: flex;
-    gap: var(--spacing-m);
-    justify-content: center;
-    align-items: center;
+  .live-description :global(.spectrum-Body) {
+    color: #bdbdbd;
+    margin: 0;
   }
 
   .tools-tags {
