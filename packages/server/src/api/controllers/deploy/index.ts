@@ -134,18 +134,18 @@ async function applyPendingColumnRenames(workspaceId: string) {
       if (table._deleted) {
         continue
       }
-      const pending = table.pendingRenames
-      if (!pending?.length) {
+      const pendingColumnRenames = table.pendingColumnRenames
+      if (!pendingColumnRenames?.length) {
         continue
       }
 
-      for (const rename of pending) {
+      for (const rename of pendingColumnRenames) {
         await sdk.tables.update(table, rename)
       }
 
       const updatedTable: Table = {
         ...table,
-        pendingRenames: [],
+        pendingColumnRenames: [],
       }
       await db.put(updatedTable)
     }
@@ -161,12 +161,12 @@ async function clearPendingColumnRenames(workspaceId: string) {
       if (table._deleted) {
         continue
       }
-      if (!table.pendingRenames?.length) {
+      if (!table.pendingColumnRenames?.length) {
         continue
       }
       const updatedTable: Table = {
         ...table,
-        pendingRenames: [],
+        pendingColumnRenames: [],
       }
       await db.put(updatedTable)
     }

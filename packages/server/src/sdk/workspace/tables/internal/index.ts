@@ -17,6 +17,7 @@ import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFo
 import {
   hasTypeChanged,
   internalTableCleanup,
+  mergePendingColumnRenames,
   TableSaveFunctions,
 } from "../../../../api/controllers/table/utils"
 import { EventType, updateLinks } from "../../../../db/linkedRows"
@@ -24,15 +25,6 @@ import { generateTableID, getRowParams } from "../../../../db/utils"
 import * as viewsSdk from "../../views"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
-
-function mergePendingRenames(
-  existing: RenameColumn[] | undefined,
-  renaming: RenameColumn
-) {
-  const pending = existing ? [...existing] : []
-  pending.push(renaming)
-  return pending
-}
 
 export async function create(
   table: WithoutDocMetadata<Table>,
@@ -127,14 +119,19 @@ export async function save(
     throw new Error("Cannot rename a linked column.")
   }
 
-  let pendingRenames = oldTable?.pendingRenames ? oldTable.pendingRenames : []
+  let pendingColumnRenames = oldTable?.pendingColumnRenames
+    ? oldTable.pendingColumnRenames
+    : []
   if (renaming) {
-    pendingRenames = mergePendingRenames(pendingRenames, renaming)
+    pendingColumnRenames = mergePendingColumnRenames(
+      pendingColumnRenames,
+      renaming
+    )
   }
-  if (pendingRenames.length > 0) {
-    table.pendingRenames = pendingRenames
+  if (pendingColumnRenames.length > 0) {
+    table.pendingColumnRenames = pendingColumnRenames
   } else {
-    delete table.pendingRenames
+    delete table.pendingColumnRenames
   }
 
   table = await tableSaveFunctions.mid(table, renaming)

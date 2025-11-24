@@ -444,6 +444,15 @@ export async function checkForViewUpdates(
   }
 }
 
+export function mergePendingColumnRenames(
+  existing: RenameColumn[],
+  renaming: RenameColumn
+) {
+  const pending = existing ? [...existing] : []
+  pending.push(renaming)
+  return pending
+}
+
 export function generateForeignKey(
   column: RelationshipFieldMetadata,
   relatedTable: Table
