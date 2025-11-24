@@ -57,14 +57,9 @@
     try {
       await agentsStore.updateAgent({
         ...currentAgent,
-        name: draft.name,
-        description: draft.description,
-        aiconfig: draft.aiconfig,
-        promptInstructions: draft.promptInstructions,
-        goal: draft.goal,
-        icon: draft.icon,
-        iconColor: draft.iconColor,
+        ...draft,
       })
+
       notifications.success("Agent saved successfully")
       await agentsStore.fetchAgents()
     } catch (error) {
@@ -78,16 +73,16 @@
 
     try {
       if (currentAgent.live) {
-        // Pause agent - set to draft
         await agentsStore.updateAgent({
           ...currentAgent,
+          ...draft,
           live: false,
         })
         notifications.success("Agent has been paused")
       } else {
-        // Set agent live
         await agentsStore.updateAgent({
           ...currentAgent,
+          ...draft,
           live: true,
         })
         notifications.success("Agent is now live")
