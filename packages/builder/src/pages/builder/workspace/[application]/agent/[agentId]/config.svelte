@@ -1,6 +1,4 @@
 <script lang="ts">
-  import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import {
     Body,
     Button,
@@ -11,22 +9,41 @@
     Select,
     TextArea,
     ActionButton,
-    IconPicker,
   } from "@budibase/bbui"
+  import type { Agent } from "@budibase/types"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
+
+  let currentAgent: Agent | undefined
+  let draftAgentId: string | undefined
+  let draft = {
+    name: "",
+    description: "",
+    aiconfig: "",
+    goal: "",
+    promptInstructions: "",
+    icon: "",
+    iconColor: "",
+  }
 
   $: currentAgent = $agentsStore.agents.find(
     a => a._id === $agentsStore.currentAgentId
   )
 
-  $: draft = {
-    name: currentAgent?.name || "",
-    description: currentAgent?.description || "",
-    aiconfig: currentAgent?.aiconfig || "",
-    goal: "",
-    promptInstructions: currentAgent?.promptInstructions || "",
-    icon: currentAgent?.icon || "",
+  $: if (currentAgent && currentAgent._id !== draftAgentId) {
+    draft = {
+      name: currentAgent.name || "",
+      description: currentAgent.description || "",
+      aiconfig: currentAgent.aiconfig || "",
+      goal: currentAgent.goal || "",
+      promptInstructions: currentAgent.promptInstructions || "",
+      icon: currentAgent.icon || "",
+      iconColor: currentAgent.iconColor || "",
+    }
+    draftAgentId = currentAgent._id
   }
 
   $: aiConfigs = $aiConfigsStore.customConfigs
@@ -35,24 +52,26 @@
     value: config._id || "",
   }))
 
-  // async function saveAgent() {
-  //   if (!currentAgent) return
-
-  //   try {
-  //     await agentsStore.updateAgent({
-  //       ...currentAgent,
-  //       name: draft.name,
-  //       description: draft.description,
-  //       aiconfig: draft.aiconfig,
-  //       promptInstructions: draft.promptInstructions,
-  //       icon: draft.icon,
-  //     })
-  //     notifications.success("Agent saved successfully")
-  //   } catch (error) {
-  //     console.error(error)
-  //     notifications.error("Error saving agent")
-  //   }
-  // }
+  async function saveAgent() {
+    if (!currentAgent) return
+    try {
+      await agentsStore.updateAgent({
+        ...currentAgent,
+        name: draft.name,
+        description: draft.description,
+        aiconfig: draft.aiconfig,
+        promptInstructions: draft.promptInstructions,
+        goal: draft.goal,
+        icon: draft.icon,
+        iconColor: draft.iconColor,
+      })
+      notifications.success("Agent saved successfully")
+      await agentsStore.fetchAgents()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error saving agent")
+    }
+  }
 
   async function setAgentLive() {
     if (!currentAgent) return
@@ -71,8 +90,7 @@
   }
 
   onMount(async () => {
-    await agentsStore.init()
-    await aiConfigsStore.fetch()
+    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
   })
 </script>
 
@@ -97,9 +115,14 @@
                 placeholder="Give your agent a name"
               />
             </div>
-            <IconPicker
-              value={draft.icon}
-              on:change={e => (draft.icon = e.detail)}
+            <EditableIcon
+              name={draft.icon}
+              color={draft.iconColor}
+              size="L"
+              on:change={e => {
+                draft.icon = e.detail.name
+                draft.iconColor = e.detail.color
+              }}
             />
           </div>
 
@@ -189,7 +212,8 @@
       </div>
 
       <div class="config-footer">
-        <div class="live-banner">
+        <div class="footer-buttons">
+          <Button icon="save" on:click={saveAgent}>Save Changes</Button>
           <Button cta icon="play" on:click={setAgentLive}>
             Set your agent live
           </Button>
@@ -318,6 +342,13 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     align-items: center;
     text-align: center;
+  }
+
+  .footer-buttons {
+    display: flex;
+    gap: var(--spacing-m);
+    justify-content: center;
+    align-items: center;
   }
 
   .live-banner {

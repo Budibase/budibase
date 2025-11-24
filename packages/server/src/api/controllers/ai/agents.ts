@@ -109,7 +109,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       onFinish: async ({ messages }) => {
-        const chatId = chat._id ?? docIds.generateAgentChatID()
+        const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
         const existingChat = chat._id
           ? await db.tryGet<AgentChat>(chat._id)
           : null
@@ -319,7 +319,11 @@ export async function createAgent(
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools || [],
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
     _deleted: false,
   }
 
@@ -334,15 +338,18 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
 
-  const updateRequest: RequiredKeys<UpdateAgentRequest> = {
+  const updateRequest: UpdateAgentRequest = {
     _id: body._id,
     _rev: body._rev,
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools,
-    _deleted: false,
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

@@ -12,11 +12,14 @@
   export let favourite: WorkspaceFavourite
   export let onContextMenu: (_e: MouseEvent, _agent: Agent) => void
 
-  const getAgentIcon = (_agent: Agent) => {
-    return "SideKick"
+  const getAgentIcon = (agent: Agent) => {
+    return agent.icon || "SideKick"
   }
 
   const getAgentIconColor = (agent: Agent, index: number) => {
+    if (agent.iconColor) {
+      return agent.iconColor
+    }
     const colors = [
       "#6366F1", // purple
       "#F59E0B", // orange
@@ -34,7 +37,7 @@
 <a
   class="agent-card"
   style={`--agent-accent:${iconColor};`}
-  href={$url(`./${agent._id}${agent.live ? "" : "/config"}`)}
+  href={$url(`./${agent._id}/config`)}
   on:contextmenu={e => onContextMenu(e, agent)}
   class:active={isHighlighted}
 >
