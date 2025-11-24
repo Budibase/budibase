@@ -13,7 +13,7 @@ export abstract class APIWarning extends Error {
   protected getPublicWarning?(): any
 }
 
-// AUTH 
+// AUTH
 
 export class InvalidAPIKeyWarning extends APIWarning {
   constructor() {
