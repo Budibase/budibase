@@ -323,13 +323,25 @@ class QueryRunner {
     for (let [staticBindingKey, staticBindingValue] of Object.entries(
       staticVars
     )) {
-      const paramValue = parameters[staticBindingKey]
-      const shouldOverride =
-        paramValue == null ||
-        paramValue === "" ||
-        this.doesStaticBindingMatchLocal(paramValue, staticBindingKey)
-      if (shouldOverride) {
+      const namedValue = parameters[staticBindingKey]
+      const shouldOverrideNamed =
+        namedValue == null ||
+        namedValue === "" ||
+        this.doesStaticBindingMatchLocal(namedValue, staticBindingKey)
+      if (shouldOverrideNamed) {
         parameters[staticBindingKey] = staticBindingValue
+      }
+      for (const [localBindingName, localBindingValue] of Object.entries(
+        parameters
+      )) {
+        if (localBindingName === staticBindingKey) {
+          continue
+        }
+        if (
+          this.doesStaticBindingMatchLocal(localBindingValue, staticBindingKey)
+        ) {
+          parameters[localBindingName] = staticBindingValue
+        }
       }
     }
     if (!this.noRecursiveQuery) {
@@ -381,9 +393,11 @@ class QueryRunner {
     if (block.length <= braceLength * 2) {
       return false
     }
-    const binding = block.slice(braceLength, -braceLength).replace(/\s+/g, "")
+    const cleanedBinding = block
+      .slice(braceLength, -braceLength)
+      .replace(/\s+/g, "")
     const target = staticBindingName.replace(/\s+/g, "")
-    return binding === target
+    return cleanedBinding === target
   }
 }
 

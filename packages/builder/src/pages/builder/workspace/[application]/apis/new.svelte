@@ -29,7 +29,12 @@
   import { formatEndpointLabel } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
-  import type { RestTemplate, QueryImportEndpoint } from "@budibase/types"
+  import type {
+    RestTemplate,
+    QueryImportEndpoint,
+    Datasource,
+  } from "@budibase/types"
+  import { SourceName } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
@@ -168,24 +173,30 @@
     templateLoading = true
     templateLoadingPhase = "import"
     try {
-      const config = configFromIntegration(restIntegration)
-
-      const datasource = await datasources.create({
-        integration: restIntegration,
-        config,
-        name: buildDatasourceName(pendingTemplate, pendingSpec),
-        restTemplate: pendingTemplate.name,
-        restTemplateVersion: pendingSpec.version,
-      })
-
-      if (!datasource?._id) {
-        throw new Error("Datasource identifier missing")
+      if (!restIntegration) {
+        throw new Error("REST API integration is unavailable.")
       }
 
-      await queries.importQueries({
+      const config = configFromIntegration(restIntegration)
+
+      const datasourcePayload: Datasource = {
+        type: "datasource",
+        source: restIntegration.name as SourceName,
+        config,
+        name: buildDatasourceName(pendingTemplate, pendingSpec),
+        plus:
+          restIntegration.plus &&
+          (restIntegration.name as SourceName) !== SourceName.REST
+            ? restIntegration.plus
+            : undefined,
+        isSQL: restIntegration.isSQL,
+        restTemplate: pendingTemplate.name,
+        restTemplateVersion: pendingSpec.version,
+      }
+
+      const importResult = await queries.importQueries({
         url: pendingSpec.url,
-        datasource,
-        datasourceId: datasource._id,
+        datasource: datasourcePayload,
         selectedEndpointId,
       })
 
@@ -193,7 +204,7 @@
 
       notifications.success(`${pendingTemplate.name} imported successfully`)
       await templateEndpointModal?.hide()
-      $goto(`./datasource/${datasource._id}`)
+      $goto(`./datasource/${importResult.datasourceId}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`

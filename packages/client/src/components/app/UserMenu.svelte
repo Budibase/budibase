@@ -8,6 +8,7 @@
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
   import {
+    helpers,
     sdk,
     resolveTranslationGroup,
     resolveWorkspaceTranslations,
@@ -40,6 +41,9 @@
     translationOverrides
   )
 
+  const { accountPortalAccountUrl, builderWorkspacesUrl, builderAppsUrl } =
+    helpers
+
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
       return ""
@@ -56,9 +60,11 @@
   }
 
   const goToPortal = () => {
-    window.location.href = isBuilder
-      ? "/builder/portal/workspaces"
-      : "/builder/apps"
+    const builderBaseUrl = $environmentStore.accountPortalUrl
+    const targetUrl = isBuilder
+      ? builderWorkspacesUrl(builderBaseUrl)
+      : builderAppsUrl(builderBaseUrl)
+    window.location.href = targetUrl
   }
 
   $: user = $authStore as User
@@ -88,7 +94,9 @@
         icon="lock"
         on:click={() => {
           if (isOwner) {
-            window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
+            window.location.href = accountPortalAccountUrl(
+              $environmentStore.accountPortalUrl
+            )
           } else {
             changePasswordModal?.show()
           }

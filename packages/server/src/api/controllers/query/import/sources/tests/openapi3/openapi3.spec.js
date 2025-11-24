@@ -117,6 +117,62 @@ describe("OpenAPI3 Import", () => {
     )
   })
 
+  it("binds server variables to datasource statics when available", async () => {
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: {
+        title: "Server Variables",
+      },
+      servers: [
+        {
+          url: "https://{subdomain}.{domain}.com/api",
+          variables: {
+            subdomain: {
+              default: "example",
+            },
+            domain: {
+              default: "zendesk",
+            },
+          },
+        },
+      ],
+      paths: {
+        "/trigger_categories/jobs": {
+          post: {
+            operationId: "BatchOperateTriggerCategories",
+            responses: {
+              default: {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    await openapi3.isSupported(spec)
+
+    const [query] = await openapi3.getQueries("datasourceId", {
+      staticVariables: {
+        subdomain: "example",
+        domain: "zendesk",
+      },
+    })
+
+    expect(query.parameters).toEqual(
+      expect.arrayContaining([
+        {
+          name: "subdomain",
+          default: "{{ subdomain }}",
+        },
+        {
+          name: "domain",
+          default: "{{ domain }}",
+        },
+      ])
+    )
+  })
+
   const runTests = async (filename, test, assertions) => {
     for (let extension of ["json", "yaml"]) {
       await test(filename, extension, assertions)
