@@ -16,12 +16,12 @@ import env from "../environment"
 import {
   Ctx,
   EndpointMatcher,
-  ErrorCode,
+  APIWarningCode,
   LoginMethod,
   SessionCookie,
   User,
 } from "@budibase/types"
-import { InvalidAPIKeyError } from "../errors"
+import { InvalidAPIKeyWarning } from "../warnings"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
 
@@ -91,7 +91,7 @@ async function checkApiKey(
         }),
       }
     } else {
-      throw new InvalidAPIKeyError()
+      throw new InvalidAPIKeyWarning()
     }
   })
 }
@@ -242,7 +242,7 @@ export function authenticated(
       // invalid token, clear the cookie
       if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
-      } else if (err?.code === ErrorCode.INVALID_API_KEY) {
+      } else if (err?.code === APIWarningCode.INVALID_API_KEY) {
         ctx.throw(403, err.message)
       }
       // allow configuring for public access
