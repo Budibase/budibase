@@ -71,7 +71,6 @@
   let selectedSourceType: any = null
   let editingSource: AgentToolSourceWithTools | null = null
 
-  // Configuration state
   let config: Record<string, string> = {}
   let disabledTools: string[] = []
   let toolsList: any[] = []
@@ -104,7 +103,7 @@
     mode = "configure"
     config = {}
     disabledTools = []
-    toolsList = [] // New sources don't have tools loaded until created/fetched usually, but for now we just configure auth.
+    toolsList = []
   }
 
   function toggleTool(toolName: string) {
@@ -118,7 +117,6 @@
   async function save() {
     try {
       if (editingSource) {
-        // Update existing
         const updatedSource = {
           ...editingSource,
           auth: config,
@@ -130,13 +128,11 @@
         )
         notifications.success("Tool source updated successfully")
       } else {
-        // Create new
         const newSource: CreateToolSourceRequest = {
           type: selectedSourceType.type,
           agentId,
           auth: config,
-          disabledTools: [], // Initially no tools are disabled or loaded really until backend processes it?
-          // The backend likely fetches tools after creation.
+          disabledTools: [],
         }
         await agentsStore.createToolSource(newSource)
         notifications.success("Tool source added successfully")

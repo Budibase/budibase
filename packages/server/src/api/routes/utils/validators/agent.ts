@@ -90,6 +90,9 @@ export function createAgentValidator() {
       promptInstructions: OPTIONAL_STRING,
       allowedTools: OPTIONAL_ARRAY.items(Joi.object().unknown(true)),
       live: Joi.boolean().optional(),
+      goal: OPTIONAL_STRING,
+      icon: OPTIONAL_STRING,
+      iconColor: OPTIONAL_STRING,
     })
   )
 }
@@ -104,6 +107,10 @@ export function updateAgentValidator() {
       aiconfig: Joi.string().required(),
       promptInstructions: OPTIONAL_STRING,
       allowedTools: OPTIONAL_ARRAY.items(Joi.object().unknown(true)),
+      live: Joi.boolean().optional(),
+      goal: OPTIONAL_STRING,
+      icon: OPTIONAL_STRING,
+      iconColor: OPTIONAL_STRING,
     }).unknown(true)
   )
 }

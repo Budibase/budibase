@@ -80,7 +80,6 @@
 
 <style>
   .agent-card {
-    --agent-accent: var(--spectrum-global-color-gray-400);
     background: var(--spectrum-alias-background-color-primary);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-l);
@@ -105,8 +104,7 @@
   }
 
   .agent-card.active {
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--agent-accent) 40%, transparent);
+    box-shadow: 0 0 0 1px;
   }
 
   .card-actions {
