@@ -73,19 +73,31 @@
     }
   }
 
-  async function setAgentLive() {
+  async function toggleAgentLive() {
     if (!currentAgent) return
 
     try {
-      await agentsStore.updateAgent({
-        ...currentAgent,
-        live: true,
-      })
-      notifications.success("Agent is now live")
+      if (currentAgent.live) {
+        // Pause agent - set to draft
+        await agentsStore.updateAgent({
+          ...currentAgent,
+          live: false,
+        })
+        notifications.success("Agent has been paused")
+      } else {
+        // Set agent live
+        await agentsStore.updateAgent({
+          ...currentAgent,
+          live: true,
+        })
+        notifications.success("Agent is now live")
+      }
       await agentsStore.fetchAgents()
     } catch (error) {
       console.error(error)
-      notifications.error("Error setting agent live")
+      notifications.error(
+        currentAgent.live ? "Error pausing agent" : "Error setting agent live"
+      )
     }
   }
 
@@ -214,13 +226,18 @@
       <div class="config-footer">
         <div class="footer-buttons">
           <Button icon="save" on:click={saveAgent}>Save Changes</Button>
-          <Button cta icon="play" on:click={setAgentLive}>
-            Set your agent live
+          <Button
+            cta
+            icon={currentAgent?.live ? "pause" : "play"}
+            on:click={toggleAgentLive}
+          >
+            {currentAgent?.live ? "Pause Agent" : "Set your agent live"}
           </Button>
         </div>
         <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          Once your agent is live, it will be available to use within
-          automations. You can pause your agent at any time.
+          {currentAgent?.live
+            ? "Your agent is currently live. Pause it to make changes and take it offline."
+            : "Once your agent is live, it will be available to use within automations. You can pause your agent at any time."}
         </Body>
       </div>
     </div>
@@ -349,9 +366,5 @@
     gap: var(--spacing-m);
     justify-content: center;
     align-items: center;
-  }
-
-  .live-banner {
-    padding: 0;
   }
 </style>
