@@ -27,10 +27,13 @@
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
+  import { API } from "@/api"
 
   let generateButton: GridGenerateButton
   let missingProductionDefinition = false
   let previousTableId: string | undefined
+  let tablePublishing = false
+  let prodRefreshKey = 0
 
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
@@ -100,6 +103,26 @@
       missingProductionDefinition = true
     }
   }
+
+  const publishProductionTable = async (seedProductionTables: boolean) => {
+    if (tablePublishing) {
+      return
+    }
+    tablePublishing = true
+    const label = seedProductionTables
+      ? "Error seeding and publishing table"
+      : "Error publishing table"
+    try {
+      await API.publishTable(tableId!, { seedProductionTables })
+      await workspaceDeploymentStore.fetch()
+      prodRefreshKey += 1
+      missingProductionDefinition = false
+      notifications.success("Table published to production")
+    } catch (error: any) {
+      notifications.error(error?.message || label)
+    }
+    tablePublishing = false
+  }
 </script>
 
 <style>
@@ -112,7 +135,7 @@
   }
 </style>
 
-{#key $dataEnvironmentStore.mode}
+{#key `${$dataEnvironmentStore.mode}-${prodRefreshKey}`}
   <div class="grid-blank-wrapper">
     <Grid
       API={$dataAPI}
@@ -156,7 +179,12 @@
       {/if}
     </Grid>
     {#if productionUnavailable}
-      <ProductionBlankState />
+      <ProductionBlankState
+        publishing={tablePublishing}
+        canSeed={isInternal}
+        on:publish={() => publishProductionTable(false)}
+        on:seedPublish={() => publishProductionTable(true)}
+      />
     {/if}
   </div>
 {/key}

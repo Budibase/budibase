@@ -1,8 +1,27 @@
 <script lang="ts">
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Button } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
   export let title = "No production data yet"
   export let description = "Publish this table to view production data."
+  export let publishing = false
+  export let canSeed = true
+
+  const dispatch = createEventDispatcher()
+
+  const publishEmpty = () => {
+    if (publishing) {
+      return
+    }
+    dispatch("publish")
+  }
+
+  const seedAndPublish = () => {
+    if (publishing) {
+      return
+    }
+    dispatch("seedPublish")
+  }
 </script>
 
 <div class="production-blank">
@@ -12,6 +31,18 @@
     </div>
     <div class="blank-title">{title}</div>
     <div class="blank-description">{description}</div>
+    <div class="blank-actions">
+      <Button cta disabled={publishing} on:click={publishEmpty}>
+        Publish empty table
+      </Button>
+      <Button
+        secondary
+        disabled={publishing || !canSeed}
+        on:click={seedAndPublish}
+      >
+        Seed and publish with dev data
+      </Button>
+    </div>
   </div>
 </div>
 
@@ -44,5 +75,12 @@
   .blank-description {
     margin-top: var(--spacing-xxs);
     color: var(--grey-5);
+  }
+  .blank-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-s);
+    margin-top: var(--spacing-m);
+    flex-wrap: wrap;
   }
 </style>

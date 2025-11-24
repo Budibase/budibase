@@ -34,6 +34,7 @@
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { getContext } from "svelte"
+  import { API } from "@/api"
   import {
     DataEnvironmentMode,
     type Table,
@@ -51,6 +52,8 @@
   let lastPublishCount = 0
   let missingProductionDefinition = false
   let previousTableId: string | undefined
+  let tablePublishing = false
+  let prodRefreshKey = 0
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -206,6 +209,29 @@
       missingProductionDefinition = true
     }
   }
+
+  const publishProductionTable = async (seedProductionTables: boolean) => {
+    if (tablePublishing) {
+      return
+    }
+    tablePublishing = true
+    const label = seedProductionTables
+      ? "Error seeding and publishing table"
+      : "Error publishing table"
+    try {
+      await API.publishTable(id, { seedProductionTables })
+      await workspaceDeploymentStore.fetch()
+      if (isProductionMode && gridContext?.rows?.actions?.refreshData) {
+        await gridContext.rows.actions.refreshData()
+      }
+      prodRefreshKey += 1
+      missingProductionDefinition = false
+      notifications.success("Table published to production")
+    } catch (error: any) {
+      notifications.error(error?.message || label)
+    }
+    tablePublishing = false
+  }
 </script>
 
 {#if $tables?.selected?.name}
@@ -219,7 +245,7 @@
     </div>
   {/if}
   <!-- re-render the grid if the data environment changes -->
-  {#key $dataEnvironmentStore.mode}
+  {#key `${$dataEnvironmentStore.mode}-${prodRefreshKey}`}
     <div class="grid-blank-wrapper">
       <Grid
         bind:this={grid}
@@ -292,7 +318,12 @@
         {/if}
       </Grid>
       {#if productionUnavailable}
-        <ProductionBlankState />
+        <ProductionBlankState
+          publishing={tablePublishing}
+          canSeed={isInternal}
+          on:publish={() => publishProductionTable(false)}
+          on:seedPublish={() => publishProductionTable(true)}
+        />
       {/if}
     </div>
   {/key}
