@@ -338,7 +338,7 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
 
-  const updateRequest: UpdateAgentRequest = {
+  const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
     _rev: body._rev,
     name: body.name,
@@ -347,6 +347,7 @@ export async function updateAgent(
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     allowedTools: body.allowedTools,
+    _deleted: false,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,

@@ -101,12 +101,10 @@
   .agent-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    border-color: var(--agent-accent);
     background-color: rgba(255, 255, 255, 0.01);
   }
 
   .agent-card.active {
-    border-color: var(--agent-accent);
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--agent-accent) 40%, transparent);
   }
