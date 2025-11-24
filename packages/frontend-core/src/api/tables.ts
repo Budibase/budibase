@@ -18,6 +18,8 @@ import {
   MigrateTableResponse,
   MigrateTableRequest,
   DeleteTableResponse,
+  PublishTableRequest,
+  PublishTableResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -52,6 +54,10 @@ export interface TableEndpoints {
     oldColumn: string,
     newColumn: string
   ) => Promise<MigrateTableResponse>
+  publishTable: (
+    tableId: string,
+    opts?: PublishTableRequest
+  ) => Promise<PublishTableResponse>
 }
 
 export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
@@ -188,6 +194,13 @@ export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
         oldColumn,
         newColumn,
       },
+    })
+  },
+
+  publishTable: async (tableId, opts) => {
+    return await API.post<PublishTableRequest, PublishTableResponse>({
+      url: `/api/tables/${tableId}/publish`,
+      body: opts,
     })
   },
 

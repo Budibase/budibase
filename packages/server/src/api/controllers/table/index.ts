@@ -1,4 +1,4 @@
-import { csv, events, HTTPError } from "@budibase/backend-core"
+import { cache, context, db as dbCore, csv, events, HTTPError } from "@budibase/backend-core"
 import {
   canBeDisplayColumn,
   helpers,
@@ -17,6 +17,10 @@ import {
   FindTableResponse,
   MigrateTableRequest,
   MigrateTableResponse,
+  PublishTableRequest,
+  PublishTableResponse,
+  DocumentType,
+  SEPARATOR,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -279,4 +283,103 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 
   const processedTable = await processTable(duplicatedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
+}
+
+export async function publish(
+  ctx: UserCtx<PublishTableRequest, PublishTableResponse>
+) {
+  const tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+
+  if (!table) {
+    ctx.throw(404, "Table not found")
+  }
+
+  if (isExternalTable(table)) {
+    ctx.throw(
+      400,
+      "Publishing production data is only supported for internal tables"
+    )
+  }
+
+  const appId = context.getWorkspaceId()!
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+  const prodPublished = await sdk.workspaces.isWorkspacePublished(
+    prodWorkspaceId
+  )
+
+  if (!prodPublished) {
+    ctx.throw(
+      400,
+      "Publish the workspace before publishing production data for individual tables."
+    )
+  }
+
+  const seedProductionTables = !!ctx.request.body?.seedProductionTables
+  const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
+  const matchesTable = (_id: string) =>
+    _id === tableId ||
+    _id.endsWith(`${SEPARATOR}${tableId}`) ||
+    _id.includes(tableSegment)
+  const isDataDoc = (_id: string) =>
+    _id.startsWith(`${DocumentType.ROW}${SEPARATOR}`) ||
+    _id.startsWith(`${DocumentType.LINK}${SEPARATOR}`)
+
+  const replication = new dbCore.Replication({
+    source: dbCore.getDevWorkspaceID(appId),
+    target: prodWorkspaceId,
+  })
+
+  await replication.resolveInconsistencies([tableId])
+
+  await replication.replicate(
+    replication.appReplicateOpts({
+      tablesToSync: seedProductionTables ? [tableId] : undefined,
+      checkpoint: false,
+      filter: (doc: any) => {
+        const _id = doc?._id as string
+        if (!_id || _id.startsWith("_design")) {
+          return false
+        }
+        if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
+          return false
+        }
+        if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
+          return false
+        }
+        if (!matchesTable(_id)) {
+          return false
+        }
+        if (!seedProductionTables && isDataDoc(_id)) {
+          return false
+        }
+        return true
+      },
+    })
+  )
+
+  const metadata = await sdk.workspaces.metadata.tryGet({
+    production: true,
+  })
+
+  if (!metadata?._id) {
+    ctx.throw(
+      400,
+      "Production workspace metadata missing. Please publish the workspace first."
+    )
+  }
+
+  metadata.resourcesPublishedAt = {
+    ...metadata.resourcesPublishedAt,
+    [tableId]: new Date().toISOString(),
+  }
+
+  const prodDb = context.getProdWorkspaceDB()
+  await prodDb.put(metadata)
+  await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
+
+  ctx.body = {
+    tableId,
+    publishedAt: metadata.resourcesPublishedAt[tableId],
+  }
 }
