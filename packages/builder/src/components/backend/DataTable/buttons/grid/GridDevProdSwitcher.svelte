@@ -17,23 +17,18 @@
   $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-  $: disabled = !isDeployed && !tableDatasource?.usesEnvironmentVariables
+  $: hasProductionData = isDeployed || tableDatasource?.usesEnvironmentVariables
   $: tooltip =
     isInternal && !isDeployed
-      ? "Please publish to view production"
-      : "No production environment variables"
+      ? "Publish to view production data"
+      : "Configure production environment variables"
 
   $: switcherProps = {
     leftIcon: "wrench",
     leftText: "Dev",
     rightIcon: "pulse",
     rightText: "Prod",
-    selected: (disabled && !isInternal
-      ? "right"
-      : isDevMode
-        ? "left"
-        : "right") as "left" | "right",
-    disabled,
+    selected: (isDevMode ? "left" : "right") as "left" | "right",
   }
 
   const handleLeft = () =>
@@ -43,7 +38,7 @@
 </script>
 
 <div class="wrapper">
-  {#if disabled}
+  {#if !hasProductionData}
     <AbsTooltip text={tooltip} position={TooltipPosition.Left}>
       <Switcher
         {...switcherProps}

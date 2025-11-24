@@ -6,6 +6,7 @@
     dataAPI,
     tables,
     datasources,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { gridClipboard } from "@budibase/frontend-core"
   import { admin, themeStore, licensing } from "@/stores/portal"
@@ -25,16 +26,20 @@
   import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
 
   let generateButton: GridGenerateButton
+  let missingProductionDefinition = false
+  let previousTableId: string | undefined
 
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
   $: id = view?.id!
+  $: tableId = view?.tableId
   $: datasource = {
     type: "viewV2",
     id,
-    tableId: view?.tableId,
+    tableId,
   }
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: tableDatasource = $datasources.list.find(datasource => {
@@ -48,6 +53,20 @@
     isInternal || tableDatasource?.usesEnvironmentVariables
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: isDeployed =
+    isInternal && tableId
+      ? $workspaceDeploymentStore.tables[tableId]?.published
+      : false
+  $: hasProductionData = Boolean(isDeployed || tableDatasource?.usesEnvironmentVariables)
+  $: productionUnavailable =
+    isProductionMode && (!hasProductionData || missingProductionDefinition)
+  $: if (!isProductionMode) {
+    missingProductionDefinition = false
+  }
+  $: if (tableId !== previousTableId) {
+    missingProductionDefinition = false
+    previousTableId = tableId
+  }
   $: externalClipboardData = {
     clipboard: gridClipboard,
     tableId: view?.tableId,
@@ -75,49 +94,69 @@
   const handleGridViewUpdate = async (e: any) => {
     viewsV2.replaceView(id, e.detail)
   }
+
+  const handleDefinitionMissing = () => {
+    if (isProductionMode) {
+      missingProductionDefinition = true
+    }
+  }
 </script>
 
+<style>
+  .grid-blank-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+</style>
+
 {#key $dataEnvironmentStore.mode}
-  <Grid
-    API={$dataAPI}
-    {darkMode}
-    {datasource}
-    {buttons}
-    allowAddRows
-    allowDeleteRows
-    aiEnabled={$licensing.customAIConfigsEnabled ||
-      $licensing.budibaseAIEnabled}
-    showAvatars={false}
-    externalClipboard={externalClipboardData}
-    on:updatedatasource={handleGridViewUpdate}
-    on:definitionMissing={() =>
-      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
-    isCloud={$admin.cloud}
-    buttonsCollapsed
-  >
-    <svelte:fragment slot="controls">
-      {#if !isProductionMode}
-        <GridManageAccessButton />
-        {#if calculation}
-          <GridViewCalculationButton />
+  <div class="grid-blank-wrapper">
+    <Grid
+      API={$dataAPI}
+      {darkMode}
+      {datasource}
+      {buttons}
+      allowAddRows
+      allowDeleteRows
+      aiEnabled={$licensing.customAIConfigsEnabled ||
+        $licensing.budibaseAIEnabled}
+      showAvatars={false}
+      externalClipboard={externalClipboardData}
+      on:updatedatasource={handleGridViewUpdate}
+      on:definitionMissing={handleDefinitionMissing}
+      isCloud={$admin.cloud}
+      buttonsCollapsed
+    >
+      <svelte:fragment slot="controls">
+        {#if !isProductionMode}
+          <GridManageAccessButton />
+          {#if calculation}
+            <GridViewCalculationButton />
+          {/if}
+          <GridFilterButton />
+          <GridSortButton />
+          <GridSizeButton />
+          {#if !calculation}
+            <GridColumnsSettingButton />
+            <GridRowActionsButton />
+            <GridScreensButton on:generate={() => generateButton?.show()} />
+          {/if}
+          <GridGenerateButton bind:this={generateButton} />
         {/if}
-        <GridFilterButton />
-        <GridSortButton />
-        <GridSizeButton />
-        {#if !calculation}
-          <GridColumnsSettingButton />
-          <GridRowActionsButton />
-          <GridScreensButton on:generate={() => generateButton?.show()} />
-        {/if}
-        <GridGenerateButton bind:this={generateButton} />
+      </svelte:fragment>
+      <svelte:fragment slot="controls-right">
+        <GridDevProdSwitcher />
+      </svelte:fragment>
+      <GridCreateEditRowModal />
+      {#if !isProductionMode && canSwitchToProduction}
+        <GridDevWarning />
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="controls-right">
-      <GridDevProdSwitcher />
-    </svelte:fragment>
-    <GridCreateEditRowModal />
-    {#if !isProductionMode && canSwitchToProduction}
-      <GridDevWarning />
+    </Grid>
+    {#if productionUnavailable}
+      <ProductionBlankState />
     {/if}
-  </Grid>
+  </div>
 {/key}

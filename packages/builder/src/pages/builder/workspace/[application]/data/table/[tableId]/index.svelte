@@ -10,6 +10,7 @@
     dataEnvironmentStore,
     dataAPI,
     deploymentStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
   import { TableNames } from "@/constants"
@@ -30,6 +31,7 @@
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
+  import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { getContext } from "svelte"
   import {
@@ -47,6 +49,8 @@
   let grid: Grid
   let gridContext: GridStore | undefined
   let lastPublishCount = 0
+  let missingProductionDefinition = false
+  let previousTableId: string | undefined
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -103,6 +107,18 @@
     isInternal || tableDatasource?.usesEnvironmentVariables
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: isDeployed =
+    isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
+  $: hasProductionData = Boolean(isDeployed || tableDatasource?.usesEnvironmentVariables)
+  $: productionUnavailable =
+    isProductionMode && (!hasProductionData || missingProductionDefinition)
+  $: if (!isProductionMode) {
+    missingProductionDefinition = false
+  }
+  $: if (id !== previousTableId) {
+    missingProductionDefinition = false
+    previousTableId = id
+  }
   $: hasStaticFormulas = Object.values($tables.selected?.schema || {}).some(
     field =>
       field.type === FieldType.FORMULA &&
@@ -184,6 +200,12 @@
       {} as Record<string, any>
     )
   }
+
+  const handleDefinitionMissing = () => {
+    if (isProductionMode) {
+      missingProductionDefinition = true
+    }
+  }
 </script>
 
 {#if $tables?.selected?.name}
@@ -198,81 +220,94 @@
   {/if}
   <!-- re-render the grid if the data environment changes -->
   {#key $dataEnvironmentStore.mode}
-    <Grid
-      bind:this={grid}
-      API={$dataAPI}
-      {darkMode}
-      datasource={gridDatasource}
-      canAddRows={!isUsersTable}
-      canDeleteRows={!isUsersTable}
-      canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
-      canEditColumns={!isProductionMode &&
-        (!isUsersTable || !$appStore.features.disableUserMetadata)}
-      canSaveSchema={!isProductionMode}
-      schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-      showAvatars={false}
-      isCloud={$admin.cloud}
-      aiEnabled={$licensing.customAIConfigsEnabled ||
-        $licensing.budibaseAIEnabled}
-      {buttons}
-      buttonsCollapsed
-      canHideColumns={false}
-      externalClipboard={externalClipboardData}
-      on:updatedatasource={handleGridTableUpdate}
-      on:definitionMissing={() =>
-        dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
-    >
-      <!-- Controls -->
-      <svelte:fragment slot="controls">
-        {#if !isProductionMode}
-          {#if isUsersTable && $appStore.features.disableUserMetadata}
-            <GridUsersTableButton />
-          {/if}
-          <GridManageAccessButton />
-          {#if relationshipsEnabled}
-            <GridRelationshipButton />
-          {/if}
-          {#if !isUsersTable}
+    <div class="grid-blank-wrapper">
+      <Grid
+        bind:this={grid}
+        API={$dataAPI}
+        {darkMode}
+        datasource={gridDatasource}
+        canAddRows={!isUsersTable}
+        canDeleteRows={!isUsersTable}
+        canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
+        canEditColumns={!isProductionMode &&
+          (!isUsersTable || !$appStore.features.disableUserMetadata)}
+        canSaveSchema={!isProductionMode}
+        schemaOverrides={isUsersTable ? userSchemaOverrides : null}
+        showAvatars={false}
+        isCloud={$admin.cloud}
+        aiEnabled={$licensing.customAIConfigsEnabled ||
+          $licensing.budibaseAIEnabled}
+        {buttons}
+        buttonsCollapsed
+        canHideColumns={false}
+        externalClipboard={externalClipboardData}
+        on:updatedatasource={handleGridTableUpdate}
+        on:definitionMissing={handleDefinitionMissing}
+      >
+        <!-- Controls -->
+        <svelte:fragment slot="controls">
+          {#if !isProductionMode}
+            {#if isUsersTable && $appStore.features.disableUserMetadata}
+              <GridUsersTableButton />
+            {/if}
+            <GridManageAccessButton />
+            {#if relationshipsEnabled}
+              <GridRelationshipButton />
+            {/if}
+            {#if !isUsersTable}
+              <GridImportButton />
+              <GridExportButton />
+              <GridRowActionsButton />
+              <GridScreensButton on:generate={() => generateButton?.show()} />
+              <GridAutomationsButton
+                on:generate={() => generateButton?.show()}
+              />
+              <GridGenerateButton bind:this={generateButton} />
+            {/if}
+          {:else if !isUsersTable}
             <GridImportButton />
             <GridExportButton />
-            <GridRowActionsButton />
-            <GridScreensButton on:generate={() => generateButton?.show()} />
-            <GridAutomationsButton on:generate={() => generateButton?.show()} />
-            <GridGenerateButton bind:this={generateButton} />
           {/if}
-        {:else if !isUsersTable}
-          <GridImportButton />
-          <GridExportButton />
+        </svelte:fragment>
+        <svelte:fragment slot="controls-right">
+          <GridDevProdSwitcher />
+        </svelte:fragment>
+
+        <!-- Content for editing columns -->
+        <svelte:fragment slot="edit-column">
+          <GridEditColumnModal />
+        </svelte:fragment>
+        <svelte:fragment slot="add-column">
+          <GridAddColumnModal />
+        </svelte:fragment>
+
+        <!-- Listening to events for editing rows in modals -->
+        {#if isUsersTable}
+          <GridEditUserModal />
+        {:else}
+          <GridCreateEditRowModal />
         {/if}
-      </svelte:fragment>
-      <svelte:fragment slot="controls-right">
-        <GridDevProdSwitcher />
-      </svelte:fragment>
-
-      <!-- Content for editing columns -->
-      <svelte:fragment slot="edit-column">
-        <GridEditColumnModal />
-      </svelte:fragment>
-      <svelte:fragment slot="add-column">
-        <GridAddColumnModal />
-      </svelte:fragment>
-
-      <!-- Listening to events for editing rows in modals -->
-      {#if isUsersTable}
-        <GridEditUserModal />
-      {:else}
-        <GridCreateEditRowModal />
+        {#if !isProductionMode && canSwitchToProduction}
+          <GridDevWarning />
+        {/if}
+      </Grid>
+      {#if productionUnavailable}
+        <ProductionBlankState />
       {/if}
-      {#if !isProductionMode && canSwitchToProduction}
-        <GridDevWarning />
-      {/if}
-    </Grid>
+    </div>
   {/key}
 {:else}
   <i>Create your first table to start building</i>
 {/if}
 
 <style>
+  .grid-blank-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
   i {
     font-size: var(--font-size-m);
     color: var(--grey-5);
