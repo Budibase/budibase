@@ -97,6 +97,18 @@ export class NotImplementedError extends HTTPError {
 }
 
 // LICENSING
+export class FeatureDisabledError extends Error {
+  constructor(feature: string) {
+    super(`Feature disabled: '${feature}'`)
+  }
+}
+
+export class UsageLimitError extends Error {
+  constructor(limitName: string) {
+    super(`Usage limit exceeded: '${limitName}'`)
+  }
+}
+
 // USERS
 
 export class EmailUnavailableError extends Error {
