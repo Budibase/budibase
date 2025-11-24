@@ -126,11 +126,21 @@
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
-        {#if icon}
-          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {#if collapsed}
+          <AbsTooltip {text} position={TooltipPosition.Right}>
+            {#if icon}
+              <Icon name={icon} color="var(--navTextColor)" size="S" />
+            {:else}
+              <span class="nav-item-letter">{collapsedText}</span>
+            {/if}
+          </AbsTooltip>
+        {:else}
+          {#if icon}
+            <Icon name={icon} color="var(--navTextColor)" size="S" />
+          {/if}
+          <span>{text}</span>
+          <Icon name={caret} color="var(--navTextColor)" size="S" />
         {/if}
-        <span>{text}</span>
-        <Icon name={caret} color="var(--navTextColor)" size="S" />
       </div>
       <div class="sublinks-wrapper">
         <div class="sublinks">

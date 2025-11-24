@@ -265,7 +265,11 @@
           <div
             class="nav nav--{typeClass} size--{navWidthClass}"
             class:collapsed={navCollapsed}
-            on:click={navCollapsed ? () => (navCollapsed = false) : null}
+            on:click={e => {
+              if (navCollapsed) {
+                navCollapsed = false
+              }
+            }}
           >
             <div class="nav-header">
               {#if enrichedNavItems.length}
