@@ -17,6 +17,7 @@
     filterValidTranslationOverrides,
     type TranslationCategory,
   } from "@budibase/shared-core"
+  import type { TranslationDetail } from "@budibase/types"
   import { routeActions } from "@/settings/pages"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
@@ -162,10 +163,6 @@
     } finally {
       saving = false
     }
-  }
-  type TranslationDetail = {
-    key: string
-    value: string
   }
   const onButtonClick = (event: CustomEvent<TranslationDetail>) => {
     handleTranslationChange(event.detail)
