@@ -29,6 +29,11 @@ async function unAssign(
 ) {
   const { userIds, ...unAssignmentProps } = ctx.request.body
   await sdk.publicApi.roles.unAssign(userIds, unAssignmentProps)
+  const workspaceIds = [
+    unAssignmentProps.role?.appId,
+    unAssignmentProps.appBuilder?.appId,
+  ].filter((id): id is string => !!id)
+  await syncUsersAgainstWorkspaces(userIds, workspaceIds)
   ctx.body = { data: { userIds } }
   await next()
 }
