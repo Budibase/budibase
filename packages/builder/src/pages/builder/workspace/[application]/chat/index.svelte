@@ -88,8 +88,6 @@
 
     chat = $agentsStore.chats[0]
   })
-
-  $: console.log(chat)
 </script>
 
 <div class="wrapper">
