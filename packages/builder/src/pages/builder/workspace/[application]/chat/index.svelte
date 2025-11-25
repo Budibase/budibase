@@ -34,13 +34,12 @@
       chat = {
         title: "",
         messages: [],
-        agentId: "",
       }
     }
   }
 
   const selectChat = async (selectedChat: AgentChat) => {
-    chat = { ...selectedChat, agentId: selectedAgentId || "" }
+    chat = { ...selectedChat, agentId: selectedAgentId || undefined }
     agentsStore.setCurrentChatId(selectedChat._id!)
   }
 
@@ -90,7 +89,6 @@
     chat = {
       title: "",
       messages: [],
-      agentId: "",
     }
   })
 </script>

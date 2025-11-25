@@ -43,7 +43,7 @@
 
   async function prompt() {
     if (!chat) {
-      chat = { title: "", messages: [], agentId: "" }
+      chat = { title: "", messages: [] }
     }
 
     const userMessage: UIMessage = {

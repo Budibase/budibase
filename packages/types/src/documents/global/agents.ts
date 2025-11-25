@@ -15,7 +15,7 @@ export interface Agent extends Document {
 }
 
 export interface AgentChat extends Document {
-  agentId: string
+  agentId?: string
   title: string
   messages: UIMessage[]
 }
