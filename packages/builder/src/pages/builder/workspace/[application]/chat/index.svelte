@@ -84,9 +84,11 @@
     await agentsStore.init()
 
     selectedAgentId = $agentsStore.agents[0]._id || null
-    await agentsStore.fetchChats(selectedAgentId || "")
 
-    chat = $agentsStore.chats[0]
+    if (selectedAgentId) {
+      await agentsStore.fetchChats(selectedAgentId)
+      chat = $agentsStore.chats[0] || { ...INITIAL_CHAT }
+    }
   })
 </script>
 
