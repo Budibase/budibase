@@ -6,10 +6,14 @@
   export let password: string
   export let error: string
   export let minLength = "12"
+  export let labels: any = {}
 
   const validatePassword = (value: string | undefined) => {
     if (!value || value.length < parseInt(minLength)) {
-      return `Please enter at least ${minLength} characters. We recommend using machine generated or random passwords.`
+      return (
+        labels?.minLengthText?.replace("{minLength}", minLength) ||
+        `Please enter at least ${minLength} characters. We recommend using machine generated or random passwords.`
+      )
     }
     return null
   }
@@ -38,17 +42,17 @@
 
 <FancyForm bind:this={passwordForm}>
   <FancyInput
-    label="Password"
+    label={labels?.passwordLabel ?? "Password"}
     type="password"
     error={firstPasswordError}
     bind:value={$firstPassword}
   />
   <FancyInput
-    label="Repeat password"
+    label={labels?.repeatLabel ?? "Repeat password"}
     type="password"
     error={$repeatTouched &&
       $firstPassword !== $repeatPassword &&
-      "Passwords must match"}
+      (labels?.mismatchText ?? "Passwords must match")}
     bind:value={$repeatPassword}
   />
 </FancyForm>
