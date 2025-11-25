@@ -73,9 +73,8 @@ async function getMetadata(
   await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
   await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
 
-  const metadata: UserMetadata[] = await context.doInContext(
-    workspaceId,
-    () => rawUserMetadata()
+  const metadata: UserMetadata[] = await context.doInContext(workspaceId, () =>
+    rawUserMetadata()
   )
   const found = metadata.find(data => data.email === email)
   return found
