@@ -11,6 +11,13 @@
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import type { Agent } from "@budibase/types"
 
+  const INITIAL_CHAT: Omit<AgentChat, "_id" | "_rev"> = {
+    title: "",
+    messages: [],
+  }
+  const NO_MESSAGES_TEXT = "No messages"
+  const NO_PREVIEW_TEXT = "No preview available"
+
   let chat: AgentChat
   let loading: boolean = false
   let selectedAgentId: string | null = null
@@ -23,18 +30,11 @@
     if (agentId) {
       agentsStore.selectAgent(agentId)
       await agentsStore.fetchChats(agentId)
-      chat = {
-        title: "",
-        messages: [],
-        agentId: agentId,
-      }
+      chat = { ...INITIAL_CHAT, agentId }
       agentsStore.clearCurrentChatId()
     } else {
       agentsStore.selectAgent(undefined)
-      chat = {
-        title: "",
-        messages: [],
-      }
+      chat = { ...INITIAL_CHAT }
     }
   }
 
@@ -45,18 +45,14 @@
 
   const startNewChat = () => {
     if (!selectedAgentId) return
-    chat = {
-      title: "",
-      messages: [],
-      agentId: selectedAgentId,
-    }
+    chat = { ...INITIAL_CHAT, agentId: selectedAgentId }
     agentsStore.clearCurrentChatId()
   }
 
   const getChatPreview = (chat: AgentChat): string => {
     const messageCount = chat.messages.length
     if (!messageCount) {
-      return "No messages"
+      return NO_MESSAGES_TEXT
     }
 
     let lastMessage = chat.messages[messageCount - 1].parts
@@ -65,8 +61,8 @@
           .filter(part => part.type === "text")
           .map(part => part.text)
           .join("")
-      : "No preview available"
-    return typeof msg === "string" ? msg : "No preview available"
+      : NO_PREVIEW_TEXT
+    return typeof msg === "string" ? msg : NO_PREVIEW_TEXT
   }
 
   const handleChatSaved = async (event: CustomEvent<{ chatId: string }>) => {
@@ -86,10 +82,7 @@
 
   onMount(async () => {
     await agentsStore.init()
-    chat = {
-      title: "",
-      messages: [],
-    }
+    chat = { ...INITIAL_CHAT }
   })
 </script>
 
