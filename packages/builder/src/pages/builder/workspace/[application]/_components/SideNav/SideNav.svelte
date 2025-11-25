@@ -289,7 +289,8 @@
         const view = $viewsV2.list.find(v => v.id === id)
         return `${appPrefix}/data/table/${view?.tableId}/${id}`
       },
-      [WorkspaceResource.AGENT]: (id: string) => `${appPrefix}/agent/${id}`,
+      [WorkspaceResource.AGENT]: (id: string) =>
+        `${appPrefix}/agent/${id}/config`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -457,6 +458,13 @@
                 icon="cpu"
                 text="Agents"
                 url={$url("./agent")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <SideNavLink
+                icon="chat"
+                text="Chat"
+                url={$url("./chat")}
                 {collapsed}
                 on:click={keepCollapsed}
               />
