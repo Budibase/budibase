@@ -1,5 +1,6 @@
 <script>
   import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import { admin } from "@/stores/portal/admin"
   import { auth } from "@/stores/portal/auth"
   import { onMount } from "svelte"
@@ -12,6 +13,7 @@
   let showWarning = false
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
+  const { accountPortalUpgradeUrl } = helpers
 
   const isUnlimited = () => {
     if (usage.total === -1) {
@@ -24,7 +26,7 @@
     return (usage.used / usage.total) * 100
   }
 
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   onMount(() => {
     unlimited = isUnlimited()

@@ -190,11 +190,13 @@
       {#if toggle}
         <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
-      <div class="delete-cell">
-        {#if !readOnly && !isLocked(field.name)}
-          <Icon hoverable name="x" on:click={() => deleteEntry(idx)} />
-        {/if}
-      </div>
+      {#if !readOnly}
+        <div class="delete-cell">
+          {#if !isLocked(field.name)}
+            <Icon hoverable name="x" on:click={() => deleteEntry(idx)} />
+          {/if}
+        </div>
+      {/if}
       {#if menuItems?.length && showMenu}
         <ActionMenu>
           <div slot="control" class="control icon">

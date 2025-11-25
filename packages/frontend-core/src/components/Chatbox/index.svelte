@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type { UserMessage, AgentChat } from "@budibase/types"
+  import { Helpers, MarkdownViewer, notifications } from "@budibase/bbui"
+  import type { AgentChat } from "@budibase/types"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
   import { onMount } from "svelte"
-  import { createAPIClient } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
+  import { createAPIClient } from "@budibase/frontend-core"
+  import type { UIMessage, UIMessageChunk } from "ai"
+  import { v4 as uuidv4 } from "uuid"
 
   export let API = createAPIClient()
 
@@ -44,7 +46,11 @@
       chat = { title: "", messages: [], agentId: "" }
     }
 
-    const userMessage: UserMessage = { role: "user", content: inputValue }
+    const userMessage: UIMessage = {
+      id: uuidv4(),
+      role: "user",
+      parts: [{ type: "text", text: inputValue }],
+    }
 
     const updatedChat = {
       ...chat,
@@ -60,93 +66,60 @@
     inputValue = ""
     loading = true
 
-    let streamingContent = ""
-    let isToolCall = false
-    let toolCallInfo: string = ""
+    let streamingText = ""
+    let assistantIndex = -1
+    let streamCompleted = false
 
     try {
       await API.agentChatStream(
         updatedChat,
         workspaceId,
-        chunk => {
-          if (chunk.type === "content") {
-            // Accumulate streaming content
-            streamingContent += chunk.content || ""
-
-            // Update chat with partial content
-            const updatedMessages = [...updatedChat.messages]
-
-            // Find or create assistant message
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content =
-                streamingContent + (isToolCall ? toolCallInfo : "")
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + (isToolCall ? toolCallInfo : ""),
-              })
+        (chunk: UIMessageChunk) => {
+          if (chunk.type === "text-start") {
+            const assistantMessage: UIMessage = {
+              id: Helpers.uuid(),
+              role: "assistant",
+              parts: [{ type: "text", text: "", state: "streaming" }],
             }
-
             chat = {
               ...chat,
-              messages: updatedMessages,
+              messages: [...updatedChat.messages, assistantMessage],
             }
-
-            // Auto-scroll as content streams
+            assistantIndex = chat.messages.length - 1
             scrollToBottom()
-          } else if (chunk.type === "tool_call_start") {
-            isToolCall = true
-            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: streamingContent + toolCallInfo,
-              })
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "tool_call_result") {
-            const resultInfo = chunk.toolResult?.error
-              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
-              : `\n**✅ Tool Result:** Complete`
-
-            toolCallInfo += resultInfo
-
-            const updatedMessages = [...updatedChat.messages]
-            const lastMessage = updatedMessages[updatedMessages.length - 1]
-            if (lastMessage?.role === "assistant") {
-              lastMessage.content = streamingContent + toolCallInfo
-            }
-
-            chat = {
-              ...chat,
-              messages: updatedMessages,
-            }
-
-            scrollToBottom()
-          } else if (chunk.type === "chat_saved") {
-            if (chunk.chat) {
-              chat = chunk.chat
-              if (chunk.chat._id) {
-                dispatch("chatSaved", { chatId: chunk.chat._id })
+          } else if (chunk.type === "text-delta") {
+            streamingText += chunk.delta || ""
+            if (assistantIndex >= 0) {
+              const messages = [...chat.messages]
+              const assistant = { ...messages[assistantIndex] }
+              const parts = [...assistant.parts]
+              const textPart = parts.find(p => p.type === "text")
+              if (textPart) {
+                textPart.text = streamingText
               }
+              assistant.parts = parts
+              messages[assistantIndex] = assistant
+              chat = { ...chat, messages }
             }
-          } else if (chunk.type === "done") {
+            scrollToBottom()
+          } else if (chunk.type === "text-end") {
             loading = false
+            streamCompleted = true
+            if (assistantIndex >= 0) {
+              const messages = [...chat.messages]
+              const assistant = { ...messages[assistantIndex] }
+              const parts = [...assistant.parts]
+              const textPart = parts.find(p => p.type === "text")
+              if (textPart) {
+                textPart.state = "done"
+              }
+              assistant.parts = parts
+              messages[assistantIndex] = assistant
+              chat = { ...chat, messages }
+            }
             scrollToBottom()
           } else if (chunk.type === "error") {
-            notifications.error(chunk.content || "An error occurred")
+            notifications.error(chunk.errorText || "An error occurred")
             loading = false
           }
         },
@@ -156,6 +129,13 @@
           loading = false
         }
       )
+
+      if (streamCompleted && chat) {
+        setTimeout(() => {
+          const chatId = chat._id || ""
+          dispatch("chatSaved", { chatId })
+        }, 500)
+      }
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
@@ -170,8 +150,6 @@
   }
 
   onMount(async () => {
-    chat = { title: "", messages: [], agentId: chat.agentId }
-
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {
       await tick()
@@ -205,22 +183,57 @@
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer
-            value={typeof message.content === "string"
-              ? message.content
-              : message.content.length > 0
-                ? message.content
-                    .map(part =>
-                      part.type === "text"
-                        ? part.text
-                        : `${part.type} content not supported`
-                    )
-                    .join("")
-                : "[Empty message]"}
+            value={message.parts && message.parts.length > 0
+              ? message.parts
+                  .filter(part => part.type === "text")
+                  .map(part => (part.type === "text" ? part.text : ""))
+                  .join("")
+              : "[Empty message]"}
           />
         </div>
-      {:else if message.role === "assistant" && message.content}
+      {:else if message.role === "assistant"}
         <div class="message assistant">
-          <MarkdownViewer value={message.content} />
+          {#each message.parts || [] as part}
+            {#if part.type === "text"}
+              <MarkdownViewer value={part.text || ""} />
+            {:else if part.type === "reasoning"}
+              <div class="reasoning-part">
+                <div class="reasoning-label">Reasoning</div>
+                <div class="reasoning-content">{part.text || ""}</div>
+              </div>
+            {:else if part.type?.startsWith("tool-") || part.type === "dynamic-tool"}
+              {@const toolPart = part}
+              <div class="tool-part">
+                <div class="tool-header">
+                  <span class="tool-icon">🔧</span>
+                  <span class="tool-name"
+                    >{("toolName" in toolPart && toolPart.toolName) ||
+                      "Tool"}</span
+                  >
+                  {#if "state" in toolPart}
+                    {#if toolPart.state === "output-available"}
+                      <span class="tool-status success">✓</span>
+                    {:else if toolPart.state === "output-error"}
+                      <span class="tool-status error">✗</span>
+                    {:else if toolPart.state === "input-streaming"}
+                      <span class="tool-status pending">...</span>
+                    {:else if toolPart.state === "input-available"}
+                      <span class="tool-status pending">...</span>
+                    {/if}
+                  {/if}
+                </div>
+                {#if "state" in toolPart && toolPart.state === "output-available" && "output" in toolPart && toolPart.output}
+                  <div class="tool-output">
+                    <div class="tool-output-label">Output:</div>
+                    <pre class="tool-output-content">{typeof toolPart.output ===
+                      "string"
+                        ? toolPart.output
+                        : JSON.stringify(toolPart.output, null, 2)}</pre>
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          {/each}
         </div>
       {/if}
     {/each}
@@ -333,5 +346,87 @@
     background-color: var(--grey-2);
     border: 1px solid var(--grey-3);
     border-radius: 4px;
+  }
+
+  /* Tool parts styling */
+  .tool-part {
+    margin: var(--spacing-m) 0;
+    padding: var(--spacing-m);
+    background-color: var(--grey-2);
+    border: 1px solid var(--grey-3);
+    border-radius: 8px;
+  }
+
+  .tool-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-s);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .tool-icon {
+    font-size: 16px;
+  }
+
+  .tool-name {
+    color: var(--spectrum-global-color-gray-900);
+    font-family: var(--font-mono), monospace;
+  }
+
+  .tool-status {
+    margin-left: auto;
+    font-size: 12px;
+  }
+
+  .tool-status.success {
+    color: var(--spectrum-global-color-green-600);
+  }
+
+  .tool-status.error {
+    color: var(--spectrum-global-color-red-600);
+  }
+
+  .tool-status.pending {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tool-output,
+  .tool-output-label,
+  .tool-output-content {
+    background-color: var(--background);
+    border: 1px solid var(--grey-3);
+    border-radius: 4px;
+    padding: var(--spacing-s);
+    font-size: 12px;
+    font-family: var(--font-mono), monospace;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Reasoning parts styling */
+  .reasoning-part {
+    margin: var(--spacing-m) 0;
+    padding: var(--spacing-m);
+    background-color: var(--grey-1);
+    border-left: 3px solid var(--spectrum-global-color-static-seafoam-700);
+    border-radius: 4px;
+  }
+
+  .reasoning-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-static-seafoam-700);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .reasoning-content {
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-800);
+    font-style: italic;
   }
 </style>

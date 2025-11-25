@@ -1,5 +1,6 @@
 <script>
   import { Modal, ModalContent, Body } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import { auth, admin } from "@/stores/portal"
 
   export let onDismiss = () => {}
@@ -7,8 +8,9 @@
 
   let accountDowngradeModal
 
-  $: accountUrl = $admin.accountPortalUrl
-  $: billingUrl = `${accountUrl}/portal/billing`
+  const { accountPortalBillingUrl } = helpers
+
+  $: billingUrl = accountPortalBillingUrl($admin.accountPortalUrl)
 
   export function show() {
     accountDowngradeModal.show()

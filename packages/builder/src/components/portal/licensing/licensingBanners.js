@@ -2,6 +2,7 @@ import { ExpiringKeys } from "./constants"
 import { admin, auth, licensing, temporalStore } from "@/stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { helpers } from "@budibase/shared-core"
 
 const oneDayInSeconds = 86400
 
@@ -9,11 +10,13 @@ const defaultCacheFn = key => {
   temporalStore.setExpiring(key, {}, oneDayInSeconds)
 }
 
+const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
+
 const upgradeAction = key => {
   return defaultNavigateAction(
     key,
     "Upgrade",
-    `${get(admin).accountPortalUrl}/portal/upgrade`
+    accountPortalUpgradeUrl(get(admin).accountPortalUrl)
   )
 }
 
@@ -21,7 +24,7 @@ const billingAction = key => {
   return defaultNavigateAction(
     key,
     "Billing",
-    `${get(admin).accountPortalUrl}/portal/billing`
+    accountPortalBillingUrl(get(admin).accountPortalUrl)
   )
 }
 

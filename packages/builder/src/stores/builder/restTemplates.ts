@@ -1,5 +1,6 @@
 import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
@@ -11,6 +12,18 @@ interface RestTemplatesState {
 
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
+    {
+      name: "BambooHR",
+      description:
+        "HRIS platform for employee records, time off, and performance management",
+      specs: [
+        {
+          version: "1.0",
+          url: "https://openapi.bamboohr.io/main/latest/docs/openapi/public-openapi.yaml",
+        },
+      ],
+      icon: BambooHRLogo,
+    },
     {
       name: "GitHub",
       description:

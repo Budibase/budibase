@@ -422,4 +422,42 @@ describe("Rest Importer", () => {
       { name: "verified", default: "false" },
     ])
   })
+
+  it("returns OpenAPI 3 server variable defaults before importing queries", async () => {
+    const openapiWithServerVariables = {
+      openapi: "3.0.0",
+      info: {
+        title: "Server Variables",
+        version: "1.0.0",
+      },
+      servers: [
+        {
+          url: "https://{companyDomain}.example.com",
+          variables: {
+            companyDomain: {
+              default: "acme",
+              description: "Company domain",
+            },
+          },
+        },
+      ],
+      paths: {
+        "/users": {
+          get: {
+            operationId: "getUsers",
+            responses: {
+              "200": {
+                description: "successful operation",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    await init(JSON.stringify(openapiWithServerVariables))
+    const staticVariables = restImporter.getStaticServerVariables()
+
+    expect(staticVariables).toEqual({ companyDomain: "acme" })
+  })
 })

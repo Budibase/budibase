@@ -59,12 +59,20 @@ export const patchAPI = (API: APIClient) => {
       if (user.roleId === "PUBLIC") {
         // Don't try to enrich a public user as it will 403
         return user
-      } else {
-        return (await enrichRows([user], Constants.TableNames.USERS))[0]
       }
-    } else {
-      return null
+      try {
+        return (await enrichRows([user], Constants.TableNames.USERS))[0]
+      } catch (error: any) {
+        const status = error?.status ?? error?.response?.status
+        // If we don't have permission to fetch the Users table schema,
+        // return the raw user so we never downgrade the role to PUBLIC
+        if (status === 401 || status === 403) {
+          return user
+        }
+        throw error
+      }
     }
+    return null
   }
   const fetchRelationshipData = API.fetchRelationshipData
   API.fetchRelationshipData = async (sourceId, rowId, fieldName) => {
