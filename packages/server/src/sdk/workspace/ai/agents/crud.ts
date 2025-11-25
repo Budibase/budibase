@@ -26,7 +26,7 @@ export async function fetch(): Promise<Agent[]> {
     .map(withAgentDefaults)
 }
 
-export async function getOrThrow(agentId: string): Promise<Agent> {
+export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
   }

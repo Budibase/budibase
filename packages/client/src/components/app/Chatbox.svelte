@@ -5,7 +5,7 @@
 
   export let intro: string = "Ask our assistant anything about this app."
 
-  let chat: AgentChat = { title: "", messages: [], agentId: "" }
+  let chat: AgentChat = { title: "", messages: [] }
   $: workspaceId = $appStore?.appId ?? null
 </script>
 
