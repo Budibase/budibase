@@ -10,6 +10,16 @@ export interface QuerySchema {
 
 export type QueryVerb = "read" | "create" | "update" | "delete" | "patch"
 
+export interface ImportEndpoint {
+  id: string
+  name: string
+  method?: string
+  path?: string
+  description?: string
+  queryVerb?: QueryVerb
+  externalDocs?: string
+}
+
 export interface Query extends Document {
   datasourceId: string
   name: string

@@ -1,4 +1,10 @@
-import { BodyType, Query, QueryParameter, QueryVerb } from "@budibase/types"
+import {
+  BodyType,
+  ImportEndpoint,
+  Query,
+  QueryParameter,
+  QueryVerb,
+} from "@budibase/types"
 import { URL } from "url"
 import {
   buildKeyValueRequestBody,
@@ -10,15 +16,6 @@ export interface ImportInfo {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
-}
-
-export interface ImportEndpoint {
-  id: string
-  name: string
-  method?: string
-  path?: string
-  description?: string
-  queryVerb?: QueryVerb
 }
 
 enum MethodToVerb {

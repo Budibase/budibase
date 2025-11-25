@@ -29,7 +29,7 @@
   import { formatEndpointLabel } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
-  import type { RestTemplate, QueryImportEndpoint } from "@budibase/types"
+  import type { RestTemplate, ImportEndpoint } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
@@ -40,7 +40,7 @@
   let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
   let pendingSpec: RestTemplate["specs"][number] | null = null
-  let templateEndpoints: QueryImportEndpoint[] = []
+  let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
   $: selectedEndpoint = templateEndpoints.find(
@@ -103,7 +103,7 @@
         ?.slice()
         .sort((a, b) => compareEndpointOrder(a, b))
       selectedEndpointId = templateEndpoints[0]?.id
-      await templateEndpointModal?.show()
+      templateEndpointModal?.show()
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -114,7 +114,7 @@
     }
   }
 
-  const getEndpointIcon = (endpoint: QueryImportEndpoint) => {
+  const getEndpointIcon = (endpoint: ImportEndpoint) => {
     const method = (endpoint.method || "").toUpperCase()
     if (!method) {
       return undefined
@@ -139,8 +139,8 @@
   }
 
   const compareEndpointOrder = (
-    a: QueryImportEndpoint,
-    b: QueryImportEndpoint
+    a: ImportEndpoint,
+    b: ImportEndpoint
   ) => {
     const methodA = (a.method || "").toUpperCase()
     const methodB = (b.method || "").toUpperCase()

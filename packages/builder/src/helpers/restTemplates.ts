@@ -1,9 +1,9 @@
-import type { QueryImportEndpoint } from "@budibase/types"
+import type { ImportEndpoint } from "@budibase/types"
 
 const normalizeEndpointLabel = (value?: string) =>
   (value || "").toLowerCase().replace(/[^a-z0-9]/g, "")
 
-export const formatEndpointLabel = (endpoint: QueryImportEndpoint) => {
+export const formatEndpointLabel = (endpoint: ImportEndpoint) => {
   const path = endpoint.path || ""
   const name = endpoint.name || ""
 
