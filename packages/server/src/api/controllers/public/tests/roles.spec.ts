@@ -2,7 +2,7 @@ import type { UserCtx } from "@budibase/types"
 import type { Next } from "koa"
 import controller from "../roles"
 import { sdk } from "@budibase/pro"
-import { syncUsersAcrossWorkspaces } from "../../../../sdk/workspace/workspaces/sync"
+import { syncUsersAgainstWorkspaces } from "../../../../sdk/workspace/workspaces/sync"
 import type {
   RoleAssignRequest,
   RoleAssignmentResponse,
@@ -20,7 +20,7 @@ jest.mock("@budibase/pro", () => ({
 }))
 
 jest.mock("../../../../sdk/workspace/workspaces/sync", () => ({
-  syncUsersAcrossWorkspaces: jest.fn(),
+  syncUsersAgainstWorkspaces: jest.fn(),
 }))
 
 const createCtx = (
@@ -38,13 +38,16 @@ describe("public roles controller", () => {
   })
 
   describe("assign", () => {
-    it("syncs users across workspaces after assigning roles", async () => {
+    it("syncs users to all provided workspaces when appIds are present", async () => {
       const userIds = ["user_basic", "user_admin"]
       const requestBody: RoleAssignRequest = {
         userIds,
         role: {
           roleId: "ROLE_BASIC",
           appId: "app_123",
+        },
+        appBuilder: {
+          appId: "app_builder",
         },
       }
       const ctx = createCtx(requestBody)
@@ -55,16 +58,22 @@ describe("public roles controller", () => {
         typeof sdk.publicApi.roles.assign
       >
       assign.mockResolvedValue(undefined)
-      const syncUsers = syncUsersAcrossWorkspaces as jest.MockedFunction<
-        typeof syncUsersAcrossWorkspaces
+      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
+        typeof syncUsersAgainstWorkspaces
       >
       syncUsers.mockResolvedValue(undefined)
 
       await controller.assign(ctx, next)
 
-      expect(assign).toHaveBeenCalledWith(userIds, { role: requestBody.role })
+      expect(assign).toHaveBeenCalledWith(userIds, {
+        role: requestBody.role,
+        appBuilder: requestBody.appBuilder,
+      })
       expect(syncUsers).toHaveBeenCalledTimes(1)
-      expect(syncUsers).toHaveBeenCalledWith(userIds)
+      expect(syncUsers).toHaveBeenCalledWith(userIds, [
+        requestBody.role?.appId,
+        requestBody.appBuilder?.appId,
+      ])
       expect(ctx.body).toEqual({ data: { userIds } })
       expect(next).toHaveBeenCalled()
     })
