@@ -27,6 +27,9 @@
   }
 
   const renderChart = async newChartElement => {
+    if (!newChartElement) {
+      return
+    }
     try {
       await chart?.destroy()
 
