@@ -6,6 +6,7 @@ import { syncUsersAgainstWorkspaces } from "../../../../sdk/workspace/workspaces
 import type {
   RoleAssignRequest,
   RoleAssignmentResponse,
+  RoleUnAssignRequest,
 } from "../mapping/types"
 
 jest.mock("@budibase/pro", () => ({
@@ -23,7 +24,7 @@ jest.mock("../../../../sdk/workspace/workspaces/sync", () => ({
   syncUsersAgainstWorkspaces: jest.fn(),
 }))
 
-const createCtx = (
+const createAssignCtx = (
   body: RoleAssignRequest
 ): UserCtx<RoleAssignRequest, RoleAssignmentResponse> =>
   ({
@@ -31,6 +32,15 @@ const createCtx = (
       body,
     },
   }) as unknown as UserCtx<RoleAssignRequest, RoleAssignmentResponse>
+
+const createUnAssignCtx = (
+  body: RoleUnAssignRequest
+): UserCtx<RoleUnAssignRequest, RoleAssignmentResponse> =>
+  ({
+    request: {
+      body,
+    },
+  }) as unknown as UserCtx<RoleUnAssignRequest, RoleAssignmentResponse>
 
 describe("public roles controller", () => {
   beforeEach(() => {
@@ -50,7 +60,7 @@ describe("public roles controller", () => {
           appId: "app_builder",
         },
       }
-      const ctx = createCtx(requestBody)
+      const ctx = createAssignCtx(requestBody)
       const next = jest
         .fn()
         .mockResolvedValue(undefined) as jest.MockedFunction<Next>
@@ -66,6 +76,48 @@ describe("public roles controller", () => {
       await controller.assign(ctx, next)
 
       expect(assign).toHaveBeenCalledWith(userIds, {
+        role: requestBody.role,
+        appBuilder: requestBody.appBuilder,
+      })
+      expect(syncUsers).toHaveBeenCalledTimes(1)
+      expect(syncUsers).toHaveBeenCalledWith(userIds, [
+        requestBody.role?.appId,
+        requestBody.appBuilder?.appId,
+      ])
+      expect(ctx.body).toEqual({ data: { userIds } })
+      expect(next).toHaveBeenCalled()
+    })
+  })
+
+  describe("unAssign", () => {
+    it("syncs users against workspaces when appIds are provided", async () => {
+      const userIds = ["user_basic", "user_admin"]
+      const requestBody: RoleUnAssignRequest = {
+        userIds,
+        role: {
+          roleId: "ROLE_BASIC",
+          appId: "app_123",
+        },
+        appBuilder: {
+          appId: "app_builder",
+        },
+      }
+      const ctx = createUnAssignCtx(requestBody)
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+      const unAssign = sdk.publicApi.roles.unAssign as jest.MockedFunction<
+        typeof sdk.publicApi.roles.unAssign
+      >
+      unAssign.mockResolvedValue(undefined)
+      const syncUsers = syncUsersAgainstWorkspaces as jest.MockedFunction<
+        typeof syncUsersAgainstWorkspaces
+      >
+      syncUsers.mockResolvedValue(undefined)
+
+      await controller.unAssign(ctx, next)
+
+      expect(unAssign).toHaveBeenCalledWith(userIds, {
         role: requestBody.role,
         appBuilder: requestBody.appBuilder,
       })
