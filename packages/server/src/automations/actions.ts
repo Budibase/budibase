@@ -41,7 +41,9 @@ import {
   AutomationStepDefinition,
   AutomationStepInputs,
   AutomationStepOutputs,
+  FeatureFlag,
 } from "@budibase/types"
+import { features } from "@budibase/backend-core"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
@@ -111,7 +113,6 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   SUMMARISE: automations.steps.summarise.definition,
   GENERATE_TEXT: automations.steps.generate.definition,
   EXTRACT_FILE_DATA: automations.steps.extract.definition,
-  AGENT: automations.steps.agent.definition,
   EXTRACT_STATE: automations.steps.extractState.definition,
   LOOP_V2: automations.steps.loopV2.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
@@ -141,6 +142,11 @@ export async function getActionDefinitions(): Promise<
   if (env.SELF_HOSTED) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
     BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
+  }
+
+  // Add agent step definition only if AI_AGENTS feature flag is enabled
+  if (await features.isEnabled(FeatureFlag.AI_AGENTS)) {
+    BUILTIN_ACTION_DEFINITIONS["AGENT"] = automations.steps.agent.definition
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
