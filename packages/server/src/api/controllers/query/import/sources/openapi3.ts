@@ -1,4 +1,4 @@
-import { ImportInfo } from "./base"
+import { GetQueriesOptions, ImportInfo } from "./base"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
@@ -105,12 +105,28 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
  */
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
+  serverVariableBindings: Record<string, string> = {}
+
+  private getPrimaryServer = (): ServerObject | undefined => {
+    if (this.document?.servers?.length) {
+      return this.document.servers[0] as ServerObject
+    }
+  }
+
+  private setServerVariableBindings = (server?: ServerObject) => {
+    this.serverVariableBindings = {}
+    const variables = server?.variables || {}
+    for (let [variableName, variable] of Object.entries(variables)) {
+      this.serverVariableBindings[variableName] = variable?.default || ""
+    }
+  }
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
+        this.serverVariableBindings = {}
         return true
       } else {
         return false
@@ -118,6 +134,13 @@ export class OpenAPI3 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  getServerVariableBindings = () => {
+    if (!Object.keys(this.serverVariableBindings).length) {
+      this.setServerVariableBindings(this.getPrimaryServer())
+    }
+    return { ...this.serverVariableBindings }
   }
 
   private getEndpoints = (): ImportInfo["endpoints"] => {
@@ -153,7 +176,8 @@ export class OpenAPI3 extends OpenAPISource {
     const name = this.document.info.title || "OpenAPI Import"
     let url: string | undefined
     if (this.document.servers?.length) {
-      url = (this.document.servers[0] as ServerObject)?.url
+      const serverUrl = (this.document.servers[0] as ServerObject)?.url
+      url = serverUrl ? this.convertPathVariables(serverUrl) : undefined
     }
     const docsUrl =
       this.document.externalDocs?.url ||
@@ -173,18 +197,20 @@ export class OpenAPI3 extends OpenAPISource {
 
   getQueries = async (
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]> => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
-    if (this.document.servers?.length) {
-      const server = this.document.servers[0] as ServerObject
-      url = server.url
-      serverVariables = server.variables || {}
+    const primaryServer = this.getPrimaryServer()
+    if (primaryServer) {
+      url = primaryServer.url
+      serverVariables = primaryServer.variables || {}
     }
+    this.setServerVariableBindings(primaryServer)
 
     const queries: Query[] = []
     const filterIds = options?.filterIds
+    const staticVariables = options?.staticVariables || {}
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
@@ -276,7 +302,13 @@ export class OpenAPI3 extends OpenAPISource {
         }
 
         for (let [variableName, variable] of Object.entries(serverVariables)) {
-          const defaultValue = variable?.default || ""
+          const hasStaticVariable = Object.prototype.hasOwnProperty.call(
+            staticVariables,
+            variableName
+          )
+          const defaultValue = hasStaticVariable
+            ? `{{ ${variableName} }}`
+            : (variable?.default ?? "")
           ensureParameter(variableName, defaultValue)
         }
 

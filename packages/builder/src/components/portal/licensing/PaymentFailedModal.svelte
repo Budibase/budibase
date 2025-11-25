@@ -1,5 +1,6 @@
 <script>
   import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import { auth, admin, licensing } from "@/stores/portal"
   import { onMount } from "svelte"
 
@@ -10,8 +11,8 @@
   let pastDueEndDate
 
   const paymentFailedTitle = "Payment failed"
-  $: accountUrl = $admin.accountPortalUrl
-  $: billingUrl = `${accountUrl}/portal/billing`
+  const { accountPortalBillingUrl } = helpers
+  $: billingUrl = accountPortalBillingUrl($admin.accountPortalUrl)
 
   export function show() {
     paymentFailedModal.show()

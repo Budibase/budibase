@@ -13,6 +13,21 @@ interface ImportResult {
   queries: Query[]
 }
 
+const assignStaticVariableDefaults = (
+  target: Record<string, string>,
+  tokens: string[],
+  defaults: Record<string, string>
+) => {
+  let changed = false
+  for (const token of tokens) {
+    if (target[token] == null) {
+      target[token] = defaults[token] ?? ""
+      changed = true
+    }
+  }
+  return changed
+}
+
 export class RestImporter {
   data: string
   sources: ImportSource[]
@@ -43,9 +58,12 @@ export class RestImporter {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
       : undefined
+    const staticVariables =
+      await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
     let queries = await this.source.getQueries(datasourceId, {
       filterIds,
+      staticVariables,
     })
 
     if (filterIds && queries.length === 0) {
@@ -107,5 +125,52 @@ export class RestImporter {
       errorQueries,
       queries: successQueries,
     }
+  }
+
+  prepareDatasourceConfig = (datasource: Datasource | undefined) => {
+    if (!datasource) {
+      return
+    }
+    const config = datasource.config || (datasource.config = {})
+    const defaults = this.getStaticServerVariables()
+    const tokens = Object.keys(defaults || {}).filter(Boolean)
+    if (!tokens.length) {
+      return
+    }
+    config.staticVariables = config.staticVariables || {}
+    assignStaticVariableDefaults(config.staticVariables, tokens, defaults)
+    const templateStaticVariables = new Set(
+      config.templateStaticVariables || []
+    )
+    tokens.forEach(token => templateStaticVariables.add(token))
+    config.templateStaticVariables = Array.from(templateStaticVariables)
+  }
+
+  getStaticServerVariables = (): Record<string, string> => {
+    const source: any = this.source
+    if (source && typeof source.getServerVariableBindings === "function") {
+      return source.getServerVariableBindings()
+    }
+    return {}
+  }
+
+  private async getDatasourceStaticVariables(
+    datasourceId: string
+  ): Promise<Record<string, string>> {
+    if (!datasourceId) {
+      return {}
+    }
+    const db = context.getWorkspaceDB()
+    let datasource: Datasource | undefined
+    try {
+      datasource = await db.get<Datasource>(datasourceId)
+    } catch (_err) {
+      return {}
+    }
+    const staticVariables = datasource?.config?.staticVariables
+    if (!staticVariables || typeof staticVariables !== "object") {
+      return {}
+    }
+    return { ...staticVariables }
   }
 }

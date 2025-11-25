@@ -12,6 +12,7 @@
   export let onCtaClick: () => void
   export let ctaText: string
   export let resourceType: `${ResourceType}`
+  export let hideCta: boolean = false
 
   const iconByType = {
     [ResourceType.App]: "browser",
@@ -35,7 +36,9 @@
   </div>
   <slot />
 
-  <Button cta on:click={onCtaClick}>{ctaText}</Button>
+  {#if !hideCta}
+    <Button cta on:click={onCtaClick}>{ctaText}</Button>
+  {/if}
 </Layout>
 
 <style>
