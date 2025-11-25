@@ -6,6 +6,7 @@ import {
   RoleUnAssignRequest,
   RoleAssignRequest,
 } from "./mapping/types"
+import { syncUsersAcrossWorkspaces } from "../../../sdk/workspace/workspaces/sync"
 
 async function assign(
   ctx: UserCtx<RoleAssignRequest, RoleAssignmentResponse>,
@@ -13,6 +14,7 @@ async function assign(
 ) {
   const { userIds, ...assignmentProps } = ctx.request.body
   await sdk.publicApi.roles.assign(userIds, assignmentProps)
+  await syncUsersAcrossWorkspaces(userIds)
   ctx.body = { data: { userIds } }
   await next()
 }
