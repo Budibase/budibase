@@ -4,8 +4,11 @@
   import { debounce } from "../../../utils/utils"
   import GridPopover from "../overlays/GridPopover.svelte"
   import { OptionColours } from "../../../constants"
+  import { loadTranslationsByGroup } from "../../../utils/translationGroups"
 
   const { API, cache } = getContext("grid")
+
+  const pickerLabels = loadTranslationsByGroup("picker")
 
   export let value = []
   export let api
@@ -39,6 +42,10 @@
       close()
     }
   }
+
+  $: relationshipSearchPlaceholder = primaryDisplay
+    ? pickerLabels.searchByFieldPlaceholder.replace("{field}", primaryDisplay)
+    : pickerLabels.searchPlaceholder
 
   $: relationFields = fieldValue?.reduce((acc, f) => {
     const fields = {}
@@ -314,7 +321,7 @@
           quiet
           type="text"
           bind:value={searchString}
-          placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
+          placeholder={relationshipSearchPlaceholder}
         />
       </div>
       {#if searching}

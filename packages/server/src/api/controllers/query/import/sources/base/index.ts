@@ -1,9 +1,10 @@
 import {
   BodyType,
-  ImportEndpoint,
   Query,
   QueryParameter,
   QueryVerb,
+  RestTemplateQueryMetadata,
+  ImportEndpoint,
 } from "@budibase/types"
 import { URL } from "url"
 import {
@@ -26,12 +27,17 @@ enum MethodToVerb {
   delete = "delete",
 }
 
+export interface GetQueriesOptions {
+  filterIds?: Set<string>
+  staticVariables?: Record<string, string>
+}
+
 export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(
     datasourceId: string,
-    options?: { filterIds?: Set<string> }
+    options?: GetQueriesOptions
   ): Promise<Query[]>
   abstract getImportSource(): string
 
@@ -121,7 +127,8 @@ export abstract class ImportSource {
     parameters: QueryParameter[] = [],
     body: unknown = undefined,
     bodyBindings: Record<string, string> = {},
-    explicitBodyType?: BodyType
+    explicitBodyType?: BodyType,
+    restTemplateMetadata?: RestTemplateQueryMetadata
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -216,6 +223,10 @@ export abstract class ImportSource {
       queryVerb,
     }
 
+    if (restTemplateMetadata) {
+      query.restTemplateMetadata = restTemplateMetadata
+    }
+
     return query
   }
 
@@ -243,5 +254,30 @@ export abstract class ImportSource {
     }
 
     return queryString
+  }
+
+  protected buildDefaultBindings(
+    parameters: QueryParameter[],
+    extraBindings?: Record<string, string>
+  ): Record<string, string> | undefined {
+    const defaults: Record<string, string> = {}
+
+    for (const parameter of parameters) {
+      if (!parameter?.name) {
+        continue
+      }
+      defaults[parameter.name] = `${parameter.default ?? ""}`
+    }
+
+    if (extraBindings) {
+      for (const [key, value] of Object.entries(extraBindings)) {
+        if (!key) {
+          continue
+        }
+        defaults[key] = value
+      }
+    }
+
+    return Object.keys(defaults).length ? defaults : undefined
   }
 }

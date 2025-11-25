@@ -611,6 +611,123 @@ describe("rest", () => {
     })
   })
 
+  it("binds static variables when the parameter name matches", async () => {
+    const staticDatasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          companyDomain: "acme",
+        },
+      },
+    })
+
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({
+        path: "/",
+        method: "GET",
+        query: { companyDomain: "acme" },
+      })
+      .reply(200, { success: true }, { headers: jsonHeaders })
+
+    await config.api.query.preview({
+      datasourceId: staticDatasource._id!,
+      name: generator.guid(),
+      parameters: [{ name: "companyDomain", default: "{{ companyDomain }}" }],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "companyDomain={{companyDomain}}",
+      },
+    })
+  })
+
+  it("binds static variables when the local binding name differs", async () => {
+    const staticDatasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          companyDomain: "acme",
+        },
+      },
+    })
+
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({
+        path: "/",
+        method: "GET",
+        query: { domain: "acme" },
+      })
+      .reply(200, { success: true }, { headers: jsonHeaders })
+
+    await config.api.query.preview({
+      datasourceId: staticDatasource._id!,
+      name: generator.guid(),
+      parameters: [
+        {
+          name: "localDomain",
+          default: "{{ companyDomain }}",
+        },
+      ],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "domain={{localDomain}}",
+      },
+    })
+  })
+
+  it("binds static variables used inside the request path", async () => {
+    const staticDatasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          companyDomain: "acme",
+        },
+      },
+    })
+
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({
+        path: "/org/acme/users",
+        method: "GET",
+      })
+      .reply(200, { success: true }, { headers: jsonHeaders })
+
+    await config.api.query.preview({
+      datasourceId: staticDatasource._id!,
+      name: generator.guid(),
+      parameters: [
+        {
+          name: "companyDomain",
+          default: "{{ companyDomain }}",
+        },
+      ],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com/org/{{companyDomain}}/users",
+        queryString: "",
+      },
+    })
+  })
+
   it("should remove empty query parameters from bindings", async () => {
     mockAgent!
       .get("http://www.example.com")

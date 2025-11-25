@@ -201,10 +201,13 @@
         }
 
         // Default workspace selection for builders
+        const isOnWorkspaceRoute =
+          $isActive("./workspace/:application") ||
+          $isActive("./workspace/updating/:application")
         if (
           isBuilder &&
           $appsStore.apps.length &&
-          !$isActive("./workspace/:application") &&
+          !isOnWorkspaceRoute &&
           !$isActive("./apps")
         ) {
           // Find first editable app to redirect to
