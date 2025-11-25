@@ -51,6 +51,7 @@ export interface SettingsInnerConfig {
   isSSOEnforced?: boolean
   createdVersion?: string
   lockedBy?: LockReason
+  active?: boolean
   liteLLM?: { keyId: string; secretKey: string }
 }
 
