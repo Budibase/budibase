@@ -10,6 +10,7 @@ import {
 } from "../../../../events/docUpdates/syncUsers"
 import { rawUserMetadata } from "../../../users/utils"
 import * as workspaceSync from "../sync"
+import { generateUserMetadataID } from "../../../../db/utils"
 
 jest.mock("../sync", () => {
   const actual = jest.requireActual("../sync")
@@ -65,16 +66,35 @@ async function removeUserFromGroup() {
   })
 }
 
-async function getMetadata(email: string) {
+async function getMetadata(
+  email: string,
+  workspaceId = config.devWorkspaceId!
+) {
   await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
   await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
 
-  const metadata: UserMetadata[] = await context.doInContext(
-    config.devWorkspaceId!,
-    () => rawUserMetadata()
+  const metadata: UserMetadata[] = await context.doInContext(workspaceId, () =>
+    rawUserMetadata()
   )
   const found = metadata.find(data => data.email === email)
   return found
+}
+
+async function removeMetadataFromWorkspace(
+  workspaceId: string,
+  userId: string
+) {
+  await context.doInContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    try {
+      const doc = await db.get(generateUserMetadataID(userId))
+      await db.remove(doc)
+    } catch (err: any) {
+      if (err.status !== 404) {
+        throw err
+      }
+    }
+  })
 }
 
 describe("app user/group sync", () => {
@@ -288,5 +308,35 @@ describe("user sync batching", () => {
 
     await config.removeUserFromGroup(group._id, user._id!)
     expect(await getMetadata(user.email)).toBeUndefined()
+  })
+})
+
+describe("syncUsersAgainstWorkspaces", () => {
+  it("syncs both the provided workspace and its dev counterpart", async () => {
+    const workspaceId = config.getProdWorkspaceId()
+    const email = generator.email({})
+    const user = await createUser({
+      email,
+      roles: {
+        [workspaceId]: "BASIC",
+      },
+    })
+
+    // ensure queues processed before mutating metadata directly
+    await getMetadata(email)
+
+    await removeMetadataFromWorkspace(config.devWorkspaceId!, user._id!)
+    await removeMetadataFromWorkspace(workspaceId, user._id!)
+
+    expect(await getMetadata(email)).toBeUndefined()
+    expect(await getMetadata(email, workspaceId)).toBeUndefined()
+
+    await config.doInTenant(async () => {
+      await workspaceSync.syncUsersAgainstWorkspaces([user._id!], [workspaceId])
+    })
+
+    const expected = expect.objectContaining({ roleId: "BASIC" })
+    expect(await getMetadata(email, workspaceId)).toEqual(expected)
+    expect(await getMetadata(email)).toEqual(expected)
   })
 })
