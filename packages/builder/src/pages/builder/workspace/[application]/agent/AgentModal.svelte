@@ -26,8 +26,10 @@
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       aiconfig: aiConfig,
+      live: false,
     })
-    $goto(`./${newAgent._id}`)
+    modal.hide()
+    $goto(`./${newAgent._id}/config`)
   }
 
   onMount(() => {

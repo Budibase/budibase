@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   Agent,
@@ -109,7 +109,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       onFinish: async ({ messages }) => {
-        const chatId = chat._id ?? docIds.generateAgentChatID()
+        const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
         const existingChat = chat._id
           ? await db.tryGet<AgentChat>(chat._id)
           : null
@@ -313,14 +313,21 @@ export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
+  const createdBy = ctx.user?._id!
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
   const createRequest: RequiredKeys<CreateAgentRequest> = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools || [],
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
     _deleted: false,
+    createdBy: globalId,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -341,8 +348,13 @@ export async function updateAgent(
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools,
     _deleted: false,
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
+    createdBy: body.createdBy,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
