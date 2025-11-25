@@ -24,6 +24,7 @@
   export let loading: boolean = false
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let searchPlaceholder: string = "Search"
   export let showSelectAll = false
   export let selectAllText = "Select all"
 
@@ -142,6 +143,7 @@
   {loading}
   {onOptionMouseenter}
   {onOptionMouseleave}
+  {searchPlaceholder}
   {showSelectAll}
   {selectAllText}
   {indeterminate}
