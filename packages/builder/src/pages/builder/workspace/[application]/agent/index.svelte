@@ -202,10 +202,10 @@
               ctaText="Create your first agent"
               onCtaClick={() => upsertModal.show()}
               resourceType="agent"
+              hideCta={activeSubTab === "Live" ||
+                (activeSubTab === "Draft" && !agents.length)}
             >
-              {activeSubTab === "Live"
-                ? "No live agents yet!"
-                : "No draft agents yet!"}
+              {activeSubTab === "Live" ? "No live agents!" : "No draft agents!"}
             </NoResults>
           {/if}
         </div>

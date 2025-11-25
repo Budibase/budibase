@@ -9,13 +9,31 @@
     Select,
     TextArea,
     ActionButton,
+    Modal,
+    ModalContent,
+    Tags,
+    Tag,
+    Icon,
+    Helpers,
   } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onMount } from "svelte"
+  import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
+  import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
+  import BambooHRLogo from "../logos/BambooHR.svelte"
+  import BudibaseLogo from "../logos/Budibase.svelte"
+  import ConfluenceLogo from "../logos/Confluence.svelte"
+  import GithubLogo from "../logos/Github.svelte"
+
+  const Logos: Record<string, ComponentType> = {
+    BUDIBASE: BudibaseLogo,
+    CONFLUENCE: ConfluenceLogo,
+    GITHUB: GithubLogo,
+    BAMBOOHR: BambooHRLogo,
+  }
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -28,6 +46,9 @@
     icon: "",
     iconColor: "",
   }
+  let toolConfigModal: AgentToolConfigModal
+  let deleteConfirmModal: Modal
+  let toolSourceToDelete: any = null
 
   $: currentAgent = $agentsStore.agents.find(
     a => a._id === $agentsStore.currentAgentId
@@ -51,6 +72,8 @@
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
+
+  $: toolSources = $agentsStore.toolSources || []
 
   async function saveAgent() {
     if (!currentAgent) return
@@ -96,10 +119,54 @@
     }
   }
 
+  const confirmDeleteToolSource = (e: PointerEvent, toolSource: any) => {
+    e.stopPropagation()
+    toolSourceToDelete = toolSource
+    deleteConfirmModal.show()
+  }
+
+  const deleteToolSource = async () => {
+    if (!toolSourceToDelete) return
+    try {
+      await agentsStore.deleteToolSource(toolSourceToDelete.id)
+      notifications.success("Tool source deleted successfully.")
+      deleteConfirmModal.hide()
+      toolSourceToDelete = null
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error deleting tool source")
+    }
+  }
+
+  const agentUrl = "budibase.app/chat/3432343dff34334334dfd"
+
+  async function copyAgentUrl() {
+    try {
+      await Helpers.copyToClipboard(agentUrl)
+      notifications.success("URL copied to clipboard")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to copy URL")
+    }
+  }
+
+  function openAgentUrl() {
+    window.open(`https://${agentUrl}`, "_blank")
+  }
+
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      $agentsStore.currentAgentId
+        ? agentsStore.fetchToolSources($agentsStore.currentAgentId)
+        : Promise.resolve(),
+    ])
   })
 </script>
+
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 
 <div class="config-wrapper">
   <TopBar
@@ -108,7 +175,9 @@
       { text: currentAgent?.name || "Agent" },
     ]}
     icon="Effect"
-  />
+  >
+    <Button cta icon="save" on:click={saveAgent}>Save Changes</Button>
+  </TopBar>
   <div class="config-page">
     <div class="config-content">
       <div class="config-form">
@@ -158,18 +227,18 @@
             />
           </div>
 
-          <div class="section section-banner">
+          <!-- <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Variables / Bindings</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
                 Add variables to your agent. For example, employee_name,
                 product, ticket_status.
               </Body>
+              <div class="add-button">
+                <ActionButton size="S" icon="plus">Add</ActionButton>
+              </div>
             </div>
-            <div class="add-button">
-              <ActionButton size="S" icon="plus">Add</ActionButton>
-            </div>
-          </div>
+          </div> -->
 
           <div class="section section-banner">
             <div class="section-header">
@@ -178,25 +247,54 @@
                 Give your agent access to internal and external tools so it can
                 complete tasks.
               </Body>
-            </div>
-            <div class="add-button">
-              <ActionButton size="S" icon="plus">Add</ActionButton>
+              {#if toolSources.length > 0}
+                <div class="tools-tags">
+                  <Tags>
+                    {#each toolSources as toolSource}
+                      <div on:click={() => toolConfigModal.show(toolSource)}>
+                        <Tag
+                          closable
+                          on:click={e => confirmDeleteToolSource(e, toolSource)}
+                        >
+                          <div class="tag-content">
+                            {#if Logos[toolSource.type]}
+                              <svelte:component
+                                this={Logos[toolSource.type]}
+                                height="14"
+                                width="14"
+                              />
+                            {/if}
+                            {toolSource.type.toLocaleLowerCase()}
+                          </div>
+                        </Tag>
+                      </div>
+                    {/each}
+                  </Tags>
+                </div>
+              {/if}
+              <div class="add-button">
+                <ActionButton
+                  on:click={() => toolConfigModal.show()}
+                  size="S"
+                  icon="plus">Add</ActionButton
+                >
+              </div>
             </div>
           </div>
 
-          <div class="section section-banner">
+          <!-- <div class="section section-banner">
             <div class="section-header">
               <Heading size="XS">Guardrails</Heading>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
                 Train your agent to deliver accurate, consistent answers across
                 every workflow.
               </Body>
-            </div>
-            <div class="add-button">
-              <ActionButton size="S" icon="plus">Add</ActionButton>
+              <div class="add-button">
+                <ActionButton size="S" icon="plus">Add</ActionButton>
+              </div>
             </div>
           </div>
-
+ -->
           <div class="section">
             <Input
               label="Goal"
@@ -218,26 +316,82 @@
         </Layout>
       </div>
 
-      <div class="config-footer">
-        <div class="footer-buttons">
-          <Button icon="save" on:click={saveAgent}>Save Changes</Button>
-          <Button
-            cta
-            icon={currentAgent?.live ? "pause" : "play"}
-            on:click={toggleAgentLive}
-          >
-            {currentAgent?.live ? "Pause Agent" : "Set your agent live"}
-          </Button>
+      {#if currentAgent?.live}
+        <div class="agent-live-card">
+          <div class="live-header">
+            <div class="live-icon">
+              <Icon name="activity" size="M" />
+            </div>
+            <Heading size="S">Your agent is live.</Heading>
+          </div>
+          <div class="url-section">
+            <div class="url">
+              <Input readonly disabled value={agentUrl} />
+            </div>
+            <div class="url-actions">
+              <div class="url-action-button">
+                <Icon name="copy" size="S" on:click={copyAgentUrl} />
+              </div>
+              <div class="url-action-button">
+                <Icon
+                  name="arrow-square-out"
+                  size="S"
+                  on:click={openAgentUrl}
+                />
+              </div>
+            </div>
+          </div>
+          <div class="live-actions">
+            <Button secondary icon="pause" on:click={toggleAgentLive}
+              >Pause agent</Button
+            >
+          </div>
         </div>
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          {currentAgent?.live
-            ? "Your agent is currently live. Pause it to make changes and take it offline."
-            : "Once your agent is live, it will be available to use within automations. You can pause your agent at any time."}
-        </Body>
-      </div>
+      {:else}
+        <div class="agent-live-card">
+          <Button
+            quiet
+            icon="play"
+            iconColor="var(--bb-blue)"
+            on:click={toggleAgentLive}>Set your agent live</Button
+          >
+          <div class="live-description">
+            <Body size="S">
+              Once your agent is live, it will be available to use.
+            </Body>
+            <Body size="S">You can pause your agent at any time.</Body>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
+
+<AgentToolConfigModal
+  bind:this={toolConfigModal}
+  agentId={$agentsStore.currentAgentId || ""}
+/>
+
+<Modal bind:this={deleteConfirmModal}>
+  <ModalContent
+    title="Delete Tool Source"
+    size="S"
+    showCancelButton={true}
+    cancelText="Cancel"
+    showConfirmButton={true}
+    confirmText="Delete"
+    showCloseIcon
+    onCancel={() => deleteConfirmModal.hide()}
+    onConfirm={deleteToolSource}
+  >
+    <div class="delete-confirm-content">
+      <Body size="S">
+        Are you sure you want to delete this tool source? This action cannot be
+        undone.
+      </Body>
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
   .config-wrapper {
@@ -321,45 +475,119 @@
   }
 
   .section.section-banner {
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: flex-start;
-    padding: var(--spacing-m);
-    border-radius: 12px;
-    background-color: var(--background-alt);
-    border: 1px dashed var(--spectrum-global-color-gray-300);
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    border: none;
+    gap: var(--spacing-m);
   }
 
   .section-header {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
-    max-width: 70%;
+    max-width: 100%;
   }
 
   .add-button {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    margin-top: var(--spacing-s);
   }
 
-  .config-footer {
+  .agent-live-card {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     margin-top: var(--spacing-xl);
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl);
     border-radius: 12px;
-    background-color: var(--background-alt);
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: #212121;
     align-items: center;
+  }
+
+  .live-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+    padding: var(--spacing-xl);
+    margin: calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl)) 0;
+    background-color: #1a1a1a;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .live-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
+    width: 100%;
+  }
+
+  .live-header :global(.spectrum-Heading) {
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .live-icon {
+    color: #4caf50;
+    display: flex;
+    align-items: center;
+  }
+
+  .url-section {
+    width: 100%;
+    display: flex;
+  }
+
+  .url {
+    width: 100%;
+  }
+
+  .url-actions {
+    margin-left: var(--spacing-m);
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+
+  .url-action-button {
+    cursor: pointer;
+  }
+
+  .url-action-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .live-description {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
     text-align: center;
   }
 
-  .footer-buttons {
+  .live-description :global(.spectrum-Body) {
+    color: #bdbdbd;
+    margin: 0;
+  }
+
+  .tools-tags {
+    margin-top: var(--spacing-s);
+  }
+
+  .tools-tags :global(.spectrum-Tags) {
     display: flex;
-    gap: var(--spacing-m);
-    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .tag-content {
+    display: flex;
     align-items: center;
+    gap: var(--spacing-xs);
   }
 </style>

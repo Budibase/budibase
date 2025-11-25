@@ -54,7 +54,10 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     promptInstructions: request.promptInstructions,
     live: request.live ?? false,
     icon: request.icon,
+    iconColor: request.iconColor,
+    goal: request.goal,
     createdAt: now,
+    createdBy: request.createdBy,
   }
 
   const { rev } = await db.put(agent)

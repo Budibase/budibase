@@ -2,15 +2,23 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { Body, Icon, TooltipPosition } from "@budibase/bbui"
-  import type { Agent, WorkspaceFavourite } from "@budibase/types"
+  import type { Agent, WorkspaceFavourite, User } from "@budibase/types"
   import { PublishResourceState } from "@budibase/types"
   import { url } from "@roxi/routify"
+  import { users } from "@/stores/portal/users"
+  import { helpers } from "@budibase/shared-core"
 
   export let agent: Agent
   export let index: number
   export let isHighlighted: boolean = false
   export let favourite: WorkspaceFavourite
   export let onContextMenu: (_e: MouseEvent, _agent: Agent) => void
+
+  let userName = "Created by Budibase"
+
+  $: iconName = getAgentIcon(agent)
+  $: iconColor = getAgentIconColor(agent, index)
+  $: loadUserName(agent?.createdBy)
 
   const getAgentIcon = (agent: Agent) => {
     return agent.icon || "SideKick"
@@ -30,8 +38,19 @@
     return colors[index % colors.length]
   }
 
-  $: iconName = getAgentIcon(agent)
-  $: iconColor = getAgentIconColor(agent, index)
+  async function loadUserName(createdBy: string | undefined) {
+    if (!createdBy) {
+      userName = "Created by Budibase"
+      return
+    }
+
+    try {
+      const user = await users.get(createdBy)
+      userName = helpers.getUserLabel(user as User)
+    } catch {
+      userName = "Created by Budibase"
+    }
+  }
 </script>
 
 <a
@@ -65,7 +84,7 @@
         <Body weight="500" size="S">{agent.name}</Body>
       </div>
       <div class="card-creator">
-        <Body size="XS">Created by Budibase</Body>
+        <Body size="XS">{userName}</Body>
       </div>
     </div>
     <div class="card-status">
@@ -80,7 +99,6 @@
 
 <style>
   .agent-card {
-    --agent-accent: var(--spectrum-global-color-gray-400);
     background: var(--spectrum-alias-background-color-primary);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-l);
@@ -101,14 +119,11 @@
   .agent-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    border-color: var(--agent-accent);
     background-color: rgba(255, 255, 255, 0.01);
   }
 
   .agent-card.active {
-    border-color: var(--agent-accent);
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--agent-accent) 40%, transparent);
+    box-shadow: 0 0 0 1px;
   }
 
   .card-actions {

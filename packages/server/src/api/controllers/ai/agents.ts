@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   Agent,
@@ -313,6 +313,8 @@ export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
+  const createdBy = ctx.user?._id!
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
   const createRequest: RequiredKeys<CreateAgentRequest> = {
     name: body.name,
@@ -325,6 +327,7 @@ export async function createAgent(
     iconColor: body.iconColor,
     live: body.live,
     _deleted: false,
+    createdBy: globalId,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -338,7 +341,7 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
 
-  const updateRequest: UpdateAgentRequest = {
+  const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
     _rev: body._rev,
     name: body.name,
@@ -347,9 +350,11 @@ export async function updateAgent(
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     allowedTools: body.allowedTools,
+    _deleted: false,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
+    createdBy: body.createdBy,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

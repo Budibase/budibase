@@ -11,6 +11,7 @@ export interface Agent extends Document {
   live?: boolean
   icon?: string
   iconColor?: string
+  createdBy?: string
 }
 
 export interface AgentChat extends Document {
