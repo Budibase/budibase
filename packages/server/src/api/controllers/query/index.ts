@@ -109,21 +109,31 @@ const _import = async (
 
   const importer = new RestImporter(data)
   await importer.init()
+  const importInfo = await importer.getInfo()
 
   let datasourceId
   if (!body.datasourceId) {
-    // construct new datasource
-    const info: any = await importer.getInfo()
-    let datasource: Datasource = {
+    const {
+      _id: _discardId,
+      _rev: _discardRev,
+      config: suppliedConfig,
+      ...rest
+    } = body.datasource ? cloneDeep(body.datasource) : ({} as Datasource)
+    const config = suppliedConfig || {}
+    const datasource: Datasource = {
+      ...rest,
       type: "datasource",
-      source: SourceName.REST,
+      source: rest.source || SourceName.REST,
+      name: rest.name || importInfo?.name,
       config: {
-        url: info.url,
-        defaultHeaders: [],
-        rejectUnauthorized: true,
+        ...config,
+        defaultHeaders: config.defaultHeaders ?? {},
+        rejectUnauthorized: config.rejectUnauthorized ?? true,
+        downloadImages: config.downloadImages ?? true,
+        url: config.url ?? importInfo?.url,
       },
-      name: info.name,
     }
+    importer.prepareDatasourceConfig(datasource)
     // save the datasource
     const datasourceCtx: UserCtx<CreateDatasourceRequest> = merge(ctx, {
       request: {

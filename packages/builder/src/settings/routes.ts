@@ -1,4 +1,4 @@
-import { sdk } from "@budibase/shared-core"
+import { sdk, helpers } from "@budibase/shared-core"
 import { GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
@@ -24,6 +24,8 @@ export const globalRoutes = (user: GetGlobalSelfResponse) => {
 }
 
 // Route definitions
+const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
+
 export const orgRoutes = (
   user: GetGlobalSelfResponse,
   admin: AdminState
@@ -181,7 +183,7 @@ export const orgRoutes = (
       access: () => cloud && user?.accountPortalAccess,
       icon: "arrow-circle-up",
       href: {
-        url: admin?.accountPortalUrl + "/portal/upgrade",
+        url: accountPortalUpgradeUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },
@@ -200,7 +202,7 @@ export const orgRoutes = (
       path: "billing",
       icon: "credit-card",
       href: {
-        url: admin?.accountPortalUrl + "/portal/billing",
+        url: accountPortalBillingUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },
@@ -265,6 +267,11 @@ export const appRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
+        {
+          path: "translations",
+          comp: Pages.get("translations"),
+          title: "Translations",
+        },
       ],
     },
   ].map((entry: Route) => ({

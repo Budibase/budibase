@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   Agent,
@@ -12,7 +12,6 @@ import {
   DocumentType,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
-  Message,
   RequiredKeys,
   Tool,
   UpdateAgentRequest,
@@ -22,52 +21,11 @@ import {
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
-
-function addDebugInformation(messages: Message[]) {
-  const processedMessages = [...messages]
-  for (let i = 0; i < processedMessages.length; i++) {
-    const message = processedMessages[i]
-    if (message.role === "assistant" && message.tool_calls?.length) {
-      // For each tool call, add debug information to the assistant message content
-      let toolDebugInfo = "\n\n**Tool Calls:**\n"
-
-      for (const toolCall of message.tool_calls) {
-        if (toolCall.type !== "function" || !toolCall.function) {
-          console.warn(
-            `[OPENAI TOOL WARN] Unsupported tool call type: ${toolCall.type}`
-          )
-          continue
-        }
-
-        let toolParams = "{}"
-        try {
-          // Try to parse and prettify the JSON arguments
-          toolParams = JSON.stringify(
-            JSON.parse(toolCall.function.arguments),
-            null,
-            2
-          )
-        } catch (e) {
-          // If not valid JSON, use as is
-          toolParams = toolCall.function.arguments
-        }
-
-        toolDebugInfo += `\n**Tool:** ${toolCall.function.name}\n**Parameters:**\n\`\`\`json\n${toolParams}\n\`\`\`\n`
-      }
-
-      // Append tool debug info to the message content
-      if (message.content) {
-        message.content += toolDebugInfo
-      } else {
-        message.content = toolDebugInfo
-      }
-    }
-  }
-  return processedMessages
-}
+import { createOpenAI } from "@ai-sdk/openai"
+import { convertToModelMessages, generateText, streamText } from "ai"
+import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const model = await sdk.aiConfigs.getLLMOrThrow()
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
   const agentId = chat.agentId
@@ -86,12 +44,13 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  let prompt = new ai.LLMRequest()
-    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
-    .addMessages(chat.messages)
-
+  // Build system prompt (agent prompt + optional tool guidelines)
+  let system = ai.agentSystemPrompt(ctx.user)
+  if (agent.promptInstructions) {
+    system += `\n\n${agent.promptInstructions}`
+  }
   let toolGuidelines = ""
-
+  const allTools: Tool[] = []
   for (const toolSource of agent.allowedTools || []) {
     const toolSourceInstance = createToolSourceInstance(
       toolSource as AgentToolSource
@@ -109,74 +68,63 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const toolsToAdd = toolSourceInstance.getEnabledTools()
 
     if (toolsToAdd.length > 0) {
-      prompt = prompt.addTools(toolsToAdd)
+      allTools.push(...toolsToAdd)
     }
   }
 
   // Append tool guidelines to the system prompt if any exist
   if (toolGuidelines) {
-    prompt = prompt.addSystemMessage(toolGuidelines)
+    system += toolGuidelines
   }
 
   try {
-    let finalMessages: Message[] = []
-    let totalTokens = 0
+    const { modelId, apiKey, baseUrl } =
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
 
-    for await (const chunk of model.chatStream(prompt)) {
-      // Send chunk to client
-      ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
+    const openai = createOpenAI({
+      apiKey,
+      baseURL: baseUrl,
+    })
+    const model = openai(modelId)
 
-      if (chunk.type === "done") {
-        finalMessages = chunk.messages || []
-        totalTokens = chunk.tokensUsed || 0
-        break
-      } else if (chunk.type === "error") {
-        ctx.res.write(
-          `data: ${JSON.stringify({
-            type: "error",
-            content: chunk.content,
-          })}\n\n`
-        )
-        ctx.res.end()
-        return
-      }
-    }
+    const aiTools = toAiSdkTools(allTools)
+    const result = await streamText({
+      model,
+      messages: convertToModelMessages(chat.messages),
+      system,
+      tools: aiTools,
+    })
 
-    // Save chat to database after streaming is complete
-    if (finalMessages.length > 0) {
-      if (!chat._id) {
-        chat._id = docIds.generateAgentChatID()
-      }
+    const title =
+      chat.title ||
+      (
+        await generateText({
+          model,
+          messages: [convertToModelMessages(chat.messages)[0]],
+          system: ai.agentHistoryTitleSystemPrompt(),
+        })
+      ).text
 
-      if (!chat.title || chat.title === "") {
-        const titlePrompt = new ai.LLMRequest()
-          .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
-          .addMessages(finalMessages)
-        const { message } = await model.prompt(titlePrompt)
-        chat.title = message
-      }
+    ctx.respond = false
+    result.pipeUIMessageStreamToResponse(ctx.res, {
+      originalMessages: chat.messages,
+      onFinish: async ({ messages }) => {
+        const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
+        const existingChat = chat._id
+          ? await db.tryGet<AgentChat>(chat._id)
+          : null
 
-      const newChat: AgentChat = {
-        _id: chat._id,
-        _rev: chat._rev,
-        agentId,
-        title: chat.title,
-        messages: addDebugInformation(finalMessages),
-      }
-
-      const { rev } = await db.put(newChat)
-
-      // Send final chat info
-      ctx.res.write(
-        `data: ${JSON.stringify({
-          type: "chat_saved",
-          chat: { ...newChat, _rev: rev },
-          tokensUsed: totalTokens,
-        })}\n\n`
-      )
-    }
-
-    ctx.res.end()
+        const updatedChat: AgentChat = {
+          _id: chatId,
+          ...(existingChat?._rev && { _rev: existingChat._rev }),
+          agentId,
+          title,
+          messages,
+        }
+        await db.put(updatedChat)
+      },
+    })
+    return
   } catch (error: any) {
     ctx.res.write(
       `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
@@ -365,14 +313,21 @@ export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
+  const createdBy = ctx.user?._id!
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
   const createRequest: RequiredKeys<CreateAgentRequest> = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools || [],
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
     _deleted: false,
+    createdBy: globalId,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -393,8 +348,13 @@ export async function updateAgent(
     description: body.description,
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
+    goal: body.goal,
     allowedTools: body.allowedTools,
     _deleted: false,
+    icon: body.icon,
+    iconColor: body.iconColor,
+    live: body.live,
+    createdBy: body.createdBy,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

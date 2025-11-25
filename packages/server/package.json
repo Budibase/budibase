@@ -40,6 +40,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.68",
     "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "12.1.0",
     "@aws-sdk/client-dynamodb": "3.709.0",
@@ -62,9 +63,10 @@
     "@koa/cors": "5.0.0",
     "@koa/router": "13.1.0",
     "@modelcontextprotocol/sdk": "^1.11.4",
-    "@octokit/rest": "^22.0.0",
+    "@octokit/rest": "^20.0.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
+    "ai": "^5.0.93",
     "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",
@@ -131,15 +133,15 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
     "@babel/preset-env": "7.16.11",
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
-    "@types/js-yaml": "^4.0.9",
     "@types/html-to-text": "^9.0.4",
+    "@types/js-yaml": "^4.0.9",
     "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
     "@types/koa-send": "^4.1.6",
@@ -175,7 +177,7 @@
     "tsconfig-paths": "4.0.0",
     "undici": "^5.28.4",
     "yargs": "^17.7.2",
-    "zod": "^3.23.8"
+    "zod": "^4.1.12"
   },
   "resolutions": {
     "@budibase/pro": "npm:@budibase/pro@latest"

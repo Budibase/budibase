@@ -17,6 +17,12 @@ export type WorkspaceMigration = {
   disabled?: boolean
 }
 
+const SKIP_MIGRATION_WAIT_ENDPOINTS = new RegExp(["appPackage"].join("|"))
+
+function shouldSkipMigrationWait(ctx: UserCtx): boolean {
+  return SKIP_MIGRATION_WAIT_ENDPOINTS.test(ctx.path || "")
+}
+
 export function getLatestEnabledMigrationId(migrations?: WorkspaceMigration[]) {
   let latestMigrationId: string | undefined
   if (!migrations) {
@@ -67,10 +73,17 @@ export async function checkMissingMigrations(
       }
     )
 
-    const { applied: migrationApplied } = await waitForMigration(workspaceId, {
-      timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
-    })
-    if (!migrationApplied) {
+    if (!shouldSkipMigrationWait(ctx)) {
+      const { applied: migrationApplied } = await waitForMigration(
+        workspaceId,
+        {
+          timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
+        }
+      )
+      if (!migrationApplied) {
+        ctx.response.set(Header.MIGRATING_APP, workspaceId)
+      }
+    } else {
       ctx.response.set(Header.MIGRATING_APP, workspaceId)
     }
   }

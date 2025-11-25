@@ -20,6 +20,7 @@
   export let fixed: boolean = false
   export let inline: boolean = false
   export let disableCancel: boolean = false
+  export let closeOnOutsideClick: boolean = true
   export let autoFocus: boolean = true
   export let zIndex: number = 1001
 
@@ -71,6 +72,12 @@
   function handleKey(e: KeyboardEvent): void {
     if (visible && e.key === "Escape") {
       cancel(ModalCancelFrom.ESCAPE_KEY)
+    }
+  }
+
+  function handleOutsideClick(): void {
+    if (closeOnOutsideClick) {
+      cancel(ModalCancelFrom.OUTSIDE_CLICK)
     }
   }
 
@@ -133,7 +140,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
           class="spectrum-Underlay is-open"
-          on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+          on:mousedown|self={handleOutsideClick}
           style="z-index:{zIndex || 999}"
         >
           <div
@@ -141,13 +148,10 @@
             in:fade={{ duration: 200 }}
             out:fade|local={{ duration: 200 }}
           />
-          <div
-            class="modal-wrapper"
-            on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
-          >
+          <div class="modal-wrapper" on:mousedown|self={handleOutsideClick}>
             <div
               class="modal-inner-wrapper"
-              on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+              on:mousedown|self={handleOutsideClick}
             >
               <slot name="outside" />
               <div
