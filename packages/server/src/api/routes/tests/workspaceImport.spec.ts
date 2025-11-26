@@ -203,4 +203,20 @@ describe("/applications/:appId/import", () => {
       "manifest.json": "93bcfcf77d7c3fa555642816f42214fa",
     })
   })
+
+  it("should import when the file is provided under the 'file' field", async () => {
+    const appId = config.getDevWorkspaceId()
+    await request
+      .post(`/api/applications/${appId}/import`)
+      .field("encryptionPassword", PASSWORD)
+      .attach("file", path.join(__dirname, "data", "old-export.enc.tar.gz"))
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+
+    const screens = await config.api.screen.list()
+    expect(screens.length).toBe(2)
+    expect(screens[0].routing.route).toBe("/derp")
+    expect(screens[1].routing.route).toBe("/blank")
+  })
 })
