@@ -26,6 +26,7 @@ import api from "./api"
 import { loadTemplateConfig } from "./constants/templates"
 import * as db from "./db"
 import env from "./environment"
+import { runAutomationCronJanitor } from "./utilities/cronJanitor"
 
 db.init()
 
@@ -154,6 +155,7 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   }
 
   cache.docWritethrough.init()
+  await runAutomationCronJanitor()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
