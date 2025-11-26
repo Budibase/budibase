@@ -89,10 +89,6 @@ export async function run({
 
     const aiTools = toAiSdkTools(allTools)
 
-    extractReasoningMiddleware({
-      tagName: "think",
-    })
-
     const agent = new Agent({
       model: wrapLanguageModel({
         model: openai(modelId),
