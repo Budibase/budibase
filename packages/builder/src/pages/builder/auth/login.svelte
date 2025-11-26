@@ -19,6 +19,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
 
   let loaded = false
   let form
@@ -57,6 +58,12 @@
   }
 
   onMount(async () => {
+    // Check for returnUrl query parameter and save it to cookie
+    const urlParams = new URLSearchParams(window.location.search)
+    const returnUrl = urlParams.get("returnUrl")
+    if (returnUrl) {
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+    }
     try {
       await organisation.init()
     } catch (error) {
