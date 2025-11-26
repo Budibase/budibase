@@ -131,4 +131,3 @@ describe("createSseToJsonTransformStream", () => {
     expect(results).toEqual([{ nested: { value: 42 } }])
   })
 })
-
