@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Helpers, MarkdownViewer, notifications } from "@budibase/bbui"
+  import { MarkdownViewer, notifications } from "@budibase/bbui"
   import type { AgentChat } from "@budibase/types"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
@@ -7,7 +7,7 @@
   import { onMount } from "svelte"
   import { createEventDispatcher } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import type { UIMessage, UIMessageChunk } from "ai"
+  import type { UIMessage } from "ai"
   import { v4 as uuidv4 } from "uuid"
 
   export let API = createAPIClient()
@@ -23,7 +23,7 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
 
-  $: if (chat.messages.length) {
+  $: if (chat?.messages?.length) {
     scrollToBottom()
   }
 
@@ -43,7 +43,7 @@
 
   async function prompt() {
     if (!chat) {
-      chat = { title: "", messages: [], agentId: "" }
+      chat = { title: "", messages: [] }
     }
 
     const userMessage: UIMessage = {
@@ -52,97 +52,36 @@
       parts: [{ type: "text", text: inputValue }],
     }
 
-    const updatedChat = {
+    const updatedChat: AgentChat = {
       ...chat,
       messages: [...chat.messages, userMessage],
     }
 
-    // Update local display immediately with user message
     chat = updatedChat
-
-    // Ensure we scroll to the new message
     await scrollToBottom()
 
     inputValue = ""
     loading = true
 
-    let streamingText = ""
-    let assistantIndex = -1
-    let streamCompleted = false
-
     try {
-      await API.agentChatStream(
-        updatedChat,
-        workspaceId,
-        (chunk: UIMessageChunk) => {
-          if (chunk.type === "text-start") {
-            const assistantMessage: UIMessage = {
-              id: Helpers.uuid(),
-              role: "assistant",
-              parts: [{ type: "text", text: "", state: "streaming" }],
-            }
-            chat = {
-              ...chat,
-              messages: [...updatedChat.messages, assistantMessage],
-            }
-            assistantIndex = chat.messages.length - 1
-            scrollToBottom()
-          } else if (chunk.type === "text-delta") {
-            streamingText += chunk.delta || ""
-            if (assistantIndex >= 0) {
-              const messages = [...chat.messages]
-              const assistant = { ...messages[assistantIndex] }
-              const parts = [...assistant.parts]
-              const textPart = parts.find(p => p.type === "text")
-              if (textPart) {
-                textPart.text = streamingText
-              }
-              assistant.parts = parts
-              messages[assistantIndex] = assistant
-              chat = { ...chat, messages }
-            }
-            scrollToBottom()
-          } else if (chunk.type === "text-end") {
-            loading = false
-            streamCompleted = true
-            if (assistantIndex >= 0) {
-              const messages = [...chat.messages]
-              const assistant = { ...messages[assistantIndex] }
-              const parts = [...assistant.parts]
-              const textPart = parts.find(p => p.type === "text")
-              if (textPart) {
-                textPart.state = "done"
-              }
-              assistant.parts = parts
-              messages[assistantIndex] = assistant
-              chat = { ...chat, messages }
-            }
-            scrollToBottom()
-          } else if (chunk.type === "error") {
-            notifications.error(chunk.errorText || "An error occurred")
-            loading = false
-          }
-        },
-        error => {
-          console.error("Streaming error:", error)
-          notifications.error(error.message)
-          loading = false
-        }
-      )
+      const messageStream = await API.agentChatStream(updatedChat, workspaceId)
 
-      if (streamCompleted && chat) {
-        setTimeout(() => {
-          const chatId = chat._id || ""
-          dispatch("chatSaved", { chatId })
-        }, 500)
+      for await (const message of messageStream) {
+        chat = {
+          ...updatedChat,
+          messages: [...updatedChat.messages, message],
+        }
+        scrollToBottom()
       }
+
+      loading = false
+      dispatch("chatSaved", { chatId: chat._id || "" })
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
       loading = false
     }
 
-    // Return focus to textarea after the response
     await tick()
     if (textareaElement) {
       textareaElement.focus()

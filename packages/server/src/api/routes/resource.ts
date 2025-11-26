@@ -7,6 +7,7 @@ const duplicateRequestValidator = auth.joiValidator.body(
   Joi.object({
     toWorkspace: Joi.string().required(),
     resources: Joi.array().min(1).items(Joi.string()),
+    copyRows: Joi.boolean(),
   }).unknown(false)
 )
 
