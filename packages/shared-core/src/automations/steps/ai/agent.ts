@@ -23,7 +23,6 @@ export const definition: AutomationStepDefinition = {
     inputs: {
       properties: {
         agentId: {
-          type: AutomationIOType.STRING,
           customType: AutomationCustomIOType.AGENT,
           title: "Agent",
           description: "Select the agent to run",
@@ -56,4 +55,3 @@ export const definition: AutomationStepDefinition = {
   },
   type: AutomationStepType.ACTION,
 }
-
