@@ -143,7 +143,6 @@
     "@types/global-agent": "2.1.1",
     "@types/html-to-text": "^9.0.4",
     "@types/js-yaml": "^4.0.9",
-    "@types/jest": "^30.0.0",
     "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
     "@types/koa-send": "^4.1.6",
