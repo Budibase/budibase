@@ -15,6 +15,7 @@ import {
 } from "@budibase/backend-core"
 import { groups, licensing, quotas } from "@budibase/pro"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
+import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
@@ -890,11 +891,17 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
+type WorkspaceImportFiles = Files & {
+  appExport?: File | File[]
+  file?: File | File[]
+}
+
 export async function importToWorkspace(
   ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
   const { appId: workspaceId } = ctx.params
-  const workspaceExport = ctx.request.files?.appExport
+  const files = ctx.request.files as WorkspaceImportFiles | undefined
+  const workspaceExport = files?.appExport ?? files?.file
   const password = ctx.request.body.encryptionPassword
   if (!workspaceExport) {
     ctx.throw(400, "Must supply export file to import")

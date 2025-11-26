@@ -14,15 +14,14 @@ import {
 
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
-import { UIMessageChunk } from "ai"
+import { readUIMessageStream, UIMessage, UIMessageChunk } from "ai"
+import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface AgentEndpoints {
   agentChatStream: (
     chat: AgentChat,
-    workspaceId: string,
-    onChunk: (chunk: UIMessageChunk) => void,
-    onError?: (error: Error) => void
-  ) => Promise<void>
+    workspaceId: string
+  ) => Promise<AsyncIterable<UIMessage>>
 
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
@@ -40,71 +39,36 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  agentChatStream: async (chat, workspaceId, onChunk, onError) => {
+  agentChatStream: async (chat, workspaceId) => {
     const body: ChatAgentRequest = chat
 
-    try {
-      const response = await fetch("/api/agent/chat/stream", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          [Header.APP_ID]: workspaceId,
-        },
-        body: JSON.stringify(body),
-        credentials: "same-origin",
-      })
+    const response = await fetch("/api/agent/chat/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        [Header.APP_ID]: workspaceId,
+      },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+    })
 
-      if (!response.ok) {
-        const body = await response.json()
-
-        if (body.message) {
-          throw new Error(body.message)
-        }
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error("Failed to get response reader")
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-
-        // Process complete lines
-        const lines = buffer.split("\n")
-        buffer = lines.pop() || "" // Keep incomplete line in buffer
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = line.slice(6) // Remove 'data: ' prefix
-              const trimmedData = data.trim()
-              if (trimmedData && trimmedData !== "[DONE]") {
-                const chunk: UIMessageChunk = JSON.parse(data)
-                onChunk(chunk)
-              }
-            } catch (parseError) {
-              console.error("Failed to parse SSE data:", parseError)
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      if (onError) {
-        onError(error)
-      } else {
-        throw error
-      }
+    if (!response.ok) {
+      const errorBody = await response.json()
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      )
     }
+
+    if (!response.body) {
+      throw new Error("Failed to get response body")
+    }
+
+    const chunkStream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(createSseToJsonTransformStream<UIMessageChunk>())
+
+    return readUIMessageStream({ stream: chunkStream })
   },
 
   removeChat: async (chatId: string) => {

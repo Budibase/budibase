@@ -40,7 +40,7 @@ describe("check export/import", () => {
     )
   }
 
-  async function runImport() {
+  async function runImport(field: "appExport" | "file" = "appExport") {
     const pathToExport = join(
       __dirname,
       "..",
@@ -54,7 +54,7 @@ describe("check export/import", () => {
       `/workspaces/${config.devWorkspaceId}/import`,
       {
         encryptionPassword: PASSWORD,
-        appExport: { path: pathToExport },
+        [field]: { path: pathToExport },
       }
     )
   }

@@ -139,6 +139,7 @@
     "@babel/core": "^7.22.5",
     "@babel/preset-env": "7.16.11",
     "@types/archiver": "6.0.2",
+    "@types/formidable": "^1.0.31",
     "@types/global-agent": "2.1.1",
     "@types/html-to-text": "^9.0.4",
     "@types/js-yaml": "^4.0.9",
