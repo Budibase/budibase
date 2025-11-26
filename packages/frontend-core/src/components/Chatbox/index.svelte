@@ -23,7 +23,7 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
 
-  $: if (chat.messages.length) {
+  $: if (chat?.messages?.length) {
     scrollToBottom()
   }
 
@@ -43,7 +43,7 @@
 
   async function prompt() {
     if (!chat) {
-      chat = { title: "", messages: [], agentId: "" }
+      chat = { title: "", messages: [] }
     }
 
     const userMessage: UIMessage = {

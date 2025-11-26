@@ -7,10 +7,15 @@ export interface Agent extends Document {
   aiconfig: string
   allowedTools?: AgentToolSource[]
   promptInstructions?: string
+  goal?: string
+  live?: boolean
+  icon?: string
+  iconColor?: string
+  createdBy?: string
 }
 
 export interface AgentChat extends Document {
-  agentId: string
+  agentId?: string
   title: string
   messages: UIMessage[]
 }

@@ -7,7 +7,12 @@
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
-  import { helpers, sdk } from "@budibase/shared-core"
+  import {
+    helpers,
+    sdk,
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
   import { API } from "@/api"
 
   export let compact: boolean = false
@@ -24,6 +29,18 @@
   $: isSSO = $authStore != null && isSSOUser($authStore)
   $: isOwner = $authStore?.accountPortalAccess && $environmentStore.cloud
   $: embedded = $appStore.embedded || $appStore.inIframe
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: userMenuLabels = resolveTranslationGroup("userMenu", translationOverrides)
+  $: profileLabels = resolveTranslationGroup(
+    "profileModal",
+    translationOverrides
+  )
+  $: passwordLabels = resolveTranslationGroup(
+    "passwordModal",
+    translationOverrides
+  )
 
   const { accountPortalAccountUrl, builderWorkspacesUrl, builderAppsUrl } =
     helpers
@@ -73,7 +90,7 @@
     </svelte:fragment>
 
     <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
-      My profile
+      {userMenuLabels.profile}
     </MenuItem>
     {#if !isSSO}
       <MenuItem
@@ -88,19 +105,19 @@
           }
         }}
       >
-        Update password
+        {userMenuLabels.password}
       </MenuItem>
     {/if}
 
     <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
-      Go to portal
+      {userMenuLabels.portal}
     </MenuItem>
     <MenuItem
       icon="sign-out"
       on:click={authStore.actions.logOut}
       disabled={embedded}
     >
-      Log out
+      {userMenuLabels.logout}
     </MenuItem>
   </ActionMenu>
 
@@ -111,6 +128,7 @@
       on:save={() => authStore.actions.fetchUser()}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
+      labels={profileLabels}
     />
   </Modal>
   <Modal bind:this={changePasswordModal}>
@@ -120,6 +138,7 @@
       on:save={() => authStore.actions.logOut()}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
+      labels={passwordLabels}
     />
   </Modal>
 {/if}

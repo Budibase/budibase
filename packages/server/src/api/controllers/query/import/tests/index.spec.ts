@@ -297,6 +297,21 @@ describe("Rest Importer", () => {
         "/users": {
           post: {
             operationId: "createUser",
+            summary: "Creates a user",
+            description: "Creates a user",
+            externalDocs: {
+              url: "https://docs.example.com/users#create",
+            },
+            parameters: [
+              {
+                name: "verbose",
+                in: "query",
+                schema: {
+                  type: "boolean",
+                  default: false,
+                },
+              },
+            ],
             requestBody: {
               required: true,
               content: {
@@ -347,11 +362,32 @@ describe("Rest Importer", () => {
 
     expect(createQuery?.fields.requestBody).toEqual(expectedBody)
     expect(createQuery?.parameters).toEqual([
+      { name: "verbose", default: "false" },
       { name: "name", default: "" },
       { name: "email", default: "" },
       { name: "age", default: "0" },
       { name: "verified", default: "false" },
     ])
+
+    expect(createQuery?.restTemplateMetadata).toMatchObject({
+      operationId: "createUser",
+      docsUrl: "https://docs.example.com/users#create",
+      description: "Creates a user",
+      originalPath: "/users",
+      originalRequestBody: {
+        name: "{{ name }}",
+        email: "{{ email }}",
+        age: "{{ age }}",
+        verified: "{{ verified }}",
+      },
+      defaultBindings: {
+        name: "",
+        email: "",
+        age: "0",
+        verified: "false",
+        verbose: "false",
+      },
+    })
   })
 
   it("populates request body for OpenAPI 2 POST endpoints without examples", async () => {
