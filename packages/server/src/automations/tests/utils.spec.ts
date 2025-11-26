@@ -41,7 +41,9 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-const mockAdd = automationQueue.add as MockedFunction<typeof automationQueue.add>
+const mockAdd = automationQueue.add as MockedFunction<
+  typeof automationQueue.add
+>
 const mockDoWithDB = dbCore.doWithDB as MockedFunction<typeof dbCore.doWithDB>
 const mockNewId = coreUtils.newid as MockedFunction<typeof coreUtils.newid>
 
@@ -71,7 +73,9 @@ const buildCronAutomation = (cronJobId?: string): Automation => ({
 describe("enableCronOrEmailTrigger", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockAdd.mockResolvedValue({ id: "job" } as Awaited<ReturnType<typeof mockAdd>>)
+    mockAdd.mockResolvedValue({ id: "job" } as Awaited<
+      ReturnType<typeof mockAdd>
+    >)
     mockNewId.mockReturnValue("mockid")
   })
 
@@ -89,7 +93,9 @@ describe("enableCronOrEmailTrigger", () => {
 
   it("persists when a cron job id needs generated", async () => {
     const automation = buildCronAutomation()
-    const mockPut = jest.fn().mockResolvedValue({ id: automation._id, rev: "2" })
+    const mockPut = jest
+      .fn()
+      .mockResolvedValue({ id: automation._id, rev: "2" })
     mockDoWithDB.mockImplementation(async (_appId, task) => {
       const fakeDb = { put: mockPut } as unknown as Parameters<
         NonNullable<Parameters<typeof mockDoWithDB>[1]>
