@@ -87,7 +87,8 @@ function getDefaultDeps(): CronJanitorDeps {
       }
     },
     workspaceExists: workspaceId => dbCore.dbExists(workspaceId),
-    fetchWorkspaceJobIds: workspaceId => fetchWorkspaceAutomationJobIds(workspaceId),
+    fetchWorkspaceJobIds: workspaceId =>
+      fetchWorkspaceAutomationJobIds(workspaceId),
   }
 }
 
@@ -187,11 +188,16 @@ export async function runAutomationCronJanitor(
     }
 
     if (removedCount > 0) {
-      console.log(`[cron-janitor] Removed ${removedCount} orphaned automation jobs`)
+      console.log(
+        `[cron-janitor] Removed ${removedCount} orphaned automation jobs`
+      )
     }
     return removedCount
   } catch (err) {
-    console.error("[cron-janitor] Failed to inspect repeatable automations", err)
+    console.error(
+      "[cron-janitor] Failed to inspect repeatable automations",
+      err
+    )
     return 0
   }
 }

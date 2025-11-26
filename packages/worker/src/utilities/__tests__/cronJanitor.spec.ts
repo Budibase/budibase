@@ -62,9 +62,7 @@ describe("runAutomationCronJanitor", () => {
   it("parses job ids from the key when Bull omits them", async () => {
     const removed: string[] = []
     const deps: CronJanitorDeps = {
-      listRepeatableJobs: async () => [
-        createJob("app_prod_email_one", false),
-      ],
+      listRepeatableJobs: async () => [createJob("app_prod_email_one", false)],
       removeRepeatableJob: async job => {
         removed.push(getJobId(job))
       },
