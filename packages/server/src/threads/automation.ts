@@ -133,39 +133,24 @@ async function branchMatches(
       return false
     }
 
-    const keys = Object.keys(condition)
-    if (keys.length === 0) {
-      return false
-    }
-
-    if (keys.length === 1 && keys[0] === "onEmptyFilter") {
-      return false
-    }
-
-    for (const key of keys) {
-      if (key === "onEmptyFilter") {
-        continue
+    return Object.entries(condition).some(([key, value]) => {
+      if (key === "onEmptyFilter" || value === undefined || value === null) {
+        return false
       }
 
-      const value = condition[key]
-      if (value && typeof value === "object") {
-        if (key === "$and" || key === "$or") {
-          if (
-            value.conditions &&
-            Array.isArray(value.conditions) &&
-            value.conditions.length > 0
-          ) {
-            return true
-          }
-        } else if (Object.keys(value).length > 0) {
-          return true
-        }
-      } else if (value !== undefined && value !== null) {
-        return true
+      if (key === "$and" || key === "$or") {
+        const logical = value as { conditions?: any[] }
+        return (
+          Array.isArray(logical?.conditions) && logical.conditions.length > 0
+        )
       }
-    }
 
-    return false
+      if (typeof value === "object") {
+        return Object.keys(value).length > 0
+      }
+
+      return true
+    })
   }
 
   if (!requiresEvaluation(branch.condition)) {
