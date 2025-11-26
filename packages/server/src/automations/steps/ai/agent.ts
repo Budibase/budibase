@@ -1,4 +1,3 @@
-import { ai } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
   AgentStepInputs,
@@ -10,7 +9,12 @@ import sdk from "../../../sdk"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 import { createOpenAI } from "@ai-sdk/openai"
-import { Experimental_Agent as Agent, stepCountIs } from "ai"
+import {
+  Experimental_Agent as Agent,
+  extractReasoningMiddleware,
+  stepCountIs,
+  wrapLanguageModel,
+} from "ai"
 
 export async function run({
   inputs,
@@ -85,9 +89,17 @@ export async function run({
 
     const aiTools = toAiSdkTools(allTools)
 
-    // Create and run the agent
+    extractReasoningMiddleware({
+      tagName: "think",
+    })
+
     const agent = new Agent({
-      model: openai(modelId),
+      model: wrapLanguageModel({
+        model: openai(modelId),
+        middleware: extractReasoningMiddleware({
+          tagName: "think",
+        }),
+      }),
       system: system || undefined,
       tools: aiTools,
       stopWhen: stepCountIs(10),
