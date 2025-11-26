@@ -18,12 +18,14 @@ import {
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  Table,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
-  enableCronTrigger,
+  enableCronOrEmailTrigger,
 } from "../../../automations/utils"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import env from "../../../environment"
@@ -98,11 +100,12 @@ async function initDeployedApp(prodAppId: string) {
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
+
   for (let automation of automations) {
     promises.push(
-      enableCronTrigger(prodAppId, automation).catch(err => {
+      enableCronOrEmailTrigger(prodAppId, automation).catch(err => {
         throw new Error(
-          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
           { cause: err }
         )
       })
@@ -119,6 +122,54 @@ async function initDeployedApp(prodAppId: string) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function applyPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      const pendingColumnRenames = table.pendingColumnRenames
+      if (!pendingColumnRenames?.length) {
+        continue
+      }
+
+      for (const rename of pendingColumnRenames) {
+        await sdk.tables.update(table, rename)
+      }
+
+      const updatedTable: Table = {
+        ...table,
+        pendingColumnRenames: [],
+      }
+      await db.put(updatedTable)
+    }
+  })
+}
+
+async function clearPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      if (!table.pendingColumnRenames?.length) {
+        continue
+      }
+      const updatedTable: Table = {
+        ...table,
+        pendingColumnRenames: [],
+      }
+      await db.put(updatedTable)
+    }
   })
 }
 
@@ -213,127 +264,147 @@ export const publishWorkspace = async function (
 
   const appId = context.getWorkspaceId()!
 
-  // Wrap the entire publish operation in migration lock to prevent race conditions
-  const result = await doInMigrationLock(appId, async () => {
-    let app
-    let replication
-    try {
-      const devId = dbCore.getDevWorkspaceID(appId)
-      const prodId = dbCore.getProdWorkspaceID(appId)
+  let migrationResult: { app: Workspace; prodWorkspaceId: string }
+  try {
+    migrationResult = await doInMigrationLock(appId, async () => {
+      let replication
+      try {
+        const devId = dbCore.getDevWorkspaceID(appId)
+        const prodId = dbCore.getProdWorkspaceID(appId)
 
-      if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
-        const allWorkspaceApps = await sdk.workspaceApps.fetch()
-        for (const workspaceApp of allWorkspaceApps) {
-          if (workspaceApp.disabled !== undefined) {
-            continue
+        if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
+          const allWorkspaceApps = await sdk.workspaceApps.fetch()
+          for (const workspaceApp of allWorkspaceApps) {
+            if (workspaceApp.disabled !== undefined) {
+              continue
+            }
+
+            await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
           }
 
-          await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
-        }
+          const allAutomations = await sdk.automations.fetch()
+          for (const automation of allAutomations) {
+            if (automation.disabled !== undefined) {
+              continue
+            }
 
-        const allAutomations = await sdk.automations.fetch()
-        for (const automation of allAutomations) {
-          if (automation.disabled !== undefined) {
-            continue
+            await sdk.automations.update({ ...automation, disabled: true })
           }
-
-          await sdk.automations.update({ ...automation, disabled: true })
         }
-      }
 
-      const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
+        const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
 
-      // don't try this if feature isn't allowed, will error
-      if (await backups.isEnabled()) {
-        // trigger backup initially
-        await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
-          createdBy: ctx.user._id,
-        })
-      }
-      const config = {
-        source: devId,
-        target: prodId,
-      }
-      replication = new dbCore.Replication(config)
-      const devDb = context.getDevWorkspaceDB()
-      await devDb.compact()
-      await replication.replicate(
-        replication.appReplicateOpts({
-          isCreation: !isPublished,
-          tablesToSync,
-          // don't use checkpoints, this can stop data that was previous ignored
-          // getting written - if not seeding tables we don't need to worry about it
-          checkpoint: !seedProductionTables,
-        })
-      )
-      // app metadata is excluded as it is likely to be in conflict
-      // replicate the app metadata document manually
-      const db = context.getProdWorkspaceDB()
-      const appDoc = await sdk.workspaces.metadata.tryGet({
-        production: false,
-      })
-      if (!appDoc) {
-        throw new Error(
-          "Unable to publish - cannot retrieve development app metadata"
+        if (await backups.isEnabled()) {
+          await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
+            createdBy: ctx.user._id,
+          })
+        }
+        const config = {
+          source: devId,
+          target: prodId,
+        }
+        replication = new dbCore.Replication(config)
+        const devDb = context.getDevWorkspaceDB()
+
+        const devTablesIds = await sdk.tables.getAllInternalTableIds()
+        await replication.resolveInconsistencies(devTablesIds)
+
+        await devDb.compact()
+        await replication.replicate(
+          replication.appReplicateOpts({
+            isCreation: !isPublished,
+            tablesToSync,
+            // don't use checkpoints, this can stop previously ignored data being replicated
+            checkpoint: !seedProductionTables,
+          })
         )
-      }
-      const prodAppDoc = await sdk.workspaces.metadata.tryGet({
-        production: true,
-      })
-      if (prodAppDoc) {
-        appDoc._rev = prodAppDoc._rev
-      } else {
-        delete appDoc._rev
-      }
 
-      // switch to production app ID
-      deployment.appUrl = appDoc.url
-      appDoc.appId = prodId
-      appDoc.instance._id = prodId
-      const [automations, workspaceApps, tables] = await Promise.all([
-        sdk.automations.fetch(),
-        sdk.workspaceApps.fetch(),
-        sdk.tables.getAllInternalTables(),
-      ])
-      const automationIds = automations.map(auto => auto._id!)
-      const workspaceAppIds = workspaceApps.map(app => app._id!)
-      const tableIds = tables.map(table => table._id!)
-      const fullMap = [
-        ...(automationIds ?? []),
-        ...(workspaceAppIds ?? []),
-        ...(tableIds ?? []),
-      ]
-      // if resource publishing, need to restrict this list
-      appDoc.resourcesPublishedAt = {
-        ...prodAppDoc?.resourcesPublishedAt,
-        ...Object.fromEntries(
-          fullMap.map(id => [id, new Date().toISOString()])
-        ),
+        await applyPendingColumnRenames(prodId)
+        await clearPendingColumnRenames(devId)
+
+        const db = context.getProdWorkspaceDB()
+        const appDoc = await sdk.workspaces.metadata.tryGet({
+          production: false,
+        })
+        if (!appDoc) {
+          throw new Error(
+            "Unable to publish - cannot retrieve development app metadata"
+          )
+        }
+        const prodAppDoc = await sdk.workspaces.metadata.tryGet({
+          production: true,
+        })
+        if (prodAppDoc) {
+          appDoc._rev = prodAppDoc._rev
+        } else {
+          delete appDoc._rev
+        }
+
+        deployment.appUrl = appDoc.url
+        appDoc.appId = prodId
+        appDoc.instance._id = prodId
+        const [automations, workspaceApps, tables] = await Promise.all([
+          sdk.automations.fetch(),
+          sdk.workspaceApps.fetch(),
+          sdk.tables.getAllInternalTables(),
+        ])
+        const automationIds = automations.map(auto => auto._id!)
+        const workspaceAppIds = workspaceApps.map(app => app._id!)
+        const tableIds = tables.map(table => table._id!)
+        const fullMap = [
+          ...(automationIds ?? []),
+          ...(workspaceAppIds ?? []),
+          ...(tableIds ?? []),
+        ]
+        appDoc.resourcesPublishedAt = {
+          ...prodAppDoc?.resourcesPublishedAt,
+          ...Object.fromEntries(
+            fullMap.map(id => [id, new Date().toISOString()])
+          ),
+        }
+        delete appDoc.automationErrors
+        await db.put(appDoc)
+        await cache.workspace.invalidateWorkspaceMetadata(prodId)
+        await initDeployedApp(prodId)
+
+        return { app: appDoc, prodWorkspaceId: prodId }
+      } finally {
+        if (replication) {
+          await replication.close()
+        }
       }
-      // remove automation errors if they exist
-      delete appDoc.automationErrors
-      await db.put(appDoc)
-      await cache.workspace.invalidateWorkspaceMetadata(prodId)
-      await initDeployedApp(prodId)
-      await syncStaticFormulasToProduction(prodId)
-      deployment.setStatus(DeploymentStatus.SUCCESS)
-      await storeDeploymentHistory(deployment)
-      app = appDoc
-    } catch (err: any) {
-      deployment.setStatus(DeploymentStatus.FAILURE, err.message)
-      await storeDeploymentHistory(deployment)
+    })
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error"
+    deployment.setStatus(DeploymentStatus.FAILURE, message)
+    await storeDeploymentHistory(deployment)
+    throw new Error(`Deployment Failed: ${message}`, { cause: error })
+  }
 
-      throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
-    } finally {
-      if (replication) {
-        await replication.close()
-      }
-    }
+  try {
+    await syncStaticFormulasToProduction(migrationResult.prodWorkspaceId)
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error"
+    deployment.setStatus(DeploymentStatus.FAILURE, message)
+    await storeDeploymentHistory(deployment)
+    throw new Error(`Deployment Failed: ${message}`, { cause: error })
+  }
 
-    await events.app.published(app)
-    return { deployment }
-  })
+  deployment.setStatus(DeploymentStatus.SUCCESS)
+  await storeDeploymentHistory(deployment)
 
-  ctx.body = result.deployment
+  await events.app.published(migrationResult.app)
+
+  ctx.body = deployment
   builderSocket?.emitAppPublish(ctx)
 }

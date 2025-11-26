@@ -80,7 +80,7 @@ async function syncUsersToWorkspace(
   })
 }
 
-export async function syncUsersAcrossWorkspaces(userIds: string[]) {
+async function buildSyncUsers(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
   const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
@@ -93,15 +93,44 @@ export async function syncUsersAcrossWorkspaces(userIds: string[]) {
       finalUsers.push(user)
     }
   }
-  const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
-  const workspaceIdsToCheck = devWorkspaceIds.flatMap(devId => [
-    devId,
-    dbCore.getProdWorkspaceID(devId),
-  ])
+  return { finalUsers, groups }
+}
+
+export async function syncUsersAgainstWorkspaces(
+  userIds: string[],
+  workspaceIdsToCheck: string[]
+) {
+  if (!workspaceIdsToCheck.length) {
+    return
+  }
+
+  const workspaceIds = new Set<string>()
+  for (const id of workspaceIdsToCheck) {
+    if (!id) {
+      continue
+    }
+    const devId = dbCore.getDevWorkspaceID(id)
+    const prodId = dbCore.getProdWorkspaceID(id)
+    if (devId) {
+      workspaceIds.add(devId)
+    }
+    if (prodId) {
+      workspaceIds.add(prodId)
+    }
+  }
+
+  if (!workspaceIds.size) {
+    return
+  }
+
+  const { finalUsers, groups } = await buildSyncUsers(userIds)
   let promises: Promise<void>[] = []
   await utils.parallelForeach(
-    workspaceIdsToCheck,
+    [...workspaceIds],
     async id => {
+      if (!id) {
+        return
+      }
       try {
         const syncAction = syncUsersToWorkspace(id, finalUsers, groups)
         promises.push(syncAction)
@@ -120,6 +149,11 @@ export async function syncUsersAcrossWorkspaces(userIds: string[]) {
   if (reasons.length > 0) {
     logging.logWarn("Failed to sync users to workspaces", reasons)
   }
+}
+
+export async function syncUsersAcrossWorkspaces(userIds: string[]) {
+  const devWorkspaceIds = await dbCore.getDevWorkspaceIDs()
+  await syncUsersAgainstWorkspaces(userIds, devWorkspaceIds)
 }
 
 export async function syncWorkspace(

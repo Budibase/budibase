@@ -54,6 +54,48 @@ class Replication {
     })
   }
 
+  // Resolves replication conflicts by treating source as the source of truth.
+  // For documents where target revision is higher than source, removes the target
+  // document and re-replicates from source to ensure source version prevails.
+  async resolveInconsistencies(documentIds: string[]) {
+    const inconsistentDocumentIds: string[] = []
+    for (const documentId of documentIds) {
+      try {
+        const [sourceDocument, targetDocument] = await Promise.all([
+          this.source.get(documentId),
+          this.target.get(documentId),
+        ])
+        if (
+          this.haveReplicationInconsistencies(sourceDocument, targetDocument)
+        ) {
+          await this.target.remove({
+            _id: targetDocument._id,
+            _rev: targetDocument._rev,
+          })
+          inconsistentDocumentIds.push(sourceDocument._id)
+        }
+      } catch (error) {
+        console.warn("Cannot resolve inconsistencies for document", documentId)
+      }
+    }
+    if (inconsistentDocumentIds.length > 0) {
+      await this.replicate({ doc_ids: inconsistentDocumentIds })
+    }
+  }
+
+  private haveReplicationInconsistencies(
+    sourceDocument: Document,
+    targetDocument: Document
+  ) {
+    const sourceRevisionNumber = this.getRevisionNumber(sourceDocument)
+    const targetRevisionNumber = this.getRevisionNumber(targetDocument)
+    return targetRevisionNumber > sourceRevisionNumber
+  }
+
+  private getRevisionNumber(document: Document) {
+    return parseInt(document._rev?.split("-")[0] || "0")
+  }
+
   appReplicateOpts(
     opts: PouchDB.Replication.ReplicateOptions & {
       isCreation?: boolean
@@ -107,6 +149,13 @@ class Replication {
         // always sync users from dev
         if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
           return true
+        }
+        if (
+          direction === ReplicationDirection.TO_PRODUCTION &&
+          !isCreation &&
+          startsWithID(doc._id, DocumentType.AUTO_COLUMN_STATE)
+        ) {
+          return false
         }
         if (isData(doc._id)) {
           return (

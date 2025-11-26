@@ -5,16 +5,19 @@
   enum ResourceType {
     App = "app",
     Automation = "automation",
+    Agent = "agent",
   }
   /* eslint-enable no-unused-vars */
 
   export let onCtaClick: () => void
   export let ctaText: string
   export let resourceType: `${ResourceType}`
+  export let hideCta: boolean = false
 
   const iconByType = {
     [ResourceType.App]: "browser",
     [ResourceType.Automation]: "path",
+    [ResourceType.Agent]: "cpu",
   }
 </script>
 
@@ -23,6 +26,7 @@
     class="icon-container"
     class:automation={resourceType === ResourceType.Automation}
     class:app={resourceType === ResourceType.App}
+    class:agent={resourceType === ResourceType.Agent}
   >
     <Icon
       name={iconByType[resourceType]}
@@ -32,7 +36,9 @@
   </div>
   <slot />
 
-  <Button cta on:click={onCtaClick}>{ctaText}</Button>
+  {#if !hideCta}
+    <Button cta on:click={onCtaClick}>{ctaText}</Button>
+  {/if}
 </Layout>
 
 <style>
@@ -48,5 +54,10 @@
   .icon-container.app {
     border: 0.5px solid #c96442;
     background: #aa4321;
+  }
+
+  .icon-container.agent {
+    border: 0.5px solid #e9e6ff;
+    background: #806fde;
   }
 </style>

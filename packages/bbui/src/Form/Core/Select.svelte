@@ -42,6 +42,8 @@
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined
+  export let searchPlaceholder: string = "Search"
+  export let hideChevron: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -127,4 +129,6 @@
   onSelectOption={selectOption}
   {loading}
   {customPopoverHeight}
+  {searchPlaceholder}
+  {hideChevron}
 />

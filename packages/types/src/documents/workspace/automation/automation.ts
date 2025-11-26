@@ -51,6 +51,7 @@ export enum AutomationTriggerStepId {
   APP = "APP",
   CRON = "CRON",
   ROW_ACTION = "ROW_ACTION",
+  EMAIL = "EMAIL",
 }
 
 export enum AutomationStepType {
@@ -62,8 +63,10 @@ export enum AutomationStepType {
 export enum AutomationActionStepId {
   SEND_EMAIL_SMTP = "SEND_EMAIL_SMTP",
   CREATE_ROW = "CREATE_ROW",
+  GET_ROW = "GET_ROW",
   UPDATE_ROW = "UPDATE_ROW",
   DELETE_ROW = "DELETE_ROW",
+  QUERY_ROWS = "QUERY_ROWS",
   EXECUTE_BASH = "EXECUTE_BASH",
   OUTGOING_WEBHOOK = "OUTGOING_WEBHOOK",
   EXECUTE_SCRIPT = "EXECUTE_SCRIPT",
@@ -73,7 +76,6 @@ export enum AutomationActionStepId {
   DELAY = "DELAY",
   FILTER = "FILTER",
   API_REQUEST = "API_REQUEST",
-  QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
@@ -300,6 +302,7 @@ export enum AutomationEventType {
   ROW_DELETE = "row:delete",
   APP_TRIGGER = "app:trigger",
   CRON_TRIGGER = "cron:trigger",
+  EMAIL_TRIGGER = "email:trigger",
   WEBHOOK_TRIGGER = "web:trigger",
   ROW_ACTION = "row:action",
 }

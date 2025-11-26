@@ -4,6 +4,7 @@ import {
 } from "@budibase/types"
 import * as app from "./app"
 import * as cron from "./cron"
+import * as email from "./email"
 import * as rowDeleted from "./rowDeleted"
 import * as rowSaved from "./rowSaved"
 import * as rowUpdated from "./rowUpdated"
@@ -20,5 +21,6 @@ export const definitions: Record<
   WEBHOOK: webhook.definition,
   APP: app.definition,
   CRON: cron.definition,
+  EMAIL: email.definition,
   ROW_ACTION: rowAction.definition,
 }

@@ -72,8 +72,20 @@ export function queryParametersToKeyValue(
   return obj
 }
 
-export function customQueryIconText(query: Query) {
-  switch (query.queryVerb) {
+type QueryVerbSource = Query | string | undefined
+
+const resolveQueryVerb = (source: QueryVerbSource) => {
+  if (!source) {
+    return undefined
+  }
+  if (typeof source === "string") {
+    return source
+  }
+  return source.queryVerb
+}
+
+export function customQueryIconText(source: QueryVerbSource) {
+  switch (resolveQueryVerb(source)) {
     case "create":
       return "POST"
     case "update":
@@ -89,8 +101,8 @@ export function customQueryIconText(query: Query) {
   }
 }
 
-export function customQueryIconColor(query: Query) {
-  switch (query.queryVerb) {
+export function customQueryIconColor(source: QueryVerbSource) {
+  switch (resolveQueryVerb(source)) {
     case "create":
       return "#dcc339"
     case "update":
@@ -100,6 +112,7 @@ export function customQueryIconColor(query: Query) {
     case "delete":
       return "#ea7d82"
     case "patch":
+      return "#7567f8"
     default:
       return
   }
@@ -127,6 +140,11 @@ export function customQueryText(
   // Remove trailing slash
   if (name.endsWith("/")) {
     name = name.slice(0, -1)
+  }
+
+  // Use the full path if there is no hostname
+  if (!name.includes(".")) {
+    return name
   }
 
   // Only use path

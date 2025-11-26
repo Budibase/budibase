@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { StripeStatus } from "@/components/portal/licensing/constants"
 import { admin, auth } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
+import { helpers } from "@budibase/shared-core"
 import { bb } from "@/stores/bb"
 import {
   License,
@@ -12,6 +13,8 @@ import {
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
+
+const { accountPortalUpgradeUrl } = helpers
 
 const UNLIMITED = -1
 const ONE_DAY_MILLIS = 86400000
@@ -42,6 +45,7 @@ interface LicensingState {
   recaptchaEnabled: boolean
   pkceOidcEnabled: boolean
   pdfEnabled: boolean
+  translationsEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -63,6 +67,7 @@ interface LicensingState {
   aiCreditsExceeded: boolean
   actionsExceeded: boolean
   errUserLimit: boolean
+  showTrialBanner: boolean
 }
 
 class LicensingStore extends BudiStore<LicensingState> {
@@ -89,6 +94,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       recaptchaEnabled: false,
       pkceOidcEnabled: false,
       pdfEnabled: false,
+      translationsEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used
@@ -109,6 +115,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       actionsExceeded: false,
       // AI Limits
       aiCreditsExceeded: false,
+      showTrialBanner: false,
     })
 
     this.goToUpgradePage = this.goToUpgradePage.bind(this)
@@ -167,7 +174,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const authStore = get(auth)
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
-      window.location.href = `${adminStore.accountPortalUrl}/portal/upgrade`
+      window.location.href = accountPortalUpgradeUrl(
+        adminStore.accountPortalUrl
+      )
     } else {
       bb.settings("/upgrade")
     }
@@ -214,6 +223,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const recaptchaEnabled = features.includes(Constants.Features.RECAPTCHA)
     const pkceOidcEnabled = features.includes(Constants.Features.PKCE_OIDC)
     const pdfEnabled = features.includes(Constants.Features.PDF)
+    const translationsEnabled = features.includes(
+      Constants.Features.TRANSLATIONS
+    )
     this.update(state => {
       return {
         ...state,
@@ -238,6 +250,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         pdfEnabled,
         recaptchaEnabled,
         pkceOidcEnabled,
+        translationsEnabled,
       }
     })
   }

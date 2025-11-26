@@ -5,13 +5,13 @@
     builderStore,
     previewStore,
     deploymentStore,
+    appStore,
   } from "@/stores/builder"
   import { appsStore, admin } from "@/stores/portal"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
   export let application
@@ -29,7 +29,9 @@
         await appsStore.load()
       } else {
         reset()
+        appStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
+
         await initialise(pkg)
       }
       await deploymentStore.load()
@@ -72,8 +74,6 @@
 {#if $previewStore.showPreview}
   <PreviewOverlay />
 {/if}
-
-<EnterpriseBasicTrialModal />
 
 <style>
   .init.page-error,

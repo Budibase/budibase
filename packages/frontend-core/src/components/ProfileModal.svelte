@@ -4,13 +4,23 @@
   import type { User, ContextUser } from "@budibase/types"
   import type { APIClient } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let user: User | ContextUser | undefined = undefined
   export let API: APIClient
   export let notifySuccess = notifications.success
   export let notifyError = notifications.error
+  const DEFAULT_LABELS = resolveTranslationGroup("profileModal")
+  type ProfileModalLabels = typeof DEFAULT_LABELS
+
+  export let labels: Partial<ProfileModalLabels> = {}
 
   const dispatch = createEventDispatcher()
+
+  $: resolvedLabels = {
+    ...DEFAULT_LABELS,
+    ...labels,
+  } as ProfileModalLabels
 
   const values = writable({
     firstName: user?.firstName,
@@ -20,20 +30,25 @@
   const updateInfo = async () => {
     try {
       await API.updateSelf($values)
-      notifySuccess("Information updated successfully")
+      notifySuccess(resolvedLabels.successText)
       dispatch("save")
     } catch (error) {
       console.error(error)
-      notifyError("Failed to update information")
+      notifyError(resolvedLabels.errorText)
     }
   }
 </script>
 
-<ModalContent title="My profile" confirmText="Save" onConfirm={updateInfo}>
+<ModalContent
+  title={resolvedLabels.title}
+  confirmText={resolvedLabels.saveText}
+  cancelText={resolvedLabels.cancelText}
+  onConfirm={updateInfo}
+>
   <Body size="S">
-    Personalise the platform by adding your first name and last name.
+    {resolvedLabels.body}
   </Body>
-  <Input disabled value={user?.email || ""} label="Email" />
-  <Input bind:value={$values.firstName} label="First name" />
-  <Input bind:value={$values.lastName} label="Last name" />
+  <Input disabled value={user?.email || ""} label={resolvedLabels.emailLabel} />
+  <Input bind:value={$values.firstName} label={resolvedLabels.firstNameLabel} />
+  <Input bind:value={$values.lastName} label={resolvedLabels.lastNameLabel} />
 </ModalContent>

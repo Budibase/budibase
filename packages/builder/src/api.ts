@@ -44,7 +44,7 @@ const newClient = (opts?: { production?: boolean }) =>
       const hasAuthCookie = !!CookieUtils.getCookie(Constants.Cookies.Auth)
 
       if (!hasAuthCookie && get(auth).user) {
-        auth.setUser()
+        auth.clearSession()
         // Let the user be redirected to auth by the core layout
         return
       }
@@ -53,6 +53,8 @@ const newClient = (opts?: { production?: boolean }) =>
       if (status === 403) {
         // Remove cookies
         CookieUtils.removeCookie(Constants.Cookies.Auth)
+        // Clear return URL to prevent redirect loops with invalid URLs
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
 
         // Reload after removing cookie, go to login
         if (!url.includes("self") && !url.includes("login")) {

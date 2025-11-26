@@ -326,6 +326,19 @@ export type QueryRowsStepOutputs = BaseAutomationOutputs & {
   rows?: Row[]
 }
 
+export type GetRowStepInputs = {
+  tableId: string
+  filters?: SearchFilters
+  "filters-def"?: any
+  sortColumn?: string
+  sortOrder?: SortOrder
+  onEmptyFilter?: EmptyFilterOption
+}
+
+export type GetRowStepOutputs = BaseAutomationOutputs & {
+  row?: Row | null
+}
+
 export type SmtpEmailStepInputs = {
   to: string
   from: string
@@ -411,8 +424,27 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export interface EmailTriggerInputs {
+  host: string
+  port: number
+  secure: boolean
+  username: string
+  password: string
+  mailbox?: string
+}
+
 export type CronTriggerOutputs = {
   timestamp: number
+}
+
+export type EmailTriggerOutputs = {
+  from: string
+  to: string
+  cc: string[]
+  subject?: string
+  sentAt?: string
+  bodyText?: string
+  bodyTextTruncated: boolean
 }
 
 export type RowDeletedTriggerInputs = {

@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { SourceName } from "../../sdk"
 import { Table } from "./table"
+import { RestTemplateName, RestTemplateSpecVersion } from "../../ui/rest"
 
 export interface Datasource extends Document {
   type: string
@@ -13,6 +14,8 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  restTemplate?: RestTemplateName
+  restTemplateVersion?: RestTemplateSpecVersion
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
 }
@@ -66,6 +69,7 @@ export interface RestConfig {
   staticVariables?: {
     [key: string]: string
   }
+  templateStaticVariables?: string[]
   dynamicVariables?: DynamicVariable[]
 }
 

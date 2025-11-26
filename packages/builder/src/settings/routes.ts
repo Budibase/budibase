@@ -1,11 +1,11 @@
+import { sdk, helpers } from "@budibase/shared-core"
+import { GetGlobalSelfResponse } from "@budibase/types"
+import { UserAvatar } from "@budibase/frontend-core"
+
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
-
-import { sdk } from "@budibase/shared-core"
-import { GetGlobalSelfResponse } from "@budibase/types"
 import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
-import { UserAvatar } from "@budibase/frontend-core"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 
@@ -24,6 +24,8 @@ export const globalRoutes = (user: GetGlobalSelfResponse) => {
 }
 
 // Route definitions
+const { accountPortalUpgradeUrl, accountPortalBillingUrl } = helpers
+
 export const orgRoutes = (
   user: GetGlobalSelfResponse,
   admin: AdminState
@@ -31,6 +33,26 @@ export const orgRoutes = (
   const isAdmin = user != null && sdk.users.isAdmin(user)
   const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
   const cloud = admin?.cloud
+
+  const emailRoutes: Route[] = [
+    {
+      path: "smtp",
+      title: "SMTP",
+      comp: Pages.get("email"),
+    },
+    {
+      path: "templates",
+      title: "Templates",
+      comp: Pages.get("email_templates"),
+      routes: [
+        {
+          path: ":templateId",
+          title: "Template",
+          comp: Pages.get("email_template"),
+        },
+      ],
+    },
+  ]
 
   return [
     {
@@ -103,25 +125,7 @@ export const orgRoutes = (
       path: "email",
       icon: "envelope",
       access: () => isAdmin,
-      routes: [
-        {
-          path: "smtp",
-          title: "SMTP",
-          comp: Pages.get("email"),
-        },
-        {
-          path: "templates",
-          title: "Templates",
-          comp: Pages.get("email_templates"),
-          routes: [
-            {
-              path: ":templateId",
-              title: "Template",
-              comp: Pages.get("email_template"),
-            },
-          ],
-        },
-      ],
+      routes: emailRoutes,
     },
     {
       section: "AI",
@@ -179,7 +183,7 @@ export const orgRoutes = (
       access: () => cloud && user?.accountPortalAccess,
       icon: "arrow-circle-up",
       href: {
-        url: admin?.accountPortalUrl + "/portal/upgrade",
+        url: accountPortalUpgradeUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },
@@ -198,7 +202,7 @@ export const orgRoutes = (
       path: "billing",
       icon: "credit-card",
       href: {
-        url: admin?.accountPortalUrl + "/portal/billing",
+        url: accountPortalBillingUrl(admin?.accountPortalUrl),
         target: Target.Blank,
       },
     },
@@ -263,6 +267,11 @@ export const appRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
+        {
+          path: "translations",
+          comp: Pages.get("translations"),
+          title: "Translations",
+        },
       ],
     },
   ].map((entry: Route) => ({

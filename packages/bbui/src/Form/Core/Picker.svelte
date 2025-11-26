@@ -18,11 +18,13 @@
   import AbsTooltip from "../../Tooltip/AbsTooltip.svelte"
   import { PopoverAlignment } from "../../constants"
   import Search from "./Search.svelte"
+  import PickerIcon from "./PickerIcon.svelte"
+  import type { PickerIconInput, ResolvedIcon } from "../../types/Picker"
 
   export let id: string | undefined = undefined
   export let disabled: boolean = false
   export let fieldText: string = ""
-  export let fieldIcon: string = ""
+  export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
@@ -51,6 +53,7 @@
   export let autocomplete: boolean = false
   export let sort: boolean = false
   export let searchTerm: string | null = null
+  export let searchPlaceholder: string = "Search"
   export let customPopoverHeight: string | undefined = undefined
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
   export let footer: string | undefined = undefined
@@ -69,11 +72,32 @@
   export let indeterminate: boolean = false
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
+  export let hideChevron: boolean = false
 
   const dispatch = createEventDispatcher()
 
-  let button: any
-  let component: any
+  let button: HTMLButtonElement | null = null
+  let component: HTMLUListElement | null = null
+  let optionIconDescriptor: ResolvedIcon | null = null
+
+  const resolveIcon = (icon: PickerIconInput): ResolvedIcon | null => {
+    if (!icon) {
+      return null
+    }
+    if (typeof icon === "object" && icon.component) {
+      return {
+        type: "component",
+        component: icon.component,
+        props: icon.props || {},
+      }
+    }
+    if (typeof icon === "string") {
+      return { type: "string", value: icon }
+    }
+    return null
+  }
+
+  $: resolvedFieldIcon = resolveIcon(fieldIcon)
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -136,7 +160,7 @@
 
   $: component?.addEventListener("scroll", onScroll)
   onDestroy(() => {
-    component?.removeEventListener("scroll", null)
+    component?.removeEventListener("scroll", onScroll)
   })
 </script>
 
@@ -150,16 +174,14 @@
   on:click={onClick}
   bind:this={button}
 >
-  {#if fieldIcon}
-    {#if !useOptionIconImage}
-      <span class="option-extra icon">
-        <Icon size="M" name={fieldIcon} />
-      </span>
-    {:else}
-      <span class="option-extra icon field-icon">
-        <img class="icon-dims" src={fieldIcon} alt="icon" />
-      </span>
-    {/if}
+  {#if resolvedFieldIcon}
+    <span
+      class="option-extra icon"
+      class:field-icon={useOptionIconImage &&
+        resolvedFieldIcon.type !== "component"}
+    >
+      <PickerIcon icon={resolvedFieldIcon} {useOptionIconImage} />
+    </span>
   {/if}
   {#if fieldColour}
     <span class="option-extra">
@@ -173,7 +195,9 @@
   >
     {fieldText}
   </span>
-  <Icon name="caret-down" size="S" />
+  {#if !hideChevron}
+    <Icon name="caret-down" size="S" />
+  {/if}
 </button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -199,7 +223,7 @@
         value={searchTerm}
         on:change={event => (searchTerm = event.detail)}
         {disabled}
-        placeholder="Search"
+        placeholder={searchPlaceholder}
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>
@@ -245,7 +269,7 @@
         </li>
       {/if}
       {#if filteredOptions.length}
-        {#each filteredOptions as option, idx}
+        {#each filteredOptions as option, idx (getOptionValue(option, idx) ?? idx)}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -257,21 +281,9 @@
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
-            {#if getOptionIcon(option, idx)}
+            {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
               <span class="option-extra icon">
-                {#if useOptionIconImage}
-                  <img
-                    class="icon-dims"
-                    src={getOptionIcon(option, idx)}
-                    alt="icon"
-                  />
-                {:else}
-                  <Icon
-                    size="M"
-                    color="var(--spectrum-global-color-gray-600)"
-                    name={getOptionIcon(option, idx)}
-                  />
-                {/if}
+                <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
@@ -327,10 +339,6 @@
 </Popover>
 
 <style>
-  .icon-dims {
-    height: 15px;
-    width: auto;
-  }
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
@@ -378,6 +386,9 @@
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
     width: 0;
     flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .popover-content.auto-width .spectrum-Menu-item {
     padding-right: var(--spacing-xl);

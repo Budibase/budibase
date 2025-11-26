@@ -32,15 +32,15 @@ export type Message =
   | AssistantMessage
   | ToolMessage
 
-export type Tool<T extends z.ZodType = z.ZodType> = Required<ToolArgs<T>>
-
-export interface ToolArgs<T extends z.ZodType> {
+export interface ToolArgs<T extends z.ZodTypeAny = z.ZodTypeAny> {
   name: string
   description: string
   parameters?: T
-  handler: (args: z.infer<T>) => Promise<string>
+  handler: (args: unknown) => Promise<string>
   strict?: boolean
 }
+
+export type Tool<T extends z.ZodTypeAny = z.ZodTypeAny> = Required<ToolArgs<T>>
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 
