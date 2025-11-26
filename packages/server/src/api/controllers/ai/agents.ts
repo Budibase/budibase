@@ -22,7 +22,13 @@ import {
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
 import { createOpenAI } from "@ai-sdk/openai"
-import { convertToModelMessages, generateText, streamText } from "ai"
+import {
+  convertToModelMessages,
+  extractReasoningMiddleware,
+  generateText,
+  streamText,
+  wrapLanguageModel,
+} from "ai"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
@@ -85,11 +91,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       apiKey,
       baseURL: baseUrl,
     })
-    const model = openai(modelId)
+    const model = openai.chat(modelId)
 
     const aiTools = toAiSdkTools(allTools)
     const result = await streamText({
-      model,
+      model: wrapLanguageModel({
+        model,
+        middleware: extractReasoningMiddleware({
+          tagName: "think",
+        }),
+      }),
       messages: convertToModelMessages(chat.messages),
       system,
       tools: aiTools,
