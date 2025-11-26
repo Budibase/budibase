@@ -23,7 +23,7 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
 
-  $: if (chat.messages.length) {
+  $: if (chat?.messages?.length) {
     scrollToBottom()
   }
 
