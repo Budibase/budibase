@@ -422,3 +422,31 @@ export function parseFilter(filter: UISearchFilter) {
 
   return update
 }
+
+/**
+ * Utility to transform a SSE stream into a JSON stream
+ * @param {TransformStream<string, T>} stream
+ * @returns {TransformStream<T, T>}
+ */
+
+export function createSseToJsonTransformStream<T>(): TransformStream<
+  string,
+  T
+> {
+  let buffer = ""
+  return new TransformStream({
+    transform(chunk, controller) {
+      buffer += chunk
+      const lines = buffer.split("\n")
+      buffer = lines.pop() || ""
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim()
+          if (data && data !== "[DONE]") {
+            controller.enqueue(JSON.parse(data))
+          }
+        }
+      }
+    },
+  })
+}
