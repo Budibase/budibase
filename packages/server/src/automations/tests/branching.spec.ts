@@ -1,4 +1,4 @@
-import { AutomationStatus, Table } from "@budibase/types"
+import { AutomationStatus, EmptyFilterOption, Table } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import * as automation from "../index"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
@@ -302,7 +302,9 @@ describe("Branching automations", () => {
         },
         elseBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
-          condition: {}, // Empty condition acts as default/ELSE branch
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          }, // Empty condition acts as default/ELSE branch
         },
       })
       .test({ fields: { input: "3" } })
@@ -329,7 +331,9 @@ describe("Branching automations", () => {
         },
         elseBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
-          condition: {}, // Empty condition acts as default/ELSE branch
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          }, // Empty condition acts as default/ELSE branch
         },
       })
       .test({ fields: { input: "2" } })
