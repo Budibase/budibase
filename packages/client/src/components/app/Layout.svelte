@@ -300,14 +300,14 @@
                     {title}
                   </Heading>
                 {/if}
-                {#if navigation === "Left" && collapsible && !navCollapsed}
+                {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
                   <div
                     class="nav-toggle"
                     on:click|stopPropagation={() =>
                       (navCollapsed = !navCollapsed)}
                   >
                     <i
-                      class="ph ph-caret-line-left"
+                      class="ph ph-sidebar-simple"
                       style:color={"var(--navTextColor)"}
                     />
                   </div>
@@ -324,8 +324,9 @@
               class:visible={mobileOpen}
               on:click={() => (mobileOpen = false)}
             />
-            {#if enrichedNavItems.length}
-              <div class="links" class:visible={mobileOpen}>
+
+            <div class="links" class:visible={mobileOpen}>
+              {#if enrichedNavItems.length}
                 {#each enrichedNavItems as navItem}
                   {#if evaluateNavItemConditions(navItem._conditions)}
                     <NavItem
@@ -344,8 +345,9 @@
                     />
                   {/if}
                 {/each}
-              </div>
-            {/if}
+              {/if}
+            </div>
+
             {#if !embedded}
               <div class="user left" class:collapsed={navCollapsed}>
                 <UserMenu collapsed={navCollapsed} />
