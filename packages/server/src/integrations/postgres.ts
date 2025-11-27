@@ -28,7 +28,7 @@ import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
-import { env, sql } from "@budibase/backend-core"
+import { sql } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -484,7 +484,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
   }
-
 }
 
 export default {
