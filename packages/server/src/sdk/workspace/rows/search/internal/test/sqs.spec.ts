@@ -614,5 +614,20 @@ describe("buildInternalFieldList", () => {
       const result = await buildInternalFieldList(view, [])
       expect(result).toEqual([`${view.tableId}.data_amount`])
     })
+
+    it("skips view fields that no longer exist on the table", async () => {
+      const baseTable = new TableConfig().create()
+      const view = new ViewConfig(baseTable).withVisible("missing").create()
+
+      const result = await buildInternalFieldList(view, [])
+      expect(result).toEqual([
+        `${view.tableId}._id`,
+        `${view.tableId}._rev`,
+        `${view.tableId}.type`,
+        `${view.tableId}.createdAt`,
+        `${view.tableId}.updatedAt`,
+        `${view.tableId}.tableId`,
+      ])
+    })
   })
 })
