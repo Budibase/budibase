@@ -9,7 +9,6 @@ import {
   FetchDatasourceInfoResponse,
   FetchDatasourceViewInfoRequest,
   FetchDatasourceViewInfoResponse,
-  FetchExternalSchemaResponse,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   VerifyDatasourceRequest,
@@ -42,9 +41,6 @@ export interface DatasourceEndpoints {
   fetchViewInfoForDatasource: (
     datasource: Datasource
   ) => Promise<FetchDatasourceViewInfoResponse>
-  fetchExternalSchema: (
-    datasourceId: string
-  ) => Promise<FetchExternalSchemaResponse>
 }
 
 export const buildDatasourceEndpoints = (
@@ -139,12 +135,4 @@ export const buildDatasourceEndpoints = (
     })
   },
 
-  /**
-   * Fetches the external schema of a datasource
-   */
-  fetchExternalSchema: async (datasourceId: string) => {
-    return await API.get({
-      url: `/api/datasources/${datasourceId}/schema/external`,
-    })
-  },
 })
