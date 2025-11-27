@@ -511,6 +511,60 @@ describe("Builder dataBinding", () => {
       ])
     })
 
+    it("should not decrement references that sit before the moved action", () => {
+      let obj = [
+        {
+          id: "queryAction",
+          parameters: {
+            text: "{{ actions.0.result }}",
+          },
+        },
+        {
+          id: "notification",
+          parameters: {
+            text: "{{ actions.0.result }}",
+          },
+        },
+        {
+          id: "prompt",
+          parameters: {
+            text: "Prompt",
+          },
+        },
+      ]
+
+      updateReferencesInObject({
+        obj,
+        modifiedIndex: 2,
+        action: "move",
+        label: "actions",
+        originalIndex: 1,
+      })
+
+      expect(obj[1].parameters.text).toEqual("{{ actions.0.result }}")
+    })
+
+    it("should skip move updates when the original index is invalid", () => {
+      let obj = [
+        {
+          id: "queryAction",
+          parameters: {
+            text: "{{ actions.0.result }}",
+          },
+        },
+      ]
+
+      updateReferencesInObject({
+        obj,
+        modifiedIndex: 0,
+        action: "move",
+        label: "actions",
+        originalIndex: -1,
+      })
+
+      expect(obj[0].parameters.text).toEqual("{{ actions.0.result }}")
+    })
+
     it("should handle on 'move' to a higher index", () => {
       let obj = [
         {
