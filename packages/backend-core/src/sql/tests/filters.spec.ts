@@ -108,15 +108,13 @@ describe("SQL filter parameterization", () => {
     })
     const malicious = "aa' OR 'bb"
     const query = buildQuery(table, {
-      string: { "kind": malicious },
+      string: { kind: malicious },
     })
 
     const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
 
     expect(result.sql).toContain("::text ilike $1")
-    expect(result.bindings).toEqual(
-      expect.arrayContaining([`${malicious}%`])
-    )
+    expect(result.bindings).toEqual(expect.arrayContaining([`${malicious}%`]))
   })
 
   it("parameterizes Postgres array contains filters", () => {
@@ -182,7 +180,7 @@ describe("SQL filter parameterization", () => {
     expect(result.sql).toContain("JSON_CONTAINS")
     expect(result.sql).not.toContain(malicious)
     expect(result.bindings).toEqual(
-      expect.arrayContaining([`[\"${malicious}\"]`])
+      expect.arrayContaining([`["${malicious}"]`])
     )
   })
 })

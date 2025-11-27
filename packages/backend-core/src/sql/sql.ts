@@ -119,19 +119,12 @@ function stringifyArray(value: unknown[], quoteStyle = '"'): string {
 }
 
 function toPgArrayLiteral(value: unknown): string {
-  const values = Array.isArray(value)
-    ? value
-    : value == null
-    ? []
-    : [value]
+  const values = Array.isArray(value) ? value : value == null ? [] : [value]
   const elements = values.map(entry => {
     if (typeof entry === "string" && entry.length > 1) {
       const first = entry[0]
       const last = entry[entry.length - 1]
-      if (
-        (first === '"' && last === '"') ||
-        (first === "'" && last === "'")
-      ) {
+      if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
         return entry.substring(1, entry.length - 1)
       }
     }
