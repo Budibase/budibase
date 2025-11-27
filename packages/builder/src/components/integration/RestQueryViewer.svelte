@@ -70,6 +70,7 @@
   let saving
   let queryNameLabel
   let mounted = false
+  let isTemplateDatasource = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
@@ -106,6 +107,7 @@
     ...globalDynamicRequestBindings,
   ]
 
+  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
   $: bindingPreviewContext = getBindingContext([
     requestBindings,
     globalDynamicBindings,
@@ -416,6 +418,9 @@
   }
 
   const urlChanged = evt => {
+    if (isTemplateDatasource) {
+      return
+    }
     breakQs = {}
     const fullUrl = evt.detail
     if (!fullUrl) return
@@ -591,6 +596,8 @@
               getOptionValue={option => option.value}
               getOptionLabel={option => option.label}
               getOptionColour={option => option.colour}
+              readonly={isTemplateDatasource}
+              hideChevron={isTemplateDatasource}
             />
           </div>
           <div class="url">
@@ -598,6 +605,7 @@
               on:blur={urlChanged}
               value={url}
               placeholder="http://www.api.com/endpoint"
+              readonly={isTemplateDatasource}
             />
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>

@@ -21,19 +21,6 @@ export interface SMTPInnerConfig {
 
 export interface SMTPConfig extends Config<SMTPInnerConfig> {}
 
-export interface IMAPInnerConfig {
-  port: number
-  host: string
-  secure: boolean
-  auth?: {
-    type?: "login" | null
-    user: string
-    pass: string
-  }
-}
-
-export interface IMAPConfig extends Config<IMAPInnerConfig> {}
-
 /**
  * Accessible only via pro.
  */
@@ -49,6 +36,10 @@ export interface SettingsBrandingConfig {
   metaTitle?: string
 }
 
+export enum LockReason {
+  FREE_TIER = "free_tier", // Locked because grace period in free tier has ended
+}
+
 export interface SettingsInnerConfig {
   platformUrl?: string
   company?: string
@@ -59,6 +50,8 @@ export interface SettingsInnerConfig {
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
   createdVersion?: string
+  lockedBy?: LockReason
+  active?: boolean
   liteLLM?: { keyId: string; secretKey: string }
 }
 
@@ -167,9 +160,6 @@ export const isSettingsConfig = (config: Config): config is SettingsConfig =>
 export const isSMTPConfig = (config: Config): config is SMTPConfig =>
   config.type === ConfigType.SMTP
 
-export const isIMAPConfig = (config: Config): config is IMAPConfig =>
-  config.type === ConfigType.IMAP
-
 export const isGoogleConfig = (config: Config): config is GoogleConfig =>
   config.type === ConfigType.GOOGLE
 
@@ -194,7 +184,6 @@ export enum ConfigType {
   SETTINGS = "settings",
   ACCOUNT = "account",
   SMTP = "smtp",
-  IMAP = "imap",
   GOOGLE = "google",
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
@@ -208,16 +197,14 @@ export type ConfigTypeToConfig<T extends ConfigType> =
     ? SettingsConfig
     : T extends ConfigType.SMTP
       ? SMTPConfig
-      : T extends ConfigType.IMAP
-        ? IMAPConfig
-        : T extends ConfigType.GOOGLE
-          ? GoogleConfig
-          : T extends ConfigType.OIDC
-            ? OIDCConfig
-            : T extends ConfigType.OIDC_LOGOS
-              ? OIDCLogosConfig
-              : T extends ConfigType.SCIM
-                ? SCIMConfig
-                : T extends ConfigType.AI
-                  ? AIConfig
-                  : never
+      : T extends ConfigType.GOOGLE
+        ? GoogleConfig
+        : T extends ConfigType.OIDC
+          ? OIDCConfig
+          : T extends ConfigType.OIDC_LOGOS
+            ? OIDCLogosConfig
+            : T extends ConfigType.SCIM
+              ? SCIMConfig
+              : T extends ConfigType.AI
+                ? AIConfig
+                : never

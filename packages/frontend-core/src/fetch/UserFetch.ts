@@ -15,6 +15,9 @@ interface UserFetchQuery {
   string?: {
     email: string
   }
+  fuzzy?: {
+    email: string
+  }
 }
 
 interface UserDefinition {

@@ -10,13 +10,13 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
+import { BUILDER_URLS } from "@budibase/shared-core"
 import {
   AIInnerConfig,
   Config,
   ConfigChecklistResponse,
   ConfigType,
   Ctx,
-  IMAPInnerConfig,
   DeleteConfigResponse,
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
@@ -24,7 +24,6 @@ import {
   GoogleInnerConfig,
   isAIConfig,
   isGoogleConfig,
-  isIMAPConfig,
   isOIDCConfig,
   isRecaptchaConfig,
   isSettingsConfig,
@@ -179,19 +178,6 @@ async function processSMTPConfig(
   }
 }
 
-async function processIMAPConfig(
-  config: IMAPInnerConfig,
-  existingConfig?: IMAPInnerConfig
-) {
-  if (config.auth?.pass === PASSWORD_REPLACEMENT) {
-    if (existingConfig && existingConfig.auth?.pass) {
-      config.auth.pass = existingConfig.auth.pass
-    } else {
-      throw new BadRequestError("IMAP password is required")
-    }
-  }
-}
-
 async function processSettingsConfig(
   config: SettingsInnerConfig & SettingsBrandingConfig,
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
@@ -332,9 +318,6 @@ export async function save(
       case ConfigType.SMTP:
         await processSMTPConfig(config, existingConfig?.config)
         break
-      case ConfigType.IMAP:
-        await processIMAPConfig(config, existingConfig?.config)
-        break
       case ConfigType.SETTINGS:
         await processSettingsConfig(config, existingConfig?.config)
         break
@@ -465,10 +448,6 @@ function stripSecrets(config: Config) {
       }
     }
   } else if (isSMTPConfig(config)) {
-    if (config.config.auth?.pass) {
-      config.config.auth.pass = PASSWORD_REPLACEMENT
-    }
-  } else if (isIMAPConfig(config)) {
     if (config.config.auth?.pass) {
       config.config.auth.pass = PASSWORD_REPLACEMENT
     }
@@ -698,23 +677,23 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
           apps: {
             checked: workspaces.length > 0,
             label: "Create your first app",
-            link: "/builder/portal/workspaces",
+            link: BUILDER_URLS.WORKSPACES,
           },
           smtp: {
             checked: !!smtpConfig,
             label: "Set up email",
-            link: "/builder/portal/settings/email",
+            link: BUILDER_URLS.SETTINGS_EMAIL,
             fallback: smtpConfig?.fallback || false,
           },
           adminUser: {
             checked: userExists,
             label: "Create your first user",
-            link: "/builder/portal/users/users",
+            link: BUILDER_URLS.SETTINGS_PEOPLE_USERS,
           },
           sso: {
             checked: !!googleConfig || !!oidcConfig,
             label: "Set up single sign-on",
-            link: "/builder/portal/settings/auth",
+            link: BUILDER_URLS.SETTINGS_AUTH,
           },
           branding,
         }

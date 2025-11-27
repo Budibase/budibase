@@ -74,7 +74,8 @@ export async function processEvent(job: AutomationJob) {
         return await tracer.trace("task", async () => {
           if (isEmailTrigger(trigger)) {
             const { proceed, ...checkMailResult } = await checkMail(
-              job.data.automation._id!
+              job.data.automation._id!,
+              trigger.inputs
             )
             if (proceed === false) {
               return { skipped: true }
@@ -238,11 +239,13 @@ export async function enableCronOrEmailTrigger(
 
     trigger.cronJobId = jobId
 
-    await dbCore.doWithDB(appId, async db => {
-      const response = await db.put(automation)
-      automation._id = response.id
-      automation._rev = response.rev
-    })
+    if (trigger.cronJobId !== existingJobId) {
+      await dbCore.doWithDB(appId, async db => {
+        const response = await db.put(automation)
+        automation._id = response.id
+        automation._rev = response.rev
+      })
+    }
 
     enabled = true
     return { enabled, automation }

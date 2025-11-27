@@ -15,6 +15,8 @@ import {
   FindQueryResponse,
   ImportRestQueryRequest,
   ImportRestQueryResponse,
+  ImportRestQueryInfoRequest,
+  ImportRestQueryInfoResponse,
   JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
@@ -38,6 +40,7 @@ import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
+import fetch from "node-fetch"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -65,33 +68,72 @@ function validateQueryInputs(parameters: QueryEventParameters) {
   }
 }
 
-export async function fetch(ctx: UserCtx<void, FetchQueriesResponse>) {
+export async function fetchQueries(ctx: UserCtx<void, FetchQueriesResponse>) {
   ctx.body = await sdk.queries.fetch()
+}
+
+const resolveImportData = async (
+  ctx: UserCtx,
+  payload: { data?: string; url?: string }
+) => {
+  const data = payload.data?.trim()
+  if (data) {
+    return payload.data as string
+  }
+
+  const url = payload.url?.trim()
+  if (url) {
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        ctx.throw(
+          response.status,
+          `Failed to fetch import data (status ${response.status})`
+        )
+      }
+      return await response.text()
+    } catch (error: any) {
+      const message = error?.message || "Unknown error"
+      ctx.throw(502, `Failed to fetch import data - ${message}`)
+    }
+  }
+
+  ctx.throw(400, "Import data is required")
 }
 
 const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
   const body = ctx.request.body
-  const data = body.data
+  const data = await resolveImportData(ctx, body)
 
   const importer = new RestImporter(data)
   await importer.init()
+  const importInfo = await importer.getInfo()
 
   let datasourceId
   if (!body.datasourceId) {
-    // construct new datasource
-    const info: any = await importer.getInfo()
-    let datasource: Datasource = {
+    const {
+      _id: _discardId,
+      _rev: _discardRev,
+      config: suppliedConfig,
+      ...rest
+    } = body.datasource ? cloneDeep(body.datasource) : ({} as Datasource)
+    const config = suppliedConfig || {}
+    const datasource: Datasource = {
+      ...rest,
       type: "datasource",
-      source: SourceName.REST,
+      source: rest.source || SourceName.REST,
+      name: rest.name || importInfo?.name,
       config: {
-        url: info.url,
-        defaultHeaders: [],
-        rejectUnauthorized: true,
+        ...config,
+        defaultHeaders: config.defaultHeaders ?? {},
+        rejectUnauthorized: config.rejectUnauthorized ?? true,
+        downloadImages: config.downloadImages ?? true,
+        url: config.url ?? importInfo?.url,
       },
-      name: info.name,
     }
+    importer.prepareDatasourceConfig(datasource)
     // save the datasource
     const datasourceCtx: UserCtx<CreateDatasourceRequest> = merge(ctx, {
       request: {
@@ -108,7 +150,18 @@ const _import = async (
     datasourceId = body.datasourceId
   }
 
-  const importResult = await importer.importQueries(datasourceId)
+  let importResult
+  try {
+    importResult = await importer.importQueries(
+      datasourceId,
+      body.selectedEndpointId
+    )
+  } catch (error: any) {
+    if (body.selectedEndpointId && error?.message) {
+      ctx.throw(400, error.message)
+    }
+    throw error
+  }
 
   ctx.body = {
     ...importResult,
@@ -116,6 +169,21 @@ const _import = async (
   }
 }
 export { _import as import }
+
+export async function importInfo(
+  ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
+) {
+  const data = await resolveImportData(ctx, ctx.request.body)
+  const importer = new RestImporter(data)
+  await importer.init()
+  const info = await importer.getInfo()
+  ctx.body = {
+    name: info.name,
+    url: info.url,
+    docsUrl: info.docsUrl,
+    endpoints: info.endpoints || [],
+  }
+}
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()

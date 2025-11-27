@@ -10,7 +10,6 @@ import GroupsPage from "@/settings/pages/people/groups/index.svelte"
 import PluginsPage from "@/settings/pages/plugins/index.svelte"
 import EmailPage from "@/settings/pages/email.svelte"
 import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
-import EmailImapPage from "@/settings/pages/email/Imap.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
 import AIPage from "@/settings/pages/ai/index.svelte"
@@ -29,6 +28,7 @@ import GeneralInfoPage from "@/settings/pages/general.svelte"
 import AutomationsPage from "@/settings/pages/automations/automations.svelte"
 import BackupsPage from "@/settings/pages/backups/index.svelte"
 import PWAPage from "@/settings/pages/pwa.svelte"
+import Translations from "@/settings/pages/translations/translations.svelte"
 import EmbedPage from "@/settings/pages/embed.svelte"
 import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
@@ -43,7 +43,6 @@ const componentMap: Record<string, ComponentType> = {
   groups: GroupsPage,
   plugins: PluginsPage,
   email: EmailPage,
-  email_imap: EmailImapPage,
   email_templates: EmailTemplatesPage,
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
@@ -63,6 +62,7 @@ const componentMap: Record<string, ComponentType> = {
   pwa: PWAPage,
   embed: EmbedPage,
   scripts: ScriptsPage,
+  translations: Translations,
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
 }
