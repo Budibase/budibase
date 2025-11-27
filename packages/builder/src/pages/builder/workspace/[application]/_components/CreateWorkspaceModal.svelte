@@ -9,6 +9,7 @@
     Dropzone,
     Button,
     Modal,
+    Icon,
   } from "@budibase/bbui"
   import { initialise, builderStore, reset } from "@/stores/builder"
   import { API } from "@/api"
@@ -342,6 +343,22 @@
     />
   {/if}
 
+  {#if selectedTemplate}
+    <div class="template-selection__details">
+      <span class="template-selection__label">Template:</span>
+      <span>
+        {selectedTemplate.name}
+      </span>
+      <Icon
+        name="x"
+        size="XS"
+        hoverable
+        on:click={clearSelectedTemplate}
+        disabled={creating}
+      />
+    </div>
+  {/if}
+
   <div slot="footer" class="flexFooter">
     {#if !template?.fromFile}
       <div class="template-selection">
@@ -353,43 +370,28 @@
         >
           {selectedTemplate ? "Change template" : "View templates"}
         </Button>
-        {#if selectedTemplate}
-          <div class="template-selection__details">
-            <span class="template-selection__label">Template</span>
-            <span class="template-selection__name">
-              {selectedTemplate.name}
-            </span>
-            <Button
-              size="S"
-              secondary
-              quiet
-              disabled={creating}
-              on:click={clearSelectedTemplate}
-            >
-              Clear
-            </Button>
-          </div>
-        {/if}
       </div>
     {/if}
-    <Button
-      secondary
-      quiet
-      disabled={creating}
-      on:click={() => {
-        if (template?.fromFile) {
-          // Turning off import - clear file selection
-          template = null
-          $values.file = undefined
-          $validation.touched.file = false
-        } else {
-          // Turning on import
-          template = { fromFile: true }
-        }
-      }}
-    >
-      {template?.fromFile ? "Don't import workspace" : "Import"}
-    </Button>
+    {#if !selectedTemplate}
+      <Button
+        secondary
+        quiet
+        disabled={creating}
+        on:click={() => {
+          if (template?.fromFile) {
+            // Turning off import - clear file selection
+            template = null
+            $values.file = undefined
+            $validation.touched.file = false
+          } else {
+            // Turning on import
+            template = { fromFile: true }
+          }
+        }}
+      >
+        {template?.fromFile ? "Don't import workspace" : "Import"}
+      </Button>
+    {/if}
   </div>
 </ModalContent>
 
@@ -410,31 +412,27 @@
   .modal-content {
     overflow: hidden;
   }
+
   .flexFooter {
     display: flex;
     align-items: center;
     gap: var(--spectrum-global-dimension-static-size-200);
   }
+
   .template-selection {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-s);
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
   }
 
   .template-selection__details {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     align-items: center;
   }
 
   .template-selection__label {
-    font-size: 12px;
     color: var(--spectrum-global-color-gray-600);
-  }
-
-  .template-selection__name {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
   }
 </style>
