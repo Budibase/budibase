@@ -139,17 +139,22 @@ if (env.SELF_HOSTED) {
 export async function getActionDefinitions(): Promise<
   Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
 > {
+  // Create a shallow copy here to avoid mutating shared object
+  const actionDefinitions: Record<string, AutomationStepDefinition> = {
+    ...BUILTIN_ACTION_DEFINITIONS,
+  }
+
   if (env.SELF_HOSTED) {
-    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
-    BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
+    actionDefinitions["OPENAI"] = {
+      ...automations.steps.openai.definition,
+      deprecated: true,
+    }
   }
 
-  // Add agent step definition only if AI_AGENTS feature flag is enabled
   if (await features.isEnabled(FeatureFlag.AI_AGENTS)) {
-    BUILTIN_ACTION_DEFINITIONS["AGENT"] = automations.steps.agent.definition
+    actionDefinitions["AGENT"] = automations.steps.agent.definition
   }
 
-  const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
     for (let plugin of plugins) {
