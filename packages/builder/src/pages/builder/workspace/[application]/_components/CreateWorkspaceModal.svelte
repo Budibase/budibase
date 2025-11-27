@@ -1,5 +1,6 @@
 <script lang="ts">
   import { writable, get } from "svelte/store"
+  import TemplatesModal from "@/components/start/TemplatesModal.svelte"
   import {
     notifications,
     keepOpen,
@@ -7,17 +8,19 @@
     ModalContent,
     Dropzone,
     Button,
+    Modal,
   } from "@budibase/bbui"
   import { initialise, builderStore, reset } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, auth } from "@/stores/portal"
+  import { appsStore, auth, templates } from "@/stores/portal"
   import { onMount, createEventDispatcher } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
-  import type { AppTemplate } from "@/types"
+  import type { AppTemplate, GalleryTemplate } from "@/types"
+  import type { TemplateMetadata } from "@budibase/types"
 
   export let redirectOnCreate = true
 
@@ -38,6 +41,14 @@
   let creating = false
   let defaultAppName: string
   let template: AppTemplate | null = null
+  let templatesModal: Modal
+  let templatePickerLoading = false
+
+  const isGalleryTemplate = (
+    value: AppTemplate | null
+  ): value is GalleryTemplate => {
+    return !!value && value.fromFile === false
+  }
 
   $: {
     const { url } = $values
@@ -48,6 +59,8 @@
     })
     encryptionValidation.check({ ...$values })
   }
+
+  $: selectedTemplate = isGalleryTemplate(template) ? template : null
 
   // filename should be separated to avoid updates everytime any other form element changes
   $: filename = $values.file?.name
@@ -88,10 +101,11 @@
   }
 
   const resolveAppName = (template: AppTemplate | null, name: string) => {
-    if (template && !template.fromFile) {
+    const trimmedName = name ? name.trim() : ""
+    if (template && !template.fromFile && !trimmedName) {
       return template.name
     }
-    return name ? name.trim() : ""
+    return trimmedName
   }
 
   const tidyUrl = (url: string | null) => {
@@ -104,6 +118,58 @@
   const nameToUrl = (appName: string) => {
     let resolvedUrl = resolveAppUrl(template, appName)
     tidyUrl(resolvedUrl)
+  }
+
+  const clearSelectedTemplate = () => {
+    if (!selectedTemplate) {
+      return
+    }
+    template = null
+    nameToUrl($values.name)
+  }
+
+  const handleSelectTemplate = async (selected: TemplateMetadata) => {
+    template = {
+      fromFile: false,
+      key: selected.key,
+      name: selected.name,
+      image: selected.image,
+      background: selected.background,
+      icon: selected.icon,
+    }
+    $values.file = undefined
+    $values.encryptionPassword = undefined
+    $validation.touched.file = false
+    $values.name = selected.name
+    nameToUrl(selected.name)
+    templatesModal?.hide()
+  }
+
+  const loadTemplates = async () => {
+    templatePickerLoading = true
+    try {
+      await templates.load()
+      return true
+    } catch (error: any) {
+      const reason = error?.message ? ` - ${lowercase(error.message)}` : ""
+      notifications.error(`Unable to load templates${reason}`)
+      return false
+    } finally {
+      templatePickerLoading = false
+    }
+  }
+
+  const openTemplateModal = async () => {
+    if (template?.fromFile || templatePickerLoading) {
+      return
+    }
+    if (!get(templates).length) {
+      const loaded = await loadTemplates()
+      if (!loaded) {
+        return
+      }
+    }
+    templatesModal?.show()
   }
 
   const setupValidation = async () => {
@@ -138,6 +204,10 @@
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
+      } else if (selectedTemplate) {
+        data.append("useTemplate", "true")
+        data.append("templateKey", selectedTemplate.key)
+        data.append("templateName", selectedTemplate.name)
       }
 
       // Create App
@@ -272,7 +342,36 @@
     />
   {/if}
 
-  <div slot="footer">
+  <div slot="footer" class="flexFooter">
+    {#if !template?.fromFile}
+      <div class="template-selection">
+        <Button
+          secondary
+          quiet
+          disabled={creating || templatePickerLoading}
+          on:click={openTemplateModal}
+        >
+          {selectedTemplate ? "Change template" : "View templates"}
+        </Button>
+        {#if selectedTemplate}
+          <div class="template-selection__details">
+            <span class="template-selection__label">Template</span>
+            <span class="template-selection__name">
+              {selectedTemplate.name}
+            </span>
+            <Button
+              size="S"
+              secondary
+              quiet
+              disabled={creating}
+              on:click={clearSelectedTemplate}
+            >
+              Clear
+            </Button>
+          </div>
+        {/if}
+      </div>
+    {/if}
     <Button
       secondary
       quiet
@@ -289,10 +388,14 @@
         }
       }}
     >
-      {template?.fromFile ? "Don't import workspace" : "Import workspace"}
+      {template?.fromFile ? "Don't import workspace" : "Import"}
     </Button>
   </div>
 </ModalContent>
+
+<Modal bind:this={templatesModal}>
+  <TemplatesModal onSelectTemplate={handleSelectTemplate} />
+</Modal>
 
 <style>
   .app-server {
@@ -306,5 +409,32 @@
 
   .modal-content {
     overflow: hidden;
+  }
+  .flexFooter {
+    display: flex;
+    align-items: center;
+    gap: var(--spectrum-global-dimension-static-size-200);
+  }
+  .template-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+    align-items: center;
+  }
+
+  .template-selection__details {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
+  }
+
+  .template-selection__label {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .template-selection__name {
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
