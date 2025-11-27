@@ -1178,6 +1178,7 @@ export const getAllStateVariables = screen => {
       const settings = componentStore.getComponentSettings(component._component)
       const nestedTypes = [
         "buttonConfiguration",
+        "componentConfiguration",
         "fieldConfiguration",
         "stepConfiguration",
       ]

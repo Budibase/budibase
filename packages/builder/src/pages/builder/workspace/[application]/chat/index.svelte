@@ -18,7 +18,7 @@
   const NO_MESSAGES_TEXT = "No messages"
   const NO_PREVIEW_TEXT = "No preview available"
 
-  let chat: AgentChat
+  let chat: AgentChat = { ...INITIAL_CHAT }
   let loading: boolean = false
   let selectedAgentId: string | null = null
 
@@ -82,7 +82,13 @@
 
   onMount(async () => {
     await agentsStore.init()
-    chat = { ...INITIAL_CHAT }
+
+    selectedAgentId = $agentsStore.agents[0]._id || null
+
+    if (selectedAgentId) {
+      await agentsStore.fetchChats(selectedAgentId)
+      chat = $agentsStore.chats[0] || { ...INITIAL_CHAT }
+    }
   })
 </script>
 
