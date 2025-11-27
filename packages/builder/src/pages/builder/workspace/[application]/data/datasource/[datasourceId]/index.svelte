@@ -12,7 +12,7 @@
   import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
   import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
-import { IntegrationTypes } from "@/constants/backend"
+  import { IntegrationTypes } from "@/constants/backend"
   import Tooltip from "./_components/panels/Tooltip.svelte"
   import SaveDatasourceButton from "./_components/panels/SaveDatasourceButton.svelte"
   import { cloneDeep } from "lodash/fp"

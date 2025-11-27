@@ -424,7 +424,6 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       await this.disconnect()
     }
   }
-
 }
 
 export default {

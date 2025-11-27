@@ -607,7 +607,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
     return dataType
   }
-
 }
 
 export default {
