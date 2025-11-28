@@ -122,10 +122,6 @@
     background-color: rgba(255, 255, 255, 0.01);
   }
 
-  .agent-card.active {
-    box-shadow: 0 0 0 1px;
-  }
-
   .card-actions {
     position: absolute;
     top: var(--spacing-m);
@@ -160,7 +156,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--agent-accent) 18%, transparent);
   }
 
   .card-content {

@@ -67,7 +67,7 @@ export async function run({
         toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
       }
 
-      const toolsToAdd = toolSourceInstance.getEnabledTools()
+      const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
       if (toolsToAdd.length > 0) {
         allTools.push(...toolsToAdd)
       }

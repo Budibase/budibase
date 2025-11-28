@@ -42,11 +42,14 @@ export interface BambooHRToolAuth extends BaseToolSourceAuth {
 
 export interface BudibaseToolAuth extends BaseToolSourceAuth {}
 
+export interface RestQueryToolAuth extends BaseToolSourceAuth {}
+
 export type AgentToolSourceAuth =
   | GitHubToolAuth
   | ConfluenceToolAuth
   | BudibaseToolAuth
   | BambooHRToolAuth
+  | RestQueryToolAuth
 
 export interface GitHubToolSource extends Document {
   id?: string
@@ -76,17 +79,28 @@ export interface BambooHRToolSource extends Document {
   auth: BambooHRToolAuth
 }
 
+export interface RestQueryToolSource extends Document {
+  id?: string
+  type: "REST_QUERY"
+  disabledTools: string[]
+  datasourceId: string
+  queryIds: string[]
+  auth: RestQueryToolAuth
+}
+
 export type AgentToolSource =
   | GitHubToolSource
   | ConfluenceToolSource
   | BudibaseToolSource
   | BambooHRToolSource
+  | RestQueryToolSource
 
 export type AgentToolSourceWithTools = (
   | GitHubToolSource
   | ConfluenceToolSource
   | BudibaseToolSource
   | BambooHRToolSource
+  | RestQueryToolSource
 ) & {
   tools: Tool[]
 }

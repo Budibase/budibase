@@ -60,6 +60,11 @@
       type: "BAMBOOHR",
       description: "Automate HR workflows and employee management",
     },
+    {
+      name: "Rest Query",
+      type: "REST_QUERY",
+      description: "Query your database",
+    },
   ]
 
   export let agentId: string

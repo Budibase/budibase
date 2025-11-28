@@ -4,6 +4,7 @@ import { BudibaseToolSource } from "./BudibaseToolSource"
 import { GitHubToolSource } from "./GitHubToolSource"
 import { ConfluenceToolSource } from "./ConfluenceToolSource"
 import { BambooHRToolSource } from "./BambooHRToolSource"
+import { RestQueryToolSource } from "./RestQueryToolSource"
 
 type ToolSourceConstructor = new (toolSource: AgentToolSource) => ToolSource
 
@@ -12,6 +13,7 @@ const registry: Record<string, ToolSourceConstructor> = {
   GITHUB: GitHubToolSource,
   CONFLUENCE: ConfluenceToolSource,
   BAMBOOHR: BambooHRToolSource,
+  REST_QUERY: RestQueryToolSource,
 }
 
 /**
