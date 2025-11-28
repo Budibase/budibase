@@ -174,9 +174,13 @@ export class DatasourceStore extends DerivedBudiStore<
     this.updateDatasourceInStore(response)
   }
 
-  sourceCount(source: string) {
+  sourceCount(source: string, restTemplate?: string) {
     return get(this.store).rawList.filter(
-      datasource => datasource.source === source
+      datasource =>
+        datasource.source === source &&
+        (restTemplate !== undefined
+          ? datasource.restTemplate === restTemplate
+          : true)
     ).length
   }
 
@@ -208,14 +212,14 @@ export class DatasourceStore extends DerivedBudiStore<
     restTemplate?: RestTemplateName
     restTemplateVersion?: RestTemplateSpecVersion
   }) {
-    const count = this.sourceCount(integration.name)
+    const count = this.sourceCount(integration.name, restTemplate)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
 
     const datasource: Datasource = {
       type: "datasource",
       source: integration.name as SourceName,
       config,
-      name: name || `${integration.friendlyName}${nameModifier}`,
+      name: `${name || integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
       ...(restTemplate && { restTemplate }),

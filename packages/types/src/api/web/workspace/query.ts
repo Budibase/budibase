@@ -1,9 +1,9 @@
 import {
   Datasource,
+  ImportEndpoint,
   Query,
   QueryPreview,
   QuerySchema,
-  QueryVerb,
 } from "../../../documents"
 
 export type FetchQueriesResponse = Query[]
@@ -19,15 +19,6 @@ export interface ImportRestQueryRequest {
   selectedEndpointId?: string
 }
 
-export interface QueryImportEndpoint {
-  id: string
-  name: string
-  method?: string
-  path?: string
-  description?: string
-  queryVerb?: QueryVerb
-}
-
 export interface ImportRestQueryInfoRequest {
   data?: string
   url?: string
@@ -37,7 +28,7 @@ export interface ImportRestQueryInfoResponse {
   name: string
   url?: string
   docsUrl?: string
-  endpoints: QueryImportEndpoint[]
+  endpoints: ImportEndpoint[]
 }
 export interface ImportRestQueryResponse {
   errorQueries: Query[]

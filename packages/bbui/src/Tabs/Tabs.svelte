@@ -26,7 +26,9 @@
   export let emphasized: boolean = false
   export let onTop: boolean = false
   export let size: "S" | "M" | "L" = "M"
+  export let disabled: boolean = false
   export let beforeSwitch: ((_title: string) => boolean) | null = null
+  export let hideTabsList: boolean = false
 
   let thisSelected: string | undefined = undefined
   let container: HTMLElement | undefined
@@ -48,7 +50,7 @@
     if (thisSelected !== selected) {
       thisSelected = selected
       dispatch("select", thisSelected)
-    } else if ($tab.title !== thisSelected) {
+    } else if ($tab.title !== thisSelected && !disabled) {
       if (typeof beforeSwitch == "function") {
         const proceed = beforeSwitch($tab.title)
         if (proceed) {
@@ -70,8 +72,8 @@
     }
   }
 
-  $: $tab && calculateIndicatorLength()
-  $: $tab && calculateIndicatorOffset()
+  $: $tab && !disabled && calculateIndicatorLength()
+  $: $tab && !disabled && calculateIndicatorOffset()
 
   function calculateIndicatorLength() {
     if (!vertical) {
@@ -113,6 +115,7 @@
   class:spectrum-Tabs--vertical={vertical}
   class:spectrum-Tabs--horizontal={!vertical}
   class="spectrum-Tabs spectrum-Tabs--size{size}"
+  class:hidden={hideTabsList}
 >
   <slot />
   {#if $tab.info}
@@ -138,6 +141,9 @@
     padding-right: var(--spacing-xl);
     position: relative;
     border-bottom-color: var(--spectrum-global-color-gray-200);
+  }
+  .spectrum-Tabs.hidden {
+    display: none;
   }
   .spectrum-Tabs-content {
     margin-top: var(--spectrum-global-dimension-static-size-150);

@@ -28,6 +28,10 @@ export const EditorModes: EditorModesMap = {
   HTML: {
     name: "html",
   },
+  JSON: {
+    name: "json",
+    match: /./,
+  },
 }
 
 const buildHelperInfoNode = (helper: Helper) => {

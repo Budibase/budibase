@@ -31,7 +31,7 @@
   import { goto } from "@roxi/routify"
   import type {
     RestTemplate,
-    QueryImportEndpoint,
+    ImportEndpoint,
     Datasource,
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
@@ -45,7 +45,7 @@
   let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
   let pendingSpec: RestTemplate["specs"][number] | null = null
-  let templateEndpoints: QueryImportEndpoint[] = []
+  let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
   $: selectedEndpoint = templateEndpoints.find(
@@ -108,7 +108,7 @@
         ?.slice()
         .sort((a, b) => compareEndpointOrder(a, b))
       selectedEndpointId = templateEndpoints[0]?.id
-      await templateEndpointModal?.show()
+      templateEndpointModal?.show()
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -119,7 +119,7 @@
     }
   }
 
-  const getEndpointIcon = (endpoint: QueryImportEndpoint) => {
+  const getEndpointIcon = (endpoint: ImportEndpoint) => {
     const method = (endpoint.method || "").toUpperCase()
     if (!method) {
       return undefined
@@ -143,10 +143,7 @@
     DELETE: 4,
   }
 
-  const compareEndpointOrder = (
-    a: QueryImportEndpoint,
-    b: QueryImportEndpoint
-  ) => {
+  const compareEndpointOrder = (a: ImportEndpoint, b: ImportEndpoint) => {
     const methodA = (a.method || "").toUpperCase()
     const methodB = (b.method || "").toUpperCase()
     const orderA = verbOrder[methodA] ?? 999

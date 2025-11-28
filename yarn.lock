@@ -2956,6 +2956,14 @@
     "@lezer/common" "^1.0.0"
     "@lezer/javascript" "^1.0.0"
 
+"@codemirror/lang-json@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@codemirror/lang-json/-/lang-json-6.0.2.tgz#054b160671306667e25d80385286049841836179"
+  integrity sha512-x2OtO+AvwEHrEwR0FyyPtfDUiloG3rnVTSZV1W8UteaLL8/MajQd8DpvUb2YVzC+/T18aSDv0H9mu+xw0EStoQ==
+  dependencies:
+    "@codemirror/language" "^6.0.0"
+    "@lezer/json" "^1.0.0"
+
 "@codemirror/language@^6.0.0", "@codemirror/language@^6.4.0", "@codemirror/language@^6.6.0":
   version "6.11.3"
   resolved "https://registry.yarnpkg.com/@codemirror/language/-/language-6.11.3.tgz#8e6632df566a7ed13a1bd307f9837765bb1abfdd"
@@ -4340,6 +4348,15 @@
     "@lezer/common" "^1.2.0"
     "@lezer/highlight" "^1.1.3"
     "@lezer/lr" "^1.3.0"
+
+"@lezer/json@^1.0.0":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@lezer/json/-/json-1.0.3.tgz#e773a012ad0088fbf07ce49cfba875cc9e5bc05f"
+  integrity sha512-BP9KzdF9Y35PDpv04r0VeSTKDeox5vVr3efE7eBbx3r4s3oNLfunchejZhjArmeieBH+nVOpgIiBJpEAv8ilqQ==
+  dependencies:
+    "@lezer/common" "^1.2.0"
+    "@lezer/highlight" "^1.0.0"
+    "@lezer/lr" "^1.0.0"
 
 "@lezer/lr@^1.0.0", "@lezer/lr@^1.3.0":
   version "1.4.2"

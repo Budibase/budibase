@@ -46,12 +46,16 @@
     getRestBindings,
     readableToRuntimeBinding,
     readableToRuntimeMap,
-    runtimeToReadableBinding,
     runtimeToReadableMap,
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
+  import {
+    getBindingContext,
+    prettifyQueryRequestBody,
+    keyValueArrayToRecord,
+  } from "./query"
 
   export let queryId
   let lastViewedQueryId = null
@@ -92,13 +96,6 @@
     "Datasource.Static",
     "Datasource Static"
   )
-
-  const getBindingContext = objects => {
-    return objects.reduce(
-      (acc, current) => ({ ...acc, ...(current || {}) }),
-      {}
-    )
-  }
 
   $: mergedBindings = [
     ...dataSourceStaticBindings,
@@ -143,6 +140,9 @@
     ? (originalQuery ?? cloneDeep(builtQuery))
     : undefined
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
+  $: prettyBody = query?.fields?.requestBody
+    ? prettifyQueryRequestBody(query, mergedBindings)
+    : undefined
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -211,6 +211,12 @@
     return newQuery
   }
 
+  function onUpdateBody(e) {
+    if (query) {
+      query.fields.requestBody = e.detail.requestBody
+    }
+  }
+
   async function saveQuery(redirectIfNew = true) {
     const toSave = builtQuery
     saving = true
@@ -233,13 +239,7 @@
       }
 
       query = getSelectedQuery()
-      prettifyQueryRequestBody(
-        query,
-        requestBindings,
-        dynamicVariables,
-        staticVariables,
-        restBindings
-      )
+      query.fields.requestBody = prettifyQueryRequestBody(query, mergedBindings)
 
       // Force rebuilding original query
       originalQuery = null
@@ -387,36 +387,6 @@
     }
   }
 
-  const prettifyQueryRequestBody = (
-    query,
-    requestBindings,
-    dynamicVariables,
-    staticVariables,
-    restBindings
-  ) => {
-    let customRequestBindings = toBindingsArray(requestBindings, "Binding")
-    let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
-    let dataSourceStaticBindings = toBindingsArray(
-      staticVariables,
-      "Datasource.Static"
-    )
-
-    const prettyBindings = [
-      ...dataSourceStaticBindings,
-      ...restBindings,
-      ...customRequestBindings,
-      ...dynamicRequestBindings,
-    ]
-
-    //Parse the body here as now all bindings have been updated.
-    if (query?.fields?.requestBody) {
-      query.fields.requestBody =
-        typeof query.fields.requestBody === "object"
-          ? runtimeToReadableMap(prettyBindings, query.fields.requestBody)
-          : runtimeToReadableBinding(prettyBindings, query.fields.requestBody)
-    }
-  }
-
   const urlChanged = evt => {
     if (isTemplateDatasource) {
       return
@@ -515,13 +485,7 @@
       )
     }
 
-    prettifyQueryRequestBody(
-      query,
-      requestBindings,
-      globalDynamicBindings,
-      staticVariables,
-      restBindings
-    )
+    query.fields.requestBody = prettifyQueryRequestBody(query, mergedBindings)
 
     mounted = true
   })
@@ -645,12 +609,7 @@
                 bindings={mergedBindings}
                 context={bindingPreviewContext}
                 on:change={e => {
-                  let newQs = {}
-                  e.detail.forEach(({ name, value }) => {
-                    newQs[name] = value
-                  })
-
-                  breakQs = newQs
+                  breakQs = keyValueArrayToRecord(e.detail)
                 }}
               />
             {/key}
@@ -674,7 +633,11 @@
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}
             />
-            <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
+            <RestBodyInput
+              bodyType={query.fields.bodyType}
+              requestBody={prettyBody}
+              on:change={onUpdateBody}
+            />
           </Tab>
           <Tab title="Pagination">
             <div class="pagination">

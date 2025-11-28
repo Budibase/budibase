@@ -14,6 +14,7 @@
   export let accentColor: string | null | undefined = null
   export let showCount = false
   export let align = PopoverAlignment.Left
+  export let btnText = "Screens"
 
   let popover: DetailPopover
 
@@ -38,7 +39,7 @@
   }
 </script>
 
-<DetailPopover title="Screens" bind:this={popover} {align}>
+<DetailPopover title={btnText} bind:this={popover} {align}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       {icon}
@@ -47,7 +48,7 @@
       {accentColor}
       on:click={show}
     >
-      Screens{showCount && screens.length ? `: ${screens.length}` : ""}
+      {btnText}{showCount && screens.length ? `: ${screens.length}` : ""}
     </ActionButton>
   </svelte:fragment>
 

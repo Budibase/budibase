@@ -4,6 +4,7 @@ import {
   QueryParameter,
   QueryVerb,
   RestTemplateQueryMetadata,
+  ImportEndpoint,
 } from "@budibase/types"
 import { URL } from "url"
 import {
@@ -16,15 +17,6 @@ export interface ImportInfo {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
-}
-
-export interface ImportEndpoint {
-  id: string
-  name: string
-  method?: string
-  path?: string
-  description?: string
-  queryVerb?: QueryVerb
 }
 
 enum MethodToVerb {

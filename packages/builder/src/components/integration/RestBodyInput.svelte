@@ -2,9 +2,11 @@
   import { Body } from "@budibase/bbui"
   import { RawRestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
-  import CodeMirrorEditor, {
-    EditorModes,
-  } from "@/components/common/CodeMirrorEditor.svelte"
+  import { EditorModes } from "@/components/common/CodeMirrorEditor.svelte"
+  import { createEventDispatcher } from "svelte"
+  import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
+
+  const dispatch = createEventDispatcher()
 
   const objectTypes = [RawRestBodyTypes.FORM, RawRestBodyTypes.ENCODED]
   const textTypes = [
@@ -13,7 +15,7 @@
     RawRestBodyTypes.TEXT,
   ]
 
-  export let query
+  export let requestBody
   export let bodyType
 
   let text = ""
@@ -23,54 +25,40 @@
   $: updateRequestBody(bodyType, text, json)
 
   function checkRequestBody(type) {
-    if (!bodyType || !query) {
+    if (!bodyType || requestBody === undefined) {
       return
     }
-    const currentType = typeof query?.fields.requestBody
+    const currentType = typeof requestBody
     const isObject = objectTypes.includes(type)
     const isText = textTypes.includes(type)
     if (isText && currentType === "string") {
-      text = query.fields.requestBody
+      text = requestBody
     } else if (isObject && currentType === "object") {
-      json = query.fields.requestBody
+      json = requestBody
     }
   }
 
   function updateRequestBody(type, text, json) {
-    if (!query?.fields) {
+    if (requestBody === undefined) {
       return
     }
 
-    const currentValue = query.fields.requestBody
-
     if (type === RawRestBodyTypes.NONE) {
-      if (currentValue != null) {
-        query.fields.requestBody = null
+      if (requestBody != null) {
+        dispatch("change", { requestBody: null })
       }
       return
     }
 
     if (objectTypes.includes(type)) {
-      if (currentValue !== json) {
-        query.fields.requestBody = json
+      if (requestBody !== json) {
+        dispatch("change", { requestBody: json })
       }
       return
     }
 
-    if (currentValue !== text) {
-      query.fields.requestBody = text
-    }
-  }
-
-  function editorMode(type) {
-    switch (type) {
-      case RawRestBodyTypes.JSON:
-        return EditorModes.JSON
-      case RawRestBodyTypes.XML:
-        return EditorModes.XML
-      default:
-      case RawRestBodyTypes.TEXT:
-        return EditorModes.Text
+    if (requestBody !== text) {
+      dispatch("change", { requestBody: text })
     }
   }
 </script>
@@ -83,17 +71,29 @@
   {:else if objectTypes.includes(bodyType)}
     <KeyValueBuilder bind:object={json} name="param" headings />
   {:else if textTypes.includes(bodyType)}
-    <CodeMirrorEditor
-      height={200}
-      mode={editorMode(bodyType)}
-      value={text}
-      resize="vertical"
-      on:change={e => (query.fields.requestBody = e.detail)}
-    />
+    <div class="embed">
+      {#key bodyType}
+        <CodeEditor
+          value={text}
+          mode={EditorModes.Handlebars}
+          aiEnabled={false}
+          on:change={e => dispatch("change", { requestBody: e.detail })}
+        />
+      {/key}
+    </div>
   {/if}
 </div>
 
 <style>
+  .embed :global(.cm-editor) {
+    min-height: 200px;
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+  .embed :global(.cm-gutters) {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
   .margin {
     margin-top: var(--spacing-m);
   }

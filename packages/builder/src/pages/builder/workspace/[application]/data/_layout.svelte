@@ -11,7 +11,7 @@
   import { IntegrationTypes } from "@/constants/backend"
 
   let searchValue
-  const MIN_PANEL_WIDTH = 320
+  const MIN_PANEL_WIDTH = 260
   let maxWidth = Math.max(window.innerWidth / 3, MIN_PANEL_WIDTH)
   let panelWidth = MIN_PANEL_WIDTH
 
@@ -48,19 +48,6 @@
   const [resizable, resizableHandle] = getHorizontalResizeActions(
     panelWidth,
     width => {
-      if (width < MIN_PANEL_WIDTH) {
-        width = MIN_PANEL_WIDTH
-      }
-
-      if (width > maxWidth) {
-        const element = document.querySelector(".panel-container")
-        if (element) {
-          element.style.width = `${maxWidth}px`
-          width = maxWidth
-        }
-      }
-
-      // Save the width to localStorage
       if (width) {
         localStorage.setItem("datasource-panel-width", width.toString())
         panelWidth = width
@@ -149,10 +136,12 @@
   }
   .panel-container {
     display: flex;
-    min-width: 320px;
+    min-width: 262px;
+    width: 260px;
     max-width: 33.33vw;
     height: 100%;
     overflow: visible;
+    transition: width 300ms ease-out;
   }
   .content {
     padding: 28px 40px 40px 40px;
