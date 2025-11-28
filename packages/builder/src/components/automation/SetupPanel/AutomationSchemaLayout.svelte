@@ -42,6 +42,7 @@
   import Editor from "@/components/integration/QueryEditor.svelte"
   import WebhookDisplay from "@/components/automation/Shared/WebhookDisplay.svelte"
   import CategorySelector from "./CategorySelector.svelte"
+  import AgentSelector from "./AgentSelector.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
@@ -245,6 +246,10 @@
       comp: CategorySelector,
       fullWidth: true,
     },
+    [SchemaFieldTypes.AGENT]: {
+      comp: AgentSelector,
+      fullWidth: true,
+    },
   }
 
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
@@ -376,6 +381,10 @@
       block?.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
     ) {
       return SchemaFieldTypes.CODE_V2
+    }
+
+    if (field.customType === AutomationCustomIOType.AGENT) {
+      return SchemaFieldTypes.AGENT
     }
 
     // Filter step or trigger
