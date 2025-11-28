@@ -7,6 +7,7 @@ export enum Cookie {
   Auth = "budibase:auth",
   Init = "budibase:init",
   ACCOUNT_RETURN_URL = "budibase:account:returnurl",
+  ReturnUrl = "budibase:returnurl",
   DatasourceAuth = "budibase:datasourceauth",
   OIDC_CONFIG = "budibase:oidc:config",
   FeatureFlags = "budibase:featureflags",

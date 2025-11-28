@@ -99,9 +99,9 @@
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
+        const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+        const loginUrl = `/builder/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`
+        window.location = loginUrl
       }
     }
   }

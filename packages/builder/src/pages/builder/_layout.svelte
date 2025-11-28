@@ -173,7 +173,7 @@
 
         // Return to saved URL first - skip onboarding check if user has a return URL
         if (returnUrl) {
-          return { type: "returnUrl", url: returnUrl }
+          return { type: "returnUrl", url: decodeURIComponent(returnUrl) }
         }
 
         // Review if builder users have workspaces. If not, redirect them to get-started

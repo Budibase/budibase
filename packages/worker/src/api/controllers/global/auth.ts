@@ -363,7 +363,14 @@ export const googleCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("google-internal", user.email)
       })
-      ctx.redirect(env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT)
+
+      const returnUrl = ctx.cookies.get(Cookie.ReturnUrl)
+      if (returnUrl) {
+        clearCookie(ctx, Cookie.ReturnUrl)
+        ctx.redirect(returnUrl)
+      } else {
+        ctx.redirect(env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT)
+      }
     }
   )(ctx, next)
 }
@@ -430,7 +437,14 @@ export const oidcCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("oidc", user.email)
       })
-      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
+
+      const returnUrl = ctx.cookies.get(Cookie.ReturnUrl)
+      if (returnUrl) {
+        clearCookie(ctx, Cookie.ReturnUrl)
+        ctx.redirect(returnUrl)
+      } else {
+        ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
+      }
     }
   )(ctx, next)
 }
