@@ -1,8 +1,9 @@
-import { Row, Document, DBView } from "@budibase/types"
+import { Row, DBView } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly
 import { db as dbCore, utils } from "@budibase/backend-core"
+import { buildMapFunction } from "./viewInterpreter"
 
 const Pouch = dbCore.getPouch({ inMemory: true })
 
@@ -24,9 +25,7 @@ export async function runView(
         _rev: undefined,
       }))
     )
-    let fn = (doc: Document, emit: any) => emit(doc._id)
-    // BUDI-7060 -> indirect eval call appears to cause issues in cloud
-    eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
+    const fn = buildMapFunction(view)
     const queryFns: any = {
       meta: view.meta,
       map: fn,
