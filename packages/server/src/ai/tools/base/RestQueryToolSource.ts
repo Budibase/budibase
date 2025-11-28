@@ -41,8 +41,10 @@ export class RestQueryToolSource extends ToolSource {
 
     for (const queryId of queryIds) {
       try {
-        const query = await db.get<Query>(queryId)
-        queries.push(query)
+        const query = await db.tryGet<Query>(queryId)
+        if (query) {
+          queries.push(query)
+        }
       } catch (err) {
         console.warn(`Failed to load query ${queryId}:`, err)
       }
