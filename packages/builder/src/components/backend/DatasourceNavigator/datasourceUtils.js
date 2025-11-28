@@ -100,7 +100,7 @@ export const enrichDatasources = (
   viewsV2,
   toggledDatasources,
   searchTerm,
-  datasourceFilter = datasource => true
+  datasourceFilter = _ => true
 ) => {
   if (!datasources?.list?.length) {
     return []

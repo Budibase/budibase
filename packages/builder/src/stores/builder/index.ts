@@ -46,7 +46,6 @@ import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
 import { agentsStore } from "../portal"
-import { get } from "svelte/store"
 
 export {
   componentTreeNodesStore,

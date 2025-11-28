@@ -101,17 +101,6 @@
     dynamicVariables = keyValueArrayToRecord(e.detail)
     dispatch("change", { dynamicVariables })
   }
-
-  $: {
-    const shouldShow =
-      !response && (!schema || Object.keys(schema).length === 0)
-    console.log("ResponsePanel:", {
-      response,
-      schema,
-      schemaKeys: schema ? Object.keys(schema) : null,
-      shouldShowPlaceholder: shouldShow,
-    })
-  }
 </script>
 
 <DynamicVariableModal

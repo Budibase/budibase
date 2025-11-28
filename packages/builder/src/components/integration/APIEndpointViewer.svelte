@@ -32,7 +32,6 @@
     type PreviewQueryResponse,
   } from "@budibase/types"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
-  import { onMount } from "svelte"
   import { findHBSBlocks } from "@budibase/string-templates"
   import { RestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
@@ -77,7 +76,6 @@
   const EXPANDED_MARGIN = 0.15 // 15vh/15vw margins
   const EXPANDED_SIZE = 0.7 // 70vh/70vw size
 
-  let mounted = false
   let selectedEndpointOption: EndpointWithIcon | undefined
   let endpoints: ImportEndpoint[] | undefined
   let endpointsLoading = false
@@ -416,7 +414,7 @@
             },
           }
         } else {
-          console.log("No matching endpoint found in list")
+          console.error("No matching endpoint found in list")
         }
       } catch (err) {
         console.error("Failed to parse path URL:", err)
@@ -657,10 +655,6 @@
       },
     }
   }
-
-  onMount(() => {
-    mounted = true
-  })
 </script>
 
 <div class="wrap">
@@ -699,7 +693,7 @@
               disabled={!queryDirty || savingQuery}
               on:click={() => saveQuery()}
             >
-              {!!query?._id ? "Save" : "Create"}
+              {!query?._id ? "Create" : "Save"}
             </Button>
           </div>
         </div>

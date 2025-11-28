@@ -2,17 +2,16 @@
   import { Layout } from "@budibase/bbui"
   import DatasourceNavigator from "@/components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "@/components/design/Panel.svelte"
-  import { isActive, redirect, goto } from "@roxi/routify"
+  import { isActive, redirect } from "@roxi/routify"
   import { datasources, builderStore } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { IntegrationTypes } from "@/constants/backend"
-  import { onMount, onDestroy } from "svelte"
+  import { onMount } from "svelte"
   import APIModal from "./_components/APIModal.svelte"
 
   let searchValue: string
-  let maxWidth = window.innerWidth / 3
   let panelWidth = 260
   let apiModal: APIModal
 
@@ -24,10 +23,6 @@
         panelWidth = width
       }
     }
-  }
-
-  const updateMaxWidth = () => {
-    maxWidth = window.innerWidth / 3
   }
 
   // TODO: typing
@@ -51,11 +46,6 @@
 
   onMount(() => {
     loadPanelWidth()
-    window.addEventListener("resize", updateMaxWidth)
-  })
-
-  onDestroy(() => {
-    window.removeEventListener("resize", updateMaxWidth)
   })
 
   $: restDatasources = ($datasources.list || []).filter(
