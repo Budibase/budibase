@@ -58,6 +58,7 @@ export enum SchemaFieldTypes {
   QUERY_PARAMS = "query_params",
   QUERY_LIMIT = "query_limit",
   CATEGORIES = "categories",
+  AGENT = "agent",
 }
 
 export type KeyValuePair = {

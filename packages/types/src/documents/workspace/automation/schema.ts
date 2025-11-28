@@ -81,6 +81,8 @@ import {
   LoopV2StepInputs,
   LoopV2StepOutputs,
   EmailTriggerInputs,
+  AgentStepInputs,
+  AgentStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -200,6 +202,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractStateStepInputs,
     ExtractStateStepOutputs
   >
+  [AutomationActionStepId.AGENT]: ActionImplementation<
+    AgentStepInputs,
+    AgentStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -297,7 +303,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                                   ? ExtractStateStepInputs
                                                                   : T extends AutomationActionStepId.LOOP_V2
                                                                     ? LoopV2StepInputs
-                                                                    : never
+                                                                    : T extends AutomationActionStepId.AGENT
+                                                                      ? AgentStepInputs
+                                                                      : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -362,7 +370,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                               ? ExtractStateStepOutputs
                                                               : T extends AutomationActionStepId.LOOP_V2
                                                                 ? LoopV2StepOutputs
-                                                                : never
+                                                                : T extends AutomationActionStepId.AGENT
+                                                                  ? AgentStepOutputs
+                                                                  : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -455,6 +465,8 @@ export type ExtractStateStep =
 
 export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
 
+export type AgentStep = AutomationStepSchema<AutomationActionStepId.AGENT>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -493,6 +505,7 @@ export type AutomationStep =
   | ExtractFileDataStep
   | ExtractStateStep
   | LoopV2Step
+  | AgentStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
