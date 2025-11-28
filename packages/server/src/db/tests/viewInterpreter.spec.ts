@@ -1,7 +1,9 @@
 import { DBView, Row, ViewTemplateOpts } from "@budibase/types"
 import { buildMapFunction } from "../viewInterpreter"
 
-const baseMeta = (overrides: Partial<ViewTemplateOpts> = {}): ViewTemplateOpts => ({
+const baseMeta = (
+  overrides: Partial<ViewTemplateOpts> = {}
+): ViewTemplateOpts => ({
   field: "score",
   tableId: "table_1",
   filters: [],
@@ -77,4 +79,3 @@ describe("viewInterpreter", () => {
     ])
   })
 })
-

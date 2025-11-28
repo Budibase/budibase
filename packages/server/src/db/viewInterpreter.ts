@@ -142,11 +142,13 @@ export const buildMapFunction = (view: DBView) => {
     }
     const meta = view.meta!
     const keyField = meta.groupBy || "_id"
-    const keyValue = coerceKey(doc[keyField as keyof typeof doc], meta.groupByMulti)
+    const keyValue = coerceKey(
+      doc[keyField as keyof typeof doc],
+      meta.groupByMulti
+    )
     const value = meta.field ? doc[meta.field as keyof typeof doc] : undefined
     for (const key of keyValue) {
       emit(key, value)
     }
   }
 }
-
