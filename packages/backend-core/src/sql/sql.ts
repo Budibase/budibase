@@ -818,10 +818,11 @@ class InternalBuilder {
         this.client === SqlClient.MARIADB
       ) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
+          const jsonSearch = Array.isArray(value) ? value : [value]
           return addModifiers(q).whereRaw(`COALESCE(?(??, ?), FALSE)`, [
             this.knex.raw(any ? "JSON_OVERLAPS" : "JSON_CONTAINS"),
             this.rawQuotedIdentifier(key),
-            this.knex.raw(wrap(stringifyArray(value))),
+            JSON.stringify(jsonSearch),
           ])
         })
       } else {
