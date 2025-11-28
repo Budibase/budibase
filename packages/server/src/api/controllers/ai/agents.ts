@@ -71,7 +71,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
     }
 
-    const toolsToAdd = toolSourceInstance.getEnabledTools()
+    const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
 
     if (toolsToAdd.length > 0) {
       allTools.push(...toolsToAdd)
@@ -195,18 +195,22 @@ export async function fetchToolSources(
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  ctx.body = (agent.allowedTools || []).map(toolSource => {
+  const toolSourcesWithTools: AgentToolSourceWithTools[] = []
+
+  for (const toolSource of agent.allowedTools || []) {
     const toolSourceInstance = createToolSourceInstance(toolSource)
 
     const tools: Tool[] = toolSourceInstance
-      ? toolSourceInstance.getTools()
+      ? await toolSourceInstance.getToolsAsync()
       : []
 
-    return {
+    toolSourcesWithTools.push({
       ...toolSource,
       tools,
-    }
-  })
+    })
+  }
+
+  ctx.body = toolSourcesWithTools
 }
 
 export async function createToolSource(

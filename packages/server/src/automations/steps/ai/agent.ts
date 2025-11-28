@@ -15,6 +15,7 @@ import {
   stepCountIs,
   wrapLanguageModel,
 } from "ai"
+import { v4 } from "uuid"
 
 export async function run({
   inputs,
@@ -85,13 +86,29 @@ export async function run({
     const openai = createOpenAI({
       apiKey,
       baseURL: baseUrl,
+      fetch: async (input, init) => {
+        // we need to specifically add a litellm_session_id to the underlying request
+        const nextInit = { ...init }
+
+        if (typeof nextInit?.body === "string") {
+          try {
+            const body = JSON.parse(nextInit.body)
+            body.litellm_session_id = v4()
+            nextInit.body = JSON.stringify(body)
+          } catch {
+            // If the body is not JSON, send the request unmodified
+          }
+        }
+
+        return fetch(input, nextInit)
+      },
     })
 
     const aiTools = toAiSdkTools(allTools)
 
     const agent = new Agent({
       model: wrapLanguageModel({
-        model: openai(modelId),
+        model: openai.chat(modelId),
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
