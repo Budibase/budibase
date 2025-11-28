@@ -239,11 +239,13 @@ export async function enableCronOrEmailTrigger(
 
     trigger.cronJobId = jobId
 
-    await dbCore.doWithDB(appId, async db => {
-      const response = await db.put(automation)
-      automation._id = response.id
-      automation._rev = response.rev
-    })
+    if (trigger.cronJobId !== existingJobId) {
+      await dbCore.doWithDB(appId, async db => {
+        const response = await db.put(automation)
+        automation._id = response.id
+        automation._rev = response.rev
+      })
+    }
 
     enabled = true
     return { enabled, automation }
