@@ -33,6 +33,7 @@
   let actionQuery
   let selectedAction = actions?.length ? actions[0] : null
   let originalActionIndex
+  let draggingActionId
 
   const setUpdateActions = actions => {
     return actions
@@ -156,15 +157,26 @@
     toggleActionList()
   }
 
-  function handleDndConsider(e) {
-    actions = e.detail.items
-
-    // set the initial index of the action being dragged
-    if (e.detail.info.trigger === "draggedEntered") {
-      originalActionIndex = actions.findIndex(
-        action => action.id === e.detail.info.id
-      )
+  const recordOriginalActionIndex = id => {
+    if (!actions || !id) {
+      return
     }
+    if (draggingActionId !== id) {
+      draggingActionId = id
+      originalActionIndex = -1
+    }
+    if (originalActionIndex >= 0) {
+      return
+    }
+    const index = actions.findIndex(action => action.id === id)
+    if (index !== -1) {
+      originalActionIndex = index
+    }
+  }
+
+  function handleDndConsider(e) {
+    recordOriginalActionIndex(e.detail.info.id)
+    actions = e.detail.items
   }
   function handleDndFinalize(e) {
     actions = e.detail.items
@@ -181,6 +193,7 @@
     })
 
     originalActionIndex = -1
+    draggingActionId = undefined
   }
 
   const getAllBindings = (actionBindings, eventContextBindings, actions) => {

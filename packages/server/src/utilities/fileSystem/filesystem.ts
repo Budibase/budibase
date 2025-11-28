@@ -75,48 +75,6 @@ export const streamFile = (path: string) => {
   return fs.createReadStream(path)
 }
 
-/**
- * Writes the provided contents to a temporary file, which can be used briefly.
- * @param fileContents contents which will be written to a temp file.
- * @return the path to the temp file.
- */
-export const storeTempFile = (
-  fileContents: string | NodeJS.ArrayBufferView
-) => {
-  const path = join(budibaseTempDir(), uuid())
-  fs.writeFileSync(path, fileContents)
-  return path
-}
-
-/**
- * Utility function for getting a file read stream - a simple in memory buffered read
- * stream doesn't work for pouchdb.
- */
-export const stringToFileStream = (
-  contents: string | NodeJS.ArrayBufferView
-) => {
-  const path = storeTempFile(contents)
-  return fs.createReadStream(path)
-}
-
-/**
- * Creates a temp file and returns it from the API.
- * @param fileContents the contents to be returned in file.
- */
-export const sendTempFile = (fileContents: string | NodeJS.ArrayBufferView) => {
-  const path = storeTempFile(fileContents)
-  return fs.createReadStream(path)
-}
-
-/**
- * All file reads come through here just to make sure all of them make sense
- * allows a centralised location to check logic is all good.
- */
-export const readFileSync = (filepath: PathLike, options = "utf8") => {
-  // @ts-ignore
-  return fs.readFileSync(filepath, options)
-}
-
 export const createTempFolder = (item: string) => {
   const path = join(budibaseTempDir(), item)
   try {

@@ -3,7 +3,6 @@ import {
   CreateDatasourceResponse,
   Datasource,
   FetchDatasourceInfoResponse,
-  FetchExternalSchemaResponse,
   FieldType,
   RelationshipType,
   UpdateDatasourceRequest,
@@ -92,19 +91,6 @@ export class DatasourceAPI extends TestAPI {
       `/api/datasources/info`,
       {
         body: { datasource },
-        expectations,
-      }
-    )
-  }
-
-  externalSchema = async (
-    datasource: Datasource | string,
-    expectations?: Expectations
-  ): Promise<FetchExternalSchemaResponse> => {
-    const id = typeof datasource === "string" ? datasource : datasource._id
-    return await this._get<FetchExternalSchemaResponse>(
-      `/api/datasources/${id}/schema/external`,
-      {
         expectations,
       }
     )
