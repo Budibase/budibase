@@ -3,30 +3,31 @@
     Body,
     Heading,
     Icon,
-    Input,
     Modal,
     ModalContent,
+    Select,
     TextArea,
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import type {
-    AgentToolSource,
-    CreateToolSourceRequest,
-    AgentToolSourceWithTools,
+  import {
+    ToolSourceType,
+    type AgentToolSource,
+    type CreateToolSourceRequest,
+    type AgentToolSourceWithTools,
+    type Query,
+    type Tool,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { datasources, queries } from "@/stores/builder"
+  import { IntegrationTypes } from "@/constants/backend"
   import { createEventDispatcher, type ComponentType } from "svelte"
-  import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
-  import ConfluenceLogo from "../logos/Confluence.svelte"
-  import GithubLogo from "../logos/Github.svelte"
+
+  export let agentId: string
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
-    CONFLUENCE: ConfluenceLogo,
-    GITHUB: GithubLogo,
-    BAMBOOHR: BambooHRLogo,
   }
 
   const ToolSources = [
@@ -36,38 +37,11 @@
       description: "Connect agent to your Budibase tools",
     },
     {
-      name: "Github",
-      type: "GITHUB",
-      description: "Automate development workflows.",
-    },
-    {
-      name: "Confluence",
-      type: "CONFLUENCE",
-      description: "Connect agent to your teams documentation",
-    },
-    {
-      name: "Sharepoint",
-      type: "SHAREPOINT",
-      description: "Sharepoint stuff",
-    },
-    {
-      name: "JIRA Service Manaagement",
-      type: "JIRA_SM",
-      description: "Automate ITSM Workflows",
-    },
-    {
-      name: "BambooHR",
-      type: "BAMBOOHR",
-      description: "Automate HR workflows and employee management",
-    },
-    {
-      name: "Rest Query",
+      name: "REST API",
       type: "REST_QUERY",
-      description: "Query your database",
+      description: "Use queries from your REST APIs as agent tools",
     },
   ]
-
-  export let agentId: string
 
   const dispatch = createEventDispatcher()
 
@@ -78,7 +52,23 @@
 
   let config: Record<string, string> = {}
   let disabledTools: string[] = []
-  let toolsList: any[] = []
+  let toolsList: Tool[] = []
+
+  let selectedDatasourceId: string = ""
+  let selectedQueryIds: string[] = []
+
+  $: restDatasources = ($datasources.list || []).filter(
+    ds => ds.source === IntegrationTypes.REST
+  )
+
+  $: datasourceOptions = restDatasources.map(ds => ({
+    label: ds.name || ds._id!,
+    value: ds._id!,
+  }))
+
+  $: queriesForDatasource = ($queries.list || []).filter(
+    (q: Query) => q.datasourceId === selectedDatasourceId
+  )
 
   export function show(sourceToEdit?: AgentToolSourceWithTools) {
     if (sourceToEdit) {
@@ -88,6 +78,15 @@
       config = { ...sourceToEdit.auth }
       disabledTools = [...(sourceToEdit.disabledTools || [])]
       toolsList = sourceToEdit.tools || []
+
+      if (sourceToEdit.type === ToolSourceType.REST_QUERY) {
+        const restSource = sourceToEdit
+        selectedDatasourceId = restSource.datasourceId || ""
+        selectedQueryIds = [...(restSource.queryIds || [])]
+      } else {
+        selectedDatasourceId = ""
+        selectedQueryIds = []
+      }
     } else {
       mode = "select"
       editingSource = null
@@ -95,6 +94,8 @@
       config = {}
       disabledTools = []
       toolsList = []
+      selectedDatasourceId = ""
+      selectedQueryIds = []
     }
     modal.show()
   }
@@ -109,6 +110,8 @@
     config = {}
     disabledTools = []
     toolsList = []
+    selectedDatasourceId = ""
+    selectedQueryIds = []
   }
 
   function toggleTool(toolName: string) {
@@ -119,26 +122,65 @@
     }
   }
 
+  function toggleQuery(queryId: string) {
+    if (selectedQueryIds.includes(queryId)) {
+      selectedQueryIds = selectedQueryIds.filter(id => id !== queryId)
+    } else {
+      selectedQueryIds = [...selectedQueryIds, queryId]
+    }
+  }
+
   async function save() {
     try {
-      if (editingSource) {
-        const updatedSource = {
-          ...editingSource,
-          auth: config,
-          disabledTools,
-          agentId,
+      if (selectedSourceType?.type === ToolSourceType.REST_QUERY) {
+        if (!selectedDatasourceId) {
+          notifications.error("Please select a datasource")
+          return
         }
-        await agentsStore.updateToolSource(
-          updatedSource as unknown as AgentToolSource // could be any of the tool source auth types so we have to cast here unfortunately.
-        )
+        if (selectedQueryIds.length === 0) {
+          notifications.error("Please select at least one query")
+          return
+        }
+      }
+
+      if (editingSource) {
+        const updatedSource =
+          selectedSourceType?.type == ToolSourceType.REST_QUERY
+            ? {
+                ...editingSource,
+                auth: config,
+                disabledTools,
+                agentId,
+                datasourceId: selectedDatasourceId,
+                queryIds: selectedQueryIds,
+              }
+            : {
+                ...editingSource,
+                auth: config,
+                disabledTools,
+                agentId,
+              }
+
+        await agentsStore.updateToolSource(updatedSource as AgentToolSource)
         notifications.success("Tool source updated successfully")
       } else {
-        const newSource: CreateToolSourceRequest = {
-          type: selectedSourceType.type,
-          agentId,
-          auth: config,
-          disabledTools: [],
-        }
+        const newSource =
+          selectedSourceType?.type === ToolSourceType.REST_QUERY
+            ? {
+                type: selectedSourceType.type,
+                agentId,
+                auth: config,
+                disabledTools: [],
+                datasourceId: selectedDatasourceId,
+                queryIds: selectedQueryIds,
+              }
+            : {
+                type: selectedSourceType.type,
+                agentId,
+                auth: config,
+                disabledTools: [],
+              }
+
         await agentsStore.createToolSource(newSource)
         notifications.success("Tool source added successfully")
       }
@@ -206,56 +248,60 @@
       </div>
     {:else if mode === "configure" && selectedSourceType}
       <div class="config-form">
-        <div class="auth-section">
-          <Heading size="XS">Authentication</Heading>
-          {#if selectedSourceType.type === "GITHUB"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your GitHub API token"
-            />
-            <Input
-              label="Base URL (Optional)"
-              bind:value={config.baseUrl}
-              type="text"
-              placeholder="https://api.github.com (leave empty for default)"
-            />
-          {:else if selectedSourceType.type === "CONFLUENCE"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your Confluence API token"
-            />
-            <Input
-              label="Email Address"
-              bind:value={config.email}
-              type="email"
-              placeholder="your.email@domain.com"
-              helpText="Your Atlassian account email address"
-            />
-            <Input
-              label="Base URL (Optional)"
-              bind:value={config.baseUrl}
-              type="text"
-              placeholder="https://your-domain.atlassian.net"
-            />
-          {:else if selectedSourceType.type === "BAMBOOHR"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your BambooHR API key"
-            />
-            <Input
-              label="Subdomain"
-              bind:value={config.subdomain}
-              type="text"
-              placeholder="your-company"
-              helpText="Your BambooHR subdomain (e.g., 'mycompany' for mycompany.bamboohr.com)"
-            />
-          {/if}
+        {#if selectedSourceType.type === ToolSourceType.REST_QUERY}
+          <div class="rest-query-section">
+            <Heading size="XS">Select API</Heading>
+            {#if restDatasources.length === 0}
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                No REST APIs found. Create a REST API in the APIs section first.
+              </Body>
+            {:else}
+              <Select
+                label="REST API"
+                bind:value={selectedDatasourceId}
+                options={datasourceOptions}
+                placeholder="Select a REST API"
+              />
+
+              {#if selectedDatasourceId}
+                <div class="queries-section">
+                  <Heading size="XS">Select Queries</Heading>
+                  {#if queriesForDatasource.length === 0}
+                    <Body
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    >
+                      No queries found for this API. Create queries in the APIs
+                      section first.
+                    </Body>
+                  {:else}
+                    <Body
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    >
+                      Select which queries the agent can use as tools.
+                    </Body>
+                    <div class="queries-list">
+                      {#each queriesForDatasource as query}
+                        <div class="query-item">
+                          <div class="query-info">
+                            <div class="query-name">{query.name}</div>
+                          </div>
+                          <Toggle
+                            value={selectedQueryIds.includes(query._id || "")}
+                            on:change={() => toggleQuery(query._id || "")}
+                          />
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            {/if}
+          </div>
+        {/if}
+
+        <div class="guidelines-section">
           <TextArea
             label="Tool Source Guidelines"
             bind:value={config.guidelines}
@@ -338,12 +384,6 @@
     gap: var(--spacing-xl);
   }
 
-  .auth-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
   .tools-section {
     display: flex;
     flex-direction: column;
@@ -387,5 +427,57 @@
   .tool-desc {
     font-size: var(--font-size-xs);
     color: var(--spectrum-global-color-gray-700);
+  }
+
+  .rest-query-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .queries-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    margin-top: var(--spacing-m);
+  }
+
+  .queries-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 4px;
+    padding: var(--spacing-s);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .query-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-s);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-100);
+  }
+
+  .query-item:last-child {
+    border-bottom: none;
+  }
+
+  .query-info {
+    flex: 1;
+    margin-right: var(--spacing-m);
+  }
+
+  .query-name {
+    font-weight: 600;
+    font-size: var(--font-size-s);
+  }
+
+  .guidelines-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
 </style>

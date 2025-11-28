@@ -23,16 +23,10 @@
   import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
-  import ConfluenceLogo from "../logos/Confluence.svelte"
-  import GithubLogo from "../logos/Github.svelte"
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
-    CONFLUENCE: ConfluenceLogo,
-    GITHUB: GithubLogo,
-    BAMBOOHR: BambooHRLogo,
   }
 
   let currentAgent: Agent | undefined
