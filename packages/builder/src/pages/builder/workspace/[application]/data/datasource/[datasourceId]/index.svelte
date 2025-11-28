@@ -12,9 +12,6 @@
   import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
   import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
-  import SettingsPanel from "./_components/panels/Settings.svelte"
-  import { helpers } from "@budibase/shared-core"
-  import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
   import Tooltip from "./_components/panels/Tooltip.svelte"
   import SaveDatasourceButton from "./_components/panels/SaveDatasourceButton.svelte"
@@ -50,8 +47,6 @@
       )?.icon
     : undefined
 
-  $: isCloud = $admin.cloud
-  $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
 
@@ -103,16 +98,6 @@
       const isRest = datasource.source === "REST"
       panelOptions = isRest ? [] : ["Queries"]
       selectedPanel = isRest ? null : "Queries"
-    }
-    // always the last option for SQL
-    if (!isRestDatasource && helpers.isSQL(datasource)) {
-      if (isCloud && isPostgres) {
-        // We don't show the settings panel for Postgres on Budicloud because
-        // it requires pg_dump to work and we don't want to enable shell injection
-        // attacks.
-      } else {
-        panelOptions.push("Settings")
-      }
     }
   }
 </script>
@@ -192,8 +177,6 @@
         <RelationshipsPanel {datasource} />
       {:else if selectedPanel === "Queries"}
         <QueriesPanel {datasource} />
-      {:else if selectedPanel === "Settings"}
-        <SettingsPanel {datasource} />
       {:else}
         <Body>Something went wrong</Body>
       {/if}

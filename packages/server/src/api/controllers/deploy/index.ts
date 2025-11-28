@@ -130,7 +130,7 @@ async function applyPendingColumnRenames(workspaceId: string) {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
 
-    for (const table of tables) {
+    for (let table of tables) {
       if (table._deleted) {
         continue
       }
@@ -140,13 +140,29 @@ async function applyPendingColumnRenames(workspaceId: string) {
       }
 
       for (const rename of pendingColumnRenames) {
-        await sdk.tables.update(table, rename)
+        const tableToUpdate: Table = {
+          ...table,
+          schema: { ...table.schema },
+        }
+
+        const existingNew = tableToUpdate.schema[rename.updated]
+        const existingOld = tableToUpdate.schema[rename.old]
+
+        // If the updatd column schema doesn't exist (replication left the old schema),
+        // use the old column schema to the new name so the rename can complete.
+        if (!existingNew && existingOld) {
+          tableToUpdate.schema[rename.updated] = {
+            ...existingOld,
+            name: rename.updated,
+          }
+          delete tableToUpdate.schema[rename.old]
+        }
+
+        await sdk.tables.update(tableToUpdate, rename)
+        table = await sdk.tables.getTable(table._id!)
       }
 
-      const updatedTable: Table = {
-        ...table,
-        pendingColumnRenames: [],
-      }
+      const updatedTable: Table = { ...table, pendingColumnRenames: [] }
       await db.put(updatedTable)
     }
   })
