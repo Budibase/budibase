@@ -24,82 +24,41 @@ export interface BaseToolSourceAuth {
   guidelines?: string
 }
 
-export interface GitHubToolAuth extends BaseToolSourceAuth {
-  apiKey: string
-  baseUrl?: string
-}
-
-export interface ConfluenceToolAuth extends BaseToolSourceAuth {
-  apiKey: string
-  email: string
-  baseUrl?: string
-}
-
-export interface BambooHRToolAuth extends BaseToolSourceAuth {
-  apiKey: string
-  subdomain: string
-}
-
 export interface BudibaseToolAuth extends BaseToolSourceAuth {}
 
 export interface RestQueryToolAuth extends BaseToolSourceAuth {}
 
-export type AgentToolSourceAuth =
-  | GitHubToolAuth
-  | ConfluenceToolAuth
-  | BudibaseToolAuth
-  | BambooHRToolAuth
-  | RestQueryToolAuth
+export type AgentToolSourceAuth = BudibaseToolAuth | RestQueryToolAuth
 
-export interface GitHubToolSource extends Document {
-  id?: string
-  type: "GITHUB"
-  disabledTools: string[]
-  auth: GitHubToolAuth
-}
-
-export interface ConfluenceToolSource extends Document {
-  id?: string
-  type: "CONFLUENCE"
-  disabledTools: string[]
-  auth: ConfluenceToolAuth
+export enum ToolSourceType {
+  BUDIBASE = "BUDIBASE",
+  REST_QUERY = "REST_QUERY",
 }
 
 export interface BudibaseToolSource extends Document {
   id?: string
-  type: "BUDIBASE"
+  type: ToolSourceType.BUDIBASE
   disabledTools: string[]
   auth: BudibaseToolAuth
-}
-
-export interface BambooHRToolSource extends Document {
-  id?: string
-  type: "BAMBOOHR"
-  disabledTools: string[]
-  auth: BambooHRToolAuth
+  agentId: string
 }
 
 export interface RestQueryToolSource extends Document {
   id?: string
-  type: "REST_QUERY"
+  type: ToolSourceType.REST_QUERY
   disabledTools: string[]
   datasourceId: string
   queryIds: string[]
   auth: RestQueryToolAuth
+  agentId: string
 }
 
 export type AgentToolSource =
-  | GitHubToolSource
-  | ConfluenceToolSource
   | BudibaseToolSource
-  | BambooHRToolSource
-  | RestQueryToolSource
+  | (RestQueryToolSource & { agentId: string })
 
 export type AgentToolSourceWithTools = (
-  | GitHubToolSource
-  | ConfluenceToolSource
   | BudibaseToolSource
-  | BambooHRToolSource
   | RestQueryToolSource
 ) & {
   tools: Tool[]

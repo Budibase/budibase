@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { ToolSourceType } from "@budibase/types"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -10,31 +11,6 @@ const OPTIONAL_ARRAY = Joi.array().optional().allow(null)
 function getAuthValidation() {
   return Joi.when("type", {
     switch: [
-      {
-        is: "GITHUB",
-        then: Joi.object({
-          apiKey: Joi.string().required(),
-          baseUrl: OPTIONAL_STRING,
-          guidelines: OPTIONAL_STRING,
-        }).required(),
-      },
-      {
-        is: "CONFLUENCE",
-        then: Joi.object({
-          apiKey: Joi.string().required(),
-          email: Joi.string().email().required(),
-          baseUrl: OPTIONAL_STRING,
-          guidelines: OPTIONAL_STRING,
-        }).required(),
-      },
-      {
-        is: "BAMBOOHR",
-        then: Joi.object({
-          apiKey: Joi.string().required(),
-          subdomain: Joi.string().required(),
-          guidelines: OPTIONAL_STRING,
-        }).required(),
-      },
       {
         is: "BUDIBASE",
         then: Joi.object({
@@ -54,7 +30,7 @@ export function createToolSourceValidator() {
       id: OPTIONAL_STRING,
       agentId: Joi.string().required(),
       type: Joi.string()
-        .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
+        .valid(ToolSourceType.BUDIBASE, ToolSourceType.REST_QUERY)
         .required(),
       description: OPTIONAL_STRING,
       disabledTools: OPTIONAL_ARRAY.items(Joi.string()),
@@ -72,7 +48,7 @@ export function updateToolSourceValidator() {
       id: Joi.string().required(),
       agentId: Joi.string().required(),
       type: Joi.string()
-        .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
+        .valid(ToolSourceType.BUDIBASE, ToolSourceType.REST_QUERY)
         .required(),
       description: OPTIONAL_STRING,
       disabledTools: OPTIONAL_ARRAY.items(Joi.string()),

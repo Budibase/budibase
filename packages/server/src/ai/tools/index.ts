@@ -1,10 +1,7 @@
 import { Tool } from "@budibase/types"
 import { z } from "zod"
 
-export { BambooHRClient } from "./bamboohr"
 export { default as budibase } from "./budibase"
-export { ConfluenceClient } from "./confluence"
-export { GitHubClient } from "./github"
 
 export interface ServerToolArgs<T extends z.ZodTypeAny> {
   name: string
@@ -30,8 +27,17 @@ export function newTool<T extends z.ZodTypeAny>(
     } catch (error: any) {
       console.error(`[TOOL ERROR] Tool '${tool.name}' failed:`, error)
 
-      // Still return the error message for the Agent
-      return `Error executing ${tool.name}: ${error.message}`
+      if (error.validation) {
+        const validationMessages = Object.entries(error.validation)
+          .map(([field, messages]) => `${field}: ${messages}`)
+          .join(", ")
+        return `Error executing ${tool.name}: Validation failed - ${validationMessages}`
+      }
+
+      const message =
+        error.message ||
+        (typeof error === "object" ? JSON.stringify(error) : String(error))
+      return `Error executing ${tool.name}: ${message}`
     }
   }
 
