@@ -1,4 +1,5 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
+import { USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
 import { Header, context, db, events, roles } from "@budibase/backend-core"
@@ -170,6 +171,20 @@ describe("/applications", () => {
       // Ensure we created a blank app without sample data
       await checkScreenCount(0)
       await checkTableCount(1) // users table
+    })
+
+    it("adds the workspace creator to the dev users table", async () => {
+      const creator = config.getUser()
+      const newWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+
+      await config.withApp(newWorkspace, async () => {
+        const rows = await config.api.row.fetch(USERS_TABLE_SCHEMA._id!)
+        const userRow = rows.find(row => row.email === creator.email)
+        expect(userRow).toBeDefined()
+        expect(userRow?.roleId).toEqual(roles.BUILTIN_ROLE_IDS.ADMIN)
+      })
     })
 
     it("creates app with sample data when onboarding", async () => {
