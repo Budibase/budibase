@@ -123,6 +123,12 @@
               options: logoPositionOptions,
             }}
           />
+          <PropertyControl
+            label="Collapsible"
+            control={Checkbox}
+            value={$nav.collapsible || false}
+            onChange={collapsible => update("collapsible", collapsible)}
+          />
         {/if}
         <PropertyControl
           label="Background"

@@ -57,6 +57,7 @@ export interface AppNavigation {
   navTextColor?: string
   links?: AppNavigationLink[]
   textAlign?: "Left" | "Center" | "Right"
+  collapsible?: boolean
 }
 
 export interface AppNavigationLink {

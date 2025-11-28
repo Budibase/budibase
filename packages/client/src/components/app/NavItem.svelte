@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { builderStore } from "@/stores"
   import { screenStore } from "@/stores/screens"
 
@@ -15,6 +15,7 @@
   export let leftNav = false
   export let mobile = false
   export let navStateStore
+  export let collapsed = false
 
   const dispatch = createEventDispatcher()
 
@@ -32,6 +33,23 @@
   $: expanded = !!$navStateStore[text] || containsActiveLink
   $: renderLeftNav = leftNav || mobile
   $: caret = !renderLeftNav || expanded ? "caret-down" : "caret-right"
+  $: collapsedText = getShortText(text)
+
+  const getShortText = text => {
+    if (!text) {
+      return ""
+    }
+
+    const words = text.trim().split(/\s+/)
+    if (words.length === 1) {
+      return words[0].charAt(0).toUpperCase()
+    } else {
+      return words
+        .slice(0, 2)
+        .map(word => word.charAt(0).toUpperCase())
+        .join("")
+    }
+  }
 
   const onClickLink = () => {
     dispatch("clickLink")
@@ -64,17 +82,41 @@
         class:builderActive
         style={customStyles}
       >
-        {#if icon}
-          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {#if collapsed}
+          <AbsTooltip {text} position={TooltipPosition.Right}>
+            <span class="nav-item-letter">
+              {#if icon}
+                <Icon name={icon} color="var(--navTextColor)" size="XS" />
+              {:else}
+                {collapsedText}
+              {/if}
+            </span>
+          </AbsTooltip>
+        {:else}
+          {#if icon}
+            <Icon name={icon} color="var(--navTextColor)" size="S" />
+          {/if}
+          {text}
         {/if}
-        {text}
       </a>
     {:else}
       <a href={url} on:click={onClickLink}>
-        {#if icon}
-          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {#if collapsed}
+          <AbsTooltip {text} position={TooltipPosition.Right}>
+            <span class="nav-item-letter">
+              {#if icon}
+                <Icon name={icon} color="var(--navTextColor)" size="L" />
+              {:else}
+                {collapsedText}
+              {/if}
+            </span>
+          </AbsTooltip>
+        {:else}
+          {#if icon}
+            <Icon name={icon} color="var(--navTextColor)" size="S" />
+          {/if}
+          {text}
         {/if}
-        {text}
       </a>
     {/if}
   </div>
@@ -84,11 +126,21 @@
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
-        {#if icon}
-          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {#if collapsed}
+          <AbsTooltip {text} position={TooltipPosition.Right}>
+            {#if icon}
+              <Icon name={icon} color="var(--navTextColor)" size="S" />
+            {:else}
+              <span class="nav-item-letter">{collapsedText}</span>
+            {/if}
+          </AbsTooltip>
+        {:else}
+          {#if icon}
+            <Icon name={icon} color="var(--navTextColor)" size="S" />
+          {/if}
+          <span>{text}</span>
+          <Icon name={caret} color="var(--navTextColor)" size="S" />
         {/if}
-        <span>{text}</span>
-        <Icon name={caret} color="var(--navTextColor)" size="S" />
       </div>
       <div class="sublinks-wrapper">
         <div class="sublinks">
@@ -149,6 +201,18 @@
   .text:hover span {
     cursor: pointer;
     opacity: 1;
+  }
+
+  .nav-item-letter {
+    font-weight: 600;
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    color: var(--navTextColor);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
   }
 
   /* Top dropdowns */
