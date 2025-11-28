@@ -27,10 +27,6 @@ builderRoutes
   )
   .post("/api/datasources", datasourceValidator(), datasourceController.save)
   .delete("/api/datasources/:datasourceId/:revId", datasourceController.destroy)
-  .get(
-    "/api/datasources/:datasourceId/schema/external",
-    datasourceController.getExternalSchema
-  )
 
 authorizedRoutes
   .get("/api/datasources/:datasourceId", datasourceController.find)

@@ -14,7 +14,6 @@ import {
   FetchDatasourceViewInfoRequest,
   FetchDatasourceViewInfoResponse,
   FetchDatasourcesResponse,
-  FetchExternalSchemaResponse,
   FieldType,
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
@@ -320,23 +319,4 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
 export async function find(ctx: UserCtx<void, FindDatasourcesResponse>) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
-}
-
-export async function getExternalSchema(
-  ctx: UserCtx<void, FetchExternalSchemaResponse>
-) {
-  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
-  const enrichedDatasource =
-    await sdk.datasources.getAndMergeDatasource(datasource)
-  const connector = await sdk.datasources.getConnector(enrichedDatasource)
-
-  if (!connector.getExternalSchema) {
-    ctx.throw(400, "Datasource does not support exporting external schema")
-  }
-
-  try {
-    ctx.body = { schema: await connector.getExternalSchema() }
-  } catch (e: any) {
-    ctx.throw(400, e.message)
-  }
 }
