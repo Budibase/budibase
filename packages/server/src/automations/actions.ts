@@ -133,6 +133,7 @@ if (env.SELF_HOSTED) {
 
   if (env.isTest()) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+    BUILTIN_ACTION_DEFINITIONS["AGENT"] = automations.steps.agent.definition
   }
 }
 
