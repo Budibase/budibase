@@ -6012,6 +6012,27 @@
         "defaultValue": "Apply"
       },
       {
+        "type": "select",
+        "key": "defaultOperator",
+        "label": "Default filter type",
+        "options": [
+          { "label": "Equals", "value": "equal" },
+          { "label": "Not equals", "value": "notEqual" },
+          { "label": "Starts with", "value": "string" },
+          { "label": "Like", "value": "fuzzy" },
+          { "label": "Is empty", "value": "empty" },
+          { "label": "Is not empty", "value": "notEmpty" },
+          { "label": "More than or equal to", "value": "rangeLow" },
+          { "label": "Less than or equal to", "value": "rangeHigh" },
+          { "label": "Contains", "value": "contains" },
+          { "label": "Does not contain", "value": "notContains" },
+          { "label": "Is in", "value": "oneOf" },
+          { "label": "Has any", "value": "containsAny" }
+        ],
+        "defaultValue": "equal",
+        "wide": true
+      },
+      {
         "type": "boolean",
         "label": "Persist filters",
         "key": "persistFilters",
