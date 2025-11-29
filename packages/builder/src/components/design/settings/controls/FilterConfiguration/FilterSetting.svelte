@@ -38,7 +38,11 @@
       return []
     }
     const schemaField = schema[item.field]
-    return QueryUtils.getValidOperatorsForType(schemaField, item.field, datasource)
+    return QueryUtils.getValidOperatorsForType(
+      schemaField,
+      item.field,
+      datasource
+    )
   }
 
   const parseSettings = settings => {
