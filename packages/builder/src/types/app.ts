@@ -1,4 +1,4 @@
-import { Workspace } from "@budibase/types"
+import type { Workspace } from "@budibase/types"
 
 export type AppTemplate =
   | {
@@ -12,6 +12,8 @@ export type AppTemplate =
       background: string
       icon: string
     }
+
+export type GalleryTemplate = Extract<AppTemplate, { fromFile: false }>
 
 export interface AppIdentifierMetadata {
   devId?: string
