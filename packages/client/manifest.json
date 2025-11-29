@@ -4821,7 +4821,6 @@
   "codegenerator": {
     "name": "Barcode/QR Generator",
     "icon": "Vignette",
-    "new": true,
     "settings": [
       {
         "type": "radio",
@@ -5975,7 +5974,6 @@
       "width": 100,
       "height": 35
     },
-    "new": true,
     "settings": [
       {
         "type": "dataSource/filterable",
@@ -6012,6 +6010,27 @@
         "label": "Button text",
         "placeholder": "Apply",
         "defaultValue": "Apply"
+      },
+      {
+        "type": "select",
+        "key": "defaultOperator",
+        "label": "Default filter type",
+        "options": [
+          { "label": "Equals", "value": "equal" },
+          { "label": "Not equals", "value": "notEqual" },
+          { "label": "Starts with", "value": "string" },
+          { "label": "Like", "value": "fuzzy" },
+          { "label": "Is empty", "value": "empty" },
+          { "label": "Is not empty", "value": "notEmpty" },
+          { "label": "More than or equal to", "value": "rangeLow" },
+          { "label": "Less than or equal to", "value": "rangeHigh" },
+          { "label": "Contains", "value": "contains" },
+          { "label": "Does not contain", "value": "notContains" },
+          { "label": "Is in", "value": "oneOf" },
+          { "label": "Has any", "value": "containsAny" }
+        ],
+        "defaultValue": "equal",
+        "wide": true
       },
       {
         "type": "boolean",
@@ -7998,7 +8017,6 @@
     "hasChildren": true,
     "illegalChildren": ["modal", "sidepanel"],
     "showSettingsBar": true,
-    "new": true,
     "size": {
       "width": 500,
       "height": 200
@@ -8608,7 +8626,6 @@
     }
   },
   "textv2": {
-    "new": true,
     "name": "Text",
     "description": "A component for displaying text",
     "icon": "text-t",
@@ -8824,7 +8841,6 @@
     "icon": "star",
     "styles": ["size"],
     "editable": true,
-    "new": true,
     "size": {
       "width": 400,
       "height": 60
