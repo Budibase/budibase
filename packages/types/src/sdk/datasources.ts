@@ -224,6 +224,7 @@ export interface DatasourcePlus extends IntegrationBase {
 
 export enum DatasourceRelationshipType {
   MANY_TO_ONE = "many-to-one",
+  MANY_TO_MANY = "many-to-many",
 }
 
 export interface DatasourceRelationshipConfig {
@@ -234,4 +235,5 @@ export interface DatasourceRelationshipConfig {
   targetTable: string
   targetColumn: string
   relationshipType: DatasourceRelationshipType
+  junctionTable?: string
 }
