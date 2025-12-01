@@ -38,7 +38,7 @@ export async function buildPromptAndTools(
     }
   }
 
-  const systemPrompt = ai.composeAgentSystemPrompt({
+  const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
     promptInstructions: agent.promptInstructions,
@@ -50,4 +50,25 @@ export async function buildPromptAndTools(
     systemPrompt,
     tools: allTools,
   }
+}
+
+export function addRequestId(
+  input: RequestInfo | URL,
+  init: RequestInit | undefined,
+  requestId: string
+) {
+  // we need to specifically add a litellm_session_id to the underlying request
+  const nextInit = { ...init }
+
+  if (typeof nextInit?.body === "string") {
+    try {
+      const body = JSON.parse(nextInit.body)
+      body.litellm_session_id = requestId
+      nextInit.body = JSON.stringify(body)
+    } catch {
+      // If the body is not JSON, send the request unmodified
+    }
+  }
+
+  return fetch(input, nextInit)
 }

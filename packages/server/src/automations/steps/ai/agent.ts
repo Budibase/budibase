@@ -1,12 +1,6 @@
 import * as automationUtils from "../../automationUtils"
-import {
-  AgentStepInputs,
-  AgentStepOutputs,
-  AgentToolSource,
-  Tool,
-} from "@budibase/types"
+import { AgentStepInputs, AgentStepOutputs } from "@budibase/types"
 import sdk from "../../../sdk"
-import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 import { createOpenAI } from "@ai-sdk/openai"
 import {
@@ -44,7 +38,6 @@ export async function run({
     const { systemPrompt, tools: allTools } =
       await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-    // Get LLM configuration
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
 
@@ -52,22 +45,8 @@ export async function run({
     const openai = createOpenAI({
       apiKey,
       baseURL: baseUrl,
-      fetch: async (input, init) => {
-        // we need to specifically add a litellm_session_id to the underlying request
-        const nextInit = { ...init }
-
-        if (typeof nextInit?.body === "string") {
-          try {
-            const body = JSON.parse(nextInit.body)
-            body.litellm_session_id = requestId
-            nextInit.body = JSON.stringify(body)
-          } catch {
-            // If the body is not JSON, send the request unmodified
-          }
-        }
-
-        return fetch(input, nextInit)
-      },
+      fetch: (input, init) =>
+        sdk.ai.agents.addRequestId(input, init, requestId),
     })
 
     const aiTools = toAiSdkTools(allTools)
@@ -80,7 +59,7 @@ export async function run({
       }),
       system: systemPrompt || undefined,
       tools: aiTools,
-      stopWhen: stepCountIs(10),
+      stopWhen: stepCountIs(30),
     })
 
     const result = await agent.generate({
