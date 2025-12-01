@@ -71,7 +71,7 @@
     position: absolute;
     inset: 0;
     top: var(--controls-height, 50px);
-    background: #0b0b0c;
+    background: var(--spectrum-alias-background-color-primary);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: grid;
     place-items: center;
@@ -95,15 +95,15 @@
   .blank-header {
     font-weight: 600;
     font-size: var(--font-size-l);
-    color: #d8d8db;
+    color: var(--spectrum-global-color-gray-900);
   }
   .blank-description {
-    color: var(--spectrum-global-color-gray-400);
+    color: var(--spectrum-global-color-gray-900);
     font-size: 14px;
     line-height: 1.5;
   }
   .card {
-    background: #0f0f11;
+    background: var(--spectrum-alias-background-color-primary);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
@@ -113,7 +113,7 @@
     padding: var(--spacing-m) var(--spacing-l);
     background: #080808;
     font-weight: 600;
-    color: #f4f4f6;
+    color: var(--spectrum-global-color-gray-900);
     letter-spacing: 0.1px;
   }
   .card-body {
@@ -123,11 +123,11 @@
     gap: var(--spacing-m);
   }
   .card-text {
-    color: #d6d6d6;
+    color: var(--spectrum-global-color-gray-900);
     line-height: 1.5;
   }
   .card-subtext {
-    color: #9ea0a5;
+    color: var(--spectrum-global-color-gray-900);
     font-size: 13px;
   }
   .card-button {
@@ -144,9 +144,9 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   }
   .card-button.muted {
-    background: #1f1f22;
+    background: var(--spectrum-global-color-gray-800, #1f1f22);
     color: var(--spectrum-global-color-gray-200);
-    border: 1px solid #2c2c30;
+    border: 1px solid var(--spectrum-global-color-gray-800, #2c2c30);
   }
   .card-button:disabled {
     opacity: 0.6;
