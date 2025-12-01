@@ -1,15 +1,20 @@
 import { createToolSource } from "packages/server/src/ai/tools/base/ToolSourceRegistry"
 import { Agent, Tool } from "@budibase/types"
+import { ai } from "@budibase/pro"
 
-export async function buildPromptAndTools(agent: Agent): Promise<{
+export interface BuildPromptAndToolsOptions {
+  baseSystemPrompt?: string
+  includeGoal?: boolean
+}
+
+export async function buildPromptAndTools(
+  agent: Agent,
+  options: BuildPromptAndToolsOptions = {}
+): Promise<{
   systemPrompt: string
   tools: Tool[]
 }> {
-  let systemPrompt = ""
-
-  if (agent.goal) {
-    systemPrompt += `\n\nYour goal: ${agent.goal}`
-  }
+  const { baseSystemPrompt, includeGoal = true } = options
 
   let toolGuidelines = ""
   const allTools: Tool[] = []
@@ -23,7 +28,8 @@ export async function buildPromptAndTools(agent: Agent): Promise<{
 
     const guidelines = toolSourceInstance.getGuidelines()
     if (guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
+      const prefix = `When using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
+      toolGuidelines += toolGuidelines ? `\n\n${prefix}` : prefix
     }
 
     const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
@@ -32,9 +38,13 @@ export async function buildPromptAndTools(agent: Agent): Promise<{
     }
   }
 
-  if (toolGuidelines) {
-    systemPrompt += `\n\n${toolGuidelines}`
-  }
+  const systemPrompt = ai.composeAgentSystemPrompt({
+    baseSystemPrompt,
+    goal: includeGoal ? agent.goal : undefined,
+    promptInstructions: agent.promptInstructions,
+    toolGuidelines,
+    includeGoal,
+  })
 
   return {
     systemPrompt,
