@@ -34,14 +34,10 @@
     <div class="card">
       <div class="card-title">Publish</div>
       <div class="card-body">
-        <div class="card-text">Publish Dev schema to Prod (no data copied).</div>
-        <Button
-          class="card-button primary"
-          disabled={publishing}
-          on:click={publishEmpty}
-        >
-          Publish
-        </Button>
+        <div class="card-text">
+          Publish Dev schema to Prod (no data copied).
+        </div>
+        <Button disabled={publishing} on:click={publishEmpty}>Publish</Button>
       </div>
     </div>
 
@@ -51,11 +47,11 @@
         <div class="card-text">
           Publish Dev schema and copy Dev rows into Prod.
         </div>
-        <div class="card-subtext">
+        <div class="card-text">
           This can only be done once when there is no production table.
         </div>
         <Button
-          class="card-button muted"
+          secondary
           disabled={publishing || !canSeed}
           on:click={seedAndPublish}
         >
@@ -129,28 +125,5 @@
   .card-subtext {
     color: var(--spectrum-global-color-gray-900);
     font-size: 13px;
-  }
-  .card-button {
-    border-radius: 999px;
-    padding: 10px 18px;
-    align-self: flex-start;
-    min-width: 140px;
-    font-weight: 600;
-  }
-  .card-button.primary {
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-900);
-    border: 1px solid var(--spectrum-global-color-gray-50);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-  }
-  .card-button.muted {
-    background: var(--spectrum-global-color-gray-800, #1f1f22);
-    color: var(--spectrum-global-color-gray-200);
-    border: 1px solid var(--spectrum-global-color-gray-800, #2c2c30);
-  }
-  .card-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    box-shadow: none;
   }
 </style>
