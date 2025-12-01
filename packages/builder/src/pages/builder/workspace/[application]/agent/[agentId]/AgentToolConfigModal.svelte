@@ -3,6 +3,7 @@
     Body,
     Heading,
     Icon,
+    Input,
     Modal,
     ModalContent,
     Select,
@@ -24,6 +25,11 @@
   import { createEventDispatcher, type ComponentType } from "svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
 
+  interface ToolSourceOption {
+    name: string
+    type: ToolSourceType
+    description: string
+  }
   export let agentId: string
 
   const Logos: Record<string, ComponentType> = {
@@ -33,12 +39,12 @@
   const ToolSources = [
     {
       name: "Budibase",
-      type: "BUDIBASE",
+      type: ToolSourceType.BUDIBASE,
       description: "Connect agent to your Budibase tools",
     },
     {
       name: "REST API",
-      type: "REST_QUERY",
+      type: ToolSourceType.REST_QUERY,
       description: "Use queries from your REST APIs as agent tools",
     },
   ]
@@ -47,12 +53,13 @@
 
   let modal: Modal
   let mode: "select" | "configure" = "select"
-  let selectedSourceType: any = null
+  let selectedSourceType: ToolSourceOption | null = null
   let editingSource: AgentToolSourceWithTools | null = null
 
-  let config: Record<string, string> = {}
+  let guidelines = ""
   let disabledTools: string[] = []
   let toolsList: Tool[] = []
+  let label = ""
 
   let selectedDatasourceId: string = ""
   let selectedQueryIds: string[] = []
@@ -70,14 +77,30 @@
     (q: Query) => q.datasourceId === selectedDatasourceId
   )
 
+  $: selectedDatasource = restDatasources.find(
+    ds => ds._id === selectedDatasourceId
+  )
+
+  // Auto-populate label from datasource name when creating new source
+  $: if (
+    selectedDatasourceId &&
+    selectedDatasource &&
+    !editingSource &&
+    !label
+  ) {
+    label = selectedDatasource.name || ""
+  }
+
   export function show(sourceToEdit?: AgentToolSourceWithTools) {
     if (sourceToEdit) {
       mode = "configure"
       editingSource = sourceToEdit
-      selectedSourceType = ToolSources.find(s => s.type === sourceToEdit.type)
-      config = { ...sourceToEdit.auth }
+      selectedSourceType =
+        ToolSources.find(s => s.type === sourceToEdit.type) || null
+      guidelines = sourceToEdit.auth.guidelines || ""
       disabledTools = [...(sourceToEdit.disabledTools || [])]
       toolsList = sourceToEdit.tools || []
+      label = sourceToEdit.label || ""
 
       if (sourceToEdit.type === ToolSourceType.REST_QUERY) {
         const restSource = sourceToEdit
@@ -91,9 +114,10 @@
       mode = "select"
       editingSource = null
       selectedSourceType = null
-      config = {}
+      guidelines = ""
       disabledTools = []
       toolsList = []
+      label = ""
       selectedDatasourceId = ""
       selectedQueryIds = []
     }
@@ -104,12 +128,13 @@
     modal.hide()
   }
 
-  function selectSource(source: any) {
+  function selectSource(source: ToolSourceOption) {
     selectedSourceType = source
     mode = "configure"
-    config = {}
+    guidelines = ""
     disabledTools = []
     toolsList = []
+    label = ""
     selectedDatasourceId = ""
     selectedQueryIds = []
   }
@@ -143,43 +168,52 @@
         }
       }
 
-      if (editingSource) {
-        const updatedSource =
-          selectedSourceType?.type == ToolSourceType.REST_QUERY
-            ? {
-                ...editingSource,
-                auth: config,
-                disabledTools,
-                agentId,
-                datasourceId: selectedDatasourceId,
-                queryIds: selectedQueryIds,
-              }
-            : {
-                ...editingSource,
-                auth: config,
-                disabledTools,
-                agentId,
-              }
+      const basePayload = {
+        auth: { guidelines },
+        agentId,
+        label: label || undefined,
+      }
 
-        await agentsStore.updateToolSource(updatedSource as AgentToolSource)
-        notifications.success("Tool source updated successfully")
-      } else {
-        const newSource =
+      if (editingSource) {
+        const updatedSource: AgentToolSource =
           selectedSourceType?.type === ToolSourceType.REST_QUERY
             ? {
-                type: selectedSourceType.type,
-                agentId,
-                auth: config,
-                disabledTools: [],
+                ...editingSource,
+                ...basePayload,
+                type: ToolSourceType.REST_QUERY,
+                disabledTools,
                 datasourceId: selectedDatasourceId,
                 queryIds: selectedQueryIds,
               }
             : {
-                type: selectedSourceType.type,
-                agentId,
-                auth: config,
-                disabledTools: [],
+                ...editingSource,
+                ...basePayload,
+                type: ToolSourceType.BUDIBASE,
+                disabledTools,
               }
+
+        await agentsStore.updateToolSource(updatedSource)
+        notifications.success("Tool source updated successfully")
+      } else {
+        let newSource: CreateToolSourceRequest
+        if (selectedSourceType?.type === ToolSourceType.REST_QUERY) {
+          newSource = {
+            type: ToolSourceType.REST_QUERY,
+            agentId,
+            label: label || undefined,
+            auth: { guidelines },
+            disabledTools: [],
+            datasourceId: selectedDatasourceId,
+            queryIds: selectedQueryIds,
+          }
+        } else {
+          newSource = {
+            type: ToolSourceType.BUDIBASE,
+            auth: { guidelines },
+            agentId,
+            disabledTools: [],
+          }
+        }
 
         await agentsStore.createToolSource(newSource)
         notifications.success("Tool source added successfully")
@@ -206,7 +240,7 @@
   <ModalContent
     title={mode === "select"
       ? "Add Tool"
-      : `${editingSource ? "Edit" : "Configure"} ${selectedSourceType?.name || "Tool"}`}
+      : `${editingSource ? "Edit" : "Configure"} ${editingSource?.label || selectedSourceType?.name || "Tool"}`}
     size="L"
     showCloseIcon
     showCancelButton={mode === "configure"}
@@ -264,6 +298,11 @@
               />
 
               {#if selectedDatasourceId}
+                <Input
+                  label="Tool Source Name"
+                  bind:value={label}
+                  placeholder="e.g. GitHub, Confluence, Jira"
+                />
                 <div class="queries-section">
                   <Heading size="XS">Select Queries</Heading>
                   {#if queriesForDatasource.length === 0}
@@ -304,7 +343,7 @@
         <div class="guidelines-section">
           <TextArea
             label="Tool Source Guidelines"
-            bind:value={config.guidelines}
+            bind:value={guidelines}
             placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
           />
         </div>

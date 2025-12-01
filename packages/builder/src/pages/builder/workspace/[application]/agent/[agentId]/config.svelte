@@ -68,7 +68,7 @@
   }))
 
   $: toolSources = $agentsStore.toolSources || []
-
+  $: console.log("toolSources", toolSources)
   async function saveAgent() {
     if (!currentAgent) return
     try {
