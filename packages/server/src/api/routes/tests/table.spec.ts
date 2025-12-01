@@ -1548,6 +1548,50 @@ if (descriptions.length) {
         })
       })
 
+      describe("publish", () => {
+        if (isInternal) {
+          beforeEach(async () => {
+            await config.unpublish()
+          })
+
+          it("requires workspace to be published before publishing a table", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            await config.api.table.publish(
+              table._id!,
+              undefined,
+              {
+                status: 400,
+                body: {
+                  message:
+                    "Publish the workspace before publishing production data for individual tables.",
+                },
+              }
+            )
+          })
+
+          it("publishes table data to production when seeded", async () => {
+            const table = await config.api.table.save(basicTable())
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+            })
+
+            const prodRowsBefore = await config.api.row.fetchProd(table._id!)
+            expect(prodRowsBefore.length).toBe(0)
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfter = await config.api.row.fetchProd(table._id!)
+            expect(prodRowsAfter.length).toBe(1)
+            expect(prodRowsAfter[0]._id).toEqual(devRow._id)
+          })
+        }
+      })
+
       describe.each([
         [RowExportFormat.CSV, (val: any) => JSON.stringify(val)],
         [RowExportFormat.JSON, (val: any) => val],

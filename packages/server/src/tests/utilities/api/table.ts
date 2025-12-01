@@ -121,4 +121,15 @@ export class TableAPI extends TestAPI {
       }
     )
   }
+
+  publish = async (
+    tableId: string,
+    body?: { seedProductionTables?: boolean },
+    expectations?: Expectations
+  ) => {
+    return await this._post(`/api/tables/${tableId}/publish`, {
+      body,
+      expectations,
+    })
+  }
 }
