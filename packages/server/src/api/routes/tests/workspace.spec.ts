@@ -1615,5 +1615,30 @@ describe("/applications", () => {
       // The result should be an array (even if empty in test mode due to all tables being synced)
       expect(Array.isArray(emptyTables)).toBe(true)
     })
+
+    it("treats production tables with only deleted rows as empty for seeding", async () => {
+      const table = await config.api.table.save(basicTable())
+      await config.api.row.save(table._id!, { name: "Row 1" })
+      await config.api.row.save(table._id!, { name: "Row 2" })
+
+      await config.publish()
+
+      await config.withProdApp(async () => {
+        const prodRows = await config.api.row.fetch(table._id!)
+        await config.api.row.bulkDelete(table._id!, { rows: prodRows })
+
+        const remainingRows = await config.api.row.fetch(table._id!)
+        expect(remainingRows).toHaveLength(0)
+      })
+
+      const emptyTables = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          return await sdk.tables.listEmptyProductionTables()
+        }
+      )
+
+      expect(emptyTables).toContain(table._id)
+    })
   })
 })
