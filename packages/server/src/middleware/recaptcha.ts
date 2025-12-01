@@ -27,7 +27,7 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
   if ("state" in app && app.state === cache.workspace.WorkspaceState.INVALID) {
     throw new Error("App not found")
   }
-  if ((app as Workspace).recaptchaEnabled) {
+  if ((app as Workspace).features?.recaptchaEnabled) {
     const cookie = utils.getCookie<RecaptchaSessionCookie>(
       ctx,
       Cookie.RecaptchaSession

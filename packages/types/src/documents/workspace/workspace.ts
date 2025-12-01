@@ -37,7 +37,6 @@ export interface Workspace extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
-  recaptchaEnabled?: boolean
   translationOverrides?: TranslationOverrides
 }
 
@@ -88,6 +87,7 @@ export interface WorkspaceFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
+  recaptchaEnabled?: boolean
 }
 
 export interface AutomationSettings {
