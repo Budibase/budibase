@@ -60,7 +60,9 @@
     isInternal && tableId
       ? $workspaceDeploymentStore.tables[tableId]?.published
       : false
-  $: hasProductionData = Boolean(isDeployed || tableDatasource?.usesEnvironmentVariables)
+  $: hasProductionData = Boolean(
+    isDeployed || tableDatasource?.usesEnvironmentVariables
+  )
   $: productionUnavailable =
     isProductionMode && (!hasProductionData || missingProductionDefinition)
   $: if (!isProductionMode) {
@@ -125,16 +127,6 @@
   }
 </script>
 
-<style>
-  .grid-blank-wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    flex: 1 1 auto;
-  }
-</style>
-
 {#key `${$dataEnvironmentStore.mode}-${prodRefreshKey}`}
   <div class="grid-blank-wrapper">
     <Grid
@@ -188,3 +180,13 @@
     {/if}
   </div>
 {/key}
+
+<style>
+  .grid-blank-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+</style>

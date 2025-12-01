@@ -10,11 +10,7 @@ import {
 } from "@budibase/types"
 import { tracer } from "dd-trace"
 import sdk from "../.."
-import {
-  getRowParams,
-  getTableParams,
-  InternalTables,
-} from "../../../db/utils"
+import { getRowParams, getTableParams, InternalTables } from "../../../db/utils"
 import {
   breakExternalTableId,
   isExternalTableID,

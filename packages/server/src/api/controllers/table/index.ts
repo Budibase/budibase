@@ -1,4 +1,11 @@
-import { cache, context, db as dbCore, csv, events, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  db as dbCore,
+  csv,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   canBeDisplayColumn,
   helpers,
@@ -304,9 +311,8 @@ export async function publish(
 
   const appId = context.getWorkspaceId()!
   const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
-  const prodPublished = await sdk.workspaces.isWorkspacePublished(
-    prodWorkspaceId
-  )
+  const prodPublished =
+    await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
 
   if (!prodPublished) {
     ctx.throw(

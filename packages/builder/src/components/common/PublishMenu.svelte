@@ -3,7 +3,7 @@
   import {
     deploymentStore,
     automationStore,
-    workspaceAppStore
+    workspaceAppStore,
   } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
 

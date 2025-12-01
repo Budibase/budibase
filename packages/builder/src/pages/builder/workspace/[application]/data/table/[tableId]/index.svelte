@@ -112,7 +112,9 @@
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
     isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
-  $: hasProductionData = Boolean(isDeployed || tableDatasource?.usesEnvironmentVariables)
+  $: hasProductionData = Boolean(
+    isDeployed || tableDatasource?.usesEnvironmentVariables
+  )
   $: productionUnavailable =
     isProductionMode && (!hasProductionData || missingProductionDefinition)
   $: if (!isProductionMode) {
