@@ -118,6 +118,10 @@
     flex-direction: column;
     gap: var(--spacing-m);
   }
+  .card-body :global(.spectrum-Button) {
+    align-self: flex-start;
+    width: auto;
+  }
   .card-text {
     color: var(--spectrum-global-color-gray-900);
     line-height: 1.5;
