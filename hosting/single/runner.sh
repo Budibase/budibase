@@ -137,7 +137,7 @@ if [ -f "${DATA_DIR}/litellm/config.yaml" ]; then
     echo "Using user-mounted litellm config from ${DATA_DIR}/litellm/config.yaml"
     LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
 fi
-pm2 start --name litellm -- litellm -c ${LITELLM_CONFIG_PATH}
+pm2 start --name litellm -- /opt/venv/litellm/bin/litellm -c ${LITELLM_CONFIG_PATH}
 
 pushd app
 pm2 start --name app "yarn run:docker"

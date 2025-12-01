@@ -44,10 +44,11 @@ ENV TARGETBUILD=$TARGETBUILD
 
 # Install base dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 gettext-base python3-pip
+    apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 gettext-base python3-pip python3-venv
 
 # Install litellm
-RUN pip install 'litellm[proxy]'
+RUN python3 -m venv /opt/venv/litellm
+RUN /opt/venv/litellm/bin/pip install 'litellm[proxy]'
 RUN mkdir -p /litellm
 
 # This is the default litellm config file, users can mount their own
