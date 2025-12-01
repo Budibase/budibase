@@ -1,6 +1,5 @@
 import {
   Tool,
-  AgentToolSource,
   RestQueryToolSource as RestQueryToolSourceType,
   Query,
 } from "@budibase/types"

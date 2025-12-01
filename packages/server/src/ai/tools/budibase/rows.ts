@@ -35,23 +35,18 @@ export default [
 
   newTool({
     name: "create_row",
-    description: "Create a new row",
+    description:
+      "Create a new row. Only include fields that match the table schema. For long text content, truncate to first 500 characters if needed.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to create the row in"),
       data: z
-        .string()
+        .record(z.string(), z.any())
         .describe(
-          "JSON string with row data. Ensure the schema for the table is known before writing a row."
+          "Row data as key-value pairs matching the table schema. Ensure the schema for the table is known before writing a row."
         ),
     }),
     handler: async ({ tableId, data }) => {
-      let parsedData
-      try {
-        parsedData = JSON.parse(data)
-      } catch (error) {
-        return `Error: Invalid JSON in data parameter: ${error}`
-      }
-      const row = await sdk.rows.save(tableId, parsedData, undefined)
+      const row = await sdk.rows.save(tableId, data, undefined)
       const formatted = JSON.stringify(row, null, 2)
       return `Successfully created new row:\n\n${formatted}`
     },
@@ -64,9 +59,11 @@ export default [
       tableId: z.string().describe("The ID of the table"),
       rowId: z.string().describe("The ID of the row to update"),
       data: z
-        .object({})
+        .record(z.string(), z.any())
         .nullish()
-        .describe("The updated data as key-value pairs"),
+        .describe(
+          "The updated data as key-value pairs matching the table schema"
+        ),
     }),
     handler: async ({ tableId, rowId, data }) => {
       const rowData = { ...data, _id: rowId }
@@ -82,7 +79,7 @@ export default [
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to search"),
       query: z
-        .object({})
+        .record(z.string(), z.any())
         .nullish()
         .describe("Search criteria as key-value pairs"),
       sort: z
