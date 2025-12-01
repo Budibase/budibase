@@ -130,14 +130,17 @@ fi
 # Wait for backend services to start
 sleep 10
 
-# Start litellm as a pm2 service
-# Check if a user-mounted config exists, otherwise use the default
 LITELLM_CONFIG_PATH="/litellm/config.yaml"
 if [ -f "${DATA_DIR}/litellm/config.yaml" ]; then
     echo "Using user-mounted litellm config from ${DATA_DIR}/litellm/config.yaml"
     LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
 fi
-pm2 start --name litellm -- /opt/venv/litellm/bin/litellm -c ${LITELLM_CONFIG_PATH}
+
+pm2 start /opt/venv/litellm/bin/litellm \
+  --interpreter /opt/venv/litellm/bin/python \
+  --restart-delay 5000 \
+  --time \
+  -- -c "${LITELLM_CONFIG_PATH}"
 
 pushd app
 pm2 start --name app "yarn run:docker"

@@ -114,6 +114,8 @@ COPY --from=build /app/packages/worker /worker
 
 EXPOSE 80
 EXPOSE 443
+# Expose port 4000 for LiteLLM config dashboard
+EXPOSE 4000
 # Expose port 2222 for SSH on Azure App Service build
 EXPOSE 2222
 VOLUME /data
