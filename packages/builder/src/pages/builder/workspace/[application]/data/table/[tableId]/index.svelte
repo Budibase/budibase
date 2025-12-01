@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, notifications } from "@budibase/bbui"
+  import { Banner, Button, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -32,6 +32,7 @@
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { getContext } from "svelte"
   import { API } from "@/api"
@@ -54,6 +55,12 @@
   let previousTableId: string | undefined
   let tablePublishing = false
   let prodRefreshKey = 0
+  let resettingProductionTable = false
+  let resetConfirm: ConfirmDialog | undefined
+  let resetConfirmInput = ""
+  $: selectedTableName = $tables?.selected?.name ?? ""
+  $: canConfirmReset =
+    resetConfirmInput === selectedTableName && selectedTableName.length > 0
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -234,6 +241,23 @@
     }
     tablePublishing = false
   }
+
+  const resetProductionTable = async () => {
+    if (tablePublishing || resettingProductionTable) {
+      return
+    }
+    resettingProductionTable = true
+    try {
+      await API.resetProductionTable(id)
+      await workspaceDeploymentStore.fetch()
+      prodRefreshKey += 1
+      notifications.success("Production table reset")
+    } catch (error: any) {
+      notifications.error(error?.message || "Error resetting production table")
+    }
+    resettingProductionTable = false
+    resetConfirmInput = ""
+  }
 </script>
 
 {#if $tables?.selected?.name}
@@ -298,7 +322,21 @@
           {/if}
         </svelte:fragment>
         <svelte:fragment slot="controls-right">
-          <GridDevProdSwitcher />
+          <div class="production-actions">
+            {#if isProductionMode && hasProductionData && isInternal}
+              <Button
+                warning
+                secondary
+                disabled={tablePublishing || resettingProductionTable}
+                on:click={() => resetConfirm?.show()}
+              >
+                {resettingProductionTable
+                  ? "Resetting..."
+                  : "Reset production table"}
+              </Button>
+            {/if}
+            <GridDevProdSwitcher />
+          </div>
         </svelte:fragment>
 
         <!-- Content for editing columns -->
@@ -333,6 +371,32 @@
   <i>Create your first table to start building</i>
 {/if}
 
+  <ConfirmDialog
+    bind:this={resetConfirm}
+    title="Reset production table"
+    okText="Reset"
+    disabled={!canConfirmReset}
+    onOk={resetProductionTable}
+    onClose={() => {
+      resetConfirmInput = ""
+    }}
+  >
+    <p class="reset-dialog-text">
+      This will delete the production data for
+      <b>{$tables.selected?.name}</b> and show the publish options again.
+    </p>
+    <label class="reset-dialog-label">
+      Type the table name to confirm:&nbsp;
+      <span class="reset-dialog-name">{selectedTableName}</span>
+    </label>
+    <input
+      class="reset-dialog-input"
+      type="text"
+      bind:value={resetConfirmInput}
+      placeholder="Table name"
+    />
+  </ConfirmDialog>
+
 <style>
   .grid-blank-wrapper {
     position: relative;
@@ -353,5 +417,32 @@
   }
   .alert-wrap :global(> *) {
     flex: 1;
+  }
+  .production-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .reset-dialog-text,
+  .reset-dialog-label {
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .reset-dialog-label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    gap: var(--spacing-xxs);
+  }
+  .reset-dialog-name {
+    font-weight: 600;
+  }
+  .reset-dialog-input {
+    width: 100%;
+    padding: var(--spacing-xs);
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--spectrum-alias-border-color-primary);
+    background: var(--spectrum-alias-background-color-primary);
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

@@ -20,6 +20,7 @@ import {
   DeleteTableResponse,
   PublishTableRequest,
   PublishTableResponse,
+  ResetProductionTableResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -58,6 +59,9 @@ export interface TableEndpoints {
     tableId: string,
     opts?: PublishTableRequest
   ) => Promise<PublishTableResponse>
+  resetProductionTable: (
+    tableId: string
+  ) => Promise<ResetProductionTableResponse>
 }
 
 export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
@@ -201,6 +205,12 @@ export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
     return await API.post<PublishTableRequest, PublishTableResponse>({
       url: `/api/tables/${tableId}/publish`,
       body: opts,
+    })
+  },
+
+  resetProductionTable: async tableId => {
+    return await API.post<undefined, ResetProductionTableResponse>({
+      url: `/api/tables/${tableId}/reset-production`,
     })
   },
 

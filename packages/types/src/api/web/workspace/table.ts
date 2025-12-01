@@ -64,3 +64,7 @@ export interface PublishTableResponse {
   tableId: string
   publishedAt: string
 }
+
+export interface ResetProductionTableResponse {
+  message: string
+}

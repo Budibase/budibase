@@ -36,7 +36,7 @@ export interface Workspace extends Document {
   scripts?: AppScript[]
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
-  resourcesPublishedAt?: Record<string, string>
+  resourcesPublishedAt?: Record<string, string | null>
   translationOverrides?: TranslationOverrides
 }
 

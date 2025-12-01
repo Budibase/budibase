@@ -11,7 +11,7 @@
   import { gridClipboard } from "@budibase/frontend-core"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
-  import { notifications } from "@budibase/bbui"
+  import { Button, notifications } from "@budibase/bbui"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "@/components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
   import GridManageAccessButton from "@/components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
@@ -27,6 +27,7 @@
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { API } from "@/api"
 
   let generateButton: GridGenerateButton
@@ -34,6 +35,12 @@
   let previousTableId: string | undefined
   let tablePublishing = false
   let prodRefreshKey = 0
+  let resettingProductionTable = false
+  let resetConfirm: ConfirmDialog | undefined
+  let resetConfirmInput = ""
+  $: selectedTableName = $tables?.selected?.name ?? ""
+  $: canConfirmReset =
+    resetConfirmInput === selectedTableName && selectedTableName.length > 0
 
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
@@ -125,6 +132,23 @@
     }
     tablePublishing = false
   }
+
+  const resetProductionTable = async () => {
+    if (!tableId || tablePublishing || resettingProductionTable) {
+      return
+    }
+    resettingProductionTable = true
+    try {
+      await API.resetProductionTable(tableId)
+      await workspaceDeploymentStore.fetch()
+      prodRefreshKey += 1
+      notifications.success("Production table reset")
+    } catch (error: any) {
+      notifications.error(error?.message || "Error resetting production table")
+    }
+    resettingProductionTable = false
+    resetConfirmInput = ""
+  }
 </script>
 
 {#key `${$dataEnvironmentStore.mode}-${prodRefreshKey}`}
@@ -163,7 +187,21 @@
         {/if}
       </svelte:fragment>
       <svelte:fragment slot="controls-right">
-        <GridDevProdSwitcher />
+        <div class="production-actions">
+          {#if isProductionMode && hasProductionData && isInternal}
+            <Button
+              warning
+              secondary
+              disabled={tablePublishing || resettingProductionTable}
+              on:click={() => resetConfirm?.show()}
+            >
+              {resettingProductionTable
+                ? "Resetting..."
+                : "Reset production table"}
+            </Button>
+          {/if}
+          <GridDevProdSwitcher />
+        </div>
       </svelte:fragment>
       <GridCreateEditRowModal />
       {#if !isProductionMode && canSwitchToProduction}
@@ -181,6 +219,32 @@
   </div>
 {/key}
 
+    <ConfirmDialog
+      bind:this={resetConfirm}
+      title="Reset production table"
+      okText="Reset"
+      disabled={!canConfirmReset}
+      onOk={resetProductionTable}
+      onClose={() => {
+        resetConfirmInput = ""
+      }}
+    >
+      <p class="reset-dialog-text">
+        This will delete the production data for
+        <b>{$tables.selected?.name}</b> and show the publish options again.
+      </p>
+      <label class="reset-dialog-label">
+        Type the table name to confirm:&nbsp;
+        <span class="reset-dialog-name">{selectedTableName}</span>
+      </label>
+      <input
+        class="reset-dialog-input"
+        type="text"
+        bind:value={resetConfirmInput}
+        placeholder="Table name"
+      />
+    </ConfirmDialog>
+
 <style>
   .grid-blank-wrapper {
     position: relative;
@@ -188,5 +252,32 @@
     flex-direction: column;
     min-height: 0;
     flex: 1 1 auto;
+  }
+  .production-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .reset-dialog-text,
+  .reset-dialog-label {
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .reset-dialog-label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    gap: var(--spacing-xxs);
+  }
+  .reset-dialog-name {
+    font-weight: 600;
+  }
+  .reset-dialog-input {
+    width: 100%;
+    padding: var(--spacing-xs);
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--spectrum-alias-border-color-primary);
+    background: var(--spectrum-alias-background-color-primary);
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

@@ -107,8 +107,30 @@ export async function status() {
   }
 
   const tables: Record<string, PublishStatusResource> = {}
+  const tableMetadata = metadata?.resourcesPublishedAt ?? {}
   for (const table of developmentState.tables) {
-    processResource(tables, prodTableIds, table)
+    const tableId = table._id!
+    const hasPublishRecord = Object.prototype.hasOwnProperty.call(
+      tableMetadata,
+      tableId
+    )
+    const resourcePublishedAt = tableMetadata[tableId]
+    const published =
+      hasPublishRecord && resourcePublishedAt
+        ? true
+        : hasPublishRecord
+          ? false
+          : prodTableIds.has(tableId)
+    tables[tableId] = {
+      published,
+      name: table.name,
+      publishedAt: resourcePublishedAt
+        ? resourcePublishedAt
+        : undefined,
+      unpublishedChanges:
+        !resourcePublishedAt || table.updatedAt! > resourcePublishedAt,
+      state: getPublishedState(table, resourcePublishedAt),
+    }
   }
 
   const workspaceApps: Record<string, PublishStatusResource> = {}

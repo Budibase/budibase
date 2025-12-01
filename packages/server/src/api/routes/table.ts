@@ -64,6 +64,11 @@ builderRoutes
     tableController.duplicate
   )
   .post(
+    "/api/tables/:tableId/reset-production",
+    paramResource("tableId"),
+    tableController.resetProduction
+  )
+  .post(
     "/api/tables/:tableId/publish",
     paramResource("tableId"),
     tableController.publish

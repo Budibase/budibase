@@ -26,6 +26,7 @@ import {
   MigrateTableResponse,
   PublishTableRequest,
   PublishTableResponse,
+  ResetProductionTableResponse,
   DocumentType,
   SEPARATOR,
   SaveTableRequest,
@@ -388,4 +389,50 @@ export async function publish(
     tableId,
     publishedAt: metadata.resourcesPublishedAt[tableId],
   }
+}
+
+export async function resetProduction(
+  ctx: UserCtx<void, ResetProductionTableResponse>
+) {
+  const tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+
+  if (!table) {
+    ctx.throw(404, "Table not found")
+  }
+
+  if (isExternalTable(table)) {
+    ctx.throw(
+      400,
+      "Publishing production data is only supported for internal tables"
+    )
+  }
+
+  const appId = context.getWorkspaceId()!
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+  const prodPublished = await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
+
+  if (!prodPublished) {
+    ctx.throw(
+      400,
+      "Publish the workspace before publishing production data for individual tables."
+    )
+  }
+
+  const prodDb = context.getProdWorkspaceDB()
+
+  const metadata = await sdk.workspaces.metadata.tryGet({
+    production: true,
+  })
+  if (metadata?._id) {
+    metadata.resourcesPublishedAt = {
+      ...(metadata.resourcesPublishedAt || {}),
+      [tableId]: null,
+    }
+    await prodDb.put(metadata)
+  }
+
+  await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
+
+  ctx.body = { message: "Production table reset." }
 }
