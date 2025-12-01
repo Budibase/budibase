@@ -261,6 +261,17 @@ export type ExtractFileDataStepOutputs = {
   response?: string
 }
 
+export type AgentStepInputs = {
+  agentId: string
+  prompt: string
+}
+
+export type AgentStepOutputs = {
+  success: boolean
+  response?: string
+  steps?: any[]
+}
+
 export type LoopV2StepInputs = {
   option: LoopStepType
   binding: any

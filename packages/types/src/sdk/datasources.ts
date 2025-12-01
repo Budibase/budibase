@@ -85,7 +85,6 @@ export enum FilterType {
 export enum DatasourceFeature {
   CONNECTION_CHECKING = "connection",
   FETCH_TABLE_NAMES = "fetch_table_names",
-  EXPORT_SCHEMA = "export_schema",
 }
 
 export interface StepDefinition {
@@ -176,7 +175,6 @@ export interface IntegrationBase {
   delete?(query: any): Promise<any[] | any>
   patch?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
-  getExternalSchema?(): Promise<string>
   defineTypeCastingFromSchema?(schema: {
     [key: string]: {
       name: string

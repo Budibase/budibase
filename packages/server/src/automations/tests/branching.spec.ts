@@ -284,22 +284,61 @@ describe("Branching automations", () => {
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
 
-  it("should not fail with empty conditions", async () => {
+  it("should execute ELSE branch when no other conditions match", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
       .branch({
-        specialBranch: {
-          steps: stepBuilder => stepBuilder.serverLog({ text: "Hello!" }),
+        branch1: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 1" }),
           condition: {
-            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            equal: { "{{trigger.fields.input}}": "1" },
           },
         },
+        branch2: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+          condition: {
+            equal: { "{{trigger.fields.input}}": "2" },
+          },
+        },
+        elseBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          }, // Empty condition acts as default/ELSE branch
+        },
       })
-      .test({ fields: { test_trigger: true } })
+      .test({ fields: { input: "3" } })
 
-    expect(results.steps[0].outputs.success).toEqual(false)
-    expect(results.steps[0].outputs.status).toEqual(
-      AutomationStatus.NO_CONDITION_MET
-    )
+    expect(results.steps[0].outputs.status).toContain("elseBranch branch taken")
+    expect(results.steps[1].outputs.message).toContain("ELSE Branch")
+  })
+
+  it("should execute first matching branch and skip ELSE", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        branch1: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 1" }),
+          condition: {
+            equal: { "{{trigger.fields.input}}": "1" },
+          },
+        },
+        branch2: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+          condition: {
+            equal: { "{{trigger.fields.input}}": "2" },
+          },
+        },
+        elseBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "ELSE Branch" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          }, // Empty condition acts as default/ELSE branch
+        },
+      })
+      .test({ fields: { input: "2" } })
+
+    expect(results.steps[0].outputs.status).toContain("branch2 branch taken")
+    expect(results.steps[1].outputs.message).toContain("Branch 2")
   })
 })

@@ -135,6 +135,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
   extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
+  agent = this.step(AutomationActionStepId.AGENT)
 
   protected addLoopStep(loopConfig: LoopConfig): void {
     const inputs: LoopV2StepInputs = {

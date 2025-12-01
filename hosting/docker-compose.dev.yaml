@@ -65,9 +65,12 @@ services:
     image: ghcr.io/berriai/litellm:main-stable
     ports:
       - "${LITELLM_PORT:-4000}:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
     environment:
       DATABASE_URL: "postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
+    command: ["--config", "/app/config.yaml"]
     env_file:
       - .env
     depends_on:

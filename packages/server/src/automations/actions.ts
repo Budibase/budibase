@@ -28,6 +28,7 @@ import * as translate from "./steps/ai/translate"
 import * as summarise from "./steps/ai/summarise"
 import * as generate from "./steps/ai/generate"
 import * as extract from "./steps/ai/extract"
+import * as agent from "./steps/ai/agent"
 import * as extractState from "./steps/extractState"
 
 import env from "../environment"
@@ -40,7 +41,9 @@ import {
   AutomationStepDefinition,
   AutomationStepInputs,
   AutomationStepOutputs,
+  FeatureFlag,
 } from "@budibase/types"
+import { features } from "@budibase/backend-core"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
@@ -72,6 +75,7 @@ const ACTION_IMPLS: ActionImplType = {
   SUMMARISE: summarise.run,
   GENERATE_TEXT: generate.run,
   EXTRACT_FILE_DATA: extract.run,
+  AGENT: agent.run,
   EXTRACT_STATE: extractState.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
@@ -129,18 +133,29 @@ if (env.SELF_HOSTED) {
 
   if (env.isTest()) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+    BUILTIN_ACTION_DEFINITIONS["AGENT"] = automations.steps.agent.definition
   }
 }
 
 export async function getActionDefinitions(): Promise<
   Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
 > {
-  if (env.SELF_HOSTED) {
-    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
-    BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
+  // Create a shallow copy here to avoid mutating shared object
+  const actionDefinitions: Record<string, AutomationStepDefinition> = {
+    ...BUILTIN_ACTION_DEFINITIONS,
   }
 
-  const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
+  if (env.SELF_HOSTED) {
+    actionDefinitions["OPENAI"] = {
+      ...automations.steps.openai.definition,
+      deprecated: true,
+    }
+  }
+
+  if (await features.isEnabled(FeatureFlag.AI_AGENTS)) {
+    actionDefinitions["AGENT"] = automations.steps.agent.definition
+  }
+
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
     for (let plugin of plugins) {
