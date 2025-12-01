@@ -6,20 +6,41 @@
   export let description = ""
   export let publishing = false
   export let canSeed = true
+  let loadingAction: "publish" | "seed" | null = null
+  let publishCycleStarted = false
+  let loading = false
+  let publishLoading = false
+  let seedLoading = false
+
+  $: loading = publishing || loadingAction !== null
+  $: publishLoading =
+    loading && (loadingAction === null || loadingAction === "publish")
+  $: seedLoading =
+    loading && (loadingAction === null || loadingAction === "seed")
+  $: {
+    if (publishing) {
+      publishCycleStarted = true
+    } else if (publishCycleStarted && loadingAction) {
+      loadingAction = null
+      publishCycleStarted = false
+    }
+  }
 
   const dispatch = createEventDispatcher()
 
   const publishEmpty = () => {
-    if (publishing) {
+    if (loading) {
       return
     }
+    loadingAction = "publish"
     dispatch("publish")
   }
 
   const seedAndPublish = () => {
-    if (publishing) {
+    if (loading || !canSeed) {
       return
     }
+    loadingAction = "seed"
     dispatch("seedPublish")
   }
 </script>
@@ -37,7 +58,14 @@
         <div class="card-text">
           Publish Dev schema to Prod (no data copied).
         </div>
-        <Button disabled={publishing} on:click={publishEmpty}>Publish</Button>
+        <Button disabled={loading} on:click={publishEmpty}>
+          <div class="button-content" aria-live="polite">
+            {#if publishLoading}
+              <span class="spinner" aria-hidden="true" />
+            {/if}
+            <span>{publishLoading ? "Publishing..." : "Publish"}</span>
+          </div>
+        </Button>
       </div>
     </div>
 
@@ -52,10 +80,15 @@
         </div>
         <Button
           secondary
-          disabled={publishing || !canSeed}
+          disabled={loading || !canSeed}
           on:click={seedAndPublish}
         >
-          Seed &amp; Publish
+          <div class="button-content" aria-live="polite">
+            {#if seedLoading}
+              <span class="spinner" aria-hidden="true" />
+            {/if}
+            <span>{seedLoading ? "Seeding & Publishing..." : "Seed & Publish"}</span>
+          </div>
         </Button>
       </div>
     </div>
@@ -129,5 +162,30 @@
   .card-subtext {
     color: var(--spectrum-global-color-gray-900);
     font-size: 13px;
+  }
+  .production-blank :global(.spectrum-Button.is-disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .button-content {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--spectrum-global-color-gray-400);
+    border-top-color: var(--spectrum-global-color-gray-900);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>
