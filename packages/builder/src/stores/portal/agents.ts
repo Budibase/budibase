@@ -105,7 +105,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     const newToolSourceWithTools = {
       ...toolSource,
       tools: [],
-    } as AgentToolSource
+    } as AgentToolSourceWithTools
     return newToolSourceWithTools
   }
 

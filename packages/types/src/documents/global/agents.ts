@@ -35,27 +35,29 @@ export enum ToolSourceType {
   REST_QUERY = "REST_QUERY",
 }
 
-export interface BudibaseToolSource extends Document {
+export interface BaseToolSource extends Document {
+  id?: string
+  label?: string
+  type: ToolSourceType
+  disabledTools: string[]
+  agentId: string
+}
+
+export interface BudibaseToolSource extends BaseToolSource {
   id?: string
   type: ToolSourceType.BUDIBASE
-  disabledTools: string[]
   auth: BudibaseToolAuth
   agentId: string
 }
 
-export interface RestQueryToolSource extends Document {
-  id?: string
+export interface RestQueryToolSource extends BaseToolSource {
   type: ToolSourceType.REST_QUERY
-  disabledTools: string[]
   datasourceId: string
   queryIds: string[]
   auth: RestQueryToolAuth
-  agentId: string
 }
 
-export type AgentToolSource =
-  | BudibaseToolSource
-  | (RestQueryToolSource & { agentId: string })
+export type AgentToolSource = BudibaseToolSource | RestQueryToolSource
 
 export type AgentToolSourceWithTools = (
   | BudibaseToolSource
