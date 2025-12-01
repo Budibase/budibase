@@ -50,6 +50,9 @@ RUN apt-get update && \
 RUN pip install 'litellm[proxy]'
 RUN mkdir -p /litellm
 
+# This is the default litellm config file, users can mount their own
+COPY hosting/litellm_config.yaml /litellm/config.yaml
+
 # Install postgres client for pg_dump utils
 RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \
     && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
@@ -96,8 +99,6 @@ RUN chmod +x ./healthcheck.sh
 # For Azure App Service install SSH & point data locations to /home
 COPY hosting/single/ssh/sshd_config /etc/
 COPY hosting/single/ssh/ssh_setup.sh /tmp
-# This is the default litellm config file, users can mount their own
-COPY hosting/litellm_config.yaml /litellm/config.yaml
 
 #  Setup letsencrypt certificate
 RUN apt-get update && apt-get install -y certbot python3-certbot-nginx
