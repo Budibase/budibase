@@ -50,38 +50,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  // Build system prompt (agent prompt + optional tool guidelines)
-  let system = ai.agentSystemPrompt(ctx.user)
-  if (agent.promptInstructions) {
-    system += `\n\n${agent.promptInstructions}`
-  }
-  let toolGuidelines = ""
-  const allTools: Tool[] = []
-  for (const toolSource of agent.allowedTools || []) {
-    const toolSourceInstance = createToolSourceInstance(
-      toolSource as AgentToolSource
-    )
-
-    if (!toolSourceInstance) {
-      continue
-    }
-
-    const guidelines = toolSourceInstance.getGuidelines()
-    if (guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-    }
-
-    const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
-
-    if (toolsToAdd.length > 0) {
-      allTools.push(...toolsToAdd)
-    }
-  }
-
-  // Append tool guidelines to the system prompt if any exist
-  if (toolGuidelines) {
-    system += toolGuidelines
-  }
+  const { systemPrompt: system, tools: allTools } =
+    await sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+      includeGoal: false,
+    })
 
   try {
     const { modelId, apiKey, baseUrl } =

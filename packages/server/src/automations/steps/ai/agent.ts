@@ -41,48 +41,14 @@ export async function run({
   try {
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-    // Build system prompt from agent configuration
-    let system = ""
-    if (agentConfig.promptInstructions) {
-      system += agentConfig.promptInstructions
-    }
-    if (agentConfig.goal) {
-      system += `\n\nYour goal: ${agentConfig.goal}`
-    }
-
-    // Collect tools from all tool sources
-    let toolGuidelines = ""
-    const allTools: Tool[] = []
-
-    for (const toolSource of agentConfig.allowedTools || []) {
-      const toolSourceInstance = createToolSourceInstance(
-        toolSource as AgentToolSource
-      )
-
-      if (!toolSourceInstance) {
-        continue
-      }
-
-      const guidelines = toolSourceInstance.getGuidelines()
-      if (guidelines) {
-        toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-      }
-
-      const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
-      if (toolsToAdd.length > 0) {
-        allTools.push(...toolsToAdd)
-      }
-    }
-
-    // Append tool guidelines to system prompt
-    if (toolGuidelines) {
-      system += toolGuidelines
-    }
+    const { systemPrompt, tools: allTools } =
+      await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
     // Get LLM configuration
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
 
+    const requestId = v4()
     const openai = createOpenAI({
       apiKey,
       baseURL: baseUrl,
@@ -93,7 +59,7 @@ export async function run({
         if (typeof nextInit?.body === "string") {
           try {
             const body = JSON.parse(nextInit.body)
-            body.litellm_session_id = v4()
+            body.litellm_session_id = requestId
             nextInit.body = JSON.stringify(body)
           } catch {
             // If the body is not JSON, send the request unmodified
@@ -105,7 +71,6 @@ export async function run({
     })
 
     const aiTools = toAiSdkTools(allTools)
-
     const agent = new Agent({
       model: wrapLanguageModel({
         model: openai.chat(modelId),
@@ -113,7 +78,7 @@ export async function run({
           tagName: "think",
         }),
       }),
-      system: system || undefined,
+      system: systemPrompt || undefined,
       tools: aiTools,
       stopWhen: stepCountIs(10),
     })
