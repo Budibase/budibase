@@ -1557,17 +1557,13 @@ if (descriptions.length) {
           it("requires workspace to be published before publishing a table", async () => {
             const table = await config.api.table.save(basicTable())
 
-            await config.api.table.publish(
-              table._id!,
-              undefined,
-              {
-                status: 400,
-                body: {
-                  message:
-                    "Publish the workspace before publishing production data for individual tables.",
-                },
-              }
-            )
+            await config.api.table.publish(table._id!, undefined, {
+              status: 400,
+              body: {
+                message:
+                  "Publish the workspace before publishing production data for individual tables.",
+              },
+            })
           })
 
           it("publishes table data to production when seeded", async () => {

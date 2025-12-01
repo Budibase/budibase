@@ -87,7 +87,11 @@
             {#if seedLoading}
               <span class="spinner" aria-hidden="true" />
             {/if}
-            <span>{seedLoading ? "Seeding & Publishing..." : "Seed & Publish"}</span>
+            <span
+              >{seedLoading
+                ? "Seeding & Publishing..."
+                : "Seed & Publish"}</span
+            >
           </div>
         </Button>
       </div>
@@ -158,10 +162,6 @@
   .card-text {
     color: var(--spectrum-global-color-gray-900);
     line-height: 1.5;
-  }
-  .card-subtext {
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 13px;
   }
   .production-blank :global(.spectrum-Button.is-disabled) {
     opacity: 0.55;
