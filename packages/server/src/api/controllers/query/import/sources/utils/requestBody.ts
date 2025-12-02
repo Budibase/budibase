@@ -593,6 +593,39 @@ export const serialiseRequestBody = (body: unknown): string | undefined => {
   })
 }
 
+const cloneSerializableRequestBody = (value: unknown): unknown => {
+  if (value == null) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => cloneSerializableRequestBody(item))
+  }
+
+  if (typeof value === "object") {
+    const binding = extractBindingFromPlaceholder(value)
+    if (binding) {
+      return `{{ ${binding} }}`
+    }
+    return Object.entries(value as Record<string, unknown>).reduce(
+      (acc, [key, child]) => {
+        acc[key] = cloneSerializableRequestBody(child)
+        return acc
+      },
+      {} as Record<string, unknown>
+    )
+  }
+
+  return value
+}
+
+export const buildSerializableRequestBody = (body: unknown): unknown => {
+  if (body === undefined) {
+    return undefined
+  }
+  return cloneSerializableRequestBody(body)
+}
+
 const extractBindingFromPlaceholder = (value: unknown): string | undefined => {
   if (!value || typeof value !== "object") {
     return undefined

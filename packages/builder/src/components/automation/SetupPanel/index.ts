@@ -10,6 +10,7 @@ import FieldSelector from "./FieldSelector.svelte"
 import FileSelector from "./FileSelector.svelte"
 import RowSelector from "./RowSelector.svelte"
 import AutomationSelector from "./AutomationSelector.svelte"
+import AgentSelector from "./AgentSelector.svelte"
 import PropField from "./PropField.svelte"
 import QueryParamSelector from "./QueryParamSelector.svelte"
 import CodeEditorModal from "./CodeEditorModal.svelte"
@@ -25,6 +26,7 @@ export {
   FileSelector,
   RowSelector,
   AutomationSelector,
+  AgentSelector,
   PropField,
   QueryParamSelector,
   CodeEditorModal,

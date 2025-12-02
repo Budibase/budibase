@@ -483,14 +483,20 @@ export function syncSchema(
   schema: TableSchema,
   renameColumn: RenameColumn | undefined
 ): ViewV2 {
-  if (renameColumn && view.schema) {
-    view.schema[renameColumn.updated] = view.schema[renameColumn.old]
+  if (renameColumn && view.schema && view.schema[renameColumn.old] != null) {
+    if (!view.schema[renameColumn.updated]) {
+      view.schema[renameColumn.updated] = view.schema[renameColumn.old]
+    }
     delete view.schema[renameColumn.old]
   }
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
       const viewSchema = view.schema[fieldName]
+      if (!viewSchema) {
+        delete view.schema[fieldName]
+        continue
+      }
       if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }

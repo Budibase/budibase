@@ -18,6 +18,7 @@ import {
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  Table,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -121,6 +122,70 @@ async function initDeployedApp(prodAppId: string) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function applyPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (let table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      const pendingColumnRenames = table.pendingColumnRenames
+      if (!pendingColumnRenames?.length) {
+        continue
+      }
+
+      for (const rename of pendingColumnRenames) {
+        const tableToUpdate: Table = {
+          ...table,
+          schema: { ...table.schema },
+        }
+
+        const existingNew = tableToUpdate.schema[rename.updated]
+        const existingOld = tableToUpdate.schema[rename.old]
+
+        // If the updatd column schema doesn't exist (replication left the old schema),
+        // use the old column schema to the new name so the rename can complete.
+        if (!existingNew && existingOld) {
+          tableToUpdate.schema[rename.updated] = {
+            ...existingOld,
+            name: rename.updated,
+          }
+          delete tableToUpdate.schema[rename.old]
+        }
+
+        await sdk.tables.update(tableToUpdate, rename)
+        table = await sdk.tables.getTable(table._id!)
+      }
+
+      const updatedTable: Table = { ...table, pendingColumnRenames: [] }
+      await db.put(updatedTable)
+    }
+  })
+}
+
+async function clearPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      if (!table.pendingColumnRenames?.length) {
+        continue
+      }
+      const updatedTable: Table = {
+        ...table,
+        pendingColumnRenames: [],
+      }
+      await db.put(updatedTable)
+    }
   })
 }
 
@@ -269,6 +334,9 @@ export const publishWorkspace = async function (
             checkpoint: !seedProductionTables,
           })
         )
+
+        await applyPendingColumnRenames(prodId)
+        await clearPendingColumnRenames(devId)
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({

@@ -109,6 +109,24 @@
           }
         }
       }
+    } else if (setting.type === "componentConfiguration") {
+      const components = component[setting.key]
+      if (Array.isArray(components)) {
+        for (let comp of components) {
+          // Check for event settings in the configured components
+          const componentSettings = componentStore.getComponentSettings(
+            comp._component
+          )
+          for (let compSetting of componentSettings) {
+            if (
+              compSetting.type === "event" &&
+              eventUpdatesState(comp[compSetting.key], stateKey)
+            ) {
+              return true
+            }
+          }
+        }
+      }
     }
     return false
   }
@@ -135,7 +153,12 @@
     const { _children, _conditions, _component, _instanceName, _id } = component
     const settings = componentStore
       .getComponentSettings(_component)
-      .filter(s => s.type === "event" || s.type === "buttonConfiguration")
+      .filter(
+        s =>
+          s.type === "event" ||
+          s.type === "buttonConfiguration" ||
+          s.type === "componentConfiguration"
+      )
 
     // Check all settings of this component
     settings.forEach(setting => {

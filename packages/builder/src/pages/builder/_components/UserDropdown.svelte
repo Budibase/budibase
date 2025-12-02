@@ -1,6 +1,7 @@
 <script>
   import { admin, auth } from "@/stores/portal"
   import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
+  import { helpers, BUILDER_URLS } from "@budibase/shared-core"
   import { goto } from "@roxi/routify"
   import ProfileModal from "@budibase/frontend-core/src/components/ProfileModal.svelte"
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
@@ -15,6 +16,8 @@
   let profileModal
   let updatePasswordModal
   let apiKeyModal
+
+  const { accountPortalAccountUrl } = helpers
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
@@ -48,7 +51,9 @@
       icon="lock"
       on:click={() => {
         if (isOwner) {
-          window.location.href = `${$admin.accountPortalUrl}/portal/account`
+          window.location.href = accountPortalAccountUrl(
+            $admin.accountPortalUrl
+          )
         } else {
           updatePasswordModal.show()
         }
@@ -60,7 +65,7 @@
   <MenuItem icon="key" on:click={() => apiKeyModal.show()}>
     View API key
   </MenuItem>
-  <MenuItem icon="code" on:click={() => $goto("/builder/apps")}>
+  <MenuItem icon="code" on:click={() => $goto(BUILDER_URLS.APPS)}>
     Close developer mode
   </MenuItem>
   <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>

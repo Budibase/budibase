@@ -208,6 +208,7 @@
       name: "AI",
       items: actions.filter(([k]) =>
         [
+          AutomationActionStepId.AGENT,
           AutomationActionStepId.PROMPT_LLM,
           AutomationActionStepId.CLASSIFY_CONTENT,
           AutomationActionStepId.TRANSLATE,

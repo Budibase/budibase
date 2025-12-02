@@ -1,4 +1,4 @@
-import { Tool, ToolArgs } from "@budibase/types"
+import { Tool } from "@budibase/types"
 import { z } from "zod"
 
 export { BambooHRClient } from "./bamboohr"
@@ -6,12 +6,25 @@ export { default as budibase } from "./budibase"
 export { ConfluenceClient } from "./confluence"
 export { GitHubClient } from "./github"
 
-export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
-  // Create error-aware handler that logs failures to server logs
-  const errorAwareHandler = async (args: z.infer<T>): Promise<string> => {
+export interface ServerToolArgs<T extends z.ZodTypeAny> {
+  name: string
+  description: string
+  parameters?: T
+  handler: (args: z.infer<T>) => Promise<string>
+  strict?: boolean
+}
+
+export function newTool<T extends z.ZodTypeAny>(
+  tool: ServerToolArgs<T>
+): Tool<T> {
+  const parameters = tool.parameters ?? (z.object({}) as unknown as T)
+
+  // Create error-aware handler that validates and logs failures to server logs
+  const errorAwareHandler = async (rawArgs: unknown): Promise<string> => {
     console.debug(`[TOOL DEBUG] Executing tool: ${tool.name}`)
     try {
-      const result = await tool.handler(args)
+      const parsed = parameters.parse(rawArgs) as z.infer<T>
+      const result = await tool.handler(parsed)
       console.debug(`[TOOL DEBUG] Tool ${tool.name} succeeded`)
       return result
     } catch (error: any) {
@@ -24,7 +37,7 @@ export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
 
   return {
     strict: tool.strict ?? true,
-    parameters: tool.parameters ?? (z.object({}) as unknown as T),
+    parameters,
     description: tool.description,
     handler: errorAwareHandler,
     name: tool.name,

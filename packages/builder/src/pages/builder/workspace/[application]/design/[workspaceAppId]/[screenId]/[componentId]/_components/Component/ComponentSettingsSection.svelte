@@ -167,6 +167,10 @@
                 // Field select settings
                 explanation: setting.explanation,
                 allowHTML: setting.allowHTML,
+
+                // Component configuration
+                componentType: setting.componentType,
+                wide: setting.wide,
               }}
               {bindings}
               {componentBindings}
