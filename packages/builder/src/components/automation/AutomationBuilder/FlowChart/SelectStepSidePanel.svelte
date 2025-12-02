@@ -350,7 +350,7 @@
       </div>
       {#each filteredCategories as category, i}
         {#if i > 0}
-          <div class="section-divider" />
+          <div class="section-divider"></div>
         {/if}
         <Detail size="M" weight={600}>{category.name}</Detail>
         <div class="item-list">
@@ -408,7 +408,7 @@
         </div>
       {/each}
       {#if filteredPlugins.length}
-        <div class="section-divider" />
+        <div class="section-divider"></div>
         <div class="section-header">
           <Detail size="M" weight={700}>Plugins</Detail>
         </div>

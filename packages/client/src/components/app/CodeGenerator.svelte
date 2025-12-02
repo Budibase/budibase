@@ -74,7 +74,7 @@
   {#if value}
     {#if codeType === "QR Code"}
       <div class="qr-container">
-        <div bind:this={qrContainer} />
+        <div bind:this={qrContainer}></div>
         <div class="qr-value" style="color: {primColor}; max-width: {size}px;">
           {showValue ? value : ""}
         </div>

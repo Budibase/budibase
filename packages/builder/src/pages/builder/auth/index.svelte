@@ -4,6 +4,8 @@
   import { onMount } from "svelte"
   import { notifications } from "@budibase/bbui"
 
+  $redirect
+
   $: tenantSet = $auth.tenantSet
   $: multiTenancyEnabled = $admin.multiTenancy
   $: useAccountPortal = $admin.cloud && !$admin.disableAccountPortal

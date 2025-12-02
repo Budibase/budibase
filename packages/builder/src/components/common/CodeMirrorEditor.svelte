@@ -128,7 +128,7 @@
 <div
   style={`--code-mirror-height: ${height}px; --code-mirror-resize: ${resize}`}
 >
-  <textarea tabindex="0" bind:this={textarea} readonly {value} />
+  <textarea tabindex="0" bind:this={textarea} readonly {value}></textarea>
 </div>
 
 <style>

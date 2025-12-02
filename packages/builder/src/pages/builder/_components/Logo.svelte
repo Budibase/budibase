@@ -2,6 +2,8 @@
   import Logo from "assets/bb-emblem.svg"
   import { goto } from "@roxi/routify"
   import { organisation } from "@/stores/portal"
+
+  $goto
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->

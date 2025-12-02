@@ -57,6 +57,10 @@
     keyValueArrayToRecord,
   } from "./query"
 
+  $beforeUrlChange
+  $goto
+  $params
+
   export let queryId
   let lastViewedQueryId = null
 
@@ -697,7 +701,7 @@
             </Layout>
           </Tab>
           <div class="auth-container">
-            <div />
+            <div></div>
             <!-- spacer -->
 
             <AuthPicker

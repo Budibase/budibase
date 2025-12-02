@@ -16,13 +16,14 @@
     AgentToolSourceWithTools,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
-  import { createEventDispatcher, type ComponentType } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import ConfluenceLogo from "../logos/Confluence.svelte"
   import GithubLogo from "../logos/Github.svelte"
 
-  const Logos: Record<string, ComponentType> = {
+  type LogoComponent = typeof BudibaseLogo
+  const Logos: Record<string, LogoComponent> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,

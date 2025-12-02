@@ -20,6 +20,8 @@
   import { onMount } from "svelte"
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
 
+  $goto
+
   let loaded = false
   let form
   let errors = {}

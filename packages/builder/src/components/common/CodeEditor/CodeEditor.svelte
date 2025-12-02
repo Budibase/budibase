@@ -453,7 +453,7 @@
   }`}
   bind:this={editorEle}
 >
-  <div tabindex="-1" bind:this={textarea} />
+  <div tabindex="-1" bind:this={textarea}></div>
 </div>
 
 {#if aiGenEnabled}

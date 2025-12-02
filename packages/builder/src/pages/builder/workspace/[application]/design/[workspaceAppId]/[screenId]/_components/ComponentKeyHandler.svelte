@@ -11,6 +11,9 @@
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
+  $goto
+  $isActive
+
   let confirmDeleteDialog
   let confirmEjectDialog
   let componentToDelete

@@ -20,7 +20,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onMount, type ComponentType } from "svelte"
+  import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
   import BambooHRLogo from "../logos/BambooHR.svelte"
@@ -28,7 +28,8 @@
   import ConfluenceLogo from "../logos/Confluence.svelte"
   import GithubLogo from "../logos/Github.svelte"
 
-  const Logos: Record<string, ComponentType> = {
+  type LogoComponent = typeof BudibaseLogo
+  const Logos: Record<string, LogoComponent> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,

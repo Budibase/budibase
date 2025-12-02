@@ -1,7 +1,7 @@
-import { svelte } from "@sveltejs/vite-plugin-svelte"
+import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte"
+import { defineConfig } from "vite"
 import path from "path"
 import { visualizer } from "rollup-plugin-visualizer"
-import { defineConfig } from "vite"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
 
 const ignoredWarnings = [
@@ -10,6 +10,7 @@ const ignoredWarnings = [
   "module-script-reactive-declaration",
   "a11y-no-onchange",
   "a11y-click-events-have-key-events",
+  "element_invalid_self_closing_tag",
 ]
 
 export default defineConfig(({ mode }) => {
@@ -44,6 +45,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       svelte({
         emitCss: true,
+        preprocess: vitePreprocess({ script: true }),
         onwarn: (warning, handler) => {
           // Ignore some warnings
           if (!ignoredWarnings.includes(warning.code)) {

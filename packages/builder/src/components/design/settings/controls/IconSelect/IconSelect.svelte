@@ -163,12 +163,12 @@
         <i
           on:click={() => pageClick(false)}
           class="page-btn ri-arrow-left-line ri-sm"
-        />
+        ></i>
         <span>{pagerText}</span>
         <i
           on:click={() => pageClick(true)}
           class="page-btn ri-arrow-right-line ri-sm"
-        />
+        ></i>
       </div>
     </div>
     {#if pagedIcons.length > 0}
@@ -181,7 +181,7 @@
               on:click={() => select(`ri-${icon}-fill`)}
             >
               <div class="icon-preview">
-                <i class={`ri-${icon}-fill ri-xl`} />
+                <i class={`ri-${icon}-fill ri-xl`}></i>
               </div>
               <div class="icon-label">{icon}-fill</div>
             </div>
@@ -191,7 +191,7 @@
               on:click={() => select(`ri-${icon}-line`)}
             >
               <div class="icon-preview">
-                <i class={`ri-${icon}-line ri-xl`} />
+                <i class={`ri-${icon}-line ri-xl`}></i>
               </div>
               <div class="icon-label">{icon}-line</div>
             </div>

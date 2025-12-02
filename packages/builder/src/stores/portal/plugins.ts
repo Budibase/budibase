@@ -1,10 +1,16 @@
 import { writable } from "svelte/store"
 import { PluginSource } from "@/constants/index"
-import { Plugin } from "@budibase/types"
+import {
+  Plugin,
+  PluginUpdateInfo,
+  PluginUpdateApplyRequest,
+  PluginUpdateApplyResponse,
+} from "@budibase/types"
 import { API } from "@/api"
 
 export function createPluginsStore() {
   const { subscribe, set, update } = writable<Plugin[]>([])
+  const updatesStore = writable<PluginUpdateInfo[]>([])
 
   async function load() {
     const plugins: Plugin[] = await API.getPlugins()
@@ -65,12 +71,33 @@ export function createPluginsStore() {
       return state
     })
   }
+
+  async function checkUpdates(token?: string) {
+    const response = await API.checkPluginUpdates(token)
+    updatesStore.set(response.updates || [])
+    return response
+  }
+
+  async function applyUpdates(
+    body: PluginUpdateApplyRequest = {},
+    token?: string
+  ): Promise<PluginUpdateApplyResponse> {
+    const response = await API.applyPluginUpdates(body)
+    await load()
+    await checkUpdates(token)
+    return response
+  }
   return {
     subscribe,
     load,
     createPlugin,
     deletePlugin,
     uploadPlugin,
+    updates: {
+      subscribe: updatesStore.subscribe,
+    },
+    checkUpdates,
+    applyUpdates,
   }
 }
 

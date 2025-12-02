@@ -1,11 +1,5 @@
-declare const svelte: {
-  render(any): SvelteReturn
-}
+import type { Component } from "svelte"
+import type { BudibaseAppProps } from "@budibase/types"
 
-export interface SvelteReturn {
-  head: any
-  html: any
-  css: any
-}
-
-export default svelte
+declare const component: Component<{ props: BudibaseAppProps }>
+export default component

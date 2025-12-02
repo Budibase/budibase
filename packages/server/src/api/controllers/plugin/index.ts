@@ -1,4 +1,4 @@
-import { plugins as pluginCore } from "@budibase/backend-core"
+import { plugins as pluginCore, features } from "@budibase/backend-core"
 import {
   PluginType,
   PluginSource,
@@ -11,8 +11,16 @@ import {
   FetchPluginResponse,
   DeletePluginResponse,
   PluginMetadata,
+  PluginUpdateApplyRequest,
+  PluginUpdateApplyResponse,
+  PluginUpdateCheckResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import { sdk as pro } from "@budibase/pro"
+import {
+  applyPluginUpdates as applyUpdatesSdk,
+  checkPluginUpdates as checkUpdatesSdk,
+} from "../../../sdk/plugins/update"
 import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
@@ -96,9 +104,9 @@ export async function create(
       )
     }
 
-    // Block Svelte 5 plugins until we release Svelte 5
-    if (metadata.schema?.metadata?.svelteMajor === 5) {
-      throw new Error("Svelte 5 plugins are not yet supported in Budibase")
+    // Only allow Svelte 5 plugins on this branch
+    if (metadata.schema?.metadata?.svelteMajor !== 5) {
+      throw new Error("Only Svelte 5 plugins are supported on this branch")
     }
 
     let origin
@@ -148,4 +156,24 @@ export async function destroy(ctx: UserCtx<void, DeletePluginResponse>) {
   } catch (err: any) {
     ctx.throw(400, err.message)
   }
+}
+
+export async function checkUpdates(
+  ctx: UserCtx<void, PluginUpdateCheckResponse>
+) {
+  if (!(await features.isEnabled(FeatureFlag.PLUGIN_AUTO_UPDATE))) {
+    ctx.throw(404)
+  }
+  const token = ctx.query.token as string | undefined
+  ctx.body = await checkUpdatesSdk({ token })
+}
+
+export async function applyUpdates(
+  ctx: UserCtx<PluginUpdateApplyRequest, PluginUpdateApplyResponse>
+) {
+  if (!(await features.isEnabled(FeatureFlag.PLUGIN_AUTO_UPDATE))) {
+    ctx.throw(404)
+  }
+  const body = ctx.request.body || {}
+  ctx.body = await applyUpdatesSdk(body)
 }

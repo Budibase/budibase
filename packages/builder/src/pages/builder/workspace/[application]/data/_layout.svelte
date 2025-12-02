@@ -10,6 +10,7 @@
   import { onMount, onDestroy, setContext } from "svelte"
   import { IntegrationTypes } from "@/constants/backend"
 
+  $goto
   let searchValue
   const MIN_PANEL_WIDTH = 320
   let maxWidth = Math.max(window.innerWidth / 3, MIN_PANEL_WIDTH)
@@ -121,7 +122,7 @@
             class="dividerClickExtender"
             role="separator"
             use:resizableHandle
-          />
+          ></div>
         </div>
       </div>
     {/if}
