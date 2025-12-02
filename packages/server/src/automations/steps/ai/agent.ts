@@ -1,5 +1,9 @@
 import * as automationUtils from "../../automationUtils"
-import { AgentStepInputs, AgentStepOutputs } from "@budibase/types"
+import {
+  AgentStepInputs,
+  AgentStepOutputs,
+  AutomationStepInputBase,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 import { createOpenAI } from "@ai-sdk/openai"
@@ -10,12 +14,14 @@ import {
   wrapLanguageModel,
 } from "ai"
 import { v4 } from "uuid"
+import { isProdWorkspaceID } from "../../../db/utils"
 
 export async function run({
   inputs,
+  appId,
 }: {
   inputs: AgentStepInputs
-}): Promise<AgentStepOutputs> {
+} & AutomationStepInputBase): Promise<AgentStepOutputs> {
   const { agentId, prompt } = inputs
 
   if (!agentId) {
@@ -34,6 +40,14 @@ export async function run({
 
   try {
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
+
+    if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
+      return {
+        success: false,
+        response:
+          "Agent is paused. Set it live to use it in published automations.",
+      }
+    }
 
     const { systemPrompt, tools: allTools } =
       await sdk.ai.agents.buildPromptAndTools(agentConfig)

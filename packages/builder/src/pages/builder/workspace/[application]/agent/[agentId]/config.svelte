@@ -16,10 +16,18 @@
     Icon,
     Helpers,
   } from "@budibase/bbui"
-  import { ToolSourceType, type Agent, type AgentToolSource } from "@budibase/types"
+  import {
+    ToolSourceType,
+    type Agent,
+    type AgentToolSource,
+  } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
-  import { datasources, restTemplates } from "@/stores/builder"
+  import {
+    deploymentStore,
+    datasources,
+    restTemplates,
+  } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
@@ -54,6 +62,7 @@
   let toolConfigModal: AgentToolConfigModal
   let deleteConfirmModal: Modal
   let toolSourceToDelete: any = null
+  let togglingLive = false
 
   $: currentAgent = $agentsStore.agents.find(
     a => a._id === $agentsStore.currentAgentId
@@ -79,7 +88,6 @@
   }))
 
   $: toolSources = $agentsStore.toolSources || []
-  $: console.log("toolSources", toolSources)
   async function saveAgent() {
     if (!currentAgent) return
     try {
@@ -97,30 +105,31 @@
   }
 
   async function toggleAgentLive() {
-    if (!currentAgent) return
+    if (!currentAgent || togglingLive) return
+
+    const nextLive = !currentAgent.live
 
     try {
-      if (currentAgent.live) {
-        await agentsStore.updateAgent({
-          ...currentAgent,
-          ...draft,
-          live: false,
-        })
-        notifications.success("Agent has been paused")
-      } else {
-        await agentsStore.updateAgent({
-          ...currentAgent,
-          ...draft,
-          live: true,
-        })
-        notifications.success("Agent is now live")
-      }
+      togglingLive = true
+
+      await agentsStore.updateAgent({
+        ...currentAgent,
+        ...draft,
+        live: nextLive,
+      })
+      await deploymentStore.publishApp()
       await agentsStore.fetchAgents()
+
+      notifications.success(
+        nextLive ? "Agent is now live" : "Agent has been paused"
+      )
     } catch (error) {
       console.error(error)
       notifications.error(
-        currentAgent.live ? "Error pausing agent" : "Error setting agent live"
+        nextLive ? "Error setting agent live" : "Error pausing agent"
       )
+    } finally {
+      togglingLive = false
     }
   }
 
@@ -275,7 +284,8 @@
                                 class="tool-icon"
                               />
                             {/if}
-                            {toolSource.label || toolSource.type.toLocaleLowerCase()}
+                            {toolSource.label ||
+                              toolSource.type.toLocaleLowerCase()}
                           </div>
                         </Tag>
                       </div>
@@ -354,6 +364,7 @@
           </div>
           <div class="live-actions">
             <Button secondary icon="pause" on:click={toggleAgentLive}
+              disabled={togglingLive}
               >Pause agent</Button
             >
           </div>
@@ -364,6 +375,7 @@
             quiet
             icon="play"
             iconColor="var(--bb-blue)"
+            disabled={togglingLive}
             on:click={toggleAgentLive}>Set your agent live</Button
           >
           <div class="live-description">
