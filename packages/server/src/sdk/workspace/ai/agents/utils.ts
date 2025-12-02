@@ -52,13 +52,7 @@ export async function buildPromptAndTools(
   }
 }
 
-export function addRequestId(
-  // eslint-disable-next-line
-  input: RequestInfo | URL,
-
-  init: RequestInit | undefined,
-  requestId: string
-) {
+export function addRequestId(input: any, init: any, requestId: string) {
   // we need to specifically add a litellm_session_id to the underlying request
   const nextInit = { ...init }
 
