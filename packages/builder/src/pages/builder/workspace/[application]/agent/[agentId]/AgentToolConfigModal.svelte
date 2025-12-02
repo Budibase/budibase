@@ -2,7 +2,6 @@
   import {
     Body,
     Heading,
-    Icon,
     Input,
     Modal,
     ModalContent,
@@ -66,6 +65,14 @@
 
   $: restDatasources = ($datasources.list || []).filter(
     ds => ds.source === IntegrationTypes.REST
+  )
+
+  // We only allow one Budibase tool source per agent
+  $: hasBudibaseSource = $agentsStore.toolSources.some(
+    ts => ts.type === ToolSourceType.BUDIBASE
+  )
+  $: availableToolSources = ToolSources.filter(
+    source => !(source.type === ToolSourceType.BUDIBASE && hasBudibaseSource)
   )
 
   $: datasourceOptions = restDatasources.map(ds => ({
@@ -265,7 +272,7 @@
   >
     {#if mode === "select"}
       <div class="sources-grid">
-        {#each ToolSources as source}
+        {#each availableToolSources as source}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div class="source-card" on:click={() => selectSource(source)}>
@@ -284,12 +291,6 @@
             <Body size="S" color="var(--spectrum-global-color-gray-700)">
               {source.description}
             </Body>
-            {#if $agentsStore.toolSources.some(ts => ts.type === source.type)}
-              <div class="connected-badge">
-                <Icon name="CheckmarkCircle" size="S" />
-                Connected
-              </div>
-            {/if}
           </div>
         {/each}
       </div>
@@ -419,15 +420,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .connected-badge {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--spectrum-global-color-green-500);
-    font-size: var(--font-size-s);
-    margin-top: auto;
   }
 
   .config-form {

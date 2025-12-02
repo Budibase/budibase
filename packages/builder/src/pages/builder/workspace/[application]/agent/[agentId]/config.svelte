@@ -258,7 +258,7 @@
                                 width="14"
                               />
                             {/if}
-                            {toolSource.type.toLocaleLowerCase()}
+                            {toolSource.label || toolSource.type.toLocaleLowerCase()}
                           </div>
                         </Tag>
                       </div>
