@@ -1,0 +1,65 @@
+{{- if .Values.services.litellm.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-service
+  labels:
+    app.kubernetes.io/name: litellm
+    io.kompose.service: litellm-service
+spec:
+  replicas: {{ .Values.services.litellm.replicaCount }}
+  selector:
+    matchLabels:
+      io.kompose.service: litellm-service
+  template:
+    metadata:
+      labels:
+        io.kompose.service: litellm-service
+    spec:
+      containers:
+        - name: litellm
+          image: {{ .Values.globals.dockerRegistry }}{{ .Values.services.litellm.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.services.litellm.port }}
+          args:
+            - --config
+            - /app/config.yaml
+          volumeMounts:
+            - name: litellm-config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          {{- with .Values.services.litellm.resources }}
+          resources:
+{{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.services.litellm.extraEnv }}
+          env:
+{{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
+          {{- end }}
+          {{- if .Values.services.litellm.extraVolumeMounts }}
+{{- toYaml .Values.services.litellm.extraVolumeMounts | nindent 10 }}
+          {{- end }}
+      volumes:
+        - name: litellm-config
+          configMap:
+            name: litellm-config
+      {{- if .Values.services.litellm.extraVolumes }}
+{{- toYaml .Values.services.litellm.extraVolumes | nindent 6 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{- end }}
+{{- end }}
