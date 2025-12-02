@@ -24,16 +24,62 @@ export function validateJsTemplate(
       offset += line.length + 1 // +1 for newline character
     }
 
+    const isFunctionNode = (node: any) =>
+      node?.type === "FunctionDeclaration" ||
+      node?.type === "FunctionExpression" ||
+      node?.type === "ArrowFunctionExpression" ||
+      node?.type === "MethodDefinition"
+
+    const isTopLevelReturn = (ancestors: any[]) =>
+      ancestors.length === 2 && ancestors[0]?.type === "Program"
+
+    const isReturnInTopLevelPlainElse = (ancestors: any[]) => {
+      let index = ancestors.length - 2
+      let child = ancestors[index + 1]
+      let seenPlainElse = false
+
+      while (index >= 0) {
+        const parent = ancestors[index]
+
+        if (parent?.type === "BlockStatement") {
+          child = parent
+          index -= 1
+          continue
+        }
+
+        if (parent?.type === "IfStatement" && parent.alternate === child) {
+          if (!seenPlainElse) {
+            if (parent.alternate?.type === "IfStatement") {
+              return false
+            }
+            seenPlainElse = true
+          }
+          child = parent
+          index -= 1
+          continue
+        }
+
+        break
+      }
+
+      return seenPlainElse && index === 0 && ancestors[0]?.type === "Program"
+    }
+
     let hasReturnStatement = false
     walk.ancestor(ast, {
       ReturnStatement(node, _state, ancestors) {
+        if (!node.argument) {
+          return
+        }
+
+        const isInsideFunction = ancestors
+          .slice(0, -1)
+          .some(ancestor => isFunctionNode(ancestor))
+
         if (
-          // it returns a value
-          node.argument &&
-          // and it is top level
-          ancestors.length === 2 &&
-          ancestors[0].type === "Program" &&
-          ancestors[1].type === "ReturnStatement"
+          !isInsideFunction &&
+          (isTopLevelReturn(ancestors) ||
+            isReturnInTopLevelPlainElse(ancestors))
         ) {
           hasReturnStatement = true
         }
