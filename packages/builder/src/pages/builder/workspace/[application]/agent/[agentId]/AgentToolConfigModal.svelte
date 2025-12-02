@@ -22,7 +22,8 @@
   import ConfluenceLogo from "../logos/Confluence.svelte"
   import GithubLogo from "../logos/Github.svelte"
 
-  const Logos: Record<string, ComponentType> = {
+  type LogoComponent = typeof BudibaseLogo
+  const Logos: Record<string, LogoComponent> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,
