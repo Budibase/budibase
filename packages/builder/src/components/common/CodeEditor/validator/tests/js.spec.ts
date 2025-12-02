@@ -80,9 +80,9 @@ describe("js validator", () => {
   })
 
   it("fails if the conditional return is not within a plain else block", () => {
-    const text = `if (true) {
+    const text = `if (false) {
       return "A"
-    } else if (false) {
+    } else if (true) {
       return "B"
     }`
     const validators = {}
