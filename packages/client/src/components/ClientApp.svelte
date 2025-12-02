@@ -189,7 +189,7 @@
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
-    {:else if $featuresStore.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
+    {:else if $featuresStore.recaptchaEnabled && $appStore.application?.features?.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
       <RecaptchaV2 />
     {:else}
       <EmbedProvider>
