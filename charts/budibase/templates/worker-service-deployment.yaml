@@ -140,6 +140,8 @@ spec:
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN
           value: {{ .Values.globals.posthogToken }}
+        - name: LITELLM_URL
+          value: {{ .Values.globals.litellmUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: INTERNAL_ACCOUNT_PORTAL_URL
