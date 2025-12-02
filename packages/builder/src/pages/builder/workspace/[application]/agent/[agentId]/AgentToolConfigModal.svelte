@@ -77,18 +77,29 @@
     (q: Query) => q.datasourceId === selectedDatasourceId
   )
 
-  $: selectedDatasource = restDatasources.find(
-    ds => ds._id === selectedDatasourceId
-  )
-
-  // Auto-populate label from datasource name when creating new source
+  // Auto-populate label and queries when datasource changes
+  let previousDatasourceId = ""
   $: if (
     selectedDatasourceId &&
-    selectedDatasource &&
-    !editingSource &&
-    !label
+    selectedDatasourceId !== previousDatasourceId
   ) {
-    label = selectedDatasource.name || ""
+    const isInitialLoad = !previousDatasourceId && editingSource
+    previousDatasourceId = selectedDatasourceId
+
+    if (!isInitialLoad) {
+      if (!editingSource) {
+        const ds = restDatasources.find(d => d._id === selectedDatasourceId)
+        if (ds) {
+          label = ds.name || ""
+        }
+      }
+      const allQueries = ($queries.list || []).filter(
+        (q: Query) => q.datasourceId === selectedDatasourceId
+      )
+      selectedQueryIds = allQueries
+        .map(q => q._id)
+        .filter((id): id is string => !!id)
+    }
   }
 
   export function show(sourceToEdit?: AgentToolSourceWithTools) {
@@ -120,6 +131,7 @@
       label = ""
       selectedDatasourceId = ""
       selectedQueryIds = []
+      previousDatasourceId = ""
     }
     modal.show()
   }
@@ -137,6 +149,7 @@
     label = ""
     selectedDatasourceId = ""
     selectedQueryIds = []
+    previousDatasourceId = ""
   }
 
   function toggleTool(toolName: string) {
@@ -348,7 +361,7 @@
           />
         </div>
 
-        {#if editingSource && toolsList.length > 0}
+        {#if editingSource && toolsList.length > 0 && selectedSourceType?.type !== ToolSourceType.REST_QUERY}
           <div class="tools-section">
             <Heading size="XS">Enabled Tools</Heading>
             <div class="tools-list">
