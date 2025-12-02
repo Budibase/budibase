@@ -596,6 +596,32 @@ describe("table sdk", () => {
         })
       })
 
+      it("ignores pending renames when the view schema is already using the updated column name", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          schema: {
+            updatedDescription: { visible: true, width: 150, icon: "ic-any" },
+          },
+        }
+        const { description, ...newTableSchema } = {
+          ...basicTable.schema,
+          updatedDescription: {
+            ...basicTable.schema.description,
+            name: "updatedDescription",
+          },
+        } as TableSchema
+
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, {
+          old: "description",
+          updated: "updatedDescription",
+        })
+
+        expect(result.schema?.updatedDescription).toEqual(
+          view.schema?.updatedDescription
+        )
+        expect(result.schema?.description).toBeUndefined()
+      })
+
       it("changing no UI schema will not affect the view", () => {
         const view: ViewV2 = {
           ...basicView,

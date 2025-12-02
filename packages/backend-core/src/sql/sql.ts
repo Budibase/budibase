@@ -118,6 +118,21 @@ function stringifyArray(value: unknown[], quoteStyle = '"'): string {
   return `[${value.join(",")}]`
 }
 
+function toPgArrayLiteral(value: unknown): string {
+  const values = Array.isArray(value) ? value : value == null ? [] : [value]
+  const elements = values.map(entry => {
+    if (typeof entry === "string" && entry.length > 1) {
+      const first = entry[0]
+      const last = entry[entry.length - 1]
+      if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+        return entry.substring(1, entry.length - 1)
+      }
+    }
+    return `${entry}`
+  })
+  return `{${elements.join(",")}}`
+}
+
 function isJsonColumn(
   field: FieldSchema
 ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
@@ -772,44 +787,42 @@ class InternalBuilder {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           q = addModifiers(q)
           const schema = this.getFieldSchema(key)
-          let cast = "::jsonb"
-          if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
-            cast = ""
-            const values = (value as string[]).map(value =>
-              value.substring(1, value.length - 1)
-            )
-            value = `{${values}}`
-          }
+          const identifier = this.rawQuotedIdentifier(key)
+          const filterValues = Array.isArray(value) ? [...value] : [value]
+          const isPgArray = this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)
           if (any) {
-            return q.whereRaw(
-              cast
-                ? `COALESCE(??::jsonb \\?| array??, FALSE)`
-                : `COALESCE(?? && '??', FALSE)`,
-              [
-                this.rawQuotedIdentifier(key),
-                cast
-                  ? this.knex.raw(stringifyArray(value, "'"))
-                  : this.knex.raw(value),
-              ]
-            )
-          } else {
-            return q.whereRaw(`COALESCE(??${cast} @> '??', FALSE)`, [
-              this.rawQuotedIdentifier(key),
-              cast
-                ? this.knex.raw(stringifyArray(value))
-                : this.knex.raw(value),
+            if (isPgArray) {
+              return q.whereRaw(`COALESCE(?? && ?::text[], FALSE)`, [
+                identifier,
+                toPgArrayLiteral(filterValues),
+              ])
+            }
+            return q.whereRaw(`COALESCE(??::jsonb \\?| ?::text[], FALSE)`, [
+              identifier,
+              toPgArrayLiteral(filterValues),
             ])
           }
+          if (isPgArray) {
+            return q.whereRaw(`COALESCE(?? @> ?::text[], FALSE)`, [
+              identifier,
+              toPgArrayLiteral(filterValues),
+            ])
+          }
+          return q.whereRaw(`COALESCE(??::jsonb @> ?::jsonb, FALSE)`, [
+            identifier,
+            stringifyArray(filterValues),
+          ])
         })
       } else if (
         this.client === SqlClient.MY_SQL ||
         this.client === SqlClient.MARIADB
       ) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
+          const jsonSearch = Array.isArray(value) ? value : [value]
           return addModifiers(q).whereRaw(`COALESCE(?(??, ?), FALSE)`, [
             this.knex.raw(any ? "JSON_OVERLAPS" : "JSON_CONTAINS"),
             this.rawQuotedIdentifier(key),
-            this.knex.raw(wrap(stringifyArray(value))),
+            JSON.stringify(jsonSearch),
           ])
         })
       } else {
@@ -933,8 +946,9 @@ class InternalBuilder {
         } else {
           const schema = this.getFieldSchema(key)
           if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
-            return q.whereRaw(`??::text ilike '${value}%'`, [
+            return q.whereRaw(`??::text ilike ?`, [
               this.knex.raw(this.quote(schema!.name)),
+              `${value}%`,
             ])
           } else {
             return q.whereILike(key, `${value}%`)

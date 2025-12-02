@@ -1,0 +1,18 @@
+{{- if .Values.services.litellm.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-service
+  labels:
+    app.kubernetes.io/name: litellm
+    io.kompose.service: litellm-service
+spec:
+  type: ClusterIP
+  selector:
+    io.kompose.service: litellm-service
+  ports:
+    - name: http
+      port: {{ .Values.services.litellm.port }}
+      targetPort: {{ .Values.services.litellm.port }}
+      protocol: TCP
+{{- end }}
