@@ -1,0 +1,12 @@
+{{- if and .Values.services.litellm.enabled .Values.services.litellm.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  labels:
+    app.kubernetes.io/name: litellm
+    io.kompose.service: litellm-service
+data:
+  config.yaml: |
+{{- .Values.services.litellm.config | nindent 4 }}
+{{- end }}

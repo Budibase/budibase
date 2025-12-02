@@ -2,18 +2,18 @@
 
 echo "Starting runner.sh..."
 
-# set defaults for Docker-related variables
+# Set defaults for Docker-related variables
 export APP_PORT="${APP_PORT:-4001}"
 export ARCHITECTURE="${ARCHITECTURE:-amd}"
 export BUDIBASE_ENVIRONMENT="${BUDIBASE_ENVIRONMENT:-PRODUCTION}"
 export CLUSTER_PORT="${CLUSTER_PORT:-80}"
 export DEPLOYMENT_ENVIRONMENT="${DEPLOYMENT_ENVIRONMENT:-docker}"
 
-# set defaults for proxy rate limiting (matching production defaults)
+# Set defaults for proxy rate limiting (matching production defaults)
 export PROXY_RATE_LIMIT_API_PER_SECOND="${PROXY_RATE_LIMIT_API_PER_SECOND:-50}"
 export PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND="${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND:-10}"
 
-# only set MINIO_URL if neither MINIO_URL nor USE_S3 is set
+# Only set MINIO_URL if neither MINIO_URL nor USE_S3 is set
 if [[ -z "${MINIO_URL}" && -z "${USE_S3}" ]]; then
   export MINIO_URL="http://127.0.0.1:9000"
 fi
@@ -28,7 +28,7 @@ export WORKER_URL="${WORKER_URL:-http://127.0.0.1:4002}"
 export APPS_URL="${APPS_URL:-http://127.0.0.1:4001}"
 export SERVER_TOP_LEVEL_PATH="${SERVER_TOP_LEVEL_PATH:-/app}"
 
-# set DATA_DIR and ensure the directory exists
+# Set DATA_DIR and ensure the directory exists
 if [[ ${TARGETBUILD} == "aas" ]]; then
     export DATA_DIR="/home"
 else
@@ -36,7 +36,7 @@ else
 fi
 mkdir -p "${DATA_DIR}"
 
-# mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
+# Mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
 if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting NFS share"
     apt update && apt install -y nfs-common nfs-kernel-server
@@ -45,14 +45,14 @@ if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting result: $?"
 fi
 
-# source environment variables from a .env file if it exists in DATA_DIR
+# Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
     set -a  # Automatically export all variables loaded from .env
     source "${DATA_DIR}/.env"
     set +a
 fi
 
-# randomize any unset sensitive environment variables using uuidgen
+# Randomize any unset sensitive environment variables using uuidgen
 env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD)
 for var in "${env_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
@@ -86,10 +86,11 @@ for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
 
-# make these directories in runner, incase of mount
+# Make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
 mkdir -p ${DATA_DIR}/couch
+mkdir -p ${DATA_DIR}/litellm
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 
 echo "Starting Redis runner..."
@@ -126,8 +127,20 @@ if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     /etc/init.d/nginx restart
 fi
 
-# wait for backend services to start
+# Wait for backend services to start
 sleep 10
+
+LITELLM_CONFIG_PATH="/litellm/config.yaml"
+if [ -f "${DATA_DIR}/litellm/config.yaml" ]; then
+    echo "Using user-mounted litellm config from ${DATA_DIR}/litellm/config.yaml"
+    LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
+fi
+
+pm2 start /opt/venv/litellm/bin/litellm \
+  --interpreter /opt/venv/litellm/bin/python \
+  --restart-delay 5000 \
+  --time \
+  -- -c "${LITELLM_CONFIG_PATH}"
 
 pushd app
 pm2 start --name app "yarn run:docker"
@@ -135,6 +148,7 @@ popd
 pushd worker
 pm2 start --name worker "yarn run:docker"
 popd
+
 echo "end of runner.sh, sleeping ..."
 
 tail -f $HOME/.pm2/logs/*.log
