@@ -49,6 +49,7 @@
   import { Compartment, EditorState } from "@codemirror/state"
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
+  import { json } from "@codemirror/lang-json"
   import { html } from "@codemirror/lang-html"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
@@ -72,6 +73,7 @@
   export let readonlyLineNumbers = false
   export let dropdown = DropdownPosition.Relative
   export let bindings: EnrichedBinding[] = []
+  export let aiEnabled = true
 
   const dispatch = createEventDispatcher()
 
@@ -88,8 +90,7 @@
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
-  $: aiGenEnabled = mode.name === "javascript" && !readonly
-
+  $: aiGenEnabled = mode.name === "javascript" && !readonly && aiEnabled
   $: {
     if (autofocus && isEditorInitialised) {
       editor.focus()
@@ -328,6 +329,8 @@
     if (mode.name === "javascript") {
       complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
+    } else if (mode.name === "json") {
+      complete.push(json())
     }
     // HTML only plugins
     else if (mode.name === "html") {
