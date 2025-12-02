@@ -3,7 +3,9 @@ import {
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,
+  BodyType,
 } from "@budibase/types"
+import { QueryVerbToHttpMethod } from "../../../../../constants"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
@@ -13,6 +15,7 @@ import {
   buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
+  buildKeyValueRequestBody,
   type FormDataParameter,
 } from "./utils/requestBody"
 
@@ -69,7 +72,8 @@ export class OpenAPI2 extends OpenAPISource {
     operation: OpenAPIV2.OperationObject,
     path: string,
     requestBody: GeneratedRequestBody | undefined,
-    parameters: QueryParameter[]
+    parameters: QueryParameter[],
+    bodyType?: BodyType
   ): RestTemplateQueryMetadata => {
     const metadata: RestTemplateQueryMetadata = {
       operationId: operation.operationId,
@@ -78,7 +82,14 @@ export class OpenAPI2 extends OpenAPISource {
       originalPath: path,
     }
 
-    const parsedBody = buildSerializableRequestBody(requestBody?.body)
+    let parsedBody = buildSerializableRequestBody(requestBody?.body)
+    if (
+      parsedBody !== undefined &&
+      bodyType &&
+      (bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED)
+    ) {
+      parsedBody = buildKeyValueRequestBody(parsedBody)
+    }
     if (parsedBody !== undefined) {
       metadata.originalRequestBody = parsedBody
     }
@@ -129,29 +140,44 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  private getEndpoints = (): ImportInfo["endpoints"] => {
+  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
+    const queries = await this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
-    for (let [path, pathItem] of Object.entries(this.document.paths)) {
-      for (let [key, opOrParams] of Object.entries(pathItem || {})) {
-        if (isParameter(key, opOrParams)) {
-          continue
-        }
-        const methodName = key
-        if (!this.isSupportedMethod(methodName)) {
-          continue
-        }
-        const operation = opOrParams as OpenAPIV2.OperationObject
-        const name = operation.operationId || path
-        endpoints.push({
-          id: this.buildEndpointId(methodName, path),
-          name,
-          method: methodName.toUpperCase(),
-          path,
-          description: operation.summary || operation.description,
-          queryVerb: this.verbFromMethod(methodName),
-        })
+
+    for (const query of queries) {
+      const metadata = query.restTemplateMetadata
+      if (!metadata) {
+        continue
       }
+
+      const path = metadata.originalPath || query.fields.path || ""
+      const method = QueryVerbToHttpMethod[query.queryVerb]
+
+      if (!this.isSupportedMethod(method)) {
+        continue
+      }
+
+      endpoints.push({
+        id: this.buildEndpointId(method || "", path),
+        name: query.name,
+        method: method?.toUpperCase() || "",
+        path,
+        description: metadata.description,
+        queryVerb: query.queryVerb,
+        operationId: metadata.operationId,
+        docsUrl: metadata.docsUrl,
+        originalPath: metadata.originalPath,
+        originalRequestBody: metadata.originalRequestBody,
+        defaultBindings: metadata.defaultBindings,
+        bodyType: query.fields.bodyType,
+        headers:
+          query.fields.headers && Object.keys(query.fields.headers).length > 0
+            ? query.fields.headers
+            : undefined,
+        queryString: query.fields.queryString || undefined,
+      })
     }
+
     return endpoints
   }
 
@@ -167,7 +193,7 @@ export class OpenAPI2 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: this.getEndpoints(),
+      endpoints: await this.getEndpoints(),
     }
   }
 
@@ -299,11 +325,16 @@ export class OpenAPI2 extends OpenAPISource {
           }
         }
 
+        const bodyType = primaryMimeType
+          ? this.bodyTypeFromMimeType(primaryMimeType)
+          : undefined
+
         const restTemplateMetadata = this.buildRestTemplateMetadata(
           operation,
           path,
           requestBody,
-          parameters
+          parameters,
+          bodyType
         )
 
         const query = this.constructQuery(
@@ -317,9 +348,7 @@ export class OpenAPI2 extends OpenAPISource {
           parameters,
           requestBody?.body,
           requestBody?.bindings ?? {},
-          primaryMimeType
-            ? this.bodyTypeFromMimeType(primaryMimeType)
-            : undefined,
+          bodyType,
           restTemplateMetadata
         )
         queries.push(query)

@@ -32,7 +32,6 @@
     type PreviewQueryResponse,
   } from "@budibase/types"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
-  import { findHBSBlocks } from "@budibase/string-templates"
   import { RestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
@@ -79,13 +78,22 @@
   let selectedEndpointOption: EndpointWithIcon | undefined
   let endpoints: ImportEndpoint[] | undefined
   let endpointsLoading = false
-  let queryParams: Record<string, any> | undefined = undefined
-  let localDynamicVariables: Record<string, any> | undefined = undefined
+  let queryParams: Record<string, string> | undefined = undefined
+  let localDynamicVariables: Record<string, string> | undefined = undefined
   let savingQuery = false,
     runningQuery = false
   let originalBuiltQuery: Query | undefined = undefined
   let baseUrl: string | undefined = undefined
   let response: PreviewQueryResponse
+  let query: Query | undefined
+
+  // Reset state when datasourceId changes
+  $: if (datasourceId) {
+    selectedEndpointOption = undefined
+    endpoints = undefined
+    queryParams = undefined
+    originalBuiltQuery = undefined
+  }
 
   // Build selectedEndpointOption from query metadata or fetch endpoints if needed
   $: if (query) {
@@ -94,7 +102,7 @@
 
   // QUERY/DATASOURCE INIT
   $: baseQuery = getSelectedQuery(queryId, datasourceId)
-  $: query = initializeQuery(baseQuery)
+  $: query = initializeQuery(baseQuery, selectedEndpointOption, baseUrl)
   $: datasource = structuredClone(
     $datasources.list.find(
       d => d._id === datasourceId || query?.datasourceId === d._id
@@ -183,8 +191,6 @@
     (!!originalBuiltQuery && !isEqual(builtQuery, originalBuiltQuery)) ||
     !!localDynamicVariables
 
-  // Text prettifying
-  $: pathParts = parsePathWithBindings(requestURL || "")
   $: prettyBody = query?.fields?.requestBody
     ? prettifyQueryRequestBody(query, mergedBindings)
     : undefined
@@ -222,10 +228,12 @@
     return options
   })()
   $: endpointVerbColor = selectedEndpointOption?.icon?.props?.color
-  $: endpointDocs = selectedEndpointOption?.externalDocs
+  $: endpointDocs = selectedEndpointOption?.docsUrl
 
   const initializeQuery = (
-    sourceQuery: Query | undefined
+    sourceQuery: Query | undefined,
+    endpoint?: EndpointWithIcon,
+    baseUrl?: string
   ): Query | undefined => {
     if (!sourceQuery) return undefined
 
@@ -255,27 +263,80 @@
     }
 
     if (!sourceQuery._id) {
-      const pathToUse = selectedEndpointOption?.path || ""
       const fullPath =
-        selectedEndpointOption && baseUrl
-          ? constructFullPath(baseUrl, pathToUse)
+        endpoint && baseUrl
+          ? constructFullPath(baseUrl, endpoint?.path || "")
           : ""
+
+      const defaultBindings = endpoint?.defaultBindings || {}
+
+      // Include static vars as bindings.
+      const staticVariables = datasource?.config?.staticVariables || {}
+      const allBindings = { ...defaultBindings }
+
+      // Add static variables with binding syntax as defaults
+      for (const [name, value] of Object.entries(staticVariables)) {
+        if (!allBindings[name]) {
+          allBindings[name] = `{{ ${name} }}`
+        }
+      }
+
+      const parameters = Object.entries(allBindings).map(
+        ([name, defaultValue]) => ({
+          name,
+          default: defaultValue,
+        })
+      )
+
+      const bodyType =
+        endpoint?.bodyType ||
+        (endpoint?.originalRequestBody ? BodyType.JSON : BodyType.NONE)
+
+      let requestBody = endpoint?.originalRequestBody
+      const isKeyValueBodyType =
+        bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED
+
+      if (
+        requestBody &&
+        typeof requestBody === "object" &&
+        !isKeyValueBodyType
+      ) {
+        requestBody = JSON.stringify(requestBody, null, 2)
+      }
+
+      // Use headers from endpoint metadata
+      const headers = endpoint?.headers || {}
+      const disabledHeaders: Record<string, boolean> = {}
+      for (const header of Object.keys(headers)) {
+        disabledHeaders[header] = false
+      }
 
       return {
         datasourceId: datasourceId,
-        name: selectedEndpointOption?.name,
-        queryVerb: selectedEndpointOption?.queryVerb,
+        name: endpoint?.name,
+        queryVerb: endpoint?.queryVerb,
         fields: {
           path: fullPath,
-          queryString: "",
-          headers: {},
-          disabledHeaders: {},
-          bodyType: BodyType.NONE,
+          queryString: endpoint?.queryString || "",
+          headers,
+          disabledHeaders,
+          requestBody,
+          bodyType,
         },
-        parameters: [],
+        parameters,
         transformer: "return data",
         schema: {},
         readable: true,
+        restTemplateMetadata: endpoint
+          ? {
+              operationId: endpoint.operationId,
+              docsUrl: endpoint.docsUrl,
+              description: endpoint.description,
+              originalPath: endpoint.originalPath,
+              originalRequestBody: endpoint.originalRequestBody,
+              defaultBindings: endpoint.defaultBindings,
+            }
+          : undefined,
       } as Query
     }
 
@@ -323,32 +384,6 @@
 
   const compareEndpoints = (option: any, value: any) => option.id === value?.id
 
-  const parsePathWithBindings = (path: string) => {
-    if (!path) return []
-
-    const bindings = findHBSBlocks(path)
-    const parts: Array<{ text: string; isBinding: boolean }> = []
-    let lastIndex = 0
-
-    bindings.forEach(binding => {
-      const bindingIndex = path.indexOf(binding, lastIndex)
-      if (bindingIndex > lastIndex) {
-        parts.push({
-          text: path.slice(lastIndex, bindingIndex),
-          isBinding: false,
-        })
-      }
-      parts.push({ text: binding, isBinding: true })
-      lastIndex = bindingIndex + binding.length
-    })
-
-    if (lastIndex < path.length) {
-      parts.push({ text: path.slice(lastIndex), isBinding: false })
-    }
-
-    return parts
-  }
-
   /**
    * This initialises the query data with either the actual query or a default
    * For queries without request metadata, it will also perform a sync
@@ -374,7 +409,7 @@
         path: metadata.originalPath || "",
         description: metadata.description || "",
         queryVerb: query.queryVerb,
-        externalDocs: metadata.docsUrl,
+        docsUrl: metadata.docsUrl,
         icon: {
           component: APIEndpointVerbBadge,
           props: {
@@ -388,9 +423,23 @@
       return
     }
 
-    // For queries without metadata, try to find from endpoints list
-    // This handles old queries that don't have metadata yet
-    if (endpoints && query.fields?.path) {
+    parseLegacyQuery(query, endpoints)
+  }
+
+  /**
+   * For queries without metadata, reverse engineer the path to find the endpoint
+   * This handles old queries that don't have metadata yet
+   *
+   * Can be removed at some point in the future
+   *
+   * @param query
+   * @param endpoints
+   */
+  function parseLegacyQuery(
+    query: Query,
+    endpoints: ImportEndpoint[] | undefined
+  ) {
+    if (endpoints && query.fields?.path && !query.restTemplateMetadata) {
       try {
         const url = new URL(query.fields.path)
         const basePath = decodeURIComponent(url.pathname)
@@ -430,26 +479,6 @@
     savingQuery = true
     try {
       const isNew = !builtQuery._rev
-
-      if (isNew && selectedEndpointOption && spec) {
-        const resp = await queries.importQueries({
-          url: spec.url,
-          datasource: datasource as Datasource,
-          selectedEndpointId: selectedEndpointOption.id,
-        })
-
-        const createdQuery = resp.queries[0]
-        await Promise.all([datasources.fetch(), queries.fetch()])
-
-        if (createdQuery?._id) {
-          notifications.success(`Request saved successfully`)
-          if (redirectIfNew) {
-            $goto(`../../${createdQuery._id}`)
-          }
-          return { ok: true }
-        }
-        throw new Error("Failed to create query")
-      }
 
       const datasourceType = datasource?.source
       const integrationInfo = $integrations[datasourceType]
@@ -498,7 +527,7 @@
   }
 
   async function previewQuery() {
-    if (!query?._id || !builtQuery) return
+    if (!selectedEndpointOption || !query || !builtQuery) return
     try {
       validateQuery(
         requestURL,
@@ -510,8 +539,10 @@
 
       const result = await runQuery(builtQuery, schema)
       response = result.response
-      schema = result.schema
-      nestedSchemaFields = result.nestedSchemaFields
+
+      // Update query object with schema from preview
+      query.schema = result.schema
+      query.nestedSchemaFields = result.nestedSchemaFields
 
       if (result.response.rows.length === 0) {
         notifications.info("Request did not return any data")
@@ -657,238 +688,245 @@
   }
 </script>
 
-<div class="wrap">
-  <div class="main">
-    <!-- Could possibly pull this into its own panel, the RequestPanel? -->
-    <Layout noPadding>
-      <div class="heading">
-        <div class="api-details">
-          <img src={template?.icon} alt={`${template?.name} logo`} width="24" />
-          <Heading>{template?.name}</Heading>{spec?.version}
-        </div>
-        <div class="actions">
-          <div class="grouped">
-            {#if endpointDocs}
-              <ActionButton
-                quiet
-                icon="arrow-square-up-right"
-                on:click={() => {
-                  window.open(endpointDocs, "_blank")
-                }}
-              >
-                Docs
-              </ActionButton>
-            {/if}
-            {#if query?._id}
-              <ConnectedQueryScreens
-                icon={"link-simple-horizontal-break"}
-                sourceId={query._id}
-                btnText="Usage"
-              />
-            {/if}
-          </div>
-          <div class="save-btn">
-            <Button
-              cta
-              disabled={!queryDirty || savingQuery}
-              on:click={() => saveQuery()}
-            >
-              {!query?._id ? "Create" : "Save"}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div class="request" style:--verb-color={endpointVerbColor}>
-        <div class="picker">
-          <Select
-            on:change={e => {
-              selectedEndpointOption = e.detail
-            }}
-            value={selectedEndpointOption}
-            options={endpointOptions}
-            getOptionValue={endpoint => endpoint}
-            getOptionLabel={endpoint => endpoint.name}
-            compare={compareEndpoints}
-            disabled={endpointsLoading}
-            readonly={!!query?._id}
-            hideChevron={!!query?._id}
-            loading={endpointsLoading}
-            autocomplete={true}
-          />
-        </div>
-        <div class="endpoint">
-          <div class="path">
-            {#each pathParts as part}
-              {#if part.isBinding}
-                <span class="binding">{part.text}</span>
-              {:else}
-                {part.text}
-              {/if}
-            {/each}
-          </div>
-        </div>
-        <div class="send" class:loaded={selectedEndpointOption}>
-          <Button
-            primary
-            disabled={!selectedEndpointOption || !query?._id || runningQuery}
-            icon="paper-plane-right"
-            on:click={previewQuery}
-          >
-            Send
-          </Button>
-        </div>
-      </div>
-      <div class="details">
-        <Layout noPadding gap="XS">
-          <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
-          <DescriptionViewer
-            description={selectedEndpointOption?.description}
-          />
-        </Layout>
-      </div>
-      <div class="config">
-        <Layout noPadding gap="S">
-          <Tabs
-            selected="Bindings"
+<div class="request-heading">
+  <div class="heading">
+    <div class="api-details">
+      <img src={template?.icon} alt={`${template?.name} logo`} width="24" />
+      <Heading>{template?.name}</Heading>{spec?.version}
+    </div>
+    <div class="actions">
+      <div class="grouped">
+        {#if endpointDocs}
+          <ActionButton
             quiet
-            noPadding
-            noHorizPadding
-            onTop
-            disabled={!query?._id}
-          >
-            <Tab title="Bindings">
-              <KeyValueBuilder
-                defaults={requestBindings}
-                tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
-                name="binding"
-                headings
-                keyPlaceholder="Binding name"
-                valuePlaceholder="Default"
-                bindings={[
-                  ...dataSourceStaticBindings,
-                  ...restBindings,
-                  ...globalDynamicRequestBindings,
-                ]}
-                context={bindingPreviewContext}
-                on:change={onUpdateBindings}
-                actionButtonDisabled={!query?._id}
-              />
-            </Tab>
-            <Tab title="Params">
-              {#key queryParams}
-                <KeyValueBuilder
-                  name="param"
-                  defaults={queryParams}
-                  headings
-                  bindings={mergedBindings}
-                  context={bindingPreviewContext}
-                  on:change={onUpdateParams}
-                />
-              {/key}
-            </Tab>
-            <Tab title="Headers">
-              <KeyValueBuilder
-                defaults={query?.fields.headers}
-                toggle
-                name="header"
-                headings
-                bindings={mergedBindings}
-                context={bindingPreviewContext}
-                on:change={onUpdateHeaders}
-              />
-            </Tab>
-            <Tab title="Body">
-              <span class="bodyType-radio-group">
-                <RadioGroup
-                  value={query?.fields?.bodyType}
-                  options={isGet ? [RestBodyTypes[0]] : RestBodyTypes}
-                  direction="horizontal"
-                  getOptionLabel={option => option.name}
-                  getOptionValue={option => option.value}
-                  on:change={onUpdateBodyType}
-                />
-              </span>
-              <RestBodyInput
-                bodyType={query?.fields.bodyType}
-                requestBody={prettyBody}
-                on:change={onUpdateBody}
-              />
-            </Tab>
-            <Tab title="Transformer">
-              <Layout noPadding>
-                {#if !$flags.queryTransformerBanner}
-                  <Banner
-                    extraButtonText="Learn more"
-                    extraButtonAction={() =>
-                      window.open(
-                        "https://docs.budibase.com/docs/transformers"
-                      )}
-                    on:change={() => updateFlag("queryTransformerBanner", true)}
-                  >
-                    Add a JavaScript function to transform the query result.
-                  </Banner>
-                {/if}
-                <div class="embed">
-                  <CodeEditor
-                    value={query?.transformer}
-                    mode={EditorModes.JS}
-                    aiEnabled={false}
-                    on:change={e => {
-                      if (!query) return
-                      query.transformer = e.detail
-                    }}
-                  />
-                </div>
-              </Layout>
-            </Tab>
-          </Tabs>
-        </Layout>
-      </div>
-    </Layout>
-  </div>
-  <div class="side-bar-wrapper">
-    <div
-      class="side-bar main"
-      class:hidden={$sidebarExpanded || isTransitioning}
-      bind:this={sidebarElement}
-    >
-      <div class="side-bar-header">
-        <div class="side-bar-title">Response</div>
-        <ActionButton
-          size="M"
-          quiet
-          selected={$sidebarExpanded}
-          on:click={() => sidebarExpanded.set(!$sidebarExpanded)}
-        >
-          <Icon
-            name={$sidebarExpanded ? "arrows-in-simple" : "arrows-out-simple"}
-            size="S"
-          />
-        </ActionButton>
-      </div>
-      <Divider size="S" noMargin />
-      <div class="side-bar-content">
-        <div use:moveToExpanded>
-          <ResponsePanel
-            {datasource}
-            {response}
-            {schema}
-            {dynamicVariables}
-            fullscreen={$sidebarExpanded}
-            on:change={e => {
-              const {
-                dynamicVariables: updatedDynamicVariables,
-                schema: updatedSchema,
-              } = e.detail || {}
-              if (updatedDynamicVariables) {
-                localDynamicVariables = updatedDynamicVariables
-              }
-              if (updatedSchema) {
-                schema = updatedSchema
-              }
+            icon="arrow-square-up-right"
+            on:click={() => {
+              window.open(endpointDocs, "_blank")
             }}
+          >
+            Docs
+          </ActionButton>
+        {/if}
+        {#if query?._id}
+          <ConnectedQueryScreens
+            icon={"link-simple-horizontal-break"}
+            sourceId={query._id}
+            buttonText="Usage"
           />
+        {/if}
+      </div>
+      <div class="save-btn">
+        <Button
+          cta
+          disabled={!queryDirty || savingQuery}
+          on:click={() => saveQuery()}
+        >
+          Save
+        </Button>
+      </div>
+    </div>
+  </div>
+  <div class="request" style:--verb-color={endpointVerbColor}>
+    <div class="picker">
+      <Select
+        on:change={e => {
+          selectedEndpointOption = e.detail
+        }}
+        value={selectedEndpointOption}
+        options={endpointOptions}
+        getOptionValue={endpoint => endpoint}
+        getOptionLabel={endpoint => endpoint.name}
+        compare={compareEndpoints}
+        disabled={endpointsLoading}
+        readonly={!!query?._id}
+        hideChevron={!!query?._id}
+        loading={endpointsLoading}
+        autocomplete={true}
+      />
+    </div>
+    <div class="endpoint">
+      <CodeEditor
+        value={requestURL}
+        mode={EditorModes.Handlebars}
+        aiEnabled={false}
+        readonly
+        lineWrapping={false}
+      />
+    </div>
+    <div class="send" class:loaded={selectedEndpointOption}>
+      <Button
+        primary
+        disabled={!selectedEndpointOption || runningQuery}
+        icon="paper-plane-right"
+        on:click={previewQuery}
+      >
+        Send
+      </Button>
+    </div>
+  </div>
+</div>
+<div class="bottom">
+  <div class="wrap-divider">
+    <Divider noMargin />
+  </div>
+  <div class="wrap">
+    <div class="main">
+      <Layout noPadding>
+        <div class="details">
+          <Layout noPadding gap="XS">
+            <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
+            <DescriptionViewer
+              description={selectedEndpointOption?.description}
+              label={""}
+            />
+          </Layout>
+        </div>
+        <div class="config">
+          <Layout noPadding gap="S">
+            {#key selectedEndpointOption?.id}
+              <Tabs
+                selected="Bindings"
+                quiet
+                noPadding
+                noHorizPadding
+                onTop
+                disabled={!selectedEndpointOption}
+              >
+                <Tab title="Bindings">
+                  <KeyValueBuilder
+                    defaults={requestBindings}
+                    tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+                    name="binding"
+                    headings
+                    keyPlaceholder="Binding name"
+                    valuePlaceholder="Default"
+                    bindings={[
+                      ...dataSourceStaticBindings,
+                      ...restBindings,
+                      ...globalDynamicRequestBindings,
+                    ]}
+                    context={bindingPreviewContext}
+                    on:change={onUpdateBindings}
+                    actionButtonDisabled={!selectedEndpointOption}
+                  />
+                </Tab>
+                <Tab title="Params">
+                  {#key queryParams}
+                    <KeyValueBuilder
+                      name="param"
+                      defaults={queryParams}
+                      headings
+                      bindings={mergedBindings}
+                      context={bindingPreviewContext}
+                      on:change={onUpdateParams}
+                    />
+                  {/key}
+                </Tab>
+                <Tab title="Headers">
+                  <KeyValueBuilder
+                    defaults={query?.fields.headers}
+                    toggle
+                    name="header"
+                    headings
+                    bindings={mergedBindings}
+                    context={bindingPreviewContext}
+                    on:change={onUpdateHeaders}
+                  />
+                </Tab>
+                <Tab title="Body">
+                  <span class="bodyType-radio-group">
+                    <RadioGroup
+                      value={query?.fields?.bodyType}
+                      options={isGet ? [RestBodyTypes[0]] : RestBodyTypes}
+                      direction="horizontal"
+                      getOptionLabel={option => option.name}
+                      getOptionValue={option => option.value}
+                      on:change={onUpdateBodyType}
+                    />
+                  </span>
+                  <RestBodyInput
+                    bodyType={query?.fields.bodyType}
+                    requestBody={prettyBody}
+                    on:change={onUpdateBody}
+                  />
+                </Tab>
+                <Tab title="Transformer">
+                  <Layout noPadding>
+                    {#if !$flags.queryTransformerBanner}
+                      <Banner
+                        extraButtonText="Learn more"
+                        extraButtonAction={() =>
+                          window.open(
+                            "https://docs.budibase.com/docs/transformers"
+                          )}
+                        on:change={() =>
+                          updateFlag("queryTransformerBanner", true)}
+                      >
+                        Add a JavaScript function to transform the query result.
+                      </Banner>
+                    {/if}
+                    <div class="embed">
+                      <CodeEditor
+                        value={query?.transformer}
+                        mode={EditorModes.JS}
+                        aiEnabled={false}
+                        on:change={e => {
+                          if (!query) return
+                          query.transformer = e.detail
+                        }}
+                      />
+                    </div>
+                  </Layout>
+                </Tab>
+              </Tabs>
+            {/key}
+          </Layout>
+        </div>
+      </Layout>
+    </div>
+    <div class="side-bar-wrapper">
+      <div
+        class="side-bar main"
+        class:hidden={$sidebarExpanded || isTransitioning}
+        bind:this={sidebarElement}
+      >
+        <div class="side-bar-header">
+          <div class="side-bar-title">Response</div>
+          <ActionButton
+            size="M"
+            quiet
+            selected={$sidebarExpanded}
+            on:click={() => sidebarExpanded.set(!$sidebarExpanded)}
+          >
+            <Icon
+              name={$sidebarExpanded ? "arrows-in-simple" : "arrows-out-simple"}
+              size="S"
+            />
+          </ActionButton>
+        </div>
+        <Divider size="S" noMargin />
+        <div class="side-bar-content">
+          <div use:moveToExpanded>
+            <ResponsePanel
+              {datasource}
+              {response}
+              {schema}
+              {dynamicVariables}
+              fullscreen={$sidebarExpanded}
+              on:change={e => {
+                const {
+                  dynamicVariables: updatedDynamicVariables,
+                  schema: updatedSchema,
+                } = e.detail || {}
+                if (updatedDynamicVariables) {
+                  localDynamicVariables = updatedDynamicVariables
+                }
+                if (updatedSchema) {
+                  schema = updatedSchema
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -933,6 +971,23 @@
 </Portal>
 
 <style>
+  .details :global(.markdown-viewer code) {
+    color: white;
+  }
+  .bottom {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .request-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+  }
+  .wrap-divider {
+    margin: 0px -40px;
+  }
   .wrap {
     --sidebar-width: 280px;
     display: flex;
@@ -940,6 +995,7 @@
     flex: 1;
   }
   .wrap > .main {
+    padding-top: var(--spacing-l);
     flex: 1;
   }
   .side-bar-wrapper {
@@ -949,8 +1005,8 @@
   }
   .side-bar {
     position: absolute;
+    top: -0px;
     /* Initial offset for the global padding */
-    top: -28px;
     bottom: -40px;
     right: -40px;
     width: var(--sidebar-width);
@@ -1048,7 +1104,7 @@
   }
   .endpoint {
     border: 0.5px dashed var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-2);
+    background: var(--spectrum-global-color-gray-200);
     display: flex;
     align-items: center;
     flex: 1;
@@ -1060,24 +1116,27 @@
     box-sizing: border-box;
     gap: var(--spacing-s);
   }
-  .endpoint .path {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    height: 100%;
-    display: flex;
-    align-items: center;
+  .endpoint :global(.code-editor) {
+    max-width: 100%;
   }
-  .endpoint .binding {
-    color: var(--verb-color);
-    background-color: color-mix(in srgb, var(--verb-color) 35%, transparent);
+  .endpoint :global(.cm-editor) {
+    background: transparent !important;
+    font-family: var(--font-sans);
+    /* To match the picker size */
+    font-size: var(--spectrum-picker-text-size);
+  }
+  .endpoint :global(.cm-line .binding-wrap) {
+    color: var(--verb-color) !important;
     padding: 2px;
     border-radius: 4px;
     transition:
       background-color 130ms ease-in-out,
       color 130ms ease-in-out;
   }
+  .endpoint :global(.code-editor .cm-scroller) {
+    overflow: hidden;
+  }
+
   .heading {
     display: flex;
     flex-direction: row;

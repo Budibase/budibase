@@ -10,6 +10,12 @@ export interface QuerySchema {
 
 export type QueryVerb = "read" | "create" | "update" | "delete" | "patch"
 
+export interface EndpointMetadata {
+  originalPath?: string
+  originalRequestBody?: unknown
+  defaultBindings?: Record<string, string>
+}
+
 export interface ImportEndpoint {
   id: string
   name: string
@@ -18,6 +24,14 @@ export interface ImportEndpoint {
   description?: string
   queryVerb?: QueryVerb
   externalDocs?: string
+  operationId?: string
+  docsUrl?: string
+  originalPath?: string
+  originalRequestBody?: unknown
+  defaultBindings?: Record<string, string>
+  bodyType?: BodyType
+  headers?: Record<string, unknown>
+  queryString?: string
 }
 
 export interface Query extends Document {

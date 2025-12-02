@@ -4,6 +4,7 @@
   import type {
     Datasource,
     PreviewQueryResponse,
+    QuerySchema,
     UIInternalDatasource,
   } from "@budibase/types"
   import { shouldShowVariables, keyValueArrayToRecord } from "./query"
@@ -14,9 +15,9 @@
   import { EditorModes } from "../common/CodeEditor"
 
   export let response: PreviewQueryResponse | undefined = undefined
-  export let schema: any = undefined
+  export let schema: Record<string, QuerySchema | string> | undefined = undefined
   export let datasource: Datasource | UIInternalDatasource | undefined
-  export let dynamicVariables: Record<string, any>
+  export let dynamicVariables: Record<string, string>
   export let fullscreen = false
 
   const dispatch = createEventDispatcher()
@@ -136,6 +137,7 @@
     {/if}
     {#if !fullscreen}
       <Select
+        quiet
         value={selectedTab}
         options={tabOptions}
         on:change={handleTabChange}

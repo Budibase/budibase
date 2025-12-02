@@ -6,7 +6,7 @@
   import type { ScreenUsage } from "@budibase/types"
 
   export let sourceId: string
-  export let btnText = "Screens"
+  export let buttonText = "Screens"
   export let icon = "browser"
 
   let screens: ScreenUsage[] = []
@@ -32,5 +32,5 @@
   {icon}
   accentColor="#364800"
   showCount
-  {btnText}
+  {buttonText}
 />
