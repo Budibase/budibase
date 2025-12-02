@@ -20,13 +20,15 @@ export class RecaptchaStore extends BudiStore<RecaptchaState> {
   syncRecaptcha = (workspace: Workspace, key?: string) => {
     this.set({
       available: !!key,
-      enabled: !!workspace.recaptchaEnabled && !!key,
+      enabled: !!workspace.features?.recaptchaEnabled && !!key,
     })
   }
 
   async setState(enabled: boolean) {
     const appId = get(appStore).appId
-    await API.saveAppMetadata(appId, { recaptchaEnabled: enabled })
+    await API.saveAppMetadata(appId, {
+      features: { recaptchaEnabled: enabled },
+    })
     this.update(state => {
       state.enabled = state.available && enabled
       return state
