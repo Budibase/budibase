@@ -15,7 +15,8 @@
   import { EditorModes } from "../common/CodeEditor"
 
   export let response: PreviewQueryResponse | undefined = undefined
-  export let schema: Record<string, QuerySchema | string> | undefined = undefined
+  export let schema: Record<string, QuerySchema | string> | undefined =
+    undefined
   export let datasource: Datasource | UIInternalDatasource | undefined
   export let dynamicVariables: Record<string, string>
   export let fullscreen = false
