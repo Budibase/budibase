@@ -487,8 +487,8 @@
                   size="XS"
                   textAlign="center"
                 >
-                  You have no favorites yet! Favourite an automation, app, table
-                  or API for quicker access.
+                  You have no favourites yet! Favourite an automation, app,
+                  table or API for quicker access.
                 </Body>
                 <Link
                   href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
