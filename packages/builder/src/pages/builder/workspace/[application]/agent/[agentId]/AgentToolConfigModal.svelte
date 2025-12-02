@@ -16,7 +16,7 @@
     AgentToolSourceWithTools,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
-  import { createEventDispatcher, type ComponentType } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import ConfluenceLogo from "../logos/Confluence.svelte"
