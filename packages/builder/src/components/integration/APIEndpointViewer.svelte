@@ -275,7 +275,7 @@
       const allBindings = { ...defaultBindings }
 
       // Add static variables with binding syntax as defaults
-      for (const [name, value] of Object.entries(staticVariables)) {
+      for (const [name, _] of Object.entries(staticVariables)) {
         if (!allBindings[name]) {
           allBindings[name] = `{{ ${name} }}`
         }
