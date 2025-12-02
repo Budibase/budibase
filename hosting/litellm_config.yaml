@@ -1,0 +1,3 @@
+general_settings:
+  store_model_in_db: true
+  store_prompts_in_spend_logs: true

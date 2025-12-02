@@ -136,7 +136,7 @@ describe("/recaptcha", () => {
     })
 
     async function setRecaptchaEnabled(value: boolean) {
-      workspace.recaptchaEnabled = value
+      workspace.features = { ...workspace.features, recaptchaEnabled: value }
       await config.api.workspace.update(workspace.appId, workspace)
       await config.api.workspace.publish(workspace.appId)
     }
