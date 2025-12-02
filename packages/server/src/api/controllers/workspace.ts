@@ -1052,6 +1052,10 @@ export async function updateWorkspacePackage(
     const newWorkspacePackage: Workspace = {
       ...application,
       ...workspacePackage,
+      features: {
+        ...application.features,
+        ...workspacePackage.features,
+      },
     }
     if (workspacePackage._rev !== application._rev) {
       newWorkspacePackage._rev = application._rev
