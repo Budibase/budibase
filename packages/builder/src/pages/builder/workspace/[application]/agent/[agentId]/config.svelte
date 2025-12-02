@@ -23,11 +23,7 @@
   } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
-  import {
-    deploymentStore,
-    datasources,
-    restTemplates,
-  } from "@/stores/builder"
+  import { deploymentStore, datasources, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
@@ -363,9 +359,11 @@
             </div>
           </div>
           <div class="live-actions">
-            <Button secondary icon="pause" on:click={toggleAgentLive}
-              disabled={togglingLive}
-              >Pause agent</Button
+            <Button
+              secondary
+              icon="pause"
+              on:click={toggleAgentLive}
+              disabled={togglingLive}>Pause agent</Button
             >
           </div>
         </div>
