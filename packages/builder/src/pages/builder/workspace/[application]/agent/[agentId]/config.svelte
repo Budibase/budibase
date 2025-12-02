@@ -16,9 +16,10 @@
     Icon,
     Helpers,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
+  import { ToolSourceType, type Agent, type AgentToolSource } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { datasources, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
@@ -27,6 +28,16 @@
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
+  }
+
+  function getToolSourceIcon(toolSource: AgentToolSource): string | undefined {
+    if (toolSource.type === ToolSourceType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
+      if (ds?.restTemplate) {
+        return restTemplates.getByName(ds.restTemplate)?.icon
+      }
+    }
+    return undefined
   }
 
   let currentAgent: Agent | undefined
@@ -256,6 +267,12 @@
                                 this={Logos[toolSource.type]}
                                 height="14"
                                 width="14"
+                              />
+                            {:else if getToolSourceIcon(toolSource)}
+                              <img
+                                src={getToolSourceIcon(toolSource)}
+                                alt=""
+                                class="tool-icon"
                               />
                             {/if}
                             {toolSource.label || toolSource.type.toLocaleLowerCase()}
@@ -583,5 +600,11 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+  }
+
+  .tool-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
   }
 </style>

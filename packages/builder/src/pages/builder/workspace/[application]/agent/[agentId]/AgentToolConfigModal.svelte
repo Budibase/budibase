@@ -304,13 +304,14 @@
                 No REST APIs found. Create a REST API in the APIs section first.
               </Body>
             {:else}
-              <Select
-                label="REST API"
-                bind:value={selectedDatasourceId}
-                options={datasourceOptions}
-                placeholder="Select a REST API"
-              />
-
+              {#if !editingSource}
+                <Select
+                  label="REST API"
+                  bind:value={selectedDatasourceId}
+                  options={datasourceOptions}
+                  placeholder="Select a REST API"
+                />
+              {/if}
               {#if selectedDatasourceId}
                 <Input
                   label="Tool Source Name"
