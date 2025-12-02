@@ -53,9 +53,9 @@ export async function buildPromptAndTools(
 }
 
 export function addRequestId(
-  // eslint-disable-next-line no-undef
+  // eslint-disable-next-line
   input: RequestInfo | URL,
-  // eslint-disable-next-line no-undef
+
   init: RequestInit | undefined,
   requestId: string
 ) {
