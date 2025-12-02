@@ -2,10 +2,11 @@
   import { Button } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "@/stores/portal"
-  import { sdk } from "@budibase/shared-core"
+  import { helpers, sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
 
   $goto
+  const { accountPortalUpgradeUrl } = helpers
 </script>
 
 {#if !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
@@ -15,7 +16,7 @@
       size="M"
       on:click
       on:click={() => {
-        window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
+        window.open(accountPortalUpgradeUrl($admin.accountPortalUrl), "_blank")
       }}
     >
       Upgrade

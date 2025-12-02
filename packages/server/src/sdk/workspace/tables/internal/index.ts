@@ -17,6 +17,7 @@ import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFo
 import {
   hasTypeChanged,
   internalTableCleanup,
+  mergePendingColumnRenames,
   TableSaveFunctions,
 } from "../../../../api/controllers/table/utils"
 import { EventType, updateLinks } from "../../../../db/linkedRows"
@@ -114,8 +115,23 @@ export async function save(
   }
 
   // rename row fields when table column is renamed
-  if (renaming && table.schema[renaming.updated].type === FieldType.LINK) {
+  if (renaming && table.schema[renaming.updated]?.type === FieldType.LINK) {
     throw new Error("Cannot rename a linked column.")
+  }
+
+  let pendingColumnRenames = oldTable?.pendingColumnRenames
+    ? oldTable.pendingColumnRenames
+    : []
+  if (renaming) {
+    pendingColumnRenames = mergePendingColumnRenames(
+      pendingColumnRenames,
+      renaming
+    )
+  }
+  if (pendingColumnRenames.length > 0) {
+    table.pendingColumnRenames = pendingColumnRenames
+  } else {
+    delete table.pendingColumnRenames
   }
 
   table = await tableSaveFunctions.mid(table, renaming)

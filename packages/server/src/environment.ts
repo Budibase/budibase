@@ -123,6 +123,10 @@ const environment = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
+  HTTP_SERVER_TIMEOUT_MS: process.env.HTTP_SERVER_TIMEOUT_MS,
+  HTTP_HEADERS_TIMEOUT_MS: process.env.HTTP_HEADERS_TIMEOUT_MS,
+  HTTP_REQUEST_TIMEOUT_MS: process.env.HTTP_REQUEST_TIMEOUT_MS,
+  HTTP_KEEPALIVE_TIMEOUT_MS: process.env.HTTP_KEEPALIVE_TIMEOUT_MS,
   FORKED_PROCESS_NAME:
     process.env.FORKED_PROCESS_NAME || DEFAULTS.FORKED_PROCESS_NAME,
   JS_PER_INVOCATION_TIMEOUT_MS:
@@ -146,6 +150,11 @@ const environment = {
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED ?? true,
   UPLOAD_APPS_FILES_ON_TEST: process.env.UPLOAD_APPS_FILES_ON_TEST,
+  LITELLM_PORT: process.env.LITELLM_PORT || "4000",
+  LITELLM_URL:
+    process.env.LITELLM_URL ||
+    `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
+  LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

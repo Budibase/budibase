@@ -64,9 +64,10 @@
     hasAuthenticated = isAuthenticated
   }
 
-  $: usersLimitLockAction = $licensing?.errUserLimit
-    ? () => accountLockedModal.show()
-    : null
+  $: lockAction =
+    $licensing?.errUserLimit || $auth?.user?.lockedBy
+      ? accountLockedModal.show
+      : null
 
   $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
 
@@ -178,8 +179,11 @@
           return { type: "returnUrl", url: returnUrl }
         }
 
+        // Review if builder users have workspaces. If not, redirect them to get-started
+        const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
         if (
-          $appsStore.apps.length === 0 &&
+          ($appsStore.apps.length === 0 ||
+            (isBuilder && !hasEditableWorkspaces)) &&
           !$isActive("./apps") &&
           !$isActive("./onboarding") &&
           !$isActive("./get-started")
@@ -200,14 +204,18 @@
         }
 
         // Default workspace selection for builders
+        const isOnWorkspaceRoute =
+          $isActive("./workspace/:application") ||
+          $isActive("./workspace/updating/:application")
         if (
           isBuilder &&
           $appsStore.apps.length &&
-          !$isActive("./workspace/:application") &&
+          !isOnWorkspaceRoute &&
           !$isActive("./apps")
         ) {
-          const defaultApp = $enrichedApps[0]
-          // Only redirect if enriched apps are loaded
+          // Find first editable app to redirect to
+          const defaultApp = $enrichedApps.find(app => app.editable)
+          // Only redirect if enriched apps are loaded and app is editable
           if (defaultApp?.devId) {
             return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
           }
@@ -243,8 +251,8 @@
 
         await auth.getInitInfo()
 
-        if (usersLimitLockAction) {
-          usersLimitLockAction()
+        if (lockAction) {
+          lockAction()
         }
       }
 
@@ -293,6 +301,7 @@
 
 <AccountLockedModal
   bind:this={accountLockedModal}
+  lockedBy={$auth.user?.lockedBy}
   onConfirm={() =>
     isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />

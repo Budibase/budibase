@@ -1,8 +1,23 @@
-import { Document, Message, Tool } from "../../"
+import { Document, Tool } from "../../"
+import type { UIMessage } from "ai"
+
+export interface Agent extends Document {
+  name: string
+  description?: string
+  aiconfig: string
+  allowedTools?: AgentToolSource[]
+  promptInstructions?: string
+  goal?: string
+  live?: boolean
+  icon?: string
+  iconColor?: string
+  createdBy?: string
+}
 
 export interface AgentChat extends Document {
+  agentId?: string
   title: string
-  messages: Message[]
+  messages: UIMessage[]
 }
 
 export interface BaseToolSourceAuth {
@@ -34,24 +49,28 @@ export type AgentToolSourceAuth =
   | BambooHRToolAuth
 
 export interface GitHubToolSource extends Document {
+  id?: string
   type: "GITHUB"
   disabledTools: string[]
   auth: GitHubToolAuth
 }
 
 export interface ConfluenceToolSource extends Document {
+  id?: string
   type: "CONFLUENCE"
   disabledTools: string[]
   auth: ConfluenceToolAuth
 }
 
 export interface BudibaseToolSource extends Document {
+  id?: string
   type: "BUDIBASE"
   disabledTools: string[]
   auth: BudibaseToolAuth
 }
 
 export interface BambooHRToolSource extends Document {
+  id?: string
   type: "BAMBOOHR"
   disabledTools: string[]
   auth: BambooHRToolAuth

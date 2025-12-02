@@ -150,7 +150,7 @@
                 })
                 .then(datasource => {
                   notifications.success("REST API created successfully")
-                  $goto(`/builder/workspace/:application/data/query/new/:id`, {
+                  $goto(`/builder/workspace/:application/apis/query/new/:id`, {
                     application: $params.application,
                     id: datasource._id,
                   })
@@ -205,7 +205,7 @@
               icon={"Add"}
               secondary
               on:click={() => {
-                $goto(`/builder/workspace/:application/data/query/new/:id`, {
+                $goto(`/builder/workspace/:application/apis/query/new/:id`, {
                   application: $params.application,
                   id: dataSource._id,
                 })

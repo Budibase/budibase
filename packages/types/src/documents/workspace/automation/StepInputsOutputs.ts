@@ -261,6 +261,17 @@ export type ExtractFileDataStepOutputs = {
   response?: string
 }
 
+export type AgentStepInputs = {
+  agentId: string
+  prompt: string
+}
+
+export type AgentStepOutputs = {
+  success: boolean
+  response?: string
+  steps?: any[]
+}
+
 export type LoopV2StepInputs = {
   option: LoopStepType
   binding: any
@@ -424,8 +435,27 @@ export type CronTriggerInputs = {
   cron: string
 }
 
+export interface EmailTriggerInputs {
+  host: string
+  port: number
+  secure: boolean
+  username: string
+  password: string
+  mailbox?: string
+}
+
 export type CronTriggerOutputs = {
   timestamp: number
+}
+
+export type EmailTriggerOutputs = {
+  from: string
+  to: string
+  cc: string[]
+  subject?: string
+  sentAt?: string
+  bodyText?: string
+  bodyTextTruncated: boolean
 }
 
 export type RowDeletedTriggerInputs = {

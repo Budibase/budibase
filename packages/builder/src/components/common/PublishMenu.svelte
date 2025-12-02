@@ -11,7 +11,10 @@
     deploymentStore,
     automationStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
+    tables,
   } from "@/stores/builder"
+  import { TableSourceType } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let publishPopoverAnchor: HTMLElement | undefined
@@ -19,9 +22,21 @@
   let seedProductionTables = false
   let menuOpen = false
 
+  // Get all internal tables and check if they're published
+  $: unpublishedInternalTableIds = $tables.list
+    .filter(table => table.sourceType === TableSourceType.INTERNAL)
+    .filter(table => {
+      const deploymentInfo = $workspaceDeploymentStore.tables[table._id!]
+      return !deploymentInfo || !deploymentInfo.published
+    })
+    .map(table => table._id!)
+
+  $: hasEmptyProdTables = unpublishedInternalTableIds.length > 0
+
   const publish = async () => {
     await deploymentStore.publishApp({ seedProductionTables })
     publishSuccessPopover?.show()
+    seedProductionTables = false
   }
 </script>
 
@@ -68,10 +83,11 @@
   <MenuItem
     icon="check"
     iconAlign="start"
-    iconHidden={!seedProductionTables}
+    disabled={!hasEmptyProdTables}
+    iconHidden={!seedProductionTables || !hasEmptyProdTables}
     on:click={() => (seedProductionTables = true)}
   >
-    <div>
+    <div class="seed-publish" class:disabled={!hasEmptyProdTables}>
       <div class="menu-item-header">Seed and publish</div>
       <div class="menu-item-text">
         Seed internal prod tables with dev data and publish workspace
@@ -168,5 +184,9 @@
     font-size: 12px;
     color: var(--spectrum-global-color-gray-700);
     margin-top: 2px;
+  }
+  .seed-publish.disabled .menu-item-header,
+  .seed-publish.disabled .menu-item-text {
+    color: unset;
   }
 </style>

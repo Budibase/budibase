@@ -89,6 +89,8 @@ globals:
   # -- Set the `platformUrl` binding. You can also do this in Settings > Organisation if you are
   # self-hosting.
   platformUrl: ""
+  # -- Internal URL for the litellm gateway service.
+  litellmUrl: "http://litellm-service:4000"
   # -- Whether or not to enable doing data migrations over the HTTP API. If this is set to "0",
   # migrations are run on startup. You shouldn't ordinarily need to change this.
   httpMigrations: "0"
@@ -217,7 +219,7 @@ services:
       # for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the proxy pods.
       targetCPUUtilizationPercentage: 80
-      # -- Additional containers to be added to the proxy pod.
+    # -- Additional containers to be added to the proxy pod.
     extraContainers: []
     #  - name: my-sidecar
     #    image: myimage:latest
@@ -581,6 +583,29 @@ services:
     extraVolumes: []
     #  - name: my-volume
     #    emptyDir: {}
+
+  litellm:
+    # -- Whether or not to deploy the litellm gateway.
+    enabled: false
+    # -- litellm image to use.
+    image: ghcr.io/berriai/litellm:main-latest
+    # -- Port exposed by the litellm container.
+    port: 4000
+    # -- Number of litellm replicas.
+    replicaCount: 1
+    # -- Resources for litellm pods.
+    resources: {}
+    # -- Extra environment variables for the litellm container.
+    extraEnv: []
+    # -- Additional volumeMounts on the litellm container.
+    extraVolumeMounts: []
+    # -- Additional volumes on the litellm pod.
+    extraVolumes: []
+    # -- Inline configuration passed to litellm as config.yaml.
+    config: |
+      general_settings:
+        store_model_in_db: true
+        store_prompts_in_spend_logs: true
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need

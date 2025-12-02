@@ -39,12 +39,15 @@
   export let actionButtonDisabled: boolean = false
   export let compare = (option: O, value: O) => option === value
   export let context: any = null
+  export let lockedKeys: string[] = []
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
     value,
   }))
   let fieldActivity = buildFieldActivity(activity)
+  $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
+  const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
 
   $: fullObject = fields.reduce<Record<string, string>>((acc, next) => {
     acc[next.name] = next.value
@@ -140,14 +143,18 @@
             field.name = e.detail
             changed()
           }}
-          disabled={readOnly}
+          disabled={readOnly || isLocked(field.name)}
           value={field.name}
           {allowJS}
           {allowHelpers}
           {context}
         />
       {:else}
-        <Input readonly={readOnly} bind:value={field.name} on:blur={changed} />
+        <Input
+          readonly={readOnly || isLocked(field.name)}
+          bind:value={field.name}
+          on:blur={changed}
+        />
       {/if}
       {#if isJsonArray(field.value)}
         <Select readonly={true} value="Array" options={["Array"]} />
@@ -184,7 +191,11 @@
         <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
       {#if !readOnly}
-        <Icon hoverable name="x" on:click={() => deleteEntry(idx)} />
+        <div class="delete-cell">
+          {#if !isLocked(field.name)}
+            <Icon hoverable name="x" on:click={() => deleteEntry(idx)} />
+          {/if}
+        </div>
       {/if}
       {#if menuItems?.length && showMenu}
         <ActionMenu>
@@ -239,5 +250,10 @@
   }
   .control {
     margin-top: 4px;
+  }
+  .delete-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 </style>

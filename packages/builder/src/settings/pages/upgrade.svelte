@@ -20,11 +20,12 @@
   import DeleteLicenseKeyModal from "@/components/portal/licensing/DeleteLicenseKeyModal.svelte"
   import { API } from "@/api"
   import { onMount } from "svelte"
-  import { sdk } from "@budibase/shared-core"
+  import { sdk, helpers } from "@budibase/shared-core"
   import { getFormattedPlanName } from "@/helpers/planTitle"
 
   $: license = $auth.user.license
-  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  const { accountPortalUpgradeUrl } = helpers
+  $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
   // LICENSE KEY
 

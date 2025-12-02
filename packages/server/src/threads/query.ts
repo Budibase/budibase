@@ -1,5 +1,9 @@
 import { auth, cache, context } from "@budibase/backend-core"
-import { iifeWrapper, processStringSync } from "@budibase/string-templates"
+import {
+  findHBSBlocks,
+  iifeWrapper,
+  processStringSync,
+} from "@budibase/string-templates"
 import {
   Datasource,
   DatasourcePlus,
@@ -316,9 +320,28 @@ class QueryRunner {
     }
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
-    for (let [key, value] of Object.entries(staticVars)) {
-      if (!parameters[key]) {
-        parameters[key] = value
+    for (let [staticBindingKey, staticBindingValue] of Object.entries(
+      staticVars
+    )) {
+      const namedValue = parameters[staticBindingKey]
+      const shouldOverrideNamed =
+        namedValue == null ||
+        namedValue === "" ||
+        this.doesStaticBindingMatchLocal(namedValue, staticBindingKey)
+      if (shouldOverrideNamed) {
+        parameters[staticBindingKey] = staticBindingValue
+      }
+      for (const [localBindingName, localBindingValue] of Object.entries(
+        parameters
+      )) {
+        if (localBindingName === staticBindingKey) {
+          continue
+        }
+        if (
+          this.doesStaticBindingMatchLocal(localBindingValue, staticBindingKey)
+        ) {
+          parameters[localBindingName] = staticBindingValue
+        }
       }
     }
     if (!this.noRecursiveQuery) {
@@ -354,6 +377,27 @@ class QueryRunner {
       }
     }
     return parameters
+  }
+
+  doesStaticBindingMatchLocal(value: unknown, staticBindingName: string) {
+    if (typeof value !== "string") {
+      return false
+    }
+    const trimmed = value.trim()
+    const [block] = findHBSBlocks(trimmed)
+    if (!block || block !== trimmed) {
+      return false
+    }
+    const isTriple = block.startsWith("{{{") && block.endsWith("}}}")
+    const braceLength = isTriple ? 3 : 2
+    if (block.length <= braceLength * 2) {
+      return false
+    }
+    const cleanedBinding = block
+      .slice(braceLength, -braceLength)
+      .replace(/\s+/g, "")
+    const target = staticBindingName.replace(/\s+/g, "")
+    return cleanedBinding === target
   }
 }
 

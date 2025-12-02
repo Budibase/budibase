@@ -35,6 +35,7 @@
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
+  import AgentSelector from "./AgentSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -865,7 +866,7 @@
                   disabled={value.readonly}
                 />
               </div>
-            {:else if value.type === "date"}
+            {:else if value.type === "date" || value.type === "datetime"}
               <DrawerBindableSlot
                 title={value.title ?? label}
                 panel={AutomationBindingPanel}
@@ -999,6 +1000,12 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 {bindings}
+              />
+            {:else if value.customType === "agent"}
+              <AgentSelector
+                on:change={e => onChange({ [key]: e.detail })}
+                value={inputData[key]}
+                title={value.title || "Agent"}
               />
             {:else if value.customType === "queryParams"}
               <QueryParamSelector

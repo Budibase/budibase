@@ -3,121 +3,89 @@ import {
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
-  ChatAgentResponse,
+  CreateAgentRequest,
+  CreateAgentResponse,
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
-  LLMStreamChunk,
+  FetchAgentsResponse,
+  UpdateAgentRequest,
+  UpdateAgentResponse,
 } from "@budibase/types"
 
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
+import { readUIMessageStream, UIMessage, UIMessageChunk } from "ai"
+import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface AgentEndpoints {
-  agentChat: (chat: AgentChat) => Promise<ChatAgentResponse>
   agentChatStream: (
     chat: AgentChat,
-    workspaceId: string,
-    onChunk: (chunk: LLMStreamChunk) => void,
-    onError?: (error: Error) => void
-  ) => Promise<void>
+    workspaceId: string
+  ) => Promise<AsyncIterable<UIMessage>>
 
-  removeChat: (historyId: string) => Promise<void>
-  fetchChats: () => Promise<FetchAgentHistoryResponse>
+  removeChat: (chatId: string) => Promise<void>
+  fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchToolSources: () => Promise<AgentToolSourceWithTools[]>
+  fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
   createToolSource: (
     toolSource: CreateToolSourceRequest
   ) => Promise<{ created: true }>
   updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
   deleteToolSource: (toolSourceId: string) => Promise<{ deleted: true }>
+  fetchAgents: () => Promise<FetchAgentsResponse>
+  createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
+  updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
+  deleteAgent: (agentId: string) => Promise<{ deleted: true }>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  agentChat: async chat => {
+  agentChatStream: async (chat, workspaceId) => {
     const body: ChatAgentRequest = chat
-    return await API.post({
-      url: "/api/agent/chat",
-      body,
+
+    const response = await fetch("/api/agent/chat/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        [Header.APP_ID]: workspaceId,
+      },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
     })
-  },
 
-  agentChatStream: async (chat, workspaceId, onChunk, onError) => {
-    const body: ChatAgentRequest = chat
-
-    try {
-      // TODO: add support for streaming into the frontend-core API object
-      const response = await fetch("/api/agent/chat/stream", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          [Header.APP_ID]: workspaceId,
-        },
-        body: JSON.stringify(body),
-        credentials: "same-origin",
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error("Failed to get response reader")
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-
-        // Process complete lines
-        const lines = buffer.split("\n")
-        buffer = lines.pop() || "" // Keep incomplete line in buffer
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = line.slice(6) // Remove 'data: ' prefix
-              if (data.trim()) {
-                const chunk: LLMStreamChunk = JSON.parse(data)
-                onChunk(chunk)
-              }
-            } catch (parseError) {
-              console.error("Failed to parse SSE data:", parseError)
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      if (onError) {
-        onError(error)
-      } else {
-        throw error
-      }
+    if (!response.ok) {
+      const errorBody = await response.json()
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      )
     }
+
+    if (!response.body) {
+      throw new Error("Failed to get response body")
+    }
+
+    const chunkStream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(createSseToJsonTransformStream<UIMessageChunk>())
+
+    return readUIMessageStream({ stream: chunkStream })
   },
 
-  removeChat: async (historyId: string) => {
+  removeChat: async (chatId: string) => {
     return await API.delete({
-      url: `/api/agent/history/${historyId}`,
+      url: `/api/agent/chats/${chatId}`,
     })
   },
 
-  fetchChats: async () => {
+  fetchChats: async (agentId: string) => {
     return await API.get({
-      url: "/api/agent/history",
+      url: `/api/agent/${agentId}/chats`,
     })
   },
 
-  fetchToolSources: async () => {
+  fetchToolSources: async (agentId: string) => {
     return await API.get({
-      url: "/api/agent/toolsource",
+      url: `/api/agent/${agentId}/toolsource`,
     })
   },
 
@@ -138,6 +106,32 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteToolSource: async (toolSourceId: string) => {
     return await API.delete({
       url: `/api/agent/toolsource/${toolSourceId}`,
+    })
+  },
+
+  fetchAgents: async () => {
+    return await API.get({
+      url: "/api/agent",
+    })
+  },
+
+  createAgent: async (agent: CreateAgentRequest) => {
+    return await API.post({
+      url: "/api/agent",
+      body: agent,
+    })
+  },
+
+  updateAgent: async (agent: UpdateAgentRequest) => {
+    return await API.put({
+      url: "/api/agent",
+      body: agent,
+    })
+  },
+
+  deleteAgent: async (agentId: string) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}`,
     })
   },
 })

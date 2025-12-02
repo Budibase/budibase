@@ -25,6 +25,7 @@ export interface AppUIMetadata {
   lockedYou: boolean
   lockedOther: boolean
   favourite: boolean
+  editable: boolean
 }
 
 export interface StoreApp extends Workspace, AppIdentifierMetadata {

@@ -65,7 +65,7 @@
 </script>
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
-  <div slot="anchor" class:display-new={!authConfig}>
+  <div slot="anchor">
     <ActionButton icon="lock" quiet selected>
       {#if !authConfig}
         Authentication
@@ -119,16 +119,3 @@
     >
   </div>
 </DetailPopover>
-
-<style>
-  .display-new :global(.spectrum-ActionButton)::before {
-    content: "NEW";
-    font-size: 10px;
-    background: var(--bb-indigo);
-    border-radius: 4px;
-    padding: 2px 4px;
-    margin-right: var(--spacing-s);
-    color: white;
-    font-weight: bold;
-  }
-</style>

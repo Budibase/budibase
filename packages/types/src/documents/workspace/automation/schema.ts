@@ -80,6 +80,9 @@ import {
   ExtractStateStepOutputs,
   LoopV2StepInputs,
   LoopV2StepOutputs,
+  EmailTriggerInputs,
+  AgentStepInputs,
+  AgentStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -199,6 +202,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractStateStepInputs,
     ExtractStateStepOutputs
   >
+  [AutomationActionStepId.AGENT]: ActionImplementation<
+    AgentStepInputs,
+    AgentStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -296,7 +303,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                                   ? ExtractStateStepInputs
                                                                   : T extends AutomationActionStepId.LOOP_V2
                                                                     ? LoopV2StepInputs
-                                                                    : never
+                                                                    : T extends AutomationActionStepId.AGENT
+                                                                      ? AgentStepInputs
+                                                                      : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -361,7 +370,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                               ? ExtractStateStepOutputs
                                                               : T extends AutomationActionStepId.LOOP_V2
                                                                 ? LoopV2StepOutputs
-                                                                : never
+                                                                : T extends AutomationActionStepId.AGENT
+                                                                  ? AgentStepOutputs
+                                                                  : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -454,6 +465,8 @@ export type ExtractStateStep =
 
 export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
 
+export type AgentStep = AutomationStepSchema<AutomationActionStepId.AGENT>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -492,6 +505,7 @@ export type AutomationStep =
   | ExtractFileDataStep
   | ExtractStateStep
   | LoopV2Step
+  | AgentStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
@@ -565,6 +579,12 @@ export function isCronTrigger(
   return trigger.stepId === AutomationTriggerStepId.CRON
 }
 
+export function isEmailTrigger(
+  trigger: AutomationStep | AutomationTrigger | null
+): trigger is EmailTrigger {
+  return trigger?.stepId === AutomationTriggerStepId.EMAIL
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
@@ -586,17 +606,19 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
         | (Record<string, any> & { fields?: Record<string, AutomationIOType> })
     : T extends AutomationTriggerStepId.CRON
       ? CronTriggerInputs
-      : T extends AutomationTriggerStepId.ROW_ACTION
-        ? RowActionTriggerInputs
-        : T extends AutomationTriggerStepId.ROW_DELETED
-          ? RowDeletedTriggerInputs
-          : T extends AutomationTriggerStepId.ROW_SAVED
-            ? RowCreatedTriggerInputs
-            : T extends AutomationTriggerStepId.ROW_UPDATED
-              ? RowUpdatedTriggerInputs
-              : T extends AutomationTriggerStepId.WEBHOOK
-                ? Record<string, any>
-                : never
+      : T extends AutomationTriggerStepId.EMAIL
+        ? EmailTriggerInputs
+        : T extends AutomationTriggerStepId.ROW_ACTION
+          ? RowActionTriggerInputs
+          : T extends AutomationTriggerStepId.ROW_DELETED
+            ? RowDeletedTriggerInputs
+            : T extends AutomationTriggerStepId.ROW_SAVED
+              ? RowCreatedTriggerInputs
+              : T extends AutomationTriggerStepId.ROW_UPDATED
+                ? RowUpdatedTriggerInputs
+                : T extends AutomationTriggerStepId.WEBHOOK
+                  ? Record<string, any>
+                  : never
 
 export type AutomationTriggerOutputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
@@ -634,11 +656,15 @@ export type AutomationTrigger =
   | RowSavedTrigger
   | RowUpdatedTrigger
   | WebhookTrigger
+  | EmailTrigger
 
 export type AppActionTrigger =
   AutomationTriggerSchema<AutomationTriggerStepId.APP>
 
 export type CronTrigger = AutomationTriggerSchema<AutomationTriggerStepId.CRON>
+
+export type EmailTrigger =
+  AutomationTriggerSchema<AutomationTriggerStepId.EMAIL>
 
 export type RowActionTrigger =
   AutomationTriggerSchema<AutomationTriggerStepId.ROW_ACTION>

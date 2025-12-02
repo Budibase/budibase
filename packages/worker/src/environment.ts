@@ -69,6 +69,11 @@ const environment = {
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   TOP_LEVEL_PATH: TOP_LEVEL_PATH,
   EMAIL_TEMPLATE_PATH: process.env.EMAIL_TEMPLATE_PATH,
+  // server
+  HTTP_SERVER_TIMEOUT_MS: process.env.HTTP_SERVER_TIMEOUT_MS,
+  HTTP_HEADERS_TIMEOUT_MS: process.env.HTTP_HEADERS_TIMEOUT_MS,
+  HTTP_REQUEST_TIMEOUT_MS: process.env.HTTP_REQUEST_TIMEOUT_MS,
+  HTTP_KEEPALIVE_TIMEOUT_MS: process.env.HTTP_KEEPALIVE_TIMEOUT_MS,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */
@@ -81,6 +86,20 @@ const environment = {
     process.env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT || "/",
   PASSPORT_OIDCAUTH_FAILURE_REDIRECT:
     process.env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT || "/error",
+
+  LOGIN_MAX_FAILED_ATTEMPTS:
+    parseIntSafe(process.env.LOGIN_MAX_FAILED_ATTEMPTS) || 5,
+  LOGIN_LOCKOUT_SECONDS: parseIntSafe(process.env.LOGIN_LOCKOUT_SECONDS) || 900,
+
+  // password reset rate limiting
+  PASSWORD_RESET_RATE_EMAIL_LIMIT:
+    parseIntSafe(process.env.PASSWORD_RESET_RATE_EMAIL_LIMIT) || 3,
+  PASSWORD_RESET_RATE_EMAIL_WINDOW_SECONDS:
+    parseIntSafe(process.env.PASSWORD_RESET_RATE_EMAIL_WINDOW_SECONDS) || 900,
+  PASSWORD_RESET_RATE_IP_LIMIT:
+    parseIntSafe(process.env.PASSWORD_RESET_RATE_IP_LIMIT) || 20,
+  PASSWORD_RESET_RATE_IP_WINDOW_SECONDS:
+    parseIntSafe(process.env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS) || 900,
 
   // Budibase AI
   BUDIBASE_AI_API_KEY: process.env.BUDIBASE_AI_API_KEY,

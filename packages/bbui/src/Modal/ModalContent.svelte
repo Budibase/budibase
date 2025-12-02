@@ -106,8 +106,16 @@
             <Button
               secondary
               warning={secondaryButtonWarning}
-              on:click={secondary}>{secondaryButtonText}</Button
+              on:click={secondary}
+              disabled={loading}
             >
+              {#if loading}
+                <ProgressCircle overBackground={true} size="S" />
+              {/if}
+              {#if !loading}
+                {secondaryButtonText}
+              {/if}
+            </Button>
           </div>
         {/if}
 

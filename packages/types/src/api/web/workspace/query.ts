@@ -3,6 +3,7 @@ import {
   Query,
   QueryPreview,
   QuerySchema,
+  QueryVerb,
 } from "../../../documents"
 
 export type FetchQueriesResponse = Query[]
@@ -12,8 +13,31 @@ export interface SaveQueryResponse extends Query {}
 
 export interface ImportRestQueryRequest {
   datasourceId?: string
-  data: string
+  data?: string
+  url?: string
   datasource: Datasource
+  selectedEndpointId?: string
+}
+
+export interface QueryImportEndpoint {
+  id: string
+  name: string
+  method?: string
+  path?: string
+  description?: string
+  queryVerb?: QueryVerb
+}
+
+export interface ImportRestQueryInfoRequest {
+  data?: string
+  url?: string
+}
+
+export interface ImportRestQueryInfoResponse {
+  name: string
+  url?: string
+  docsUrl?: string
+  endpoints: QueryImportEndpoint[]
 }
 export interface ImportRestQueryResponse {
   errorQueries: Query[]

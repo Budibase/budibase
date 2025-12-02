@@ -12,11 +12,11 @@
   } from "@/stores/builder"
   import { appsStore } from "@/stores/portal"
   import {
+    Checkbox,
     Modal,
     ModalContent,
     notifications,
     Select,
-    Table,
   } from "@budibase/bbui"
   import type { AnyDocument, UsedResource } from "@budibase/types"
   import {
@@ -31,6 +31,7 @@
   export const show = () => {
     isOpen = true
     toWorkspaceId = undefined
+    copyRows = false
     selectedResources = {
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
@@ -51,6 +52,7 @@
   }
 
   let toWorkspaceId: string | undefined
+  let copyRows = false
 
   let selectedResources: Record<ResourceType, DataType[]> = {
     [ResourceType.DATASOURCE]: [],
@@ -69,6 +71,7 @@
       .duplicateResourceToWorkspace({
         resources: resourcesToBeCopied.map(r => r._id),
         toWorkspace: toWorkspaceId!,
+        copyRows,
       })
       .then(() => {
         notifications.success("Resources copied successfully")
@@ -92,6 +95,38 @@
     __disabled: false,
   })
 
+  const sortResources = (resources: DataType[]) =>
+    [...resources].sort((a, b) =>
+      a.name.toLocaleLowerCase().localeCompare(b.name.toLowerCase())
+    )
+
+  const isResourceSelected = (type: ResourceType, id: string) =>
+    selectedResources[type].some(resource => resource._id === id)
+
+  const toggleResourceSelection = (
+    type: ResourceType,
+    resource: DataType,
+    value: boolean
+  ) => {
+    if (resource.__disabled) {
+      return
+    }
+
+    const selected = selectedResources[type]
+    const exists = selected.find(item => item._id === resource._id)
+
+    if (value && !exists) {
+      selectedResources[type] = [...selected, { ...resource, direct: true }]
+      return
+    }
+
+    if (!value && exists) {
+      selectedResources[type] = selected.filter(
+        item => item._id !== resource._id
+      )
+    }
+  }
+
   $: $tables.list.forEach(t => rowActions.refreshRowActions(t._id!))
 
   let resourceTypesToDisplay: {
@@ -102,13 +137,8 @@
     }
   }
   $: resourceTypesToDisplay = {
-    [ResourceType.WORKSPACE_APP]: {
-      displayName: "Apps",
-      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
-      type: ResourceType.WORKSPACE_APP,
-    },
     [ResourceType.TABLE]: {
-      displayName: "BB tables",
+      displayName: "Tables",
       data: $tables.list
         .filter(
           t =>
@@ -118,17 +148,22 @@
         .map(mapToDataType),
       type: ResourceType.TABLE,
     },
+    [ResourceType.WORKSPACE_APP]: {
+      displayName: "Apps",
+      data: $workspaceAppStore.workspaceApps.map(mapToDataType),
+      type: ResourceType.WORKSPACE_APP,
+    },
+    [ResourceType.AUTOMATION]: {
+      displayName: "Automations",
+      data: $automationStore.automations.map(mapToDataType),
+      type: ResourceType.AUTOMATION,
+    },
     [ResourceType.DATASOURCE]: {
       displayName: "Datasources",
       data: $datasources.list
         .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
         .map(mapToDataType),
       type: ResourceType.DATASOURCE,
-    },
-    [ResourceType.AUTOMATION]: {
-      displayName: "Automations",
-      data: $automationStore.automations.map(mapToDataType),
-      type: ResourceType.AUTOMATION,
     },
     [ResourceType.QUERY]: {
       displayName: "Queries",
@@ -248,13 +283,46 @@
     isOpen = false
   }}
 >
-  <ModalContent
-    title={`Copy resources`}
-    {onConfirm}
-    size="M"
-    {disabled}
-    {confirmText}
-  >
+  <ModalContent {onConfirm} size="L" {disabled} {confirmText}>
+    <div class="copy-resources-title">Copy resources between workspaces</div>
+    <div class="copy-resources-subtitle">
+      Select resources from this workspace
+    </div>
+    {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
+      {#if data.length}
+        <div class="resource-section">
+          <p class="resource-title">{displayName}</p>
+          <div class="resource-list">
+            {#each sortResources(data) as resource}
+              <div class="resource-item">
+                <Checkbox
+                  value={isResourceSelected(type, resource._id)}
+                  on:change={({ detail }) =>
+                    toggleResourceSelection(type, resource, detail)}
+                  text={resource.name}
+                  disabled={resource.__disabled}
+                />
+                {#if resource.__disabled}
+                  <span class="resource-note">Included automatically</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          {#if type === ResourceType.TABLE}
+            <div class="copy-data-section">
+              <p class="copy-data-warning">
+                By default only the table schemas are copied. To include row
+                data, select the box below - but note that copying large
+                attachments and relationship data can be complex and sometimes
+                not reliable.
+              </p>
+              <Checkbox bind:value={copyRows} text="Copy row data" />
+            </div>
+          {/if}
+        </div>
+      {/if}
+    {/each}
+
     <p class="workspace-selection-label">Select the destination workspace:</p>
     <Select
       bind:value={toWorkspaceId}
@@ -263,29 +331,46 @@
       getOptionValue={w => w.devId}
       getOptionIcon={() => undefined}
     />
-
-    {#each Object.values(resourceTypesToDisplay) as { displayName, data, type }}
-      {#if data.length}
-        <Table
-          bind:selectedRows={selectedResources[type]}
-          data={data.sort((a, b) =>
-            a.name.toLocaleLowerCase().localeCompare(b.name.toLowerCase())
-          )}
-          disableSorting
-          schema={{ name: { type: "string", displayName } }}
-          allowEditColumns={false}
-          allowEditRows={false}
-          allowSelectRows
-          compact
-          quiet
-        />
-      {/if}
-    {/each}
   </ModalContent>
 </Modal>
 
 <style>
   .workspace-selection-label {
-    margin-bottom: var(--bb-spacing-xs);
+    margin-bottom: -0.5rem;
+  }
+
+  .copy-resources-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+  }
+
+  .copy-resources-subtitle {
+    font-size: var(--font-size-l);
+  }
+
+  .copy-data-section {
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-s);
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .copy-data-warning {
+    margin: var(--spacing-xs) 0 0;
+    line-height: 1.4;
+  }
+
+  .resource-title {
+    margin: 0 0 var(--spacing-s);
+    font-size: var(--font-size-l);
+  }
+
+  .resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .resource-note {
+    margin-left: var(--spacing-s);
   }
 </style>

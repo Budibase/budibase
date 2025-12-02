@@ -1,6 +1,6 @@
 export const inventoryImport = [
   {
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Little Blue Van",
     SKU: "LBV-101",
     Notes: "Max payload 595 kg \nMax load length 1620 mm",
@@ -13,7 +13,7 @@ export const inventoryImport = [
     "Item Tags": ["Vehicle"],
   },
   {
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Masonry Drill",
     SKU: "ABC-123",
     Notes: "Making a burning smell",
@@ -26,7 +26,7 @@ export const inventoryImport = [
     "Purchase Price": 250,
   },
   {
-    Status: ["Repair"],
+    Status: "Repair",
     "Item Name": "Circular saw",
     SKU: "AB2-100",
     Notes: "Won't start",
@@ -42,7 +42,7 @@ export const inventoryImport = [
     "Item Tags": ["Electrical"],
     "Purchase Price": 210,
     "Purchase Date": "2022-10-17T12:00:00.000",
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Tablet Device (5g)",
     SKU: "PH-001",
     Notes: "Android tablet for use on site",
@@ -55,7 +55,7 @@ export const inventoryImport = [
     "Item Tags": ["Tools", "Electrical"],
     "Purchase Price": 200,
     "Purchase Date": "2022-10-12T12:00:00.000",
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Power Screwdriver",
     SKU: "TKIT-002-A",
     Notes: "Requires micro USB charger",
@@ -65,7 +65,7 @@ export const inventoryImport = [
     type: "row",
   },
   {
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Large Blue Van",
     SKU: "LBV-102",
     Notes: "Max load length 4256 mm",
@@ -80,7 +80,7 @@ export const inventoryImport = [
   {
     "Purchase Price": 2500,
     "Purchase Date": "2022-11-09T12:00:00.000",
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Office laptop",
     SKU: "PC-123-ABC",
     Notes: "Office Laptop \n",
@@ -91,7 +91,7 @@ export const inventoryImport = [
     "Item Tags": ["Electrical", "Office"],
   },
   {
-    Status: ["Available"],
+    Status: "Available",
     "Item Name": "Little Red Van",
     SKU: "LRV-904-VNQ",
     Notes: "Max payload 595 kg \nMax load length 1620 mm",

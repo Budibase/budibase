@@ -15,6 +15,7 @@ import {
 } from "@budibase/backend-core"
 import { groups, licensing, quotas } from "@budibase/pro"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
+import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
@@ -54,6 +55,9 @@ import { createOnboardingWelcomeScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
+  InternalTables,
+  USER_METDATA_PREFIX,
+  generateUserMetadataID,
   generateWorkspaceID,
   getDevWorkspaceID,
   getLayoutParams,
@@ -80,6 +84,7 @@ import { removeWorkspaceFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
+import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
 
@@ -172,6 +177,53 @@ async function createInstance(appId: string, template: AppTemplate) {
   }
 
   return { _id: appId }
+}
+
+function getCreatorMetadataId(ctx: UserCtx) {
+  const userId = ctx.user?._id
+  if (!userId) {
+    return
+  }
+  if (userId.startsWith(USER_METDATA_PREFIX)) {
+    return userId
+  }
+  return generateUserMetadataID(userId)
+}
+
+async function addCreatorToUsersTable(ctx: UserCtx) {
+  const metadataId = getCreatorMetadataId(ctx)
+  if (!metadataId) {
+    return
+  }
+  const db = context.getWorkspaceDB()
+  try {
+    await db.get(metadataId)
+    return
+  } catch (err: any) {
+    if (err.status && err.status !== 404) {
+      throw err
+    }
+  }
+
+  let creator
+  try {
+    creator = await getGlobalUser(metadataId)
+  } catch (err) {
+    return
+  }
+
+  if (!creator.roleId || creator.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC) {
+    creator.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
+  }
+
+  const metadata = sdk.users.combineMetadataAndUser(creator, [])
+  if (!metadata) {
+    return
+  }
+
+  metadata.tableId = InternalTables.USER_METADATA
+  metadata._id = metadataId
+  await db.put(metadata)
 }
 
 async function addSampleDataDocs() {
@@ -398,6 +450,8 @@ async function performWorkspaceCreate(
     const db = context.getWorkspaceDB()
     const isImport = !!instanceConfig.file
 
+    await addCreatorToUsersTable(ctx)
+
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(workspaceId, db, ctx.user._id!)
     }
@@ -447,6 +501,7 @@ async function performWorkspaceCreate(
         "customTheme",
         "icon",
         "snippets",
+        "scripts",
         "creationVersion",
       ]
       keys.forEach(key => {
@@ -889,11 +944,17 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
+type WorkspaceImportFiles = Files & {
+  appExport?: File | File[]
+  file?: File | File[]
+}
+
 export async function importToWorkspace(
   ctx: UserCtx<ImportToUpdateWorkspaceRequest, ImportToUpdateWorkspaceResponse>
 ) {
   const { appId: workspaceId } = ctx.params
-  const workspaceExport = ctx.request.files?.appExport
+  const files = ctx.request.files as WorkspaceImportFiles | undefined
+  const workspaceExport = files?.appExport ?? files?.file
   const password = ctx.request.body.encryptionPassword
   if (!workspaceExport) {
     ctx.throw(400, "Must supply export file to import")
@@ -991,6 +1052,10 @@ export async function updateWorkspacePackage(
     const newWorkspacePackage: Workspace = {
       ...application,
       ...workspacePackage,
+      features: {
+        ...application.features,
+        ...workspacePackage.features,
+      },
     }
     if (workspacePackage._rev !== application._rev) {
       newWorkspacePackage._rev = application._rev

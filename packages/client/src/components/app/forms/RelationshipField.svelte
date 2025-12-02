@@ -19,12 +19,16 @@
     type UIFieldValidationRule,
     type DataFetchDatasource,
   } from "@budibase/types"
-  import { fetchData, Utils, Constants } from "@budibase/frontend-core"
-  import { getContext } from "svelte"
+  import { getContext, createEventDispatcher } from "svelte"
+  import {
+    fetchData,
+    Utils,
+    loadTranslationsByGroup,
+    Constants,
+  } from "@budibase/frontend-core"
   import Field from "./Field.svelte"
   import type { FieldApi, FieldState } from "@/types"
   import { utils } from "@budibase/shared-core"
-  import { createEventDispatcher } from "svelte"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -49,10 +53,12 @@
   export let tableId: string | undefined = undefined
   export let defaultRows: Row[] | undefined = []
 
+  const sdk = (getContext("sdk") as any) ?? {}
+  const { API } = sdk
+
+  const pickerLabels = loadTranslationsByGroup("picker")
   // Limit datasourceType "user" to app users only
   export let workspaceUsersOnly: boolean | undefined = false
-
-  const { API } = getContext("sdk")
 
   const dispatch = createEventDispatcher()
 
@@ -102,6 +108,12 @@
     (tableDefinition && "primaryDisplay" in tableDefinition
       ? tableDefinition.primaryDisplay
       : undefined)
+  $: relationshipPickerPlaceholder = primaryDisplayField
+    ? pickerLabels.searchByFieldPlaceholder.replace(
+        "{field}",
+        primaryDisplayField
+      )
+    : pickerLabels.searchPlaceholder
 
   // Build our options map
   $: rows = $fetch?.rows || []
@@ -472,6 +484,7 @@
       {autocomplete}
       bind:searchTerm
       bind:open
+      searchPlaceholder={relationshipPickerPlaceholder}
       on:change={handleChange}
     />
   {/if}

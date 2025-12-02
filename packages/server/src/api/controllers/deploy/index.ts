@@ -15,16 +15,17 @@ import {
   FieldType,
   FetchDeploymentResponse,
   FormulaType,
-  Workspace,
   PublishStatusResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  Table,
   UserCtx,
+  Workspace,
 } from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
-  enableCronTrigger,
+  enableCronOrEmailTrigger,
 } from "../../../automations/utils"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import env from "../../../environment"
@@ -99,11 +100,12 @@ async function initDeployedApp(prodAppId: string) {
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
+
   for (let automation of automations) {
     promises.push(
-      enableCronTrigger(prodAppId, automation).catch(err => {
+      enableCronOrEmailTrigger(prodAppId, automation).catch(err => {
         throw new Error(
-          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
           { cause: err }
         )
       })
@@ -120,6 +122,70 @@ async function initDeployedApp(prodAppId: string) {
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {
     automationOnly: true,
+  })
+}
+
+async function applyPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (let table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      const pendingColumnRenames = table.pendingColumnRenames
+      if (!pendingColumnRenames?.length) {
+        continue
+      }
+
+      for (const rename of pendingColumnRenames) {
+        const tableToUpdate: Table = {
+          ...table,
+          schema: { ...table.schema },
+        }
+
+        const existingNew = tableToUpdate.schema[rename.updated]
+        const existingOld = tableToUpdate.schema[rename.old]
+
+        // If the updatd column schema doesn't exist (replication left the old schema),
+        // use the old column schema to the new name so the rename can complete.
+        if (!existingNew && existingOld) {
+          tableToUpdate.schema[rename.updated] = {
+            ...existingOld,
+            name: rename.updated,
+          }
+          delete tableToUpdate.schema[rename.old]
+        }
+
+        await sdk.tables.update(tableToUpdate, rename)
+        table = await sdk.tables.getTable(table._id!)
+      }
+
+      const updatedTable: Table = { ...table, pendingColumnRenames: [] }
+      await db.put(updatedTable)
+    }
+  })
+}
+
+async function clearPendingColumnRenames(workspaceId: string) {
+  await context.doInWorkspaceContext(workspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    const tables = await sdk.tables.getAllInternalTables()
+
+    for (const table of tables) {
+      if (table._deleted) {
+        continue
+      }
+      if (!table.pendingColumnRenames?.length) {
+        continue
+      }
+      const updatedTable: Table = {
+        ...table,
+        pendingColumnRenames: [],
+      }
+      await db.put(updatedTable)
+    }
   })
 }
 
@@ -268,6 +334,9 @@ export const publishWorkspace = async function (
             checkpoint: !seedProductionTables,
           })
         )
+
+        await applyPendingColumnRenames(prodId)
+        await clearPendingColumnRenames(devId)
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({

@@ -2,6 +2,7 @@ import { Document, Plugin, Snippet, Theme, User } from ".."
 import { SocketSession } from "../../sdk"
 
 export type WorkspaceMetadataErrors = { [key: string]: string[] }
+export type TranslationOverrides = Record<string, string>
 
 export interface Workspace extends Document {
   appId: string
@@ -36,7 +37,7 @@ export interface Workspace extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
-  recaptchaEnabled?: boolean
+  translationOverrides?: TranslationOverrides
 }
 
 export interface WorkspaceInstance {
@@ -86,6 +87,7 @@ export interface WorkspaceFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
+  recaptchaEnabled?: boolean
 }
 
 export interface AutomationSettings {

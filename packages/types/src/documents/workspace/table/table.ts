@@ -27,6 +27,7 @@ export interface Table extends Document {
   created?: boolean
   rowHeight?: number
   aiGenerated?: boolean
+  pendingColumnRenames?: RenameColumn[]
 }
 
 export interface TableRequest extends Table {

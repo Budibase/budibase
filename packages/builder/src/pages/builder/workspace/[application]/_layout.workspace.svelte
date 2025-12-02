@@ -5,6 +5,7 @@
     builderStore,
     previewStore,
     deploymentStore,
+    appStore,
   } from "@/stores/builder"
   import { appsStore, admin } from "@/stores/portal"
   import { Heading, Layout, Body } from "@budibase/bbui"
@@ -28,7 +29,9 @@
         await appsStore.load()
       } else {
         reset()
+        appStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
+
         await initialise(pkg)
       }
       await deploymentStore.load()

@@ -29,6 +29,7 @@ import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 import FilterConfiguration from "./controls/FilterConfiguration/FilterConfiguration.svelte"
 import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
+import ComponentConfiguration from "./controls/ComponentConfiguration/ComponentConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
@@ -67,6 +68,7 @@ const componentMap = {
   fieldConfiguration: FieldConfiguration,
   filterConfiguration: FilterConfiguration,
   buttonConfiguration: ButtonConfiguration,
+  componentConfiguration: ComponentConfiguration,
   stepConfiguration: FormStepConfiguration,
   formStepControls: FormStepControls,
   columns: ColumnEditor,
