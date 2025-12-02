@@ -53,8 +53,10 @@ export async function buildPromptAndTools(
 }
 
 export function addRequestId(
-  input: Parameters<typeof fetch>[0],
-  init: Parameters<typeof fetch>[1],
+  // eslint-disable-next-line no-undef
+  input: RequestInfo | URL,
+  // eslint-disable-next-line no-undef
+  init: RequestInit | undefined,
   requestId: string
 ) {
   // we need to specifically add a litellm_session_id to the underlying request
