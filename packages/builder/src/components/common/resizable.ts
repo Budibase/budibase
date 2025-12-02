@@ -4,14 +4,25 @@ type CSSProperty = "width" | "height"
 type MouseMoveEventProperty = "pageX" | "pageY"
 type ElementProperty = "clientWidth" | "clientHeight"
 
-const getResizeActions = (
-  cssProperty: CSSProperty,
-  mouseMoveEventProperty: MouseMoveEventProperty,
-  elementProperty: ElementProperty,
-  initialValue?: number,
-  setValue: (value: number) => void = () => {},
-  onResizeStart: () => void = () => {}
-) => {
+const noop = () => {}
+
+interface ResizeActionsConfig {
+  cssProperty: CSSProperty
+  mouseMoveEventProperty: MouseMoveEventProperty
+  elementProperty: ElementProperty
+  initialValue?: number
+  setValue?: (value: number) => void
+  onResizeStart?: () => void
+}
+
+const getResizeActions = ({
+  cssProperty,
+  mouseMoveEventProperty,
+  elementProperty,
+  initialValue,
+  setValue = noop,
+  onResizeStart = noop,
+}: ResizeActionsConfig) => {
   let element: HTMLElement | null = null
 
   const elementAction = (node: HTMLElement) => {
@@ -135,28 +146,28 @@ const getResizeActions = (
 
 export const getVerticalResizeActions = (
   initialValue?: number,
-  setValue: (value: number) => void = () => {}
+  setValue?: (value: number) => void
 ) => {
-  return getResizeActions(
-    "height",
-    "pageY",
-    "clientHeight",
+  return getResizeActions({
+    cssProperty: "height",
+    mouseMoveEventProperty: "pageY",
+    elementProperty: "clientHeight",
     initialValue,
-    setValue
-  )
+    setValue,
+  })
 }
 
 export const getHorizontalResizeActions = (
   initialValue?: number,
-  setValue: (value: number) => void = () => {},
-  onResizeStart: () => void = () => {}
+  setValue?: (value: number) => void,
+  onResizeStart?: () => void
 ) => {
-  return getResizeActions(
-    "width",
-    "pageX",
-    "clientWidth",
+  return getResizeActions({
+    cssProperty: "width",
+    mouseMoveEventProperty: "pageX",
+    elementProperty: "clientWidth",
     initialValue,
     setValue,
-    onResizeStart
-  )
+    onResizeStart,
+  })
 }
