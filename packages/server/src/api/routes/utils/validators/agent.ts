@@ -17,6 +17,12 @@ function getAuthValidation() {
           guidelines: OPTIONAL_STRING,
         }).optional(),
       },
+      {
+        is: "REST_QUERY",
+        then: Joi.object({
+          guidelines: OPTIONAL_STRING,
+        }).optional(),
+      },
     ],
   })
 }
