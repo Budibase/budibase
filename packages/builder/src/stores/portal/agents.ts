@@ -100,7 +100,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
     await API.createToolSource(toolSource)
     if (toolSource.agentId) {
-      await this.fetchToolSources(toolSource.agentId)
+      await Promise.all([
+        this.fetchToolSources(toolSource.agentId),
+        this.fetchAgents(),
+      ])
     }
     const newToolSourceWithTools = {
       ...toolSource,
@@ -121,6 +124,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       }
       return state
     })
+    if (toolSource.agentId) {
+      await this.fetchAgents()
+    }
     return updatedToolSource
   }
 
@@ -130,6 +136,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.toolSources = state.toolSources.filter(ts => ts.id !== toolSourceId)
       return state
     })
+    await this.fetchAgents()
   }
 
   getToolSource = (type: string) => {

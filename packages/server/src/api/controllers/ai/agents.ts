@@ -14,6 +14,7 @@ import {
   FetchAgentsResponse,
   RequiredKeys,
   Tool,
+  ToolSourceType,
   UpdateAgentRequest,
   UpdateAgentResponse,
   UpdateToolSourceRequest,
@@ -290,6 +291,52 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
 
   ctx.body = { deleted: true }
   ctx.status = 200
+}
+
+export async function fetchAvailableTools(
+  ctx: UserCtx<void, Tool[], { toolSourceType: string }>
+) {
+  const toolSourceType = ctx.params.toolSourceType
+
+  if (!toolSourceType) {
+    throw new HTTPError("toolSourceType is required", 400)
+  }
+
+  let tempToolSource: AgentToolSource
+  if (toolSourceType === ToolSourceType.BUDIBASE) {
+    tempToolSource = {
+      type: ToolSourceType.BUDIBASE,
+      id: "temp",
+      auth: {},
+      disabledTools: [],
+      agentId: "temp",
+    }
+  } else if (toolSourceType === ToolSourceType.REST_QUERY) {
+    tempToolSource = {
+      type: ToolSourceType.REST_QUERY,
+      id: "temp",
+      auth: {},
+      disabledTools: [],
+      agentId: "temp",
+      datasourceId: "",
+      queryIds: [],
+    }
+  } else {
+    throw new HTTPError(`Unknown tool source type: ${toolSourceType}`, 400)
+  }
+
+  const toolSourceInstance = createToolSourceInstance(tempToolSource)
+
+  if (!toolSourceInstance) {
+    throw new HTTPError(
+      `Failed to create tool source instance: ${toolSourceType}`,
+      400
+    )
+  }
+
+  const tools = await toolSourceInstance.getToolsAsync()
+
+  ctx.body = tools
 }
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {

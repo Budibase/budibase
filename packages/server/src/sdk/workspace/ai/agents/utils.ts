@@ -1,4 +1,4 @@
-import { createToolSource } from "packages/server/src/ai/tools/base/ToolSourceRegistry"
+import { createToolSource } from "../../../../ai/tools/base/ToolSourceRegistry"
 import { Agent, Tool } from "@budibase/types"
 import { ai } from "@budibase/pro"
 
