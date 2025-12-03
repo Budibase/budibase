@@ -2,94 +2,115 @@
   import {
     Body,
     Heading,
-    Icon,
-    Input,
     Modal,
     ModalContent,
     TextArea,
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import type {
-    AgentToolSource,
-    CreateToolSourceRequest,
-    AgentToolSourceWithTools,
+  import {
+    ToolSourceType,
+    type AgentToolSource,
+    type CreateToolSourceRequest,
+    type AgentToolSourceWithTools,
+    type Tool,
+    type ToolSourceOption,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import { createEventDispatcher, type ComponentType } from "svelte"
-  import BambooHRLogo from "../logos/BambooHR.svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
-  import ConfluenceLogo from "../logos/Confluence.svelte"
-  import GithubLogo from "../logos/Github.svelte"
+  import { API } from "@/api"
+  import RestQueryToolConfig from "./RestQueryToolConfig.svelte"
+
+  export let agentId: string
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
-    CONFLUENCE: ConfluenceLogo,
-    GITHUB: GithubLogo,
-    BAMBOOHR: BambooHRLogo,
   }
-
   const ToolSources = [
     {
       name: "Budibase",
-      type: "BUDIBASE",
+      type: ToolSourceType.BUDIBASE,
       description: "Connect agent to your Budibase tools",
     },
     {
-      name: "Github",
-      type: "GITHUB",
-      description: "Automate development workflows.",
-    },
-    {
-      name: "Confluence",
-      type: "CONFLUENCE",
-      description: "Connect agent to your teams documentation",
-    },
-    {
-      name: "Sharepoint",
-      type: "SHAREPOINT",
-      description: "Sharepoint stuff",
-    },
-    {
-      name: "JIRA Service Manaagement",
-      type: "JIRA_SM",
-      description: "Automate ITSM Workflows",
-    },
-    {
-      name: "BambooHR",
-      type: "BAMBOOHR",
-      description: "Automate HR workflows and employee management",
+      name: "REST API",
+      type: ToolSourceType.REST_QUERY,
+      description: "Use queries from your REST APIs as agent tools",
     },
   ]
-
-  export let agentId: string
 
   const dispatch = createEventDispatcher()
 
   let modal: Modal
   let mode: "select" | "configure" = "select"
-  let selectedSourceType: any = null
+  let selectedSourceType: ToolSourceOption | null = null
   let editingSource: AgentToolSourceWithTools | null = null
 
-  let config: Record<string, string> = {}
+  let guidelines = ""
   let disabledTools: string[] = []
-  let toolsList: any[] = []
+  let toolsList: Tool[] = []
+  let label = ""
+
+  let selectedDatasourceId: string = ""
+  let selectedQueryIds: string[] = []
+
+  // We only allow one Budibase tool source per agent
+  $: hasBudibaseSource = $agentsStore.toolSources.some(
+    ts => ts.type === ToolSourceType.BUDIBASE
+  )
+  $: availableToolSources = ToolSources.filter(
+    source => !(source.type === ToolSourceType.BUDIBASE && hasBudibaseSource)
+  )
+
+  const fetchBudibaseTools = async (sourceType: ToolSourceType) => {
+    try {
+      toolsList = await API.fetchAvailableTools(sourceType)
+    } catch (error) {
+      console.error("Error fetching Budibase tools:", error)
+      notifications.error("Failed to load Budibase tools")
+    }
+  }
+
+  const resetForm = () => {
+    mode = "select"
+    editingSource = null
+    selectedSourceType = null
+    guidelines = ""
+    disabledTools = []
+    toolsList = []
+    label = ""
+    selectedDatasourceId = ""
+    selectedQueryIds = []
+  }
 
   export function show(sourceToEdit?: AgentToolSourceWithTools) {
     if (sourceToEdit) {
       mode = "configure"
       editingSource = sourceToEdit
-      selectedSourceType = ToolSources.find(s => s.type === sourceToEdit.type)
-      config = { ...sourceToEdit.auth }
+      selectedSourceType =
+        ToolSources.find(s => s.type === sourceToEdit.type) || null
+      guidelines = sourceToEdit.auth.guidelines || ""
       disabledTools = [...(sourceToEdit.disabledTools || [])]
       toolsList = sourceToEdit.tools || []
+      label = sourceToEdit.label || ""
+
+      if (sourceToEdit.type === ToolSourceType.REST_QUERY) {
+        selectedDatasourceId = sourceToEdit.datasourceId || ""
+        selectedQueryIds = [...(sourceToEdit.queryIds || [])]
+      } else {
+        selectedDatasourceId = ""
+        selectedQueryIds = []
+      }
+
+      const needsToolsFetch =
+        sourceToEdit.type === ToolSourceType.BUDIBASE &&
+        (!toolsList || toolsList.length === 0)
+      if (needsToolsFetch) {
+        fetchBudibaseTools(sourceToEdit.type)
+      }
     } else {
-      mode = "select"
-      editingSource = null
-      selectedSourceType = null
-      config = {}
-      disabledTools = []
-      toolsList = []
+      resetForm()
     }
     modal.show()
   }
@@ -98,12 +119,19 @@
     modal.hide()
   }
 
-  function selectSource(source: any) {
+  const selectSource = async (source: ToolSourceOption) => {
     selectedSourceType = source
     mode = "configure"
-    config = {}
+    guidelines = ""
     disabledTools = []
     toolsList = []
+    label = ""
+    selectedDatasourceId = ""
+    selectedQueryIds = []
+
+    if (source.type === ToolSourceType.BUDIBASE) {
+      await fetchBudibaseTools(source.type)
+    }
   }
 
   function toggleTool(toolName: string) {
@@ -114,26 +142,74 @@
     }
   }
 
+  function toggleQuery(queryId: string) {
+    if (selectedQueryIds.includes(queryId)) {
+      selectedQueryIds = selectedQueryIds.filter(id => id !== queryId)
+    } else {
+      selectedQueryIds = [...selectedQueryIds, queryId]
+    }
+  }
+
   async function save() {
     try {
-      if (editingSource) {
-        const updatedSource = {
-          ...editingSource,
-          auth: config,
-          disabledTools,
-          agentId,
+      if (selectedSourceType?.type === ToolSourceType.REST_QUERY) {
+        if (!selectedDatasourceId) {
+          notifications.error("Please select a datasource")
+          return
         }
-        await agentsStore.updateToolSource(
-          updatedSource as unknown as AgentToolSource // could be any of the tool source auth types so we have to cast here unfortunately.
-        )
+        if (selectedQueryIds.length === 0) {
+          notifications.error("Please select at least one query")
+          return
+        }
+      }
+
+      const basePayload = {
+        auth: { guidelines },
+        agentId,
+        label: label || undefined,
+      }
+
+      if (editingSource) {
+        const updatedSource: AgentToolSource =
+          selectedSourceType?.type === ToolSourceType.REST_QUERY
+            ? {
+                ...editingSource,
+                ...basePayload,
+                type: ToolSourceType.REST_QUERY,
+                disabledTools,
+                datasourceId: selectedDatasourceId,
+                queryIds: selectedQueryIds,
+              }
+            : {
+                ...editingSource,
+                ...basePayload,
+                type: ToolSourceType.BUDIBASE,
+                disabledTools,
+              }
+
+        await agentsStore.updateToolSource(updatedSource)
         notifications.success("Tool source updated successfully")
       } else {
-        const newSource: CreateToolSourceRequest = {
-          type: selectedSourceType.type,
-          agentId,
-          auth: config,
-          disabledTools: [],
+        let newSource: CreateToolSourceRequest
+        if (selectedSourceType?.type === ToolSourceType.REST_QUERY) {
+          newSource = {
+            type: ToolSourceType.REST_QUERY,
+            agentId,
+            label: label || undefined,
+            auth: { guidelines },
+            disabledTools: [],
+            datasourceId: selectedDatasourceId,
+            queryIds: selectedQueryIds,
+          }
+        } else {
+          newSource = {
+            type: ToolSourceType.BUDIBASE,
+            auth: { guidelines },
+            agentId,
+            disabledTools,
+          }
         }
+
         await agentsStore.createToolSource(newSource)
         notifications.success("Tool source added successfully")
       }
@@ -159,7 +235,7 @@
   <ModalContent
     title={mode === "select"
       ? "Add Tool"
-      : `${editingSource ? "Edit" : "Configure"} ${selectedSourceType?.name || "Tool"}`}
+      : `${editingSource ? "Edit" : "Configure"} ${editingSource?.label || selectedSourceType?.name || "Tool"}`}
     size="L"
     showCloseIcon
     showCancelButton={mode === "configure"}
@@ -171,7 +247,7 @@
   >
     {#if mode === "select"}
       <div class="sources-grid">
-        {#each ToolSources as source}
+        {#each availableToolSources as source}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div class="source-card" on:click={() => selectSource(source)}>
@@ -190,77 +266,27 @@
             <Body size="S" color="var(--spectrum-global-color-gray-700)">
               {source.description}
             </Body>
-            {#if $agentsStore.toolSources.some(ts => ts.type === source.type)}
-              <div class="connected-badge">
-                <Icon name="CheckmarkCircle" size="S" />
-                Connected
-              </div>
-            {/if}
           </div>
         {/each}
       </div>
     {:else if mode === "configure" && selectedSourceType}
       <div class="config-form">
-        <div class="auth-section">
-          <Heading size="XS">Authentication</Heading>
-          {#if selectedSourceType.type === "GITHUB"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your GitHub API token"
-            />
-            <Input
-              label="Base URL (Optional)"
-              bind:value={config.baseUrl}
-              type="text"
-              placeholder="https://api.github.com (leave empty for default)"
-            />
-          {:else if selectedSourceType.type === "CONFLUENCE"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your Confluence API token"
-            />
-            <Input
-              label="Email Address"
-              bind:value={config.email}
-              type="email"
-              placeholder="your.email@domain.com"
-              helpText="Your Atlassian account email address"
-            />
-            <Input
-              label="Base URL (Optional)"
-              bind:value={config.baseUrl}
-              type="text"
-              placeholder="https://your-domain.atlassian.net"
-            />
-          {:else if selectedSourceType.type === "BAMBOOHR"}
-            <Input
-              label="API Key"
-              bind:value={config.apiKey}
-              type="password"
-              placeholder="Enter your BambooHR API key"
-            />
-            <Input
-              label="Subdomain"
-              bind:value={config.subdomain}
-              type="text"
-              placeholder="your-company"
-              helpText="Your BambooHR subdomain (e.g., 'mycompany' for mycompany.bamboohr.com)"
-            />
-          {/if}
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={config.guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+        {#if selectedSourceType.type === ToolSourceType.REST_QUERY}
+          <RestQueryToolConfig
+            {toggleQuery}
+            {editingSource}
+            bind:selectedDatasourceId
+            bind:selectedQueryIds
+            bind:label
           />
-        </div>
+        {/if}
 
-        {#if editingSource && toolsList.length > 0}
+        {#if toolsList.length > 0 && selectedSourceType?.type === ToolSourceType.BUDIBASE}
           <div class="tools-section">
             <Heading size="XS">Enabled Tools</Heading>
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              Select which tools the agent can use.
+            </Body>
             <div class="tools-list">
               {#each toolsList as tool}
                 <div class="tool-item">
@@ -277,6 +303,13 @@
             </div>
           </div>
         {/if}
+        <div class="guidelines-section">
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
+        </div>
       </div>
     {/if}
   </ModalContent>
@@ -318,25 +351,10 @@
     justify-content: center;
   }
 
-  .connected-badge {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--spectrum-global-color-green-500);
-    font-size: var(--font-size-s);
-    margin-top: auto;
-  }
-
   .config-form {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
-  }
-
-  .auth-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
   }
 
   .tools-section {
@@ -382,5 +400,11 @@
   .tool-desc {
     font-size: var(--font-size-xs);
     color: var(--spectrum-global-color-gray-700);
+  }
+
+  .guidelines-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
 </style>

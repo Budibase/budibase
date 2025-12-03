@@ -18,7 +18,10 @@ const prepareDocument = (raw: string): string | OpenAPI.Document => {
   }
 
   try {
-    const yamlDocument = loadYaml(trimmed)
+    const yamlDocument = loadYaml(trimmed, {
+      // allow duplicate keys so large vendor specs (e.g. Okta) still parse
+      json: true,
+    })
     if (isYamlDocument(yamlDocument)) {
       return yamlDocument
     }
@@ -46,7 +49,14 @@ export abstract class OpenAPISource extends ImportSource {
       console.log(
         `[OpenAPI Import] Schema validation failed, continuing without validation`
       )
-      return await SwaggerParser.dereference(document, baseOptions)
+      try {
+        return await SwaggerParser.dereference(document, baseOptions)
+      } catch (dereferenceErr) {
+        console.log(
+          `[OpenAPI Import] Dereference failed, continuing with parsed document`
+        )
+        return document as OpenAPI.Document
+      }
     }
   }
 }

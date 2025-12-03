@@ -41,6 +41,7 @@ builderAdminRoutes
 
     ai.deleteToolSource
   )
+  .get("/api/agent/toolsource/:toolSourceType/tools", ai.fetchAvailableTools)
   .get("/api/agent/:agentId/toolsource", ai.fetchToolSources)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)

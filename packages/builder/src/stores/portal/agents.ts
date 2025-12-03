@@ -9,7 +9,7 @@ import {
   CreateToolSourceRequest,
   UpdateAgentRequest,
 } from "@budibase/types"
-import { get } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 interface AgentStoreState {
   agents: Agent[]
@@ -100,12 +100,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
     await API.createToolSource(toolSource)
     if (toolSource.agentId) {
-      await this.fetchToolSources(toolSource.agentId)
+      await Promise.all([
+        this.fetchToolSources(toolSource.agentId),
+        this.fetchAgents(),
+      ])
     }
     const newToolSourceWithTools = {
       ...toolSource,
       tools: [],
-    } as AgentToolSource
+    } as AgentToolSourceWithTools
     return newToolSourceWithTools
   }
 
@@ -121,6 +124,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       }
       return state
     })
+    if (toolSource.agentId) {
+      await this.fetchAgents()
+    }
     return updatedToolSource
   }
 
@@ -130,6 +136,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.toolSources = state.toolSources.filter(ts => ts.id !== toolSourceId)
       return state
     })
+    await this.fetchAgents()
   }
 
   getToolSource = (type: string) => {
@@ -176,5 +183,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.fetchAgents()
   }
 }
-
 export const agentsStore = new AgentsStore()
+export const selectedAgent = derived(agentsStore, state =>
+  state.agents.find(a => a._id === state.currentAgentId)
+)
