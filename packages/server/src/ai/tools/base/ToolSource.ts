@@ -23,10 +23,28 @@ export abstract class ToolSource {
   abstract getTools(): Tool[]
 
   /**
+   * Get all available tools asynchronously
+   * Override this for tool sources that need async initialization (e.g., database queries)
+   * Default implementation falls back to sync getTools()
+   */
+  async getToolsAsync(): Promise<Tool[]> {
+    return this.getTools()
+  }
+
+  /**
    * Get filtered tools based on disabled tools list
    */
   getEnabledTools(): Tool[] {
     const allTools = this.getTools()
+    const disabledTools = this.toolSource.disabledTools || []
+    return allTools.filter(tool => !disabledTools.includes(tool.name))
+  }
+
+  /**
+   * Get filtered tools asynchronously based on disabled tools list
+   */
+  async getEnabledToolsAsync(): Promise<Tool[]> {
+    const allTools = await this.getToolsAsync()
     const disabledTools = this.toolSource.disabledTools || []
     return allTools.filter(tool => !disabledTools.includes(tool.name))
   }
