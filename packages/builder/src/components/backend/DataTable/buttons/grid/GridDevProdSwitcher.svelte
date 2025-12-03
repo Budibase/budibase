@@ -17,11 +17,10 @@
   $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-  $: hasProductionData = isDeployed || tableDatasource?.usesEnvironmentVariables
-  $: tooltip =
-    isInternal && !isDeployed
-      ? "Publish to view production data"
-      : "Configure production environment variables"
+  $: hasProductionData = isDeployed
+  $: tooltip = isInternal
+    ? "Publish to view production data"
+    : "Production data is only available for internal tables"
 
   $: switcherProps = {
     leftIcon: "wrench",

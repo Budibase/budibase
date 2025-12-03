@@ -107,16 +107,16 @@
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
   $: canSwitchToProduction =
-    isInternal || tableDatasource?.usesEnvironmentVariables
+    isInternal
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
     isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
-  $: hasProductionData = Boolean(
-    isDeployed || tableDatasource?.usesEnvironmentVariables
-  )
+  $: hasProductionData = Boolean(isDeployed)
   $: productionUnavailable =
-    isProductionMode && (!hasProductionData || missingProductionDefinition)
+    isInternal &&
+    isProductionMode &&
+    (!hasProductionData || missingProductionDefinition)
   $: if (!isProductionMode) {
     missingProductionDefinition = false
   }
