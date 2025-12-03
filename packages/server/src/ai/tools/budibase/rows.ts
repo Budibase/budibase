@@ -104,7 +104,7 @@ export default [
             `Examples: ` +
             `Find where status equals "active": {"equal": {"status": "active"}}. ` +
             `Find where name is not empty: {"notEmpty": {"name": true}}. ` +
-            `Find where price is in range: {"range": {"price": {"low": 10, "high": 100}}}.`
+            `Find where price is within the range of 10 to 100: {"range": {"price": {"low": 10, "high": 100}}}.`
         ),
       sort: z
         .object({
