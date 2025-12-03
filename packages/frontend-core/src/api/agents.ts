@@ -8,6 +8,7 @@ import {
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
+  Tool,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -27,6 +28,7 @@ export interface AgentEndpoints {
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
   fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
+  fetchAvailableTools: (toolSourceType: string) => Promise<Tool[]>
   createToolSource: (
     toolSource: CreateToolSourceRequest
   ) => Promise<{ created: true }>
@@ -86,6 +88,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchToolSources: async (agentId: string) => {
     return await API.get({
       url: `/api/agent/${agentId}/toolsource`,
+    })
+  },
+
+  fetchAvailableTools: async (toolSourceType: string) => {
+    return await API.get({
+      url: `/api/agent/toolsource/${toolSourceType}/tools`,
     })
   },
 

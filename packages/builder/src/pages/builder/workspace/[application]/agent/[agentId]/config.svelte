@@ -16,27 +16,29 @@
     Icon,
     Helpers,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
+  import {
+    ToolSourceType,
+    type Agent,
+    type AgentToolSource,
+  } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import { deploymentStore, datasources, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onMount, type ComponentType } from "svelte"
+  import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import BambooHRLogo from "../logos/BambooHR.svelte"
+  import { getIntegrationIcon } from "@/helpers/integrationIcons"
+  import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogo from "../logos/Budibase.svelte"
-  import ConfluenceLogo from "../logos/Confluence.svelte"
-  import GithubLogo from "../logos/Github.svelte"
-
-  const Logos: Record<string, ComponentType> = {
-    BUDIBASE: BudibaseLogo,
-    CONFLUENCE: ConfluenceLogo,
-    GITHUB: GithubLogo,
-    BAMBOOHR: BambooHRLogo,
-  }
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
+  let toolConfigModal: AgentToolConfigModal
+  let deleteConfirmModal: Modal
+  let toolSourceToDelete: AgentToolSource | null = null
+  let togglingLive = false
+  let modelOptions: { label: string; value: string }[] = []
   let draft = {
     name: "",
     description: "",
@@ -46,13 +48,8 @@
     icon: "",
     iconColor: "",
   }
-  let toolConfigModal: AgentToolConfigModal
-  let deleteConfirmModal: Modal
-  let toolSourceToDelete: any = null
 
-  $: currentAgent = $agentsStore.agents.find(
-    a => a._id === $agentsStore.currentAgentId
-  )
+  $: currentAgent = $selectedAgent
 
   $: if (currentAgent && currentAgent._id !== draftAgentId) {
     draft = {
@@ -67,13 +64,10 @@
     draftAgentId = currentAgent._id
   }
 
-  $: aiConfigs = $aiConfigsStore.customConfigs
-  $: modelOptions = aiConfigs.map(config => ({
+  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
-
-  $: toolSources = $agentsStore.toolSources || []
 
   async function saveAgent() {
     if (!currentAgent) return
@@ -92,41 +86,57 @@
   }
 
   async function toggleAgentLive() {
-    if (!currentAgent) return
+    if (!currentAgent || togglingLive) return
+
+    const nextLive = !currentAgent.live
 
     try {
-      if (currentAgent.live) {
-        await agentsStore.updateAgent({
-          ...currentAgent,
-          ...draft,
-          live: false,
-        })
-        notifications.success("Agent has been paused")
-      } else {
-        await agentsStore.updateAgent({
-          ...currentAgent,
-          ...draft,
-          live: true,
-        })
-        notifications.success("Agent is now live")
-      }
+      togglingLive = true
+
+      await agentsStore.updateAgent({
+        ...currentAgent,
+        ...draft,
+        live: nextLive,
+      })
+      await deploymentStore.publishApp()
       await agentsStore.fetchAgents()
+
+      notifications.success(
+        nextLive ? "Agent is now live" : "Agent has been paused"
+      )
     } catch (error) {
       console.error(error)
       notifications.error(
-        currentAgent.live ? "Error pausing agent" : "Error setting agent live"
+        nextLive ? "Error setting agent live" : "Error pausing agent"
       )
+    } finally {
+      togglingLive = false
     }
   }
 
-  const confirmDeleteToolSource = (e: PointerEvent, toolSource: any) => {
-    e.stopPropagation()
-    toolSourceToDelete = toolSource
-    deleteConfirmModal.show()
+  function getToolSourceIcon(toolSource: AgentToolSource) {
+    if (toolSource.type === ToolSourceType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
+      if (ds?.restTemplate) {
+        return getIntegrationIcon(
+          IntegrationTypes.REST,
+          ds.restTemplate,
+          restTemplates.getByName(ds.restTemplate)?.icon
+        )
+      }
+    }
+    return { icon: BudibaseLogo }
   }
 
+  const confirmDeleteToolSource =
+    (toolSource: AgentToolSource) => (e: MouseEvent) => {
+      e.stopPropagation()
+      toolSourceToDelete = toolSource
+      deleteConfirmModal.show()
+    }
+
   const deleteToolSource = async () => {
-    if (!toolSourceToDelete) return
+    if (!toolSourceToDelete || !toolSourceToDelete.id) return
     try {
       await agentsStore.deleteToolSource(toolSourceToDelete.id)
       notifications.success("Tool source deleted successfully.")
@@ -167,7 +177,6 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-
 <div class="config-wrapper">
   <TopBar
     breadcrumbs={[
@@ -247,24 +256,32 @@
                 Give your agent access to internal and external tools so it can
                 complete tasks.
               </Body>
-              {#if toolSources.length > 0}
+              {#if $agentsStore.toolSources.length > 0}
                 <div class="tools-tags">
                   <Tags>
-                    {#each toolSources as toolSource}
+                    {#each $agentsStore.toolSources as toolSource}
+                      {@const iconInfo = getToolSourceIcon(toolSource)}
                       <div on:click={() => toolConfigModal.show(toolSource)}>
                         <Tag
                           closable
-                          on:click={e => confirmDeleteToolSource(e, toolSource)}
+                          on:click={confirmDeleteToolSource(toolSource)}
                         >
                           <div class="tag-content">
-                            {#if Logos[toolSource.type]}
+                            {#if iconInfo?.icon}
                               <svelte:component
-                                this={Logos[toolSource.type]}
+                                this={iconInfo.icon}
                                 height="14"
                                 width="14"
                               />
+                            {:else if iconInfo?.url}
+                              <img
+                                src={iconInfo.url}
+                                alt=""
+                                class="tool-icon"
+                              />
                             {/if}
-                            {toolSource.type.toLocaleLowerCase()}
+                            {toolSource.label ||
+                              toolSource.type.toLocaleLowerCase()}
                           </div>
                         </Tag>
                       </div>
@@ -342,8 +359,11 @@
             </div>
           </div>
           <div class="live-actions">
-            <Button secondary icon="pause" on:click={toggleAgentLive}
-              >Pause agent</Button
+            <Button
+              secondary
+              icon="pause"
+              on:click={toggleAgentLive}
+              disabled={togglingLive}>Pause agent</Button
             >
           </div>
         </div>
@@ -353,6 +373,7 @@
             quiet
             icon="play"
             iconColor="var(--bb-blue)"
+            disabled={togglingLive}
             on:click={toggleAgentLive}>Set your agent live</Button
           >
           <div class="live-description">
@@ -589,5 +610,11 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+  }
+
+  .tool-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
   }
 </style>
