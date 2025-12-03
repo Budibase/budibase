@@ -22,7 +22,7 @@
     type AgentToolSource,
   } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import { deploymentStore, datasources, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount, type ComponentType } from "svelte"
@@ -38,6 +38,7 @@
   let deleteConfirmModal: Modal
   let toolSourceToDelete: AgentToolSource | null = null
   let togglingLive = false
+  let modelOptions: { label: string; value: string }[] = []
   let draft = {
     name: "",
     description: "",
@@ -48,9 +49,7 @@
     iconColor: "",
   }
 
-  $: currentAgent = $agentsStore.agents.find(
-    a => a._id === $agentsStore.currentAgentId
-  )
+  $: currentAgent = $selectedAgent
 
   $: if (currentAgent && currentAgent._id !== draftAgentId) {
     draft = {
@@ -65,13 +64,10 @@
     draftAgentId = currentAgent._id
   }
 
-  $: aiConfigs = $aiConfigsStore.customConfigs
-  $: modelOptions = aiConfigs.map(config => ({
+  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
-
-  $: toolSources = $agentsStore.toolSources || []
 
   async function saveAgent() {
     if (!currentAgent) return
@@ -260,10 +256,10 @@
                 Give your agent access to internal and external tools so it can
                 complete tasks.
               </Body>
-              {#if toolSources.length > 0}
+              {#if $agentsStore.toolSources.length > 0}
                 <div class="tools-tags">
                   <Tags>
-                    {#each toolSources as toolSource}
+                    {#each $agentsStore.toolSources as toolSource}
                       {@const iconInfo = getToolSourceIcon(toolSource)}
                       <div on:click={() => toolConfigModal.show(toolSource)}>
                         <Tag
