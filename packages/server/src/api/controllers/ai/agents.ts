@@ -59,7 +59,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
     const openai = createOpenAI({
       apiKey,
