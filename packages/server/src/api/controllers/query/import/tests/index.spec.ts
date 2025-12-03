@@ -267,9 +267,7 @@ describe("Rest Importer", () => {
     expect(createQuery?.fields.path).toContain(
       "https://{{subdomain}}.okta.com/api/v1/apps"
     )
-    expect(createQuery?.fields.requestBody).toContain(
-      '"label": "{{ label }}"'
-    )
+    expect(createQuery?.fields.requestBody).toContain('"label": "{{ label }}"')
     expect(createQuery?.fields.requestBody).toContain(
       '"client_uri": "{{ settings_oauthClient_client_uri }}"'
     )
