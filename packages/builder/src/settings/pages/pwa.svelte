@@ -39,6 +39,7 @@
     theme_color: "#FFFFFF",
     display: "standalone",
     start_url: "",
+    scope: "",
   }
 
   $: iconCount = pwaConfig.icons?.length || 0
