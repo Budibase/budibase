@@ -4,7 +4,6 @@ import {
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,
-  BodyType,
 } from "@budibase/types"
 import { QueryVerbToHttpMethod } from "../../../../../constants"
 import { OpenAPIV2 } from "openapi-types"

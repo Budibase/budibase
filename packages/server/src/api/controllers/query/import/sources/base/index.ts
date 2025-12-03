@@ -5,7 +5,6 @@ import {
   QueryParameter,
   QueryVerb,
   RestTemplateQueryMetadata,
-  ImportEndpoint,
 } from "@budibase/types"
 import { URL } from "url"
 import {
