@@ -106,8 +106,7 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
-  $: canSwitchToProduction =
-    isInternal
+  $: canSwitchToProduction = isInternal
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =

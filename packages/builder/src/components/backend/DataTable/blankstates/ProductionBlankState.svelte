@@ -109,15 +109,14 @@
     display: grid;
     place-items: center;
     z-index: 20;
+    padding-bottom: 10rem;
   }
   .blank-content {
     color: var(--spectrum-global-color-gray-50);
     max-width: 560px;
     width: 100%;
-    padding: var(--spacing-l);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
   }
   .card-stack {
     display: flex;
@@ -140,7 +139,6 @@
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
   }
   .card-title {
     padding: var(--spacing-m) var(--spacing-l);

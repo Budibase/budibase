@@ -4,7 +4,6 @@
     dataEnvironmentStore,
     workspaceDeploymentStore,
     tables,
-    datasources,
   } from "@/stores/builder"
   import { DataEnvironmentMode } from "@budibase/types"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
@@ -14,9 +13,7 @@
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: isDeployed =
     isInternal && $workspaceDeploymentStore.tables[tableId]?.published
-  $: tableDatasource = $datasources.list.find(datasource => {
-    return datasource._id === $tables.selected?.sourceId
-  })
+
   $: hasProductionData = isDeployed
   $: tooltip = isInternal
     ? "Publish to view production data"

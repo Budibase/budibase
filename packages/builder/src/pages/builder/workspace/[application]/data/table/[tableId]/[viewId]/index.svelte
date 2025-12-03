@@ -5,7 +5,6 @@
     dataEnvironmentStore,
     dataAPI,
     tables,
-    datasources,
     workspaceDeploymentStore,
   } from "@/stores/builder"
   import { gridClipboard } from "@budibase/frontend-core"
@@ -45,15 +44,11 @@
     tableId,
   }
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
-  $: tableDatasource = $datasources.list.find(datasource => {
-    return datasource._id === $tables.selected?.sourceId
-  })
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
-  $: canSwitchToProduction =
-    isInternal
+  $: canSwitchToProduction = isInternal
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
