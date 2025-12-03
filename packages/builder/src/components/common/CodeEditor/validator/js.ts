@@ -42,7 +42,10 @@ const getHelperFunctionName = (callee: acorn.Expression | acorn.Super) => {
     return callee.property.name
   }
 
-  if (callee.property.type === "Literal" && typeof callee.property.value === "string") {
+  if (
+    callee.property.type === "Literal" &&
+    typeof callee.property.value === "string"
+  ) {
     return callee.property.value
   }
 
@@ -137,7 +140,8 @@ export function validateJsTemplate(
           return
         }
 
-        const from = lineOffsets[node.loc.start.line - 1] + node.loc.start.column
+        const from =
+          lineOffsets[node.loc.start.line - 1] + node.loc.start.column
         const to = lineOffsets[node.loc.end.line - 1] + node.loc.end.column
 
         if (!(functionName in validations)) {
@@ -151,7 +155,10 @@ export function validateJsTemplate(
         }
 
         const { arguments: expectedArguments } = validations[functionName]
-        if (expectedArguments && node.arguments.length !== expectedArguments.length) {
+        if (
+          expectedArguments &&
+          node.arguments.length !== expectedArguments.length
+        ) {
           diagnostics.push({
             from,
             to,
