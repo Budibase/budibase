@@ -1,5 +1,5 @@
 <script>
-  import { getIntegrationIcon } from "@/helpers/helpers"
+  import { getIntegrationIcon } from "@/helpers/integrationIcons"
   export let integrationType
   export let schema
   export let iconUrl = undefined

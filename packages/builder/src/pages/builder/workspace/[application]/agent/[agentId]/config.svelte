@@ -28,7 +28,7 @@
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import { getIntegrationIcon } from "@/helpers/helpers"
+  import { getIntegrationIcon } from "@/helpers/integrationIcons"
   import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogo from "../logos/Budibase.svelte"
 
