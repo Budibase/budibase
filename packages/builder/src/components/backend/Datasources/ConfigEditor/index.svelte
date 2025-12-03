@@ -5,6 +5,7 @@
   import { createValidatedNameStore } from "./stores/validatedName"
   import { get } from "svelte/store"
   import type { UIIntegration } from "@budibase/types"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let integration: UIIntegration
   export let config: Record<string, any>
@@ -45,7 +46,14 @@
 >
   <Layout noPadding>
     <Body size="XS">
-      Connect your database to Budibase using the config below.
+      {#if integration.warningMessage}
+        <InfoDisplay
+          body={integration.warningMessage}
+          warning={true}
+          icon="warning"
+        />
+      {/if}
+      <p>Connect your database to Budibase using the config below.</p>
     </Body>
   </Layout>
 
