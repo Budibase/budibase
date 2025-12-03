@@ -98,7 +98,14 @@ export default [
       query: z
         .record(z.string(), z.any())
         .nullish()
-        .describe("Search criteria as key-value pairs"),
+        .describe(
+          `Query filters object. Structure: { operator: { fieldName: value } }. ` +
+            `Valid operators: "equal", "notEqual", "empty", "notEmpty", "fuzzy", "string", "contains", "notContains", "containsAny", "oneOf", "range". ` +
+            `Examples: ` +
+            `Find where status equals "active": {"equal": {"status": "active"}}. ` +
+            `Find where name is not empty: {"notEmpty": {"name": true}}. ` +
+            `Find where price is in range: {"range": {"price": {"low": 10, "high": 100}}}.`
+        ),
       sort: z
         .object({
           column: z.string().describe("Column to sort by"),
