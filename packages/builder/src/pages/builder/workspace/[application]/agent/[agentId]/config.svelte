@@ -25,7 +25,7 @@
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import { deploymentStore, datasources, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onMount, type ComponentType } from "svelte"
+  import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
   import { getIcon } from "@/components/backend/DatasourceNavigator/icons"

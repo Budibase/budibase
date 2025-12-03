@@ -2,10 +2,8 @@
   import {
     Body,
     Heading,
-    Input,
     Modal,
     ModalContent,
-    Select,
     TextArea,
     Toggle,
     notifications,
@@ -29,7 +27,6 @@
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
   }
-
   const ToolSources = [
     {
       name: "Budibase",

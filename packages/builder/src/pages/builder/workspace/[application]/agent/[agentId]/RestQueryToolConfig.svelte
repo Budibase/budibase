@@ -6,7 +6,7 @@
   import { queries } from "@/stores/builder"
 
   export let editingSource: AgentToolSourceWithTools | null = null
-  export let toggleQuery: (queryId: string) => void
+  export let toggleQuery: (_queryId: string) => void
   export let selectedDatasourceId: string
   export let selectedQueryIds: string[] = []
   export let label: string
