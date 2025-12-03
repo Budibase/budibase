@@ -1,7 +1,6 @@
 import { derived, get, Writable } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "./app"
-import { workspaceAppStore } from "./workspaceApps"
+import { appStore, workspaceAppStore } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 import { notifications } from "@budibase/bbui"
