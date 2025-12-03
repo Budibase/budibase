@@ -1,8 +1,53 @@
 import { Parser } from "acorn"
 import * as walk from "acorn-walk"
 
+import type * as acorn from "acorn"
 import type { Diagnostic } from "@codemirror/lint"
-import { CodeValidator } from "@/types"
+import type { CodeValidator } from "@/types"
+
+const FUNCTION_NODE_TYPES = [
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+  "MethodDefinition",
+] as const
+
+type FunctionNodeType = (typeof FUNCTION_NODE_TYPES)[number]
+
+type FunctionLikeNode = Extract<acorn.AnyNode, { type: FunctionNodeType }>
+
+const isFunctionNode = (node?: acorn.Node | null): node is FunctionLikeNode =>
+  !!node && FUNCTION_NODE_TYPES.includes(node.type as FunctionNodeType)
+
+const isProgramNode = (node?: acorn.Node | null): node is acorn.Program =>
+  node?.type === "Program"
+
+const isBlockStatement = (
+  node?: acorn.Node | null
+): node is acorn.BlockStatement => node?.type === "BlockStatement"
+
+const isIfStatement = (node?: acorn.Node | null): node is acorn.IfStatement =>
+  node?.type === "IfStatement"
+
+const getHelperFunctionName = (callee: acorn.Expression | acorn.Super) => {
+  if (
+    callee.type !== "MemberExpression" ||
+    callee.object.type !== "Identifier" ||
+    callee.object.name !== "helpers"
+  ) {
+    return undefined
+  }
+
+  if (callee.property.type === "Identifier") {
+    return callee.property.name
+  }
+
+  if (callee.property.type === "Literal" && typeof callee.property.value === "string") {
+    return callee.property.value
+  }
+
+  return undefined
+}
 
 export function validateJsTemplate(
   code: string,
@@ -24,45 +69,43 @@ export function validateJsTemplate(
       offset += line.length + 1 // +1 for newline character
     }
 
-    const isFunctionNode = (node: any) =>
-      node?.type === "FunctionDeclaration" ||
-      node?.type === "FunctionExpression" ||
-      node?.type === "ArrowFunctionExpression" ||
-      node?.type === "MethodDefinition"
+    const isTopLevelReturn = (ancestors: acorn.Node[]) =>
+      ancestors.length === 2 && isProgramNode(ancestors[0])
 
-    const isTopLevelReturn = (ancestors: any[]) =>
-      ancestors.length === 2 && ancestors[0]?.type === "Program"
+    const isReturnInTopLevelPlainElse = (ancestors: acorn.Node[]) => {
+      if (ancestors.length < 2) {
+        return false
+      }
 
-    const isReturnInTopLevelPlainElse = (ancestors: any[]) => {
       let index = ancestors.length - 2
-      let child = ancestors[index + 1]
+      let child: acorn.Node | undefined = ancestors[index + 1]
       let seenPlainElse = false
 
       while (index >= 0) {
         const parent = ancestors[index]
 
-        if (parent?.type === "BlockStatement") {
+        if (isBlockStatement(parent)) {
           child = parent
           index -= 1
           continue
         }
 
-        if (parent?.type === "IfStatement" && parent.alternate === child) {
-          if (!seenPlainElse) {
-            if (parent.alternate?.type === "IfStatement") {
-              return false
-            }
-            seenPlainElse = true
+        if (!isIfStatement(parent) || parent.alternate !== child) {
+          break
+        }
+
+        if (!seenPlainElse) {
+          if (isIfStatement(parent.alternate)) {
+            return false
           }
-          child = parent
-          index -= 1
-          continue
+          seenPlainElse = true
         }
 
-        break
+        child = parent
+        index -= 1
       }
 
-      return seenPlainElse && index === 0 && ancestors[0]?.type === "Program"
+      return seenPlainElse && index === 0 && isProgramNode(ancestors[0])
     }
 
     let hasReturnStatement = false
@@ -85,43 +128,40 @@ export function validateJsTemplate(
         }
       },
       CallExpression(node) {
-        const callee: any = node.callee
-        if (
-          node.type === "CallExpression" &&
-          callee.object?.name === "helpers" &&
-          node.loc
-        ) {
-          const functionName = callee.property.name
-          const from =
-            lineOffsets[node.loc.start.line - 1] + node.loc.start.column
-          const to = lineOffsets[node.loc.end.line - 1] + node.loc.end.column
+        if (!node.loc) {
+          return
+        }
 
-          if (!(functionName in validations)) {
-            diagnostics.push({
-              from,
-              to,
-              severity: "warning",
-              message: `"${functionName}" function does not exist.`,
-            })
-            return
-          }
+        const functionName = getHelperFunctionName(node.callee)
+        if (!functionName) {
+          return
+        }
 
-          const { arguments: expectedArguments } = validations[functionName]
-          if (
-            expectedArguments &&
-            node.arguments.length !== expectedArguments.length
-          ) {
-            diagnostics.push({
-              from,
-              to,
-              severity: "error",
-              message: `Function "${functionName}" expects ${
-                expectedArguments.length
-              } parameters (${expectedArguments.join(", ")}), but got ${
-                node.arguments.length
-              }.`,
-            })
-          }
+        const from = lineOffsets[node.loc.start.line - 1] + node.loc.start.column
+        const to = lineOffsets[node.loc.end.line - 1] + node.loc.end.column
+
+        if (!(functionName in validations)) {
+          diagnostics.push({
+            from,
+            to,
+            severity: "warning",
+            message: `"${functionName}" function does not exist.`,
+          })
+          return
+        }
+
+        const { arguments: expectedArguments } = validations[functionName]
+        if (expectedArguments && node.arguments.length !== expectedArguments.length) {
+          diagnostics.push({
+            from,
+            to,
+            severity: "error",
+            message: `Function "${functionName}" expects ${
+              expectedArguments.length
+            } parameters (${expectedArguments.join(", ")}), but got ${
+              node.arguments.length
+            }.`,
+          })
         }
       },
     })
@@ -134,12 +174,13 @@ export function validateJsTemplate(
         message: "Your code must return a value.",
       })
     }
-  } catch (e: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error"
     diagnostics.push({
       from: 0,
       to: code.length,
       severity: "error",
-      message: `Syntax error: ${e.message}`,
+      message: `Syntax error: ${message}`,
     })
   }
 
