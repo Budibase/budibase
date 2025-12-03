@@ -8,6 +8,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { IntegrationTypes } from "@/constants/backend"
+  import type { Datasource, UIInternalDatasource } from "@budibase/types"
   import { onMount } from "svelte"
   import APIModal from "./_components/APIModal.svelte"
 
@@ -25,8 +26,9 @@
     }
   }
 
-  // TODO: typing
-  const sortByDatasourceName = (a: any, b: any) =>
+  type SortableDatasource = Pick<Datasource | UIInternalDatasource, "name">
+
+  const sortByDatasourceName = (a: SortableDatasource, b: SortableDatasource) =>
     (a.name || "").localeCompare(b.name || "", undefined, {
       sensitivity: "base",
     })
