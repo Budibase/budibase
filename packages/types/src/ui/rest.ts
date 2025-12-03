@@ -9,6 +9,7 @@ export type RestTemplateName =
   | "BambooHR"
   | "GitHub"
   | "Jira Cloud"
+  | "Okta Management"
   | "PagerDuty"
   | "Slack Web API"
   | "Stripe"
