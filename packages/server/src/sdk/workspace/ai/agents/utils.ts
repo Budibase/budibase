@@ -52,19 +52,20 @@ export async function buildPromptAndTools(
   }
 }
 
-export function addRequestId(input: any, init: any, requestId: string) {
-  // we need to specifically add a litellm_session_id to the underlying request
-  const nextInit = { ...init }
-
-  if (typeof nextInit?.body === "string") {
-    try {
-      const body = JSON.parse(nextInit.body)
-      body.litellm_session_id = requestId
-      nextInit.body = JSON.stringify(body)
-    } catch {
-      // If the body is not JSON, send the request unmodified
+export function createLiteLLMFetch(sessionId: string) {
+  return (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ) => {
+    if (typeof init?.body === "string") {
+      try {
+        const body = JSON.parse(init.body)
+        body.litellm_session_id = sessionId
+        return fetch(input, { ...init, body: JSON.stringify(body) })
+      } catch {
+        // Not JSON, pass through
+      }
     }
+    return fetch(input, init)
   }
-
-  return fetch(input, nextInit)
 }

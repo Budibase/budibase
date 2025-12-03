@@ -55,12 +55,10 @@ export async function run({
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
 
-    const requestId = v4()
     const openai = createOpenAI({
       apiKey,
       baseURL: baseUrl,
-      fetch: (input, init) =>
-        sdk.ai.agents.addRequestId(input, init, requestId),
+      fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
     const aiTools = toAiSdkTools(allTools)
