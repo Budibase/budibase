@@ -55,7 +55,7 @@
   let customModalConfig: CustomAIProviderConfig | null = null
 
   $: isCloud = $admin.cloud
-  $: privateLLMSEnabled = !$admin.cloud && $featureFlags.PRIVATE_LLMS
+  $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
