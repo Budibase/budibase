@@ -18,6 +18,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { API } from "@/api"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   const DISPLAY_OPTIONS = [
     { label: "Standalone", value: "standalone" },
@@ -38,6 +39,7 @@
     theme_color: "#FFFFFF",
     display: "standalone",
     start_url: "",
+    scope: "",
   }
 
   $: iconCount = pwaConfig.icons?.length || 0
@@ -132,6 +134,12 @@
           visuals to create a branded, professional experience for their users.
         </Body>
       </Layout>
+      <InfoDisplay
+        icon="info"
+        title="PWA Configuration Applies to Entire Workspace"
+        body="Within a workspace, you can only make all the apps within that workspace a pwa. If you want a specific
+          app to be a pwa, create a new workspace."
+      />
       <Divider noMargin />
     {/if}
 

@@ -33,7 +33,7 @@ import timekeeper from "timekeeper"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 
-const { basicTable } = setup.structures
+const { basicTable, viewV2: viewV2Structures } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -1164,6 +1164,21 @@ if (descriptions.length) {
             // Verify original table still has its data
             const originalRows = await config.api.row.fetch(testTable._id!)
             expect(originalRows.length).toBe(2)
+          })
+
+          it("should not duplicate table views", async () => {
+            const createdView = await config.api.viewV2.create(
+              viewV2Structures.createRequest(testTable._id!)
+            )
+
+            const duplicatedTable = await config.api.table.duplicate(
+              testTable._id!
+            )
+
+            expect(Object.keys(duplicatedTable.views || {})).toHaveLength(0)
+
+            const originalTable = await config.api.table.get(testTable._id!)
+            expect(originalTable.views?.[createdView.name]).toBeDefined()
           })
 
           it("should apply authorization to endpoint", async () => {

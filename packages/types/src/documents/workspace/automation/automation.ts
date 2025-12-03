@@ -41,6 +41,7 @@ export enum AutomationCustomIOType {
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
   CATEGORIES = "categories",
+  AGENT = "agent",
 }
 
 export enum AutomationTriggerStepId {
@@ -89,6 +90,7 @@ export enum AutomationActionStepId {
   EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
   EXTRACT_STATE = "EXTRACT_STATE",
   LOOP_V2 = "LOOP_V2",
+  AGENT = "AGENT",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
