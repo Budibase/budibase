@@ -577,4 +577,65 @@ describe("Rest Importer", () => {
 
     expect(staticVariables).toEqual({ companyDomain: "acme" })
   })
+
+  it("returns OpenAPI 3 component parameters as static variables", async () => {
+    const openapiWithComponentParams = {
+      openapi: "3.0.0",
+      info: {
+        title: "Component Parameters",
+        version: "1.0.0",
+      },
+      components: {
+        parameters: {
+          tenantParam: {
+            name: "tenant",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+              default: "example",
+            },
+          },
+          authHeader: {
+            name: "authorization",
+            in: "header",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        },
+      },
+      paths: {
+        "/{tenant}/jobs": {
+          get: {
+            operationId: "getJobs",
+            parameters: [
+              {
+                $ref: "#/components/parameters/tenantParam",
+              },
+              {
+                $ref: "#/components/parameters/authHeader",
+              },
+            ],
+            responses: {
+              "200": {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    }
+
+    await init(JSON.stringify(openapiWithComponentParams))
+    const staticVariables = restImporter.getStaticServerVariables()
+
+    expect(staticVariables).toEqual(
+      expect.objectContaining({
+        tenant: "example",
+        authorization: "",
+      })
+    )
+  })
 })

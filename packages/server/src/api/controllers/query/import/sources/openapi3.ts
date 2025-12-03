@@ -56,6 +56,7 @@ const isOperation = (
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
   serverVariableBindings: Record<string, string> = {}
+  componentParameterBindings: Record<string, string> = {}
 
   private resolveRef<T>(ref: string): T | undefined {
     if (!ref || !ref.startsWith("#/")) {
@@ -86,6 +87,20 @@ export class OpenAPI3 extends OpenAPISource {
       return this.resolveRef<T>(value.$ref)
     }
     return value as T
+  }
+
+  private serializeDefaultValue(value: unknown) {
+    if (value === undefined || value === null) {
+      return ""
+    }
+    if (typeof value === "string") {
+      return value
+    }
+    try {
+      return JSON.stringify(value)
+    } catch (_err) {
+      return String(value)
+    }
   }
 
   private normalizeParameters(
@@ -209,12 +224,38 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  private setComponentParameterBindings = () => {
+    this.componentParameterBindings = {}
+    const parameters = this.document?.components?.parameters || {}
+    for (let parameter of Object.values(parameters)) {
+      const normalized = this.resolveMaybeRef<OpenAPIV3.ParameterObject>(
+        parameter as any
+      )
+      if (!normalized?.name) {
+        continue
+      }
+      let defaultValue = ""
+      const schema = this.resolveMaybeRef<OpenAPIV3.SchemaObject>(
+        normalized.schema
+      )
+      if (schema?.default !== undefined) {
+        defaultValue = this.serializeDefaultValue(schema.default)
+      } else if (normalized.example !== undefined) {
+        defaultValue = this.serializeDefaultValue(normalized.example)
+      } else if (schema?.example !== undefined) {
+        defaultValue = this.serializeDefaultValue(schema.example)
+      }
+      this.componentParameterBindings[normalized.name] = defaultValue
+    }
+  }
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
         this.serverVariableBindings = {}
+        this.componentParameterBindings = {}
         return true
       } else {
         return false
@@ -228,7 +269,20 @@ export class OpenAPI3 extends OpenAPISource {
     if (!Object.keys(this.serverVariableBindings).length) {
       this.setServerVariableBindings(this.getPrimaryServer())
     }
-    return { ...this.serverVariableBindings }
+    if (!Object.keys(this.componentParameterBindings).length) {
+      this.setComponentParameterBindings()
+    }
+    return {
+      ...this.componentParameterBindings,
+      ...this.serverVariableBindings,
+    }
+  }
+
+  getComponentParameterBindings = () => {
+    if (!Object.keys(this.componentParameterBindings).length) {
+      this.setComponentParameterBindings()
+    }
+    return { ...this.componentParameterBindings }
   }
 
   private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
@@ -389,6 +443,13 @@ export class OpenAPI3 extends OpenAPISource {
             )
             if (schema?.default !== undefined) {
               defaultValue = String(schema.default)
+            }
+            const hasStaticVariable = Object.prototype.hasOwnProperty.call(
+              staticVariables,
+              param.name
+            )
+            if (hasStaticVariable) {
+              defaultValue = `{{ ${param.name} }}`
             }
             ensureParameter(param.name, defaultValue)
           }

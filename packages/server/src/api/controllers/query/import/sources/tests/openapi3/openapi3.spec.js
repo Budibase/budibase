@@ -173,6 +173,61 @@ describe("OpenAPI3 Import", () => {
     )
   })
 
+  it("binds component parameters to datasource statics when available", async () => {
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: {
+        title: "Component Parameters",
+      },
+      components: {
+        parameters: {
+          tenantParam: {
+            name: "tenant",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        },
+      },
+      paths: {
+        "/{tenant}/resources": {
+          get: {
+            operationId: "getResources",
+            parameters: [
+              {
+                $ref: "#/components/parameters/tenantParam",
+              },
+            ],
+            responses: {
+              default: {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    await openapi3.isSupported(spec)
+
+    const [query] = await openapi3.getQueries("datasourceId", {
+      staticVariables: {
+        tenant: "demo",
+      },
+    })
+
+    expect(query.parameters).toEqual(
+      expect.arrayContaining([
+        {
+          name: "tenant",
+          default: "{{ tenant }}",
+        },
+      ])
+    )
+  })
+
   const runTests = async (filename, test, assertions) => {
     for (let extension of ["json", "yaml"]) {
       await test(filename, extension, assertions)
