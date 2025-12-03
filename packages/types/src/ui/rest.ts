@@ -8,6 +8,7 @@ export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 export type RestTemplateName =
   | "BambooHR"
   | "GitHub"
+  | "Jira Cloud"
   | "PagerDuty"
   | "Slack Web API"
   | "Stripe"
