@@ -3,6 +3,7 @@ import { BudiStore } from "../BudiStore"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
+import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
@@ -48,6 +49,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: JiraLogo,
+    },
+    {
+      name: "Okta Management",
+      description:
+        "Configure and manage authorization servers and the security policies attached to them, enabling centralized control over API access",
+      specs: [
+        {
+          version: "2025.11.0",
+          url: "https://raw.githubusercontent.com/okta/okta-management-openapi-spec/master/dist/current/management-oneOfInheritance.yaml",
+        },
+      ],
+      icon: OktaLogo,
     },
     {
       name: "PagerDuty",
