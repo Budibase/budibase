@@ -69,7 +69,7 @@
         placeholder="e.g. GitHub, Confluence, Jira"
       />
       <div class="queries-section">
-        <Heading size="XS">Select Queries</Heading>
+        <Heading size="XS">Select queries</Heading>
         {#if queriesForDatasource.length === 0}
           <Body size="S" color="var(--spectrum-global-color-gray-700)">
             No actions found for this API. Create actions in the APIs section
