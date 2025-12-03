@@ -1,5 +1,6 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
 import {
+  BodyType,
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,

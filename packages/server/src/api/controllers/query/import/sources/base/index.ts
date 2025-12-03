@@ -1,5 +1,6 @@
 import {
   BodyType,
+  ImportEndpoint,
   Query,
   QueryParameter,
   QueryVerb,
