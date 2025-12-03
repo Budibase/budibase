@@ -12,7 +12,10 @@ import { promisify } from "util"
 interface SnowflakeConfig {
   account: string
   username: string
-  password: string
+  /** @deprecated Use privateKey instead */
+  password: string | undefined
+  privateKey: string
+  authenticator: string
   warehouse: string
   database: string
   schema: string
@@ -23,6 +26,8 @@ const SCHEMA: Integration = {
   description:
     "Snowflake is a solution for data warehousing, data lakes, data engineering, data science, data application development, and securely sharing and consuming shared data.",
   friendlyName: "Snowflake",
+  warningMessage:
+    "Snowflake has announced upcoming security policy changes that will disallow passwords for all non-human service by October 2026. In order to avoid any disruption, please consider using key pair authentication.",
   type: "Relational",
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
@@ -38,7 +43,18 @@ const SCHEMA: Integration = {
     },
     password: {
       type: DatasourceFieldType.PASSWORD,
-      required: true,
+      required: false,
+      deprecated: true,
+    },
+    privateKey: {
+      display: "Private Key (PEM)",
+      type: DatasourceFieldType.SENSITIVE_LONGFORM,
+      required: false,
+    },
+    authenticator: {
+      type: DatasourceFieldType.STRING,
+      required: false,
+      hidden: "true",
     },
     role: {
       type: DatasourceFieldType.STRING,
@@ -82,6 +98,12 @@ class SnowflakePromise {
 
   async connect() {
     if (this.client?.isUp()) return
+
+    this.config.authenticator = "SNOWFLAKE"
+    if (this.config.privateKey) {
+      this.config.authenticator = "SNOWFLAKE_JWT"
+      this.config.privateKey = this.config.privateKey?.trim()
+    }
 
     this.client = snowflakeSdk.createConnection(this.config)
     const connectAsync = promisify(this.client.connect.bind(this.client))
