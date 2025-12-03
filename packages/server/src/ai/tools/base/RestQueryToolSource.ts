@@ -55,7 +55,7 @@ export class RestQueryToolSource extends ToolSource {
 
   private sanitiseToolName(name: string): string {
     if (name.length > 64) {
-      name = name.substring(0, 64)
+      return name.substring(0, 64) + "..."
     }
     return name.replace(/[^a-zA-Z0-9_-]/g, "_")
   }

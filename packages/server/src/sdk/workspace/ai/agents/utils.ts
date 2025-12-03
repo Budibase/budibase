@@ -15,9 +15,8 @@ export async function buildPromptAndTools(
   tools: Tool[]
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
-
-  let toolGuidelines = ""
   const allTools: Tool[] = []
+  const toolGuidelineEntries: { toolName: string; guidelines: string }[] = []
 
   for (const toolSource of agent.allowedTools || []) {
     const toolSourceInstance = createToolSource(toolSource)
@@ -28,15 +27,19 @@ export async function buildPromptAndTools(
 
     const guidelines = toolSourceInstance.getGuidelines()
     if (guidelines) {
-      const prefix = `When using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-      toolGuidelines += toolGuidelines ? `\n\n${prefix}` : prefix
+      toolGuidelineEntries.push({
+        toolName: toolSourceInstance.getName(),
+        guidelines,
+      })
     }
-
     const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
     if (toolsToAdd.length > 0) {
       allTools.push(...toolsToAdd)
     }
   }
+
+  const toolGuidelines =
+    ai.composeAutomationAgentToolGuidelines(toolGuidelineEntries)
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
