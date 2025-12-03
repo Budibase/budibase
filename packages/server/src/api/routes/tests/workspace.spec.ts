@@ -1163,6 +1163,23 @@ describe("/applications", () => {
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
+    it("should seed production tables when requested", async () => {
+      await config.unpublish()
+      const table = await config.api.table.save(basicTable())
+      const devRow = await config.api.row.save(table._id!, {
+        name: "dev-row",
+      })
+
+      await config.api.workspace.filteredPublish(workspace.appId, {
+        seedProductionTables: true,
+      })
+
+      const prodRows = await config.api.row.fetchProd(table._id!)
+
+      expect(prodRows).toHaveLength(1)
+      expect(prodRows[0]._id).toEqual(devRow._id)
+    })
+
     // API to publish filtered resources currently disabled, skip test while not needed
     it.skip("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources

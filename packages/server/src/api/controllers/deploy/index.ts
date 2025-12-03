@@ -16,6 +16,8 @@ import {
   FetchDeploymentResponse,
   FormulaType,
   PublishStatusResponse,
+  PublishTableRequest,
+  PublishTableResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   Table,
@@ -251,15 +253,19 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-export const publishWorkspace = async function (
-  ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
-) {
-  if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
-    throw new errors.NotImplementedError(
-      "Publishing resources by ID not currently supported"
-    )
-  }
-  const seedProductionTables = ctx.request.body?.seedProductionTables
+type PublishContext = UserCtx<
+  PublishWorkspaceRequest | PublishTableRequest,
+  PublishWorkspaceResponse | PublishTableResponse
+>
+
+export const publishWorkspaceInternal = async (
+  ctx: PublishContext,
+  seedProductionTables?: boolean
+) => {
+  const seedTables =
+    seedProductionTables !== undefined
+      ? seedProductionTables
+      : ctx.request.body?.seedProductionTables
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
@@ -270,7 +276,7 @@ export const publishWorkspace = async function (
     // data to production instead of development - but doesn't improve test
     // quality - so keep publishing data in dev for now
     tablesToSync = "all"
-  } else if (seedProductionTables) {
+  } else if (seedTables) {
     try {
       tablesToSync = await sdk.tables.listEmptyProductionTables()
     } catch (e) {
@@ -331,7 +337,7 @@ export const publishWorkspace = async function (
             isCreation: !isPublished,
             tablesToSync,
             // don't use checkpoints, this can stop previously ignored data being replicated
-            checkpoint: !seedProductionTables,
+            checkpoint: !seedTables,
           })
         )
 
@@ -421,6 +427,18 @@ export const publishWorkspace = async function (
 
   await events.app.published(migrationResult.app)
 
-  ctx.body = deployment
   builderSocket?.emitAppPublish(ctx)
+  return deployment
+}
+
+export const publishWorkspace = async function (
+  ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
+) {
+  if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
+    throw new errors.NotImplementedError(
+      "Publishing resources by ID not currently supported"
+    )
+  }
+
+  ctx.body = await publishWorkspaceInternal(ctx)
 }

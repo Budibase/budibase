@@ -45,6 +45,7 @@ import {
 } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { processTable } from "../../../sdk/workspace/tables/getters"
+import { publishWorkspaceInternal } from "../deploy"
 import {
   isRows,
   isSchema,
@@ -314,14 +315,10 @@ export async function publish(
   const prodPublished =
     await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
 
-  if (!prodPublished) {
-    ctx.throw(
-      400,
-      "Publish the workspace before publishing production data for individual tables."
-    )
-  }
-
   const seedProductionTables = !!ctx.request.body?.seedProductionTables
+  if (!prodPublished) {
+    await publishWorkspaceInternal(ctx, seedProductionTables)
+  }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
   const matchesTable = (_id: string) =>
     _id === tableId ||

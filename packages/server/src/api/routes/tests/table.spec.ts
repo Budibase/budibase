@@ -1554,16 +1554,24 @@ if (descriptions.length) {
             await config.unpublish()
           })
 
-          it("requires workspace to be published before publishing a table", async () => {
+          it("publishes the workspace before publishing a table", async () => {
             const table = await config.api.table.save(basicTable())
 
-            await config.api.table.publish(table._id!, undefined, {
-              status: 400,
-              body: {
-                message:
-                  "Publish the workspace before publishing production data for individual tables.",
-              },
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
             })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            config.prodWorkspaceId = config
+              .getDevWorkspaceId()
+              .replace("_dev", "")
+            const prodRows = await config.api.row.fetchProd(table._id!)
+
+            expect(prodRows.length).toBe(1)
+            expect(prodRows[0]._id).toEqual(devRow._id)
           })
 
           it("publishes table data to production when seeded", async () => {
