@@ -107,10 +107,7 @@
     updateCollapsible()
   }
 
-  const enhanceLinks = (
-    node: HTMLElement,
-    params: LinkEnhancerParams = {}
-  ) => {
+  const enhanceLinks = (node: HTMLElement, params: LinkEnhancerParams = {}) => {
     let { baseUrl: currentBase, onMutate } = params
 
     const apply = () => {
@@ -160,7 +157,11 @@
       class="description-content"
       class:description-content--collapsed={!expanded && collapsible}
       bind:this={contentEl}
-      use:enhanceLinks={{ baseUrl, contentKey: description, onMutate: updateCollapsible }}
+      use:enhanceLinks={{
+        baseUrl,
+        contentKey: description,
+        onMutate: updateCollapsible,
+      }}
     >
       <MarkdownViewer value={description || placeholder} />
     </div>
@@ -170,7 +171,11 @@
         aria-hidden={!expanded}
         hidden={expanded}
       />
-      <button type="button" class="description-viewer__toggle" on:click={toggleExpanded}>
+      <button
+        type="button"
+        class="description-viewer__toggle"
+        on:click={toggleExpanded}
+      >
         {#if expanded}
           Show less
         {:else}
@@ -219,11 +224,7 @@
     pointer-events: none;
     inset: calc(var(--description-collapsed-height) - 3em) 0 auto 0;
     height: 3em;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      var(--background) 100%
-    );
+    background: linear-gradient(180deg, transparent 0%, var(--background) 100%);
   }
 
   .description-viewer__toggle {
