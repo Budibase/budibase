@@ -1,6 +1,7 @@
 import { RestTemplate, RestTemplateName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
+import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
@@ -35,6 +36,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: GitHubLogo,
+    },
+    {
+      name: "Jira Cloud",
+      description:
+        "Build apps, script interactions with Jira, or develop any other type of integration",
+      specs: [
+        {
+          version: "3.0",
+          url: "https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json",
+        },
+      ],
+      icon: JiraLogo,
     },
     {
       name: "PagerDuty",
