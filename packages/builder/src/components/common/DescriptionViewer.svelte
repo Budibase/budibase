@@ -43,42 +43,55 @@
     }
   }
 
-  const replaceLinks = (html: string, base?: string): string => {
-    if (!html) {
-      return html
-    }
-    const template = document.createElement("template")
-    template.innerHTML = html
-
-    const resolvedBase = resolveBaseUrl(base)
-
-    template.content.querySelectorAll("a").forEach(anchor => {
-      const href = anchor.getAttribute("href") || undefined
-      if (resolvedBase) {
-        const absolute = toAbsoluteUrl(href, resolvedBase)
-        if (absolute) {
-          anchor.setAttribute("href", absolute)
-        }
-      }
-      anchor.setAttribute("target", "_blank")
-      anchor.setAttribute("rel", "noopener noreferrer")
-      anchor.classList.add("spectrum-Link", "spectrum-Link--sizeM")
-    })
-
-    return template.innerHTML
+  interface LinkEnhancerParams {
+    baseUrl?: string
+    contentKey?: string
   }
 
-  $: descriptionWithLinks = description
-    ? replaceLinks(description, baseUrl)
-    : ""
+  const enhanceLinks = (
+    node: HTMLElement,
+    params: LinkEnhancerParams = {}
+  ) => {
+    let { baseUrl: currentBase } = params
+
+    const apply = () => {
+      const resolvedBase = resolveBaseUrl(currentBase)
+      node.querySelectorAll("a").forEach(anchor => {
+        const href = anchor.getAttribute("href") || undefined
+        if (resolvedBase) {
+          const absolute = toAbsoluteUrl(href, resolvedBase)
+          if (absolute) {
+            anchor.setAttribute("href", absolute)
+          }
+        }
+        anchor.setAttribute("target", "_blank")
+        anchor.setAttribute("rel", "noopener noreferrer")
+        anchor.classList.add("spectrum-Link", "spectrum-Link--sizeM")
+      })
+    }
+
+    const observer = new MutationObserver(apply)
+    observer.observe(node, { childList: true, subtree: true })
+    apply()
+
+    return {
+      update(newParams?: LinkEnhancerParams) {
+        currentBase = newParams?.baseUrl
+        apply()
+      },
+      destroy() {
+        observer.disconnect()
+      },
+    }
+  }
 </script>
 
 <div>
   {#if label}
     <span class="spectrum-FieldLabel spectrum-FieldLabel--sizeM">{label}</span>
   {/if}
-  <div class="description-viewer">
-    <MarkdownViewer value={descriptionWithLinks || placeholder} />
+  <div class="description-viewer" use:enhanceLinks={{ baseUrl, contentKey: description }}>
+    <MarkdownViewer value={description || placeholder} />
   </div>
 </div>
 
