@@ -1,0 +1,81 @@
+openapi: 3.0.1
+info:
+  title: Placeholder
+  version: 0.0.1
+info:
+  title: Okta Management Sample
+  version: 2025.11.0
+servers:
+  - url: https://{subdomain}.okta.com
+    variables:
+      subdomain:
+        default: example
+paths:
+  /api/v1/apps:
+    parameters:
+      - $ref: '#/components/parameters/Okta-Version'
+    get:
+      operationId: listApps
+      summary: List applications
+      parameters:
+        - $ref: '#/components/parameters/Query-Limit'
+      responses:
+        '200':
+          description: Successful response
+    post:
+      operationId: createApp
+      summary: Create application
+      requestBody:
+        $ref: '#/components/requestBodies/AppCreateRequest'
+      responses:
+        '200':
+          description: App created
+components:
+  requestBodies:
+    AppCreateRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppCreate'
+  parameters:
+    Okta-Version:
+      name: Okta-Version
+      in: header
+      schema:
+        type: string
+        default: '2025-11-0'
+    Query-Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 200
+  schemas:
+    AppCreate:
+      type: object
+      required:
+        - label
+        - settings
+      properties:
+        label:
+          type: string
+          example: Example app
+        settings:
+          type: object
+          required:
+            - oauthClient
+          properties:
+            oauthClient:
+              $ref: '#/components/schemas/OAuthClient'
+    OAuthClient:
+      type: object
+      properties:
+        client_uri:
+          type: string
+          default: https://example.okta.com/app
+        redirect_uris:
+          type: array
+          items:
+            type: string
+            example: https://example.okta.com/callback
