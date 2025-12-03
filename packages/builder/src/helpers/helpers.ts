@@ -3,10 +3,12 @@ import { integrations } from "@/stores/builder"
 import type { Many } from "lodash"
 import { last, flow } from "lodash/fp"
 import { get as svelteGet } from "svelte/store"
-import type { SvelteComponent } from "svelte"
+import type { ComponentType } from "svelte"
+
+type IntegrationIcon = (typeof ICONS)[keyof typeof ICONS]
 
 export type IconInfo =
-  | { icon: typeof SvelteComponent; url?: never }
+  | { icon: IntegrationIcon | ComponentType; url?: never }
   | { url: string; icon?: never }
 
 export const getIntegrationIcon = (
