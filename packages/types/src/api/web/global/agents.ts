@@ -1,4 +1,9 @@
-import { Agent, AgentChat, AgentToolSource } from "../../../documents"
+import {
+  Agent,
+  AgentChat,
+  BudibaseToolSource,
+  RestQueryToolSource,
+} from "../../../documents"
 
 export type ChatAgentRequest = AgentChat
 
@@ -8,19 +13,33 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
-export type CreateToolSourceRequest = Omit<
-  AgentToolSource,
+type CreateBudibaseToolSourceRequest = Omit<
+  BudibaseToolSource,
   "_id" | "_rev" | "createdAt" | "updatedAt"
-> & {
-  agentId: string
-}
+>
 
-export type UpdateToolSourceRequest = Omit<
-  AgentToolSource,
+type CreateRestQueryToolSourceRequest = Omit<
+  RestQueryToolSource,
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+
+export type CreateToolSourceRequest =
+  | CreateBudibaseToolSourceRequest
+  | CreateRestQueryToolSourceRequest
+
+type UpdateBudibaseToolSourceRequest = Omit<
+  BudibaseToolSource,
   "createdAt" | "updatedAt"
-> & {
-  agentId: string
-}
+>
+
+type UpdateRestQueryToolSourceRequest = Omit<
+  RestQueryToolSource,
+  "createdAt" | "updatedAt"
+>
+
+export type UpdateToolSourceRequest =
+  | (UpdateBudibaseToolSourceRequest & { agentId: string })
+  | (UpdateRestQueryToolSourceRequest & { agentId: string })
 
 export type CreateAgentRequest = Omit<
   Agent,
