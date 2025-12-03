@@ -72,7 +72,7 @@
         <Heading size="XS">Select Queries</Heading>
         {#if queriesForDatasource.length === 0}
           <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            No queries found for this API. Create queries in the APIs section
+            No actions found for this API. Create actions in the APIs section
             first.
           </Body>
         {:else}

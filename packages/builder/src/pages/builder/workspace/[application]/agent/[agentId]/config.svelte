@@ -28,24 +28,16 @@
   import { onMount, type ComponentType } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import BudibaseLogo from "../logos/Budibase.svelte"
-
-  const Logos: Record<string, ComponentType> = {
-    BUDIBASE: BudibaseLogo,
-  }
-
-  function getToolSourceIcon(toolSource: AgentToolSource): string | undefined {
-    if (toolSource.type === ToolSourceType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
-      if (ds?.restTemplate) {
-        return restTemplates.getByName(ds.restTemplate)?.icon
-      }
-    }
-    return undefined
-  }
+  import { getIcon } from "@/components/backend/DatasourceNavigator/icons"
+  import { IntegrationTypes } from "@/constants/backend"
+  import Budibase from "../logos/Budibase.svelte"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
+  let toolConfigModal: AgentToolConfigModal
+  let deleteConfirmModal: Modal
+  let toolSourceToDelete: AgentToolSource | null = null
+  let togglingLive = false
   let draft = {
     name: "",
     description: "",
@@ -55,10 +47,6 @@
     icon: "",
     iconColor: "",
   }
-  let toolConfigModal: AgentToolConfigModal
-  let deleteConfirmModal: Modal
-  let toolSourceToDelete: AgentToolSource | null = null
-  let togglingLive = false
 
   $: currentAgent = $agentsStore.agents.find(
     a => a._id === $agentsStore.currentAgentId
@@ -84,6 +72,7 @@
   }))
 
   $: toolSources = $agentsStore.toolSources || []
+
   async function saveAgent() {
     if (!currentAgent) return
     try {
@@ -127,6 +116,20 @@
     } finally {
       togglingLive = false
     }
+  }
+
+  function getToolSourceIcon(toolSource: AgentToolSource) {
+    if (toolSource.type === ToolSourceType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
+      if (ds?.restTemplate) {
+        return getIcon(
+          IntegrationTypes.REST,
+          ds.restTemplate,
+          restTemplates.getByName(ds.restTemplate)?.icon
+        )
+      }
+    }
+    return { icon: Budibase }
   }
 
   const confirmDeleteToolSource =
@@ -262,21 +265,22 @@
                 <div class="tools-tags">
                   <Tags>
                     {#each toolSources as toolSource}
+                      {@const iconInfo = getToolSourceIcon(toolSource)}
                       <div on:click={() => toolConfigModal.show(toolSource)}>
                         <Tag
                           closable
                           on:click={confirmDeleteToolSource(toolSource)}
                         >
                           <div class="tag-content">
-                            {#if Logos[toolSource.type]}
+                            {#if iconInfo?.icon}
                               <svelte:component
-                                this={Logos[toolSource.type]}
+                                this={iconInfo.icon}
                                 height="14"
                                 width="14"
                               />
-                            {:else if getToolSourceIcon(toolSource)}
+                            {:else if iconInfo?.url}
                               <img
-                                src={getToolSourceIcon(toolSource)}
+                                src={iconInfo.url}
                                 alt=""
                                 class="tool-icon"
                               />
