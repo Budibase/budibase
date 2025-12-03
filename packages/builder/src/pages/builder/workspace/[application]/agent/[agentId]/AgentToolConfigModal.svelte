@@ -17,18 +17,15 @@
     type AgentToolSourceWithTools,
     type Query,
     type Tool,
+    type ToolSourceOption,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import { datasources, queries } from "@/stores/builder"
   import { IntegrationTypes } from "@/constants/backend"
   import { createEventDispatcher, type ComponentType } from "svelte"
   import BudibaseLogo from "../logos/Budibase.svelte"
+  import { API } from "@/api"
 
-  interface ToolSourceOption {
-    name: string
-    type: ToolSourceType
-    description: string
-  }
   export let agentId: string
 
   const Logos: Record<string, ComponentType> = {
@@ -84,29 +81,47 @@
     (q: Query) => q.datasourceId === selectedDatasourceId
   )
 
-  // Auto-populate label and queries when datasource changes
-  let previousDatasourceId = ""
-  $: if (
-    selectedDatasourceId &&
-    selectedDatasourceId !== previousDatasourceId
-  ) {
-    const isInitialLoad = !previousDatasourceId && editingSource
-    previousDatasourceId = selectedDatasourceId
+  function handleDatasourceChange(newDatasourceId: string) {
+    selectedDatasourceId = newDatasourceId
 
-    if (!isInitialLoad) {
-      if (!editingSource) {
-        const ds = restDatasources.find(d => d._id === selectedDatasourceId)
-        if (ds) {
-          label = ds.name || ""
-        }
-      }
-      const allQueries = ($queries.list || []).filter(
-        (q: Query) => q.datasourceId === selectedDatasourceId
-      )
-      selectedQueryIds = allQueries
-        .map(q => q._id)
-        .filter((id): id is string => !!id)
+    if (!newDatasourceId) {
+      return
     }
+
+    if (!editingSource) {
+      const ds = restDatasources.find(d => d._id === newDatasourceId)
+      if (ds) {
+        label = ds.name || ""
+      }
+    }
+
+    const allQueries = ($queries.list || []).filter(
+      (q: Query) => q.datasourceId === newDatasourceId
+    )
+    selectedQueryIds = allQueries
+      .map(q => q._id)
+      .filter((id): id is string => !!id)
+  }
+
+  const fetchBudibaseTools = async (sourceType: ToolSourceType) => {
+    try {
+      toolsList = await API.fetchAvailableTools(sourceType)
+    } catch (error) {
+      console.error("Error fetching Budibase tools:", error)
+      notifications.error("Failed to load Budibase tools")
+    }
+  }
+
+  const resetForm = () => {
+    mode = "select"
+    editingSource = null
+    selectedSourceType = null
+    guidelines = ""
+    disabledTools = []
+    toolsList = []
+    label = ""
+    selectedDatasourceId = ""
+    selectedQueryIds = []
   }
 
   export function show(sourceToEdit?: AgentToolSourceWithTools) {
@@ -121,24 +136,21 @@
       label = sourceToEdit.label || ""
 
       if (sourceToEdit.type === ToolSourceType.REST_QUERY) {
-        const restSource = sourceToEdit
-        selectedDatasourceId = restSource.datasourceId || ""
-        selectedQueryIds = [...(restSource.queryIds || [])]
+        selectedDatasourceId = sourceToEdit.datasourceId || ""
+        selectedQueryIds = [...(sourceToEdit.queryIds || [])]
       } else {
         selectedDatasourceId = ""
         selectedQueryIds = []
       }
+
+      const needsToolsFetch =
+        sourceToEdit.type === ToolSourceType.BUDIBASE &&
+        (!toolsList || toolsList.length === 0)
+      if (needsToolsFetch) {
+        fetchBudibaseTools(sourceToEdit.type)
+      }
     } else {
-      mode = "select"
-      editingSource = null
-      selectedSourceType = null
-      guidelines = ""
-      disabledTools = []
-      toolsList = []
-      label = ""
-      selectedDatasourceId = ""
-      selectedQueryIds = []
-      previousDatasourceId = ""
+      resetForm()
     }
     modal.show()
   }
@@ -147,7 +159,7 @@
     modal.hide()
   }
 
-  function selectSource(source: ToolSourceOption) {
+  const selectSource = async (source: ToolSourceOption) => {
     selectedSourceType = source
     mode = "configure"
     guidelines = ""
@@ -156,7 +168,10 @@
     label = ""
     selectedDatasourceId = ""
     selectedQueryIds = []
-    previousDatasourceId = ""
+
+    if (source.type === ToolSourceType.BUDIBASE) {
+      await fetchBudibaseTools(source.type)
+    }
   }
 
   function toggleTool(toolName: string) {
@@ -231,7 +246,7 @@
             type: ToolSourceType.BUDIBASE,
             auth: { guidelines },
             agentId,
-            disabledTools: [],
+            disabledTools,
           }
         }
 
@@ -307,7 +322,8 @@
               {#if !editingSource}
                 <Select
                   label="REST API"
-                  bind:value={selectedDatasourceId}
+                  value={selectedDatasourceId}
+                  on:change={e => handleDatasourceChange(e.detail)}
                   options={datasourceOptions}
                   placeholder="Select a REST API"
                 />
@@ -355,17 +371,12 @@
           </div>
         {/if}
 
-        <div class="guidelines-section">
-          <TextArea
-            label="Tool Source Guidelines"
-            bind:value={guidelines}
-            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-          />
-        </div>
-
-        {#if editingSource && toolsList.length > 0 && selectedSourceType?.type !== ToolSourceType.REST_QUERY}
+        {#if toolsList.length > 0 && selectedSourceType?.type === ToolSourceType.BUDIBASE}
           <div class="tools-section">
             <Heading size="XS">Enabled Tools</Heading>
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              Select which tools the agent can use.
+            </Body>
             <div class="tools-list">
               {#each toolsList as tool}
                 <div class="tool-item">
@@ -382,6 +393,13 @@
             </div>
           </div>
         {/if}
+        <div class="guidelines-section">
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
+        </div>
       </div>
     {/if}
   </ModalContent>

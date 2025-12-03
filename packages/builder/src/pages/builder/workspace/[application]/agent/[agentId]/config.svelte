@@ -57,7 +57,7 @@
   }
   let toolConfigModal: AgentToolConfigModal
   let deleteConfirmModal: Modal
-  let toolSourceToDelete: any = null
+  let toolSourceToDelete: AgentToolSource | null = null
   let togglingLive = false
 
   $: currentAgent = $agentsStore.agents.find(
@@ -129,16 +129,17 @@
     }
   }
 
-  const confirmDeleteToolSource = (e: PointerEvent, toolSource: any) => {
-    e.stopPropagation()
-    toolSourceToDelete = toolSource
-    deleteConfirmModal.show()
-  }
+  const confirmDeleteToolSource =
+    (toolSource: AgentToolSource) => (e: MouseEvent) => {
+      e.stopPropagation()
+      toolSourceToDelete = toolSource
+      deleteConfirmModal.show()
+    }
 
   const deleteToolSource = async () => {
     if (!toolSourceToDelete) return
     try {
-      await agentsStore.deleteToolSource(toolSourceToDelete.id)
+      await agentsStore.deleteToolSource(toolSourceToDelete.id!)
       notifications.success("Tool source deleted successfully.")
       deleteConfirmModal.hide()
       toolSourceToDelete = null
@@ -264,7 +265,7 @@
                       <div on:click={() => toolConfigModal.show(toolSource)}>
                         <Tag
                           closable
-                          on:click={e => confirmDeleteToolSource(e, toolSource)}
+                          on:click={confirmDeleteToolSource(toolSource)}
                         >
                           <div class="tag-content">
                             {#if Logos[toolSource.type]}
