@@ -1,5 +1,5 @@
 export interface RestTemplateSpec {
-  version: `${number}-${number}-${number}` | `${number}.${number}`
+  version: string
   url: string
 }
 
@@ -12,6 +12,7 @@ export type RestTemplateName =
   | "Okta Management"
   | "PagerDuty"
   | "Slack Web API"
+  | "Splunk Collect"
   | "Stripe"
 
 export interface RestTemplate {

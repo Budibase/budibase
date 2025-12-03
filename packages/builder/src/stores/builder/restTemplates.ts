@@ -6,6 +6,7 @@ import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
+import SplunkLogo from "assets/rest-template-icons/splunk.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 
 interface RestTemplatesState {
@@ -85,6 +86,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SlackLogo,
+    },
+    {
+      name: "Splunk Collect",
+      description:
+        "Manage Splunk Cloud Services Collect jobs to ingest event and metric data from cloud and SaaS sources",
+      specs: [
+        {
+          version: "v1beta1.8",
+          url: "https://raw.githubusercontent.com/splunk/splunk-cloud-sdk-js/master/src/services/collect/v1beta1/openapi.yaml",
+        },
+      ],
+      icon: SplunkLogo,
     },
     {
       name: "Stripe",
