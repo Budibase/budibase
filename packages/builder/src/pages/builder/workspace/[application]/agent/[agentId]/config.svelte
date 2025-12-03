@@ -28,9 +28,9 @@
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import { getIcon } from "@/components/backend/DatasourceNavigator/icons"
+  import { getIntegrationIcon } from "@/helpers/helpers"
   import { IntegrationTypes } from "@/constants/backend"
-  import Budibase from "../logos/Budibase.svelte"
+  import BudibaseLogo from "../logos/Budibase.svelte"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -118,14 +118,14 @@
     if (toolSource.type === ToolSourceType.REST_QUERY) {
       const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
       if (ds?.restTemplate) {
-        return getIcon(
+        return getIntegrationIcon(
           IntegrationTypes.REST,
           ds.restTemplate,
           restTemplates.getByName(ds.restTemplate)?.icon
         )
       }
     }
-    return { icon: Budibase }
+    return { icon: BudibaseLogo }
   }
 
   const confirmDeleteToolSource =
@@ -136,9 +136,9 @@
     }
 
   const deleteToolSource = async () => {
-    if (!toolSourceToDelete) return
+    if (!toolSourceToDelete || !toolSourceToDelete.id) return
     try {
-      await agentsStore.deleteToolSource(toolSourceToDelete.id!)
+      await agentsStore.deleteToolSource(toolSourceToDelete.id)
       notifications.success("Tool source deleted successfully.")
       deleteConfirmModal.hide()
       toolSourceToDelete = null
