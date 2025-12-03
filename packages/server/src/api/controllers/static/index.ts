@@ -502,6 +502,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
 
     const manifest: PWAManifest = {
       name: appInfo.pwa.name || appInfo.name,
+      scope: `/app${appInfo.url}`,
       short_name: appInfo.pwa.short_name || appInfo.name,
       description: appInfo.pwa.description || "",
       start_url: `/app${appInfo.url}`,
