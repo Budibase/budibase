@@ -185,12 +185,12 @@ export async function getLLMOrThrow() {
   return llm
 }
 
-export async function getLiteLLMModelConfigOrThrow(): Promise<{
+export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
   modelId: string
   apiKey: string
   baseUrl: string
 }> {
-  const aiConfig = await getDefault()
+  const aiConfig = configId ? await find(configId) : await getDefault()
   if (!aiConfig) {
     throw new HTTPError("Chat config not found", 400)
   }
