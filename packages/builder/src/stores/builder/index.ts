@@ -141,7 +141,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
-  workspaceFavouriteStore.sync()
+  await workspaceFavouriteStore.sync()
   agentsStore.init()
   resetBuilderHistory()
   await refreshBuilderData()
