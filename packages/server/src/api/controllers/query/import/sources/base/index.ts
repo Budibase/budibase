@@ -280,4 +280,8 @@ export abstract class ImportSource {
 
     return Object.keys(defaults).length ? defaults : undefined
   }
+
+  getSecurityHeaders(): string[] {
+    return []
+  }
 }
