@@ -26,8 +26,11 @@ export class InvalidAPIKeyWarning extends APIWarning {
 export class UsageLimitWarning extends APIWarning {
   limitName: string
 
-  constructor(message: string, limitName: string) {
-    super(message, APIWarningCode.USAGE_LIMIT_EXCEEDED)
+  constructor(limitName: string) {
+    super(
+      `Usage limit exceeded: '${limitName}'`,
+      APIWarningCode.USAGE_LIMIT_EXCEEDED
+    )
     this.limitName = limitName
   }
 
@@ -41,8 +44,8 @@ export class UsageLimitWarning extends APIWarning {
 export class FeatureDisabledWarning extends APIWarning {
   featureName: string
 
-  constructor(message: string, featureName: string) {
-    super(message, APIWarningCode.FEATURE_DISABLED)
+  constructor(featureName: string) {
+    super(`Feature disabled: '${featureName}'`, APIWarningCode.FEATURE_DISABLED)
     this.featureName = featureName
   }
 
