@@ -1574,6 +1574,51 @@ if (descriptions.length) {
             expect(prodRows[0]._id).toEqual(devRow._id)
           })
 
+          it("does not seed other tables when publishing workspace from table publish", async () => {
+            const sourceTable = await config.api.table.save(basicTable())
+            const otherTable = await config.api.table.save(basicTable())
+
+            const sourceRow = await config.api.row.save(sourceTable._id!, {
+              name: "source-dev-row",
+            })
+            await config.api.row.save(otherTable._id!, {
+              name: "other-dev-row",
+            })
+
+            await config.api.table.publish(sourceTable._id!, {
+              seedProductionTables: true,
+            })
+
+            config.prodWorkspaceId = config
+              .getDevWorkspaceId()
+              .replace("_dev", "")
+
+            const prodSourceRows = await config.api.row.fetchProd(
+              sourceTable._id!
+            )
+            const prodOtherRows = await config.api.row.fetchProd(
+              otherTable._id!
+            )
+
+            expect(prodSourceRows.length).toBe(1)
+            expect(prodSourceRows[0]._id).toEqual(sourceRow._id)
+            expect(prodOtherRows.length).toBe(0)
+          })
+
+          it("only publishes the selected table when seeding an unpublished workspace", async () => {
+            const sourceTable = await config.api.table.save(basicTable())
+            const otherTable = await config.api.table.save(basicTable())
+
+            await config.api.table.publish(sourceTable._id!, {
+              seedProductionTables: true,
+            })
+
+            const status = await config.api.deploy.publishStatus()
+
+            expect(status.tables[sourceTable._id!].published).toBe(true)
+            expect(status.tables[otherTable._id!].published).toBe(false)
+          })
+
           it("publishes table data to production when seeded", async () => {
             const table = await config.api.table.save(basicTable())
             await config.api.workspace.publish(config.getDevWorkspaceId())

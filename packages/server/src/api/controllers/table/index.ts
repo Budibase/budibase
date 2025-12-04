@@ -317,7 +317,7 @@ export async function publish(
 
   const seedProductionTables = !!ctx.request.body?.seedProductionTables
   if (!prodPublished) {
-    await publishWorkspaceInternal(ctx, seedProductionTables)
+    await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
   const matchesTable = (_id: string) =>

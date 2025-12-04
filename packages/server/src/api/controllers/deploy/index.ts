@@ -29,7 +29,12 @@ import {
   disableAllCrons,
   enableCronOrEmailTrigger,
 } from "../../../automations/utils"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import {
+  DocumentType,
+  getAutomationParams,
+  InternalTables,
+  SEPARATOR,
+} from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -260,17 +265,32 @@ type PublishContext = UserCtx<
 
 export const publishWorkspaceInternal = async (
   ctx: PublishContext,
-  seedProductionTables?: boolean
+  seedProductionTables?: boolean,
+  tablesToSeed?: string[]
 ) => {
   const seedTables =
     seedProductionTables !== undefined
       ? seedProductionTables
       : ctx.request.body?.seedProductionTables
+  const tablesToPublish = tablesToSeed?.length
+    ? new Set<string>(tablesToSeed)
+    : undefined
+  tablesToPublish?.add(InternalTables.USER_METADATA)
+  const getTableIdFromDocId = (_id: string) => {
+    const parts = _id.split(SEPARATOR)
+    const tableIndex = parts.indexOf(DocumentType.TABLE)
+    if (tableIndex === -1 || !parts[tableIndex + 1]) {
+      return
+    }
+    return `${DocumentType.TABLE}${SEPARATOR}${parts[tableIndex + 1]}`
+  }
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
   let tablesToSync: "all" | string[] | undefined
-  if (env.isTest()) {
+  if (seedTables && tablesToSeed?.length) {
+    tablesToSync = tablesToSeed
+  } else if (env.isTest()) {
     // TODO: a lot of tests depend on old behaviour of data being published
     // we could do with going through the tests and updating them all to write
     // data to production instead of development - but doesn't improve test
@@ -315,6 +335,22 @@ export const publishWorkspaceInternal = async (
         }
 
         const isPublished = await sdk.workspaces.isWorkspacePublished(prodId)
+        const restrictToTables =
+          !!tablesToPublish?.size && tablesToSync !== "all" && !isPublished
+        const tableFilter =
+          restrictToTables && tablesToPublish
+            ? (doc: any) => {
+                const _id = doc?._id as string
+                if (!_id) {
+                  return false
+                }
+                const tableId = getTableIdFromDocId(_id)
+                if (!tableId) {
+                  return true
+                }
+                return tablesToPublish.has(tableId)
+              }
+            : undefined
 
         if (await backups.isEnabled()) {
           await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
@@ -328,7 +364,9 @@ export const publishWorkspaceInternal = async (
         replication = new dbCore.Replication(config)
         const devDb = context.getDevWorkspaceDB()
 
-        const devTablesIds = await sdk.tables.getAllInternalTableIds()
+        const devTablesIds = tablesToPublish
+          ? Array.from(tablesToPublish)
+          : await sdk.tables.getAllInternalTableIds()
         await replication.resolveInconsistencies(devTablesIds)
 
         await devDb.compact()
@@ -338,6 +376,7 @@ export const publishWorkspaceInternal = async (
             tablesToSync,
             // don't use checkpoints, this can stop previously ignored data being replicated
             checkpoint: !seedTables,
+            filter: tableFilter,
           })
         )
 
@@ -370,9 +409,13 @@ export const publishWorkspaceInternal = async (
           sdk.workspaceApps.fetch(),
           sdk.tables.getAllInternalTables(),
         ])
+        const tablesMarkedForPublish =
+          restrictToTables && tablesToPublish
+            ? tables.filter(table => tablesToPublish.has(table._id!))
+            : tables
         const automationIds = automations.map(auto => auto._id!)
         const workspaceAppIds = workspaceApps.map(app => app._id!)
-        const tableIds = tables.map(table => table._id!)
+        const tableIds = tablesMarkedForPublish.map(table => table._id!)
         const fullMap = [
           ...(automationIds ?? []),
           ...(workspaceAppIds ?? []),
