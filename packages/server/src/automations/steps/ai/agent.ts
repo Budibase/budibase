@@ -4,9 +4,9 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
+import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
-import { createOpenAI } from "@ai-sdk/openai"
 import {
   Experimental_Agent as Agent,
   extractReasoningMiddleware,
@@ -55,16 +55,17 @@ export async function run({
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-    const openai = createOpenAI({
+    const litellm = ai.createLiteLLMOpenAI({
       apiKey,
-      baseURL: baseUrl,
+      baseUrl,
       fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
+    const model = litellm.chat(modelId)
     const aiTools = toAiSdkTools(allTools)
     const agent = new Agent({
       model: wrapLanguageModel({
-        model: openai.chat(modelId),
+        model,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
@@ -76,6 +77,9 @@ export async function run({
 
     const result = await agent.generate({
       prompt,
+      providerOptions: {
+        litellm: ai.getLiteLLMProviderOptions(modelId),
+      },
     })
 
     return {
