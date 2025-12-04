@@ -1,9 +1,10 @@
 <script>
-  import { isActive } from "@roxi/routify"
+  import { isActive, goto, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import NavItem from "@/components/common/NavItem.svelte"
+  import { SourceName } from "@budibase/types"
 
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon } from "@budibase/bbui"
@@ -21,8 +22,27 @@
   let editModal
   let deleteConfirmationModal
 
+  let addQueryItem = {
+    icon: "plus",
+    name: datasource?.source === "REST" ? "Add action" : "Create new query",
+    keyBind: null,
+    visible: true,
+    disabled: false,
+    callback: () => {
+      const section = datasource?.source === "REST" ? "apis" : "data"
+      $goto(`/builder/workspace/:application/${section}/query/new/:id`, {
+        application: $params.application,
+        id: datasource._id,
+      })
+    },
+  }
+
   const getContextMenuItems = () => {
     return [
+      ...(datasource._id !== BUDIBASE_INTERNAL_DB_ID &&
+      datasource.source !== SourceName.GOOGLE_SHEETS
+        ? [addQueryItem]
+        : []),
       {
         icon: "pencil",
         name: "Edit",

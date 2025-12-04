@@ -30,7 +30,6 @@ export const EditorModes: EditorModesMap = {
   },
   JSON: {
     name: "json",
-    match: /./,
   },
 }
 

@@ -6,6 +6,8 @@
   import type { ScreenUsage } from "@budibase/types"
 
   export let sourceId: string
+  export let buttonText = "Screens"
+  export let icon = "browser"
 
   let screens: ScreenUsage[] = []
   let popover: any
@@ -27,7 +29,8 @@
 <ScreensPopover
   bind:this={popover}
   {screens}
-  icon="browser"
+  {icon}
   accentColor="#364800"
   showCount
+  {buttonText}
 />
