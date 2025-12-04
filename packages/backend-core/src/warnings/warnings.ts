@@ -4,6 +4,7 @@ import { APIWarningCode } from "@budibase/types"
 
 export abstract class APIWarning extends Error {
   code: string
+  status?: number
 
   constructor(message: string, code: string) {
     super(message)
@@ -43,13 +44,19 @@ export class UsageLimitWarning extends APIWarning {
 
 export class FeatureDisabledWarning extends APIWarning {
   featureName: string
-
   constructor(featureName: string) {
     super(`Feature disabled: '${featureName}'`, APIWarningCode.FEATURE_DISABLED)
     this.featureName = featureName
+    this.status = 400
   }
 
   getPublicWarning() {
+    return {
+      featureName: this.featureName,
+    }
+  }
+
+  getPublicError() {
     return {
       featureName: this.featureName,
     }
