@@ -778,6 +778,7 @@
             <DescriptionViewer
               description={selectedEndpointOption?.description}
               label={""}
+              baseUrl={endpointDocs}
             />
           </Layout>
         </div>
