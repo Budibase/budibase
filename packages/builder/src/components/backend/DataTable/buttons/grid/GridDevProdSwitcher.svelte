@@ -13,8 +13,8 @@
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: isDeployed =
     isInternal && $workspaceDeploymentStore.tables[tableId]?.published
-
-  $: hasProductionData = isDeployed
+  $: hasProductionData = isInternal ? isDeployed : false
+  $: switcherDisabled = !isInternal
   $: tooltip = isInternal
     ? "Publish to view production data"
     : "Production data is only available for internal tables"
@@ -25,12 +25,19 @@
     rightIcon: "pulse",
     rightText: "Prod",
     selected: (isDevMode ? "left" : "right") as "left" | "right",
+    disabled: switcherDisabled,
+  }
+
+  $: if (switcherDisabled && !isDevMode) {
+    dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
   }
 
   const handleLeft = () =>
     dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
-  const handleRight = () =>
+  const handleRight = () => {
+    if (switcherDisabled) return
     dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
+  }
 </script>
 
 <div class="wrapper">
