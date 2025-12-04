@@ -53,7 +53,7 @@ export async function run({
       await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
     const openai = createOpenAI({
       apiKey,
