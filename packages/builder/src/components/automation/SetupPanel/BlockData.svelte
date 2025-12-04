@@ -10,6 +10,7 @@
   import JSONViewer, {
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
+  import AgentOutputViewer from "./AgentOutputViewer.svelte"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -253,6 +254,7 @@
 
   $: parsedContext = parseContext(context, blockRef)
   $: isLoopChild = blockRef?.pathTo?.some(path => path.loopStepId)
+  $: isAgentStep = block?.stepId === AutomationActionStepId.AGENT
 </script>
 
 <div class="tabs">
@@ -280,11 +282,15 @@
     />
   {:else if dataMode === DataMode.OUTPUT}
     {#if blockResults}
-      <JSONViewer
-        value={blockResults.outputs}
-        showCopyIcon
-        on:click-copy={copyContext}
-      />
+      {#if isAgentStep && blockResults.outputs}
+        <AgentOutputViewer outputs={blockResults.outputs} />
+      {:else}
+        <JSONViewer
+          value={blockResults.outputs}
+          showCopyIcon
+          on:click-copy={copyContext}
+        />
+      {/if}
     {:else if testResults && !blockResults}
       <div class="content">
         {#if isLoopChild}

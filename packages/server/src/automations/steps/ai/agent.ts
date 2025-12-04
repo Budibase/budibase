@@ -64,12 +64,7 @@ export async function run({
     const model = litellm.chat(modelId)
     const aiTools = toAiSdkTools(allTools)
     const agent = new Agent({
-      model: wrapLanguageModel({
-        model,
-        middleware: extractReasoningMiddleware({
-          tagName: "think",
-        }),
-      }),
+      model,
       system: systemPrompt || undefined,
       tools: aiTools,
       stopWhen: stepCountIs(30),
