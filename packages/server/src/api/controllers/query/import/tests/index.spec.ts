@@ -644,4 +644,10 @@ describe("Rest Importer", () => {
     )
     expect(query.fields.headers?.["X-Apikey"]).toBeUndefined()
   })
+
+  it("exposes security headers via importer info", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const info = await restImporter.getInfo()
+    expect(info.securityHeaders).toEqual(["X-Apikey"])
+  })
 })

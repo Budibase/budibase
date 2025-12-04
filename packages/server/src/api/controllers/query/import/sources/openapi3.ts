@@ -334,6 +334,7 @@ export class OpenAPI3 extends OpenAPISource {
       url,
       docsUrl,
       endpoints: await this.getEndpoints(),
+      securityHeaders: this.getSecurityHeaders(),
     }
   }
 

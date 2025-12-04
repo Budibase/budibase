@@ -17,6 +17,7 @@ export interface ImportInfo {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
+  securityHeaders?: string[]
 }
 
 enum MethodToVerb {

@@ -232,6 +232,7 @@ export class OpenAPI2 extends OpenAPISource {
       url,
       docsUrl,
       endpoints: await this.getEndpoints(),
+      securityHeaders: this.getSecurityHeaders(),
     }
   }
 
