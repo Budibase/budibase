@@ -1,24 +1,20 @@
 import { builderStore } from "@/stores/builder"
 
-type CSSProperty = "width" | "height"
-type MouseMoveEventProperty = "pageX" | "pageY"
-type ElementProperty = "clientWidth" | "clientHeight"
-
 const noop = () => {}
 
 interface ResizeActionsConfig {
-  cssProperty: CSSProperty
-  mouseMoveEventProperty: MouseMoveEventProperty
-  elementProperty: ElementProperty
+  elementDimension: "width" | "height"
+  mouseCoordinate: "pageX" | "pageY"
+  clientDimension: "clientWidth" | "clientHeight"
   initialValue?: number
   setValue?: (value: number) => void
   onResizeStart?: () => void
 }
 
 const getResizeActions = ({
-  cssProperty,
-  mouseMoveEventProperty,
-  elementProperty,
+  elementDimension,
+  mouseCoordinate,
+  clientDimension: elementProperty,
   initialValue,
   setValue = noop,
   onResizeStart = noop,
@@ -29,7 +25,7 @@ const getResizeActions = ({
     element = node
 
     if (initialValue != null) {
-      element.style[cssProperty] = `${initialValue}px`
+      element.style[elementDimension] = `${initialValue}px`
     }
 
     return {
@@ -48,9 +44,9 @@ const getResizeActions = ({
       e.preventDefault()
       if (!element || startProperty == null || startPosition == null) return
 
-      const change = e[mouseMoveEventProperty] - startPosition
+      const change = e[mouseCoordinate] - startPosition
       const newValue = startProperty + change
-      element.style[cssProperty] = `${newValue}px`
+      element.style[elementDimension] = `${newValue}px`
     }
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -68,7 +64,7 @@ const getResizeActions = ({
 
         // Get the actual computed width/height that was set
         const computedValue = parseInt(
-          element.style[cssProperty]?.replace("px", "") || "0",
+          element.style[elementDimension]?.replace("px", "") || "0",
           10
         )
 
@@ -108,7 +104,7 @@ const getResizeActions = ({
       onResizeStart()
 
       // Temporarily override any height transitions
-      element.style.transition = `${cssProperty} 0ms`
+      element.style.transition = `${elementDimension} 0ms`
 
       // iframes swallow mouseup events if your cursor ends up over it during a drag, so make them
       // temporarily non-interactive
@@ -117,7 +113,7 @@ const getResizeActions = ({
       }
 
       startProperty = element[elementProperty]
-      startPosition = e[mouseMoveEventProperty]
+      startPosition = e[mouseCoordinate]
 
       window.addEventListener("mousemove", handleMouseMove)
       window.addEventListener("mouseup", handleMouseUp)
@@ -125,7 +121,7 @@ const getResizeActions = ({
 
     const handleDoubleClick = () => {
       if (element) {
-        element.style.removeProperty(cssProperty)
+        element.style.removeProperty(elementDimension)
         setValue(initialValue || 0)
       }
     }
@@ -149,9 +145,9 @@ export const getVerticalResizeActions = (
   setValue?: (value: number) => void
 ) => {
   return getResizeActions({
-    cssProperty: "height",
-    mouseMoveEventProperty: "pageY",
-    elementProperty: "clientHeight",
+    elementDimension: "height",
+    mouseCoordinate: "pageY",
+    clientDimension: "clientHeight",
     initialValue,
     setValue,
   })
@@ -163,9 +159,9 @@ export const getHorizontalResizeActions = (
   onResizeStart?: () => void
 ) => {
   return getResizeActions({
-    cssProperty: "width",
-    mouseMoveEventProperty: "pageX",
-    elementProperty: "clientWidth",
+    elementDimension: "width",
+    mouseCoordinate: "pageX",
+    clientDimension: "clientWidth",
     initialValue,
     setValue,
     onResizeStart,

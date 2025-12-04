@@ -243,7 +243,6 @@ export function buildQuery(
   return newQuery
 }
 
-// Necessary ?
 interface DynamicVariable {
   name: string
   value: string
