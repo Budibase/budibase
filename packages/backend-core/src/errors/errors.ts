@@ -97,45 +97,15 @@ export class NotImplementedError extends HTTPError {
 }
 
 // LICENSING
-
-export class UsageLimitError extends HTTPError {
-  limitName: string
-
-  constructor(message: string, limitName: string) {
-    super(message, 400, ErrorCode.USAGE_LIMIT_EXCEEDED)
-    this.limitName = limitName
-  }
-
-  getPublicError() {
-    return {
-      limitName: this.limitName,
-    }
+export class FeatureDisabledError extends Error {
+  constructor(feature: string) {
+    super(`Feature disabled: '${feature}'`)
   }
 }
 
-export class FeatureDisabledError extends HTTPError {
-  featureName: string
-
-  constructor(message: string, featureName: string) {
-    super(message, 400, ErrorCode.FEATURE_DISABLED)
-    this.featureName = featureName
-  }
-
-  getPublicError() {
-    return {
-      featureName: this.featureName,
-    }
-  }
-}
-
-// AUTH
-
-export class InvalidAPIKeyError extends BudibaseError {
-  constructor() {
-    super(
-      "Invalid API key - may need re-generated, or user doesn't exist",
-      ErrorCode.INVALID_API_KEY
-    )
+export class UsageLimitError extends Error {
+  constructor(limitName: string) {
+    super(`Usage limit exceeded: '${limitName}'`)
   }
 }
 
