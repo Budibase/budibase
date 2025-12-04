@@ -13,11 +13,12 @@
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: isDeployed =
     isInternal && $workspaceDeploymentStore.tables[tableId]?.published
-  $: hasProductionData = isInternal ? isDeployed : false
+  $: hasProductionData = isInternal ? isDeployed : true
   $: switcherDisabled = !isInternal
   $: tooltip = isInternal
     ? "Publish to view production data"
-    : "Production data is only available for internal tables"
+    : "Dev data is only available for internal tables"
+  $: showTooltip = switcherDisabled || !hasProductionData
 
   $: switcherProps = {
     leftIcon: "wrench",
@@ -28,8 +29,8 @@
     disabled: switcherDisabled,
   }
 
-  $: if (switcherDisabled && !isDevMode) {
-    dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
+  $: if (switcherDisabled && isDevMode) {
+    dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
   }
 
   const handleLeft = () =>
@@ -41,7 +42,7 @@
 </script>
 
 <div class="wrapper">
-  {#if !hasProductionData}
+  {#if showTooltip}
     <AbsTooltip text={tooltip} position={TooltipPosition.Left}>
       <Switcher
         {...switcherProps}
