@@ -26,7 +26,7 @@ import {
   DeleteWorkspaceResponse,
   DuplicateWorkspaceRequest,
   DuplicateWorkspaceResponse,
-  ErrorCode,
+  APIWarningCode,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
@@ -692,7 +692,7 @@ async function workspacePostCreate(
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
-        if (err.code && err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
+        if (err.code && err.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
