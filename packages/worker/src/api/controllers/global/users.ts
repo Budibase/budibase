@@ -30,7 +30,7 @@ import {
   DeleteInviteUsersResponse,
   DeleteUserResponse,
   EditUserPermissionsResponse,
-  ErrorCode,
+  APIWarningCode,
   FetchUsersResponse,
   FindUserResponse,
   GetUserInvitesResponse,
@@ -614,7 +614,7 @@ export const inviteAccept = async (
       }
     )
   } catch (err: any) {
-    if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
+    if (err.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
     }

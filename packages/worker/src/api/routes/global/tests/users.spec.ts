@@ -858,7 +858,7 @@ describe("/api/global/users", () => {
     })
 
     it("should support fuzzy email fragments", async () => {
-      const email = `search-like-user-${Date.now()}@example.com`
+      const email = structures.users.newEmail()
       await config.createUser({ email })
       const fragment = email.slice(3, 12)
       const response = await config.api.users.searchUsers({

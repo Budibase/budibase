@@ -50,7 +50,7 @@ describe("scim", () => {
             code: "feature_disabled",
             featureName: "scim",
           },
-          message: "scim is not currently enabled",
+          message: "Feature disabled: 'scim'",
           status: 400,
         })
       })
@@ -66,7 +66,7 @@ describe("scim", () => {
             code: "feature_disabled",
             featureName: "scim",
           },
-          message: "scim is not currently enabled",
+          message: "Feature disabled: 'scim'",
           status: 400,
         })
       })
