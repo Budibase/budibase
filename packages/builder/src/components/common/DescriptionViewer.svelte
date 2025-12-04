@@ -3,7 +3,7 @@
   import "@spectrum-css/link/dist/index-vars.css"
   import { MarkdownViewer } from "@budibase/bbui"
 
-  const COLLAPSED_HEIGHT_EM = 14
+  const COLLAPSED_HEIGHT_EM = 5
 
   export let description: string | undefined = undefined
   export let label: string | undefined = "Description"
@@ -240,8 +240,8 @@
   .description-viewer__fade {
     position: absolute;
     pointer-events: none;
-    inset: calc(var(--description-collapsed-height) - 3em) 0 auto 0;
-    height: 3em;
+    inset: calc(var(--description-collapsed-height) - 2em) 0 auto 0;
+    height: 2em;
     background: linear-gradient(180deg, transparent 0%, var(--background) 100%);
   }
 
