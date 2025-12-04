@@ -107,6 +107,20 @@
     updateCollapsible()
   }
 
+  const replaceWithSpan = (anchor: HTMLAnchorElement) => {
+    const span = anchor.ownerDocument?.createElement("span")
+    if (!span) {
+      return
+    }
+    while (anchor.firstChild) {
+      span.appendChild(anchor.firstChild)
+    }
+    anchor.replaceWith(span)
+  }
+
+  const isHashLink = (href?: string | null) =>
+    typeof href === "string" && href.trim().startsWith("#")
+
   const enhanceLinks = (node: HTMLElement, params: LinkEnhancerParams = {}) => {
     let { baseUrl: currentBase, onMutate } = params
 
@@ -114,6 +128,10 @@
       const resolvedBase = resolveBaseUrl(currentBase)
       node.querySelectorAll("a").forEach(anchor => {
         const href = anchor.getAttribute("href") || undefined
+        if (isHashLink(href)) {
+          replaceWithSpan(anchor)
+          return
+        }
         if (resolvedBase) {
           const absolute = toAbsoluteUrl(href, resolvedBase)
           if (absolute) {
