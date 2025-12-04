@@ -35,21 +35,26 @@ export default [
 
   newTool({
     name: "create_row",
-    description: "Create a new row",
+    description:
+      "Create a new row. Only include fields that match the table schema. " +
+      "Use plain text values for text fields - do not store JSON or structured data. " +
+      "For long text content, truncate to first 500 characters if needed.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to create the row in"),
       data: z
         .string()
         .describe(
-          "JSON string with row data. Ensure the schema for the table is known before writing a row."
+          'Row data as a valid JSON string. Example: \'{"name": "John", "age": 30}\'. ' +
+            'Ensure all special characters are properly escaped (use \\" for quotes, \\n for newlines). ' +
+            "Ensure the schema for the table is known before writing a row."
         ),
     }),
     handler: async ({ tableId, data }) => {
-      let parsedData
+      let parsedData: Record<string, unknown>
       try {
         parsedData = JSON.parse(data)
-      } catch (error) {
-        return `Error: Invalid JSON in data parameter: ${error}`
+      } catch (e) {
+        return `Error: Invalid JSON in data field. Please ensure proper escaping. Details: ${e}`
       }
       const row = await sdk.rows.save(tableId, parsedData, undefined)
       const formatted = JSON.stringify(row, null, 2)
@@ -59,17 +64,26 @@ export default [
 
   newTool({
     name: "update_row",
-    description: "Update an existing row",
+    description:
+      "Update an existing row. Use plain text values for text fields - do not store JSON or structured data.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table"),
       rowId: z.string().describe("The ID of the row to update"),
       data: z
-        .object({})
-        .nullish()
-        .describe("The updated data as key-value pairs"),
+        .string()
+        .describe(
+          'The updated data as a valid JSON string. Example: \'{"name": "Jane"}\'. ' +
+            'Ensure all special characters are properly escaped (use \\" for quotes, \\n for newlines).'
+        ),
     }),
     handler: async ({ tableId, rowId, data }) => {
-      const rowData = { ...data, _id: rowId }
+      let parsedData: Record<string, unknown>
+      try {
+        parsedData = JSON.parse(data)
+      } catch (e) {
+        return `Error: Invalid JSON in data field. Please ensure proper escaping. Details: ${e}`
+      }
+      const rowData = { ...parsedData, _id: rowId }
       const row = await sdk.rows.save(tableId, rowData, undefined)
       const formatted = JSON.stringify(row, null, 2)
       return `Successfully updated row:\n\n${formatted}`
@@ -82,9 +96,16 @@ export default [
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to search"),
       query: z
-        .object({})
+        .record(z.string(), z.any())
         .nullish()
-        .describe("Search criteria as key-value pairs"),
+        .describe(
+          `Query filters object. Structure: { operator: { fieldName: value } }. ` +
+            `Valid operators: "equal", "notEqual", "empty", "notEmpty", "fuzzy", "string", "contains", "notContains", "containsAny", "oneOf", "range". ` +
+            `Examples: ` +
+            `Find where status equals "active": {"equal": {"status": "active"}}. ` +
+            `Find where name is not empty: {"notEmpty": {"name": true}}. ` +
+            `Find where price is within the range of 10 to 100: {"range": {"price": {"low": 10, "high": 100}}}.`
+        ),
       sort: z
         .object({
           column: z.string().describe("Column to sort by"),

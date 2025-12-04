@@ -6,9 +6,30 @@ export default [
   newTool({
     name: "list_tables",
     description: "List all tables in the current app",
-    handler: async () => {
-      const tables = await sdk.tables.getAllTables()
-      const formatted = JSON.stringify(tables, null, 2)
+    parameters: z.object({
+      showSchema: z
+        .boolean()
+        .describe(
+          "Whether to show the schema of the tables. This can be extemely large. Default to false to save on tokens."
+        )
+        .default(false),
+    }),
+    handler: async ({ showSchema }) => {
+      let tables = await sdk.tables.getAllTables()
+      let formattedTables: { id: string; tableName: string }[] = []
+      if (!showSchema) {
+        formattedTables = tables.map(table => {
+          return {
+            id: table._id!,
+            tableName: table.name,
+          }
+        })
+      }
+      const formatted = JSON.stringify(
+        formattedTables.length ? formattedTables : tables,
+        null,
+        2
+      )
       return `Here are the tables in the current app:\n\n${formatted}`
     },
   }),

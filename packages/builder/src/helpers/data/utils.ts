@@ -1,6 +1,16 @@
 import { IntegrationTypes } from "@/constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
-import { Query } from "@budibase/types"
+import type { Query, QueryVerb } from "@budibase/types"
+
+type QueryVerbSource = Query | string | undefined
+
+const QUERY_VERB_COLORS: Record<QueryVerb, string> = {
+  create: "#dcc339",
+  update: "#5197ec",
+  read: "#53a761",
+  delete: "#ea7d82",
+  patch: "#7567f8",
+}
 
 export function breakQueryString(qs: string) {
   if (!qs) {
@@ -72,8 +82,6 @@ export function queryParametersToKeyValue(
   return obj
 }
 
-type QueryVerbSource = Query | string | undefined
-
 const resolveQueryVerb = (source: QueryVerbSource) => {
   if (!source) {
     return undefined
@@ -82,6 +90,14 @@ const resolveQueryVerb = (source: QueryVerbSource) => {
     return source
   }
   return source.queryVerb
+}
+
+export const QUERY_VERB_MAP: Record<QueryVerb, string> = {
+  create: "POST",
+  update: "PUT",
+  read: "GET",
+  delete: "DEL",
+  patch: "PATCH",
 }
 
 export function customQueryIconText(source: QueryVerbSource) {
@@ -102,20 +118,8 @@ export function customQueryIconText(source: QueryVerbSource) {
 }
 
 export function customQueryIconColor(source: QueryVerbSource) {
-  switch (resolveQueryVerb(source)) {
-    case "create":
-      return "#dcc339"
-    case "update":
-      return "#5197ec"
-    case "read":
-      return "#53a761"
-    case "delete":
-      return "#ea7d82"
-    case "patch":
-      return "#7567f8"
-    default:
-      return
-  }
+  const verb = resolveQueryVerb(source) as QueryVerb | undefined
+  return verb ? QUERY_VERB_COLORS[verb] : undefined
 }
 
 export function customQueryText(

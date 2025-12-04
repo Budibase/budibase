@@ -2,6 +2,7 @@
   import ObjectField from "./fields/Object.svelte"
   import BooleanField from "./fields/Boolean.svelte"
   import LongFormField from "./fields/LongForm.svelte"
+  import SensitiveLongFormField from "./fields/SensitiveLongForm.svelte"
   import FieldGroupField from "./fields/FieldGroup.svelte"
   import StringField from "./fields/String.svelte"
   import SelectField from "./fields/Select.svelte"
@@ -26,6 +27,8 @@
       return BooleanField
     } else if (type === "longForm") {
       return LongFormField
+    } else if (type === "sensitiveLongForm") {
+      return SensitiveLongFormField
     } else if (type === "fieldGroup") {
       return FieldGroupField
     } else if (type === "select") {

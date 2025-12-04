@@ -2,17 +2,11 @@ import { API } from "@/api"
 import { GetUserFlagsResponse } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
-interface FlagsState {
-  flags: GetUserFlagsResponse
-}
-
-const INITIAL_FLAGS_STATE: FlagsState = {
-  flags: {},
-}
-
-export class FlagsStore extends BudiStore<FlagsState> {
+// Per workspace doc containing all flags set by the
+// the user e.g. queryTransformerBanner
+export class FlagsStore extends BudiStore<GetUserFlagsResponse> {
   constructor() {
-    super(INITIAL_FLAGS_STATE)
+    super({})
 
     this.fetch = this.fetch.bind(this)
     this.updateFlag = this.updateFlag.bind(this)
@@ -20,10 +14,7 @@ export class FlagsStore extends BudiStore<FlagsState> {
 
   async fetch() {
     const flags = await API.getFlags()
-    this.update(state => ({
-      ...state,
-      flags,
-    }))
+    this.set(flags)
   }
 
   async updateFlag(flag: string, value: any) {

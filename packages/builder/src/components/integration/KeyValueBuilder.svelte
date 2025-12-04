@@ -15,8 +15,8 @@
 
   const dispatch = createEventDispatcher()
 
-  export let defaults: Record<string, string> | undefined = undefined
-  export let object: Record<string, string> = defaults || {}
+  export let defaults: Record<string, unknown> | undefined = undefined
+  export let object: Record<string, unknown> = defaults || {}
   export let activity: Record<string, boolean> = {}
   export let readOnly: boolean = false
   export let noAddButton: boolean = false
@@ -49,12 +49,12 @@
   $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
   const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
 
-  $: fullObject = fields.reduce<Record<string, string>>((acc, next) => {
+  $: fullObject = fields.reduce<Record<string, unknown>>((acc, next) => {
     acc[next.name] = next.value
     return acc
   }, {})
 
-  $: object = Object.entries(fullObject).reduce<Record<string, string>>(
+  $: object = Object.entries(fullObject).reduce<Record<string, unknown>>(
     (acc, [key, next]) => {
       if (key) {
         acc[key] = next
