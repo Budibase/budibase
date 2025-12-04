@@ -6,7 +6,6 @@ interface JSEditorMode {
 
 interface JSONEditorMode {
   name: "json"
-  match: RegExp
 }
 
 interface HBSEditorMode {

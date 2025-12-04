@@ -45,7 +45,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     title="Add dynamic variable"
-    confirmText="Save"
+    confirmText="Done"
     onConfirm={saveVariable}
     disabled={!valid}
   >
