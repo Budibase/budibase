@@ -1,11 +1,11 @@
 <script>
-  import { getIcon } from "./icons"
+  import { getIntegrationIcon } from "@/helpers/integrationIcons"
   export let integrationType
   export let schema
   export let iconUrl = undefined
   export let size = "18"
 
-  $: iconInfo = getIcon(integrationType, schema, iconUrl)
+  $: iconInfo = getIntegrationIcon(integrationType, schema, iconUrl)
 </script>
 
 {#if iconInfo.icon}

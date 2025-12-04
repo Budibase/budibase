@@ -16,8 +16,6 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
-import { integrations } from "@/stores/builder"
-import { get } from "svelte/store"
 
 const ICONS = {
   BUDIBASE: Budibase,
@@ -41,19 +39,3 @@ const ICONS = {
 }
 
 export default ICONS
-
-export function getIcon(integrationType, schema, iconUrl) {
-  const integrationList = get(integrations)
-  if (!integrationList) {
-    return
-  }
-  if (iconUrl) {
-    return { url: iconUrl }
-  } else if (integrationList[integrationType]?.iconUrl) {
-    return { url: integrationList[integrationType].iconUrl }
-  } else if (schema?.custom || !ICONS[integrationType]) {
-    return { icon: ICONS.CUSTOM }
-  } else {
-    return { icon: ICONS[integrationType] }
-  }
-}
