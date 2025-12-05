@@ -71,6 +71,7 @@ export class Curl extends ImportSource {
     return {
       name: url.hostname,
       url: url.origin,
+      securityHeaders: this.getSecurityHeaders(),
       endpoints: [
         {
           id: this.buildEndpointId(method, path),

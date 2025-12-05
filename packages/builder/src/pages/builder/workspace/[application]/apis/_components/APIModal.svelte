@@ -3,6 +3,7 @@
   import { beforeUrlChange } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
+  import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors" //??
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
@@ -63,6 +64,71 @@
     targetSpec = null
   }
 
+  const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
+    if (!spec?.url) {
+      return undefined
+    }
+    try {
+      return await queries.fetchImportInfo({ url: spec.url })
+    } catch (err) {
+      console.warn("Failed to load template metadata", err)
+      return undefined
+    }
+  }
+
+  const applySecurityHeaders = (
+    config: Record<string, any>,
+    securityHeaders?: string[] | null
+  ) => {
+    const normalizedHeaders = (securityHeaders || []).filter(
+      (header): header is string => Boolean(header)
+    )
+    if (!normalizedHeaders.length) {
+      return config
+    }
+    const headers = (config.defaultHeaders = config.defaultHeaders || {})
+    for (const header of normalizedHeaders) {
+      if (!header) {
+        continue
+      }
+      const normalized = header.toLowerCase()
+      const existing = Object.keys(headers).find(
+        key => key?.toLowerCase() === normalized
+      )
+      if (!existing) {
+        headers[header] = headers[header] ?? ""
+      }
+    }
+    return config
+  }
+
+  const applyTemplateStaticVariables = (
+    config: Record<string, any>,
+    staticVariables?: Record<string, string> | null
+  ) => {
+    if (!staticVariables) {
+      return config
+    }
+    const entries = Object.entries(staticVariables).filter(
+      ([name]) => name.trim() !== ""
+    )
+    if (!entries.length) {
+      return config
+    }
+    const templateVariables = new Set(
+      (config.templateStaticVariables || []).filter(Boolean)
+    )
+    config.staticVariables ||= {}
+    for (const [name, value] of entries) {
+      templateVariables.add(name)
+      if (config.staticVariables[name] == null) {
+        config.staticVariables[name] = value ?? ""
+      }
+    }
+    config.templateStaticVariables = Array.from(templateVariables)
+    return config
+  }
+
   const handleTemplateSelection = async (template: RestTemplate) => {
     if (loading) return
 
@@ -79,6 +145,9 @@
       targetSpec = template.specs[0] || null
 
       const config = configFromIntegration(restIntegration)
+      const templateInfo = await loadTemplateInfo(targetSpec)
+      applySecurityHeaders(config, templateInfo?.securityHeaders)
+      applyTemplateStaticVariables(config, templateInfo?.staticVariables)
 
       const ds = await datasources.create({
         integration: restIntegration,
@@ -90,8 +159,8 @@
 
       await datasources.fetch()
 
-      // Go to the new query page.
-      $goto(`./query/new/${ds._id}`)
+      // Go to the newly created datasource page.
+      $goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
     } catch (error: any) {

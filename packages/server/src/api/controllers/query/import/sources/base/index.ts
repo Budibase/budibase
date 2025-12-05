@@ -17,6 +17,7 @@ export interface ImportInfo {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
+  securityHeaders?: string[]
 }
 
 enum MethodToVerb {
@@ -279,5 +280,9 @@ export abstract class ImportSource {
     }
 
     return Object.keys(defaults).length ? defaults : undefined
+  }
+
+  getSecurityHeaders(): string[] {
+    return []
   }
 }

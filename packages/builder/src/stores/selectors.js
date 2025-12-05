@@ -1,5 +1,6 @@
 import { DEFAULT_BB_DATASOURCE_ID } from "@/constants/backend"
 import { DatasourceFeature } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
 
 export const integrationForDatasource = (integrations, datasource) => ({
   name: datasource.source,
@@ -23,7 +24,7 @@ export const configFromIntegration = integration => {
         config[fieldKey] = null
       })
     } else {
-      config[key] = properties.default ?? null
+      config[key] = cloneDeep(properties.default ?? null)
     }
   })
 
