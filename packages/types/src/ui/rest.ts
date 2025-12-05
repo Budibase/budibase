@@ -13,6 +13,7 @@ export type RestTemplateName =
   | "PagerDuty"
   | "Slack Web API"
   | "Stripe"
+  | "VirusTotal"
 
 export interface RestTemplate {
   name: RestTemplateName
