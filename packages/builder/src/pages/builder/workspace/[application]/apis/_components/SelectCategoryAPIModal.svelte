@@ -294,6 +294,7 @@
     align-items: center;
     flex-shrink: 0;
     margin-right: 10px;
+    margin-top: 10px;
   }
 
   .api-icon.group-icon {
@@ -413,9 +414,9 @@
   }
 
   .group-step-actions {
-    margin-top: 20px;
+    margin-top: 12px;
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 </style>
