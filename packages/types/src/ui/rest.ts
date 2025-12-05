@@ -65,16 +65,24 @@ export type TwilioRestTemplateName =
   | "Twilio Voice"
   | "Twilio Wireless"
 
-export interface RestTemplate<Name> {
-  name: Name
+export interface RestTemplate {
+  name: RestTemplateName
   description: string
   specs: RestTemplateSpec[]
   icon: string
+}
+
+export interface RestTemplateWithoutIcon<Name> {
+  name: Name
+  description: string
+  specs: RestTemplateSpec[]
 }
 
 export interface RestTemplateGroup<
   TemplateGroupName extends keyof RestTemplateGroups,
 > {
   name: TemplateGroupName
-  templates: RestTemplate<RestTemplateGroups[TemplateGroupName]>
+  description: string
+  icon: string
+  templates: RestTemplateWithoutIcon<RestTemplateGroups[TemplateGroupName]>[]
 }
