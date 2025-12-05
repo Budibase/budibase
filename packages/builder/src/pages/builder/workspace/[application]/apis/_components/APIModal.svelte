@@ -64,36 +64,68 @@
     targetSpec = null
   }
 
-  const applySecurityHeaders = async (
-    config: Record<string, any>,
-    spec?: RestTemplateSpec | null
-  ) => {
+  const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
     if (!spec?.url) {
+      return undefined
+    }
+    try {
+      return await queries.fetchImportInfo({ url: spec.url })
+    } catch (err) {
+      console.warn("Failed to load template metadata", err)
+      return undefined
+    }
+  }
+
+  const applySecurityHeaders = (
+    config: Record<string, any>,
+    securityHeaders?: string[] | null
+  ) => {
+    const normalizedHeaders = (securityHeaders || []).filter(
+      (header): header is string => Boolean(header)
+    )
+    if (!normalizedHeaders.length) {
       return config
     }
-
-    try {
-      const info = await queries.fetchImportInfo({ url: spec.url })
-      const securityHeaders = info.securityHeaders || []
-      if (!securityHeaders.length) {
-        return config
+    const headers = (config.defaultHeaders = config.defaultHeaders || {})
+    for (const header of normalizedHeaders) {
+      if (!header) {
+        continue
       }
-      const headers = (config.defaultHeaders = config.defaultHeaders || {})
-      for (const header of securityHeaders) {
-        if (!header) {
-          continue
-        }
-        const normalized = header.toLowerCase()
-        const existing = Object.keys(headers).find(
-          key => key?.toLowerCase() === normalized
-        )
-        if (!existing) {
-          headers[header] = headers[header] ?? ""
-        }
+      const normalized = header.toLowerCase()
+      const existing = Object.keys(headers).find(
+        key => key?.toLowerCase() === normalized
+      )
+      if (!existing) {
+        headers[header] = headers[header] ?? ""
       }
-    } catch (err) {
-      console.warn("Failed to apply security headers", err)
     }
+    return config
+  }
+
+  const applyTemplateStaticVariables = (
+    config: Record<string, any>,
+    staticVariables?: Record<string, string> | null
+  ) => {
+    if (!staticVariables) {
+      return config
+    }
+    const entries = Object.entries(staticVariables).filter(
+      ([name]) => name.trim() !== ""
+    )
+    if (!entries.length) {
+      return config
+    }
+    const templateVariables = new Set(
+      (config.templateStaticVariables || []).filter(Boolean)
+    )
+    const target = (config.staticVariables = config.staticVariables || {})
+    for (const [name, value] of entries) {
+      templateVariables.add(name)
+      if (target[name] == null) {
+        target[name] = value ?? ""
+      }
+    }
+    config.templateStaticVariables = Array.from(templateVariables)
     return config
   }
 
@@ -113,7 +145,9 @@
       targetSpec = template.specs[0] || null
 
       const config = configFromIntegration(restIntegration)
-      await applySecurityHeaders(config, targetSpec)
+      const templateInfo = await loadTemplateInfo(targetSpec)
+      applySecurityHeaders(config, templateInfo?.securityHeaders)
+      applyTemplateStaticVariables(config, templateInfo?.staticVariables)
 
       const ds = await datasources.create({
         integration: restIntegration,
