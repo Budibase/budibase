@@ -199,7 +199,6 @@
             size="XS"
             hoverable
             on:click={() => copyToClipboard(response)}
-            title="Copy response"
           />
         </div>
         <div class="response-text">
