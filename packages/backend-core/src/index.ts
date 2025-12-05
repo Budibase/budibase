@@ -25,6 +25,7 @@ export { Client as RedisClient } from "./redis"
 export * as locks from "./redis/redlockImpl"
 export * as utils from "./utils"
 export * as errors from "./errors"
+export * as warnings from "./warnings"
 export * as timers from "./timers"
 export { default as env, withEnv, setEnv } from "./environment"
 export * as blacklist from "./blacklist"
@@ -48,6 +49,9 @@ export const tenancy = {
 
 // expose error classes directly
 export * from "./errors"
+
+// expose warning classes directly
+export * from "./warnings"
 
 // expose constants directly
 export * from "./constants"

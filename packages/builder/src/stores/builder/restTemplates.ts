@@ -7,6 +7,7 @@ import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
+import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -97,6 +98,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: StripeLogo,
+    },
+    {
+      name: "VirusTotal",
+      description:
+        "Analyze files, URLs, IPs, or domains and pull threat intelligence verdicts from VirusTotal",
+      specs: [
+        {
+          version: "3.0",
+          url: "https://github.com/VirusTotal/vt-py/files/13278605/vt-api-v3-openapi.json",
+        },
+      ],
+      icon: VirusTotalLogo,
     },
   ],
 }

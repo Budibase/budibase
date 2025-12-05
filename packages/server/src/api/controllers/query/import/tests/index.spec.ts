@@ -1,5 +1,5 @@
 import { events } from "@budibase/backend-core"
-import { BodyType } from "@budibase/types"
+import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
@@ -576,5 +576,78 @@ describe("Rest Importer", () => {
     const staticVariables = restImporter.getStaticServerVariables()
 
     expect(staticVariables).toEqual({ companyDomain: "acme" })
+  })
+
+  const openapiWithHeaderSecurity = {
+    openapi: "3.0.0",
+    info: {
+      title: "Header Security",
+      version: "1.0.0",
+    },
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "X-Apikey",
+        },
+      },
+    },
+    security: [{ ApiKeyAuth: [] }],
+    paths: {
+      "/files": {
+        get: {
+          operationId: "listFiles",
+          parameters: [
+            {
+              name: "x-apikey",
+              in: "header",
+              schema: {
+                type: "string",
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "OK",
+            },
+          },
+        },
+      },
+    },
+  }
+
+  it("adds datasource header defaults from OpenAPI security schemes", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const datasource: Datasource = {
+      type: "datasource",
+      source: SourceName.REST,
+      config: {},
+    }
+
+    restImporter.prepareDatasourceConfig(datasource)
+
+    expect(datasource.config?.defaultHeaders).toEqual({ "X-Apikey": "" })
+  })
+
+  it("does not duplicate security headers in generated queries", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const datasource = await config.createDatasource()
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
+    )
+
+    expect(importResult.queries.length).toBe(1)
+    const [query] = importResult.queries
+    expect(query.parameters?.some(param => param.name === "x-apikey")).toBe(
+      false
+    )
+    expect(query.fields.headers?.["X-Apikey"]).toBeUndefined()
+  })
+
+  it("exposes security headers via importer info", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const info = await restImporter.getInfo()
+    expect(info.securityHeaders).toEqual(["X-Apikey"])
   })
 })

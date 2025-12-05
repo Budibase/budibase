@@ -56,6 +56,7 @@ const isOperation = (
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
   serverVariableBindings: Record<string, string> = {}
+  private securityHeaders: Map<string, string> = new Map()
 
   private resolveRef<T>(ref: string): T | undefined {
     if (!ref || !ref.startsWith("#/")) {
@@ -209,12 +210,53 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  private setSecurityHeaders = () => {
+    this.securityHeaders = new Map()
+    const securitySchemes = this.document.components?.securitySchemes
+    if (!securitySchemes) {
+      return
+    }
+    for (const scheme of Object.values(securitySchemes)) {
+      const resolvedScheme =
+        this.resolveMaybeRef<OpenAPIV3.SecuritySchemeObject>(
+          scheme as OpenAPIV3.SecuritySchemeObject | OpenAPIV3.ReferenceObject
+        )
+      const headerName = this.getSecuritySchemeHeader(resolvedScheme)
+      if (headerName) {
+        this.securityHeaders.set(headerName.toLowerCase(), headerName)
+      }
+    }
+  }
+
+  private getSecuritySchemeHeader(
+    scheme?: OpenAPIV3.SecuritySchemeObject
+  ): string | undefined {
+    if (!scheme) {
+      return undefined
+    }
+    if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
+      return scheme.name
+    }
+    if (scheme.type === "http" || scheme.type === "oauth2") {
+      return "Authorization"
+    }
+    return undefined
+  }
+
+  private isSecurityHeader(name?: string): boolean {
+    if (!name) {
+      return false
+    }
+    return this.securityHeaders.has(name.toLowerCase())
+  }
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
         this.serverVariableBindings = {}
+        this.setSecurityHeaders()
         return true
       } else {
         return false
@@ -229,6 +271,10 @@ export class OpenAPI3 extends OpenAPISource {
       this.setServerVariableBindings(this.getPrimaryServer())
     }
     return { ...this.serverVariableBindings }
+  }
+
+  getSecurityHeaders(): string[] {
+    return Array.from(new Set(this.securityHeaders.values()))
   }
 
   private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
@@ -288,6 +334,7 @@ export class OpenAPI3 extends OpenAPISource {
       url,
       docsUrl,
       endpoints: await this.getEndpoints(),
+      securityHeaders: this.getSecurityHeaders(),
     }
   }
 
@@ -334,6 +381,16 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: { [key: string]: unknown } = {}
+        const setHeader = (headerName: string, value: unknown) => {
+          if (!headerName) {
+            return
+          }
+          const normalized = headerName.toLowerCase()
+          const existingKey = Object.keys(headers).find(
+            existing => existing.toLowerCase() === normalized
+          )
+          headers[existingKey || headerName] = value
+        }
         const mimeTypes = this.getMimeTypes(operation)
         const primaryMimeType = mimeTypes[0]
 
@@ -354,7 +411,7 @@ export class OpenAPI3 extends OpenAPISource {
           }
         }
         if (primaryMimeType) {
-          headers["Content-Type"] = primaryMimeType
+          setHeader("Content-Type", primaryMimeType)
         }
 
         // combine the path parameters with the operation parameters
@@ -362,6 +419,7 @@ export class OpenAPI3 extends OpenAPISource {
         const allParams = [...pathParams, ...operationParams]
 
         for (let param of allParams) {
+          let skipParameterBinding = false
           switch (param.in) {
             case "query": {
               let prefix = ""
@@ -372,7 +430,11 @@ export class OpenAPI3 extends OpenAPISource {
               break
             }
             case "header":
-              headers[param.name] = `{{${param.name}}}`
+              if (this.isSecurityHeader(param.name)) {
+                skipParameterBinding = true
+                break
+              }
+              setHeader(param.name, `{{${param.name}}}`)
               break
             case "path":
               // do nothing: param is already in the path
@@ -382,7 +444,10 @@ export class OpenAPI3 extends OpenAPISource {
               break
           }
 
-          if (["query", "header", "path"].includes(param.in)) {
+          if (
+            !skipParameterBinding &&
+            ["query", "header", "path"].includes(param.in)
+          ) {
             let defaultValue = ""
             const schema = this.resolveMaybeRef<OpenAPIV3.SchemaObject>(
               param.schema
