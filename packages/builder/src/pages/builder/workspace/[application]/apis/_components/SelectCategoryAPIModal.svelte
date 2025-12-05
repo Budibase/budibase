@@ -9,6 +9,7 @@
     RestTemplateName,
     RestTemplateWithoutIcon,
   } from "@budibase/types"
+  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
 
   export let templates: RestTemplate[] = []
   export let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
@@ -169,15 +170,16 @@
           </div>
           <div class="group-step-body">
             <Select
-              label={`Select ${activeGroup.name} category`}
+              label={`Select category`}
               options={activeGroupOptions}
               bind:value={activeGroupTemplateName}
               disabled={loading}
             />
             {#if selectedGroupTemplateDescription}
-              <p class="group-template-description">
-                {selectedGroupTemplateDescription}
-              </p>
+              <DescriptionViewer
+                description={selectedGroupTemplateDescription}
+                label={undefined}
+              />
             {/if}
           </div>
           <div class="group-step-actions">
@@ -290,8 +292,8 @@
     height: 36px;
     justify-content: center;
     align-items: center;
-    gap: 10px;
     flex-shrink: 0;
+    margin-right: 10px;
   }
 
   .api-icon.group-icon {
@@ -383,19 +385,35 @@
     font-weight: 600;
   }
 
-  .group-step-description,
-  .group-template-description {
+  .group-step-description {
     color: var(--spectrum-global-color-gray-700);
     font-size: 14px;
+    margin-top: var(--spacing-xs);
+  }
+
+  .group-step-description :global(.description-viewer) {
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    color: inherit;
+    gap: 4px;
+  }
+
+  .group-step-description :global(.description-content) {
+    font-size: inherit;
+    color: inherit;
   }
 
   .group-step-body {
+    margin-top: 10px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
   }
 
   .group-step-actions {
+    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-s);
