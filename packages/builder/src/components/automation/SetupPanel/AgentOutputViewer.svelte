@@ -16,8 +16,6 @@
   import type { AgentStepOutputs } from "@budibase/types"
   import type { ContentPart, ToolCallDisplay } from "@budibase/types"
 
-  export let outputs: AgentStepOutputs
-
   type ToolCallDisplayWithReasoning = ToolCallDisplay & {
     reasoningText?: string
   }
@@ -30,19 +28,15 @@
   type StepToolResultPart = Extract<StepContentPart, { type: "tool-result" }>
   type StepReasoningPart = Extract<StepContentPart, { type: "reasoning" }>
 
-  function hasErrorOutput(output: unknown): boolean {
-    return (
-      typeof output === "object" &&
-      output !== null &&
-      "error" in output &&
-      !("success" in output && (output as { success: boolean }).success)
-    )
-  }
+  export let outputs: AgentStepOutputs
+
+  let expandedTools = new Set<string>()
+  let expandedReasoning = new Set<string>()
 
   $: response = outputs.response || ""
   $: steps = outputs.steps || []
   $: stepContentParts = steps.flatMap((step, stepIndex) =>
-    (step.content || []).map(part => ({
+    ((step.content || []) as ContentPart[]).map(part => ({
       ...part,
       stepIndex,
     }))
@@ -161,8 +155,14 @@
     }
   }
 
-  let expandedTools = new Set<string>()
-  let expandedReasoning = new Set<string>()
+  function hasErrorOutput(output: unknown): boolean {
+    return (
+      typeof output === "object" &&
+      output !== null &&
+      "error" in output &&
+      !("success" in output && (output as { success: boolean }).success)
+    )
+  }
 
   function toggleTool(toolCallId: string) {
     if (expandedTools.has(toolCallId)) {
