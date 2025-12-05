@@ -16,6 +16,7 @@
   import { API } from "@/api"
 
   export let compact: boolean = false
+  export let collapsed: boolean = false
 
   const { authStore, environmentStore, notificationStore, appStore } =
     getContext("sdk")
@@ -75,14 +76,16 @@
     <svelte:fragment slot="control">
       <div class="container">
         <UserAvatar {user} size="M" showTooltip={false} />
-        {#if !compact}
-          <div class="text">
-            <div class="name">
-              {text}
+        {#if !collapsed}
+          {#if !compact}
+            <div class="text">
+              <div class="name">
+                {text}
+              </div>
             </div>
-          </div>
+          {/if}
+          <Icon size="S" name="caret-down" color="var(--navTextColor)" />
         {/if}
-        <Icon size="S" name="caret-down" color="var(--navTextColor)" />
       </div>
     </svelte:fragment>
 
