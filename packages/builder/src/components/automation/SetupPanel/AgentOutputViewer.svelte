@@ -76,7 +76,7 @@
         status = "completed"
       }
 
-      const step = steps[call.stepIndex] as any
+      const step = steps[call.stepIndex]
 
       const stepReasoningText =
         typeof step?.reasoningText === "string" ? step.reasoningText : undefined
@@ -87,7 +87,7 @@
       )
 
       const contentReasoningText = stepReasoningParts
-        .map(part => (part as any).text)
+        .map(part => part.text)
         .filter(
           (text): text is string =>
             typeof text === "string" && text.trim().length > 0
@@ -217,7 +217,7 @@
     >
       <div class="steps-section">
         <List title={null}>
-          {#each toolCallsDisplay as toolCall, index (toolCall.toolCallId)}
+          {#each toolCallsDisplay as toolCall (toolCall.toolCallId)}
             {@const isExpanded = expandedTools.has(toolCall.toolCallId)}
             <div class="step-item" class:expanded={isExpanded}>
               <ListItem
