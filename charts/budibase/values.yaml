@@ -601,6 +601,10 @@ services:
     extraVolumeMounts: []
     # -- Additional volumes on the litellm pod.
     extraVolumes: []
+    # -- The salt key to use for litellm.
+    saltKey: ""
+    # -- The master key to use for litellm.
+    masterKey: ""
     # -- Inline configuration passed to litellm as config.yaml.
     config: |
       general_settings:
