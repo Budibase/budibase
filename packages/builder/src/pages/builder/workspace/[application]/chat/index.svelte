@@ -118,11 +118,17 @@
   onMount(async () => {
     await agentsStore.init()
 
-    selectedAgentId = $agentsStore.agents[0]._id || null
+    const initialAgentId = $agentsStore.agents[0]?._id
+    if (!initialAgentId) {
+      return
+    }
 
-    if (selectedAgentId) {
-      await agentsStore.fetchChats(selectedAgentId)
-      chat = $agentsStore.chats[0] || { ...INITIAL_CHAT }
+    await selectAgent(initialAgentId)
+
+    const initialChat = $agentsStore.chats[0]
+    if (initialChat) {
+      chat = { ...initialChat, agentId: initialChat.agentId || initialAgentId }
+      agentsStore.setCurrentChatId(initialChat._id!)
     }
   })
 </script>
