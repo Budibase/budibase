@@ -32,7 +32,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "Core account resources including usage, addresses, and credentials",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_accounts_v1.yaml",
         },
       ],
@@ -42,7 +42,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Autopilot assistants, tasks, samples, and field values",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_assistants_v1.yaml",
         },
       ],
@@ -53,7 +53,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "BulkExports API for exporting messaging, voice, and usage data",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_bulkexports_v1.yaml",
         },
       ],
@@ -63,7 +63,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable Chat channels, members, roles, and messages",
       specs: [
         {
-          version: "v3",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_chat_v3.yaml",
         },
       ],
@@ -73,7 +73,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Reusable Content API for templates, variants, and media",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_content_v2.yaml",
         },
       ],
@@ -83,7 +83,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Conversations services, participants, and messages",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_conversations_v1.yaml",
         },
       ],
@@ -94,7 +94,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "Event Streams resources for schema, sinks, and subscriptions",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_events_v1.yaml",
         },
       ],
@@ -104,7 +104,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Flex contact center configuration, users, and integrations",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_flex_v2.yaml",
         },
       ],
@@ -115,7 +115,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "Frontline mobile workforce accounts, users, and conversations",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_frontline_v1.yaml",
         },
       ],
@@ -126,7 +126,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "Identity and access management for keys, services, and policies",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_iam_v2.yaml",
         },
       ],
@@ -136,7 +136,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "IAM organization, invitation, and membership management",
       specs: [
         {
-          version: "v0",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_iam_organizations.yaml",
         },
       ],
@@ -146,7 +146,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "SCIM directory sync for IAM users and groups",
       specs: [
         {
-          version: "v0",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_iam_scim.yaml",
         },
       ],
@@ -156,7 +156,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Voice Insights calls, metrics, and summaries",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_insights_v1.yaml",
         },
       ],
@@ -166,7 +166,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Voice Intelligence transcripts, participants, and insights",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_intelligence_v2.yaml",
         },
       ],
@@ -176,7 +176,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable IP Messaging services, users, and messages",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_ip_messaging_v2.yaml",
         },
       ],
@@ -186,7 +186,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Knowledge base content, categories, and documents",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_knowledge_v1.yaml",
         },
       ],
@@ -196,7 +196,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Lookup API for phone carrier, caller name, and identity",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_lookups_v2.yaml",
         },
       ],
@@ -206,7 +206,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Marketplace listings, installations, and products",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_marketplace_v1.yaml",
         },
       ],
@@ -216,7 +216,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable Messaging services, templates, and compliance",
       specs: [
         {
-          version: "v3",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_messaging_v3.yaml",
         },
       ],
@@ -226,7 +226,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Monitoring alerts, events, and triggers",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_monitor_v2.yaml",
         },
       ],
@@ -236,7 +236,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Notify bindings, credentials, and notifications",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_notify_v1.yaml",
         },
       ],
@@ -246,7 +246,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Phone number inventory, orders, and configurations",
       specs: [
         {
-          version: "v3",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_numbers_v3.yaml",
         },
       ],
@@ -257,7 +257,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "OAuth 2.0 API for authorization servers, clients, and tokens",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_oauth_v2.yaml",
         },
       ],
@@ -267,7 +267,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Preview API set for Twilio beta capabilities",
       specs: [
         {
-          version: "v0",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_preview.yaml",
         },
       ],
@@ -277,7 +277,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Pricing API for voice, SMS, and phone numbers",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_pricing_v2.yaml",
         },
       ],
@@ -287,7 +287,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Proxy sessions, phone numbers, and short codes",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_proxy_v1.yaml",
         },
       ],
@@ -297,7 +297,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Routes API for expertise routing and orchestration",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_routes_v2.yaml",
         },
       ],
@@ -307,7 +307,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Serverless assets, environments, and deployments",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_serverless_v1.yaml",
         },
       ],
@@ -317,7 +317,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Studio flows, executions, and steps",
       specs: [
         {
-          version: "v2",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_studio_v2.yaml",
         },
       ],
@@ -327,7 +327,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Super SIM fleets, commands, and networks",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_supersim_v1.yaml",
         },
       ],
@@ -337,7 +337,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Sync services, documents, lists, and maps",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_sync_v1.yaml",
         },
       ],
@@ -347,7 +347,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "TaskRouter workers, tasks, and workflows",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_taskrouter_v1.yaml",
         },
       ],
@@ -358,7 +358,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
         "Elastic SIP Trunking trunks, phone numbers, and credentials",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trunking_v1.yaml",
         },
       ],
@@ -368,7 +368,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "TrustHub customer profiles and compliance items",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trusthub_v1.yaml",
         },
       ],
@@ -378,7 +378,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Verify services, factors, and challenges",
       specs: [
         {
-          version: "v3",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_verify_v3.yaml",
         },
       ],
@@ -388,7 +388,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable Video rooms, participants, and recordings",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_video_v1.yaml",
         },
       ],
@@ -398,7 +398,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable voice calls, conferences, and recordings",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_voice_v1.yaml",
         },
       ],
@@ -408,7 +408,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       description: "Programmable Wireless SIM cards, data sessions, and usage",
       specs: [
         {
-          version: "v1",
+          version: "1.0.0",
           url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_wireless_v1.yaml",
         },
       ],
@@ -529,6 +529,14 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       templates = state.templates
     })()
     return templates
+  }
+
+  get templateGroups(): RestTemplateGroup<RestTemplateGroupName>[] {
+    let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
+    this.subscribe(state => {
+      templateGroups = state.templateGroups
+    })()
+    return templateGroups
   }
 
   getByName(name?: RestTemplateName) {

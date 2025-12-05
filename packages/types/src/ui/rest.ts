@@ -3,7 +3,6 @@ export interface RestTemplateSpec {
     | `${number}-${number}-${number}`
     | `${number}.${number}`
     | `${number}.${number}.${number}`
-    | `v${number}`
   url: string
 }
 

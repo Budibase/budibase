@@ -1,0 +1,404 @@
+<script lang="ts">
+  import { Button, Divider, Select } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+  import type {
+    RestTemplate,
+    RestTemplateGroup,
+    RestTemplateGroupName,
+    RestTemplateGroups,
+    RestTemplateName,
+    RestTemplateWithoutIcon,
+  } from "@budibase/types"
+
+  export let templates: RestTemplate[] = []
+  export let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
+  export let loading = false
+  export let customDisabled = false
+
+  type GroupTemplateSelection = {
+    kind: "group"
+    groupName: RestTemplateGroupName
+    template: RestTemplateWithoutIcon<RestTemplateGroups[RestTemplateGroupName]>
+  }
+
+  type TemplateSelection =
+    | { kind: "template"; template: RestTemplate }
+    | GroupTemplateSelection
+
+  const dispatch = createEventDispatcher<{
+    selectTemplate: TemplateSelection
+    custom: void
+  }>()
+
+  type ConnectorCard =
+    | {
+        type: "group"
+        name: RestTemplateGroupName
+        icon: string
+        key: string
+        group: RestTemplateGroup<RestTemplateGroupName>
+      }
+    | {
+        type: "template"
+        name: RestTemplateName
+        icon: string
+        key: string
+        template: RestTemplate
+      }
+
+  type GroupTemplateName = RestTemplateGroups[RestTemplateGroupName]
+
+  let scrolling = false
+  let page: HTMLDivElement | undefined
+  let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
+  let activeGroupTemplateName: GroupTemplateName | null = null
+
+  $: groupedTemplateNames = new Set<RestTemplateName>(
+    templateGroups.flatMap(group =>
+      group.templates.map(template => template.name as RestTemplateName)
+    )
+  )
+  $: visibleTemplates = (templates || []).filter(
+    template => !groupedTemplateNames.has(template.name)
+  )
+  $: connectorCards = [
+    ...templateGroups.map<ConnectorCard>(group => ({
+      type: "group",
+      name: group.name,
+      icon: group.icon,
+      key: `group-${group.name}`,
+      group,
+    })),
+    ...visibleTemplates.map<ConnectorCard>(template => ({
+      type: "template",
+      name: template.name,
+      icon: template.icon,
+      key: `template-${template.name}`,
+      template,
+    })),
+  ].sort((a, b) => a.name.localeCompare(b.name))
+  $: activeGroupOptions = activeGroup
+    ? activeGroup.templates.map(template => ({
+        label: template.name,
+        value: template.name,
+        description: template.description,
+      }))
+    : []
+  $: selectedGroupTemplate =
+    activeGroup && activeGroupTemplateName
+      ? activeGroup.templates.find(
+          template => template.name === activeGroupTemplateName
+        ) || null
+      : null
+  $: selectedGroupTemplateDescription = activeGroupOptions.find(
+    option => option.value === activeGroupTemplateName
+  )?.description
+
+  const handleScroll = (event: Event) => {
+    const target = event.target as HTMLDivElement
+    scrolling = target?.scrollTop !== 0
+  }
+
+  const openTemplateGroup = (
+    group: RestTemplateGroup<RestTemplateGroupName>
+  ) => {
+    if (loading) {
+      return
+    }
+    activeGroup = group
+    activeGroupTemplateName = group.templates[0]?.name || null
+  }
+
+  const resetGroupSelection = () => {
+    activeGroup = null
+    activeGroupTemplateName = null
+  }
+
+  const confirmGroupTemplateSelection = () => {
+    if (!activeGroup || !selectedGroupTemplate) {
+      return
+    }
+    dispatch("selectTemplate", {
+      kind: "group",
+      groupName: activeGroup.name,
+      template: selectedGroupTemplate,
+    })
+  }
+
+  const handleTemplateSelection = (template: RestTemplate) => {
+    dispatch("selectTemplate", { kind: "template", template })
+  }
+
+  const handleCustomClick = () => {
+    dispatch("custom")
+  }
+</script>
+
+<div class="api-main" class:scrolling>
+  <div class="api-header">
+    <div>API connectors</div>
+    {#if !activeGroup}
+      <div>
+        <Button
+          secondary
+          icon="plus"
+          disabled={loading || customDisabled}
+          on:click={handleCustomClick}
+        >
+          Custom REST API
+        </Button>
+      </div>
+    {/if}
+  </div>
+  <Divider size={"S"} noMargin />
+  <div class="contents-wrap" on:scroll={handleScroll}>
+    <div class="shadow"></div>
+    <div bind:this={page} class="contents">
+      {#if activeGroup}
+        <div class="group-step">
+          <div class="group-step-summary">
+            <div class="api-icon group-icon">
+              <img src={activeGroup.icon} alt={activeGroup.name} />
+            </div>
+            <div>
+              <div class="group-step-name">{activeGroup.name}</div>
+              <div class="group-step-description">
+                {activeGroup.description}
+              </div>
+            </div>
+          </div>
+          <div class="group-step-body">
+            <Select
+              label={`Select ${activeGroup.name} API`}
+              options={activeGroupOptions}
+              bind:value={activeGroupTemplateName}
+              disabled={loading}
+            />
+            {#if selectedGroupTemplateDescription}
+              <p class="group-template-description">
+                {selectedGroupTemplateDescription}
+              </p>
+            {/if}
+          </div>
+          <div class="group-step-actions">
+            <Button secondary on:click={resetGroupSelection} disabled={loading}>
+              Back
+            </Button>
+            <Button
+              cta
+              on:click={confirmGroupTemplateSelection}
+              disabled={!selectedGroupTemplate || loading}
+            >
+              Use template
+            </Button>
+          </div>
+        </div>
+      {:else}
+        <div class="grid">
+          {#each connectorCards as card (card.key)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div
+              class="api"
+              class:disabled={loading}
+              on:click={() => {
+                if (card.type === "group") {
+                  openTemplateGroup(card.group)
+                } else {
+                  handleTemplateSelection(card.template)
+                }
+              }}
+            >
+              <div class="api-icon">
+                <img src={card.icon} alt={card.name} />
+              </div>
+
+              {card.name}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </div>
+</div>
+
+<style>
+  @property --shadow-opacity-1 {
+    syntax: "<number>";
+    initial-value: 0;
+    inherits: false;
+  }
+
+  @property --shadow-opacity-2 {
+    syntax: "<number>";
+    initial-value: 0;
+    inherits: false;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .api {
+    display: flex;
+    height: 38px;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      opacity 0.2s ease;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-global-color-gray-100);
+    position: relative;
+  }
+
+  .api:hover {
+    background-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .api.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .api.disabled img {
+    filter: grayscale(100%);
+    opacity: 0.6;
+  }
+
+  .api img {
+    width: 20px;
+    height: 20px;
+    transition:
+      filter 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .api-icon {
+    border-radius: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    display: flex;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .api-icon.group-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .api-header {
+    padding: var(--spacing-l) var(--spectrum-dialog-confirm-padding);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--spectrum-global-color-gray-800);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .api-main .contents {
+    padding-left: var(--spectrum-dialog-confirm-padding);
+    padding-right: var(--spectrum-dialog-confirm-padding);
+  }
+
+  .api-main :global(hr) {
+    background-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .contents-wrap {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+    background:
+      linear-gradient(
+        to right,
+        transparent calc(100% - 20px),
+        transparent calc(100% - 20px)
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, var(--shadow-opacity-1)) 0px,
+        rgba(0, 0, 0, var(--shadow-opacity-2)) 5px,
+        transparent 15px
+      );
+    background-repeat: no-repeat;
+    background-position: top right;
+    background-size:
+      100% 20px,
+      15px 20px;
+    transition:
+      --shadow-opacity-1 0.2s ease,
+      --shadow-opacity-2 0.2s ease;
+  }
+
+  .api-main.scrolling .contents-wrap {
+    --shadow-opacity-1: 0.2;
+    --shadow-opacity-2: 0.1;
+  }
+
+  .api-main.scrolling .shadow {
+    box-shadow: inset 0px 15px 10px -10px rgba(0, 0, 0, 0.2);
+  }
+
+  .api-main .shadow {
+    transition: box-shadow 0.2s ease;
+  }
+
+  .shadow {
+    width: 100%;
+    height: var(--spacing-l);
+    display: inline-block;
+  }
+
+  .group-step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+
+  .group-step-summary {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+
+  .group-step-name {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .group-step-description,
+  .group-template-description {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 14px;
+  }
+
+  .group-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    max-width: 400px;
+  }
+
+  .group-step-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-s);
+  }
+</style>
