@@ -85,10 +85,10 @@ export class RestQueryToolSource extends ToolSource {
       name: toolName,
       description,
       parameters: parametersSchema,
-      handler: async (params: Record<string, any>): Promise<string> => {
+      handler: async (params: Record<string, any>) => {
         const workspaceId = context.getWorkspaceId()
         if (!workspaceId) {
-          return JSON.stringify({ error: "No app context available" })
+          return { error: "No app context available" }
         }
 
         const ctx: any = buildCtx(workspaceId, null, {
@@ -103,12 +103,12 @@ export class RestQueryToolSource extends ToolSource {
         try {
           await queryController.executeV2AsAutomation(ctx)
           const { data, ...rest } = ctx.body
-          return JSON.stringify({ success: true, data, info: rest })
+          return { success: true, data, info: rest }
         } catch (err: any) {
-          return JSON.stringify({
+          return {
             success: false,
             error: err.message || "Query execution failed",
-          })
+          }
         }
       },
     })

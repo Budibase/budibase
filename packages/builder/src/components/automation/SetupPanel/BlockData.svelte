@@ -10,6 +10,7 @@
   import JSONViewer, {
     type JSONViewerClickEvent,
   } from "@/components/common/JSONViewer.svelte"
+  import AgentOutputViewer from "./AgentOutputViewer.svelte"
   import {
     type AutomationStep,
     type AutomationTrigger,
@@ -20,6 +21,7 @@
     type BlockRef,
     type AutomationIOProps,
     type AutomationStepResult,
+    type AgentStepOutputs,
     AutomationStepStatus,
     AutomationStatus,
     AutomationStepType,
@@ -52,6 +54,7 @@
   const DataModeTabs = {
     [DataMode.INPUT]: "Data In",
     [DataMode.OUTPUT]: "Data Out",
+    [DataMode.AGENT]: "Agent",
     [DataMode.ERRORS]: "Errors",
   }
 
@@ -253,10 +256,18 @@
 
   $: parsedContext = parseContext(context, blockRef)
   $: isLoopChild = blockRef?.pathTo?.some(path => path.loopStepId)
+  $: isAgentStep = block?.stepId === AutomationActionStepId.AGENT
+  $: visibleModes = isAgentStep
+    ? [DataMode.INPUT, DataMode.OUTPUT, DataMode.AGENT, DataMode.ERRORS]
+    : [DataMode.INPUT, DataMode.OUTPUT, DataMode.ERRORS]
+  $: agentOutputs =
+    isAgentStep && blockResults && blockResults.outputs
+      ? (blockResults.outputs as AgentStepOutputs)
+      : undefined
 </script>
 
 <div class="tabs">
-  {#each Object.values(DataMode) as mode}
+  {#each visibleModes as mode}
     <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
       <ActionButton
         selected={mode === dataMode}
@@ -314,6 +325,20 @@
         >
           Run
         </Button>
+      </div>
+    {/if}
+  {:else if dataMode === DataMode.AGENT}
+    {#if agentOutputs}
+      <AgentOutputViewer outputs={agentOutputs} />
+    {:else if testResults && !blockResults}
+      <div class="content">
+        <span class="info">
+          This step was not executed as part of the test run
+        </span>
+      </div>
+    {:else}
+      <div class="content">
+        <span class="info"> Run the automation to show the agent details </span>
       </div>
     {/if}
   {:else}

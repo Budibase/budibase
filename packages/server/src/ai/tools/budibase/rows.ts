@@ -14,8 +14,7 @@ export default [
     }),
     handler: async ({ tableId }) => {
       const rows = await sdk.rows.fetch(tableId)
-      const formatted = JSON.stringify(rows, null, 2)
-      return `Here are the rows for table ${tableId}:\n\n${formatted}`
+      return { rows }
     },
   }),
 
@@ -28,8 +27,7 @@ export default [
     }),
     handler: async ({ tableId, rowId }) => {
       const row = await sdk.rows.find(tableId, rowId)
-      const formatted = JSON.stringify(row, null, 2)
-      return `Here is the row data:\n\n${formatted}`
+      return { row }
     },
   }),
 
@@ -37,62 +35,57 @@ export default [
     name: "create_row",
     description:
       "Create a new row. Only include fields that match the table schema. " +
-      "Use plain text values for text fields - do not store JSON or structured data. " +
-      "For long text content, truncate to first 500 characters if needed.",
+      "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
+      "or content containing quotes, backslashes, or special characters - these break JSON parsing. " +
+      "Summarize or strip complex content. Max 500 characters per field.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to create the row in"),
       data: z
-        .string()
+        .record(z.string(), z.any())
         .describe(
-          'Row data as a valid JSON string. Example: \'{"name": "John", "age": 30}\'. ' +
-            'Ensure all special characters are properly escaped (use \\" for quotes, \\n for newlines). ' +
-            "Ensure the schema for the table is known before writing a row."
+          'Row data as a JSON object. Example: {"name": "John", "age": 30}. ' +
+            "Do NOT nest this inside a string; pass the object directly. " +
+            "Values must be plain text - no HTML, markdown, or special characters."
         ),
     }),
     handler: async ({ tableId, data }) => {
-      let parsedData: Record<string, unknown>
-      try {
-        parsedData = JSON.parse(data)
-      } catch (e) {
-        return `Error: Invalid JSON in data field. Please ensure proper escaping. Details: ${e}`
-      }
-      const row = await sdk.rows.save(tableId, parsedData, undefined)
-      const formatted = JSON.stringify(row, null, 2)
-      return `Successfully created new row:\n\n${formatted}`
+      const row = await sdk.rows.save(tableId, data as any, undefined)
+      return { row }
     },
   }),
 
   newTool({
     name: "update_row",
     description:
-      "Update an existing row. Use plain text values for text fields - do not store JSON or structured data.",
+      "Update an existing row. " +
+      "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
+      "or content containing quotes, backslashes, or special characters - these break JSON parsing. " +
+      "Summarize or strip complex content. Max 500 characters per field.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table"),
       rowId: z.string().describe("The ID of the row to update"),
       data: z
-        .string()
+        .record(z.string(), z.any())
         .describe(
-          'The updated data as a valid JSON string. Example: \'{"name": "Jane"}\'. ' +
-            'Ensure all special characters are properly escaped (use \\" for quotes, \\n for newlines).'
+          'The updated data as a JSON object. Example: {"name": "Jane"}. ' +
+            "Do NOT nest this inside a string; pass the object directly. " +
+            "Values must be plain text - no HTML, markdown, or special characters."
         ),
     }),
     handler: async ({ tableId, rowId, data }) => {
-      let parsedData: Record<string, unknown>
-      try {
-        parsedData = JSON.parse(data)
-      } catch (e) {
-        return `Error: Invalid JSON in data field. Please ensure proper escaping. Details: ${e}`
-      }
-      const rowData = { ...parsedData, _id: rowId }
+      const rowData = { ...data, _id: rowId }
       const row = await sdk.rows.save(tableId, rowData, undefined)
-      const formatted = JSON.stringify(row, null, 2)
-      return `Successfully updated row:\n\n${formatted}`
+      return { row }
     },
   }),
 
   newTool({
     name: "search_rows",
-    description: "Search for rows in a table based on criteria",
+    description:
+      "Search for rows in a table based on criteria. " +
+      "IMPORTANT: You can ONLY filter on fields that exist in the table schema. " +
+      "Use get_table or list_tables first to see available field names. " +
+      "Searching on non-existent fields will fail.",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to search"),
       query: z
@@ -100,6 +93,7 @@ export default [
         .nullish()
         .describe(
           `Query filters object. Structure: { operator: { fieldName: value } }. ` +
+            `CRITICAL: fieldName must match an existing column in the table schema exactly (case-sensitive). ` +
             `Valid operators: "equal", "notEqual", "empty", "notEmpty", "fuzzy", "string", "contains", "notContains", "containsAny", "oneOf", "range". ` +
             `Examples: ` +
             `Find where status equals "active": {"equal": {"status": "active"}}. ` +
@@ -129,9 +123,8 @@ export default [
             : SortOrder.DESCENDING
       }
 
-      const rows = await sdk.rows.search(searchParams)
-      const formatted = JSON.stringify(rows, null, 2)
-      return `Search results:\n\n${formatted}`
+      const result = await sdk.rows.search(searchParams)
+      return { rows: result.rows }
     },
   }),
 ]

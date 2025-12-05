@@ -186,6 +186,7 @@ export async function getLLMOrThrow() {
 }
 
 export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
+  modelName: string
   modelId: string
   apiKey: string
   baseUrl: string
@@ -204,6 +205,7 @@ export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
   }
 
   return {
+    modelName: aiConfig.model,
     modelId: aiConfig.liteLLMModelId,
     apiKey: secretKey,
     baseUrl: environment.LITELLM_URL,

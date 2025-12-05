@@ -1,4 +1,5 @@
 import { Table } from "@budibase/types"
+import type { StepResult, ToolSet } from "ai"
 import { SortOrder } from "../../../api"
 import {
   SearchFilters,
@@ -269,7 +270,7 @@ export type AgentStepInputs = {
 export type AgentStepOutputs = {
   success: boolean
   response?: string
-  steps?: any[]
+  steps?: Array<StepResult<ToolSet>>
 }
 
 export type LoopV2StepInputs = {
