@@ -1,3 +1,4 @@
+import type { StepResult, ToolSet } from "ai"
 import { ToolSourceType } from "../documents"
 
 export interface ToolSourceOption {
@@ -6,36 +7,33 @@ export interface ToolSourceOption {
   description: string
 }
 
-/**
- * types for agent output - AgentOutputViewer.svelte
- */
-export interface ViewerToolCall {
-  toolCallId: string
-  toolName: string
-  input: unknown
-}
+export type AgentStepResult<TOOLS extends ToolSet = ToolSet> =
+  StepResult<TOOLS>
 
-export interface ViewerToolResult {
-  toolCallId: string
-  output?: unknown
-}
+export type ContentPart<TOOLS extends ToolSet = ToolSet> = AgentStepResult<
+  TOOLS
+>["content"][number]
 
-export interface ViewerReasoningOutput {
-  text: string
-}
+export type ViewerToolCall<TOOLS extends ToolSet = ToolSet> = Extract<
+  ContentPart<TOOLS>,
+  { type: "tool-call" }
+>
 
-// Content part with type discriminator (from AI SDK StepResult.content)
-export type ContentPart =
-  | ({ type: "tool-call" } & ViewerToolCall)
-  | ({ type: "tool-result" } & ViewerToolResult)
-  | ({ type: "reasoning" } & ViewerReasoningOutput)
-  | { type: "text"; text: string }
+export type ViewerToolResult<TOOLS extends ToolSet = ToolSet> = Extract<
+  ContentPart<TOOLS>,
+  { type: "tool-result" }
+>
 
-export interface ToolCallDisplay {
-  toolCallId: string
-  toolName: string
+export type ViewerReasoningOutput<TOOLS extends ToolSet = ToolSet> = Extract<
+  ContentPart<TOOLS>,
+  { type: "reasoning" }
+>
+
+export interface ToolCallDisplay<TOOLS extends ToolSet = ToolSet> {
+  toolCallId: ViewerToolCall<TOOLS>["toolCallId"]
+  toolName: ViewerToolCall<TOOLS>["toolName"]
   displayName: string
-  input: unknown
-  output?: unknown
+  input: ViewerToolCall<TOOLS>["input"]
+  output?: ViewerToolResult<TOOLS>["output"]
   status: "completed" | "failed" | "error"
 }
