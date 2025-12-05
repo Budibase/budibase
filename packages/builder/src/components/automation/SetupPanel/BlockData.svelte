@@ -21,6 +21,7 @@
     type BlockRef,
     type AutomationIOProps,
     type AutomationStepResult,
+    type AgentStepOutputs,
     AutomationStepStatus,
     AutomationStatus,
     AutomationStepType,
@@ -259,6 +260,10 @@
   $: visibleModes = isAgentStep
     ? [DataMode.INPUT, DataMode.OUTPUT, DataMode.AGENT, DataMode.ERRORS]
     : [DataMode.INPUT, DataMode.OUTPUT, DataMode.ERRORS]
+  $: agentOutputs =
+    isAgentStep && blockResults && blockResults.outputs
+      ? (blockResults.outputs as AgentStepOutputs)
+      : undefined
 </script>
 
 <div class="tabs">
@@ -323,8 +328,8 @@
       </div>
     {/if}
   {:else if dataMode === DataMode.AGENT}
-    {#if blockResults && blockResults.outputs}
-      <AgentOutputViewer outputs={blockResults.outputs} />
+    {#if agentOutputs}
+      <AgentOutputViewer outputs={agentOutputs} />
     {:else if testResults && !blockResults}
       <div class="content">
         <span class="info">
