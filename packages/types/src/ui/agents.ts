@@ -24,11 +24,6 @@ export type ViewerToolResult<TOOLS extends ToolSet = ToolSet> = Extract<
   { type: "tool-result" }
 >
 
-export type ViewerReasoningOutput<TOOLS extends ToolSet = ToolSet> = Extract<
-  ContentPart<TOOLS>,
-  { type: "reasoning" }
->
-
 export interface ToolCallDisplay<TOOLS extends ToolSet = ToolSet> {
   toolCallId: ViewerToolCall<TOOLS>["toolCallId"]
   toolName: ViewerToolCall<TOOLS>["toolName"]

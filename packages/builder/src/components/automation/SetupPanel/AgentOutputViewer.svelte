@@ -42,13 +42,10 @@
   $: response = outputs.response || ""
   $: steps = outputs.steps || []
   $: stepContentParts = steps.flatMap((step, stepIndex) =>
-    ((step.content || []) as ContentPart[]).map(
-      part =>
-        ({
-          ...part,
-          stepIndex,
-        }) as StepContentPart
-    )
+    (step.content || []).map(part => ({
+      ...part,
+      stepIndex,
+    }))
   )
 
   $: toolCallParts = stepContentParts.filter(
