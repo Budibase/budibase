@@ -237,9 +237,6 @@ export class OpenAPI3 extends OpenAPISource {
     if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
       return scheme.name
     }
-    if (scheme.type === "http" || scheme.type === "oauth2") {
-      return "Authorization"
-    }
     return undefined
   }
 
