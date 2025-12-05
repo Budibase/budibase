@@ -543,7 +543,22 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     if (!name) {
       return undefined
     }
-    return this.templates.find(template => template.name === name)
+    const template = this.templates.find(template => template.name === name)
+    if (template) {
+      return template
+    }
+    for (const group of this.templateGroups) {
+      const groupTemplate = group.templates.find(
+        template => template.name === name
+      )
+      if (groupTemplate) {
+        return {
+          ...groupTemplate,
+          icon: group.icon,
+        }
+      }
+    }
+    return undefined
   }
 }
 

@@ -17,6 +17,7 @@ export type RestTemplateName =
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"
+  | TwilioRestTemplateName
 
 export type RestTemplateGroupName = "Twilio"
 

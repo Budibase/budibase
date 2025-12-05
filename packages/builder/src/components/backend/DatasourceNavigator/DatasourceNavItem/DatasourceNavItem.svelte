@@ -12,12 +12,14 @@
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
   export let datasource
+  let templateIcon
 
-  $: templateIcon = datasource?.restTemplate
-    ? $restTemplates.templates.find(
-        template => template.name === datasource.restTemplate
-      )?.icon
-    : undefined
+  $: {
+    void $restTemplates
+    templateIcon = datasource?.restTemplate
+      ? restTemplates.getByName(datasource.restTemplate)?.icon
+      : undefined
+  }
 
   let editModal
   let deleteConfirmationModal

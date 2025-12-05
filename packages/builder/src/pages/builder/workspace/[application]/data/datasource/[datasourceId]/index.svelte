@@ -39,13 +39,15 @@
 
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
+  let templateIcon
 
   $: datasource = $datasources.selected
-  $: templateIcon = datasource?.restTemplate
-    ? $restTemplates.templates.find(
-        template => template.name === datasource.restTemplate
-      )?.icon
-    : undefined
+  $: {
+    void $restTemplates
+    templateIcon = datasource?.restTemplate
+      ? restTemplates.getByName(datasource.restTemplate)?.icon
+      : undefined
+  }
 
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)

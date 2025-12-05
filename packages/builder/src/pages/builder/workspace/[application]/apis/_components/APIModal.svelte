@@ -229,10 +229,9 @@
       return
     }
 
+    const groupSelection = event.detail as GroupTemplateSelectionDetail
     const group = templateGroupsValue.find(
-      templateGroup =>
-        templateGroup.name ===
-        (event.detail as GroupTemplateSelectionDetail).groupName
+      templateGroup => templateGroup.name === groupSelection.groupName
     )
 
     if (!group) {
@@ -240,11 +239,21 @@
       return
     }
 
+    const selectedTemplate = group.templates.find(
+      template => template.name === groupSelection.template.name
+    )
+
+    if (!selectedTemplate) {
+      notifications.error("Selected template could not be found.")
+      return
+    }
+
     handleTemplateSelection({
-      name: event.detail.template.name,
-      description: event.detail.template.description,
-      specs: event.detail.template.specs,
+      name: selectedTemplate.name,
+      description: selectedTemplate.description,
+      specs: selectedTemplate.specs,
       icon: group.icon,
+      restTemplateName: selectedTemplate.name,
     })
   }
 </script>
