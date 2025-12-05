@@ -63,3 +63,8 @@ builderRoutes
     paramResource("tableId"),
     tableController.duplicate
   )
+  .post(
+    "/api/tables/:tableId/publish",
+    paramResource("tableId"),
+    tableController.publish
+  )

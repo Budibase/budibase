@@ -269,13 +269,16 @@ export default class TestConfiguration {
 
   async withApp<R>(workspace: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.devWorkspaceId
+    const oldProdAppId = this.prodWorkspaceId
     this.devWorkspaceId =
       typeof workspace === "string" ? workspace : workspace.appId
+    this.prodWorkspaceId = dbCore.getProdWorkspaceID(this.devWorkspaceId)
     return await context.doInWorkspaceContext(this.devWorkspaceId, async () => {
       try {
         return await f()
       } finally {
         this.devWorkspaceId = oldAppId
+        this.prodWorkspaceId = oldProdAppId
       }
     })
   }
@@ -735,9 +738,20 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(workspaceController.unpublish, undefined, {
-      appId: this.devWorkspaceId,
-    })
+    let response
+    try {
+      response = await this._req(workspaceController.unpublish, undefined, {
+        appId: this.devWorkspaceId,
+      })
+    } catch (err: unknown) {
+      // Ignore attempts to unpublish when there is no published workspace.
+      if (
+        !(err instanceof Error) ||
+        !err.message.includes("Workspace has not been published")
+      ) {
+        throw err
+      }
+    }
     this.prodWorkspaceId = undefined
     this.prodWorkspace = undefined
     return response

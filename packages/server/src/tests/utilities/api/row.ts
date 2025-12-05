@@ -103,6 +103,16 @@ export class RowAPI extends TestAPI {
     })
   }
 
+  fetchProd = async (
+    sourceId: string,
+    expectations?: Expectations
+  ): Promise<Row[]> => {
+    return await this._get<Row[]>(`/api/${sourceId}/rows`, {
+      useProdApp: true,
+      expectations,
+    })
+  }
+
   exportRows = async (
     tableId: string,
     body?: ExportRowsRequest,
