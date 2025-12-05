@@ -169,7 +169,7 @@
           </div>
           <div class="group-step-body">
             <Select
-              label={`Select ${activeGroup.name} API`}
+              label={`Select ${activeGroup.name} category`}
               options={activeGroupOptions}
               bind:value={activeGroupTemplateName}
               disabled={loading}
@@ -393,7 +393,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    max-width: 400px;
   }
 
   .group-step-actions {

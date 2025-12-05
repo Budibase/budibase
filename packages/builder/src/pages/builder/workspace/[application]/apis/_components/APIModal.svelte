@@ -252,53 +252,28 @@
 <div class="settings-wrap">
   <Modal bind:this={modal}>
     <div
-      class="api-dialog spectrum-Dialog spectrum-Dialog--large"
-      style="position: relative;"
+      class="spectrum-Dialog--large"
       role="dialog"
       tabindex="-1"
       aria-modal="true"
     >
-      <section class="spectrum-Dialog-content">
-        <SelectCategoryAPIModal
-          templates={templatesValue}
-          templateGroups={templateGroupsValue}
-          {loading}
-          customDisabled={!restIntegration}
-          on:custom={() => handleCustom(restIntegration)}
-          on:selectTemplate={onSelectTemplate}
-        />
-      </section>
+      <SelectCategoryAPIModal
+        templates={templatesValue}
+        templateGroups={templateGroupsValue}
+        {loading}
+        customDisabled={!restIntegration}
+        on:custom={() => handleCustom(restIntegration)}
+        on:selectTemplate={onSelectTemplate}
+      />
     </div>
   </Modal>
 </div>
 
 <style>
-  .spectrum-Dialog.spectrum-Dialog--large {
+  .spectrum-Dialog--large {
     width: 720px;
     min-height: 320px;
     max-height: 540px;
     height: auto;
-  }
-
-  .spectrum-Dialog-content {
-    margin: 0px;
-    padding: 0px;
-    border-radius: var(--spectrum-global-dimension-size-100);
-    width: 100%;
-    display: flex;
-    overflow: hidden;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .spectrum-Dialog-content :global(.nav_wrapper .nav) {
-    border-top-left-radius: var(--spectrum-global-dimension-size-100);
-    border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
-  }
-
-  .spectrum-Dialog-content :global(.nav_header) {
-    padding-top: var(--spacing-l);
-    padding-bottom: var(--spacing-l);
-    flex: 0 0 32px;
   }
 </style>
