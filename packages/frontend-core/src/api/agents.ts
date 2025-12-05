@@ -69,8 +69,21 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     const chunkStream = response.body
       .pipeThrough(new TextDecoderStream())
       .pipeThrough(createSseToJsonTransformStream<UIMessageChunk>())
+      .pipeThrough(
+        new TransformStream<UIMessageChunk, UIMessageChunk>({
+          transform(chunk, controller) {
+            if (chunk.type === "error") {
+              throw new Error(chunk.errorText || "Agent action failed")
+            }
+            controller.enqueue(chunk)
+          },
+        })
+      )
 
-    return readUIMessageStream({ stream: chunkStream })
+    return readUIMessageStream({
+      stream: chunkStream,
+      terminateOnError: true,
+    })
   },
 
   removeChat: async (chatId: string) => {
