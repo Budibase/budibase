@@ -118,11 +118,11 @@
     const templateVariables = new Set(
       (config.templateStaticVariables || []).filter(Boolean)
     )
-    const target = (config.staticVariables = config.staticVariables || {})
+    config.staticVariables ||= {}
     for (const [name, value] of entries) {
       templateVariables.add(name)
-      if (target[name] == null) {
-        target[name] = value ?? ""
+      if (config.staticVariables[name] == null) {
+        config.staticVariables[name] = value ?? ""
       }
     }
     config.templateStaticVariables = Array.from(templateVariables)
