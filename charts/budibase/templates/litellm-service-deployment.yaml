@@ -25,6 +25,14 @@ spec:
           args:
             - --config
             - /app/config.yaml
+          env:
+            - name: LITELLM_MASTER_KEY
+              value: {{ .Values.services.litellm.masterKey | quote }}
+            - name: LITELLM_SALT_KEY
+              value: {{ .Values.services.litellm.saltKey | quote }}
+          {{- if .Values.services.litellm.extraEnv }}
+            {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: litellm-config
               mountPath: /app/config.yaml
@@ -32,10 +40,6 @@ spec:
           {{- with .Values.services.litellm.resources }}
           resources:
 {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.services.litellm.extraEnv }}
-          env:
-{{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}
           {{- if .Values.services.litellm.extraVolumeMounts }}
 {{- toYaml .Values.services.litellm.extraVolumeMounts | nindent 10 }}

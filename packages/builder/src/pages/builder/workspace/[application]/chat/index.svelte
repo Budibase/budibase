@@ -4,7 +4,14 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { agentsStore } from "@/stores/portal"
-  import { Body, Icon, Select } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Icon,
+    ProgressCircle,
+    Select,
+    notifications,
+  } from "@budibase/bbui"
   import type { AgentChat } from "@budibase/types"
   import { params } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -20,6 +27,7 @@
 
   let chat: AgentChat = { ...INITIAL_CHAT }
   let loading: boolean = false
+  let deletingChat: boolean = false
   let selectedAgentId: string | null = null
 
   $: chatHistory = $agentsStore.chats || []
@@ -41,6 +49,33 @@
   const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat, agentId: selectedAgentId || undefined }
     agentsStore.setCurrentChatId(selectedChat._id!)
+  }
+
+  const deleteCurrentChat = async () => {
+    if (!selectedAgentId || !chat?._id || deletingChat) {
+      return
+    }
+
+    deletingChat = true
+
+    try {
+      await agentsStore.removeChat(chat._id, selectedAgentId)
+      const remainingChats = $agentsStore.chats
+      if (remainingChats.length) {
+        const [nextChat] = remainingChats
+        chat = { ...nextChat, agentId: selectedAgentId }
+        agentsStore.setCurrentChatId(nextChat._id!)
+      } else {
+        chat = { ...INITIAL_CHAT, agentId: selectedAgentId }
+        agentsStore.clearCurrentChatId()
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete chat"
+      notifications.error(message)
+    } finally {
+      deletingChat = false
+    }
   }
 
   const startNewChat = () => {
@@ -141,6 +176,26 @@
       </Panel>
 
       <div class="chat-wrapper">
+        {#if chat._id}
+          <div class="chat-header">
+            <Button
+              quiet
+              warning
+              disabled={deletingChat || loading}
+              on:click={deleteCurrentChat}
+            >
+              <span class="delete-button-content">
+                {#if deletingChat}
+                  <ProgressCircle size="S" />
+                  Deleting...
+                {:else}
+                  <Icon name="trash" size="S" />
+                  Delete chat
+                {/if}
+              </span>
+            </Button>
+          </div>
+        {/if}
         <Chatbox
           bind:chat
           {loading}
@@ -192,6 +247,23 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
+  }
+
+  .chat-header {
+    width: 600px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: var(--spacing-l) 0 var(--spacing-s);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .delete-button-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
   }
 
   .agent-selector {
