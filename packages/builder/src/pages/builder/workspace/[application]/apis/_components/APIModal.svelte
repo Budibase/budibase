@@ -3,6 +3,7 @@
   import { beforeUrlChange } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
+  import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors" //??
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
@@ -63,6 +64,39 @@
     targetSpec = null
   }
 
+  const applySecurityHeaders = async (
+    config: Record<string, any>,
+    spec?: RestTemplateSpec | null
+  ) => {
+    if (!spec?.url) {
+      return config
+    }
+
+    try {
+      const info = await queries.fetchImportInfo({ url: spec.url })
+      const securityHeaders = info.securityHeaders || []
+      if (!securityHeaders.length) {
+        return config
+      }
+      const headers = (config.defaultHeaders = config.defaultHeaders || {})
+      for (const header of securityHeaders) {
+        if (!header) {
+          continue
+        }
+        const normalized = header.toLowerCase()
+        const existing = Object.keys(headers).find(
+          key => key?.toLowerCase() === normalized
+        )
+        if (!existing) {
+          headers[header] = headers[header] ?? ""
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to apply security headers", err)
+    }
+    return config
+  }
+
   const handleTemplateSelection = async (template: RestTemplate) => {
     if (loading) return
 
@@ -79,6 +113,7 @@
       targetSpec = template.specs[0] || null
 
       const config = configFromIntegration(restIntegration)
+      await applySecurityHeaders(config, targetSpec)
 
       const ds = await datasources.create({
         integration: restIntegration,

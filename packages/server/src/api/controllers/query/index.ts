@@ -182,6 +182,7 @@ export async function importInfo(
     url: info.url,
     docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
+    securityHeaders: info.securityHeaders || [],
   }
 }
 

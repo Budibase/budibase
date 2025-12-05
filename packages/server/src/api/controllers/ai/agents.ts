@@ -22,7 +22,6 @@ import {
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
-import { createOpenAI } from "@ai-sdk/openai"
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
@@ -61,9 +60,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const { modelId, apiKey, baseUrl } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
-    const openai = createOpenAI({
+    const openai = ai.createLiteLLMOpenAI({
       apiKey,
-      baseURL: baseUrl,
+      baseUrl,
     })
     const model = openai.chat(modelId)
 
