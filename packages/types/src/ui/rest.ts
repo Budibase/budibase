@@ -1,5 +1,9 @@
 export interface RestTemplateSpec {
-  version: `${number}-${number}-${number}` | `${number}.${number}`
+  version:
+    | `${number}-${number}-${number}`
+    | `${number}.${number}`
+    | `${number}.${number}.${number}`
+    | `v${number}`
   url: string
 }
 
@@ -15,9 +19,62 @@ export type RestTemplateName =
   | "Stripe"
   | "VirusTotal"
 
-export interface RestTemplate {
-  name: RestTemplateName
+export type RestTemplateGroupName = "Twilio"
+
+export type RestTemplateGroups = {
+  Twilio: TwilioRestTemplateName
+}
+
+export type TwilioRestTemplateName =
+  | "Twilio Accounts"
+  | "Twilio Assistants"
+  | "Twilio Bulk Exports"
+  | "Twilio Chat"
+  | "Twilio Content"
+  | "Twilio Conversations"
+  | "Twilio Events"
+  | "Twilio Flex"
+  | "Twilio Frontline"
+  | "Twilio IAM"
+  | "Twilio IAM Organizations"
+  | "Twilio IAM SCIM"
+  | "Twilio Insights"
+  | "Twilio Intelligence"
+  | "Twilio IP Messaging"
+  | "Twilio Knowledge"
+  | "Twilio Lookups"
+  | "Twilio Marketplace"
+  | "Twilio Messaging"
+  | "Twilio Monitor"
+  | "Twilio Notify"
+  | "Twilio Numbers"
+  | "Twilio OAuth"
+  | "Twilio Preview"
+  | "Twilio Pricing"
+  | "Twilio Proxy"
+  | "Twilio Routes"
+  | "Twilio Serverless"
+  | "Twilio Studio"
+  | "Twilio Super SIM"
+  | "Twilio Sync"
+  | "Twilio TaskRouter"
+  | "Twilio Trunking"
+  | "Twilio TrustHub"
+  | "Twilio Verify"
+  | "Twilio Video"
+  | "Twilio Voice"
+  | "Twilio Wireless"
+
+export interface RestTemplate<Name> {
+  name: Name
   description: string
   specs: RestTemplateSpec[]
   icon: string
+}
+
+export interface RestTemplateGroup<
+  TemplateGroupName extends keyof RestTemplateGroups,
+> {
+  name: TemplateGroupName
+  templates: RestTemplate<RestTemplateGroups[TemplateGroupName]>
 }
