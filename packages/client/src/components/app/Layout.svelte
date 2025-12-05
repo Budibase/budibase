@@ -265,7 +265,7 @@
           <div
             class="nav nav--{typeClass} size--{navWidthClass}"
             class:collapsed={navCollapsed}
-            on:click={e => {
+            on:click={() => {
               if (navCollapsed) {
                 navCollapsed = false
               }
