@@ -146,7 +146,19 @@ export const createRelationshipSelectionStore = (datasource: Datasource) => {
     const targetTable = datasource.entities[relationship.targetTable]
 
     // Check if this relationship already exists
-    if (relationshipExists(sourceTable, targetTable, relationship)) {
+    const junctionTableId =
+      relationship.relationshipType ===
+        DatasourceRelationshipType.MANY_TO_MANY && relationship.junctionTable
+        ? datasource.entities[relationship.junctionTable]?._id
+        : undefined
+    if (
+      relationshipExists(
+        sourceTable,
+        targetTable,
+        relationship,
+        junctionTableId
+      )
+    ) {
       // Relationship already exists, skip creating it
       return false
     }
@@ -253,7 +265,8 @@ export const createRelationshipSelectionStore = (datasource: Datasource) => {
   const relationshipExists = (
     sourceTable: Table,
     targetTable: Table,
-    relationship: DatasourceRelationshipConfig
+    relationship: DatasourceRelationshipConfig,
+    junctionTableId?: string
   ): boolean => {
     // Check if there's already a link column that represents this relationship
     // regardless of column name - check the actual relationship definition
@@ -268,19 +281,23 @@ export const createRelationshipSelectionStore = (datasource: Datasource) => {
     if (
       relationship.relationshipType === DatasourceRelationshipType.MANY_TO_MANY
     ) {
-      // For many-to-many, check if there's already a link with the same through table
+      // For many-to-many, check if there's already a link with the same through table and FK mappings
       const sourceMatch = sourceLinks.some(
         (link: any) =>
           link.tableId === targetTable._id &&
-          link.through === relationship.junctionTable &&
-          link.relationshipType === RelationshipType.MANY_TO_MANY
+          link.through === junctionTableId &&
+          link.relationshipType === RelationshipType.MANY_TO_MANY &&
+          link.throughFrom === relationship.targetColumn &&
+          link.throughTo === relationship.sourceColumn
       )
 
       const targetMatch = targetLinks.some(
         (link: any) =>
           link.tableId === sourceTable._id &&
-          link.through === relationship.junctionTable &&
-          link.relationshipType === RelationshipType.MANY_TO_MANY
+          link.through === junctionTableId &&
+          link.relationshipType === RelationshipType.MANY_TO_MANY &&
+          link.throughFrom === relationship.sourceColumn &&
+          link.throughTo === relationship.targetColumn
       )
 
       return sourceMatch && targetMatch
@@ -308,7 +325,7 @@ export const createRelationshipSelectionStore = (datasource: Datasource) => {
   const generateRelationshipColumnName = (
     schema: TableSchema,
     tableName: string,
-    columnName: string
+    _columnName: string
   ): string => {
     // First try: just the table name
     if (!schema[tableName]) {
