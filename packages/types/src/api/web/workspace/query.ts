@@ -29,6 +29,7 @@ export interface ImportRestQueryInfoResponse {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
+  securityHeaders?: string[]
 }
 export interface ImportRestQueryResponse {
   errorQueries: Query[]

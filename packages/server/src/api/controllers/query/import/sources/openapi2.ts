@@ -56,6 +56,7 @@ const isParameter = (
  */
 export class OpenAPI2 extends OpenAPISource {
   document!: OpenAPIV2.Document
+  private securityHeaders: Map<string, string> = new Map()
 
   private getDocsUrl = (
     operation: OpenAPIV2.OperationObject
@@ -66,6 +67,42 @@ export class OpenAPI2 extends OpenAPISource {
       this.document.info?.termsOfService ||
       this.document.info?.contact?.url
     )
+  }
+
+  private setSecurityHeaders = () => {
+    this.securityHeaders = new Map()
+    const securityDefinitions = this.document.securityDefinitions
+    if (!securityDefinitions) {
+      return
+    }
+    for (const scheme of Object.values(securityDefinitions)) {
+      const headerName = this.getSecuritySchemeHeader(scheme)
+      if (headerName) {
+        this.securityHeaders.set(headerName.toLowerCase(), headerName)
+      }
+    }
+  }
+
+  private getSecuritySchemeHeader(
+    scheme?: OpenAPIV2.SecuritySchemeObject
+  ): string | undefined {
+    if (!scheme) {
+      return undefined
+    }
+    if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
+      return scheme.name
+    }
+    if (scheme.type === "basic" || scheme.type === "oauth2") {
+      return "Authorization"
+    }
+    return undefined
+  }
+
+  private isSecurityHeader(name?: string): boolean {
+    if (!name) {
+      return false
+    }
+    return this.securityHeaders.has(name.toLowerCase())
   }
 
   private buildRestTemplateMetadata = (
@@ -110,6 +147,7 @@ export class OpenAPI2 extends OpenAPISource {
       const document: any = await this.parseData(data)
       if (isOpenAPI2(document)) {
         this.document = document
+        this.setSecurityHeaders()
         return true
       } else {
         return false
@@ -194,7 +232,12 @@ export class OpenAPI2 extends OpenAPISource {
       url,
       docsUrl,
       endpoints: await this.getEndpoints(),
+      securityHeaders: this.getSecurityHeaders(),
     }
+  }
+
+  getSecurityHeaders(): string[] {
+    return Array.from(new Set(this.securityHeaders.values()))
   }
 
   getImportSource(): string {
@@ -232,14 +275,24 @@ export class OpenAPI2 extends OpenAPISource {
         }
         const name = operation.operationId || path
         let queryString = ""
-        const headers: any = {}
+        const headers: Record<string, unknown> = {}
+        const setHeader = (headerName: string, value: unknown) => {
+          if (!headerName) {
+            return
+          }
+          const normalized = headerName.toLowerCase()
+          const existingKey = Object.keys(headers).find(
+            existing => existing.toLowerCase() === normalized
+          )
+          headers[existingKey || headerName] = value
+        }
         let primaryMimeType: string | undefined
         let requestBody: GeneratedRequestBody | undefined = undefined
         const parameters: QueryParameter[] = []
 
         if (operation.consumes) {
           primaryMimeType = operation.consumes[0]
-          headers["Content-Type"] = primaryMimeType
+          setHeader("Content-Type", primaryMimeType)
         }
 
         const formDataParams: FormDataParameter[] = []
@@ -250,6 +303,7 @@ export class OpenAPI2 extends OpenAPISource {
 
         for (let param of allParams) {
           if (parameterNotRef(param)) {
+            let skipParameterBinding = false
             switch (param.in) {
               case "query": {
                 let prefix = ""
@@ -260,7 +314,11 @@ export class OpenAPI2 extends OpenAPISource {
                 break
               }
               case "header":
-                headers[param.name] = `{{${param.name}}}`
+                if (this.isSecurityHeader(param.name)) {
+                  skipParameterBinding = true
+                  break
+                }
+                setHeader(param.name, `{{${param.name}}}`)
                 break
               case "path":
                 // do nothing: param is already in the path
@@ -296,7 +354,10 @@ export class OpenAPI2 extends OpenAPISource {
             }
 
             // add the parameter if it can be bound in our config
-            if (["query", "header", "path", "formData"].includes(param.in)) {
+            if (
+              !skipParameterBinding &&
+              ["query", "header", "path", "formData"].includes(param.in)
+            ) {
               const defaultValue =
                 param.default !== undefined ? String(param.default) : ""
               parameters.push({
@@ -320,7 +381,7 @@ export class OpenAPI2 extends OpenAPISource {
                 : "application/x-www-form-urlencoded"
             }
             if (primaryMimeType) {
-              headers["Content-Type"] = primaryMimeType
+              setHeader("Content-Type", primaryMimeType)
             }
           }
         }
