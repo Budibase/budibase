@@ -18,6 +18,18 @@
 
   export let outputs: AgentStepOutputs
 
+  type ToolCallDisplayWithReasoning = ToolCallDisplay & {
+    reasoningText?: string
+  }
+
+  type StepContentPart = ContentPart & {
+    stepIndex: number
+  }
+
+  type StepToolCallPart = Extract<StepContentPart, { type: "tool-call" }>
+  type StepToolResultPart = Extract<StepContentPart, { type: "tool-result" }>
+  type StepReasoningPart = Extract<StepContentPart, { type: "reasoning" }>
+
   function hasErrorOutput(output: unknown): boolean {
     return (
       typeof output === "object" &&
@@ -29,53 +41,82 @@
 
   $: response = outputs.response || ""
   $: steps = outputs.steps || []
-  $: allContentParts = steps.flatMap(
-    step => (step.content || []) as ContentPart[]
+  $: stepContentParts = steps.flatMap((step, stepIndex) =>
+    ((step.content || []) as ContentPart[]).map(
+      part =>
+        ({
+          ...part,
+          stepIndex,
+        }) as StepContentPart
+    )
   )
 
-  $: toolCallParts = allContentParts.filter(
-    (part): part is Extract<ContentPart, { type: "tool-call" }> =>
-      part.type === "tool-call"
+  $: toolCallParts = stepContentParts.filter(
+    (part): part is StepToolCallPart => part.type === "tool-call"
   )
-  $: toolResultParts = allContentParts.filter(
-    (part): part is Extract<ContentPart, { type: "tool-result" }> =>
-      part.type === "tool-result"
+  $: toolResultParts = stepContentParts.filter(
+    (part): part is StepToolResultPart => part.type === "tool-result"
   )
 
   $: toolResultsMap = new Map(
     toolResultParts.map(result => [result.toolCallId, result])
   )
 
-  $: toolCallsDisplay = toolCallParts.map((call): ToolCallDisplay => {
-    const result = toolResultsMap.get(call.toolCallId)
-    const output = result?.output
+  $: toolCallsDisplay = toolCallParts.map(
+    (call): ToolCallDisplayWithReasoning => {
+      const result = toolResultsMap.get(call.toolCallId)
+      const output = result?.output
 
-    let status: ToolCallDisplay["status"]
-    if (!result) {
-      status = "failed"
-    } else if (hasErrorOutput(output)) {
-      status = "error"
-    } else {
-      status = "completed"
+      let status: ToolCallDisplay["status"]
+      if (!result) {
+        status = "failed"
+      } else if (hasErrorOutput(output)) {
+        status = "error"
+      } else {
+        status = "completed"
+      }
+
+      const step = steps[call.stepIndex] as any
+
+      const stepReasoningText =
+        typeof step?.reasoningText === "string" ? step.reasoningText : undefined
+
+      const stepReasoningParts = stepContentParts.filter(
+        (part): part is StepReasoningPart =>
+          part.stepIndex === call.stepIndex && part.type === "reasoning"
+      )
+
+      const contentReasoningText = stepReasoningParts
+        .map(part => (part as any).text)
+        .filter(
+          (text): text is string =>
+            typeof text === "string" && text.trim().length > 0
+        )
+
+      const reasoningSegments: string[] = []
+      if (stepReasoningText && stepReasoningText.trim().length > 0) {
+        reasoningSegments.push(stepReasoningText)
+      }
+      if (contentReasoningText.length > 0) {
+        reasoningSegments.push(...contentReasoningText)
+      }
+
+      const reasoningText =
+        reasoningSegments.length > 0
+          ? reasoningSegments.join("\n\n")
+          : undefined
+
+      return {
+        toolCallId: call.toolCallId,
+        toolName: call.toolName,
+        displayName: humanizeToolName(call.toolName),
+        input: call.input,
+        output,
+        status,
+        reasoningText,
+      }
     }
-
-    return {
-      toolCallId: call.toolCallId,
-      toolName: call.toolName,
-      displayName: humanizeToolName(call.toolName),
-      input: call.input,
-      output,
-      status,
-    }
-  })
-
-  $: reasoningParts = allContentParts.filter(
-    (part): part is Extract<ContentPart, { type: "reasoning" }> =>
-      part.type === "reasoning"
   )
-  $: console.log(steps)
-  $: hasReasoning =
-    reasoningParts.length > 0 || steps.some(step => step.reasoningText)
 
   function humanizeToolName(toolName: string): string {
     return toolName
@@ -83,21 +124,6 @@
       .replace(/([A-Z])/g, " $1")
       .replace(/^./, str => str.toUpperCase())
       .trim()
-  }
-
-  function getReasoningText(): string {
-    const parts: string[] = []
-    // Get reasoning from content parts
-    for (const part of reasoningParts) {
-      parts.push(part.text)
-    }
-    // Also check step-level reasoningText
-    for (const step of steps) {
-      if (step.reasoningText) {
-        parts.push(step.reasoningText)
-      }
-    }
-    return parts.join("\n\n")
   }
 
   function copyToClipboard(text: string) {
@@ -139,6 +165,7 @@
   }
 
   let expandedTools = new Set<string>()
+  let expandedReasoning = new Set<string>()
 
   function toggleTool(toolCallId: string) {
     if (expandedTools.has(toolCallId)) {
@@ -147,6 +174,15 @@
       expandedTools.add(toolCallId)
     }
     expandedTools = new Set(expandedTools)
+  }
+
+  function toggleReasoning(toolCallId: string) {
+    if (expandedReasoning.has(toolCallId)) {
+      expandedReasoning.delete(toolCallId)
+    } else {
+      expandedReasoning.add(toolCallId)
+    }
+    expandedReasoning = new Set(expandedReasoning)
   }
 </script>
 
@@ -206,6 +242,26 @@
               </ListItem>
               {#if isExpanded}
                 <div class="step-details">
+                  {#if toolCall.reasoningText}
+                    <div class="detail-section reasoning-section">
+                      <div class="detail-label-row">
+                        <div class="detail-label">Reasoning</div>
+                        <span
+                          class="reasoning-toggle"
+                          on:click={() => toggleReasoning(toolCall.toolCallId)}
+                        >
+                          {expandedReasoning.has(toolCall.toolCallId)
+                            ? "Hide reasoning"
+                            : "Show reasoning"}
+                        </span>
+                      </div>
+                      {#if expandedReasoning.has(toolCall.toolCallId)}
+                        <div class="reasoning-body">
+                          <Body size="S">{toolCall.reasoningText}</Body>
+                        </div>
+                      {/if}
+                    </div>
+                  {/if}
                   <div class="detail-section">
                     <div class="detail-label">Input</div>
                     <JSONViewer
@@ -229,14 +285,6 @@
             </div>
           {/each}
         </List>
-      </div>
-    </DetailSummary>
-  {/if}
-
-  {#if hasReasoning}
-    <DetailSummary name="Reasoning" padded initiallyShow={false}>
-      <div class="reasoning-text">
-        <Body size="S">{getReasoningText()}</Body>
       </div>
     </DetailSummary>
   {/if}
@@ -311,11 +359,26 @@
     letter-spacing: 0.5px;
   }
 
-  .reasoning-text {
-    padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-75);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--border-radius-s);
+  .detail-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+  }
+
+  .reasoning-toggle {
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .reasoning-toggle:hover {
+    text-decoration: underline;
+  }
+
+  .reasoning-body {
+    padding-top: var(--spacing-xs);
     white-space: pre-wrap;
     word-break: break-word;
   }

@@ -1,6 +1,7 @@
 import { createToolSource } from "../../../../ai/tools/base/ToolSourceRegistry"
 import { Agent, Tool } from "@budibase/types"
 import { ai } from "@budibase/pro"
+import type { StepResult, ToolSet } from "ai"
 
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
@@ -71,4 +72,51 @@ export function createLiteLLMFetch(sessionId: string) {
     }
     return fetch(input, init)
   }
+}
+
+export const extractReasoningTextFromStep = (
+  step: StepResult<ToolSet>
+): string | undefined => {
+  const existing = step.reasoningText
+  if (existing && existing.trim().length > 0) {
+    return existing
+  }
+
+  const body = step.response?.body
+  if (!body || typeof body !== "object" || !("choices" in body)) {
+    return undefined
+  }
+
+  try {
+    const choices = body.choices
+    if (!Array.isArray(choices) || choices.length === 0) {
+      return undefined
+    }
+    const message = choices[0]?.message
+    const reasoning = message?.reasoning
+    if (typeof reasoning === "string" && reasoning.trim().length > 0) {
+      return reasoning
+    }
+  } catch (_error) {}
+
+  return undefined
+}
+
+export const attachReasoningToSteps = (
+  steps?: Array<StepResult<ToolSet>>
+): Array<StepResult<ToolSet>> | undefined => {
+  if (!steps || steps.length === 0) {
+    return steps
+  }
+
+  return steps.map(step => {
+    const reasoningText = extractReasoningTextFromStep(step)
+    if (!reasoningText) {
+      return step
+    }
+    return {
+      ...step,
+      reasoningText,
+    }
+  })
 }
