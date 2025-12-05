@@ -41,12 +41,10 @@
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === datasource?.source
   )
-  $: {
-    void $restTemplates
-    template = datasource?.restTemplate
+  $: template =
+    datasource?.restTemplate && $restTemplates
       ? restTemplates.getByName(datasource.restTemplate)
       : undefined
-  }
   $: selectedTemplateSpec = template
     ? template.specs?.find(
         spec => spec.version === datasource?.restTemplateVersion

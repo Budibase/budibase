@@ -198,12 +198,10 @@
     : undefined
 
   // BB Rest template specs
-  $: {
-    void $restTemplates
-    template = datasource?.restTemplate
+  $: template =
+    datasource?.restTemplate && $restTemplates
       ? restTemplates.getByName(datasource.restTemplate)
       : undefined
-  }
   $: spec = template?.specs?.[0]
 
   // ENDPOINTS - only skip loading if we have both query Id AND metadata

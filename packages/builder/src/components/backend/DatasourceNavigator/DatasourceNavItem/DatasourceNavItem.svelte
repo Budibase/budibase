@@ -14,12 +14,10 @@
   export let datasource
   let templateIcon
 
-  $: {
-    void $restTemplates
-    templateIcon = datasource?.restTemplate
+  $: templateIcon =
+    datasource?.restTemplate && $restTemplates
       ? restTemplates.getByName(datasource.restTemplate)?.icon
       : undefined
-  }
 
   let editModal
   let deleteConfirmationModal

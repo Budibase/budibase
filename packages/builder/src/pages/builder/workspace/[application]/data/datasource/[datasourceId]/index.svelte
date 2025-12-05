@@ -42,12 +42,10 @@
   let templateIcon
 
   $: datasource = $datasources.selected
-  $: {
-    void $restTemplates
-    templateIcon = datasource?.restTemplate
+  $: templateIcon =
+    datasource?.restTemplate && $restTemplates
       ? restTemplates.getByName(datasource.restTemplate)?.icon
       : undefined
-  }
 
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
