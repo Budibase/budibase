@@ -97,7 +97,9 @@ export const extractReasoningTextFromStep = (
     if (typeof reasoning === "string" && reasoning.trim().length > 0) {
       return reasoning
     }
-  } catch (_error) {}
+  } catch (error) {
+    console.log("Error extracting reasoning text from step: ", error)
+  }
 
   return undefined
 }
