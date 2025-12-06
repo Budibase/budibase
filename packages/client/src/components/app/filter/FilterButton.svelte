@@ -16,6 +16,7 @@
   export let disabled = false
   export let size: "S" | "M" | "L" = "S"
   export let buttonText = "Apply"
+  export let defaultOperator: string | undefined = undefined
 
   export let filter: SearchFilter | undefined = undefined
   export let config: FilterConfig | undefined = undefined
@@ -148,6 +149,7 @@
   {schema}
   {config}
   {buttonText}
+  {defaultOperator}
   on:change
 >
   {buttonText}
