@@ -124,7 +124,11 @@
 
       case "returnUrl":
         CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-        $goto(action.url)
+        if (action.url.startsWith("/builder")) {
+          $goto(action.url)
+        } else {
+          window.location.assign(action.url)
+        }
         break
     }
   }
