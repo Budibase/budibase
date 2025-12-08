@@ -177,11 +177,14 @@ export async function importInfo(
   const importer = new RestImporter(data)
   await importer.init()
   const info = await importer.getInfo()
+  const staticVariables = importer.getStaticServerVariables()
   ctx.body = {
     name: info.name,
     url: info.url,
     docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
+    securityHeaders: info.securityHeaders || [],
+    staticVariables,
   }
 }
 

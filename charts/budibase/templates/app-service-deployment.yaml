@@ -144,6 +144,8 @@ spec:
           value: {{ .Values.globals.posthogToken | quote }}
         - name: WORKER_URL
           value: http://worker-service:{{ .Values.services.worker.port }}
+        - name: LITELLM_URL
+          value: {{ .Values.globals.litellmUrl | quote }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL

@@ -28,6 +28,9 @@ export const EditorModes: EditorModesMap = {
   HTML: {
     name: "html",
   },
+  JSON: {
+    name: "json",
+  },
 }
 
 const buildHelperInfoNode = (helper: Helper) => {
@@ -254,44 +257,63 @@ const buildBindingInfoNode = (binding: EnrichedBinding) => {
   return ele
 }
 
-// Readdress these methods. They shouldn't be used
+interface WrapperState {
+  hasOpen: boolean
+  hasClose: boolean
+  inside: boolean
+}
+
+const getWrapperState = (
+  value: string | undefined,
+  from: number,
+  to: number,
+  openToken: string,
+  closeToken: string
+): WrapperState => {
+  const doc = value ?? ""
+  const left = doc.slice(0, from)
+  const right = doc.slice(to)
+
+  const lastOpen = left.lastIndexOf(openToken)
+  const lastClose = left.lastIndexOf(closeToken)
+  const hasOpen = lastOpen !== -1 && (lastClose === -1 || lastOpen > lastClose)
+
+  const nextClose = right.indexOf(closeToken)
+  const nextOpen = right.indexOf(openToken)
+  const hasClose = nextClose !== -1 && (nextOpen === -1 || nextClose < nextOpen)
+
+  return {
+    hasOpen,
+    hasClose,
+    inside: hasOpen && hasClose,
+  }
+}
+
 export const hbInsert = (
-  value: string,
+  value: string | undefined,
   from: number,
   to: number,
   text: string
 ) => {
-  let parsedInsert = ""
-
-  const left = from ? value.substring(0, from) : ""
-  const right = to ? value.substring(to) : ""
-
-  if (!left.includes("{{") || !right.includes("}}")) {
-    parsedInsert = `{{ ${text} }}`
-  } else {
-    parsedInsert = ` ${text} `
-  }
-
-  return parsedInsert
+  const { inside } = getWrapperState(value, from, to, "{{", "}}")
+  return inside ? ` ${text} ` : `{{ ${text} }}`
 }
 
 export const htmlInsert = (
-  value: string,
+  value: string | undefined,
   from: number,
   to: number,
   text: string
 ) => {
-  const left = from ? value.substring(0, from) : ""
-  const right = to ? value.substring(to) : ""
-
-  const leftPrefix = left.includes("{{") ? "" : "{{"
-  const rightPrefix = right.includes("}}") ? "" : "}}"
+  const state = getWrapperState(value, from, to, "{{", "}}")
+  const leftPrefix = state.hasOpen ? "" : "{{"
+  const rightPrefix = state.hasOpen && state.hasClose ? "" : "}}"
 
   return `${leftPrefix} ${text} ${rightPrefix}`
 }
 
 export function jsInsert(
-  value: string,
+  value: string | undefined,
   from: number,
   to: number,
   text: string,
@@ -302,13 +324,11 @@ export function jsInsert(
 ) {
   let parsedInsert = ""
 
-  const left = from ? value.substring(0, from) : ""
-  const right = to ? value.substring(to) : ""
   if (disableWrapping) {
     parsedInsert = text
   } else if (helper) {
     parsedInsert = `helpers.${text}()`
-  } else if (!left.includes('$("') || !right.includes('")')) {
+  } else if (!getWrapperState(value, from, to, '$("', '")').inside) {
     parsedInsert = `$("${text}")`
   } else {
     parsedInsert = text

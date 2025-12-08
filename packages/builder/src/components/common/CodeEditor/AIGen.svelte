@@ -3,7 +3,7 @@
 
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
-  import { ErrorCode, type EnrichedBinding } from "@budibase/types"
+  import { APIWarningCode, type EnrichedBinding } from "@budibase/types"
   import analytics, { Events } from "@/analytics"
   import AiInput from "../ai/AIInput.svelte"
 
@@ -51,7 +51,7 @@
     } catch (e: any) {
       console.error(e)
 
-      if ("code" in e && e.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
+      if ("code" in e && e.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
         notifications.error(
           "Monthly usage limit reached. We're exploring options to expand this soon. Questions? Contact support@budibase.com"
         )

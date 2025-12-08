@@ -57,13 +57,7 @@
 
 <Panel>
   <div class="controls" slot="controls">
-    <Button
-      cta
-      on:click={() =>
-        isTemplateDatasource
-          ? restImportModal?.show()
-          : $goto(`../../query/new/${datasource._id}`)}
-    >
+    <Button cta on:click={() => $goto(`../../query/new/${datasource._id}`)}>
       {createQueryLabel}
     </Button>
     <slot name="global-save" />

@@ -1,4 +1,5 @@
 import { events } from "@budibase/backend-core"
+import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
@@ -27,6 +28,7 @@ const oapi3CrudJson = getData("openapi3/data/crud/crud.json")
 const oapi3CrudYaml = getData("openapi3/data/crud/crud.json")
 const oapi3PetstoreJson = getData("openapi3/data/petstore/petstore.json")
 const oapi3PetstoreYaml = getData("openapi3/data/petstore/petstore.json")
+const oapi3OktaYaml = getData("openapi3/data/okta/okta.yaml")
 
 // curl
 const curl = getData("curl/data/post.txt")
@@ -42,6 +44,7 @@ const datasets = {
   oapi3CrudYaml,
   oapi3PetstoreJson,
   oapi3PetstoreYaml,
+  oapi3OktaYaml,
   // curl
   curl,
 }
@@ -128,6 +131,10 @@ describe("Rest Importer", () => {
         name: "Swagger Petstore - OpenAPI 3.0",
         endpoints: 19,
       },
+      oapi3OktaYaml: {
+        name: "Okta Management Sample",
+        endpoints: 2,
+      },
       // curl
       curl: {
         name: "example.com",
@@ -196,6 +203,10 @@ describe("Rest Importer", () => {
         count: 19,
         source: "openapi3.0",
       },
+      oapi3OktaYaml: {
+        count: 2,
+        source: "openapi3.0",
+      },
       // curl
       curl: {
         count: 1,
@@ -203,6 +214,76 @@ describe("Rest Importer", () => {
       },
     }
     await runTest(testImportQueries, assertions)
+  })
+
+  it("imports referenced parameters and request bodies from Okta specs", async () => {
+    await init(oapi3OktaYaml)
+    const datasource = await config.createDatasource()
+    const { queries } = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
+    )
+
+    const listQuery = queries.find(query => query.name === "listApps")
+    const createQuery = queries.find(query => query.name === "createApp")
+
+    expect(listQuery).toBeDefined()
+    expect(createQuery).toBeDefined()
+
+    const getParameters = listQuery?.parameters || []
+    expect(getParameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Okta-Version", default: "2025-11-0" }),
+        expect.objectContaining({ name: "limit", default: "200" }),
+        expect.objectContaining({ name: "subdomain", default: "example" }),
+      ])
+    )
+    expect(listQuery?.fields.headers?.["Okta-Version"]).toBe("{{Okta-Version}}")
+    expect(listQuery?.fields.queryString).toBe("limit={{limit}}")
+    expect(listQuery?.fields.path).toContain(
+      "https://{{subdomain}}.okta.com/api/v1/apps"
+    )
+
+    const createParameters = createQuery?.parameters || []
+    expect(createParameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Okta-Version", default: "2025-11-0" }),
+        expect.objectContaining({ name: "subdomain", default: "example" }),
+        expect.objectContaining({
+          name: "label",
+          default: "Example app",
+        }),
+        expect.objectContaining({
+          name: "settings_oauthClient_client_uri",
+          default: "https://example.okta.com/app",
+        }),
+        expect.objectContaining({
+          name: "settings_oauthClient_redirect_uris",
+          default: "https://example.okta.com/callback",
+        }),
+      ])
+    )
+
+    expect(createQuery?.fields.bodyType).toBe(BodyType.JSON)
+    expect(createQuery?.fields.path).toContain(
+      "https://{{subdomain}}.okta.com/api/v1/apps"
+    )
+    expect(createQuery?.fields.requestBody).toContain('"label": "{{ label }}"')
+    expect(createQuery?.fields.requestBody).toContain(
+      '"client_uri": "{{ settings_oauthClient_client_uri }}"'
+    )
+    expect(createQuery?.fields.requestBody).toContain(
+      "{{ settings_oauthClient_redirect_uris }}"
+    )
+
+    expect(createQuery?.restTemplateMetadata?.defaultBindings).toMatchObject({
+      label: "Example app",
+      settings_oauthClient_client_uri: "https://example.okta.com/app",
+      settings_oauthClient_redirect_uris: "https://example.okta.com/callback",
+      "Okta-Version": "2025-11-0",
+      subdomain: "example",
+    })
+
+    jest.clearAllMocks()
   })
 
   it("imports only the selected endpoint", async () => {
@@ -495,5 +576,78 @@ describe("Rest Importer", () => {
     const staticVariables = restImporter.getStaticServerVariables()
 
     expect(staticVariables).toEqual({ companyDomain: "acme" })
+  })
+
+  const openapiWithHeaderSecurity = {
+    openapi: "3.0.0",
+    info: {
+      title: "Header Security",
+      version: "1.0.0",
+    },
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "X-Apikey",
+        },
+      },
+    },
+    security: [{ ApiKeyAuth: [] }],
+    paths: {
+      "/files": {
+        get: {
+          operationId: "listFiles",
+          parameters: [
+            {
+              name: "x-apikey",
+              in: "header",
+              schema: {
+                type: "string",
+              },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "OK",
+            },
+          },
+        },
+      },
+    },
+  }
+
+  it("adds datasource header defaults from OpenAPI security schemes", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const datasource: Datasource = {
+      type: "datasource",
+      source: SourceName.REST,
+      config: {},
+    }
+
+    restImporter.prepareDatasourceConfig(datasource)
+
+    expect(datasource.config?.defaultHeaders).toEqual({ "X-Apikey": "" })
+  })
+
+  it("does not duplicate security headers in generated queries", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const datasource = await config.createDatasource()
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
+    )
+
+    expect(importResult.queries.length).toBe(1)
+    const [query] = importResult.queries
+    expect(query.parameters?.some(param => param.name === "x-apikey")).toBe(
+      false
+    )
+    expect(query.fields.headers?.["X-Apikey"]).toBeUndefined()
+  })
+
+  it("exposes security headers via importer info", async () => {
+    await init(JSON.stringify(openapiWithHeaderSecurity))
+    const info = await restImporter.getInfo()
+    expect(info.securityHeaders).toEqual(["X-Apikey"])
   })
 })
