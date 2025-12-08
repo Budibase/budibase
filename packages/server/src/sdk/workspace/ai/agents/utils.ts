@@ -74,6 +74,12 @@ export function createLiteLLMFetch(sessionId: string) {
   }
 }
 
+/**
+ * Extracts reasoning text from an agent step result. First checks if reasoningText
+ * is already present on the step, otherwise attempts to extract it from the response
+ * body structure (choices[0].message.reasoning). Returns undefined if no reasoning
+ * text is found or if extraction fails.
+ */
 export const extractReasoningTextFromStep = (
   step: StepResult<ToolSet>
 ): string | undefined => {

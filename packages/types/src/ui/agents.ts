@@ -28,5 +28,5 @@ export interface ToolCallDisplay<TOOLS extends ToolSet = ToolSet> {
   displayName: string
   input: ViewerToolCall<TOOLS>["input"]
   output?: ViewerToolResult<TOOLS>["output"]
-  status: "completed" | "failed" | "error"
+  status: "completed" | "failed" | "error" | "pending"
 }
