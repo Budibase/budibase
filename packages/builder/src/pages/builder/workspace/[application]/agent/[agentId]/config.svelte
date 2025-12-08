@@ -308,8 +308,19 @@
     <div class="config-content">
       <div class="config-form">
         <Layout paddingY="XL" gap="L">
-          <div class="name-row">
-            <div class="name-input">
+          <div class="start-pause-row">
+            <Button
+              primary={!currentAgent?.live}
+              secondary={currentAgent?.live}
+              icon={currentAgent?.live ? "pause" : "play"}
+              iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
+              on:click={toggleAgentLive}
+              disabled={togglingLive}
+              >{currentAgent?.live ? "Pause agent" : "Set agent live"}</Button
+            >
+          </div>
+          <div class="form-row">
+            <div class="form-field">
               <Input
                 label="Name"
                 labelPosition="left"
@@ -317,19 +328,21 @@
                 placeholder="Give your agent a name"
               />
             </div>
-            <EditableIcon
-              name={draft.icon}
-              color={draft.iconColor}
-              size="L"
-              on:change={e => {
-                draft.icon = e.detail.name
-                draft.iconColor = e.detail.color
-              }}
-            />
+            <div class="form-icon">
+              <EditableIcon
+                name={draft.icon}
+                color={draft.iconColor}
+                size="L"
+                on:change={e => {
+                  draft.icon = e.detail.name
+                  draft.iconColor = e.detail.color
+                }}
+              />
+            </div>
           </div>
 
-          <div class="model-row">
-            <div class="model-select">
+          <div class="form-row">
+            <div class="form-field">
               <Select
                 label="Model"
                 labelPosition="left"
@@ -338,12 +351,14 @@
                 placeholder="Select a model"
               />
             </div>
-            <ActionButton
-              size="M"
-              icon="sliders-horizontal"
-              tooltip="Manage AI configurations"
-              on:click={() => bb.settings("/ai")}
-            />
+            <div class="form-icon">
+              <ActionButton
+                size="M"
+                icon="sliders-horizontal"
+                tooltip="Manage AI configurations"
+                on:click={() => bb.settings("/ai")}
+              />
+            </div>
           </div>
 
           <div class="section">
@@ -374,58 +389,6 @@
           </div>
         </Layout>
       </div>
-
-      {#if currentAgent?.live}
-        <div class="agent-live-card">
-          <div class="live-header">
-            <div class="live-icon">
-              <Icon name="activity" size="M" />
-            </div>
-            <Heading size="S">Your agent is live.</Heading>
-          </div>
-          <div class="url-section">
-            <div class="url">
-              <Input readonly disabled value={agentUrl} />
-            </div>
-            <div class="url-actions">
-              <div class="url-action-button">
-                <Icon name="copy" size="S" on:click={copyAgentUrl} />
-              </div>
-              <div class="url-action-button">
-                <Icon
-                  name="arrow-square-out"
-                  size="S"
-                  on:click={openAgentUrl}
-                />
-              </div>
-            </div>
-          </div>
-          <div class="live-actions">
-            <Button
-              secondary
-              icon="pause"
-              on:click={toggleAgentLive}
-              disabled={togglingLive}>Pause agent</Button
-            >
-          </div>
-        </div>
-      {:else}
-        <div class="agent-live-card">
-          <Button
-            quiet
-            icon="play"
-            iconColor="var(--bb-blue)"
-            disabled={togglingLive}
-            on:click={toggleAgentLive}>Set your agent live</Button
-          >
-          <div class="live-description">
-            <Body size="S">
-              Once your agent is live, it will be available to use.
-            </Body>
-            <Body size="S">You can pause your agent at any time.</Body>
-          </div>
-        </div>
-      {/if}
     </div>
   </div>
 </div>
@@ -458,11 +421,11 @@
   .config-content {
     max-width: 840px;
     width: 100%;
+    height: 100%;
     margin: 0 auto;
     padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
     border-radius: 16px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     background: var(--spectrum-alias-background-color-primary);
@@ -470,26 +433,34 @@
 
   .config-form {
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
-  .model-row {
-    display: flex;
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: var(--spacing-m);
   }
 
-  .model-select {
-    flex: 1;
+  .form-field {
+    min-width: 0;
   }
 
-  .name-row {
+  .form-icon {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xl);
+    justify-content: center;
+    width: var(--spectrum-alias-item-height-m);
+    height: var(--spectrum-alias-item-height-m);
+    flex-shrink: 0;
   }
 
-  .name-input {
-    flex: 1;
+  .start-pause-row {
+    display: flex;
+    justify-content: flex-end;
   }
 
   /* Override input backgrounds to match design */
@@ -501,95 +472,24 @@
   /* Align left-position labels into a clean column */
   :global(.config-form .spectrum-Form-item:not(.above)) {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    align-items: center;
+    grid-template-columns: 120px 1fr 20px;
     column-gap: var(--spacing-m);
   }
 
-  :global(.config-form .spectrum-Form-itemLabel) {
-    justify-self: flex-start;
+  :global(.config-form .container) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: var(--spectrum-alias-grid-gutter-medium);
   }
 
   .section {
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: var(--spacing-m);
-  }
-
-  .agent-live-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-xl);
-    border-radius: 12px;
-    background-color: #212121;
-    align-items: center;
-  }
-
-  .live-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    width: 100%;
-    padding: var(--spacing-xl);
-    margin: calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl)) 0;
-    background-color: #1a1a1a;
-    border-radius: 12px 12px 0 0;
-  }
-
-  .live-actions {
-    display: flex;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
-    width: 100%;
-  }
-
-  .live-header :global(.spectrum-Heading) {
-    color: #ffffff;
-    margin: 0;
-  }
-
-  .live-icon {
-    color: #4caf50;
-    display: flex;
-    align-items: center;
-  }
-
-  .url-section {
-    width: 100%;
-    display: flex;
-  }
-
-  .url {
-    width: 100%;
-  }
-
-  .url-actions {
-    margin-left: var(--spacing-m);
-    display: flex;
-    gap: var(--spacing-m);
-    align-items: center;
-  }
-
-  .url-action-button {
-    cursor: pointer;
-  }
-
-  .url-action-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .live-description {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    text-align: center;
-  }
-
-  .live-description :global(.spectrum-Body) {
-    color: #bdbdbd;
-    margin: 0;
+    min-height: 0;
   }
 
   :global(.tools-popover-container .spectrum-Popover) {
@@ -601,13 +501,15 @@
     flex-direction: row;
     gap: var(--spacing-xxs);
     justify-content: space-between;
+    flex-shrink: 0;
   }
 
   .prompt-editor {
+    flex: 1;
     margin-top: var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
-    height: 320px;
+    min-height: 0;
     overflow: hidden;
   }
 
