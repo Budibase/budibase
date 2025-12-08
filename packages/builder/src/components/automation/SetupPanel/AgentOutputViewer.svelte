@@ -36,7 +36,7 @@
   $: response = outputs.response || ""
   $: steps = outputs.steps || []
   $: stepContentParts = steps.flatMap((step, stepIndex) =>
-    ((step.content || []) as ContentPart[]).map(part => ({
+    (step.content as ContentPart[]).map(part => ({
       ...part,
       stepIndex,
     }))
@@ -142,6 +142,8 @@
         return "Error"
       case "failed":
         return "Failed"
+      case "pending":
+        return "Pending"
     }
   }
 
@@ -152,6 +154,8 @@
       case "error":
       case "failed":
         return "var(--spectrum-global-color-static-red-500)"
+      case "pending":
+        return "var(--spectrum-global-color-static-yellow-500)"
     }
   }
 
