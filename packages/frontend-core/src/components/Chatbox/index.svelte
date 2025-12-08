@@ -16,7 +16,9 @@
   export let chat: AgentChat
   export let loading: boolean = false
 
-  const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
+  const dispatch = createEventDispatcher<{
+    chatSaved: { chatId?: string; chat: AgentChat }
+  }>()
 
   let inputValue = ""
   let chatAreaElement: HTMLDivElement
@@ -75,7 +77,7 @@
       }
 
       loading = false
-      dispatch("chatSaved", { chatId: chat._id || "" })
+      dispatch("chatSaved", { chatId: chat._id, chat })
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
