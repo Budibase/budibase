@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import { ToolSourceType, type Tool } from "@budibase/types"
+  import type { ToolSourceType} from "@budibase/types";
+import { type Tool } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
 
   interface EnrichedTool extends Tool {

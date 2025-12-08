@@ -265,22 +265,6 @@
     }
   }
 
-  const agentUrl = "budibase.app/chat/3432343dff34334334dfd"
-
-  async function copyAgentUrl() {
-    try {
-      await Helpers.copyToClipboard(agentUrl)
-      notifications.success("URL copied to clipboard")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to copy URL")
-    }
-  }
-
-  function openAgentUrl() {
-    window.open(`https://${agentUrl}`, "_blank")
-  }
-
   onMount(async () => {
     await Promise.all([
       agentsStore.init(),
@@ -309,6 +293,24 @@
       <div class="config-form">
         <Layout paddingY="XL" gap="L">
           <div class="start-pause-row">
+            <div class="status-icons">
+              <Icon
+                tooltip="Documentation"
+                on:click={() =>
+                  window.open(
+                    "https://docs.budibase.com/docs/agents",
+                    "_blank"
+                  )}
+                name="info"
+                size="M"
+                color="var(--spectrum-global-color-gray-600)"
+              />
+              <Icon
+                name="check-circle"
+                size="M"
+                color="var(--spectrum-semantic-positive-color-default, var(--spectrum-global-color-green-500))"
+              />
+            </div>
             <Button
               primary={!currentAgent?.live}
               secondary={currentAgent?.live}
@@ -390,6 +392,7 @@
         </Layout>
       </div>
     </div>
+    <div class="config-preview"></div>
   </div>
 </div>
 
@@ -410,25 +413,40 @@
   .config-page {
     flex: 1 1 auto;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
     box-sizing: border-box;
+    gap: var(--spacing-l);
   }
 
   .config-content {
-    max-width: 840px;
-    width: 100%;
-    height: 100%;
-    margin: 0 auto;
+    flex: 0 0 auto;
+    width: 45%;
+    max-width: 600px;
+    min-width: 0;
+    height: calc(100% - var(--spacing-xl) * 2);
     padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
     border-radius: 16px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     background: var(--spectrum-alias-background-color-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .config-preview {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: calc(100% - var(--spacing-xl) * 2);
+    padding: var(--spacing-xl);
+    border-radius: 16px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-alias-background-color-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .config-form {
@@ -461,6 +479,13 @@
   .start-pause-row {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    margin-right: var(--spacing-m);
   }
 
   /* Override input backgrounds to match design */
