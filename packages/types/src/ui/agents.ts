@@ -7,12 +7,10 @@ export interface ToolSourceOption {
   description: string
 }
 
-export type AgentStepResult<TOOLS extends ToolSet = ToolSet> =
-  StepResult<TOOLS>
+export type AgentStepResult<TOOLS extends ToolSet = ToolSet> = StepResult<TOOLS>
 
-export type ContentPart<TOOLS extends ToolSet = ToolSet> = AgentStepResult<
-  TOOLS
->["content"][number]
+export type ContentPart<TOOLS extends ToolSet = ToolSet> =
+  AgentStepResult<TOOLS>["content"][number]
 
 export type ViewerToolCall<TOOLS extends ToolSet = ToolSet> = Extract<
   ContentPart<TOOLS>,
