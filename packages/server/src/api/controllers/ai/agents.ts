@@ -131,7 +131,7 @@ export async function remove(ctx: UserCtx<void, void>) {
   }
 
   await db.remove(chat)
-  ctx.status = 201
+  ctx.status = 204
 }
 
 export async function fetchHistory(
