@@ -100,12 +100,34 @@
     return typeof msg === "string" ? msg : NO_PREVIEW_TEXT
   }
 
-  const handleChatSaved = async (event: CustomEvent<{ chatId: string }>) => {
-    const { chatId } = event.detail
-    if (chatId && selectedAgentId) {
-      agentsStore.setCurrentChatId(chatId)
-      await agentsStore.fetchChats(selectedAgentId)
+  const handleChatSaved = async (
+    event: CustomEvent<{ chatId?: string; chat: AgentChat }>
+  ) => {
+    if (!selectedAgentId) {
+      return
     }
+
+    const { chatId, chat: savedChat } = event.detail
+    const updatedChats = await agentsStore.fetchChats(selectedAgentId)
+    const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
+
+    const newCurrentChat =
+      updatedChats.find(chatItem => chatItem._id === chatId) ||
+      (lastMessageId
+        ? updatedChats.find(chatItem =>
+            chatItem.messages?.some(message => message.id === lastMessageId)
+          )
+        : undefined)
+
+    if (!newCurrentChat?._id) {
+      return
+    }
+
+    chat = {
+      ...newCurrentChat,
+      agentId: newCurrentChat.agentId || selectedAgentId,
+    }
+    agentsStore.setCurrentChatId(newCurrentChat._id)
   }
 
   const handleAgentChange = (event: CustomEvent<string>) => {
