@@ -22,6 +22,7 @@
     isFilterStep,
   } from "@budibase/types"
   import { ActionButton } from "@budibase/bbui"
+  import Spinner from "@/components/common/Spinner.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined
   export let branch: Branch | undefined
@@ -36,18 +37,47 @@
   $: viewMode = $automationStore.viewMode
   $: isTriggerBlock = block ? isTrigger(block) : false
   $: testResults = $automationStore.testResults as TestAutomationResponse
+
+  $: progressResult =
+    viewMode !== ViewMode.LOGS && block
+      ? $automationStore.testProgress?.[block.id]?.result
+      : null
+
   $: blockResult =
     viewMode === ViewMode.LOGS && logStepData
       ? logStepData
-      : automationStore.actions.processBlockResults(testResults, block)
-  $: flowStatus = getFlowStatus(blockResult)
+      : progressResult
+        ? (progressResult as AutomationStepResult)
+        : automationStore.actions.processBlockResults(testResults, block)
+
+  $: isRunning =
+    viewMode !== ViewMode.LOGS &&
+    !!block &&
+    $automationStore.inProgressTest &&
+    $automationStore.testProgress?.[block.id]?.status === "running"
+
+  $: triggerRunning =
+    viewMode !== ViewMode.LOGS &&
+    !!block &&
+    isTriggerBlock &&
+    !!$automationStore.inProgressTest
+
+  $: flowStatus = getFlowStatus(blockResult, triggerRunning)
 
   const getFlowStatus = (
     result?:
       | AutomationTriggerResult
       | AutomationStepResult
-      | DidNotTriggerResponse
+      | DidNotTriggerResponse,
+    triggerRunning?: boolean
   ): FlowItemStatus | undefined => {
+    if (triggerRunning) {
+      return {
+        message: "Completed",
+        icon: "CheckmarkCircle",
+        type: FlowStatusType.SUCCESS,
+      }
+    }
     if (!result || !block) {
       return
     }
@@ -116,7 +146,14 @@
     {:else}
       <span />
     {/if}
-    {#if blockResult && flowStatus && !hideStatus}
+    {#if isRunning && !isTriggerBlock}
+      <span class="flow-info">
+        <Spinner
+          size="15"
+          color="var(--spectrum-semantic-positive-color-status)"
+        />
+      </span>
+    {:else if flowStatus && !hideStatus}
       <span class={`flow-${flowStatus.type} flow-status-btn`}>
         <ActionButton
           size="S"
@@ -159,6 +196,9 @@
   .flow-success :global(.spectrum-ActionButton) {
     background-color: var(--spectrum-semantic-positive-color-status);
     border-color: var(--spectrum-semantic-positive-color-status);
+  }
+  .flow-info {
+    margin-bottom: -5px;
   }
   .flow-error :global(.spectrum-ActionButton) {
     background-color: var(--spectrum-semantic-negative-color-status);

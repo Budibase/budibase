@@ -40,8 +40,12 @@ export interface AutomationEndpoints {
   ) => Promise<TriggerAutomationResponse>
   testAutomation: (
     automationdId: string,
-    data: TestAutomationRequest
+    data: TestAutomationRequest,
+    options?: { async?: boolean }
   ) => Promise<TestAutomationResponse>
+  getAutomationTestStatus: (
+    automationId: string
+  ) => Promise<Record<string, any>>
   getAutomationDefinitions: () => Promise<GetAutomationStepDefinitionsResponse>
   getAutomationLogs: (
     options: SearchAutomationLogsRequest
@@ -69,10 +73,17 @@ export const buildAutomationEndpoints = (
    * @param automationId the ID of the automation to test
    * @param data the test data to run against the automation
    */
-  testAutomation: async (automationId, data) => {
+  testAutomation: async (automationId, data, options = {}) => {
+    const suffix = options.async ? "?async=true" : ""
     return await API.post({
-      url: `/api/automations/${automationId}/test`,
+      url: `/api/automations/${automationId}/test${suffix}`,
       body: data,
+    })
+  },
+
+  getAutomationTestStatus: async automationId => {
+    return await API.get({
+      url: `/api/automations/${automationId}/test/status`,
     })
   },
 

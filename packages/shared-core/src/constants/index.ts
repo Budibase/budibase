@@ -100,6 +100,7 @@ export enum BuilderSocketEvent {
   SelectResource = "SelectResource",
   AppPublishChange = "AppPublishChange",
   AutomationChange = "AutomationChange",
+  AutomationTestProgress = "AutomationTestProgress",
   RoleChange = "RoleChange",
   WorkspaceAppChange = "WorkspaceAppChange",
 }
