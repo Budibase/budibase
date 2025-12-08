@@ -7,36 +7,44 @@
     Layout,
     notifications,
     Select,
-    TextArea,
     ActionButton,
-    Modal,
-    ModalContent,
-    Tags,
-    Tag,
     Icon,
     Helpers,
   } from "@budibase/bbui"
   import {
     ToolSourceType,
     type Agent,
+    type Tool,
+    type EnrichedBinding,
+    type CaretPositionFn,
+    type InsertAtPositionFn,
     type AgentToolSource,
   } from "@budibase/types"
+  import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
-  import { deploymentStore, datasources, restTemplates } from "@/stores/builder"
+  import { datasources, deploymentStore, restTemplates } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
-  import { getIntegrationIcon } from "@/helpers/integrationIcons"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
+  import ToolsDropdown from "./ToolsDropdown.svelte"
+
+  import {
+    EditorModes,
+    hbAutocomplete,
+    hbInsert,
+    bindingsToCompletions,
+    getHelperCompletions,
+  } from "@/components/common/CodeEditor"
   import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogo from "../logos/Budibase.svelte"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
   let toolConfigModal: AgentToolConfigModal
-  let deleteConfirmModal: Modal
-  let toolSourceToDelete: AgentToolSource | null = null
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
   let draft = {
@@ -48,6 +56,24 @@
     icon: "",
     iconColor: "",
   }
+
+  let getCaretPosition: CaretPositionFn | undefined
+  let insertAtPos: InsertAtPositionFn | undefined
+  let toolSearch = ""
+  let promptBindings: EnrichedBinding[] = []
+  let promptCompletions: BindingCompletion[] = []
+
+  interface EnrichedTool extends Tool {
+    sourceLabel?: string
+    sourceType?: ToolSourceType
+    readableBinding: string
+    runtimeBinding: string
+    icon?: IconInfo
+  }
+
+  let availableTools: EnrichedTool[] = []
+  let filteredTools: EnrichedTool[] = []
+  let toolSections: Record<string, EnrichedTool[]> = {}
 
   $: currentAgent = $selectedAgent
 
@@ -68,6 +94,131 @@
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
+
+  function getToolSourceIcon(toolSource: AgentToolSource) {
+    if (toolSource.type === ToolSourceType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
+      if (ds?.restTemplate) {
+        const result = getIntegrationIcon(
+          IntegrationTypes.REST,
+          ds.restTemplate,
+          restTemplates.getByName(ds.restTemplate)?.icon
+        )
+        return result
+      }
+    }
+    return { icon: BudibaseLogo }
+  }
+
+  const slugify = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")
+
+  const getBindingPrefix = (
+    sourceType: ToolSourceType | undefined,
+    sourceLabel: string | undefined
+  ): string => {
+    if (sourceType === ToolSourceType.BUDIBASE) {
+      return "budibase"
+    }
+    if (sourceType === ToolSourceType.REST_QUERY && sourceLabel) {
+      return `api.${slugify(sourceLabel)}`
+    }
+    return "tool"
+  }
+
+  const getSectionName = (sourceType: ToolSourceType | undefined): string => {
+    if (sourceType === ToolSourceType.BUDIBASE) {
+      return "Budibase"
+    }
+    if (sourceType === ToolSourceType.REST_QUERY) {
+      return "API tools"
+    }
+    return "Tools"
+  }
+
+  $: availableTools = ($agentsStore.toolSources || []).flatMap(source =>
+    (source.tools || []).map(tool => {
+      const prefix = getBindingPrefix(source.type, source.label)
+      return {
+        ...tool,
+        sourceLabel: source.label,
+        sourceType: source.type,
+        readableBinding: `${prefix}.${tool.name}`,
+        runtimeBinding: tool.name,
+        icon: getToolSourceIcon(source),
+      }
+    })
+  )
+
+  $: filteredTools =
+    toolSearch.trim().length === 0
+      ? availableTools
+      : availableTools.filter(tool => {
+          const query = toolSearch.toLowerCase()
+          return (
+            tool.name?.toLowerCase().includes(query) ||
+            tool.readableBinding?.toLowerCase().includes(query)
+          )
+        })
+
+  $: toolSections = filteredTools.reduce<Record<string, EnrichedTool[]>>(
+    (acc, tool) => {
+      const key = getSectionName(tool.sourceType)
+      acc[key] = acc[key] || []
+      acc[key].push(tool)
+      return acc
+    },
+    {}
+  )
+
+  $: promptBindings = availableTools
+    .filter(tool => !!tool.name)
+    .map(tool => ({
+      runtimeBinding: tool.runtimeBinding,
+      readableBinding: tool.readableBinding,
+      category: getSectionName(tool.sourceType),
+      display: {
+        name: tool.description || tool.name,
+        type: "tool",
+        rank: 1,
+      },
+      icon: tool.icon?.url,
+    }))
+
+  $: promptCompletions =
+    promptBindings.length > 0
+      ? [
+          hbAutocomplete([
+            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+            ...getHelperCompletions(EditorModes.Handlebars),
+          ]),
+        ]
+      : []
+
+  const handleToolClick = (tool: EnrichedTool) => {
+    if (!tool.readableBinding) {
+      return
+    }
+    const currentValue = draft.promptInstructions || ""
+    const start = currentValue.length
+    const end = start
+    const wrapped = hbInsert(currentValue, start, end, tool.readableBinding)
+
+    if (insertAtPos) {
+      insertAtPos({
+        start,
+        end,
+        value: wrapped,
+        cursor: { anchor: start + wrapped.length },
+      })
+    } else {
+      draft.promptInstructions =
+        currentValue.slice(0, start) + wrapped + currentValue.slice(end)
+    }
+  }
 
   async function saveAgent() {
     if (!currentAgent) return
@@ -111,40 +262,6 @@
       )
     } finally {
       togglingLive = false
-    }
-  }
-
-  function getToolSourceIcon(toolSource: AgentToolSource) {
-    if (toolSource.type === ToolSourceType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
-      if (ds?.restTemplate) {
-        return getIntegrationIcon(
-          IntegrationTypes.REST,
-          ds.restTemplate,
-          restTemplates.getByName(ds.restTemplate)?.icon
-        )
-      }
-    }
-    return { icon: BudibaseLogo }
-  }
-
-  const confirmDeleteToolSource =
-    (toolSource: AgentToolSource) => (e: MouseEvent) => {
-      e.stopPropagation()
-      toolSourceToDelete = toolSource
-      deleteConfirmModal.show()
-    }
-
-  const deleteToolSource = async () => {
-    if (!toolSourceToDelete || !toolSourceToDelete.id) return
-    try {
-      await agentsStore.deleteToolSource(toolSourceToDelete.id)
-      notifications.success("Tool source deleted successfully.")
-      deleteConfirmModal.hide()
-      toolSourceToDelete = null
-    } catch (err) {
-      console.error(err)
-      notifications.error("Error deleting tool source")
     }
   }
 
@@ -211,13 +328,6 @@
             />
           </div>
 
-          <Input
-            label="Description"
-            labelPosition="left"
-            bind:value={draft.description}
-            placeholder="Give your agent a description"
-          />
-
           <div class="model-row">
             <div class="model-select">
               <Select
@@ -236,99 +346,31 @@
             />
           </div>
 
-          <!-- <div class="section section-banner">
-            <div class="section-header">
-              <Heading size="XS">Variables / Bindings</Heading>
-              <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                Add variables to your agent. For example, employee_name,
-                product, ticket_status.
-              </Body>
-              <div class="add-button">
-                <ActionButton size="S" icon="plus">Add</ActionButton>
-              </div>
-            </div>
-          </div> -->
-
-          <div class="section section-banner">
-            <div class="section-header">
-              <Heading size="XS">Tools</Heading>
-              <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                Give your agent access to internal and external tools so it can
-                complete tasks.
-              </Body>
-              {#if $agentsStore.toolSources.length > 0}
-                <div class="tools-tags">
-                  <Tags>
-                    {#each $agentsStore.toolSources as toolSource}
-                      {@const iconInfo = getToolSourceIcon(toolSource)}
-                      <div on:click={() => toolConfigModal.show(toolSource)}>
-                        <Tag
-                          closable
-                          on:click={confirmDeleteToolSource(toolSource)}
-                        >
-                          <div class="tag-content">
-                            {#if iconInfo?.icon}
-                              <svelte:component
-                                this={iconInfo.icon}
-                                height="14"
-                                width="14"
-                              />
-                            {:else if iconInfo?.url}
-                              <img
-                                src={iconInfo.url}
-                                alt=""
-                                class="tool-icon"
-                              />
-                            {/if}
-                            {toolSource.label ||
-                              toolSource.type.toLocaleLowerCase()}
-                          </div>
-                        </Tag>
-                      </div>
-                    {/each}
-                  </Tags>
-                </div>
-              {/if}
-              <div class="add-button">
-                <ActionButton
-                  on:click={() => toolConfigModal.show()}
-                  size="S"
-                  icon="plus">Add</ActionButton
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- <div class="section section-banner">
-            <div class="section-header">
-              <Heading size="XS">Guardrails</Heading>
-              <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                Train your agent to deliver accurate, consistent answers across
-                every workflow.
-              </Body>
-              <div class="add-button">
-                <ActionButton size="S" icon="plus">Add</ActionButton>
-              </div>
-            </div>
-          </div>
- -->
           <div class="section">
-            <Input
-              label="Goal"
-              labelPosition="left"
-              bind:value={draft.goal}
-              placeholder="Raise a security alert."
-            />
-          </div>
-
-          <div class="section">
-            <TextArea
-              label="Agent instructions"
-              labelPosition="left"
-              bind:value={draft.promptInstructions}
-              placeholder="You are the Security Agent. When a user reports a possible incident, guide them to provide type, severity, and description. After collecting inputs, call the automation raise_security_alert. Respond concisely and confirm submission."
-              minHeight={140}
-            />
+            <div class="title-tools-bar">
+              <Heading size="XS">Instructions</Heading>
+              <div class="tools-popover-container" />
+              <ToolsDropdown
+                {filteredTools}
+                {toolSections}
+                bind:toolSearch
+                onToolClick={handleToolClick}
+                onAddApiConnection={() => toolConfigModal.show()}
+              />
+            </div>
+            <div class="prompt-editor">
+              <CodeEditor
+                value={draft.promptInstructions || ""}
+                bindings={promptBindings}
+                completions={promptCompletions}
+                mode={EditorModes.Handlebars}
+                bind:getCaretPosition
+                bind:insertAtPos
+                placeholder=""
+                on:change={event =>
+                  (draft.promptInstructions = event.detail || "")}
+              />
+            </div>
           </div>
         </Layout>
       </div>
@@ -392,27 +434,6 @@
   bind:this={toolConfigModal}
   agentId={$agentsStore.currentAgentId || ""}
 />
-
-<Modal bind:this={deleteConfirmModal}>
-  <ModalContent
-    title="Delete Tool Source"
-    size="S"
-    showCancelButton={true}
-    cancelText="Cancel"
-    showConfirmButton={true}
-    confirmText="Delete"
-    showCloseIcon
-    onCancel={() => deleteConfirmModal.hide()}
-    onConfirm={deleteToolSource}
-  >
-    <div class="delete-confirm-content">
-      <Body size="S">
-        Are you sure you want to delete this tool source? This action cannot be
-        undone.
-      </Body>
-    </div>
-  </ModalContent>
-</Modal>
 
 <style>
   .config-wrapper {
@@ -495,31 +516,6 @@
     gap: var(--spacing-m);
   }
 
-  .section.section-banner {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    padding: 0;
-    border-radius: 0;
-    background-color: transparent;
-    border: none;
-    gap: var(--spacing-m);
-  }
-
-  .section-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    max-width: 100%;
-  }
-
-  .add-button {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-top: var(--spacing-s);
-  }
-
   .agent-live-card {
     display: flex;
     flex-direction: column;
@@ -596,25 +592,26 @@
     margin: 0;
   }
 
-  .tools-tags {
+  :global(.tools-popover-container .spectrum-Popover) {
+    background-color: var(--background-alt);
+  }
+
+  .title-tools-bar {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xxs);
+    justify-content: space-between;
+  }
+
+  .prompt-editor {
     margin-top: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    height: 320px;
+    overflow: hidden;
   }
 
-  .tools-tags :global(.spectrum-Tags) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
-  }
-
-  .tag-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .tool-icon {
-    width: 14px;
-    height: 14px;
-    object-fit: contain;
+  .prompt-editor :global(.cm-editor) {
+    background: var(--background-alt) !important;
   }
 </style>
