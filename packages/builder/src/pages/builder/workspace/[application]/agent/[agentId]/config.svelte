@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    Body,
     Button,
     Heading,
     Input,
@@ -9,7 +8,6 @@
     Select,
     ActionButton,
     Icon,
-    Helpers,
   } from "@budibase/bbui"
   import {
     ToolSourceType,
@@ -276,8 +274,6 @@
   })
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="config-wrapper">
   <TopBar
     breadcrumbs={[

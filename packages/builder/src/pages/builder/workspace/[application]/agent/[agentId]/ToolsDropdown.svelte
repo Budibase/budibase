@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import type { ToolSourceType} from "@budibase/types";
-import { type Tool } from "@budibase/types"
+  import type { ToolSourceType } from "@budibase/types"
+  import { type Tool } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
 
   interface EnrichedTool extends Tool {
@@ -15,7 +15,7 @@ import { type Tool } from "@budibase/types"
   export let filteredTools: EnrichedTool[]
   export let toolSections: Record<string, EnrichedTool[]>
   export let toolSearch: string
-  export let onToolClick: (tool: EnrichedTool) => void
+  export let onToolClick: (_tool: EnrichedTool) => void
   export let onAddApiConnection: () => void
 
   let toolsMenu: ActionMenu | undefined
@@ -44,10 +44,7 @@ import { type Tool } from "@budibase/types"
 
     {#if filteredTools.length === 0}
       <div class="tool-empty">
-        <Body
-          size="S"
-          color="var(--spectrum-global-color-gray-600)"
-        >
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
           No tools available
         </Body>
       </div>
@@ -80,12 +77,7 @@ import { type Tool } from "@budibase/types"
                         width="16"
                       />
                     {:else if tool?.icon?.url}
-                      <img
-                        src={tool.icon.url}
-                        alt=""
-                        width="16"
-                        height="16"
-                      />
+                      <img src={tool.icon.url} alt="" width="16" height="16" />
                     {/if}
                   </div>
                   <span class="tool-item-label">
@@ -166,4 +158,3 @@ import { type Tool } from "@budibase/types"
     font-size: var(--font-size-s);
   }
 </style>
-
