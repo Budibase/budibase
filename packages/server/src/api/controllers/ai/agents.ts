@@ -131,7 +131,7 @@ export async function remove(ctx: UserCtx<void, void>) {
   }
 
   await db.remove(chat)
-  ctx.status = 201
+  ctx.status = 204
 }
 
 export async function fetchHistory(
@@ -197,10 +197,8 @@ export async function createToolSource(
 
   const agent = await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
 
-  // Generate a unique ID for the tool source
   const toolSourceId = docIds.generateAgentToolSourceID()
 
-  // Remove agentId from tool source as it's not part of the tool source structure
   const { agentId: _, ...toolSourceData } = toolSourceRequest
 
   const toolSource: AgentToolSource = {
@@ -208,7 +206,6 @@ export async function createToolSource(
     id: toolSourceId,
   } as AgentToolSource
 
-  // Add tool source to agent's allowedTools
   const updatedAgent: Agent = {
     ...agent,
     allowedTools: [...(agent.allowedTools || []), toolSource],
@@ -240,7 +237,7 @@ export async function updateToolSource(
 
   // Find and update the tool source in allowedTools
   const updatedAllowedTools = (agent.allowedTools || []).map(ts => {
-    if ((ts as any).id === toolSourceRequest.id) {
+    if (ts.id === toolSourceRequest.id) {
       return {
         ...toolSourceData,
         id: toolSourceRequest.id,
@@ -258,7 +255,7 @@ export async function updateToolSource(
 
   // Return the updated tool source
   const updatedToolSource = updatedAllowedTools.find(
-    ts => (ts as any).id === toolSourceRequest.id
+    ts => ts.id === toolSourceRequest.id
   ) as AgentToolSource
 
   ctx.body = updatedToolSource
@@ -271,7 +268,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   // Find agent that contains this tool source
   const agents = await sdk.ai.agents.fetch()
   const agentWithToolSource = agents.find(agent =>
-    (agent.allowedTools || []).some(ts => (ts as any).id === toolSourceId)
+    (agent.allowedTools || []).some(ts => ts.id === toolSourceId)
   )
 
   if (!agentWithToolSource) {
@@ -282,7 +279,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const updatedAgent: Agent = {
     ...agentWithToolSource,
     allowedTools: (agentWithToolSource.allowedTools || []).filter(
-      ts => (ts as any).id !== toolSourceId
+      ts => ts.id !== toolSourceId
     ),
   }
 

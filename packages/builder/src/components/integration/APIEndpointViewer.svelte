@@ -276,9 +276,7 @@
 
       // Add static variables with binding syntax as defaults
       for (const [name, _] of Object.entries(staticVariables)) {
-        if (!allBindings[name]) {
-          allBindings[name] = `{{ ${name} }}`
-        }
+        allBindings[name] = `{{ ${name} }}`
       }
 
       const parameters = Object.entries(allBindings).map(
