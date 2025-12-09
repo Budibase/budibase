@@ -30,34 +30,27 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
   }
 
-  ensureChatAppForAgent = async (
-    agentId: string,
-    workspaceId?: string
-  ): Promise<ChatApp> => {
+  ensureChatApp = async (
+    workspaceId?: string,
+    fallbackAgentId?: string
+  ): Promise<ChatApp | null> => {
     const state = get(this.store)
     const chatApp = await API.fetchChatApp(
-      agentId,
+      fallbackAgentId,
       workspaceId || state.workspaceId
     )
 
     if (!chatApp?._id) {
-      throw new Error("Chat app could not be retrieved or created")
+      return null
     }
 
-    const updated = chatApp.agentIds?.includes(agentId)
-      ? chatApp
-      : await API.updateChatApp({
-          ...chatApp,
-          agentIds: [...(chatApp.agentIds || []), agentId],
-        })
-
     this.update(state => {
-      state.chatAppId = updated._id
+      state.chatAppId = chatApp._id
       state.workspaceId = workspaceId || state.workspaceId
       return state
     })
 
-    return updated
+    return chatApp
   }
 
   fetchChats = async (chatAppId?: string) => {
@@ -78,17 +71,11 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return chats
   }
 
-  selectChatAppForAgent = async (
-    agentId?: string,
-    workspaceId?: string
-  ): Promise<ChatApp | undefined> => {
-    if (!agentId) {
-      this.reset(workspaceId)
-      return
+  initChats = async (workspaceId?: string, fallbackAgentId?: string) => {
+    const chatApp = await this.ensureChatApp(workspaceId, fallbackAgentId)
+    if (chatApp?._id) {
+      await this.fetchChats(chatApp._id)
     }
-
-    const chatApp = await this.ensureChatAppForAgent(agentId, workspaceId)
-    await this.fetchChats(chatApp._id!)
     return chatApp
   }
 
