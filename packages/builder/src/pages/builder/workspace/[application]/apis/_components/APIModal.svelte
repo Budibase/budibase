@@ -8,13 +8,11 @@
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
   import {
-    type GroupTemplateSelectionDetail,
     type RestTemplateSpec,
     type RestTemplate,
     type RestTemplateGroupName,
     type RestTemplateGroup,
     type TemplateSelectionContext,
-    type TemplateSelectionDetail,
     type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
@@ -207,7 +205,7 @@
       return
     }
 
-    const groupSelection = event.detail as GroupTemplateSelectionDetail
+    const groupSelection = event.detail
     const group = templateGroupsValue.find(
       templateGroup => templateGroup.name === groupSelection.groupName
     )

@@ -29,7 +29,7 @@
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
-      group.templates.map(template => template.name as RestTemplateName)
+      group.templates.map(template => template.name)
     )
   )
   $: visibleTemplates = (templates || []).filter(
