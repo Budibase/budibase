@@ -92,4 +92,5 @@ export type FilterConfig = {
   label?: string
   _id?: string
   columnType?: FieldType
+  defaultOperator?: string
 }
