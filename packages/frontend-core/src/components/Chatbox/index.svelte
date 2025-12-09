@@ -97,7 +97,10 @@
     loading = true
 
     try {
-      const messageStream = await API.agentChatStream(updatedChat, workspaceId)
+      const messageStream = await API.streamChatConversation(
+        updatedChat,
+        workspaceId
+      )
 
       for await (const message of messageStream) {
         chat = {

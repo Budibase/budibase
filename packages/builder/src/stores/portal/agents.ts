@@ -4,10 +4,8 @@ import {
   Agent,
   AgentToolSource,
   AgentToolSourceWithTools,
-  ChatConversation,
   CreateAgentRequest,
   CreateToolSourceRequest,
-  ChatApp,
   UpdateAgentRequest,
 } from "@budibase/types"
 import { derived, get } from "svelte/store"
@@ -15,23 +13,16 @@ import { derived, get } from "svelte/store"
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
-  chats: ChatConversation[]
-  currentChatId?: string
   toolSources: AgentToolSourceWithTools[]
   agentsLoaded: boolean
-  chatAppId?: string
-  workspaceId?: string
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
     super({
       agents: [],
-      chats: [],
       toolSources: [],
       agentsLoaded: false,
-      chatAppId: undefined,
-      workspaceId: undefined,
     })
   }
 
@@ -49,68 +40,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return agents
   }
 
-  fetchChats = async (chatAppId?: string) => {
-    const targetChatAppId = chatAppId || get(this.store).chatAppId
-    if (!targetChatAppId) {
-      this.update(state => {
-        state.chats = []
-        return state
-      })
-      return []
-    }
-    const chats = await API.fetchChats(targetChatAppId)
-    this.update(state => {
-      state.chats = chats
-      return state
-    })
-    return chats
-  }
-
-  removeChat = async (chatId: string, chatAppId?: string) => {
-    await API.removeChat(chatId)
-    if (chatAppId || get(this.store).chatAppId) {
-      await this.fetchChats(chatAppId)
-    }
-  }
-
-  ensureChatAppForAgent = async (
-    agentId: string,
-    workspaceId?: string
-  ): Promise<ChatApp> => {
-    const state = get(this.store)
-    const chatApp = await API.fetchChatApp(
-      agentId,
-      workspaceId || state.workspaceId
-    )
-    if (chatApp && chatApp.agentIds?.includes(agentId)) {
-      this.update(state => {
-        state.chatAppId = chatApp._id
-        state.workspaceId = workspaceId || state.workspaceId
-        return state
-      })
-      return chatApp
-    }
-    if (!chatApp?._id) {
-      throw new Error("Chat app could not be retrieved or created")
-    }
-    const updated = await API.updateChatApp({
-      ...chatApp,
-      agentIds: [...(chatApp.agentIds || []), agentId],
-    })
-    this.update(state => {
-      state.chatAppId = updated._id
-      return state
-    })
-    return updated
-  }
-
-  selectAgent = async (agentId: string | undefined, workspaceId?: string) => {
+  selectAgent = async (agentId: string | undefined, _workspaceId?: string) => {
     if (!agentId) {
       this.update(state => {
         state.currentAgentId = undefined
-        state.chatAppId = undefined
-        state.workspaceId = workspaceId || state.workspaceId
-        state.chats = []
         state.toolSources = []
         return state
       })
@@ -119,13 +52,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.update(state => {
       state.currentAgentId = agentId
-      state.workspaceId = workspaceId || state.workspaceId
       return state
     })
 
-    const chatApp = await this.ensureChatAppForAgent(agentId, workspaceId)
-
-    await this.fetchChats(chatApp._id!)
     await this.fetchToolSources(agentId)
   }
 
@@ -189,20 +118,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   getToolSource = (type: string) => {
     return get(this.store).toolSources.find(ts => ts.type === type)
-  }
-
-  setCurrentChatId = (chatId: string) => {
-    this.update(state => {
-      state.currentChatId = chatId
-      return state
-    })
-  }
-
-  clearCurrentChatId = () => {
-    this.update(state => {
-      state.currentChatId = undefined
-      return state
-    })
   }
 
   createAgent = async (agent: CreateAgentRequest) => {

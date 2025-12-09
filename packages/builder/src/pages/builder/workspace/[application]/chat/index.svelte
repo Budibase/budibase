@@ -3,7 +3,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, chatAppsStore } from "@/stores/portal"
   import {
     Body,
     Button,
@@ -31,7 +31,7 @@
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
 
-  $: chatHistory = $agentsStore.chats || []
+  $: chatHistory = $chatAppsStore.chats || []
   $: agents = $agentsStore.agents || []
 
   const selectAgent = async (agentId: string | null) => {
@@ -39,11 +39,16 @@
     const workspaceId = $params?.application
     if (agentId) {
       await agentsStore.selectAgent(agentId, workspaceId)
-      const chatAppId = $agentsStore.chatAppId || agentId
-      chat = { ...INITIAL_CHAT, agentId, chatAppId }
-      agentsStore.clearCurrentChatId()
+      const chatApp = await chatAppsStore.selectChatAppForAgent(
+        agentId,
+        workspaceId
+      )
+      const resolvedChatAppId = chatApp?._id || agentId
+      chat = { ...INITIAL_CHAT, agentId, chatAppId: resolvedChatAppId }
+      chatAppsStore.clearCurrentChatId()
     } else {
       await agentsStore.selectAgent(undefined, workspaceId)
+      chatAppsStore.reset(workspaceId)
       chat = { ...INITIAL_CHAT }
     }
   }
@@ -54,11 +59,11 @@
       agentId: selectedAgentId || selectedChat.agentId,
       chatAppId:
         selectedChat.chatAppId ||
-        $agentsStore.chatAppId ||
+        $chatAppsStore.chatAppId ||
         selectedAgentId ||
         "",
     }
-    agentsStore.setCurrentChatId(selectedChat._id!)
+    chatAppsStore.setCurrentChatId(selectedChat._id!)
   }
 
   const deleteCurrentChat = async () => {
@@ -69,8 +74,8 @@
     deletingChat = true
 
     try {
-      await agentsStore.removeChat(chat._id, $agentsStore.chatAppId)
-      const remainingChats = $agentsStore.chats
+      await chatAppsStore.removeChat(chat._id, $chatAppsStore.chatAppId)
+      const remainingChats = $chatAppsStore.chats
       if (remainingChats.length) {
         const [nextChat] = remainingChats
         chat = {
@@ -78,14 +83,14 @@
           agentId: selectedAgentId,
           chatAppId: nextChat.chatAppId || selectedAgentId,
         }
-        agentsStore.setCurrentChatId(nextChat._id!)
+        chatAppsStore.setCurrentChatId(nextChat._id!)
       } else {
         chat = {
           ...INITIAL_CHAT,
           agentId: selectedAgentId,
-          chatAppId: $agentsStore.chatAppId || selectedAgentId,
+          chatAppId: $chatAppsStore.chatAppId || selectedAgentId,
         }
-        agentsStore.clearCurrentChatId()
+        chatAppsStore.clearCurrentChatId()
       }
     } catch (err) {
       const message =
@@ -101,9 +106,9 @@
     chat = {
       ...INITIAL_CHAT,
       agentId: selectedAgentId,
-      chatAppId: $agentsStore.chatAppId || selectedAgentId,
+      chatAppId: $chatAppsStore.chatAppId || selectedAgentId,
     }
-    agentsStore.clearCurrentChatId()
+    chatAppsStore.clearCurrentChatId()
   }
 
   const getChatPreview = (chat: ChatConversation): string => {
@@ -130,7 +135,9 @@
     }
 
     const { chatId, chat: savedChat } = event.detail
-    const updatedChats = await agentsStore.fetchChats(selectedAgentId)
+    const updatedChats = await chatAppsStore.fetchChats(
+      $chatAppsStore.chatAppId
+    )
     const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
 
     const newCurrentChat =
@@ -150,11 +157,11 @@
       agentId: newCurrentChat.agentId || selectedAgentId,
       chatAppId:
         newCurrentChat.chatAppId ||
-        $agentsStore.chatAppId ||
+        $chatAppsStore.chatAppId ||
         selectedAgentId ||
         "",
     }
-    agentsStore.setCurrentChatId(newCurrentChat._id)
+    chatAppsStore.setCurrentChatId(newCurrentChat._id)
   }
 
   const handleAgentChange = (event: CustomEvent<string>) => {
@@ -174,15 +181,15 @@
 
     await selectAgent(initialAgentId)
 
-    const initialChat = $agentsStore.chats[0]
+    const initialChat = $chatAppsStore.chats[0]
     if (initialChat) {
       chat = {
         ...initialChat,
         agentId: initialChat.agentId || initialAgentId,
         chatAppId:
-          initialChat.chatAppId || $agentsStore.chatAppId || initialAgentId,
+          initialChat.chatAppId || $chatAppsStore.chatAppId || initialAgentId,
       }
-      agentsStore.setCurrentChatId(initialChat._id!)
+      chatAppsStore.setCurrentChatId(initialChat._id!)
     }
   })
 </script>
@@ -215,7 +222,7 @@
             text={chatItem.title || "Untitled Chat"}
             subtext={getChatPreview(chatItem)}
             on:click={() => selectChat(chatItem)}
-            selected={$agentsStore.currentChatId === chatItem._id}
+            selected={$chatAppsStore.currentChatId === chatItem._id}
             withActions={false}
           />
         {/each}

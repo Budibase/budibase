@@ -20,7 +20,7 @@ const drainStream = async (stream: AsyncIterable<unknown>) => {
   }
 }
 
-describe("agentChatStream error handling", () => {
+describe("streamChatConversation error handling", () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
@@ -37,7 +37,7 @@ describe("agentChatStream error handling", () => {
     const api = createAPIClient()
 
     await expect(async () => {
-      const stream = await api.agentChatStream(chat, "workspace-123")
+      const stream = await api.streamChatConversation(chat, "workspace-123")
       await drainStream(stream)
     }).rejects.toThrow("Custom agent failure")
   })
@@ -51,7 +51,7 @@ describe("agentChatStream error handling", () => {
     const api = createAPIClient()
 
     await expect(async () => {
-      const stream = await api.agentChatStream(chat, "workspace-123")
+      const stream = await api.streamChatConversation(chat, "workspace-123")
       await drainStream(stream)
     }).rejects.toThrow("Agent action failed")
   })
