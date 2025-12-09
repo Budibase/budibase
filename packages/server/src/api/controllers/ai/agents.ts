@@ -109,7 +109,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       onFinish: async ({ messages }) => {
-        const chatId = chat._id ?? docIds.generateChatConversationID(chatAppId)
+        const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
