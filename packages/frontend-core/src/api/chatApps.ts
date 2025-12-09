@@ -21,6 +21,10 @@ export interface ChatAppEndpoints {
     agentId?: string,
     workspaceId?: string
   ) => Promise<ChatApp | null>
+  createChatConversation: (
+    chat: Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    workspaceId?: string
+  ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
 }
 
@@ -96,6 +100,37 @@ export const buildChatAppEndpoints = (
       url: `/api/chatapp${query}`,
       ...(headers && { headers }),
     })
+  },
+
+  createChatConversation: async (
+    chat: Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    workspaceId?: string
+  ) => {
+    const resolvedWorkspaceId = workspaceId || API.getAppID()
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    }
+
+    if (resolvedWorkspaceId) {
+      headers[Header.APP_ID] = resolvedWorkspaceId
+    }
+
+    const response = await fetch("/api/chat/conversations", {
+      method: "POST",
+      headers,
+      credentials: "same-origin",
+      body: JSON.stringify(chat),
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null)
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      )
+    }
+
+    return (await response.json()) as ChatConversation
   },
 
   updateChatApp: async (chatApp: UpdateChatAppRequest) => {

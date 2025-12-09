@@ -119,6 +119,43 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
 }
 
+export async function createChatConversation(
+  ctx: UserCtx<
+    Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    ChatConversation
+  >
+) {
+  const { chatAppId, agentId, title } = ctx.request.body
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+
+  if (agentId) {
+    await sdk.ai.agents.getOrThrow(agentId)
+  }
+
+  const db = context.getWorkspaceDB()
+  const chatId = docIds.generateChatConversationID()
+
+  const newChat: ChatConversation = {
+    _id: chatId,
+    chatAppId,
+    agentId,
+    title,
+    userId: ctx.user.userId || ctx.user._id,
+    messages: [],
+    createdAt: new Date().toISOString(),
+  }
+
+  await db.put(newChat)
+
+  ctx.status = 201
+  ctx.body = newChat
+}
+
 export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const db = context.getWorkspaceDB()
 

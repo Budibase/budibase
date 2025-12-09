@@ -19,6 +19,7 @@ builderAdminRoutes
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .post("/api/agent/chat/stream", ai.agentChatStream)
+  .post("/api/chat/conversations", ai.createChatConversation)
   .delete(
     "/api/chat/conversations/:chatConversationId",
     ai.removeChatConversation

@@ -73,9 +73,36 @@
       chat = { title: "", messages: [], chatAppId: "" }
     }
 
-    if (!resolvedChatAppId && !chat.chatAppId) {
+    const chatAppId = chat.chatAppId || resolvedChatAppId
+
+    if (!chatAppId) {
       notifications.error("Chat app could not be created")
       return
+    }
+
+    if (!chat._id && (!chat.messages || chat.messages.length === 0)) {
+      try {
+        const newChat = await API.createChatConversation(
+          {
+            chatAppId,
+            agentId: chat.agentId,
+            title: chat.title,
+          },
+          workspaceId
+        )
+
+        chat = {
+          ...chat,
+          ...newChat,
+          chatAppId,
+        }
+      } catch (err: any) {
+        console.error(err)
+        notifications.error(
+          err?.message || "Could not start a new chat conversation"
+        )
+        return
+      }
     }
 
     const userMessage: UIMessage = {
