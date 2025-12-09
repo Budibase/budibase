@@ -19,8 +19,11 @@ builderAdminRoutes
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .post("/api/agent/chat/stream", ai.agentChatStream)
-  .delete("/api/agent/chats/:chatId", ai.remove)
-  .get("/api/chatapp/:chatAppId/chats", ai.fetchHistory)
+  .delete(
+    "/api/chat/conversations/:chatConversationId",
+    ai.removeChatConversation
+  )
+  .get("/api/chatapp/:chatAppId/chats", ai.fetchChatHistory)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)

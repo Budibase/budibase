@@ -96,7 +96,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
 
   removeChat: async (chatId: string) => {
     return await API.delete({
-      url: `/api/agent/chats/${chatId}`,
+      url: `/api/chat/conversations/${chatId}`,
     })
   },
 

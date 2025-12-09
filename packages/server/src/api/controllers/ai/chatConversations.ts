@@ -1,0 +1,165 @@
+import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
+import {
+  ChatAgentRequest,
+  ChatApp,
+  ChatConversation,
+  DocumentType,
+  FetchAgentHistoryResponse,
+  UserCtx,
+} from "@budibase/types"
+import {
+  convertToModelMessages,
+  extractReasoningMiddleware,
+  generateText,
+  streamText,
+  wrapLanguageModel,
+} from "ai"
+import sdk from "../../../sdk"
+import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
+
+export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
+  const chat = ctx.request.body
+  const db = context.getWorkspaceDB()
+  const chatAppId = chat.chatAppId
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await db.tryGet<ChatApp>(chatAppId)
+  if (!chatApp) {
+    throw new HTTPError("Chat app not found", 404)
+  }
+
+  const agentId = chat.agentId || chatApp.agentIds?.[0]
+
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  ctx.status = 200
+  ctx.set("Content-Type", "text/event-stream")
+  ctx.set("Cache-Control", "no-cache")
+  ctx.set("Connection", "keep-alive")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Headers", "Cache-Control")
+
+  ctx.res.setHeader("X-Accel-Buffering", "no")
+  ctx.res.setHeader("Transfer-Encoding", "chunked")
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  const { systemPrompt: system, tools: allTools } =
+    await sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+      includeGoal: false,
+    })
+
+  try {
+    const { modelId, apiKey, baseUrl } =
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+
+    const openai = ai.createLiteLLMOpenAI({
+      apiKey,
+      baseUrl,
+    })
+    const model = openai.chat(modelId)
+
+    const aiTools = toAiSdkTools(allTools)
+    const result = await streamText({
+      model: wrapLanguageModel({
+        model,
+        middleware: extractReasoningMiddleware({
+          tagName: "think",
+        }),
+      }),
+      messages: convertToModelMessages(chat.messages),
+      system,
+      tools: aiTools,
+    })
+
+    const title =
+      chat.title ||
+      (
+        await generateText({
+          model,
+          messages: [convertToModelMessages(chat.messages)[0]],
+          system: ai.agentHistoryTitleSystemPrompt(),
+        })
+      ).text
+
+    ctx.respond = false
+    result.pipeUIMessageStreamToResponse(ctx.res, {
+      originalMessages: chat.messages,
+      onFinish: async ({ messages }) => {
+        const chatId = chat._id ?? docIds.generateChatConversationID()
+        const existingChat = chat._id
+          ? await db.tryGet<ChatConversation>(chat._id)
+          : null
+
+        const updatedChat: ChatConversation = {
+          _id: chatId,
+          ...(existingChat?._rev && { _rev: existingChat._rev }),
+          chatAppId,
+          userId: ctx.user.userId || ctx.user._id,
+          agentId,
+          title,
+          messages,
+        }
+        await db.put(updatedChat)
+      },
+    })
+    return
+  } catch (error: any) {
+    ctx.res.write(
+      `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
+    )
+    ctx.res.end()
+  }
+}
+
+export async function removeChatConversation(ctx: UserCtx<void, void>) {
+  const db = context.getWorkspaceDB()
+
+  const chatConversationId = ctx.params.chatConversationId
+  if (!chatConversationId) {
+    throw new HTTPError("chatConversationId is required", 400)
+  }
+
+  const chat = await db.tryGet<ChatConversation>(chatConversationId)
+  if (!chat) {
+    throw new HTTPError("chat not found", 404)
+  }
+
+  await db.remove(chat)
+  ctx.status = 204
+}
+
+export async function fetchChatHistory(
+  ctx: UserCtx<void, FetchAgentHistoryResponse, { chatAppId: string }>
+) {
+  const db = context.getWorkspaceDB()
+  const chatAppId = ctx.params.chatAppId
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+
+  const allChats = await db.allDocs<ChatConversation>(
+    docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
+      include_docs: true,
+    })
+  )
+
+  ctx.body = allChats.rows
+    .map(row => row.doc!)
+    .filter(chat => chat.chatAppId === chatAppId)
+    .sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return timeB - timeA
+    })
+}
