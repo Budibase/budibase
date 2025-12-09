@@ -249,7 +249,6 @@
     align-items: center;
     flex-shrink: 0;
     margin-right: 10px;
-    margin-top: 10px;
   }
 
   .api-icon.group-icon {
@@ -270,6 +269,7 @@
   }
 
   .api-main .contents {
+    padding-top: var(--spacing-xl);
     padding-left: var(--spectrum-dialog-confirm-padding);
     padding-right: var(--spectrum-dialog-confirm-padding);
   }
