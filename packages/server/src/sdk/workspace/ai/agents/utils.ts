@@ -96,12 +96,12 @@ export async function getAvailableTools(): Promise<ExecutableTool[]> {
   ])
 
   const restDatasourceNames = new Map(
-    (datasources as Datasource[])
+    datasources
       .filter(ds => ds.source === SourceName.REST)
       .map(ds => [ds._id, ds.name || "API"])
   )
 
-  const restQueryTools = (queries as Query[])
+  const restQueryTools = queries
     .filter(query => restDatasourceNames.has(query.datasourceId))
     .map(query =>
       createQueryTool(query, restDatasourceNames.get(query.datasourceId))
@@ -129,6 +129,7 @@ export async function buildPromptAndTools(
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
   const allTools = await getAvailableTools()
+  const enabledToolNames = new Set(agent.enabledTools || [])
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -139,7 +140,10 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt,
-    tools: allTools,
+    tools:
+      enabledToolNames.size > 0
+        ? allTools.filter(tool => enabledToolNames.has(tool.name))
+        : allTools,
   }
 }
 

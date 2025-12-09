@@ -9,6 +9,7 @@ import {
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
+  enabledTools: agent.enabledTools || [],
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -56,6 +57,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
+    enabledTools: request.enabledTools || [],
   }
 
   const { rev } = await db.put(agent)
@@ -76,6 +78,7 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...existing,
     ...request,
     updatedAt: new Date().toISOString(),
+    enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
   }
 
   const { rev } = await db.put(updated)

@@ -51,6 +51,7 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
+    enabledTools: [] as string[],
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -68,6 +69,7 @@
   let availableTools: EnrichedTool[] = []
   let filteredTools: EnrichedTool[] = []
   let toolSections: Record<string, EnrichedTool[]> = {}
+  let readableToRuntimeBinding: Record<string, string> = {}
 
   $: currentAgent = $selectedAgent
 
@@ -80,6 +82,7 @@
       promptInstructions: currentAgent.promptInstructions || "",
       icon: currentAgent.icon || "",
       iconColor: currentAgent.iconColor || "",
+      enabledTools: currentAgent.enabledTools || [],
     }
     draftAgentId = currentAgent._id
   }
@@ -152,6 +155,16 @@
     }
   })
 
+  $: readableToRuntimeBinding = availableTools.reduce(
+    (acc, tool) => {
+      if (tool.readableBinding && tool.runtimeBinding) {
+        acc[tool.readableBinding] = tool.runtimeBinding
+      }
+      return acc
+    },
+    {} as Record<string, string>
+  )
+
   $: filteredTools =
     toolSearch.trim().length === 0
       ? availableTools
@@ -197,6 +210,11 @@
         ]
       : []
 
+  $: syncEnabledToolsFromPrompt(
+    draft.promptInstructions,
+    readableToRuntimeBinding
+  )
+
   const handleToolClick = (tool: EnrichedTool) => {
     if (!tool.readableBinding) {
       return
@@ -216,6 +234,35 @@
     } else {
       draft.promptInstructions =
         currentValue.slice(0, start) + wrapped + currentValue.slice(end)
+    }
+  }
+
+  const normaliseBinding = (binding: string) =>
+    binding
+      .replace(/^\s*\{\{\s*/, "")
+      .replace(/\s*\}\}\s*$/, "")
+      .trim()
+
+  const syncEnabledToolsFromPrompt = (
+    prompt: string | undefined | null,
+    bindingsMap: Record<string, string> = readableToRuntimeBinding
+  ) => {
+    const matches = (prompt || "").match(/\{\{[^}]+\}\}/g) || []
+    const next = Array.from(
+      new Set(
+        matches
+          .map(normaliseBinding)
+          .map(binding => bindingsMap[binding])
+          .filter(Boolean)
+      )
+    )
+
+    const current = draft.enabledTools || []
+    if (
+      next.length !== current.length ||
+      next.some(tool => !current.includes(tool))
+    ) {
+      draft.enabledTools = next
     }
   }
 
