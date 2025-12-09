@@ -14,14 +14,14 @@ export interface ExecutableTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
 
 export interface ServerToolArgs<T extends z.ZodTypeAny> {
   name: string
+  sourceType: ToolType
+  sourceLabel: string
   description: string
   parameters?: T
   handler: (args: z.infer<T>) => Promise<unknown>
 }
 
 export function newTool<T extends z.ZodTypeAny>(
-  toolType: ToolType,
-  label: string,
   tool: ServerToolArgs<T>
 ): ExecutableTool<T> {
   const parameters = tool.parameters ?? (z.object({}) as unknown as T)
@@ -47,7 +47,7 @@ export function newTool<T extends z.ZodTypeAny>(
     description: tool.description,
     handler: errorAwareHandler,
     name: tool.name,
-    sourceType: toolType,
-    sourceLabel: label,
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
   }
 }
