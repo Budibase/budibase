@@ -1,11 +1,10 @@
-import { Document, Tool } from "../../"
+import { Document } from "../../"
 import type { UIMessage } from "ai"
 
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  allowedTools?: AgentToolSource[]
   promptInstructions?: string
   goal?: string
   live?: boolean
@@ -30,38 +29,15 @@ export interface RestQueryToolAuth extends BaseToolSourceAuth {}
 
 export type AgentToolSourceAuth = BudibaseToolAuth | RestQueryToolAuth
 
-export enum ToolSourceType {
+export enum ToolType {
   BUDIBASE = "BUDIBASE",
   REST_QUERY = "REST_QUERY",
 }
 
-export interface BaseToolSource extends Document {
-  id?: string
-  label?: string
-  type: ToolSourceType
-  disabledTools: string[]
-  agentId: string
-}
-
-export interface BudibaseToolSource extends BaseToolSource {
-  id?: string
-  type: ToolSourceType.BUDIBASE
-  auth: BudibaseToolAuth
-  agentId: string
-}
-
-export interface RestQueryToolSource extends BaseToolSource {
-  type: ToolSourceType.REST_QUERY
-  datasourceId: string
-  queryIds: string[]
-  auth: RestQueryToolAuth
-}
-
-export type AgentToolSource = BudibaseToolSource | RestQueryToolSource
-
-export type AgentToolSourceWithTools = (
-  | BudibaseToolSource
-  | RestQueryToolSource
-) & {
-  tools: Tool[]
+export interface Tool extends Document {
+  name: string
+  description?: string
+  sourceType: ToolType
+  sourceLabel?: string
+  auth?: AgentToolSourceAuth
 }

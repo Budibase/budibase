@@ -1,12 +1,11 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import type { ToolSourceType } from "@budibase/types"
   import { type Tool } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
 
   interface EnrichedTool extends Tool {
     sourceLabel?: string
-    sourceType?: ToolSourceType
+    sourceType?: string
     readableBinding: string
     runtimeBinding: string
     icon?: IconInfo
@@ -17,7 +16,7 @@
   export let toolSearch: string
   export let onToolClick: (_tool: EnrichedTool) => void
   export let onAddApiConnection: () => void
-
+  $: console.log("filteredTools", filteredTools)
   let toolsMenu: ActionMenu | undefined
 </script>
 

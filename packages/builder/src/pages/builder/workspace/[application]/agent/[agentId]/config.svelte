@@ -10,13 +10,12 @@
     Icon,
   } from "@budibase/bbui"
   import {
-    ToolSourceType,
+    ToolType,
     type Agent,
     type Tool,
     type EnrichedBinding,
     type CaretPositionFn,
     type InsertAtPositionFn,
-    type AgentToolSource,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
@@ -25,7 +24,6 @@
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
-  import AgentToolConfigModal from "./AgentToolConfigModal.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import ToolsDropdown from "./ToolsDropdown.svelte"
@@ -37,12 +35,12 @@
     bindingsToCompletions,
     getHelperCompletions,
   } from "@/components/common/CodeEditor"
-  import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogo from "../logos/Budibase.svelte"
+  import { goto } from "@roxi/routify"
+  import { IntegrationTypes } from "@/constants/backend"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
-  let toolConfigModal: AgentToolConfigModal
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
   let draft = {
@@ -63,7 +61,7 @@
 
   interface EnrichedTool extends Tool {
     sourceLabel?: string
-    sourceType?: ToolSourceType
+    sourceType?: string
     readableBinding: string
     runtimeBinding: string
     icon?: IconInfo
@@ -93,15 +91,20 @@
     value: config._id || "",
   }))
 
-  function getToolSourceIcon(toolSource: AgentToolSource) {
-    if (toolSource.type === ToolSourceType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d._id === toolSource.datasourceId)
+  function getToolSourceIcon(
+    sourceType: string | undefined,
+    sourceLabel: string | undefined
+  ) {
+    if (sourceType === IntegrationTypes.REST) {
+      const ds = $datasources.list.find(d => d.name === sourceLabel)
+      console.log("ds", ds)
       if (ds?.restTemplate) {
         const result = getIntegrationIcon(
           IntegrationTypes.REST,
           ds.restTemplate,
           restTemplates.getByName(ds.restTemplate)?.icon
         )
+        console.log("result", result)
         return result
       }
     }
@@ -115,41 +118,44 @@
       .replace(/^_|_$/g, "")
 
   const getBindingPrefix = (
-    sourceType: ToolSourceType | undefined,
+    sourceType: string | undefined,
     sourceLabel: string | undefined
   ): string => {
-    if (sourceType === ToolSourceType.BUDIBASE) {
+    if (sourceType === "BUDIBASE") {
       return "budibase"
     }
-    if (sourceType === ToolSourceType.REST_QUERY && sourceLabel) {
+    if (sourceType === "REST" && sourceLabel) {
       return `api.${slugify(sourceLabel)}`
     }
     return "tool"
   }
 
-  const getSectionName = (sourceType: ToolSourceType | undefined): string => {
-    if (sourceType === ToolSourceType.BUDIBASE) {
+  const getSectionName = (sourceType: string | undefined): string => {
+    if (sourceType === "BUDIBASE") {
       return "Budibase"
     }
-    if (sourceType === ToolSourceType.REST_QUERY) {
+    if (sourceType === "REST") {
       return "API tools"
     }
     return "Tools"
   }
 
-  $: availableTools = ($agentsStore.toolSources || []).flatMap(source =>
-    (source.tools || []).map(tool => {
-      const prefix = getBindingPrefix(source.type, source.label)
-      return {
-        ...tool,
-        sourceLabel: source.label,
-        sourceType: source.type,
-        readableBinding: `${prefix}.${tool.name}`,
-        runtimeBinding: tool.name,
-        icon: getToolSourceIcon(source),
-      }
-    })
-  )
+  $: availableTools = ($agentsStore.tools || []).map(tool => {
+    const sourceType = tool.sourceType
+    const sourceLabel = tool.sourceLabel
+
+    console.log("sourceType", sourceType)
+    console.log("sourceLabel", sourceLabel)
+    const prefix = getBindingPrefix(sourceType, sourceLabel)
+    return {
+      ...tool,
+      sourceLabel,
+      sourceType,
+      readableBinding: `${prefix}.${tool.name}`,
+      runtimeBinding: tool.name,
+      icon: getToolSourceIcon(sourceType, sourceLabel),
+    }
+  })
 
   $: filteredTools =
     toolSearch.trim().length === 0
@@ -264,13 +270,7 @@
   }
 
   onMount(async () => {
-    await Promise.all([
-      agentsStore.init(),
-      aiConfigsStore.fetch(),
-      $agentsStore.currentAgentId
-        ? agentsStore.fetchToolSources($agentsStore.currentAgentId)
-        : Promise.resolve(),
-    ])
+    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
   })
 </script>
 
@@ -368,7 +368,7 @@
                 {toolSections}
                 bind:toolSearch
                 onToolClick={handleToolClick}
-                onAddApiConnection={() => toolConfigModal.show()}
+                onAddApiConnection={() => $goto(`./apis`)}
               />
             </div>
             <div class="prompt-editor">
@@ -391,11 +391,6 @@
     <div class="config-preview"></div>
   </div>
 </div>
-
-<AgentToolConfigModal
-  bind:this={toolConfigModal}
-  agentId={$agentsStore.currentAgentId || ""}
-/>
 
 <style>
   .config-wrapper {

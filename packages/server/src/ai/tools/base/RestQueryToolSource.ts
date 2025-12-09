@@ -1,14 +1,15 @@
-import {
-  Tool,
-  RestQueryToolSource as RestQueryToolSourceType,
-  Query,
-} from "@budibase/types"
+import { Tool, Query } from "@budibase/types"
 import { ToolSource } from "./ToolSource"
 import { context } from "@budibase/backend-core"
 import { z } from "zod"
 import { newTool } from ".."
 import * as queryController from "../../../api/controllers/query"
 import { buildCtx } from "../../../automations/steps/utils"
+
+type RestQueryToolSourceType = {
+  queryIds?: string[]
+  datasourceId?: string
+}
 
 export class RestQueryToolSource extends ToolSource {
   private queries: Query[] = []

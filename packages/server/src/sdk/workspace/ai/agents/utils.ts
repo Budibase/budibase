@@ -1,7 +1,119 @@
-import { createToolSource } from "../../../../ai/tools/base/ToolSourceRegistry"
-import { Agent, Tool } from "@budibase/types"
+import {
+  Agent,
+  Tool,
+  SourceName,
+  type Query,
+  type Datasource,
+} from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
+import budibaseTools from "../../../../ai/tools/budibase"
+import { newTool } from "../../../../ai/tools"
+import { z } from "zod"
+import { context } from "@budibase/backend-core"
+import * as queryController from "../../../../api/controllers/query"
+import { buildCtx } from "../../../../automations/steps/utils"
+import sdk from "../../.."
+
+type ToolWithSource = Tool & {
+  sourceType?: "BUDIBASE" | "REST"
+  sourceLabel?: string
+}
+
+const sanitiseToolName = (name: string): string => {
+  if (name.length > 64) {
+    return name.substring(0, 64) + "..."
+  }
+  return name.replace(/[^a-zA-Z0-9_-]/g, "_")
+}
+
+const buildParametersSchema = (parameters: { name: string }[] = []) => {
+  const schemaFields: Record<string, z.ZodTypeAny> = {}
+
+  for (const param of parameters) {
+    schemaFields[param.name] = z
+      .string()
+      .optional()
+      .describe(`Parameter: ${param.name}`)
+  }
+
+  return z.object(schemaFields)
+}
+
+const createQueryTool = (
+  query: { name: string; _id?: string; parameters?: { name: string }[] },
+  datasourceName?: string
+): ToolWithSource => {
+  const toolName = sanitiseToolName(query.name)
+  const parametersSchema = buildParametersSchema(query.parameters || [])
+
+  const description = query.name
+
+  const tool = newTool({
+    name: toolName,
+    description,
+    parameters: parametersSchema,
+    handler: async (params: Record<string, any>) => {
+      const workspaceId = context.getWorkspaceId()
+      if (!workspaceId) {
+        return { error: "No app context available" }
+      }
+
+      const ctx: any = buildCtx(workspaceId, null, {
+        body: {
+          parameters: params,
+        },
+        params: {
+          queryId: query._id,
+        },
+      })
+
+      try {
+        await queryController.executeV2AsAutomation(ctx)
+        const { data, ...rest } = ctx.body
+        return { success: true, data, info: rest }
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err.message || "Query execution failed",
+        }
+      }
+    },
+  })
+
+  return {
+    ...tool,
+    sourceType: "REST",
+    sourceLabel: datasourceName || "API",
+  }
+}
+
+export async function getAvailableTools(): Promise<ToolWithSource[]> {
+  const [queries, datasources] = await Promise.all([
+    sdk.queries.fetch(),
+    sdk.datasources.fetch(),
+  ])
+
+  const restDatasourceNames = new Map(
+    (datasources as Datasource[])
+      .filter(ds => ds.source === SourceName.REST)
+      .map(ds => [ds._id, ds.name || "API"])
+  )
+
+  const restQueryTools = (queries as Query[])
+    .filter(query => restDatasourceNames.has(query.datasourceId))
+    .map(query =>
+      createQueryTool(query, restDatasourceNames.get(query.datasourceId))
+    )
+
+  const budibaseToolsWithMeta: ToolWithSource[] = budibaseTools.map(tool => ({
+    ...tool,
+    sourceType: "BUDIBASE",
+    sourceLabel: "Budibase",
+  }))
+
+  return [...budibaseToolsWithMeta, ...restQueryTools]
+}
 
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
@@ -16,37 +128,12 @@ export async function buildPromptAndTools(
   tools: Tool[]
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
-  const allTools: Tool[] = []
-  const toolGuidelineEntries: { toolName: string; guidelines: string }[] = []
-
-  for (const toolSource of agent.allowedTools || []) {
-    const toolSourceInstance = createToolSource(toolSource)
-
-    if (!toolSourceInstance) {
-      continue
-    }
-
-    const guidelines = toolSourceInstance.getGuidelines()
-    if (guidelines) {
-      toolGuidelineEntries.push({
-        toolName: toolSourceInstance.getName(),
-        guidelines,
-      })
-    }
-    const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
-    if (toolsToAdd.length > 0) {
-      allTools.push(...toolsToAdd)
-    }
-  }
-
-  const toolGuidelines =
-    ai.composeAutomationAgentToolGuidelines(toolGuidelineEntries)
+  const allTools = await getAvailableTools()
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
     promptInstructions: agent.promptInstructions,
-    toolGuidelines,
     includeGoal,
   })
 

@@ -1,4 +1,6 @@
-import { Tool, AgentToolSource } from "@budibase/types"
+import { Tool } from "@budibase/types"
+
+type AgentToolSource = Record<string, any>
 
 /**
  * Abstract base class for tool sources
@@ -35,18 +37,14 @@ export abstract class ToolSource {
    * Get filtered tools based on disabled tools list
    */
   getEnabledTools(): Tool[] {
-    const allTools = this.getTools()
-    const disabledTools = this.toolSource.disabledTools || []
-    return allTools.filter(tool => !disabledTools.includes(tool.name))
+    return this.getTools()
   }
 
   /**
    * Get filtered tools asynchronously based on disabled tools list
    */
   async getEnabledToolsAsync(): Promise<Tool[]> {
-    const allTools = await this.getToolsAsync()
-    const disabledTools = this.toolSource.disabledTools || []
-    return allTools.filter(tool => !disabledTools.includes(tool.name))
+    return this.getToolsAsync()
   }
 
   /**

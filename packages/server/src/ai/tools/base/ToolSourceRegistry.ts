@@ -1,7 +1,8 @@
-import { AgentToolSource } from "@budibase/types"
 import { ToolSource } from "./ToolSource"
 import { BudibaseToolSource } from "./BudibaseToolSource"
 import { RestQueryToolSource } from "./RestQueryToolSource"
+
+type AgentToolSource = Record<string, any>
 
 type ToolSourceConstructor = new (toolSource: AgentToolSource) => ToolSource
 
