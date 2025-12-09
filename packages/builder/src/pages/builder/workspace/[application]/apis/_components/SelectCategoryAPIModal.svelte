@@ -2,12 +2,13 @@
   import { Button, Divider, Select } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import type {
+    ConnectorCard,
+    GroupTemplateName,
     RestTemplate,
     RestTemplateGroup,
     RestTemplateGroupName,
-    RestTemplateGroups,
     RestTemplateName,
-    RestTemplateWithoutIcon,
+    TemplateSelection,
   } from "@budibase/types"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
 
@@ -16,38 +17,10 @@
   export let loading = false
   export let customDisabled = false
 
-  type GroupTemplateSelection = {
-    kind: "group"
-    groupName: RestTemplateGroupName
-    template: RestTemplateWithoutIcon<RestTemplateGroups[RestTemplateGroupName]>
-  }
-
-  type TemplateSelection =
-    | { kind: "template"; template: RestTemplate }
-    | GroupTemplateSelection
-
   const dispatch = createEventDispatcher<{
     selectTemplate: TemplateSelection
     custom: void
   }>()
-
-  type ConnectorCard =
-    | {
-        type: "group"
-        name: RestTemplateGroupName
-        icon: string
-        key: string
-        group: RestTemplateGroup<RestTemplateGroupName>
-      }
-    | {
-        type: "template"
-        name: RestTemplateName
-        icon: string
-        key: string
-        template: RestTemplate
-      }
-
-  type GroupTemplateName = RestTemplateGroups[RestTemplateGroupName]
 
   let scrolling = false
   let page: HTMLDivElement | undefined

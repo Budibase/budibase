@@ -8,43 +8,21 @@
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
   import {
+    type GroupTemplateSelectionDetail,
     type RestTemplateSpec,
     type RestTemplate,
     type RestTemplateGroupName,
     type RestTemplateGroup,
-    type RestTemplateGroups,
-    type RestTemplateWithoutIcon,
+    type TemplateSelectionContext,
+    type TemplateSelectionDetail,
+    type TemplateSelectionEventDetail,
     type UIIntegration,
-    type RestTemplateName,
   } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()
   export const hide = () => modal.hide()
-
-  type TemplateSelectionDetail = {
-    kind: "template"
-    template: RestTemplate
-  }
-
-  type GroupTemplateSelectionDetail = {
-    kind: "group"
-    groupName: RestTemplateGroupName
-    template: RestTemplateWithoutIcon<RestTemplateGroups[RestTemplateGroupName]>
-  }
-
-  type TemplateSelectionEventDetail =
-    | TemplateSelectionDetail
-    | GroupTemplateSelectionDetail
-
-  interface TemplateSelectionContext {
-    name: string
-    description: string
-    specs: RestTemplateSpec[]
-    icon?: string
-    restTemplateName?: RestTemplateName
-  }
 
   let modal: Modal
   let loading = false
