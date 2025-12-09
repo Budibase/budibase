@@ -274,8 +274,8 @@ export class OpenAPI3 extends OpenAPISource {
     return Array.from(new Set(this.securityHeaders.values()))
   }
 
-  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
-    const queries = await this.getQueries("")
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
 
     for (const query of queries) {
@@ -315,7 +315,7 @@ export class OpenAPI3 extends OpenAPISource {
     return endpoints
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const name = this.document.info.title || "OpenAPI Import"
     let url: string | undefined
     if (this.document.servers?.length) {
@@ -330,7 +330,7 @@ export class OpenAPI3 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: await this.getEndpoints(),
+      endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
     }
   }

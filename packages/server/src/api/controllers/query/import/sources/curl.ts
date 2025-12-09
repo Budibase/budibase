@@ -64,7 +64,7 @@ export class Curl extends ImportSource {
     return new URL(this.curl.raw_url)
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const url = this.getUrl()
     const method = this.curl.method
     const path = url.pathname

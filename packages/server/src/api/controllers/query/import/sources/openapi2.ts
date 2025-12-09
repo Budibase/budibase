@@ -216,7 +216,7 @@ export class OpenAPI2 extends OpenAPISource {
     return endpoints
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const name = this.document.info.title || "Swagger Import"
     const rawUrl = this.getUrl()?.href
     const url = rawUrl ? this.convertPathVariables(rawUrl) : undefined
@@ -228,7 +228,7 @@ export class OpenAPI2 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: await this.getEndpoints(),
+      endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
     }
   }

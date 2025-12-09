@@ -99,7 +99,7 @@ export async function getImporter({
     }
   }
 
-  const importInfo = await importer.source.getInfo()
+  const importInfo = importer.source.getInfo()
 
   return { importer, importInfo }
 }
