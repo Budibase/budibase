@@ -102,12 +102,34 @@
         workspaceId
       )
 
+      let streamedMessages: UIMessage[] = [...updatedChat.messages]
+
       for await (const message of messageStream) {
+        streamedMessages = [...streamedMessages, message]
         chat = {
           ...updatedChat,
-          messages: [...updatedChat.messages, message],
+          messages: streamedMessages,
         }
         scrollToBottom()
+      }
+
+      // When a chat is created for the first time the server generates the ID.
+      // If we don't have it locally yet, retrieve the saved conversation so
+      // subsequent prompts append to the same document instead of creating a new one.
+      if (!chat._id && chat.chatAppId) {
+        try {
+          const history = await API.fetchChatHistory(chat.chatAppId)
+          const lastMessageId = chat.messages[chat.messages.length - 1]?.id
+          const savedConversation =
+            history?.find(convo =>
+              convo.messages.some(message => message.id === lastMessageId)
+            ) || history?.[0]
+          if (savedConversation) {
+            chat = savedConversation
+          }
+        } catch (historyError) {
+          console.error(historyError)
+        }
       }
 
       loading = false
