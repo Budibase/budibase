@@ -1,4 +1,4 @@
-import { Tool } from "@budibase/types"
+import type { ExecutableTool } from ".."
 import { ToolSource } from "./ToolSource"
 import budibase from "../budibase"
 
@@ -11,7 +11,7 @@ export class BudibaseToolSource extends ToolSource {
     return "Budibase"
   }
 
-  getTools(): Tool[] {
+  getTools(): ExecutableTool[] {
     return budibase
   }
 

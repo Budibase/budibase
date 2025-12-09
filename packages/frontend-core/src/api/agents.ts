@@ -5,7 +5,7 @@ import {
   CreateAgentResponse,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
-  Tool,
+  ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -24,7 +24,7 @@ export interface AgentEndpoints {
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchTools: () => Promise<Tool[]>
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>

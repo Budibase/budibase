@@ -1,11 +1,9 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import { type Tool } from "@budibase/types"
+  import { type ToolMetadata } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
 
-  interface EnrichedTool extends Tool {
-    sourceLabel?: string
-    sourceType?: string
+  interface EnrichedTool extends ToolMetadata {
     readableBinding: string
     runtimeBinding: string
     icon?: IconInfo

@@ -10,7 +10,7 @@ import {
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
   RequiredKeys,
-  Tool,
+  ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
   UserCtx,
@@ -151,8 +151,8 @@ export async function fetchHistory(
     })
 }
 
-export async function fetchTools(ctx: UserCtx<void, Tool[]>) {
-  ctx.body = await sdk.ai.agents.getAvailableTools()
+export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
+  ctx.body = await sdk.ai.agents.getAvailableToolsMetadata()
 }
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
@@ -178,6 +178,7 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
+    enabledTools: body.enabledTools,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -204,6 +205,7 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     createdBy: body.createdBy,
+    enabledTools: body.enabledTools,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

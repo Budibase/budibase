@@ -12,7 +12,7 @@
   import {
     ToolType,
     type Agent,
-    type Tool,
+    type ToolMetadata,
     type EnrichedBinding,
     type CaretPositionFn,
     type InsertAtPositionFn,
@@ -59,9 +59,7 @@
   let promptBindings: EnrichedBinding[] = []
   let promptCompletions: BindingCompletion[] = []
 
-  interface EnrichedTool extends Tool {
-    sourceLabel?: string
-    sourceType?: string
+  interface EnrichedTool extends ToolMetadata {
     readableBinding: string
     runtimeBinding: string
     icon?: IconInfo
@@ -92,20 +90,17 @@
   }))
 
   function getToolSourceIcon(
-    sourceType: string | undefined,
+    sourceType: ToolType | undefined,
     sourceLabel: string | undefined
   ) {
-    if (sourceType === IntegrationTypes.REST) {
+    if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
-      console.log("ds", ds)
       if (ds?.restTemplate) {
-        const result = getIntegrationIcon(
+        return getIntegrationIcon(
           IntegrationTypes.REST,
           ds.restTemplate,
           restTemplates.getByName(ds.restTemplate)?.icon
         )
-        console.log("result", result)
-        return result
       }
     }
     return { icon: BudibaseLogo }
@@ -118,23 +113,23 @@
       .replace(/^_|_$/g, "")
 
   const getBindingPrefix = (
-    sourceType: string | undefined,
+    sourceType: ToolType | undefined,
     sourceLabel: string | undefined
   ): string => {
-    if (sourceType === "BUDIBASE") {
+    if (sourceType === ToolType.BUDIBASE) {
       return "budibase"
     }
-    if (sourceType === "REST" && sourceLabel) {
+    if (sourceType === ToolType.REST_QUERY && sourceLabel) {
       return `api.${slugify(sourceLabel)}`
     }
     return "tool"
   }
 
-  const getSectionName = (sourceType: string | undefined): string => {
-    if (sourceType === "BUDIBASE") {
+  const getSectionName = (sourceType: ToolType | undefined): string => {
+    if (sourceType === ToolType.BUDIBASE) {
       return "Budibase"
     }
-    if (sourceType === "REST") {
+    if (sourceType === ToolType.REST_QUERY) {
       return "API tools"
     }
     return "Tools"

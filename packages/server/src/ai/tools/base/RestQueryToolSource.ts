@@ -1,14 +1,15 @@
-import { Tool, Query } from "@budibase/types"
+import { Query, ToolType } from "@budibase/types"
 import { ToolSource } from "./ToolSource"
 import { context } from "@budibase/backend-core"
 import { z } from "zod"
-import { newTool } from ".."
+import { type ExecutableTool } from ".."
 import * as queryController from "../../../api/controllers/query"
 import { buildCtx } from "../../../automations/steps/utils"
 
 type RestQueryToolSourceType = {
   queryIds?: string[]
   datasourceId?: string
+  datasourceName?: string
 }
 
 export class RestQueryToolSource extends ToolSource {
@@ -74,19 +75,22 @@ export class RestQueryToolSource extends ToolSource {
     return z.object(schemaFields)
   }
 
-  private createQueryTool(query: Query): Tool {
+  private createQueryTool(query: Query): ExecutableTool {
     const toolName = this.sanitiseToolName(query.name)
     const parametersSchema = this.buildParametersSchema(query)
+    const config = this.toolSource
 
     const description = query.restTemplateMetadata?.description
       ? `${query.name}: ${query.restTemplateMetadata.description}`
       : `Execute REST query: ${query.name}`
 
-    return newTool({
+    return {
       name: toolName,
       description,
       parameters: parametersSchema,
-      handler: async (params: Record<string, any>) => {
+      sourceType: ToolType.REST_QUERY,
+      sourceLabel: config.datasourceName || "API",
+      handler: async (params: unknown) => {
         const workspaceId = context.getWorkspaceId()
         if (!workspaceId) {
           return { error: "No app context available" }
@@ -112,10 +116,10 @@ export class RestQueryToolSource extends ToolSource {
           }
         }
       },
-    })
+    }
   }
 
-  getTools(): Tool[] {
+  getTools(): ExecutableTool[] {
     // Note: This is synchronous but we need async loading
     // The tools are loaded lazily when first accessed
     // For now, return empty if not loaded - the async version should be used
@@ -126,7 +130,7 @@ export class RestQueryToolSource extends ToolSource {
     return this.queries.map(query => this.createQueryTool(query))
   }
 
-  async getToolsAsync(): Promise<Tool[]> {
+  async getToolsAsync(): Promise<ExecutableTool[]> {
     await this.loadQueries()
     return this.queries.map(query => this.createQueryTool(query))
   }

@@ -1,6 +1,7 @@
 import {
   Agent,
-  Tool,
+  ToolMetadata,
+  ToolType,
   SourceName,
   type Query,
   type Datasource,
@@ -8,17 +9,12 @@ import {
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
-import { newTool } from "../../../../ai/tools"
+import { type ExecutableTool } from "../../../../ai/tools"
 import { z } from "zod"
 import { context } from "@budibase/backend-core"
 import * as queryController from "../../../../api/controllers/query"
 import { buildCtx } from "../../../../automations/steps/utils"
 import sdk from "../../.."
-
-type ToolWithSource = Tool & {
-  sourceType?: "BUDIBASE" | "REST"
-  sourceLabel?: string
-}
 
 const sanitiseToolName = (name: string): string => {
   if (name.length > 64) {
@@ -43,17 +39,19 @@ const buildParametersSchema = (parameters: { name: string }[] = []) => {
 const createQueryTool = (
   query: { name: string; _id?: string; parameters?: { name: string }[] },
   datasourceName?: string
-): ToolWithSource => {
+): ExecutableTool => {
   const toolName = sanitiseToolName(query.name)
   const parametersSchema = buildParametersSchema(query.parameters || [])
 
   const description = query.name
 
-  const tool = newTool({
+  return {
     name: toolName,
     description,
     parameters: parametersSchema,
-    handler: async (params: Record<string, any>) => {
+    sourceType: ToolType.REST_QUERY,
+    sourceLabel: datasourceName || "API",
+    handler: async (params: unknown) => {
       const workspaceId = context.getWorkspaceId()
       if (!workspaceId) {
         return { error: "No app context available" }
@@ -79,16 +77,19 @@ const createQueryTool = (
         }
       }
     },
-  })
-
-  return {
-    ...tool,
-    sourceType: "REST",
-    sourceLabel: datasourceName || "API",
   }
 }
 
-export async function getAvailableTools(): Promise<ToolWithSource[]> {
+export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
+  return {
+    name: tool.name,
+    description: tool.description,
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
+  }
+}
+
+export async function getAvailableTools(): Promise<ExecutableTool[]> {
   const [queries, datasources] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
@@ -106,13 +107,12 @@ export async function getAvailableTools(): Promise<ToolWithSource[]> {
       createQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
-  const budibaseToolsWithMeta: ToolWithSource[] = budibaseTools.map(tool => ({
-    ...tool,
-    sourceType: "BUDIBASE",
-    sourceLabel: "Budibase",
-  }))
+  return [...budibaseTools, ...restQueryTools]
+}
 
-  return [...budibaseToolsWithMeta, ...restQueryTools]
+export async function getAvailableToolsMetadata(): Promise<ToolMetadata[]> {
+  const tools = await getAvailableTools()
+  return tools.map(toToolMetadata)
 }
 
 export interface BuildPromptAndToolsOptions {
@@ -125,7 +125,7 @@ export async function buildPromptAndTools(
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
-  tools: Tool[]
+  tools: ExecutableTool[]
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
   const allTools = await getAvailableTools()

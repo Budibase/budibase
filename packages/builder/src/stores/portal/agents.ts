@@ -5,7 +5,7 @@ import {
   AgentChat,
   CreateAgentRequest,
   UpdateAgentRequest,
-  Tool,
+  ToolMetadata,
 } from "@budibase/types"
 import { derived } from "svelte/store"
 
@@ -14,7 +14,7 @@ interface AgentStoreState {
   currentAgentId?: string
   chats: AgentChat[]
   currentChatId?: string
-  tools: Tool[]
+  tools: ToolMetadata[]
   agentsLoaded: boolean
 }
 

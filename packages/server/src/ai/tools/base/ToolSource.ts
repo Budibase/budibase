@@ -1,4 +1,4 @@
-import { Tool } from "@budibase/types"
+import type { ExecutableTool } from ".."
 
 type AgentToolSource = Record<string, any>
 
@@ -22,28 +22,28 @@ export abstract class ToolSource {
    * Get all available tools for this tool source
    * Implementations should handle authentication and configuration
    */
-  abstract getTools(): Tool[]
+  abstract getTools(): ExecutableTool[]
 
   /**
    * Get all available tools asynchronously
    * Override this for tool sources that need async initialization (e.g., database queries)
    * Default implementation falls back to sync getTools()
    */
-  async getToolsAsync(): Promise<Tool[]> {
+  async getToolsAsync(): Promise<ExecutableTool[]> {
     return this.getTools()
   }
 
   /**
    * Get filtered tools based on disabled tools list
    */
-  getEnabledTools(): Tool[] {
+  getEnabledTools(): ExecutableTool[] {
     return this.getTools()
   }
 
   /**
    * Get filtered tools asynchronously based on disabled tools list
    */
-  async getEnabledToolsAsync(): Promise<Tool[]> {
+  async getEnabledToolsAsync(): Promise<ExecutableTool[]> {
     return this.getToolsAsync()
   }
 
