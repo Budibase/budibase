@@ -12,7 +12,6 @@
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
   export let datasource
-  let templateIcon
 
   $: templateIcon =
     datasource?.restTemplate && $restTemplates
