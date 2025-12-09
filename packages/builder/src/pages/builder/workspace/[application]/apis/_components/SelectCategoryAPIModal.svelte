@@ -198,18 +198,6 @@
 </div>
 
 <style>
-  @property --shadow-opacity-1 {
-    syntax: "<number>";
-    initial-value: 0;
-    inherits: false;
-  }
-
-  @property --shadow-opacity-2 {
-    syntax: "<number>";
-    initial-value: 0;
-    inherits: false;
-  }
-
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -224,9 +212,6 @@
     gap: 8px;
     flex-shrink: 0;
     cursor: pointer;
-    transition:
-      background-color 0.2s ease,
-      opacity 0.2s ease;
     font-size: 14px;
     border-radius: 8px;
     border: 1px solid var(--spectrum-global-color-gray-200);
@@ -252,9 +237,6 @@
   .api img {
     width: 20px;
     height: 20px;
-    transition:
-      filter 0.2s ease,
-      opacity 0.2s ease;
   }
 
   .api-icon {
@@ -301,45 +283,6 @@
     overflow-y: auto;
     min-height: 0;
     position: relative;
-    background:
-      linear-gradient(
-        to right,
-        transparent calc(100% - 20px),
-        transparent calc(100% - 20px)
-      ),
-      linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, var(--shadow-opacity-1)) 0px,
-        rgba(0, 0, 0, var(--shadow-opacity-2)) 5px,
-        transparent 15px
-      );
-    background-repeat: no-repeat;
-    background-position: top right;
-    background-size:
-      100% 20px,
-      15px 20px;
-    transition:
-      --shadow-opacity-1 0.2s ease,
-      --shadow-opacity-2 0.2s ease;
-  }
-
-  .api-main.scrolling .contents-wrap {
-    --shadow-opacity-1: 0.2;
-    --shadow-opacity-2: 0.1;
-  }
-
-  .api-main.scrolling .shadow {
-    box-shadow: inset 0px 15px 10px -10px rgba(0, 0, 0, 0.2);
-  }
-
-  .api-main .shadow {
-    transition: box-shadow 0.2s ease;
-  }
-
-  .shadow {
-    width: 100%;
-    height: var(--spacing-l);
-    display: inline-block;
   }
 
   .group-step {
