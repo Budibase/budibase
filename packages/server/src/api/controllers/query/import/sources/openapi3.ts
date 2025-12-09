@@ -339,10 +339,7 @@ export class OpenAPI3 extends OpenAPISource {
     return "openapi3.0"
   }
 
-  getQueries = async (
-    datasourceId: string,
-    options?: GetQueriesOptions
-  ): Promise<Query[]> => {
+  getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
     const primaryServer = this.getPrimaryServer()

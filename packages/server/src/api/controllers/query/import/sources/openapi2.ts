@@ -175,8 +175,8 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
-    const queries = await this.getQueries("")
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
 
     for (const query of queries) {
@@ -241,10 +241,7 @@ export class OpenAPI2 extends OpenAPISource {
     return "openapi2.0"
   }
 
-  getQueries = async (
-    datasourceId: string,
-    options?: GetQueriesOptions
-  ): Promise<Query[]> => {
+  getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     const url = this.getUrl()
     const queries = []
     const filterIds = options?.filterIds

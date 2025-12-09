@@ -39,7 +39,7 @@ export abstract class ImportSource {
   abstract getQueries(
     datasourceId: string,
     options?: GetQueriesOptions
-  ): Promise<Query[]>
+  ): Query[]
   abstract getImportSource(): string
 
   protected buildEndpointId = (method: string, path: string): string => {
