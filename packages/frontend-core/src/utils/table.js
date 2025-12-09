@@ -16,6 +16,10 @@ export function canBeSortColumn(column) {
   if (column.calculationType) {
     return true
   }
+  // Allow static-only formula columns to be sorted
+  if (column.type === "formula" && column.formulaType === "static") {
+    return true
+  }
   if (!sharedCore.canBeSortColumn(column.type)) {
     return false
   }
