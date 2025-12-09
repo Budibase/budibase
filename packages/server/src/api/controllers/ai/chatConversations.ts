@@ -32,7 +32,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("Chat app not found", 404)
   }
 
-  const agentId = chat.agentId || chatApp.agentIds?.[0]
+  const agentId = chatApp.agentIds?.[0]
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -103,7 +103,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           ...(existingChat?._rev && { _rev: existingChat._rev }),
           chatAppId,
           userId: ctx.user.userId || ctx.user._id,
-          agentId,
           title,
           messages,
         }
@@ -121,11 +120,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
 export async function createChatConversation(
   ctx: UserCtx<
-    Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    Pick<ChatConversation, "chatAppId" | "title">,
     ChatConversation
   >
 ) {
-  const { chatAppId, agentId, title } = ctx.request.body
+  const { chatAppId, title } = ctx.request.body
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -133,17 +132,12 @@ export async function createChatConversation(
 
   await sdk.ai.chatApps.getOrThrow(chatAppId)
 
-  if (agentId) {
-    await sdk.ai.agents.getOrThrow(agentId)
-  }
-
   const db = context.getWorkspaceDB()
   const chatId = docIds.generateChatConversationID()
 
   const newChat: ChatConversation = {
     _id: chatId,
     chatAppId,
-    agentId,
     title,
     userId: ctx.user.userId || ctx.user._id,
     messages: [],

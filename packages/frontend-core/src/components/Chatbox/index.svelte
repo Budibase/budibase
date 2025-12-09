@@ -15,6 +15,7 @@
   export let workspaceId: string
   export let chat: ChatConversation
   export let loading: boolean = false
+  export let agentId: string | undefined = undefined
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversation }
@@ -36,13 +37,12 @@
       return chat.chatAppId
     }
     try {
-      const chatApp = await API.fetchChatApp(chat?.agentId, workspaceId)
+      const chatApp = await API.fetchChatApp(agentId, workspaceId)
       if (chatApp?._id) {
         const baseChat = chat || { title: "", messages: [], chatAppId: "" }
         chat = {
           ...baseChat,
           chatAppId: chatApp._id,
-          agentId: baseChat.agentId || chatApp.agentIds?.[0],
         }
         return chatApp._id
       }
@@ -85,7 +85,6 @@
         const newChat = await API.createChatConversation(
           {
             chatAppId,
-            agentId: chat.agentId,
             title: chat.title,
           },
           workspaceId

@@ -29,7 +29,6 @@ export interface ChatConversation extends Document {
   userId?: string
   title?: string
   messages: UIMessage[]
-  agentId?: string
 }
 
 export interface BaseToolSourceAuth {

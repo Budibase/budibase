@@ -22,7 +22,7 @@ export interface ChatAppEndpoints {
     workspaceId?: string
   ) => Promise<ChatApp | null>
   createChatConversation: (
-    chat: Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    chat: Pick<ChatConversation, "chatAppId" | "title">,
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
@@ -103,7 +103,7 @@ export const buildChatAppEndpoints = (
   },
 
   createChatConversation: async (
-    chat: Pick<ChatConversation, "chatAppId" | "agentId" | "title">,
+    chat: Pick<ChatConversation, "chatAppId" | "title">,
     workspaceId?: string
   ) => {
     const resolvedWorkspaceId = workspaceId || API.getAppID()

@@ -40,9 +40,8 @@
     if (agentId) {
       await agentsStore.selectAgent(agentId, workspaceId)
       await chatAppsStore.initChats(workspaceId, agentId)
-      const resolvedChatAppId =
-        $chatAppsStore.chatAppId || $chatAppsStore.chats[0]?._id || agentId
-      chat = { ...INITIAL_CHAT, agentId, chatAppId: resolvedChatAppId }
+      const resolvedChatAppId = $chatAppsStore.chatAppId || ""
+      chat = { ...INITIAL_CHAT, chatAppId: resolvedChatAppId }
       chatAppsStore.clearCurrentChatId()
     } else {
       await agentsStore.selectAgent(undefined, workspaceId)
@@ -54,12 +53,7 @@
   const selectChat = async (selectedChat: ChatConversation) => {
     chat = {
       ...selectedChat,
-      agentId: selectedAgentId || selectedChat.agentId,
-      chatAppId:
-        selectedChat.chatAppId ||
-        $chatAppsStore.chatAppId ||
-        selectedAgentId ||
-        "",
+      chatAppId: selectedChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.setCurrentChatId(selectedChat._id!)
   }
@@ -78,15 +72,13 @@
         const [nextChat] = remainingChats
         chat = {
           ...nextChat,
-          agentId: selectedAgentId,
-          chatAppId: nextChat.chatAppId || selectedAgentId,
+          chatAppId: nextChat.chatAppId || $chatAppsStore.chatAppId || "",
         }
         chatAppsStore.setCurrentChatId(nextChat._id!)
       } else {
         chat = {
           ...INITIAL_CHAT,
-          agentId: selectedAgentId,
-          chatAppId: $chatAppsStore.chatAppId || selectedAgentId,
+          chatAppId: $chatAppsStore.chatAppId || "",
         }
         chatAppsStore.clearCurrentChatId()
       }
@@ -103,8 +95,7 @@
     if (!selectedAgentId) return
     chat = {
       ...INITIAL_CHAT,
-      agentId: selectedAgentId,
-      chatAppId: $chatAppsStore.chatAppId || selectedAgentId,
+      chatAppId: $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.clearCurrentChatId()
   }
@@ -152,12 +143,7 @@
 
     chat = {
       ...newCurrentChat,
-      agentId: newCurrentChat.agentId || selectedAgentId,
-      chatAppId:
-        newCurrentChat.chatAppId ||
-        $chatAppsStore.chatAppId ||
-        selectedAgentId ||
-        "",
+      chatAppId: newCurrentChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.setCurrentChatId(newCurrentChat._id)
   }
@@ -184,9 +170,7 @@
     if (initialChat) {
       chat = {
         ...initialChat,
-        agentId: initialChat.agentId || initialAgentId,
-        chatAppId:
-          initialChat.chatAppId || $chatAppsStore.chatAppId || initialAgentId,
+        chatAppId: initialChat.chatAppId || $chatAppsStore.chatAppId || "",
       }
       chatAppsStore.setCurrentChatId(initialChat._id!)
     }
@@ -259,6 +243,7 @@
         <Chatbox
           bind:chat
           {loading}
+          agentId={selectedAgentId || undefined}
           workspaceId={$params.application}
           on:chatSaved={handleChatSaved}
         />
