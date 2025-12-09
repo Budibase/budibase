@@ -15,22 +15,16 @@ export default [
         .default(false),
     }),
     handler: async ({ showSchema }) => {
-      let tables = await sdk.tables.getAllTables()
-      let formattedTables: { id: string; tableName: string }[] = []
+      const tables = await sdk.tables.getAllTables()
       if (!showSchema) {
-        formattedTables = tables.map(table => {
-          return {
+        return {
+          tables: tables.map(table => ({
             id: table._id!,
             tableName: table.name,
-          }
-        })
+          })),
+        }
       }
-      const formatted = JSON.stringify(
-        formattedTables.length ? formattedTables : tables,
-        null,
-        2
-      )
-      return `Here are the tables in the current app:\n\n${formatted}`
+      return { tables }
     },
   }),
 
@@ -42,8 +36,7 @@ export default [
     }),
     handler: async ({ tableId }: { tableId: string }) => {
       const table = await sdk.tables.getTable(tableId)
-      const formatted = JSON.stringify(table, null, 2)
-      return `Here are the details for table ${tableId}:\n\n${formatted}`
+      return { table }
     },
   }),
 ]
