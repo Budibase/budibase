@@ -141,7 +141,7 @@ export class OpenAPI2 extends OpenAPISource {
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
-      const document: any = await this.parseData(data)
+      const document = await this.parseData(data)
       if (isOpenAPI2(document)) {
         this.document = document
         this.setSecurityHeaders()
