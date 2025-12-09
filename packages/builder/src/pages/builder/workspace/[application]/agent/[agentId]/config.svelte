@@ -138,10 +138,8 @@
   $: availableTools = ($agentsStore.tools || []).map(tool => {
     const sourceType = tool.sourceType
     const sourceLabel = tool.sourceLabel
-
-    console.log("sourceType", sourceType)
-    console.log("sourceLabel", sourceLabel)
     const prefix = getBindingPrefix(sourceType, sourceLabel)
+
     return {
       ...tool,
       sourceLabel,

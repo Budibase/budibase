@@ -1,7 +1,6 @@
 import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
-  Agent,
   AgentChat,
   ChatAgentRequest,
   CreateAgentRequest,

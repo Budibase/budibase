@@ -14,7 +14,7 @@
   export let toolSearch: string
   export let onToolClick: (_tool: EnrichedTool) => void
   export let onAddApiConnection: () => void
-  $: console.log("filteredTools", filteredTools)
+
   let toolsMenu: ActionMenu | undefined
 </script>
 
