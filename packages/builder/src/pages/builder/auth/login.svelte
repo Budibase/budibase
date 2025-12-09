@@ -19,6 +19,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
+  import { CookieUtils, Constants } from "@budibase/frontend-core"
 
   let loaded = false
   let form
@@ -45,7 +46,18 @@
         notifications.success("Logged in successfully")
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
 
-        $goto("/builder")
+        // Check for return URL cookie and redirect there if it exists
+        const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+        if (returnUrl) {
+          CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+          if (returnUrl.startsWith("/builder")) {
+            $goto(returnUrl)
+          } else {
+            window.location.assign(returnUrl)
+          }
+        } else {
+          $goto("/builder")
+        }
       }
     } catch (err) {
       notifications.error(err.message ? err.message : "Invalid credentials")
