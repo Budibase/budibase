@@ -29,6 +29,7 @@ export enum DataMode {
   INPUT = "data_in",
   OUTPUT = "data_out",
   ERRORS = "errors",
+  AGENT = "agent",
 }
 
 export enum ViewMode {

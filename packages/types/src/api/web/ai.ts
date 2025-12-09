@@ -36,7 +36,7 @@ export interface ToolArgs<T extends z.ZodTypeAny = z.ZodTypeAny> {
   name: string
   description: string
   parameters?: T
-  handler: (args: unknown) => Promise<string>
+  handler: (args: unknown) => Promise<unknown>
   strict?: boolean
 }
 
