@@ -101,6 +101,8 @@
           ds.restTemplate,
           restTemplates.getByName(ds.restTemplate)?.icon
         )
+      } else {
+        return getIntegrationIcon(IntegrationTypes.REST)
       }
     }
     return { icon: BudibaseLogo }
