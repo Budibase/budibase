@@ -1,12 +1,11 @@
+import { context, events, HTTPError } from "@budibase/backend-core"
+import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
-import { ImportInfo, ImportSource } from "./sources/base"
+import { ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
-// @ts-ignore
-import { context, events } from "@budibase/backend-core"
-import { Datasource, Query } from "@budibase/types"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -47,7 +46,65 @@ const assignDatasourceHeaderDefaults = (
   }
 }
 
-export class RestImporter {
+const resolveImportData = async (url: string) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new HTTPError(
+        `Failed to fetch import data (status ${response.status})`,
+        response.status
+      )
+    }
+    return await response.text()
+  } catch (error: any) {
+    const message = error?.message || "Unknown error"
+    throw new HTTPError(`Failed to fetch import data - ${message}`, 502)
+  }
+}
+
+export async function getImporter({
+  data,
+  url,
+}: {
+  data?: string
+  url?: string
+}) {
+  data = data?.trim()
+  url = url?.trim()
+  if (!data && !url) {
+    throw new HTTPError("Import data or url is required", 400)
+  }
+
+  if (!data && url) {
+    data = await resolveImportData(url)
+    if (!data) {
+      throw new HTTPError("Import data or url is required", 400)
+    }
+  }
+
+  const getSafeUrl = () => {
+    if (!url) {
+      throw new HTTPError("Import data or url is required", 400)
+    }
+    return url
+  }
+  data = data ?? (await resolveImportData(getSafeUrl()))
+
+  const importer = new RestImporter(data)
+
+  for (let source of importer.sources) {
+    if (await source.isSupported(importer.data)) {
+      importer.source = source
+      break
+    }
+  }
+
+  const importInfo = await importer.source.getInfo()
+
+  return { importer, importInfo }
+}
+
+class RestImporter {
   data: string
   sources: ImportSource[]
   source!: ImportSource
@@ -55,19 +112,6 @@ export class RestImporter {
   constructor(data: string) {
     this.data = data
     this.sources = [new OpenAPI2(), new OpenAPI3(), new Curl()]
-  }
-
-  init = async () => {
-    for (let source of this.sources) {
-      if (await source.isSupported(this.data)) {
-        this.source = source
-        break
-      }
-    }
-  }
-
-  getInfo = async (): Promise<ImportInfo> => {
-    return this.source.getInfo()
   }
 
   importQueries = async (
