@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { createAPIClient } from "@budibase/frontend-core"
-import type { AgentChat } from "@budibase/types"
+import type { ChatConversation } from "@budibase/types"
 
-const chat: AgentChat = {
+const chat: ChatConversation = {
   title: "Test chat",
   messages: [],
+  chatAppId: "chatapp-123",
 }
 
 const createStreamResponse = (sse: string) =>

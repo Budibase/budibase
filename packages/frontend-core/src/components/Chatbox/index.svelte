@@ -1,6 +1,6 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type { AgentChat } from "@budibase/types"
+  import type { ChatConversation } from "@budibase/types"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
@@ -13,11 +13,11 @@
   export let API = createAPIClient()
 
   export let workspaceId: string
-  export let chat: AgentChat
+  export let chat: ChatConversation
   export let loading: boolean = false
 
   const dispatch = createEventDispatcher<{
-    chatSaved: { chatId?: string; chat: AgentChat }
+    chatSaved: { chatId?: string; chat: ChatConversation }
   }>()
 
   let inputValue = ""
@@ -25,10 +25,31 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
   let lastFocusedChatId: string | undefined
-  let lastFocusedNewChat: AgentChat | undefined
+  let lastFocusedNewChat: ChatConversation | undefined
 
   $: if (chat?.messages?.length) {
     scrollToBottom()
+  }
+
+  const ensureChatApp = async (): Promise<string | undefined> => {
+    if (chat?.chatAppId) {
+      return chat.chatAppId
+    }
+    try {
+      const chatApp = await API.fetchChatApp(chat?.agentId, workspaceId)
+      if (chatApp?._id) {
+        const baseChat = chat || { title: "", messages: [], chatAppId: "" }
+        chat = {
+          ...baseChat,
+          chatAppId: chatApp._id,
+          agentId: baseChat.agentId || chatApp.agentIds?.[0],
+        }
+        return chatApp._id
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    return undefined
   }
 
   async function scrollToBottom() {
@@ -46,8 +67,15 @@
   }
 
   async function prompt() {
+    const resolvedChatAppId = await ensureChatApp()
+
     if (!chat) {
-      chat = { title: "", messages: [] }
+      chat = { title: "", messages: [], chatAppId: "" }
+    }
+
+    if (!resolvedChatAppId && !chat.chatAppId) {
+      notifications.error("Chat app could not be created")
+      return
     }
 
     const userMessage: UIMessage = {
@@ -56,8 +84,9 @@
       parts: [{ type: "text", text: inputValue }],
     }
 
-    const updatedChat: AgentChat = {
+    const updatedChat: ChatConversation = {
       ...chat,
+      chatAppId: chat.chatAppId,
       messages: [...chat.messages, userMessage],
     }
 
@@ -93,6 +122,8 @@
   }
 
   onMount(async () => {
+    await ensureChatApp()
+
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {
       await tick()

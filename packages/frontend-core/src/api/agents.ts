@@ -1,8 +1,9 @@
 import {
-  AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
+  ChatConversation,
+  ChatApp,
   CreateAgentRequest,
   CreateAgentResponse,
   CreateToolSourceRequest,
@@ -11,6 +12,7 @@ import {
   Tool,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  UpdateChatAppRequest,
 } from "@budibase/types"
 
 import { Header } from "@budibase/shared-core"
@@ -20,12 +22,17 @@ import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface AgentEndpoints {
   agentChatStream: (
-    chat: AgentChat,
+    chat: ChatConversation,
     workspaceId: string
   ) => Promise<AsyncIterable<UIMessage>>
 
   removeChat: (chatId: string) => Promise<void>
-  fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
+  fetchChats: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
+  fetchChatApp: (
+    agentId?: string,
+    workspaceId?: string
+  ) => Promise<ChatApp | null>
+  updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
 
   fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
   fetchAvailableTools: (toolSourceType: string) => Promise<Tool[]>
@@ -93,9 +100,29 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchChats: async (agentId: string) => {
+  fetchChats: async (chatAppId: string) => {
     return await API.get({
-      url: `/api/agent/${agentId}/chats`,
+      url: `/api/chatapp/${chatAppId}/chats`,
+    })
+  },
+
+  fetchChatApp: async (agentId?: string, workspaceId?: string) => {
+    const query = agentId ? `?agentId=${encodeURIComponent(agentId)}` : ""
+    const headers = workspaceId
+      ? {
+          [Header.APP_ID]: workspaceId,
+        }
+      : undefined
+    return await API.get({
+      url: `/api/chatapp${query}`,
+      ...(headers && { headers }),
+    })
+  },
+
+  updateChatApp: async (chatApp: UpdateChatAppRequest) => {
+    return await API.put({
+      url: "/api/chatapp",
+      body: chatApp as any,
     })
   },
 

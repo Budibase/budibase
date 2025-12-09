@@ -125,8 +125,12 @@ export const generateAgentID = () => {
   return `${DocumentType.AGENT}${SEPARATOR}${newid()}`
 }
 
-export const generateAgentChatID = (agentId: string) => {
-  return `${DocumentType.AGENT_CHAT}${SEPARATOR}${DocumentType.AGENT}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
+export const generateChatAppID = () => {
+  return `${DocumentType.CHAT_APP}${SEPARATOR}${newid()}`
+}
+
+export const generateChatConversationID = (chatAppId: string) => {
+  return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${DocumentType.CHAT_APP}${SEPARATOR}${chatAppId}${SEPARATOR}${newid()}`
 }
 
 export const generateAgentToolSourceID = () => {

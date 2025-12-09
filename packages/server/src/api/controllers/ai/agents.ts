@@ -2,10 +2,11 @@ import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   Agent,
-  AgentChat,
   AgentToolSource,
   AgentToolSourceWithTools,
   ChatAgentRequest,
+  ChatApp,
+  ChatConversation,
   CreateAgentRequest,
   CreateAgentResponse,
   CreateToolSourceRequest,
@@ -34,7 +35,22 @@ import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
   const db = context.getWorkspaceDB()
-  const agentId = chat.agentId
+  const chatAppId = chat.chatAppId
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await db.tryGet<ChatApp>(chatAppId)
+  if (!chatApp) {
+    throw new HTTPError("Chat app not found", 404)
+  }
+
+  const agentId = chat.agentId || chatApp.agentIds?.[0]
+
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
 
   // Set SSE headers and status
   ctx.status = 200
@@ -93,14 +109,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       onFinish: async ({ messages }) => {
-        const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
+        const chatId = chat._id ?? docIds.generateChatConversationID(chatAppId)
         const existingChat = chat._id
-          ? await db.tryGet<AgentChat>(chat._id)
+          ? await db.tryGet<ChatConversation>(chat._id)
           : null
 
-        const updatedChat: AgentChat = {
+        const updatedChat: ChatConversation = {
           _id: chatId,
           ...(existingChat?._rev && { _rev: existingChat._rev }),
+          chatAppId,
+          userId: ctx.user.userId || ctx.user._id,
           agentId,
           title,
           messages,
@@ -125,7 +143,7 @@ export async function remove(ctx: UserCtx<void, void>) {
     throw new HTTPError("chatId is required", 400)
   }
 
-  const chat = await db.tryGet<AgentChat>(chatId)
+  const chat = await db.tryGet<ChatConversation>(chatId)
   if (!chat) {
     throw new HTTPError("chat not found", 404)
   }
@@ -135,21 +153,26 @@ export async function remove(ctx: UserCtx<void, void>) {
 }
 
 export async function fetchHistory(
-  ctx: UserCtx<void, FetchAgentHistoryResponse>
+  ctx: UserCtx<void, FetchAgentHistoryResponse, { chatAppId: string }>
 ) {
   const db = context.getWorkspaceDB()
-  const agentId = ctx.params.agentId
-  await sdk.ai.agents.getOrThrow(agentId)
+  const chatAppId = ctx.params.chatAppId
 
-  const allChats = await db.allDocs<AgentChat>(
-    docIds.getDocParams(DocumentType.AGENT_CHAT, undefined, {
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+
+  const allChats = await db.allDocs<ChatConversation>(
+    docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
       include_docs: true,
     })
   )
 
   ctx.body = allChats.rows
     .map(row => row.doc!)
-    .filter(chat => chat.agentId === agentId)
+    .filter(chat => chat.chatAppId === chatAppId)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0

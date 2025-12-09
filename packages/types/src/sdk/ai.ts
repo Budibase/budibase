@@ -1,5 +1,5 @@
 import { Message } from "../api"
-import { AgentChat, AIProvider } from "../documents"
+import { ChatConversation, AIProvider } from "../documents"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
@@ -126,6 +126,6 @@ export interface LLMStreamChunk {
     error?: string
   }
   messages?: Message[]
-  chat?: AgentChat
+  chat?: ChatConversation
   tokensUsed?: number
 }
