@@ -119,10 +119,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 }
 
 export async function createChatConversation(
-  ctx: UserCtx<
-    Pick<ChatConversation, "chatAppId" | "title">,
-    ChatConversation
-  >
+  ctx: UserCtx<Pick<ChatConversation, "chatAppId" | "title">, ChatConversation>
 ) {
   const { chatAppId, title } = ctx.request.body
 
