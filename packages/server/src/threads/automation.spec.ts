@@ -3,11 +3,12 @@ import {
   AutomationActionStepId,
   AutomationData,
   AutomationStep,
+  AutomationEventType,
   AutomationStepType,
   AutomationTriggerStepId,
 } from "@budibase/types"
 import { Job } from "bull"
-import { BUILTIN_ACTION_DEFINITIONS } from "../automations"
+import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
 import { executeInThread } from "./automation"
@@ -24,7 +25,7 @@ describe("automation thread", () => {
     config.end()
   })
 
-  it("executes the latest automation definition for queued jobs", async () => {
+  it("executes the latest automation definition for cron jobs", async () => {
     const prodAppId = config.getProdWorkspaceId()
 
     const initialAutomation = await context.doInWorkspaceContext(
@@ -35,9 +36,16 @@ describe("automation thread", () => {
             appId: prodAppId,
             definition: {
               trigger: {
-                ...basicAutomation().definition.trigger,
-                stepId: AutomationTriggerStepId.APP,
+                id: "cron-trigger",
                 type: AutomationStepType.TRIGGER,
+                name: TRIGGER_DEFINITIONS.CRON.name,
+                tagline: TRIGGER_DEFINITIONS.CRON.tagline,
+                description: TRIGGER_DEFINITIONS.CRON.description,
+                icon: TRIGGER_DEFINITIONS.CRON.icon,
+                schema: TRIGGER_DEFINITIONS.CRON.schema,
+                stepId: AutomationTriggerStepId.CRON,
+                event: AutomationEventType.CRON_TRIGGER,
+                inputs: { cron: "* * * * *" },
               },
               steps: [],
             },
@@ -71,6 +79,54 @@ describe("automation thread", () => {
         automation: initialAutomation,
         event: {
           appId: prodAppId,
+          timestamp: Date.now(),
+        },
+      },
+    } as Job<AutomationData>
+
+    const result = await executeInThread(job)
+
+    expect(result.steps[0].stepId).toBe(AutomationTriggerStepId.CRON)
+    const logStepResult = result.steps.find(
+      step => step.id === serverLogStep.id
+    )
+    expect(logStepResult?.stepId).toBe(AutomationActionStepId.SERVER_LOG)
+    expect(logStepResult?.outputs?.success).toBe(true)
+    expect(updatedAutomation.definition.steps).toHaveLength(1)
+  })
+
+  it("uses the queued automation definition for non-cron jobs", async () => {
+    const prodAppId = config.getProdWorkspaceId()
+
+    const initialAutomation = await context.doInWorkspaceContext(
+      prodAppId,
+      async () => sdk.automations.create(basicAutomation({ appId: prodAppId }))
+    )
+
+    const { id: _ignored, ...serverLogDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+    const serverLogStep: AutomationStep = {
+      ...serverLogDefinition,
+      id: "server-log-step",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: { text: "updated definition" },
+    }
+
+    await context.doInWorkspaceContext(prodAppId, async () =>
+      sdk.automations.update({
+        ...initialAutomation,
+        definition: {
+          ...initialAutomation.definition,
+          steps: [serverLogStep],
+        },
+      })
+    )
+
+    const job = {
+      data: {
+        automation: initialAutomation,
+        event: {
+          appId: prodAppId,
         },
       },
     } as Job<AutomationData>
@@ -79,10 +135,8 @@ describe("automation thread", () => {
 
     expect(result.steps[0].stepId).toBe(AutomationTriggerStepId.APP)
     const logStepResult = result.steps.find(
-      step => step.id === serverLogStep.id
+      step => step.stepId === AutomationActionStepId.SERVER_LOG
     )
-    expect(logStepResult?.stepId).toBe(AutomationActionStepId.SERVER_LOG)
-    expect(logStepResult?.outputs?.success).toBe(true)
-    expect(updatedAutomation.definition.steps).toHaveLength(1)
+    expect(logStepResult).toBeUndefined()
   })
 })

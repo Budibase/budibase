@@ -22,6 +22,8 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isCronTrigger,
+  isEmailTrigger,
   isLogicalFilter,
   LoopV2Step,
   LoopV2StepInputs,
@@ -222,6 +224,11 @@ function setTriggerOutput(result: AutomationResults, outputs: any) {
 }
 
 async function reloadAutomation(job: Job<AutomationData>) {
+  const trigger = job.data.automation?.definition?.trigger
+  if (!trigger || (!isCronTrigger(trigger) && !isEmailTrigger(trigger))) {
+    return
+  }
+
   const appId = job.data.event.appId
   const automationId = job.data.automation._id
   if (!appId) {
