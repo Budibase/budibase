@@ -104,12 +104,13 @@ export async function getImporter(input: {
 export async function getImporter(
   input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
-  const importer = await createImporter(input)
+  const importer = await createImporter(input, true)
   return importer
 }
 
 async function createImporter(
-  input: { data?: string } | { url?: string }
+  input: { data?: string } | { url?: string },
+  skipValidation?: boolean
 ): Promise<RestImporter> {
   let data: string | undefined
   if ("url" in input && input.url) {
@@ -124,7 +125,7 @@ async function createImporter(
   }
 
   for (const source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
-    if (await source.isSupported(data)) {
+    if (await source.isSupported(data, skipValidation)) {
       return new RestImporter(source)
     }
   }

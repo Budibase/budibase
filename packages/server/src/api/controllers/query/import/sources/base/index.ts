@@ -35,7 +35,7 @@ export interface GetQueriesOptions {
 }
 
 export abstract class ImportSource {
-  abstract isSupported(data: string): Promise<boolean>
+  abstract isSupported(data: string, skipValidation?: boolean): Promise<boolean>
   abstract getInfo(): ImportInfo
   abstract getQueries(
     datasourceId: string,

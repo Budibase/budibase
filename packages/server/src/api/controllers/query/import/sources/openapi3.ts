@@ -247,9 +247,12 @@ export class OpenAPI3 extends OpenAPISource {
     return this.securityHeaders.has(name.toLowerCase())
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  isSupported = async (
+    data: string,
+    skipValidation?: boolean
+  ): Promise<boolean> => {
     try {
-      const document = await this.parseData(data)
+      const document = await this.parseData(data, !!skipValidation)
       if (isOpenAPI3(document)) {
         this.document = document
         this.serverVariableBindings = {}

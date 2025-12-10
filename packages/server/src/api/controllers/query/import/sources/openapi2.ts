@@ -139,9 +139,12 @@ export class OpenAPI2 extends OpenAPISource {
     return metadata
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  isSupported = async (
+    data: string,
+    skipValidation?: boolean
+  ): Promise<boolean> => {
     try {
-      const document = await this.parseData(data)
+      const document = await this.parseData(data, !!skipValidation)
       if (isOpenAPI2(document)) {
         this.document = document
         this.setSecurityHeaders()
