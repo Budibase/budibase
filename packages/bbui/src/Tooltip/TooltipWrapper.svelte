@@ -5,7 +5,7 @@
 
   export let tooltip: string = ""
   export let size: "S" | "M" | "L" = "M"
-  export let disabled: boolean = true
+  export let disabled: boolean = false
   export let position: TooltipPosition | undefined = undefined
 </script>
 
@@ -19,7 +19,7 @@
           class:icon-small={size === "M" || size === "S"}
           on:focus
         >
-          <Icon name="info" size="S" {disabled} hoverable />
+          <Icon name="info" size="S" hoverable {disabled} />
         </div>
       </AbsTooltip>
     </div>
@@ -29,7 +29,7 @@
 <style>
   .container {
     display: flex;
-    align-items: center;
+    align-items: baseline;
   }
   .icon-container {
     position: relative;
@@ -37,12 +37,13 @@
     justify-content: center;
     margin-left: 5px;
     margin-right: 5px;
+    color: var(--spectrum-fieldlabel-text-color, inherit);
   }
   .icon {
     transform: scale(0.75);
   }
   .icon-small {
-    margin-bottom: -2px;
+    margin-top: -2px;
   }
   .icon-container :global(i.disabled) {
     color: var(--spectrum-global-color-gray-700);
