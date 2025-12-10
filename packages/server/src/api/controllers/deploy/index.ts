@@ -166,8 +166,9 @@ async function applyPendingColumnRenames(
       }
 
       const updatedTable: Table = { ...table, pendingColumnRenames: [] }
-      await db.put(updatedTable)
-      updatedTables.push(updatedTable)
+      const putResult = await db.put(updatedTable)
+      const persistedTable: Table = { ...updatedTable, _rev: putResult.rev }
+      updatedTables.push(persistedTable)
     }
 
     return updatedTables
