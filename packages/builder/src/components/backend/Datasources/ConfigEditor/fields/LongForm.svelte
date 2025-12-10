@@ -1,7 +1,6 @@
-<script>
+<script lang="ts">
   import { Label, TextArea } from "@budibase/bbui"
 
-  export let type
   export let name
   export let value
   export let error
@@ -10,8 +9,8 @@
 </script>
 
 <div class="form-row">
-  <Label tooltip={tooltip}>{name}</Label>
-  <TextArea on:blur on:change {type} {value} {error} {placeholder} />
+  <Label {tooltip}>{name}</Label>
+  <TextArea on:blur on:change {value} {error} {placeholder} />
 </div>
 
 <style>

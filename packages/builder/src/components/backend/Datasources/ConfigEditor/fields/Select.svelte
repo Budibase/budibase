@@ -1,7 +1,6 @@
-<script>
+<script lang="ts">
   import { Label, Select } from "@budibase/bbui"
 
-  export let type
   export let name
   export let value
   export let error
@@ -11,12 +10,11 @@
 </script>
 
 <div class="form-row">
-  <Label tooltip={tooltip}>{name}</Label>
+  <Label {tooltip}>{name}</Label>
   <Select
     on:blur
     on:change
     options={config.options}
-    {type}
     value={value || undefined}
     {error}
     {placeholder}

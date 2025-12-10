@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Label, Toggle } from "@budibase/bbui"
 
   export let value
@@ -7,7 +7,7 @@
 </script>
 
 <div class="form-row">
-  <Label tooltip={tooltip}>{name}</Label>
+  <Label {tooltip}>{name}</Label>
   <Toggle on:blur on:change text="" {value} />
 </div>
 

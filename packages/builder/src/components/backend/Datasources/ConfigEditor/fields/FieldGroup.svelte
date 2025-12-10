@@ -6,7 +6,7 @@
   export let value
   export let name
   export let config
-  export let tooltip: string | undefined = undefined
+  export let tooltip
 
   let dispatch = createEventDispatcher()
 
