@@ -23,13 +23,15 @@
     }
     return capitalise(name)
   }
+
+  const getTooltip = field => schema.fields[field]?.tooltip || ""
 </script>
 
 <form on:submit|preventDefault>
   <Layout noPadding gap="S">
     {#each schemaKeys as field}
       {#if schema.fields[field]?.type === "object"}
-        <Label small>{getDisplayName(field)}</Label>
+        <Label small tooltip={getTooltip(field)}>{getDisplayName(field)}</Label>
         <KeyValueBuilder
           name={getDisplayName(field)}
           readOnly={!editable}
@@ -37,7 +39,9 @@
         />
       {:else if schema.fields[field]?.type === "json"}
         <div>
-          <Label extraSmall grey>{getDisplayName(field)}</Label>
+          <Label extraSmall grey tooltip={getTooltip(field)}>
+            {getDisplayName(field)}
+          </Label>
           <Editor
             mode="json"
             on:change={({ detail }) => (fields[field] = detail.value)}
@@ -47,7 +51,9 @@
         </div>
       {:else}
         <div class="horizontal">
-          <Label small>{getDisplayName(field)}</Label>
+          <Label small tooltip={getTooltip(field)}>
+            {getDisplayName(field)}
+          </Label>
           <Input
             placeholder="Enter {getDisplayName(field)}"
             outline
