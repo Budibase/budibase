@@ -1,5 +1,5 @@
 import { Document } from "../document"
-import { FieldSchema, FormulaType } from "./table"
+import { FieldSchema, FormulaFieldMetadata, FormulaType } from "./table"
 
 export const EXTERNAL_ROW_REV = "rev"
 
@@ -174,7 +174,9 @@ export function canGroupBy(type: FieldType) {
   return GroupByTypes.includes(type)
 }
 
-export function isStaticFormula(schema: FieldSchema) {
+export function isStaticFormula(
+  schema: FieldSchema
+): schema is FormulaFieldMetadata {
   return (
     schema.type === FieldType.FORMULA &&
     schema.formulaType === FormulaType.STATIC

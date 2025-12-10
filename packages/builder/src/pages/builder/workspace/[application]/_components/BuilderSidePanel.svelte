@@ -652,7 +652,7 @@
                 >
                   <div class="details">
                     <GroupIcon {group} size="S" />
-                    <div class="group-name">
+                    <div class="group-name" title={group.name}>
                       {group.name}
                     </div>
                     <div class="auth-entity-meta">
