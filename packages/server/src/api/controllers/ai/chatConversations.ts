@@ -22,6 +22,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
   const chatAppIdFromPath = ctx.params?.chatAppId
   const chatConversationIdFromPath = ctx.params?.chatConversationId
+  const userId = ctx.user.userId || ctx.user._id
   if (chatAppIdFromPath && !chat.chatAppId) {
     chat.chatAppId = chatAppIdFromPath
   }
@@ -42,6 +43,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chatApp = await db.tryGet<ChatApp>(chatAppId)
   if (!chatApp) {
     throw new HTTPError("Chat app not found", 404)
+  }
+
+  if (chat._id) {
+    const existingChat = await db.tryGet<ChatConversation>(chat._id)
+    if (!existingChat) {
+      throw new HTTPError("chat not found", 404)
+    }
+    if (existingChat.userId && existingChat.userId !== userId) {
+      throw new HTTPError("Forbidden", 403)
+    }
   }
 
   const agentId = chatApp.agentIds?.[0]
@@ -114,7 +125,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           _id: chatId,
           ...(existingChat?._rev && { _rev: existingChat._rev }),
           chatAppId,
-          userId: ctx.user.userId || ctx.user._id,
+          userId,
           title,
           messages,
         }
@@ -164,6 +175,7 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const db = context.getWorkspaceDB()
 
   const chatConversationId = ctx.params.chatConversationId
+  const userId = ctx.user.userId || ctx.user._id
   if (!chatConversationId) {
     throw new HTTPError("chatConversationId is required", 400)
   }
@@ -171,6 +183,9 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat) {
     throw new HTTPError("chat not found", 404)
+  }
+  if (chat.userId && chat.userId !== userId) {
+    throw new HTTPError("Forbidden", 403)
   }
 
   await db.remove(chat)
@@ -182,6 +197,7 @@ export async function fetchChatHistory(
 ) {
   const db = context.getWorkspaceDB()
   const chatAppId = ctx.params.chatAppId
+  const userId = ctx.user.userId || ctx.user._id
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -197,7 +213,9 @@ export async function fetchChatHistory(
 
   ctx.body = allChats.rows
     .map(row => row.doc!)
-    .filter(chat => chat.chatAppId === chatAppId)
+    .filter(
+      chat => chat.chatAppId === chatAppId && (!chat.userId || chat.userId === userId)
+    )
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -215,6 +233,7 @@ export async function fetchChatConversation(
   const db = context.getWorkspaceDB()
   const chatAppId = ctx.params.chatAppId
   const chatConversationId = ctx.params.chatConversationId
+  const userId = ctx.user.userId || ctx.user._id
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -228,6 +247,9 @@ export async function fetchChatConversation(
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {
     throw new HTTPError("chat not found", 404)
+  }
+  if (chat.userId && chat.userId !== userId) {
+    throw new HTTPError("Forbidden", 403)
   }
 
   ctx.body = chat
