@@ -12,6 +12,7 @@ import { ImportInfo, ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
+import sdk from "../../../../sdk"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -141,7 +142,7 @@ class RestImporter {
     const staticVariables =
       await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
-    let queries = await this.source.getQueries(datasourceId, {
+    let queries = this.source.getQueries(datasourceId, {
       filterIds,
       staticVariables,
     })
@@ -195,7 +196,7 @@ class RestImporter {
     // events
     const count = successQueries.length
     const importSource = this.source.getImportSource()
-    const datasource: Datasource = await db.get(datasourceId)
+    const datasource = await sdk.datasources.get(datasourceId)
     await events.query.imported(datasource, importSource, count)
     for (let query of successQueries) {
       await events.query.created(datasource, query)
@@ -254,10 +255,10 @@ class RestImporter {
     if (!datasourceId) {
       return {}
     }
-    const db = context.getWorkspaceDB()
-    let datasource: Datasource | undefined
+
+    let datasource
     try {
-      datasource = await db.get<Datasource>(datasourceId)
+      datasource = await sdk.datasources.get(datasourceId)
     } catch (_err) {
       return {}
     }
