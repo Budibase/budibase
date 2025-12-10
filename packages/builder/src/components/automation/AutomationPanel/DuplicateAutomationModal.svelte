@@ -71,7 +71,8 @@
     <Label size="S">Select a trigger</Label>
     <div class="item-list">
       {#each triggers as [, trigger]}
-        <div
+        <button
+          type="button"
           class="item"
           class:selected={selectedTriggerId === trigger.stepId}
           on:click={() => selectTrigger(trigger)}
@@ -84,7 +85,7 @@
             />
           </div>
           <Body size="S">{trigger.name}</Body>
-        </div>
+        </button>
       {/each}
     </div>
   </Layout>
@@ -99,14 +100,23 @@
 
   .item {
     cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    padding: var(--spacing-s) var(--spacing-m);
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    background: #0f1116;
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    background: #0f1116;
-    border-radius: 12px;
-    padding: var(--spacing-s) var(--spacing-m);
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: border 0.2s, background 0.2s;
+  }
+
+  .item:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-600);
+    outline-offset: 2px;
   }
 
   .item.selected {
