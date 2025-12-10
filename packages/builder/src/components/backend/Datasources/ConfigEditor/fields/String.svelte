@@ -11,7 +11,7 @@
 </script>
 
 <div class="form-row">
-  <Label tooltip={tooltip}>{name}</Label>
+  <Label {tooltip}>{name}</Label>
   <EnvVariableInput
     on:change
     on:blur

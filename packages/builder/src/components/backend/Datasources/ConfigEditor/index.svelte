@@ -68,16 +68,7 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as {
-    type,
-    key,
-    value,
-    error,
-    name,
-    config,
-    placeholder,
-    tooltip,
-  }}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder, tooltip }}
     <ConfigInput
       {type}
       {value}

@@ -15,7 +15,7 @@
 </script>
 
 <div class="form-row">
-  <Label tooltip={tooltip}>{name}</Label>
+  <Label {tooltip}>{name}</Label>
   <div class="textarea-wrapper">
     {#if visible}
       <TextArea on:blur on:change {value} {error} {placeholder} />
