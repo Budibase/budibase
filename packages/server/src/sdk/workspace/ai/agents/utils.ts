@@ -1,11 +1,4 @@
-import {
-  Agent,
-  ToolMetadata,
-  ToolType,
-  SourceName,
-  type Query,
-  type Datasource,
-} from "@budibase/types"
+import { Agent, ToolMetadata, ToolType, SourceName } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"

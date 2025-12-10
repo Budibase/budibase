@@ -38,7 +38,7 @@
   import BudibaseLogo from "../logos/Budibase.svelte"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
-  import budibaseLogoOnly from "@/imgs/budibase-logo-only.png"
+  import BudibaseLogoSvg from "assets/bb-emblem.svg"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -172,7 +172,7 @@
       if (tool.readableBinding) {
         acc[tool.readableBinding] =
           tool.icon?.url ||
-          (tool.sourceType === ToolType.BUDIBASE ? budibaseLogoOnly : undefined)
+          (tool.sourceType === ToolType.BUDIBASE ? BudibaseLogoSvg : undefined)
       }
       return acc
     },
@@ -430,17 +430,17 @@
             <div class="prompt-editor">
               <CodeEditor
                 value={draft.promptInstructions || ""}
-              bindings={promptBindings}
-              bindingIcons={readableToIcon}
-              completions={promptCompletions}
-              mode={EditorModes.Handlebars}
-              bind:getCaretPosition
-              bind:insertAtPos
-              renderBindingsAsPills={true}
-              placeholder=""
-              on:change={event =>
-                (draft.promptInstructions = event.detail || "")}
-            />
+                bindings={promptBindings}
+                bindingIcons={readableToIcon}
+                completions={promptCompletions}
+                mode={EditorModes.Handlebars}
+                bind:getCaretPosition
+                bind:insertAtPos
+                renderBindingsAsTags={true}
+                placeholder=""
+                on:change={event =>
+                  (draft.promptInstructions = event.detail || "")}
+              />
             </div>
           </div>
         </Layout>
