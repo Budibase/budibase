@@ -102,7 +102,7 @@
         startDate,
       })
       pageInfo.fetched(response.hasNextPage, response.nextPage)
-      totalLogs = response.totalRows ?? response.data.length
+      totalLogs = response.totalLogs ?? response.data.length
       runHistory = response.data
     } catch (error) {
       notifications.error("Error fetching automation logs")

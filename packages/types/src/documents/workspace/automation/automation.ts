@@ -262,7 +262,7 @@ export interface AutomationLogPage {
   data: AutomationLog[]
   hasNextPage: boolean
   nextPage?: string
-  totalRows: number
+  totalLogs: number
 }
 
 export interface AutomationStepInputBase {
