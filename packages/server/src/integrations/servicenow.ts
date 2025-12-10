@@ -10,9 +10,30 @@ import { fetch } from "undici"
 import { URLSearchParams } from "url"
 
 interface ServiceNowConfig {
-  instanceUrl: string
+  domain: string
   username: string
   password: string
+}
+
+export const buildServiceNowBaseUrl = (rawDomain?: string) => {
+  const trimmed = rawDomain?.trim()
+  if (!trimmed) {
+    throw new Error("ServiceNow domain is required")
+  }
+  const withoutProtocol = trimmed.replace(/^https?:\/\//i, "")
+  const withoutPath = withoutProtocol.replace(/\/.*$/, "")
+  const withoutSuffix = withoutPath.replace(/\.service-now\.com$/i, "")
+  const cleanedDomain = withoutSuffix.trim()
+  if (!cleanedDomain) {
+    throw new Error("ServiceNow domain is required")
+  }
+  if (!/^[a-z0-9-]+$/i.test(cleanedDomain)) {
+    throw new Error(
+      "ServiceNow domain may only contain letters, numbers, or hyphens"
+    )
+  }
+  const normalised = cleanedDomain.toLowerCase()
+  return `https://${normalised}.service-now.com/api`
 }
 
 type ServiceNowReadEndpoint =
@@ -144,11 +165,13 @@ const SCHEMA: Integration = {
   friendlyName: "ServiceNow",
   type: "API",
   datasource: {
-    instanceUrl: {
+    domain: {
       type: DatasourceFieldType.STRING,
       required: true,
-      display: "Instance URL",
-      placeholder: "https://example.service-now.com",
+      display: "Instance domain",
+      placeholder: "example",
+      tooltip:
+        "Enter just the domain, e.g. 'example' for https://example.service-now.com",
     },
     username: {
       type: DatasourceFieldType.STRING,
@@ -552,10 +575,7 @@ class ServiceNowIntegration implements IntegrationBase {
   }
 
   private buildBaseUrl() {
-    if (!this.config.instanceUrl) {
-      throw new Error("ServiceNow instance URL is required")
-    }
-    return this.config.instanceUrl.replace(/\/$/, "") + "/api"
+    return buildServiceNowBaseUrl(this.config.domain)
   }
 
   private buildUrl(
