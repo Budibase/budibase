@@ -606,4 +606,43 @@ describe("/api/deploy", () => {
       expect(prodTable.schema.details).toBeDefined()
     })
   })
+
+  it("keeps dev revisions aligned with prod after column renames to avoid rev gaps", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const renamedSchema = {
+      ...table.schema,
+      details: {
+        ...table.schema.description,
+        name: "details",
+      },
+    }
+    delete (renamedSchema as any).description
+
+    const renamedTable = await config.api.table.save({
+      ...table,
+      schema: renamedSchema,
+      _rename: { old: "description", updated: "details" },
+    })
+
+    // First publish after rename
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+    // Second publish should not see prod ahead of dev
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    let prodRevNum: number | undefined
+    await config.withProdApp(async () => {
+      const prodTable = await config.api.table.get(renamedTable._id!)
+      expect(prodTable._deleted).toBeFalsy()
+      prodRevNum = parseInt(prodTable._rev!.split("-")[0])
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const devTable = await db.get<Table>(renamedTable._id!)
+      const devRevNum = parseInt(devTable._rev!.split("-")[0])
+      expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
+    })
+  })
 })

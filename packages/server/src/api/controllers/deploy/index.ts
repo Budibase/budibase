@@ -125,10 +125,13 @@ async function initDeployedApp(prodAppId: string) {
   })
 }
 
-async function applyPendingColumnRenames(workspaceId: string) {
-  await context.doInWorkspaceContext(workspaceId, async () => {
+async function applyPendingColumnRenames(
+  workspaceId: string
+): Promise<Table[]> {
+  return await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
+    const updatedTables: Table[] = []
 
     for (let table of tables) {
       if (table._deleted) {
@@ -164,7 +167,10 @@ async function applyPendingColumnRenames(workspaceId: string) {
 
       const updatedTable: Table = { ...table, pendingColumnRenames: [] }
       await db.put(updatedTable)
+      updatedTables.push(updatedTable)
     }
+
+    return updatedTables
   })
 }
 
@@ -335,7 +341,37 @@ export const publishWorkspace = async function (
           })
         )
 
-        await applyPendingColumnRenames(prodId)
+        const updatedProdTables = await applyPendingColumnRenames(prodId)
+
+        // Keep development revs aligned with production after renaming, so the
+        // next publish doesn't see production ahead and delete / tombstone the doc.
+        if (updatedProdTables.length > 0) {
+          await context.doInWorkspaceContext(devId, async () => {
+            const devDb = context.getWorkspaceDB()
+            for (const prodTable of updatedProdTables) {
+              try {
+                const devTable = await devDb.tryGet<Table>(prodTable._id!)
+                if (!devTable) {
+                  console.warn(
+                    `Failed to get development table for table ${prodTable._id} 
+                    when applying column renames`
+                  )
+                  continue
+                }
+                await devDb.put({
+                  ...prodTable,
+                  _rev: devTable._rev,
+                })
+              } catch (err) {
+                console.warn(
+                  `Failed to update development table with production table 
+                  revision when applying column renames for table ${prodTable._id}: ${err}`
+                )
+              }
+            }
+          })
+        }
+
         await clearPendingColumnRenames(devId)
 
         const db = context.getProdWorkspaceDB()
