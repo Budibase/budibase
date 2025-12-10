@@ -14,6 +14,7 @@ import {
   FetchAgentsResponse,
   RequiredKeys,
   Tool,
+  ToolSourceType,
   UpdateAgentRequest,
   UpdateAgentResponse,
   UpdateToolSourceRequest,
@@ -21,7 +22,6 @@ import {
 } from "@budibase/types"
 import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import sdk from "../../../sdk"
-import { createOpenAI } from "@ai-sdk/openai"
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
@@ -50,46 +50,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  // Build system prompt (agent prompt + optional tool guidelines)
-  let system = ai.agentSystemPrompt(ctx.user)
-  if (agent.promptInstructions) {
-    system += `\n\n${agent.promptInstructions}`
-  }
-  let toolGuidelines = ""
-  const allTools: Tool[] = []
-  for (const toolSource of agent.allowedTools || []) {
-    const toolSourceInstance = createToolSourceInstance(
-      toolSource as AgentToolSource
-    )
-
-    if (!toolSourceInstance) {
-      continue
-    }
-
-    const guidelines = toolSourceInstance.getGuidelines()
-    if (guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-    }
-
-    const toolsToAdd = toolSourceInstance.getEnabledTools()
-
-    if (toolsToAdd.length > 0) {
-      allTools.push(...toolsToAdd)
-    }
-  }
-
-  // Append tool guidelines to the system prompt if any exist
-  if (toolGuidelines) {
-    system += toolGuidelines
-  }
+  const { systemPrompt: system, tools: allTools } =
+    await sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+      includeGoal: false,
+    })
 
   try {
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
-    const openai = createOpenAI({
+    const openai = ai.createLiteLLMOpenAI({
       apiKey,
-      baseURL: baseUrl,
+      baseUrl,
     })
     const model = openai.chat(modelId)
 
@@ -158,7 +131,7 @@ export async function remove(ctx: UserCtx<void, void>) {
   }
 
   await db.remove(chat)
-  ctx.status = 201
+  ctx.status = 204
 }
 
 export async function fetchHistory(
@@ -195,18 +168,22 @@ export async function fetchToolSources(
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  ctx.body = (agent.allowedTools || []).map(toolSource => {
+  const toolSourcesWithTools: AgentToolSourceWithTools[] = []
+
+  for (const toolSource of agent.allowedTools || []) {
     const toolSourceInstance = createToolSourceInstance(toolSource)
 
     const tools: Tool[] = toolSourceInstance
-      ? toolSourceInstance.getTools()
+      ? await toolSourceInstance.getToolsAsync()
       : []
 
-    return {
+    toolSourcesWithTools.push({
       ...toolSource,
       tools,
-    }
-  })
+    })
+  }
+
+  ctx.body = toolSourcesWithTools
 }
 
 export async function createToolSource(
@@ -220,10 +197,8 @@ export async function createToolSource(
 
   const agent = await sdk.ai.agents.getOrThrow(toolSourceRequest.agentId)
 
-  // Generate a unique ID for the tool source
   const toolSourceId = docIds.generateAgentToolSourceID()
 
-  // Remove agentId from tool source as it's not part of the tool source structure
   const { agentId: _, ...toolSourceData } = toolSourceRequest
 
   const toolSource: AgentToolSource = {
@@ -231,7 +206,6 @@ export async function createToolSource(
     id: toolSourceId,
   } as AgentToolSource
 
-  // Add tool source to agent's allowedTools
   const updatedAgent: Agent = {
     ...agent,
     allowedTools: [...(agent.allowedTools || []), toolSource],
@@ -263,7 +237,7 @@ export async function updateToolSource(
 
   // Find and update the tool source in allowedTools
   const updatedAllowedTools = (agent.allowedTools || []).map(ts => {
-    if ((ts as any).id === toolSourceRequest.id) {
+    if (ts.id === toolSourceRequest.id) {
       return {
         ...toolSourceData,
         id: toolSourceRequest.id,
@@ -281,7 +255,7 @@ export async function updateToolSource(
 
   // Return the updated tool source
   const updatedToolSource = updatedAllowedTools.find(
-    ts => (ts as any).id === toolSourceRequest.id
+    ts => ts.id === toolSourceRequest.id
   ) as AgentToolSource
 
   ctx.body = updatedToolSource
@@ -294,7 +268,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   // Find agent that contains this tool source
   const agents = await sdk.ai.agents.fetch()
   const agentWithToolSource = agents.find(agent =>
-    (agent.allowedTools || []).some(ts => (ts as any).id === toolSourceId)
+    (agent.allowedTools || []).some(ts => ts.id === toolSourceId)
   )
 
   if (!agentWithToolSource) {
@@ -305,7 +279,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const updatedAgent: Agent = {
     ...agentWithToolSource,
     allowedTools: (agentWithToolSource.allowedTools || []).filter(
-      ts => (ts as any).id !== toolSourceId
+      ts => ts.id !== toolSourceId
     ),
   }
 
@@ -313,6 +287,52 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
 
   ctx.body = { deleted: true }
   ctx.status = 200
+}
+
+export async function fetchAvailableTools(
+  ctx: UserCtx<void, Tool[], { toolSourceType: string }>
+) {
+  const toolSourceType = ctx.params.toolSourceType
+
+  if (!toolSourceType) {
+    throw new HTTPError("toolSourceType is required", 400)
+  }
+
+  let tempToolSource: AgentToolSource
+  if (toolSourceType === ToolSourceType.BUDIBASE) {
+    tempToolSource = {
+      type: ToolSourceType.BUDIBASE,
+      id: "temp",
+      auth: {},
+      disabledTools: [],
+      agentId: "temp",
+    }
+  } else if (toolSourceType === ToolSourceType.REST_QUERY) {
+    tempToolSource = {
+      type: ToolSourceType.REST_QUERY,
+      id: "temp",
+      auth: {},
+      disabledTools: [],
+      agentId: "temp",
+      datasourceId: "",
+      queryIds: [],
+    }
+  } else {
+    throw new HTTPError(`Unknown tool source type: ${toolSourceType}`, 400)
+  }
+
+  const toolSourceInstance = createToolSourceInstance(tempToolSource)
+
+  if (!toolSourceInstance) {
+    throw new HTTPError(
+      `Failed to create tool source instance: ${toolSourceType}`,
+      400
+    )
+  }
+
+  const tools = await toolSourceInstance.getToolsAsync()
+
+  ctx.body = tools
 }
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {

@@ -44,6 +44,7 @@ const SQL_NUMBER_TYPE_MAP: Record<string, PrimitiveTypes> = {
   int: FieldType.NUMBER,
   decimal: FieldType.NUMBER,
   smallint: FieldType.NUMBER,
+  tinyint: FieldType.NUMBER,
   real: FieldType.NUMBER,
   float: FieldType.NUMBER,
   numeric: FieldType.NUMBER,
@@ -90,7 +91,6 @@ const SQL_STRING_TYPE_MAP: Record<string, FieldType.STRING> = {
 const SQL_BOOLEAN_TYPE_MAP: Record<string, FieldType.BOOLEAN> = {
   boolean: FieldType.BOOLEAN,
   bit: FieldType.BOOLEAN,
-  tinyint: FieldType.BOOLEAN,
 }
 
 const SQL_OPTIONS_TYPE_MAP: Record<string, FieldType.OPTIONS> = {

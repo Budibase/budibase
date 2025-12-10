@@ -107,23 +107,13 @@
     flex-direction: column;
     text-decoration: none;
     color: var(--text-color);
-    transition:
-      transform 130ms ease-out,
-      box-shadow 130ms ease-out,
-      border-color 130ms ease-out,
-      background-color 130ms ease-out;
     position: relative;
     min-height: 140px;
   }
 
   .agent-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     background-color: rgba(255, 255, 255, 0.01);
-  }
-
-  .agent-card.active {
-    box-shadow: 0 0 0 1px;
   }
 
   .card-actions {
@@ -160,7 +150,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--agent-accent) 18%, transparent);
   }
 
   .card-content {

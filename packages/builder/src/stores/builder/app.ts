@@ -97,6 +97,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
     background_color: "",
     theme_color: "",
     start_url: "",
+    scope: "",
     screenshots: [],
   },
   scripts: [],
@@ -203,6 +204,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
         background_color: state.pwa?.background_color || "",
         theme_color: state.pwa?.theme_color || "",
         start_url: state.pwa?.start_url || "",
+        scope: state.pwa?.scope || "",
         screenshots: state.pwa?.screenshots || [],
       },
     }))

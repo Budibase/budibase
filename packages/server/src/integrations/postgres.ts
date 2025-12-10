@@ -1,4 +1,3 @@
-import fs from "fs"
 import {
   Integration,
   DatasourceFieldType,
@@ -29,9 +28,7 @@ import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
-import { exec } from "child_process"
-import { storeTempFile } from "../utilities/fileSystem"
-import { env, sql } from "@budibase/backend-core"
+import { sql } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -69,7 +66,6 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
-    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -487,61 +483,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
-  }
-
-  async getExternalSchema() {
-    if (!env.SELF_HOSTED) {
-      // This is because it relies on shelling out to pg_dump and we don't want
-      // to enable shell injection attacks.
-      throw new Error(
-        "schema export for Postgres is not supported in Budibase Cloud"
-      )
-    }
-
-    const dumpCommandParts = [
-      `user=${this.config.user}`,
-      `host=${this.config.host}`,
-      `port=${this.config.port}`,
-      `dbname=${this.config.database}`,
-    ]
-
-    if (this.config.ssl) {
-      dumpCommandParts.push("sslmode=verify-ca")
-      if (this.config.ca) {
-        const caFilePath = storeTempFile(this.config.ca)
-        fs.chmodSync(caFilePath, "0600")
-        dumpCommandParts.push(`sslrootcert=${caFilePath}`)
-      }
-
-      if (this.config.clientCert) {
-        const clientCertFilePath = storeTempFile(this.config.clientCert)
-        fs.chmodSync(clientCertFilePath, "0600")
-        dumpCommandParts.push(`sslcert=${clientCertFilePath}`)
-      }
-
-      if (this.config.clientKey) {
-        const clientKeyFilePath = storeTempFile(this.config.clientKey)
-        fs.chmodSync(clientKeyFilePath, "0600")
-        dumpCommandParts.push(`sslkey=${clientKeyFilePath}`)
-      }
-    }
-
-    const dumpCommand = `PGPASSWORD="${
-      this.config.password
-    }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
-
-    return new Promise<string>((resolve, reject) => {
-      exec(dumpCommand, (error, stdout, stderr) => {
-        if (error || stderr) {
-          console.error(stderr)
-          reject(new Error(stderr))
-          return
-        }
-
-        resolve(stdout)
-        console.log("SQL dump generated successfully!")
-      })
-    })
   }
 }
 

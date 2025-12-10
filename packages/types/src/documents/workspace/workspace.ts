@@ -37,7 +37,6 @@ export interface Workspace extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
-  recaptchaEnabled?: boolean
   translationOverrides?: TranslationOverrides
 }
 
@@ -57,6 +56,7 @@ export interface AppNavigation {
   navTextColor?: string
   links?: AppNavigationLink[]
   textAlign?: "Left" | "Center" | "Right"
+  collapsible?: boolean
 }
 
 export interface AppNavigationLink {
@@ -88,6 +88,7 @@ export interface WorkspaceFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
   skeletonLoader?: boolean
+  recaptchaEnabled?: boolean
 }
 
 export interface AutomationSettings {
@@ -98,6 +99,7 @@ export interface PWAManifest {
   name: string
   short_name: string
   description: string
+  scope: string
   icons: PWAManifestImage[]
   screenshots: PWAManifestImage[]
   background_color: string

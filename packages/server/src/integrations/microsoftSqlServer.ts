@@ -85,7 +85,6 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
-    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     user: {
@@ -607,51 +606,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
 
     return dataType
-  }
-
-  async getExternalSchema() {
-    const scriptParts = []
-    const tables: any = {}
-    const columns = await this.getColumnDefinitions()
-    for (const row of columns) {
-      const { TableName, ColumnName, IsNullable, IsIdentity } = row
-
-      if (!tables[TableName]) {
-        tables[TableName] = {
-          columns: [],
-        }
-      }
-
-      const nullable = IsNullable ? "NULL" : "NOT NULL"
-      const identity = IsIdentity ? "IDENTITY" : ""
-      const columnDefinition = `[${ColumnName}] ${this.getDataType(
-        row
-      )} ${nullable} ${identity}`
-
-      tables[TableName].columns.push(columnDefinition)
-
-      if (IsIdentity) {
-        tables[TableName].identityColumn = ColumnName
-      }
-    }
-
-    // Generate SQL statements for table creation
-    for (const tableName in tables) {
-      const { columns, identityColumn } = tables[tableName]
-
-      let createTableStatement = `CREATE TABLE [${tableName}] (\n`
-      createTableStatement += columns.join(",\n")
-
-      if (identityColumn) {
-        createTableStatement += `,\n CONSTRAINT [PK_${tableName}] PRIMARY KEY (${identityColumn})`
-      }
-
-      createTableStatement += "\n);"
-
-      scriptParts.push(createTableStatement)
-    }
-
-    return scriptParts.join("\n")
   }
 }
 

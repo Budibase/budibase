@@ -35,6 +35,7 @@ export enum DatasourceFieldType {
   STRING = "string",
   CODE = "code",
   LONGFORM = "longForm",
+  SENSITIVE_LONGFORM = "sensitiveLongForm",
   BOOLEAN = "boolean",
   NUMBER = "number",
   PASSWORD = "password",
@@ -85,7 +86,6 @@ export enum FilterType {
 export enum DatasourceFeature {
   CONNECTION_CHECKING = "connection",
   FETCH_TABLE_NAMES = "fetch_table_names",
-  EXPORT_SCHEMA = "export_schema",
 }
 
 export interface StepDefinition {
@@ -148,6 +148,7 @@ export interface DatasourceConfig {
 
 export interface Integration {
   docs: string
+  warningMessage?: string
   plus?: boolean
   isSQL?: boolean
   auth?: { type: string }
@@ -176,7 +177,6 @@ export interface IntegrationBase {
   delete?(query: any): Promise<any[] | any>
   patch?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
-  getExternalSchema?(): Promise<string>
   defineTypeCastingFromSchema?(schema: {
     [key: string]: {
       name: string
