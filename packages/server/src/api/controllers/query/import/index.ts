@@ -89,14 +89,28 @@ export async function getImportInfo(
     return value as ImportInfo
   }
 
-  const result = await fetchImportInfo(input)
+  const importer = await createImporter(input)
+  const result = importer.getInfo()
   await specsCache.store(cacheKey, JSON.stringify(result), cache.TTL.ONE_DAY)
   return result
 }
 
-async function fetchImportInfo(
+export async function getImporter(input: {
+  data?: string
+}): Promise<RestImporter>
+export async function getImporter(input: {
+  url?: string
+}): Promise<RestImporter>
+export async function getImporter(
   input: { data?: string } | { url?: string }
-): Promise<ImportInfo> {
+): Promise<RestImporter> {
+  const importer = await createImporter(input)
+  return importer
+}
+
+async function createImporter(
+  input: { data?: string } | { url?: string }
+): Promise<RestImporter> {
   let data: string | undefined
   if ("url" in input && input.url) {
     data = await fetchFromUrl(input.url)
@@ -111,7 +125,7 @@ async function fetchImportInfo(
 
   for (const source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
     if (await source.isSupported(data)) {
-      return source.getInfo()
+      return new RestImporter(source)
     }
   }
 
@@ -119,14 +133,13 @@ async function fetchImportInfo(
 }
 
 class RestImporter {
-  data: string
-  sources: ImportSource[]
-  source!: ImportSource
+  private source: ImportSource
 
-  constructor(data: string) {
-    this.data = data
-    this.sources = [new OpenAPI2(), new OpenAPI3(), new Curl()]
+  constructor(source: ImportSource) {
+    this.source = source
   }
+
+  getInfo = () => this.source.getInfo()
 
   importQueries = async (
     datasourceId: string,

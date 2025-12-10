@@ -39,7 +39,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { getImportInfo } from "./import"
+import { getImporter, getImportInfo } from "./import"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -76,7 +76,8 @@ const _import = async (
 ) => {
   const body = ctx.request.body
 
-  const { importer, importInfo } = await getImportInfo(body)
+  const importer = await getImporter(body)
+  const importInfo = importer.getInfo()
 
   let datasourceId
   if (!body.datasourceId) {
