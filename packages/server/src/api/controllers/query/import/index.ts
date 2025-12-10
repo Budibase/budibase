@@ -95,16 +95,23 @@ export async function getImportInfo(
   return result
 }
 
-export async function getImporter(input: {
-  data?: string
-}): Promise<RestImporter>
-export async function getImporter(input: {
-  url?: string
-}): Promise<RestImporter>
 export async function getImporter(
-  input: { data?: string } | { url?: string }
+  input: {
+    data?: string
+  },
+  skipValidation: boolean
+): Promise<RestImporter>
+export async function getImporter(
+  input: {
+    url?: string
+  },
+  skipValidation: boolean
+): Promise<RestImporter>
+export async function getImporter(
+  input: { data?: string } | { url?: string },
+  skipValidation: boolean
 ): Promise<RestImporter> {
-  const importer = await createImporter(input, true)
+  const importer = await createImporter(input, skipValidation)
   return importer
 }
 
