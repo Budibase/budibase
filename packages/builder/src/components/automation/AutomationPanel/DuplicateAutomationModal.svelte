@@ -118,7 +118,9 @@
     align-items: center;
     gap: var(--spacing-s);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: border 0.2s, background 0.2s;
+    transition:
+      border 0.2s,
+      background 0.2s;
   }
 
   .item:focus-visible {
