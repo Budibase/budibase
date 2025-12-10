@@ -10,7 +10,8 @@ let userClient: Client,
   socketClient: Client,
   inviteClient: Client,
   passwordResetClient: Client,
-  docWritethroughClient: Client
+  docWritethroughClient: Client,
+  openapiSpecsClient: Client
 
 export async function init() {
   userClient = await Client.init(utils.Databases.USER_CACHE)
@@ -26,19 +27,21 @@ export async function init() {
     utils.SelectableDatabase.SOCKET_IO
   )
   docWritethroughClient = await Client.init(utils.Databases.DOC_WRITE_THROUGH)
+  openapiSpecsClient = await Client.init(utils.Databases.OPENAPI_SPECS)
 }
 
 export async function shutdown() {
-  if (userClient) await userClient.finish()
-  if (sessionClient) await sessionClient.finish()
-  if (workspaceClient) await workspaceClient.finish()
-  if (cacheClient) await cacheClient.finish()
-  if (writethroughClient) await writethroughClient.finish()
-  if (lockClient) await lockClient.finish()
-  if (inviteClient) await inviteClient.finish()
-  if (passwordResetClient) await passwordResetClient.finish()
-  if (socketClient) await socketClient.finish()
-  if (docWritethroughClient) await docWritethroughClient.finish()
+  await userClient?.finish()
+  await sessionClient?.finish()
+  await workspaceClient?.finish()
+  await cacheClient?.finish()
+  await writethroughClient?.finish()
+  await lockClient?.finish()
+  await inviteClient?.finish()
+  await passwordResetClient?.finish()
+  await socketClient?.finish()
+  await docWritethroughClient?.finish()
+  await openapiSpecsClient?.finish()
 }
 
 process.on("exit", async () => {
@@ -113,4 +116,11 @@ export async function getDocWritethroughClient() {
     await init()
   }
   return writethroughClient
+}
+
+export async function getOpenapiSpecsClient() {
+  if (!openapiSpecsClient) {
+    await init()
+  }
+  return openapiSpecsClient
 }

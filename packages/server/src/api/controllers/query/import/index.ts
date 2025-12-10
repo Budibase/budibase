@@ -1,4 +1,10 @@
-import { context, events, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  events,
+  HTTPError,
+  redis,
+} from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
@@ -46,7 +52,7 @@ const assignDatasourceHeaderDefaults = (
   }
 }
 
-const resolveImportData = async (url: string) => {
+async function fetchFromUrl(url: string): Promise<string> {
   try {
     const response = await fetch(url)
     if (!response.ok) {
@@ -62,33 +68,27 @@ const resolveImportData = async (url: string) => {
   }
 }
 
-export async function getImporter({
-  data,
-  url,
-}: {
-  data?: string
-  url?: string
-}) {
-  data = data?.trim()
+export async function resolveImportData(url: string | undefined) {
   url = url?.trim()
-  if (!data && !url) {
+  if (!url) {
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  if (!data && url) {
-    data = await resolveImportData(url)
-    if (!data) {
-      throw new HTTPError("Import data or url is required", 400)
-    }
+  const specsCache = await redis.clients.getOpenapiSpecsClient()
+  let value = await specsCache.get(url)
+  if (!value) {
+    value = await fetchFromUrl(url)
+    await specsCache.store(url, value, cache.TTL.ONE_DAY)
   }
 
-  const getSafeUrl = () => {
-    if (!url) {
-      throw new HTTPError("Import data or url is required", 400)
-    }
-    return url
+  return value
+}
+
+export async function getImporter(data: string) {
+  data = data?.trim()
+  if (!data) {
+    throw new HTTPError("Import data or url is required", 400)
   }
-  data = data ?? (await resolveImportData(getSafeUrl()))
 
   const importer = new RestImporter(data)
 
