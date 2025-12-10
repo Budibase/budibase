@@ -112,7 +112,7 @@ const SCHEMA: Integration = {
           required: true,
         },
         row: {
-          type: QueryType.JSON,
+          type: DatasourceFieldType.JSON,
           required: true,
         },
       },
@@ -138,7 +138,7 @@ const SCHEMA: Integration = {
           required: true,
         },
         row: {
-          type: QueryType.JSON,
+          type: DatasourceFieldType.JSON,
           required: true,
         },
       },
