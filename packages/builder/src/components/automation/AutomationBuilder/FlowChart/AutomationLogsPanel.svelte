@@ -30,6 +30,8 @@
   let timeRange = null
   let loaded = false
 
+  const AUTOMATION_LOG_PAGE_SIZE = 10
+
   const allTimeOptions = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
@@ -173,9 +175,10 @@
                 >
                   <div class="log-content">
                     <div class="log-info">
-                      <Body size="S" weight="600"
-                        >Log #{runHistory.length - idx}</Body
-                      >
+                      <Body size="S" weight="600">
+                        Log #{$pageInfo.pageNumber * AUTOMATION_LOG_PAGE_SIZE -
+                          (AUTOMATION_LOG_PAGE_SIZE - idx - 1)}
+                      </Body>
                       <Body size="S">
                         {dayjs(log.createdAt).format("MMM DD, YYYY HH:mm")}
                       </Body>
