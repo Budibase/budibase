@@ -141,7 +141,7 @@ export async function importInfo(
   ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
 ) {
   const { body } = ctx.request
-  const { importInfo: info } = await getImportInfo(body)
+  const info = await getImportInfo(body)
   ctx.body = {
     name: info.name,
     url: info.url,

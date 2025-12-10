@@ -13,6 +13,7 @@ import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import sdk from "../../../../sdk"
+import * as crypto from "crypto"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -69,34 +70,36 @@ async function fetchFromUrl(url: string): Promise<string> {
   }
 }
 
-async function resolveImportData(url: string | undefined) {
-  url = url?.trim()
-  if (!url) {
-    throw new HTTPError("Import data or url is required", 400)
-  }
-
-  const specsCache = await redis.clients.getOpenapiSpecsClient()
-  let value = await specsCache.get(url)
-  if (!value) {
-    value = await fetchFromUrl(url)
-    await specsCache.store(url, value, cache.TTL.ONE_DAY)
-  }
-
-  return value
-}
-
 export async function getImportInfo(input: {
   data?: string
-}): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
+}): Promise<ImportInfo>
 export async function getImportInfo(input: {
   url?: string
-}): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
+}): Promise<ImportInfo>
 export async function getImportInfo(
   input: { data?: string } | { url?: string }
-): Promise<{ importer: RestImporter; importInfo: ImportInfo }> {
+): Promise<ImportInfo> {
+  const cacheKey = crypto
+    .createHash("sha512")
+    .update(JSON.stringify(input))
+    .digest("hex")
+  const specsCache = await redis.clients.getOpenapiSpecsClient()
+  let value = await specsCache.get(cacheKey)
+  if (value) {
+    return value as ImportInfo
+  }
+
+  const result = await fetchImportInfo(input)
+  await specsCache.store(cacheKey, JSON.stringify(result), cache.TTL.ONE_DAY)
+  return result
+}
+
+async function fetchImportInfo(
+  input: { data?: string } | { url?: string }
+): Promise<ImportInfo> {
   let data: string | undefined
-  if ("url" in input) {
-    data = await resolveImportData(input.url)
+  if ("url" in input && input.url) {
+    data = await fetchFromUrl(input.url)
   } else if ("data" in input) {
     data = input.data
   }
@@ -106,18 +109,13 @@ export async function getImportInfo(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  const importer = new RestImporter(data)
-
-  for (let source of importer.sources) {
-    if (await source.isSupported(importer.data)) {
-      importer.source = source
-      break
+  for (const source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
+    if (await source.isSupported(data)) {
+      return source.getInfo()
     }
   }
 
-  const importInfo = importer.source.getInfo()
-
-  return { importer, importInfo }
+  throw new HTTPError("Import data format is not supported", 400)
 }
 
 class RestImporter {
