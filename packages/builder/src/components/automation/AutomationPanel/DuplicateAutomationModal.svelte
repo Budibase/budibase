@@ -1,5 +1,6 @@
 <script>
   import { automationStore } from "@/stores/builder"
+  import { cloneDeep } from "lodash/fp"
   import {
     notifications,
     Icon,
@@ -44,6 +45,12 @@
         triggerVal.stepId,
         triggerVal
       )
+      if (
+        automation.definition.trigger?.stepId === triggerVal.stepId &&
+        automation.definition.trigger?.inputs
+      ) {
+        newTrigger.inputs = cloneDeep(automation.definition.trigger.inputs)
+      }
       const duplicatedAutomation = {
         ...automation,
         definition: {
