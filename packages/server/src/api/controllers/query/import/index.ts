@@ -80,8 +80,6 @@ async function resolveImportData(url: string | undefined) {
   if (!value) {
     value = await fetchFromUrl(url)
     await specsCache.store(url, value, cache.TTL.ONE_DAY)
-  } else {
-    value = await fetchFromUrl(url)
   }
 
   return value
