@@ -14,7 +14,6 @@
   export let toolSearch: string
   export let onToolClick: (_tool: EnrichedTool) => void
   export let onAddApiConnection: () => void
-
   let toolsMenu: ActionMenu | undefined
 </script>
 
@@ -25,7 +24,7 @@
   portalTarget=".tools-popover-container"
 >
   <div slot="control">
-    <Button secondary size="S" icon="plus">Add tools</Button>
+    <Button secondary size="M" icon="plus">Add tools</Button>
   </div>
 
   <div class="tools-menu">
