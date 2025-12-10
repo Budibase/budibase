@@ -68,7 +68,16 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+  {#each $configStore.validatedConfig as {
+    type,
+    key,
+    value,
+    error,
+    name,
+    config,
+    placeholder,
+    tooltip,
+  }}
     <ConfigInput
       {type}
       {value}
@@ -76,6 +85,7 @@
       {name}
       {config}
       {placeholder}
+      {tooltip}
       on:blur={() => configStore.markFieldActive(key)}
       on:change={e => configStore.updateFieldValue(key, e.detail)}
       on:nestedFieldBlur={e =>

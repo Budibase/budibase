@@ -7,10 +7,11 @@
   export let error
   export let config
   export let placeholder
+  export let tooltip: string | undefined = undefined
 </script>
 
 <div class="form-row">
-  <Label>{name}</Label>
+  <Label tooltip={tooltip}>{name}</Label>
   <Select
     on:blur
     on:change

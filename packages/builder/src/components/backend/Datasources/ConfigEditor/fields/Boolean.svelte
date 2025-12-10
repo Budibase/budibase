@@ -3,10 +3,11 @@
 
   export let value
   export let name
+  export let tooltip: string | undefined = undefined
 </script>
 
 <div class="form-row">
-  <Label>{name}</Label>
+  <Label tooltip={tooltip}>{name}</Label>
   <Toggle on:blur on:change text="" {value} />
 </div>
 

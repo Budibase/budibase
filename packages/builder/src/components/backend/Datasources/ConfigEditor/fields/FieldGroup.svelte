@@ -6,6 +6,7 @@
   export let value
   export let name
   export let config
+  export let tooltip: string | undefined = undefined
 
   let dispatch = createEventDispatcher()
 
@@ -29,6 +30,7 @@
   initialOpen={config?.openByDefault ||
     Object.values(value).some(properties => !!properties.value)}
   header={name}
+  headerTooltip={tooltip}
 >
   <Layout gap="S">
     {#each value as field}

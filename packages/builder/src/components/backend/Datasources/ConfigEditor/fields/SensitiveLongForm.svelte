@@ -7,6 +7,7 @@
   export let error
   export let placeholder
   export let visible: boolean
+  export let tooltip: string | undefined = undefined
 
   onMount(() => {
     visible = !value
@@ -14,7 +15,7 @@
 </script>
 
 <div class="form-row">
-  <Label>{name}</Label>
+  <Label tooltip={tooltip}>{name}</Label>
   <div class="textarea-wrapper">
     {#if visible}
       <TextArea on:blur on:change {value} {error} {placeholder} />

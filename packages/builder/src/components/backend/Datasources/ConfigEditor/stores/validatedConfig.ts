@@ -14,6 +14,7 @@ interface ValidatedConfigItem {
   placeholder: string | undefined
   type: DatasourceFieldType
   config: any | undefined
+  tooltip?: string
 }
 
 interface ValidatedConfigStore {
@@ -165,16 +166,17 @@ export const createValidatedConfigStore = (
             if (properties.type === DatasourceFieldType.FIELD_GROUP) {
               return Object.entries(properties.fields || {}).map(
                 ([fieldKey, fieldProperties]) => {
-                  return {
-                    key: fieldKey,
-                    value: $configStore[key]?.[fieldKey],
-                    error: $errorsStore[`${key}.${fieldKey}`],
-                    name: capitalise(fieldProperties.display || fieldKey),
-                    type: fieldProperties.type,
-                  }
-                }
-              )
+              return {
+                key: fieldKey,
+                value: $configStore[key]?.[fieldKey],
+                error: $errorsStore[`${key}.${fieldKey}`],
+                name: capitalise(fieldProperties.display || fieldKey),
+                type: fieldProperties.type,
+                tooltip: fieldProperties.tooltip,
+              }
             }
+          )
+        }
 
             return $configStore[key]
           }
@@ -191,6 +193,7 @@ export const createValidatedConfigStore = (
               placeholder: properties.placeholder,
               type: properties.type,
               config: (properties as any).config,
+              tooltip: properties.tooltip,
             })
             config[key] = $configStore[key]
           }

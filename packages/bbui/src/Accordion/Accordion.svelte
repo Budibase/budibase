@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/accordion"
   import Icon from "../Icon/Icon.svelte"
+  import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
 
   export let itemName: string | undefined = undefined
   export let initialOpen: boolean = false
@@ -8,6 +9,7 @@
   export let headerSize: "S" | "M" | "L" = "S"
   export let bold: boolean = true
   export let noPadding: boolean = false
+  export let headerTooltip: string | undefined = undefined
 
   let isOpen = initialOpen
 
@@ -41,7 +43,13 @@
         on:click={() => (isOpen = !isOpen)}
       >
         <Icon name={isOpen ? "caret-down" : "caret-right"} size="S" />
-        {header}
+        {#if headerTooltip}
+          <TooltipWrapper tooltip={headerTooltip} size="S">
+            <span class="accordion-header-text">{header}</span>
+          </TooltipWrapper>
+        {:else}
+          <span class="accordion-header-text">{header}</span>
+        {/if}
       </button>
     </h3>
     <div
@@ -70,6 +78,10 @@
     display: flex;
     gap: var(--spacing-m);
     padding-left: 0;
+  }
+  .accordion-header-text {
+    display: inline-flex;
+    align-items: center;
   }
   .spectrum-Accordion-itemHeaderS {
     font-size: 1rem;

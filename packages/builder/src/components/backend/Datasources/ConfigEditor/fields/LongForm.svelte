@@ -6,10 +6,11 @@
   export let value
   export let error
   export let placeholder
+  export let tooltip: string | undefined = undefined
 </script>
 
 <div class="form-row">
-  <Label>{name}</Label>
+  <Label tooltip={tooltip}>{name}</Label>
   <TextArea on:blur on:change {type} {value} {error} {placeholder} />
 </div>
 

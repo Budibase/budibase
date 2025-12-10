@@ -4,12 +4,13 @@
 
   export let name
   export let value
+  export let tooltip: string | undefined = undefined
 
   let addButton
 </script>
 
 <div class="form-row ssl">
-  <Label>{name}</Label>
+  <Label tooltip={tooltip}>{name}</Label>
   <Button secondary thin outline on:click={addButton.addEntry()}>Add</Button>
 </div>
 <KeyValueBuilder
