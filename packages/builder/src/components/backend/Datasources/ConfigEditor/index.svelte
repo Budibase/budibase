@@ -34,6 +34,8 @@
 
     return keepOpen
   }
+
+  $: integrationType = integration.type === "API" ? "API" : "database"
 </script>
 
 <ModalContent
@@ -53,7 +55,7 @@
           icon="warning"
         />
       {/if}
-      <p>Connect your database to Budibase using the config below.</p>
+      <p>Connect your {integrationType} to Budibase using the config below.</p>
     </Body>
   </Layout>
 
