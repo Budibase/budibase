@@ -647,7 +647,7 @@ class ServiceNowIntegration implements IntegrationBase {
   }): T {
     const endpoint = query.extra?.endpoint
     if (!endpoint) {
-      throw new Error("Endpoint selection is required")
+      throw new Error("You must select an action")
     }
     return endpoint
   }
