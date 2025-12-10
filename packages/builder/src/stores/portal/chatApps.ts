@@ -80,9 +80,13 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   }
 
   removeChat = async (chatConversationId: string, chatAppId?: string) => {
-    await API.deleteChatConversation(chatConversationId)
-    if (chatAppId || get(this.store).chatAppId) {
-      await this.fetchChats(chatAppId)
+    const targetChatAppId = chatAppId || get(this.store).chatAppId
+    if (!targetChatAppId) {
+      return
+    }
+    await API.deleteChatConversation(chatConversationId, targetChatAppId)
+    if (targetChatAppId) {
+      await this.fetchChats(targetChatAppId)
     }
   }
 

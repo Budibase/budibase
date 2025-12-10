@@ -20,6 +20,18 @@ import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
+  const chatAppIdFromPath = ctx.params?.chatAppId
+  const chatConversationIdFromPath = ctx.params?.chatConversationId
+  if (chatAppIdFromPath && !chat.chatAppId) {
+    chat.chatAppId = chatAppIdFromPath
+  }
+  if (
+    chatConversationIdFromPath &&
+    chatConversationIdFromPath !== "new" &&
+    !chat._id
+  ) {
+    chat._id = chatConversationIdFromPath
+  }
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 
@@ -121,7 +133,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 export async function createChatConversation(
   ctx: UserCtx<Pick<ChatConversation, "chatAppId" | "title">, ChatConversation>
 ) {
-  const { chatAppId, title } = ctx.request.body
+  const { title } = ctx.request.body
+  const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -190,4 +203,32 @@ export async function fetchChatHistory(
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return timeB - timeA
     })
+}
+
+export async function fetchChatConversation(
+  ctx: UserCtx<
+    void,
+    ChatConversation,
+    { chatAppId: string; chatConversationId: string }
+  >
+) {
+  const db = context.getWorkspaceDB()
+  const chatAppId = ctx.params.chatAppId
+  const chatConversationId = ctx.params.chatConversationId
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+  if (!chatConversationId) {
+    throw new HTTPError("chatConversationId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+
+  const chat = await db.tryGet<ChatConversation>(chatConversationId)
+  if (!chat || chat.chatAppId !== chatAppId) {
+    throw new HTTPError("chat not found", 404)
+  }
+
+  ctx.body = chat
 }

@@ -15,7 +15,14 @@ export interface ChatAppEndpoints {
     chat: ChatConversation,
     workspaceId: string
   ) => Promise<AsyncIterable<UIMessage>>
-  deleteChatConversation: (chatConversationId: string) => Promise<void>
+  deleteChatConversation: (
+    chatConversationId: string,
+    chatAppId: string
+  ) => Promise<void>
+  fetchChatConversation: (
+    chatAppId: string,
+    chatConversationId: string
+  ) => Promise<ChatConversation>
   fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (
     agentId?: string,
@@ -42,18 +49,26 @@ export const buildChatAppEndpoints = (
   API: BaseAPIClient
 ): ChatAppEndpoints => ({
   streamChatConversation: async (chat, workspaceId) => {
-    const body: ChatAgentRequest = chat
+    if (!chat.chatAppId) {
+      throw new Error("chatAppId is required to stream a chat conversation")
+    }
 
-    const response = await fetch("/api/agent/chat/stream", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        [Header.APP_ID]: workspaceId,
-      },
-      body: JSON.stringify(body),
-      credentials: "same-origin",
-    })
+    const body: ChatAgentRequest = chat
+    const conversationId = chat._id || "new"
+
+    const response = await fetch(
+      `/api/chatapps/${chat.chatAppId}/conversations/${conversationId}/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          [Header.APP_ID]: workspaceId,
+        },
+        body: JSON.stringify(body),
+        credentials: "same-origin",
+      }
+    )
 
     if (!response.ok) {
       const errorBody = await response.json()
@@ -77,15 +92,27 @@ export const buildChatAppEndpoints = (
     })
   },
 
-  deleteChatConversation: async (chatConversationId: string) => {
+  deleteChatConversation: async (
+    chatConversationId: string,
+    chatAppId: string
+  ) => {
     return await API.delete({
-      url: `/api/chat/conversations/${chatConversationId}`,
+      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+    })
+  },
+
+  fetchChatConversation: async (
+    chatAppId: string,
+    chatConversationId: string
+  ) => {
+    return await API.get({
+      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
     })
   },
 
   fetchChatHistory: async (chatAppId: string) => {
     return await API.get({
-      url: `/api/chatapp/${chatAppId}/chats`,
+      url: `/api/chatapps/${chatAppId}/conversations`,
     })
   },
 
@@ -97,7 +124,7 @@ export const buildChatAppEndpoints = (
         }
       : undefined
     return await API.get({
-      url: `/api/chatapp${query}`,
+      url: `/api/chatapps${query}`,
       ...(headers && { headers }),
     })
   },
@@ -107,6 +134,11 @@ export const buildChatAppEndpoints = (
     workspaceId?: string
   ) => {
     const resolvedWorkspaceId = workspaceId || API.getAppID()
+    const { chatAppId } = chat
+    if (!chatAppId) {
+      throw new Error("chatAppId is required to create a chat conversation")
+    }
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -116,12 +148,15 @@ export const buildChatAppEndpoints = (
       headers[Header.APP_ID] = resolvedWorkspaceId
     }
 
-    const response = await fetch("/api/chat/conversations", {
-      method: "POST",
-      headers,
-      credentials: "same-origin",
-      body: JSON.stringify(chat),
-    })
+    const response = await fetch(
+      `/api/chatapps/${chatAppId}/conversations`,
+      {
+        method: "POST",
+        headers,
+        credentials: "same-origin",
+        body: JSON.stringify(chat),
+      }
+    )
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null)
@@ -134,8 +169,11 @@ export const buildChatAppEndpoints = (
   },
 
   updateChatApp: async (chatApp: UpdateChatAppRequest) => {
+    if (!chatApp._id) {
+      throw new Error("chatAppId is required to update a chat app")
+    }
     return await API.put({
-      url: "/api/chatapp",
+      url: `/api/chatapps/${chatApp._id}`,
       body: chatApp as any,
     })
   },

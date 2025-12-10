@@ -18,13 +18,23 @@ builderAdminRoutes
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
-  .post("/api/agent/chat/stream", ai.agentChatStream)
-  .post("/api/chat/conversations", ai.createChatConversation)
+  .get("/api/chatapps", ai.fetchChatApp)
+  .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
+  .put("/api/chatapps/:chatAppId", ai.updateChatApp)
+  .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
+  .get(
+    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
+    ai.fetchChatConversation
+  )
+  .post("/api/chatapps/:chatAppId/conversations", ai.createChatConversation)
   .delete(
-    "/api/chat/conversations/:chatConversationId",
+    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
     ai.removeChatConversation
   )
-  .get("/api/chatapp/:chatAppId/chats", ai.fetchChatHistory)
+  .post(
+    "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
+    ai.agentChatStream
+  )
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)
@@ -47,8 +57,6 @@ builderAdminRoutes
   )
   .get("/api/agent/toolsource/:toolSourceType/tools", ai.fetchAvailableTools)
   .get("/api/agent/:agentId/toolsource", ai.fetchToolSources)
-  .get("/api/chatapp", ai.fetchChatApp)
-  .put("/api/chatapp", ai.updateChatApp)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

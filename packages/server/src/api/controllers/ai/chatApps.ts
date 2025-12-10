@@ -28,10 +28,27 @@ export async function fetchChatApp(
 export async function updateChatApp(
   ctx: UserCtx<UpdateChatAppRequest, ChatApp>
 ) {
+  const chatAppIdFromPath = ctx.params?.chatAppId
   const chatApp = ctx.request.body as ChatApp
-  if (!chatApp.agentIds?.length) {
+  const resolvedChatApp: ChatApp = chatAppIdFromPath
+    ? { ...chatApp, _id: chatApp._id || chatAppIdFromPath }
+    : chatApp
+
+  if (!resolvedChatApp.agentIds?.length) {
     throw new HTTPError("agentIds is required", 400)
   }
-  const updated = await sdk.ai.chatApps.update(chatApp)
+  const updated = await sdk.ai.chatApps.update(resolvedChatApp)
   ctx.body = updated
+}
+
+export async function fetchChatAppById(
+  ctx: UserCtx<void, ChatApp, { chatAppId: string }>
+) {
+  const chatAppId = ctx.params?.chatAppId
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  ctx.body = chatApp
 }
