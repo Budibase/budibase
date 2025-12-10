@@ -241,6 +241,7 @@ export default abstract class BaseDataFetch<
       if (
         fieldSchema?.type === FieldType.NUMBER ||
         fieldSchema?.type === FieldType.BIGINT ||
+        fieldSchema?.responseType === FieldType.NUMBER ||
         ("calculationType" in fieldSchema && fieldSchema?.calculationType)
       ) {
         this.options.sortType = SortType.NUMBER
