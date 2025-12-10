@@ -478,13 +478,19 @@ export async function enrichSchema(
   return { ...view, schema }
 }
 
+export interface SyncSchemaOpts {
+  renameColumn?: RenameColumn
+  primaryDisplay?: string
+  previousPrimaryDisplay?: string
+}
+
 export function syncSchema(
   view: ViewV2,
   schema: TableSchema,
-  renameColumn: RenameColumn | undefined,
-  primaryDisplay?: string,
-  previousPrimaryDisplay?: string
+  opts: SyncSchemaOpts = {}
 ): ViewV2 {
+  const { renameColumn, primaryDisplay, previousPrimaryDisplay } = opts
+
   if (renameColumn && view.schema && view.schema[renameColumn.old] != null) {
     if (!view.schema[renameColumn.updated]) {
       view.schema[renameColumn.updated] = view.schema[renameColumn.old]

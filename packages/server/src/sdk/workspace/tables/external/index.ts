@@ -156,9 +156,11 @@ export async function save(
     tableToSave.views[view] = viewSdk.syncSchema(
       oldTable!.views![view] as ViewV2,
       tableToSave.schema,
-      opts?.renaming,
-      tableToSave.primaryDisplay,
-      oldTable?.primaryDisplay
+      {
+        renameColumn: opts?.renaming,
+        primaryDisplay: tableToSave.primaryDisplay,
+        previousPrimaryDisplay: oldTable?.primaryDisplay,
+      }
     )
   }
 
