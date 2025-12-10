@@ -38,6 +38,7 @@
   import BudibaseLogo from "../logos/Budibase.svelte"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
+  import budibaseLogoOnly from "@/imgs/budibase-logo-only.png"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -70,6 +71,7 @@
   let filteredTools: EnrichedTool[] = []
   let toolSections: Record<string, EnrichedTool[]> = {}
   let readableToRuntimeBinding: Record<string, string> = {}
+  let readableToIcon: Record<string, string | undefined> = {}
 
   $: currentAgent = $selectedAgent
 
@@ -163,6 +165,18 @@
       return acc
     },
     {} as Record<string, string>
+  )
+
+  $: readableToIcon = availableTools.reduce(
+    (acc, tool) => {
+      if (tool.readableBinding) {
+        acc[tool.readableBinding] =
+          tool.icon?.url ||
+          (tool.sourceType === ToolType.BUDIBASE ? budibaseLogoOnly : undefined)
+      }
+      return acc
+    },
+    {} as Record<string, string | undefined>
   )
 
   $: filteredTools =
@@ -416,15 +430,17 @@
             <div class="prompt-editor">
               <CodeEditor
                 value={draft.promptInstructions || ""}
-                bindings={promptBindings}
-                completions={promptCompletions}
-                mode={EditorModes.Handlebars}
-                bind:getCaretPosition
-                bind:insertAtPos
-                placeholder=""
-                on:change={event =>
-                  (draft.promptInstructions = event.detail || "")}
-              />
+              bindings={promptBindings}
+              bindingIcons={readableToIcon}
+              completions={promptCompletions}
+              mode={EditorModes.Handlebars}
+              bind:getCaretPosition
+              bind:insertAtPos
+              renderBindingsAsPills={true}
+              placeholder=""
+              on:change={event =>
+                (draft.promptInstructions = event.detail || "")}
+            />
             </div>
           </div>
         </Layout>

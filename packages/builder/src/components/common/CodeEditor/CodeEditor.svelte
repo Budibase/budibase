@@ -30,6 +30,7 @@
     ViewPlugin,
     Decoration,
     EditorView,
+    WidgetType,
   } from "@codemirror/view"
   import {
     bracketMatching,
@@ -73,8 +74,10 @@
   export let readonlyLineNumbers = false
   export let dropdown = DropdownPosition.Relative
   export let bindings: EnrichedBinding[] = []
+  export let bindingIcons: Record<string, string | undefined> = {}
   export let aiEnabled = true
   export let lineWrapping = true
+  export let renderBindingsAsPills = false
 
   const dispatch = createEventDispatcher()
 
@@ -228,6 +231,79 @@
     }
   )
 
+  const stripHbsDelimiters = (binding: string) =>
+    binding.replace(/^\s*\{\{\{?/, "").replace(/\}?\}\}\s*$/, "").trim()
+
+  class HbsPillWidget extends WidgetType {
+    text: string
+    icon?: string
+    constructor(text: string, icon?: string) {
+      super()
+      this.text = text
+      this.icon = icon
+    }
+    eq(other: HbsPillWidget) {
+      return other.text === this.text && other.icon === this.icon
+    }
+    toDOM() {
+      const pill = document.createElement("span")
+      pill.className = "hbs-pill"
+      if (this.icon) {
+        const img = document.createElement("img")
+        img.src = this.icon
+        img.className = "hbs-pill__icon"
+        img.alt = ""
+        pill.appendChild(img)
+      }
+      const textNode = document.createElement("span")
+      textNode.className = "hbs-pill__text"
+      textNode.textContent = `{{ ${this.text} }}`
+      pill.appendChild(textNode)
+      return pill
+    }
+    ignoreEvent() {
+      return false
+    }
+  }
+
+  const buildHbsPillDecorations = (view: EditorView) => {
+    const decos = []
+    const regex = new RegExp(FIND_ANY_HBS_REGEX)
+    for (const { from, to } of view.visibleRanges) {
+      const text = view.state.doc.sliceString(from, to)
+      let match: RegExpExecArray | null
+      regex.lastIndex = 0
+      while ((match = regex.exec(text))) {
+        const start = from + match.index
+        const end = start + match[0].length
+        const clean = stripHbsDelimiters(match[0])
+        const icon = bindingIcons?.[clean]
+        const widget = new HbsPillWidget(clean, icon)
+        decos.push(Decoration.replace({ widget, inclusive: true }).range(start, end))
+      }
+    }
+    return Decoration.set(decos, true)
+  }
+
+  const hbsPillPlugin = ViewPlugin.fromClass(
+    class {
+      decorations
+      constructor(view: EditorView) {
+        this.decorations = buildHbsPillDecorations(view)
+      }
+      update(update) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = buildHbsPillDecorations(update.view)
+        }
+      }
+    },
+    {
+      decorations: v => v.decorations,
+      provide: plugin =>
+        EditorView.atomicRanges.of(view => view.plugin(plugin)?.decorations || Decoration.none),
+    }
+  )
+
   const indentWithTabCustom = {
     key: "Tab",
     run: (view: EditorView) => {
@@ -339,7 +415,11 @@
     }
     // HBS only plugins
     else {
-      complete.push(hbsMatchDecoPlugin)
+      if (renderBindingsAsPills) {
+        complete.push(hbsPillPlugin)
+      } else {
+        complete.push(hbsMatchDecoPlugin)
+      }
     }
 
     if (placeholder) {
@@ -498,6 +578,32 @@
   }
   .code-editor > div {
     height: 100%;
+  }
+
+  :global(.hbs-pill) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--spectrum-global-color-blue-100);
+    color: var(--spectrum-global-color-blue-900);
+    font-family: var(--spectrum-alias-body-text-font-family);
+    font-size: 11px;
+    line-height: 1.4;
+    border: 1px solid var(--spectrum-global-color-blue-300);
+    box-shadow: inset 0 0 0 1px var(--spectrum-global-color-blue-200);
+    white-space: nowrap;
+  }
+  :global(.hbs-pill__icon) {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  :global(.hbs-pill__text) {
+    line-height: 1.3;
   }
 
   /* Active line */
