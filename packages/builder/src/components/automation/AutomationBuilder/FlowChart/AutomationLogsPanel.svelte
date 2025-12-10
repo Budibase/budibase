@@ -29,6 +29,7 @@
   let status = null
   let timeRange = null
   let loaded = false
+  let totalLogs = 0
 
   const AUTOMATION_LOG_PAGE_SIZE = 10
 
@@ -101,6 +102,7 @@
         startDate,
       })
       pageInfo.fetched(response.hasNextPage, response.nextPage)
+      totalLogs = response.totalRows ?? response.data.length
       runHistory = response.data
     } catch (error) {
       notifications.error("Error fetching automation logs")
@@ -176,8 +178,10 @@
                   <div class="log-content">
                     <div class="log-info">
                       <Body size="S" weight="600">
-                        Log #{$pageInfo.pageNumber * AUTOMATION_LOG_PAGE_SIZE -
-                          (AUTOMATION_LOG_PAGE_SIZE - idx - 1)}
+                        Log #{totalLogs -
+                          (($pageInfo.pageNumber - 1) *
+                            AUTOMATION_LOG_PAGE_SIZE +
+                            idx)}
                       </Body>
                       <Body size="S">
                         {dayjs(log.createdAt).format("MMM DD, YYYY HH:mm")}
