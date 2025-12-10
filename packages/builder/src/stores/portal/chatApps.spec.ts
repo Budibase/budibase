@@ -1,19 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { chatAppsStore } from "./chatApps"
 import type { ChatApp } from "@budibase/types"
 
-const fetchChatApp = vi.fn()
-const updateChatApp = vi.fn()
-const setChatAppAgent = vi.fn()
+vi.mock("@/api", () => {
+  const fetchChatApp = vi.fn()
+  const updateChatApp = vi.fn()
+  const setChatAppAgent = vi.fn()
 
-vi.mock("@/api", () => ({
-  API: {
-    fetchChatApp,
-    updateChatApp,
-    setChatAppAgent,
-  },
-}))
+  return {
+    API: {
+      fetchChatApp,
+      updateChatApp,
+      setChatAppAgent,
+    },
+  }
+})
+
+import { API } from "@/api"
+import { chatAppsStore } from "./chatApps"
+
+const fetchChatApp = vi.mocked(API.fetchChatApp)
+const updateChatApp = vi.mocked(API.updateChatApp)
+const setChatAppAgent = vi.mocked(API.setChatAppAgent)
 
 describe("chatAppsStore", () => {
   beforeEach(() => {

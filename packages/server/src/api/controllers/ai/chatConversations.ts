@@ -18,11 +18,55 @@ import {
 import sdk from "../../../sdk"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
+interface PrepareChatConversationForSaveParams {
+  chatId: string
+  chatAppId: string
+  userId: string
+  title?: string
+  messages: ChatConversation["messages"]
+  chat: Partial<ChatConversation>
+  existingChat?: ChatConversation | null
+}
+
+export const prepareChatConversationForSave = ({
+  chatId,
+  chatAppId,
+  userId,
+  title,
+  messages,
+  chat,
+  existingChat,
+}: PrepareChatConversationForSaveParams): ChatConversation => {
+  const now = new Date().toISOString()
+  const createdAt = existingChat?.createdAt || chat.createdAt || now
+  const updatedAt = now
+  const rev = existingChat?._rev || chat._rev
+
+  return {
+    _id: chatId,
+    ...(rev && { _rev: rev }),
+    chatAppId,
+    userId,
+    title: title ?? chat.title,
+    messages,
+    createdAt,
+    updatedAt,
+  }
+}
+
+const getGlobalUserId = (ctx: UserCtx) => {
+  const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
+  if (!userId) {
+    throw new HTTPError("userId is required", 400)
+  }
+  return userId as string
+}
+
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
   const chatAppIdFromPath = ctx.params?.chatAppId
   const chatConversationIdFromPath = ctx.params?.chatConversationId
-  const userId = ctx.user.userId || ctx.user._id
+  const userId = getGlobalUserId(ctx)
   if (chatAppIdFromPath && !chat.chatAppId) {
     chat.chatAppId = chatAppIdFromPath
   }
@@ -121,15 +165,17 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
 
-        const updatedChat: ChatConversation = {
-          _id: chatId,
-          ...(existingChat?._rev && { _rev: existingChat._rev }),
+        const chatToSave = prepareChatConversationForSave({
+          chatId,
           chatAppId,
           userId,
           title,
           messages,
-        }
-        await db.put(updatedChat)
+          chat,
+          existingChat,
+        })
+
+        await db.put(chatToSave)
       },
     })
     return
@@ -146,6 +192,7 @@ export async function createChatConversation(
 ) {
   const { title } = ctx.request.body
   const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
+  const userId = getGlobalUserId(ctx)
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -156,14 +203,20 @@ export async function createChatConversation(
   const db = context.getWorkspaceDB()
   const chatId = docIds.generateChatConversationID()
 
-  const newChat: ChatConversation = {
-    _id: chatId,
+  const newChat = prepareChatConversationForSave({
+    chatId,
     chatAppId,
+    userId,
     title,
-    userId: ctx.user.userId || ctx.user._id,
     messages: [],
-    createdAt: new Date().toISOString(),
-  }
+    chat: {
+      _id: chatId,
+      chatAppId,
+      userId,
+      title,
+      messages: [],
+    },
+  })
 
   await db.put(newChat)
 
@@ -175,7 +228,7 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const db = context.getWorkspaceDB()
 
   const chatConversationId = ctx.params.chatConversationId
-  const userId = ctx.user.userId || ctx.user._id
+  const userId = getGlobalUserId(ctx)
   if (!chatConversationId) {
     throw new HTTPError("chatConversationId is required", 400)
   }
@@ -197,7 +250,7 @@ export async function fetchChatHistory(
 ) {
   const db = context.getWorkspaceDB()
   const chatAppId = ctx.params.chatAppId
-  const userId = ctx.user.userId || ctx.user._id
+  const userId = getGlobalUserId(ctx)
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
@@ -214,7 +267,8 @@ export async function fetchChatHistory(
   ctx.body = allChats.rows
     .map(row => row.doc!)
     .filter(
-      chat => chat.chatAppId === chatAppId && (!chat.userId || chat.userId === userId)
+      chat =>
+        chat.chatAppId === chatAppId && (!chat.userId || chat.userId === userId)
     )
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
@@ -233,7 +287,7 @@ export async function fetchChatConversation(
   const db = context.getWorkspaceDB()
   const chatAppId = ctx.params.chatAppId
   const chatConversationId = ctx.params.chatConversationId
-  const userId = ctx.user.userId || ctx.user._id
+  const userId = getGlobalUserId(ctx)
 
   if (!chatAppId) {
     throw new HTTPError("chatAppId is required", 400)

@@ -1,10 +1,7 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type {
-  ChatApp,
-  ChatConversation,
-  User,
-} from "@budibase/types"
+import type { ChatApp, ChatConversation, User } from "@budibase/types"
 import TestConfiguration from "../utilities/TestConfiguration"
+import { prepareChatConversationForSave } from "../../api/controllers/ai/chatConversations"
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -21,7 +18,7 @@ describe("chat conversations authorization", () => {
       roles: {
         [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
-      builder: { global: false },
+      builder: { global: true },
       admin: { global: false },
     })
 
@@ -64,9 +61,7 @@ describe("chat conversations authorization", () => {
   })
 
   const headersForUser = async (user: User) =>
-    await config.withUser(user, async () =>
-      config.defaultHeaders({}, true)
-    )
+    await config.withUser(user, async () => config.defaultHeaders({}, true))
 
   it("filters history results to the requesting user", async () => {
     const headers = await headersForUser(userA)
@@ -87,9 +82,7 @@ describe("chat conversations authorization", () => {
 
     const res = await config
       .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/conversations/${convoB._id}`
-      )
+      .get(`/api/chatapps/${chatApp._id}/conversations/${convoB._id}`)
       .set(headers)
 
     expect(res.status).toBe(403)
@@ -100,12 +93,72 @@ describe("chat conversations authorization", () => {
 
     const res = await config
       .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/conversations/${convoB._id}`
-      )
+      .get(`/api/chatapps/${chatApp._id}/conversations/${convoB._id}`)
       .set(headers)
 
     expect(res.status).toBe(200)
     expect(res.body._id).toBe(convoB._id)
+  })
+})
+
+describe("prepareChatConversationForSave", () => {
+  const now = new Date("2024-01-01T00:00:00.000Z")
+
+  beforeAll(() => {
+    jest.useFakeTimers()
+    jest.setSystemTime(now)
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  it("preserves existing createdAt and updates updatedAt", () => {
+    const existingChat: ChatConversation = {
+      _id: "chat-1",
+      _rev: "1",
+      chatAppId: "chat-app-1",
+      userId: "user-1",
+      title: "old title",
+      messages: [],
+      createdAt: "2023-12-31T12:00:00.000Z",
+      updatedAt: "2023-12-31T12:00:00.000Z",
+    }
+
+    const result = prepareChatConversationForSave({
+      chatId: existingChat._id!,
+      chatAppId: existingChat.chatAppId,
+      userId: existingChat.userId!,
+      title: "new title",
+      messages: [],
+      chat: existingChat,
+      existingChat,
+    })
+
+    expect(result.createdAt).toEqual(existingChat.createdAt)
+    expect(result.updatedAt).toEqual(now.toISOString())
+    expect(result._rev).toEqual(existingChat._rev)
+  })
+
+  it("sets createdAt when saving a new conversation", () => {
+    const chat: ChatConversation = {
+      _id: "chat-2",
+      chatAppId: "chat-app-2",
+      userId: "user-2",
+      title: "new chat",
+      messages: [],
+    }
+
+    const result = prepareChatConversationForSave({
+      chatId: chat._id!,
+      chatAppId: chat.chatAppId,
+      userId: chat.userId!,
+      title: chat.title,
+      messages: [],
+      chat,
+    })
+
+    expect(result.createdAt).toEqual(now.toISOString())
+    expect(result.updatedAt).toEqual(now.toISOString())
   })
 })

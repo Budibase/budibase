@@ -158,15 +158,12 @@ export const buildChatAppEndpoints = (
       headers[Header.APP_ID] = resolvedWorkspaceId
     }
 
-    const response = await fetch(
-      `/api/chatapps/${chatAppId}/conversations`,
-      {
-        method: "POST",
-        headers,
-        credentials: "same-origin",
-        body: JSON.stringify(chat),
-      }
-    )
+    const response = await fetch(`/api/chatapps/${chatAppId}/conversations`, {
+      method: "POST",
+      headers,
+      credentials: "same-origin",
+      body: JSON.stringify(chat),
+    })
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null)
