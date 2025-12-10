@@ -133,10 +133,6 @@ export async function runAutomationCronJanitor(
       try {
         workspaceExists = await deps.workspaceExists(workspaceId)
       } catch (err) {
-        console.error(
-          `[cron-janitor] Failed to check workspace ${workspaceId}`,
-          err
-        )
         continue
       }
 
