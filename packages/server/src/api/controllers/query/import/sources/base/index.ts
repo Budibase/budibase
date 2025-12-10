@@ -18,6 +18,7 @@ export interface ImportInfo {
   docsUrl?: string
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
+  staticVariables?: Record<string, string>
 }
 
 enum MethodToVerb {

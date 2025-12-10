@@ -86,13 +86,13 @@ async function resolveImportData(url: string | undefined) {
   return value
 }
 
-export async function getImporter(input: {
+export async function getImportInfo(input: {
   data?: string
 }): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
-export async function getImporter(input: {
+export async function getImportInfo(input: {
   url?: string
 }): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
-export async function getImporter(
+export async function getImportInfo(
   input: { data?: string } | { url?: string }
 ): Promise<{ importer: RestImporter; importInfo: ImportInfo }> {
   let data: string | undefined
@@ -240,7 +240,7 @@ class RestImporter {
     }
   }
 
-  getStaticServerVariables = (): Record<string, string> => {
+  private getStaticServerVariables = (): Record<string, string> => {
     const source: any = this.source
     if (source && typeof source.getServerVariableBindings === "function") {
       return source.getServerVariableBindings()

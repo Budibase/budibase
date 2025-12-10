@@ -332,6 +332,7 @@ export class OpenAPI3 extends OpenAPISource {
       docsUrl,
       endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
+      staticVariables: this.getServerVariableBindings(),
     }
   }
 
