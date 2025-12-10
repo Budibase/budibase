@@ -32,16 +32,19 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
   ensureChatApp = async (
     workspaceId?: string,
-    fallbackAgentId?: string
+    preferredAgentId?: string
   ): Promise<ChatApp | null> => {
     const state = get(this.store)
-    const chatApp = await API.fetchChatApp(
-      fallbackAgentId,
-      workspaceId || state.workspaceId
-    )
+    let chatApp = await API.fetchChatApp(workspaceId || state.workspaceId)
 
     if (!chatApp?._id) {
       return null
+    }
+
+    if (preferredAgentId && chatApp.agentIds?.length) {
+      if (chatApp.agentIds[0] !== preferredAgentId) {
+        chatApp = await API.setChatAppAgent(chatApp._id, preferredAgentId)
+      }
     }
 
     this.update(state => {

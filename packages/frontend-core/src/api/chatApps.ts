@@ -24,10 +24,8 @@ export interface ChatAppEndpoints {
     chatConversationId: string
   ) => Promise<ChatConversation>
   fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
-  fetchChatApp: (
-    agentId?: string,
-    workspaceId?: string
-  ) => Promise<ChatApp | null>
+  fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
+  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatApp>
   createChatConversation: (
     chat: Pick<ChatConversation, "chatAppId" | "title">,
     workspaceId?: string
@@ -116,16 +114,28 @@ export const buildChatAppEndpoints = (
     })
   },
 
-  fetchChatApp: async (agentId?: string, workspaceId?: string) => {
-    const query = agentId ? `?agentId=${encodeURIComponent(agentId)}` : ""
+  fetchChatApp: async (workspaceId?: string) => {
     const headers = workspaceId
       ? {
           [Header.APP_ID]: workspaceId,
         }
       : undefined
     return await API.get({
-      url: `/api/chatapps${query}`,
+      url: `/api/chatapps`,
       ...(headers && { headers }),
+    })
+  },
+
+  setChatAppAgent: async (chatAppId: string, agentId: string) => {
+    if (!chatAppId) {
+      throw new Error("chatAppId is required to set chat app agent")
+    }
+    if (!agentId) {
+      throw new Error("agentId is required to set chat app agent")
+    }
+    return await API.post({
+      url: `/api/chatapps/${chatAppId}/agent`,
+      body: { agentId } as any,
     })
   },
 

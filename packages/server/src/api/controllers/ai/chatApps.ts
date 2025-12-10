@@ -52,3 +52,32 @@ export async function fetchChatAppById(
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   ctx.body = chatApp
 }
+
+export async function setChatAppAgent(
+  ctx: UserCtx<{ agentId: string }, ChatApp, { chatAppId: string }>
+) {
+  const chatAppId = ctx.params?.chatAppId
+  const { agentId } = ctx.request.body || {}
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const agentIds = chatApp.agentIds || []
+  if (!agentIds.includes(agentId)) {
+    throw new HTTPError("agentId is not part of this chat app", 400)
+  }
+
+  const reorderedAgentIds = [
+    agentId,
+    ...agentIds.filter(existing => existing !== agentId),
+  ]
+  const updated = await sdk.ai.chatApps.update({
+    ...chatApp,
+    agentIds: reorderedAgentIds,
+  })
+  ctx.body = updated
+}

@@ -41,7 +41,10 @@
       await agentsStore.selectAgent(agentId, workspaceId)
       await chatAppsStore.initChats(workspaceId, agentId)
       const resolvedChatAppId = $chatAppsStore.chatAppId || ""
-      chat = { ...INITIAL_CHAT, chatAppId: resolvedChatAppId }
+      chat = {
+        ...INITIAL_CHAT,
+        chatAppId: resolvedChatAppId,
+      }
       chatAppsStore.clearCurrentChatId()
     } else {
       await agentsStore.selectAgent(undefined, workspaceId)
@@ -243,7 +246,6 @@
         <Chatbox
           bind:chat
           {loading}
-          agentId={selectedAgentId || undefined}
           workspaceId={$params.application}
           on:chatSaved={handleChatSaved}
         />

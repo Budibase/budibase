@@ -21,6 +21,7 @@ builderAdminRoutes
   .get("/api/chatapps", ai.fetchChatApp)
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
+  .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
   .get(
     "/api/chatapps/:chatAppId/conversations/:chatConversationId",
