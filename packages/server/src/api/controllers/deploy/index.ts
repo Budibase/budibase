@@ -174,6 +174,9 @@ async function applyPendingColumnRenames(
   })
 }
 
+const getRevisionNumber = (rev?: string) =>
+  parseInt(rev?.split("-")?.[0] || "0", 10)
+
 async function clearPendingColumnRenames(workspaceId: string) {
   await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
@@ -353,15 +356,28 @@ export const publishWorkspace = async function (
                 const devTable = await devDb.tryGet<Table>(prodTable._id!)
                 if (!devTable) {
                   console.warn(
-                    `Failed to get development table for table ${prodTable._id} 
-                    when applying column renames`
+                    `Failed to get development table for table ${prodTable._id} when applying column renames`
                   )
                   continue
                 }
-                await devDb.put({
+
+                const prodRevNum = getRevisionNumber(prodTable._rev)
+                let devRevNum = getRevisionNumber(devTable._rev)
+
+                let docForPut: Table = {
                   ...prodTable,
                   _rev: devTable._rev,
-                })
+                }
+
+                // Bump dev revisions until dev is at least prod (avoids prod-ahead).
+                while (devRevNum < prodRevNum) {
+                  const res = await devDb.put(docForPut)
+                  docForPut = { ...docForPut, _rev: res.rev }
+                  devRevNum = getRevisionNumber(res.rev)
+                }
+
+                // Ensure final content is written with the latest dev rev (handles equal case).
+                await devDb.put(docForPut)
               } catch (err) {
                 console.warn(
                   `Failed to update development table with production table 

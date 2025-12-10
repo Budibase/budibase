@@ -645,4 +645,46 @@ describe("/api/deploy", () => {
       expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
     })
   })
+
+  it("keeps dev revisions aligned when multiple pending renames would bump prod multiple times", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    // First rename
+    const renamedOnce = await config.api.table.save({
+      ...table,
+      schema: {
+        ...table.schema,
+        details: { ...table.schema.description, name: "details" },
+      },
+      _rename: { old: "description", updated: "details" },
+    })
+
+    // Second rename on the already renamed table
+    const renamedTwice = await config.api.table.save({
+      ...renamedOnce,
+      schema: {
+        ...renamedOnce.schema,
+        fullName: { ...renamedOnce.schema.name, name: "fullName" },
+      },
+      _rename: { old: "name", updated: "fullName" },
+    })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    let prodRevNum: number | undefined
+    await config.withProdApp(async () => {
+      const prodTable = await config.api.table.get(renamedTwice._id!)
+      expect(prodTable._deleted).toBeFalsy()
+      prodRevNum = parseInt(prodTable._rev!.split("-")[0])
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const devTable = await db.get<Table>(renamedTwice._id!)
+      const devRevNum = parseInt(devTable._rev!.split("-")[0])
+      expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
+    })
+  })
 })
