@@ -44,4 +44,7 @@
   .icon-small {
     margin-bottom: -2px;
   }
+  .icon-container :global(i.disabled) {
+    color: var(--spectrum-global-color-gray-700);
+  }
 </style>
