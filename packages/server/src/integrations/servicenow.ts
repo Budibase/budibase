@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  DatasourceFieldConfig,
   DatasourceFieldType,
   Integration,
   IntegrationBase,
@@ -104,14 +105,16 @@ const DELETE_ENDPOINT_OPTIONS: ServiceNowDeleteEndpoint[] = [
   "attachment.delete",
 ]
 
-const listFields = {
+const listFields: Record<string, DatasourceFieldConfig> = {
   customQuery: {
-    display: "Custom query (sysparm_query)",
+    display: "Custom query",
+    tooltip: "sysparm_query",
     type: DatasourceFieldType.STRING,
     required: false,
   },
   fields: {
-    display: "Fields (comma separated)",
+    display: "Fields",
+    tooltip: "comma separated",
     type: DatasourceFieldType.STRING,
     required: false,
   },
@@ -161,9 +164,10 @@ const SCHEMA: Integration = {
       type: QueryType.FIELDS,
       fields: {
         tableName: {
-          display: "Table name (table records only)",
+          display: "Table name",
           type: DatasourceFieldType.STRING,
           required: false,
+          tooltip: "table records only",
         },
         payload: payloadField,
       },
@@ -177,7 +181,8 @@ const SCHEMA: Integration = {
           type: DatasourceFieldType.STRING,
         },
         tableName: {
-          display: "Table name (table records / attachments)",
+          display: "Table name",
+          tooltip: "table records / attachments",
           type: DatasourceFieldType.STRING,
         },
         userName: {
@@ -196,7 +201,8 @@ const SCHEMA: Integration = {
           required: true,
         },
         tableName: {
-          display: "Table name (table records only)",
+          display: "Table name",
+          tooltip: "table records only",
           type: DatasourceFieldType.STRING,
         },
         payload: payloadField,
@@ -211,7 +217,8 @@ const SCHEMA: Integration = {
           required: true,
         },
         tableName: {
-          display: "Table name (table records only)",
+          display: "Table name",
+          tooltip: "table records only",
           type: DatasourceFieldType.STRING,
         },
       },
@@ -219,7 +226,7 @@ const SCHEMA: Integration = {
   },
   extra: {
     endpoint: {
-      displayName: "Endpoint",
+      displayName: "Action",
       type: DatasourceFieldType.LIST,
       required: true,
       data: {
@@ -423,9 +430,7 @@ class ServiceNowIntegration implements IntegrationBase {
     const results = await this.request<any[]>("GET", "/now/table/sys_user", {
       query: params,
     })
-    return Array.isArray(results) && results.length > 0
-      ? results[0]
-      : undefined
+    return Array.isArray(results) && results.length > 0 ? results[0] : undefined
   }
 
   private async listTable(path: string, query: ServiceNowReadQuery) {
@@ -486,7 +491,9 @@ class ServiceNowIntegration implements IntegrationBase {
       }
       const remaining = limit ? limit - results.length : undefined
       const requested =
-        remaining != null ? Math.min(pageSize, Math.max(remaining, 1)) : pageSize
+        remaining != null
+          ? Math.min(pageSize, Math.max(remaining, 1))
+          : pageSize
       const query = {
         ...params,
         sysparm_limit: requested,
