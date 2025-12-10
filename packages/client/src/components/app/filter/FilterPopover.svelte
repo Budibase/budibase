@@ -44,6 +44,7 @@
   export let schema: TableSchema | null = null
   export let buttonText: string | undefined = undefined
   export let config: FilterConfig | undefined = undefined
+  export let defaultOperator: string | undefined = undefined
   export let operators:
     | {
         value: string
@@ -151,9 +152,15 @@
       operator: BasicOperator.EMPTY,
       value: defaultValue,
     }
+    const findOperator = (value?: string) =>
+      value && operators?.find(op => op.value === value)?.value
+    const operatorFallback = operators?.[0]?.value
+    const configuredOperator = findOperator(config?.defaultOperator)
+    const componentOperator = findOperator(defaultOperator)
+
     return {
       ...defaultFilter,
-      operator: operators?.[0]?.value,
+      operator: configuredOperator ?? componentOperator ?? operatorFallback,
     } as SearchFilter
   }
 
