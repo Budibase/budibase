@@ -142,6 +142,7 @@ const listFields: Record<string, DatasourceFieldConfig> = {
   returnAll: {
     display: "Return all records",
     type: DatasourceFieldType.BOOLEAN,
+    placeholder: "true/false",
     required: false,
     default: false,
   },
