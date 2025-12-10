@@ -8,7 +8,7 @@ import {
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
-import { ImportSource } from "./sources/base"
+import { ImportInfo, ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
@@ -68,7 +68,7 @@ async function fetchFromUrl(url: string): Promise<string> {
   }
 }
 
-export async function resolveImportData(url: string | undefined) {
+async function resolveImportData(url: string | undefined) {
   url = url?.trim()
   if (!url) {
     throw new HTTPError("Import data or url is required", 400)
@@ -79,12 +79,29 @@ export async function resolveImportData(url: string | undefined) {
   if (!value) {
     value = await fetchFromUrl(url)
     await specsCache.store(url, value, cache.TTL.ONE_DAY)
+  } else {
+    value = await fetchFromUrl(url)
   }
 
   return value
 }
 
-export async function getImporter(data: string) {
+export async function getImporter(input: {
+  data?: string
+}): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
+export async function getImporter(input: {
+  url?: string
+}): Promise<{ importer: RestImporter; importInfo: ImportInfo }>
+export async function getImporter(
+  input: { data?: string } | { url?: string }
+): Promise<{ importer: RestImporter; importInfo: ImportInfo }> {
+  let data: string | undefined
+  if ("url" in input) {
+    data = await resolveImportData(input.url)
+  } else if ("data" in input) {
+    data = input.data
+  }
+
   data = data?.trim()
   if (!data) {
     throw new HTTPError("Import data or url is required", 400)

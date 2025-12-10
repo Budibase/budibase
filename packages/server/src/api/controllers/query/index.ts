@@ -39,7 +39,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { getImporter, resolveImportData } from "./import"
+import { getImporter } from "./import"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -76,9 +76,7 @@ const _import = async (
 ) => {
   const body = ctx.request.body
 
-  const data = body.data ?? (await resolveImportData(body.url))
-
-  const { importer, importInfo } = await getImporter(data)
+  const { importer, importInfo } = await getImporter(body)
 
   let datasourceId
   if (!body.datasourceId) {
@@ -143,8 +141,7 @@ export async function importInfo(
   ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
 ) {
   const { body } = ctx.request
-  const data = body.data ?? (await resolveImportData(body.url))
-  const { importer, importInfo: info } = await getImporter(data)
+  const { importer, importInfo: info } = await getImporter(body)
   const staticVariables = importer.getStaticServerVariables()
   ctx.body = {
     name: info.name,
