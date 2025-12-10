@@ -55,7 +55,7 @@
             {getDisplayName(field)}
           </Label>
           <Input
-            placeholder="Enter {getDisplayName(field)}"
+            placeholder={`Enter ${schema.fields[field]?.placeholder ?? getDisplayName(field)}`}
             outline
             disabled={!editable}
             type={schema.fields[field]?.type}
