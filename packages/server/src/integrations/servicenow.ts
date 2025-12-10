@@ -545,7 +545,10 @@ class ServiceNowIntegration implements IntegrationBase {
       return undefined as T
     }
     const json = await response.json()
-    return (json?.result ?? json) as T
+    if (this.hasResult(json)) {
+      return (json.result ?? json) as T
+    }
+    return json as T
   }
 
   private buildBaseUrl() {
@@ -627,6 +630,10 @@ class ServiceNowIntegration implements IntegrationBase {
       throw new Error("Endpoint selection is required")
     }
     return endpoint
+  }
+
+  private hasResult(json: unknown): json is { result?: unknown } {
+    return typeof json === "object" && json !== null && "result" in json
   }
 }
 

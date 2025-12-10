@@ -15,7 +15,7 @@
 
 <div class="form-row ssl">
   <Label {tooltip}>{name}</Label>
-  <Button secondary on:click={addButton?.addEntry()}>Add</Button>
+  <Button secondary on:click={() => addButton?.addEntry()}>Add</Button>
 </div>
 <KeyValueBuilder
   on:change
