@@ -45,6 +45,7 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.FIRESTORE]: undefined,
   [SourceName.GOOGLE_SHEETS]: undefined,
   [SourceName.REDIS]: undefined,
+  [SourceName.SERVICENOW]: undefined,
   [SourceName.SNOWFLAKE]: undefined,
   [SourceName.BUDIBASE]: undefined,
 }

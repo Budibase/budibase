@@ -62,6 +62,7 @@ export enum SourceName {
   POSTGRES = "POSTGRES",
   REDIS = "REDIS",
   REST = "REST",
+  SERVICENOW = "SERVICENOW",
   S3 = "S3",
   SNOWFLAKE = "SNOWFLAKE",
   SQL_SERVER = "SQL_SERVER",

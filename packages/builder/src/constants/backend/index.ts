@@ -240,6 +240,7 @@ export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
   REDIS: "REDIS",
   REST: "REST",
+  SERVICENOW: "SERVICENOW",
   S3: "S3",
   SNOWFLAKE: "SNOWFLAKE",
   SQL_SERVER: "SQL_SERVER",
@@ -262,6 +263,7 @@ export const IntegrationNames = {
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
   [IntegrationTypes.FIRESTORE]: "Firestore",
   [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SERVICENOW]: "ServiceNow",
   [IntegrationTypes.SNOWFLAKE]: "Snowflake",
 }
 
