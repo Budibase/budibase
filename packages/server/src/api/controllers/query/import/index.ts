@@ -91,7 +91,11 @@ export async function getImportInfo(
 
   const importer = await createImporter(input)
   const result = importer.getInfo()
-  await specsCache.store(cacheKey, JSON.stringify(result), cache.TTL.ONE_DAY)
+  await specsCache.store(
+    cacheKey,
+    JSON.stringify(result),
+    cache.TTL.ONE_DAY * 7
+  )
   return result
 }
 
