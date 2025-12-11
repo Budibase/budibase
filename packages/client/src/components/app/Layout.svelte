@@ -300,19 +300,19 @@
                     {title}
                   </Heading>
                 {/if}
-                {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
-                  <div
-                    class="nav-toggle"
-                    on:click|stopPropagation={() =>
-                      (navCollapsed = !navCollapsed)}
-                  >
-                    <i
-                      class="ph ph-sidebar-simple"
-                      style:color={"var(--navTextColor)"}
-                    />
-                  </div>
-                {/if}
               </div>
+              {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
+                <div
+                  class="nav-toggle"
+                  on:click|stopPropagation={() =>
+                    (navCollapsed = !navCollapsed)}
+                >
+                  <i
+                    class="ph ph-sidebar-simple"
+                    style:color={"var(--navTextColor)"}
+                  />
+                </div>
+              {/if}
               {#if !embedded}
                 <div class="user top">
                   <UserMenu compact />
@@ -463,6 +463,7 @@
     align-items: stretch;
     padding: 18px 32px 18px 32px;
     max-width: 100%;
+    min-width: 0;
     gap: var(--spacing-xs);
   }
   .nav :global(.icon) {
@@ -483,6 +484,8 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-xl);
+    min-width: 0;
+    overflow: hidden;
   }
 
   #side-panel-container {
@@ -573,6 +576,7 @@
     padding: var(--spacing-s);
     border-radius: 4px;
     transition: background-color 0.2s ease;
+    flex-shrink: 0;
   }
   .nav-toggle:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -590,6 +594,8 @@
     align-items: center;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
   }
   .logo :global(h1) {
     font-weight: 600;
@@ -598,6 +604,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .logo :global(img) {
+    max-width: 100%;
+    height: auto;
+    flex-shrink: 0;
   }
   .links {
     flex: 1 0 auto;
@@ -615,6 +626,7 @@
   /* Left overrides for both desktop and mobile */
   .nav--left {
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   /* Desktop nav overrides */
