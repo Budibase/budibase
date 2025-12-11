@@ -194,6 +194,9 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)
+    } else if (type === "toggle-preview-device") {
+      const previewDevice = get(previewStore).previewDevice
+      previewStore.setDevice(previewDevice === "mobile" ? "desktop" : "mobile")
     } else if (type === "provide-context") {
       let context = data?.context
       if (context) {
