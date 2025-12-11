@@ -36,9 +36,7 @@
   })
 
   const togglePreviewDevice = () => {
-    const currentDevice =
-      $builderStore.previewModalDevice || $builderStore.previewDevice
-    const nextDevice = currentDevice === "mobile" ? "desktop" : "mobile"
+    const nextDevice = displayDevice === "mobile" ? "desktop" : "mobile"
     builderStore.update(state => ({
       ...state,
       previewModalDevice: nextDevice === "mobile" ? "mobile" : null,
@@ -48,8 +46,12 @@
     })
   }
 
+  $: contextDevice = $context?.device?.mobile === true ? "mobile" : "desktop"
+
   $: displayDevice =
-    $builderStore.previewModalDevice || $builderStore.previewDevice
+    $builderStore.previewModalDevice ||
+    $builderStore.previewDevice ||
+    contextDevice
 
   $: previewIcon =
     displayDevice === "mobile" ? "device-mobile-camera" : "monitor"
