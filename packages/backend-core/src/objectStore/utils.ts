@@ -78,9 +78,7 @@ async function processUrlAttachment(
   }
   return {
     filename: attachment.filename || fallbackFilename,
-    content: stream.Readable.fromWeb(
-      response.body as unknown as streamWeb.ReadableStream
-    ),
+    content: stream.Readable.fromWeb(response.body as streamWeb.ReadableStream),
   }
 }
 

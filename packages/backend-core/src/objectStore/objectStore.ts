@@ -439,7 +439,7 @@ export async function retrieve(
       // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
       // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
       const readableStream =
-        response.Body.transformToWebStream() as unknown as ReadableStream
+        response.Body.transformToWebStream() as ReadableStream
       return stream.Readable.fromWeb(readableStream)
     }
   })
