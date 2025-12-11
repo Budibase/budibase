@@ -6,6 +6,10 @@
 
   $: src = $selectedAppUrls.previewUrl
 
+  const close = () => {
+    previewStore.showPreview(false)
+  }
+
   onMount(() => {
     window.isBuilder = true
     window.closePreview = () => {
