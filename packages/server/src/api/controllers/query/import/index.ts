@@ -131,21 +131,26 @@ async function createImporter(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  for (const source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
-    if (await source.isSupported(data, skipValidation)) {
-      return new RestImporter(source)
-    }
-  }
-
-  throw new HTTPError("Import data format is not supported", 400)
+  return await RestImporter.init(data, skipValidation)
 }
 
-class RestImporter {
-  private source: ImportSource
+export class RestImporter {
+  private source!: ImportSource
 
-  constructor(source: ImportSource) {
-    this.source = source
+  private constructor() {}
+
+  static init = async (data: string, skipValidation?: boolean) => {
+    const importer = new RestImporter()
+    for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
+      if (await source.isSupported(data, skipValidation)) {
+        importer.source = source
+        break
+      }
+    }
+    return importer
   }
+
+  getImportSource = () => this.source.getImportSource()
 
   getInfo = () => this.source.getInfo()
 
@@ -258,7 +263,7 @@ class RestImporter {
     }
   }
 
-  private getStaticServerVariables = (): Record<string, string> => {
+  getStaticServerVariables = (): Record<string, string> => {
     const source: any = this.source
     if (source && typeof source.getServerVariableBindings === "function") {
       return source.getServerVariableBindings()

@@ -61,8 +61,7 @@ describe("Rest Importer", () => {
   let restImporter: RestImporter
 
   const init = async (data: string) => {
-    restImporter = new RestImporter(data)
-    await restImporter.init()
+    restImporter = await RestImporter.init(data)
   }
 
   const runTest = async (
@@ -301,7 +300,7 @@ describe("Rest Importer", () => {
     expect(events.query.imported).toHaveBeenCalledTimes(1)
     expect(events.query.imported).toHaveBeenCalledWith(
       datasource,
-      restImporter.source.getImportSource(),
+      restImporter.getImportSource(),
       1
     )
     jest.clearAllMocks()
