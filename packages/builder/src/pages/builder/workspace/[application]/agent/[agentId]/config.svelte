@@ -259,8 +259,6 @@
   }
 
   const removeEnabledTool = (tool: EnrichedTool) => {
-    console.log("removing tool", tool)
-    console.log("draft.enabledTools", draft.enabledTools)
     draft.enabledTools = (draft.enabledTools || []).filter(
       binding => binding !== tool.runtimeBinding
     )
