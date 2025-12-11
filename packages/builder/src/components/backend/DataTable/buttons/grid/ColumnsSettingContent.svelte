@@ -41,7 +41,10 @@
 
   $: displayColumns = columns.map(c => {
     const isDisplayColumn = c.primaryDisplay
-    const isDisplayLocked = isDisplayColumn && viewHasCrudActions
+    const isDisplayLocked =
+      isDisplayColumn &&
+      viewHasCrudActions &&
+      $datasource?.type !== "viewV2"
     const isRequired =
       isDisplayLocked || helpers.schema.isRequired(c.schema.constraints)
 
