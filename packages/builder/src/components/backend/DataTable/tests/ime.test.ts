@@ -2,18 +2,32 @@ import { fireEvent, render, waitFor } from "@testing-library/svelte"
 import { vi } from "vitest"
 import TextCellTestWrapper from "./TextCellTestWrapper.svelte"
 
+interface TextCellApi {
+  focus: () => void
+  blur: () => void
+  isActive: () => boolean
+  onKeyDown: (event: KeyboardEvent) => boolean
+}
+
+const ensureApi = (api?: TextCellApi): TextCellApi => {
+  if (!api) {
+    throw new Error("api is not ready")
+  }
+  return api
+}
+
 describe("TextCell IME handling", () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
   it("ignores Enter key while composing", async () => {
-    let api
+    let api: TextCellApi | undefined
     const onChange = vi.fn()
     const { getByRole } = render(TextCellTestWrapper, {
       props: {
         value: "テスト",
-        setApi: ref => {
+        setApi: (ref: TextCellApi) => {
           api = ref
         },
         onChange,
@@ -31,7 +45,7 @@ describe("TextCell IME handling", () => {
     const blurSpy = vi.spyOn(input, "blur")
     const dispatchSpy = vi.spyOn(document, "dispatchEvent")
 
-    const handled = api.onKeyDown(
+    const handled = ensureApi(api).onKeyDown(
       new KeyboardEvent("keydown", { key: "Enter" })
     )
 
@@ -41,12 +55,12 @@ describe("TextCell IME handling", () => {
   })
 
   it("commits the value after composition ends", async () => {
-    let api
+    let api: TextCellApi | undefined
     const onChange = vi.fn()
     const { getByRole } = render(TextCellTestWrapper, {
       props: {
         value: "テスト",
-        setApi: ref => {
+        setApi: (ref: TextCellApi) => {
           api = ref
         },
         onChange,
@@ -65,14 +79,14 @@ describe("TextCell IME handling", () => {
     const blurSpy = vi.spyOn(input, "blur")
     const dispatchSpy = vi.spyOn(document, "dispatchEvent")
 
-    const handled = api.onKeyDown(
+    const handled = ensureApi(api).onKeyDown(
       new KeyboardEvent("keydown", { key: "Enter" })
     )
 
     expect(handled).toBe(true)
     expect(blurSpy).toHaveBeenCalled()
     expect(dispatchSpy).toHaveBeenCalled()
-    const arrowEvent = dispatchSpy.mock.calls[0][0]
+    const arrowEvent = dispatchSpy.mock.calls[0][0] as KeyboardEvent
     expect(arrowEvent).toBeInstanceOf(KeyboardEvent)
     expect(arrowEvent.key).toBe("ArrowDown")
   })
