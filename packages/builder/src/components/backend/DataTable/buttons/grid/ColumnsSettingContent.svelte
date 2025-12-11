@@ -44,25 +44,8 @@
 
     const defaultPermission = permissions[0]
     const requiredTooltips = {
-      [FieldPermissions.WRITABLE]: (() => {
-        if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (isDisplayLocked) {
-            return "Display column must be writable"
-          }
-          if (isRequired) {
-            return "Required columns must be writable"
-          }
-        }
-      })(),
+      [FieldPermissions.WRITABLE]: (() => {})(),
       [FieldPermissions.READONLY]: (() => {
-        if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (isDisplayLocked) {
-            return "Display column cannot be read-only"
-          }
-          if (isRequired) {
-            return "Required columns cannot be read-only"
-          }
-        }
         if (defaultPermission === FieldPermissions.READONLY) {
           if (isDisplayColumn) {
             return "Display column must be read-only"
