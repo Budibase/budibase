@@ -27,6 +27,7 @@
     Datasource,
     ImportRestQueryRequest,
     ImportEndpoint,
+    RestTemplate,
   } from "@budibase/types"
 
   export let navigateDatasource = false
@@ -35,16 +36,15 @@
   export let onCancel: (() => void) | undefined = undefined
 
   $: datasource = $datasources.selected as Datasource
-  $: restTemplateList = $restTemplates.templates
   let selectedEndpoint: ImportEndpoint | undefined
+  let template: RestTemplate | undefined
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === datasource?.source
   )
-  $: template = datasource?.restTemplate
-    ? restTemplateList.find(
-        template => template.name === datasource.restTemplate
-      )
-    : undefined
+  $: template =
+    datasource?.restTemplate && $restTemplates
+      ? restTemplates.getByName(datasource.restTemplate)
+      : undefined
   $: selectedTemplateSpec = template
     ? template.specs?.find(
         spec => spec.version === datasource?.restTemplateVersion
