@@ -136,7 +136,7 @@ export async function buildPromptAndTools(
     tools:
       enabledToolNames.size > 0
         ? allTools.filter(tool => enabledToolNames.has(tool.name))
-        : allTools,
+        : [],
   }
 }
 
