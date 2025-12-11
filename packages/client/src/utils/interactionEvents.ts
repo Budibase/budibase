@@ -1,9 +1,17 @@
 const DEFAULT_DOUBLE_TAP_DELAY = 400
 const DEFAULT_LONG_PRESS_DELAY = 600
 
+export type ClickMode = "onClick" | "onDoubleClick"
+
 export interface InteractionHandlers {
-  onDoubleClick?: (event?: Event) => void
+  onClick?: (event?: Event) => void
   onContextMenu?: (event?: Event) => void
+}
+
+export interface InteractionOptions extends InteractionHandlers {
+  clickMode?: ClickMode
+  doubleTapDelay?: number
+  longPressDelay?: number
 }
 
 type TouchLikeEvent = {
@@ -29,10 +37,15 @@ export class InteractionController {
   private suppressDoubleClick: boolean
   private suppressContextMenu: boolean
   private touchStartEvent: TouchLikeEvent | null
+  private clickMode: ClickMode
 
   constructor(
     handlers: InteractionHandlers = {},
-    config: { doubleTapDelay?: number; longPressDelay?: number } = {}
+    config: {
+      doubleTapDelay?: number
+      longPressDelay?: number
+      clickMode?: ClickMode
+    } = {}
   ) {
     this.handlers = handlers
     this.doubleTapDelay = config.doubleTapDelay ?? DEFAULT_DOUBLE_TAP_DELAY
@@ -43,22 +56,37 @@ export class InteractionController {
     this.suppressDoubleClick = false
     this.suppressContextMenu = false
     this.touchStartEvent = null
+    this.clickMode = config.clickMode ?? "onClick"
   }
 
-  setHandlers(handlers: InteractionHandlers = {}) {
+  setHandlers(
+    handlers: InteractionHandlers = {},
+    clickMode: ClickMode = "onClick"
+  ) {
     this.handlers = handlers
+    this.clickMode = clickMode
+  }
+
+  setConfig(
+    config: {
+      doubleTapDelay?: number
+      longPressDelay?: number
+      clickMode?: ClickMode
+    } = {}
+  ) {
+    if (config.doubleTapDelay != null) {
+      this.doubleTapDelay = config.doubleTapDelay
+    }
+    if (config.longPressDelay != null) {
+      this.longPressDelay = config.longPressDelay
+    }
+    if (config.clickMode != null) {
+      this.clickMode = config.clickMode
+    }
   }
 
   destroy() {
     this.resetLongPress()
-  }
-
-  handleDblClick = (event: Event) => {
-    if (this.suppressDoubleClick) {
-      this.suppressDoubleClick = false
-      return
-    }
-    this.handlers.onDoubleClick?.(event)
   }
 
   handleContextMenu = (event: Event) => {
@@ -111,7 +139,9 @@ export class InteractionController {
     if (now - this.lastTouchEnd <= this.doubleTapDelay) {
       this.lastTouchEnd = -Infinity
       this.suppressDoubleClick = true
-      this.handlers.onDoubleClick?.(event)
+      if (this.clickMode === "onDoubleClick") {
+        this.handlers.onClick?.(event)
+      }
     } else {
       this.lastTouchEnd = now
     }
@@ -128,10 +158,17 @@ export class InteractionController {
 
 export const interactionEvents = (
   node: HTMLElement,
-  handlers: InteractionHandlers = {}
+  options: InteractionOptions = {}
 ) => {
-  const controller = new InteractionController(handlers)
-  node.addEventListener("dblclick", controller.handleDblClick)
+  const controller = new InteractionController(
+    { onClick: options.onClick, onContextMenu: options.onContextMenu },
+    {
+      doubleTapDelay: options.doubleTapDelay,
+      longPressDelay: options.longPressDelay,
+      clickMode: options.clickMode,
+    }
+  )
+  let currentOptions: InteractionOptions = { ...options }
   node.addEventListener("contextmenu", controller.handleContextMenu)
   node.addEventListener("touchstart", controller.handleTouchStart, {
     passive: false,
@@ -141,11 +178,21 @@ export const interactionEvents = (
   node.addEventListener("touchcancel", controller.handleTouchCancel)
 
   return {
-    update(newHandlers: InteractionHandlers = {}) {
-      controller.setHandlers(newHandlers)
+    update(newOptions: InteractionOptions = {}) {
+      currentOptions = { ...currentOptions, ...newOptions }
+      controller.setHandlers(
+        {
+          onClick: currentOptions.onClick,
+          onContextMenu: currentOptions.onContextMenu,
+        },
+        currentOptions.clickMode ?? "onClick"
+      )
+      controller.setConfig({
+        doubleTapDelay: currentOptions.doubleTapDelay,
+        longPressDelay: currentOptions.longPressDelay,
+      })
     },
     destroy() {
-      node.removeEventListener("dblclick", controller.handleDblClick)
       node.removeEventListener("contextmenu", controller.handleContextMenu)
       node.removeEventListener("touchstart", controller.handleTouchStart)
       node.removeEventListener("touchend", controller.handleTouchEnd)

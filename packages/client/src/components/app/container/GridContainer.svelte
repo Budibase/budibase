@@ -6,8 +6,8 @@
   import { interactionEvents } from "@/utils/interactionEvents"
 
   export let onClick
-  export let onDoubleClick
   export let onContextMenu
+  export let clickMode = "onClick"
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
@@ -156,13 +156,18 @@
   bind:this={ref}
   class="grid"
   class:mobile
-  class:clickable={!!(onClick || onDoubleClick || onContextMenu)}
+  class:clickable={!!(onClick || onContextMenu)}
   use:styleable={$styles}
-  use:interactionEvents={{ onDoubleClick, onContextMenu }}
+  use:interactionEvents={{ onClick, onContextMenu, clickMode }}
   data-cols={GridColumns}
   data-col-size={colSize}
   data-required-rows={requiredRows}
-  on:click={onClick}
+  on:click={clickMode === "onClick" ? onClick : null}
+  on:dblclick={event => {
+    if (clickMode !== "onDoubleClick") return
+    if (event.target !== event.currentTarget) return
+    onClick?.(event)
+  }}
 >
   {#if inBuilder}
     <div class="underlay-h">

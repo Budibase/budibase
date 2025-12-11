@@ -12,28 +12,34 @@ describe("InteractionController", () => {
     vi.useRealTimers()
   })
 
-  it("executes the handler for dblclick events", () => {
-    const handler = vi.fn()
-    const controller = new InteractionController({ onDoubleClick: handler })
-    controller.handleDblClick(new MouseEvent("dblclick"))
-    expect(handler).toHaveBeenCalledTimes(1)
-  })
-
-  it("fires double-click once when a double tap is detected and suppresses native dblclick", () => {
+  it("fires onClick once when a double tap is detected while in double click mode", () => {
     vi.useFakeTimers()
     vi.setSystemTime(0)
     const handler = vi.fn()
     const controller = new InteractionController(
-      { onDoubleClick: handler },
-      { doubleTapDelay: 200 }
+      { onClick: handler },
+      { clickMode: "onDoubleClick", doubleTapDelay: 200 }
     )
     const touchEvent = createTouchEvent()
     controller.handleTouchEnd(touchEvent)
     vi.setSystemTime(100)
     controller.handleTouchEnd(touchEvent)
     expect(handler).toHaveBeenCalledTimes(1)
-    controller.handleDblClick(new MouseEvent("dblclick"))
-    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not fire onClick on double tap when left click mode is set to onClick", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(0)
+    const handler = vi.fn()
+    const controller = new InteractionController(
+      { onClick: handler },
+      { doubleTapDelay: 200 }
+    )
+    const touchEvent = createTouchEvent()
+    controller.handleTouchEnd(touchEvent)
+    vi.setSystemTime(100)
+    controller.handleTouchEnd(touchEvent)
+    expect(handler).toHaveBeenCalledTimes(0)
   })
 
   it("triggers the context menu handler after a long press and ignores the native event", () => {
