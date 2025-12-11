@@ -16,12 +16,4 @@
   }
 </script>
 
-<TextCell
-  bind:api
-  {value}
-  {focused}
-  {readonly}
-  {type}
-  {format}
-  {onChange}
-/>
+<TextCell bind:api {value} {focused} {readonly} {type} {format} {onChange} />

@@ -31,7 +31,9 @@ describe("TextCell IME handling", () => {
     const blurSpy = vi.spyOn(input, "blur")
     const dispatchSpy = vi.spyOn(document, "dispatchEvent")
 
-    const handled = api.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))
+    const handled = api.onKeyDown(
+      new KeyboardEvent("keydown", { key: "Enter" })
+    )
 
     expect(handled).toBe(true)
     expect(blurSpy).not.toHaveBeenCalled()
@@ -63,7 +65,9 @@ describe("TextCell IME handling", () => {
     const blurSpy = vi.spyOn(input, "blur")
     const dispatchSpy = vi.spyOn(document, "dispatchEvent")
 
-    const handled = api.onKeyDown(new KeyboardEvent("keydown", { key: "Enter" }))
+    const handled = api.onKeyDown(
+      new KeyboardEvent("keydown", { key: "Enter" })
+    )
 
     expect(handled).toBe(true)
     expect(blurSpy).toHaveBeenCalled()
