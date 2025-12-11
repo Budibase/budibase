@@ -6,7 +6,12 @@
   import { getColumnIcon } from "../../../utils/schema"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
-  import { FieldType, FormulaType, SortOrder } from "@budibase/types"
+  import {
+    FieldType,
+    FormulaType,
+    SortOrder,
+    isStaticFormula,
+  } from "@budibase/types"
   import { TableNames } from "../../../constants"
   import GridPopover from "../overlays/GridPopover.svelte"
 
@@ -73,7 +78,11 @@
         descending: "high-low",
       }
     }
-    switch (column?.schema?.type) {
+    let schemaType = column.schema?.type
+    if (isStaticFormula(column.schema)) {
+      schemaType = column.schema.responseType
+    }
+    switch (schemaType) {
       case FieldType.NUMBER:
       case FieldType.BIGINT:
         return {
