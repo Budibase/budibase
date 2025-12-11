@@ -300,7 +300,7 @@ describe("Rest Importer", () => {
     expect(events.query.imported).toHaveBeenCalledTimes(1)
     expect(events.query.imported).toHaveBeenCalledWith(
       datasource,
-      restImporter.getImportSource(),
+      restImporter.getSource().getImportSource(),
       1
     )
     jest.clearAllMocks()

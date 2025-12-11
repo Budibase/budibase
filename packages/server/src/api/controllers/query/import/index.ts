@@ -20,6 +20,19 @@ interface ImportResult {
   queries: Query[]
 }
 
+interface SerializedImportSource {
+  type: string
+  payload: any
+}
+
+type ImporterInput = { data?: string } | { url?: string }
+
+const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
+  "openapi2.0": () => new OpenAPI2(),
+  "openapi3.0": () => new OpenAPI3(),
+  curl: () => new Curl(),
+}
+
 const assignStaticVariableDefaults = (
   target: Record<string, string>,
   tokens: string[],
@@ -54,6 +67,30 @@ const assignDatasourceHeaderDefaults = (
   }
 }
 
+const buildCacheKey = (input: ImporterInput) =>
+  crypto.createHash("sha512").update(JSON.stringify(input)).digest("hex")
+
+const getCacheContext = async (input: ImporterInput) => {
+  const cacheKey = buildCacheKey(input)
+  const specsCache = await redis.clients.getOpenapiSpecsClient()
+  const entry = await specsCache.get(cacheKey)
+  return { cacheKey, specsCache, entry }
+}
+
+const persistImporterToCache = async (
+  specsCache: Awaited<ReturnType<typeof redis.clients.getOpenapiSpecsClient>>,
+  cacheKey: string,
+  importer: RestImporter
+): Promise<SerializedImportSource> => {
+  const source = importer.getSource()
+  const entry: SerializedImportSource = {
+    type: source.getImportSource(),
+    payload: source.serialize(),
+  }
+  await specsCache.store(cacheKey, entry, cache.TTL.ONE_DAY * 7)
+  return entry
+}
+
 async function fetchFromUrl(url: string): Promise<string> {
   try {
     const response = await fetch(url)
@@ -79,24 +116,9 @@ export async function getImportInfo(input: {
 export async function getImportInfo(
   input: { data?: string } | { url?: string }
 ): Promise<ImportInfo> {
-  const cacheKey = crypto
-    .createHash("sha512")
-    .update(JSON.stringify(input))
-    .digest("hex")
-  const specsCache = await redis.clients.getOpenapiSpecsClient()
-  let value = await specsCache.get(cacheKey)
-  if (value) {
-    return value as ImportInfo
-  }
-
-  const importer = await createImporter(input)
-  const result = importer.getInfo()
-  await specsCache.store(
-    cacheKey,
-    JSON.stringify(result),
-    cache.TTL.ONE_DAY * 7
-  )
-  return result
+  const importer = await getImporter(input as any)
+  const info = importer.getInfo()
+  return info
 }
 
 export async function getImporter(input: {
@@ -108,7 +130,16 @@ export async function getImporter(input: {
 export async function getImporter(
   input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
+  const { cacheKey, specsCache, entry } = await getCacheContext(input)
+  if (entry) {
+    const importer = RestImporter.hydrate(entry)
+    if (importer) {
+      return importer
+    }
+  }
+
   const importer = await createImporter(input)
+  await persistImporterToCache(specsCache, cacheKey, importer)
   return importer
 }
 
@@ -143,10 +174,28 @@ export class RestImporter {
         break
       }
     }
+    if (!importer.source) {
+      throw new HTTPError("Unsupported import data", 400)
+    }
     return importer
   }
 
-  getImportSource = () => this.source.getImportSource()
+  static hydrate = (state: SerializedImportSource): RestImporter | null => {
+    const factory = SOURCE_FACTORIES[state.type]
+    if (!factory) {
+      return null
+    }
+    const source = factory()
+    if (!source.hydrate) {
+      return null
+    }
+    source.hydrate(state.payload)
+    const importer = new RestImporter()
+    importer.source = source
+    return importer
+  }
+
+  getSource = () => this.source
 
   getInfo = () => this.source.getInfo()
 

@@ -42,6 +42,8 @@ export abstract class ImportSource {
     options?: GetQueriesOptions
   ): Query[]
   abstract getImportSource(): string
+  abstract serialize(): any
+  abstract hydrate(payload: any): void
 
   protected buildEndpointId = (method: string, path: string): string => {
     const normalized = this.normalizeMethod(method) || method.toLowerCase()
