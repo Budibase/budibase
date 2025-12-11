@@ -373,6 +373,16 @@
         "type": "event",
         "label": "On click",
         "key": "onClick"
+      },
+      {
+        "type": "event",
+        "label": "On double click",
+        "key": "onDoubleClick"
+      },
+      {
+        "type": "event",
+        "label": "On right click",
+        "key": "onContextMenu"
       }
     ]
   },

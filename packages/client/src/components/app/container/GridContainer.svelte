@@ -3,8 +3,11 @@
   import { writable } from "svelte/store"
   import { GridRowHeight, GridColumns } from "@/constants"
   import { memo } from "@budibase/frontend-core"
+  import { interactionEvents } from "@/utils/interactionEvents"
 
   export let onClick
+  export let onDoubleClick
+  export let onContextMenu
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
@@ -153,8 +156,9 @@
   bind:this={ref}
   class="grid"
   class:mobile
-  class:clickable={!!onClick}
+  class:clickable={!!(onClick || onDoubleClick || onContextMenu)}
   use:styleable={$styles}
+  use:interactionEvents={{ onDoubleClick, onContextMenu }}
   data-cols={GridColumns}
   data-col-size={colSize}
   data-required-rows={requiredRows}

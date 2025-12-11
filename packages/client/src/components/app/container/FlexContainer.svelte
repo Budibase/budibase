@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { interactionEvents } from "@/utils/interactionEvents"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -11,6 +12,8 @@
   export let gap
   export let wrap
   export let onClick
+  export let onDoubleClick
+  export let onContextMenu
 
   $: directionClass = direction ? `flex-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
@@ -30,8 +33,9 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class={classNames}
-  class:clickable={!!onClick}
+  class:clickable={!!(onClick || onDoubleClick || onContextMenu)}
   use:styleable={$component.styles}
+  use:interactionEvents={{ onDoubleClick, onContextMenu }}
   class:wrap
   on:click={onClick}
 >
