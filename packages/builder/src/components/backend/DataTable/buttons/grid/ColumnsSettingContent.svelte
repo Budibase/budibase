@@ -18,7 +18,7 @@
   export let columns
   export let fromRelationshipField
 
-  const { datasource, dispatch } = getContext("grid")
+  const { datasource, dispatch, config } = getContext("grid")
 
   let relationshipPanelAnchor
   let relationshipFieldName
@@ -36,15 +36,20 @@
     {}
   )
 
+  $: viewHasCrudActions =
+    $config.canAddRows || $config.canEditRows || $config.canDeleteRows
+
   $: displayColumns = columns.map(c => {
+    const isDisplayColumn = c.primaryDisplay
+    const isDisplayLocked = isDisplayColumn && viewHasCrudActions
     const isRequired =
-      c.primaryDisplay || helpers.schema.isRequired(c.schema.constraints)
+      isDisplayLocked || helpers.schema.isRequired(c.schema.constraints)
 
     const defaultPermission = permissions[0]
     const requiredTooltips = {
       [FieldPermissions.WRITABLE]: (() => {
         if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (c.primaryDisplay) {
+          if (isDisplayLocked) {
             return "Display column must be writable"
           }
           if (isRequired) {
@@ -54,7 +59,7 @@
       })(),
       [FieldPermissions.READONLY]: (() => {
         if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (c.primaryDisplay) {
+          if (isDisplayLocked) {
             return "Display column cannot be read-only"
           }
           if (isRequired) {
@@ -62,7 +67,7 @@
           }
         }
         if (defaultPermission === FieldPermissions.READONLY) {
-          if (c.primaryDisplay) {
+          if (isDisplayColumn) {
             return "Display column must be read-only"
           }
           if (isRequired) {
@@ -71,7 +76,7 @@
         }
       })(),
       [FieldPermissions.HIDDEN]: (() => {
-        if (c.primaryDisplay) {
+        if (isDisplayColumn) {
           return "Display column cannot be hidden"
         }
         if (isRequired) {
