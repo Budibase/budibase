@@ -52,7 +52,7 @@
     $builderStore.previewModalDevice || $builderStore.previewDevice
 
   $: previewIcon =
-    displayDevice === "mobile" ? "monitor" : "device-mobile-camera"
+    displayDevice === "mobile" ? "device-mobile-camera" : "monitor"
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
