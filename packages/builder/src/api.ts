@@ -53,11 +53,19 @@ const newClient = (opts?: { production?: boolean }) =>
       if (status === 403) {
         // Remove cookies
         CookieUtils.removeCookie(Constants.Cookies.Auth)
-        // Clear return URL to prevent redirect loops with invalid URLs
-        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+
+        const isAuthenticated = !!get(auth).user
+        if (isAuthenticated) {
+          // Clear return URL to prevent redirect loops with invalid URLs
+          CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+        }
 
         // Reload after removing cookie, go to login
-        if (!url.includes("self") && !url.includes("login")) {
+        if (
+          isAuthenticated &&
+          !url.includes("self") &&
+          !url.includes("login")
+        ) {
           location.reload()
         }
       }
