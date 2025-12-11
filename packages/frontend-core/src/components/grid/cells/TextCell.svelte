@@ -11,9 +11,18 @@
 
   let input
   let active = false
+  let isComposing = false
 
   $: editable = focused && !readonly
   $: displayValue = format?.(value) ?? value ?? ""
+
+  const handleCompositionStart = () => {
+    isComposing = true
+  }
+
+  const handleCompositionEnd = () => {
+    isComposing = false
+  }
 
   const handleChange = e => {
     onChange(e.target.value)
@@ -22,6 +31,9 @@
   const onKeyDown = e => {
     if (!active) {
       return false
+    }
+    if (e.key === "Enter" && (isComposing || e.isComposing)) {
+      return true
     }
     if (e.key === "Enter") {
       input?.blur()
@@ -46,6 +58,8 @@
     bind:this={input}
     on:focus={() => (active = true)}
     on:blur={() => (active = false)}
+    on:compositionstart={handleCompositionStart}
+    on:compositionend={handleCompositionEnd}
     {type}
     value={value ?? ""}
     on:change={handleChange}
