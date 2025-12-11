@@ -41,7 +41,6 @@
     hbAutocomplete,
     hbInsert,
     bindingsToCompletions,
-    getHelperCompletions,
   } from "@/components/common/CodeEditor"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import { goto } from "@roxi/routify"
@@ -112,54 +111,6 @@
     value: config._id || "",
   }))
 
-  function getToolSourceIcon(
-    sourceType: ToolType | undefined,
-    sourceLabel: string | undefined
-  ) {
-    if (sourceType === ToolType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d.name === sourceLabel)
-      if (ds?.restTemplate) {
-        return getIntegrationIcon(
-          IntegrationTypes.REST,
-          ds.restTemplate,
-          restTemplates.getByName(ds.restTemplate)?.icon
-        )
-      } else {
-        return getIntegrationIcon(IntegrationTypes.REST)
-      }
-    }
-    return { icon: BudibaseLogo }
-  }
-
-  const slugify = (str: string) =>
-    str
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_|_$/g, "")
-
-  const getBindingPrefix = (
-    sourceType: ToolType | undefined,
-    sourceLabel: string | undefined
-  ): string => {
-    if (sourceType === ToolType.BUDIBASE) {
-      return "budibase"
-    }
-    if (sourceType === ToolType.REST_QUERY && sourceLabel) {
-      return `api.${slugify(sourceLabel)}`
-    }
-    return "tool"
-  }
-
-  const getSectionName = (sourceType: ToolType | undefined): string => {
-    if (sourceType === ToolType.BUDIBASE) {
-      return "Budibase"
-    }
-    if (sourceType === ToolType.REST_QUERY) {
-      return "API tools"
-    }
-    return "Tools"
-  }
-
   $: availableTools = ($agentsStore.tools || []).map(tool => {
     const sourceType = tool.sourceType
     const sourceLabel = tool.sourceLabel
@@ -225,7 +176,7 @@
       readableBinding: tool.readableBinding,
       category: getSectionName(tool.sourceType),
       display: {
-        name: tool.description || tool.name,
+        name: formatToolLabel(tool),
         type: "tool",
         rank: 1,
       },
@@ -237,7 +188,6 @@
       ? [
           hbAutocomplete([
             ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
-            ...getHelperCompletions(EditorModes.Handlebars),
           ]),
         ]
       : []
@@ -253,6 +203,54 @@
     )
     .filter(Boolean) as EnrichedTool[]
 
+  function getToolSourceIcon(
+    sourceType: ToolType | undefined,
+    sourceLabel: string | undefined
+  ) {
+    if (sourceType === ToolType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d.name === sourceLabel)
+      if (ds?.restTemplate) {
+        return getIntegrationIcon(
+          IntegrationTypes.REST,
+          ds.restTemplate,
+          restTemplates.getByName(ds.restTemplate)?.icon
+        )
+      } else {
+        return getIntegrationIcon(IntegrationTypes.REST)
+      }
+    }
+    return { icon: BudibaseLogo }
+  }
+
+  const slugify = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")
+
+  const getBindingPrefix = (
+    sourceType: ToolType | undefined,
+    sourceLabel: string | undefined
+  ): string => {
+    if (sourceType === ToolType.BUDIBASE) {
+      return "budibase"
+    }
+    if (sourceType === ToolType.REST_QUERY && sourceLabel) {
+      return `api.${slugify(sourceLabel)}`
+    }
+    return "tool"
+  }
+
+  const getSectionName = (sourceType: ToolType | undefined): string => {
+    if (sourceType === ToolType.BUDIBASE) {
+      return "Budibase"
+    }
+    if (sourceType === ToolType.REST_QUERY) {
+      return "API tools"
+    }
+    return "Tools"
+  }
+
   const normaliseToolNameForMatch = (name: string) => {
     const sanitised = name.replace(/[^a-zA-Z0-9_-]/g, "_")
     return sanitised.length > 64
@@ -261,6 +259,8 @@
   }
 
   const removeEnabledTool = (tool: EnrichedTool) => {
+    console.log("removing tool", tool)
+    console.log("draft.enabledTools", draft.enabledTools)
     draft.enabledTools = (draft.enabledTools || []).filter(
       binding => binding !== tool.runtimeBinding
     )
@@ -460,7 +460,7 @@
     icon="Effect"
   ></TopBar>
   <div class="config-page">
-    <div class="config-content">
+    <div class="config-pane config-content">
       <div class="config-form">
         <Layout paddingY="XL" gap="L">
           <div class="start-pause-row">
@@ -650,7 +650,7 @@
         </Layout>
       </div>
     </div>
-    <div class="config-preview"></div>
+    <div class="config-pane config-preview"></div>
   </div>
 </div>
 
@@ -670,36 +670,30 @@
     height: 0;
     overflow: hidden;
     padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
-    box-sizing: border-box;
     gap: var(--spacing-l);
+  }
+
+  .config-pane {
+    min-width: 0;
+    height: calc(100% - var(--spacing-xl) * 2);
+    padding: var(--spacing-xl);
+    border-radius: 16px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-alias-background-color-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .config-content {
     flex: 0 0 auto;
     width: 50%;
     max-width: 800px;
-    min-width: 0;
-    height: calc(100% - var(--spacing-xl) * 2);
-    padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    border-radius: 16px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-alias-background-color-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 
   .config-preview {
     flex: 1 1 auto;
-    min-width: 0;
-    height: calc(100% - var(--spacing-xl) * 2);
-    padding: var(--spacing-xl);
-    border-radius: 16px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-alias-background-color-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 
   .config-form {
@@ -742,8 +736,10 @@
   }
 
   /* Override input backgrounds to match design */
-  :global(.config-form .spectrum-Textfield-input),
-  :global(.config-form .spectrum-Picker) {
+  :global(
+    .config-form .spectrum-Textfield-input,
+    .config-form .spectrum-Picker
+  ) {
     background-color: var(--background) !important;
   }
 
