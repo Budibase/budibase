@@ -1,11 +1,16 @@
 import { describe, expect, it, vi, afterEach } from "vitest"
 import { InteractionController } from "../../../../client/src/utils/interactionEvents"
 
-const createTouchEvent = () => ({
-  touches: [{}],
-  changedTouches: [{}],
-  preventDefault: vi.fn(),
-})
+type TouchLikeEvent = Parameters<InteractionController["handleTouchEnd"]>[0]
+
+const createTouchEvent = (): TouchLikeEvent => {
+  const event = new Event("touchend")
+  return Object.assign(event, {
+    touches: [{ length: 1 }],
+    changedTouches: [{ length: 1 }],
+    preventDefault: vi.fn(),
+  })
+}
 
 describe("InteractionController", () => {
   afterEach(() => {
