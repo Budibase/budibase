@@ -43,4 +43,3 @@ describe("automation test progress cache", () => {
     expect(state).toBeUndefined()
   })
 })
-

@@ -180,7 +180,10 @@ export interface SchemaConfigProps {
 export interface AutomationTestProgressEntry {
   status: "running" | "success" | "error" | "stopped" | "complete"
   occurredAt: number
-  result?: AutomationStepResult | TestAutomationResponse
+  result?:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | TestAutomationResponse
   message?: string
 }
 
@@ -191,7 +194,10 @@ export interface AutomationTestProgressEvent {
   stepId?: string
   status: AutomationTestProgressEntry["status"]
   occurredAt: number
-  result?: AutomationStepResult | TestAutomationResponse
+  result?:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | TestAutomationResponse
   message?: string
 }
 

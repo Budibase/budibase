@@ -18,9 +18,9 @@ import { auth, appsStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
+import { type AutomationTestProgressEvent } from "@/types/automations"
 import {
   Automation,
-  AutomationTestProgressEvent,
   Datasource,
   Role,
   Table,

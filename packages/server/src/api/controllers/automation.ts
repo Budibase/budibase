@@ -254,7 +254,10 @@ function prepareTestInput(input: TestAutomationRequest) {
 }
 
 export async function test(
-  ctx: UserCtx<TestAutomationRequest & { async?: boolean }, TestAutomationResponse>
+  ctx: UserCtx<
+    TestAutomationRequest & { async?: boolean },
+    TestAutomationResponse | { message: string }
+  >
 ) {
   const db = context.getWorkspaceDB()
   const automation = await db.tryGet<Automation>(ctx.params.id)
@@ -265,7 +268,8 @@ export async function test(
   const { request, appId } = ctx
   const { body } = request
   const asyncFlag =
-    isQsTrue((ctx.request.query as any)?.async) || isQsTrue((body as any)?.async)
+    isQsTrue((ctx.request.query as any)?.async) ||
+    isQsTrue((body as any)?.async)
 
   const testBody = { ...body }
   delete (testBody as any).async
@@ -278,7 +282,12 @@ export async function test(
     }
   }
 
-  const emitProgress = (event: AutomationTestProgressEvent) => {
+  type ProgressEventInput = Omit<
+    AutomationTestProgressEvent,
+    "automationId" | "appId"
+  >
+
+  const emitProgress = (event: ProgressEventInput) => {
     const payload: AutomationTestProgressEvent = {
       ...event,
       automationId: automation._id!,

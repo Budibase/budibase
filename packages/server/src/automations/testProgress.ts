@@ -1,4 +1,8 @@
-import { AutomationStepResult, TestAutomationResponse } from "@budibase/types"
+import {
+  AutomationStepResult,
+  AutomationTriggerResult,
+  TestAutomationResponse,
+} from "@budibase/types"
 
 export type AutomationTestProgressStatus =
   | "running"
@@ -14,7 +18,10 @@ export interface AutomationTestProgressEvent {
   stepId?: string
   status: AutomationTestProgressStatus
   occurredAt: number
-  result?: AutomationStepResult | TestAutomationResponse
+  result?:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | TestAutomationResponse
   message?: string
 }
 
@@ -22,7 +29,10 @@ interface AutomationTestProgressState {
   lastUpdated: number
   events: Record<string, AutomationTestProgressEvent>
   completed?: boolean
-  result?: TestAutomationResponse | AutomationStepResult
+  result?:
+    | TestAutomationResponse
+    | AutomationStepResult
+    | AutomationTriggerResult
   error?: string
 }
 
