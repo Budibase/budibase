@@ -59,6 +59,10 @@ export class InteractionController {
     this.clickMode = config.clickMode ?? "onClick"
   }
 
+  private hasContextMenuHandler() {
+    return typeof this.handlers.onContextMenu === "function"
+  }
+
   setHandlers(
     handlers: InteractionHandlers = {},
     clickMode: ClickMode = "onClick"
@@ -94,6 +98,9 @@ export class InteractionController {
       this.suppressContextMenu = false
       return
     }
+    if (!this.hasContextMenuHandler()) {
+      return
+    }
     event.preventDefault?.()
     this.handlers.onContextMenu?.(event)
   }
@@ -106,9 +113,16 @@ export class InteractionController {
     }
 
     this.resetLongPress()
+    if (!this.hasContextMenuHandler()) {
+      this.touchStartEvent = null
+      return
+    }
     this.touchStartEvent = event
     this.longPressTimer = globalThis.setTimeout(() => {
       this.longPressTimer = null
+      if (!this.hasContextMenuHandler()) {
+        return
+      }
       this.longPressTriggered = true
       this.suppressContextMenu = true
       const targetEvent = this.touchStartEvent || event

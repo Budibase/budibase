@@ -47,6 +47,15 @@ describe("InteractionController", () => {
     expect(handler).toHaveBeenCalledTimes(0)
   })
 
+  it("allows the native context menu when no handler is registered", () => {
+    const controller = new InteractionController()
+    const event = new MouseEvent("contextmenu")
+    const preventDefault = vi.fn()
+    Object.assign(event, { preventDefault })
+    controller.handleContextMenu(event)
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+
   it("triggers the context menu handler after a long press and ignores the native event", () => {
     vi.useFakeTimers()
     vi.setSystemTime(0)
