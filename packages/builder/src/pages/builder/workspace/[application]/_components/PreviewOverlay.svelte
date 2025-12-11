@@ -7,13 +7,14 @@
   $: src = $selectedAppUrls.previewUrl
 
   const close = () => {
+    previewStore.resetModalDevice()
     previewStore.showPreview(false)
   }
 
   onMount(() => {
     window.isBuilder = true
     window.closePreview = () => {
-      previewStore.showPreview(false)
+      close()
     }
   })
 
@@ -29,6 +30,7 @@
 >
   <div
     class="container spectrum {$themeStore.theme}"
+    class:mobile={$previewStore.modalDevice === "mobile"}
     transition:fly={{ duration: 260, y: 130 }}
   >
     <div class="header placeholder" />
@@ -61,6 +63,12 @@
     overflow: hidden;
     position: relative;
     box-shadow: 0 0 80px 0 rgba(0, 0, 0, 0.5);
+  }
+  .container.mobile {
+    flex: 0 0 auto;
+    width: min(520px, calc(100% - 96px));
+    height: min(960px, calc(100% - 96px));
+    margin: auto;
   }
   iframe {
     position: absolute;

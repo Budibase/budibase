@@ -1,6 +1,6 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore, builderStore } from "@/stores"
+  import { devToolsStore, builderStore, eventStore } from "@/stores"
   import { getContext, onMount } from "svelte"
   import { API } from "@/api"
 
@@ -36,14 +36,23 @@
   })
 
   const togglePreviewDevice = () => {
+    const currentDevice =
+      $builderStore.previewModalDevice || $builderStore.previewDevice
+    const nextDevice = currentDevice === "mobile" ? "desktop" : "mobile"
     builderStore.update(state => ({
       ...state,
-      previewDevice: state.previewDevice === "mobile" ? "desktop" : "mobile",
+      previewModalDevice: nextDevice === "mobile" ? "mobile" : null,
     }))
+    eventStore.actions.dispatchEvent("set-preview-modal-device", {
+      device: nextDevice,
+    })
   }
 
+  $: displayDevice =
+    $builderStore.previewModalDevice || $builderStore.previewDevice
+
   $: previewIcon =
-    $builderStore.previewDevice === "mobile" ? "device-mobile-camera" : "monitor"
+    displayDevice === "mobile" ? "monitor" : "device-mobile-camera"
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
