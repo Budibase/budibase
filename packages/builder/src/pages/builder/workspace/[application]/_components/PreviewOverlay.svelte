@@ -6,15 +6,10 @@
 
   $: src = $selectedAppUrls.previewUrl
 
-  const close = () => {
-    previewStore.resetModalDevice()
-    previewStore.showPreview(false)
-  }
-
   onMount(() => {
     window.isBuilder = true
     window.closePreview = () => {
-      close()
+      previewStore.showPreview(false)
     }
   })
 
