@@ -140,8 +140,8 @@ export async function buildPromptAndTools(
   }
 }
 
-export function createLiteLLMFetch(sessionId: string) {
-  return (
+export function createLiteLLMFetch(sessionId: string): typeof fetch {
+  const liteFetch = ((
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
   ) => {
@@ -155,7 +155,14 @@ export function createLiteLLMFetch(sessionId: string) {
       }
     }
     return fetch(input, init)
+  }) as typeof fetch
+
+  // Preserve the preconnect helper required by the OpenAI client typings.
+  if (typeof (fetch as any).preconnect === "function") {
+    ;(liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
+
+  return liteFetch
 }
 
 /**
