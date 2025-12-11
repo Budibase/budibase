@@ -95,29 +95,21 @@ export async function getImportInfo(
   return result
 }
 
+export async function getImporter(input: {
+  data?: string
+}): Promise<RestImporter>
+export async function getImporter(input: {
+  url?: string
+}): Promise<RestImporter>
 export async function getImporter(
-  input: {
-    data?: string
-  },
-  skipValidation: boolean
-): Promise<RestImporter>
-export async function getImporter(
-  input: {
-    url?: string
-  },
-  skipValidation: boolean
-): Promise<RestImporter>
-export async function getImporter(
-  input: { data?: string } | { url?: string },
-  skipValidation: boolean
+  input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
-  const importer = await createImporter(input, skipValidation)
+  const importer = await createImporter(input)
   return importer
 }
 
 async function createImporter(
-  input: { data?: string } | { url?: string },
-  skipValidation?: boolean
+  input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
   let data: string | undefined
   if ("url" in input && input.url) {
@@ -131,7 +123,7 @@ async function createImporter(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  return await RestImporter.init(data, skipValidation)
+  return await RestImporter.init(data)
 }
 
 export class RestImporter {
@@ -139,10 +131,10 @@ export class RestImporter {
 
   private constructor() {}
 
-  static init = async (data: string, skipValidation?: boolean) => {
+  static init = async (data: string) => {
     const importer = new RestImporter()
     for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
-      if (await source.isSupported(data, skipValidation)) {
+      if (await source.isSupported(data)) {
         importer.source = source
         break
       }

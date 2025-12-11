@@ -33,10 +33,7 @@ const prepareDocument = (raw: string): string | OpenAPI.Document => {
 }
 
 export abstract class OpenAPISource extends ImportSource {
-  parseData = async (
-    data: string,
-    skipValidation: boolean
-  ): Promise<OpenAPI.Document> => {
+  parseData = async (data: string): Promise<OpenAPI.Document> => {
     const baseOptions = {
       resolve: {
         external: false,
@@ -46,9 +43,6 @@ export abstract class OpenAPISource extends ImportSource {
     const parsedInput = prepareDocument(data)
     const document = await SwaggerParser.parse(parsedInput, baseOptions)
 
-    if (skipValidation) {
-      return document
-    }
     try {
       return await SwaggerParser.validate(document)
     } catch (err) {

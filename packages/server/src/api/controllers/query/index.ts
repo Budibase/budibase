@@ -76,8 +76,7 @@ const _import = async (
 ) => {
   const body = ctx.request.body
 
-  const validate = !!body.data
-  const importer = await getImporter(body, validate)
+  const importer = await getImporter(body)
   const importInfo = importer.getInfo()
 
   let datasourceId
