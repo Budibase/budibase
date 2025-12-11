@@ -147,11 +147,11 @@
       <span />
     {/if}
     {#if isRunning && !isTriggerBlock}
-      <span class="flow-info">
-        <Spinner
-          size="15"
-          color="var(--spectrum-semantic-positive-color-status)"
-        />
+      <span class="flow-success flow-running flow-status-btn">
+        <ActionButton size="S" active={false}>
+          <Spinner size="12" color="currentColor" />
+          Running
+        </ActionButton>
       </span>
     {:else if flowStatus && !hideStatus}
       <span class={`flow-${flowStatus.type} flow-status-btn`}>
@@ -197,8 +197,18 @@
     background-color: var(--spectrum-semantic-positive-color-status);
     border-color: var(--spectrum-semantic-positive-color-status);
   }
-  .flow-info {
+  .flow-running {
     margin-bottom: -5px;
+  }
+  .flow-running :global(.spectrum-ActionButton-label) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    line-height: 1;
+  }
+  .flow-running :global(.spinner-container) {
+    display: inline-flex;
+    align-items: center;
   }
   .flow-error :global(.spectrum-ActionButton) {
     background-color: var(--spectrum-semantic-negative-color-status);
