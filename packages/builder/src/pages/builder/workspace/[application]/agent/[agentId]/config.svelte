@@ -30,7 +30,7 @@
     queries,
   } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
@@ -68,6 +68,15 @@
   let toolSearch = ""
   let promptBindings: EnrichedBinding[] = []
   let promptCompletions: BindingCompletion[] = []
+  let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
+  let saving = false
+  const AUTO_SAVE_DEBOUNCE_MS = 800
+  const clearAutoSave = () => {
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout)
+      autoSaveTimeout = undefined
+    }
+  }
 
   interface EnrichedTool extends ToolMetadata {
     readableBinding: string
@@ -363,20 +372,45 @@
     }
   }
 
-  async function saveAgent() {
+  async function saveAgent({
+    showNotifications = true,
+  }: {
+    showNotifications?: boolean
+  }) {
     if (!currentAgent) return
+    if (saving) return
+
+    saving = true
     try {
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
       })
 
-      notifications.success("Agent saved successfully")
+      if (showNotifications) {
+        notifications.success("Agent saved successfully")
+      }
       await agentsStore.fetchAgents()
     } catch (error) {
       console.error(error)
       notifications.error("Error saving agent")
+    } finally {
+      saving = false
     }
+  }
+
+  const scheduleSave = (immediate = false) => {
+    clearAutoSave()
+
+    if (immediate) {
+      saveAgent({ showNotifications: false })
+      return
+    }
+
+    autoSaveTimeout = setTimeout(() => {
+      saveAgent({ showNotifications: false })
+      autoSaveTimeout = undefined
+    }, AUTO_SAVE_DEBOUNCE_MS)
   }
 
   async function toggleAgentLive() {
@@ -411,6 +445,10 @@
   onMount(async () => {
     await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
   })
+
+  onDestroy(() => {
+    clearAutoSave()
+  })
 </script>
 
 <div class="config-wrapper">
@@ -420,9 +458,7 @@
       { text: currentAgent?.name || "Agent" },
     ]}
     icon="Effect"
-  >
-    <Button cta icon="save" on:click={saveAgent}>Save Changes</Button>
-  </TopBar>
+  ></TopBar>
   <div class="config-page">
     <div class="config-content">
       <div class="config-form">
@@ -463,6 +499,7 @@
                 labelPosition="left"
                 bind:value={draft.name}
                 placeholder="Give your agent a name"
+                on:blur={() => scheduleSave(true)}
               />
             </div>
             <div class="form-icon">
@@ -473,6 +510,7 @@
                 on:change={e => {
                   draft.icon = e.detail.name
                   draft.iconColor = e.detail.color
+                  scheduleSave(true)
                 }}
               />
             </div>
@@ -486,6 +524,7 @@
                 bind:value={draft.aiconfig}
                 options={modelOptions}
                 placeholder="Select a model"
+                on:change={() => scheduleSave(true)}
               />
             </div>
             <div class="form-icon">
@@ -512,8 +551,10 @@
                   bind:insertAtPos
                   renderBindingsAsTags={true}
                   placeholder=""
-                  on:change={event =>
-                    (draft.promptInstructions = event.detail || "")}
+                  on:change={event => {
+                    draft.promptInstructions = event.detail || ""
+                    scheduleSave()
+                  }}
                 />
               </div>
               <div class="bindings-bar">
@@ -592,7 +633,12 @@
                       <MenuItem on:click={() => navigateToTool(tool)}>
                         Navigate to resource
                       </MenuItem>
-                      <MenuItem on:click={() => removeEnabledTool(tool)}>
+                      <MenuItem
+                        on:click={() => {
+                          removeEnabledTool(tool)
+                          scheduleSave(true)
+                        }}
+                      >
                         Remove from agent
                       </MenuItem>
                     </ActionMenu>
