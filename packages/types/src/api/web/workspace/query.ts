@@ -11,18 +11,19 @@ export type FetchQueriesResponse = Query[]
 export interface SaveQueryRequest extends Query {}
 export interface SaveQueryResponse extends Query {}
 
-export interface ImportRestQueryRequest {
+export type ImportRestQueryRequest = {
   datasourceId?: string
-  data?: string
-  url?: string
   datasource: Datasource
   selectedEndpointId?: string
-}
+} & ImportRestQueryInfoRequest
 
-export interface ImportRestQueryInfoRequest {
-  data?: string
-  url?: string
-}
+export type ImportRestQueryInfoRequest =
+  | {
+      data: string
+    }
+  | {
+      url: string
+    }
 
 export interface ImportRestQueryInfoResponse {
   name: string

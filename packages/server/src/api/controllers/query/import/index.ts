@@ -25,7 +25,7 @@ interface SerializedImportSource {
   payload: any
 }
 
-type ImporterInput = { data?: string } | { url?: string }
+type ImporterInput = { data: string } | { url: string }
 
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
@@ -68,17 +68,15 @@ const assignDatasourceHeaderDefaults = (
 }
 
 const buildCacheKey = (input: ImporterInput) =>
-  crypto.createHash("sha512").update(JSON.stringify(input)).digest("hex")
-
-const getCacheContext = async (input: ImporterInput) => {
-  const cacheKey = buildCacheKey(input)
-  const specsCache = await redis.clients.getOpenapiSpecsClient()
-  const entry = await specsCache.get(cacheKey)
-  return { cacheKey, specsCache, entry }
-}
+  crypto
+    .createHash("sha512")
+    .update(JSON.stringify("data" in input ? input.data : input.url))
+    .digest("hex")
 
 const persistImporterToCache = async (
-  specsCache: Awaited<ReturnType<typeof redis.clients.getOpenapiSpecsClient>>,
+  specsCache: Awaited<
+    ReturnType<typeof redis.clients.getOpenapiImporterClient>
+  >,
   cacheKey: string,
   importer: RestImporter
 ): Promise<SerializedImportSource> => {
@@ -107,30 +105,21 @@ async function fetchFromUrl(url: string): Promise<string> {
   }
 }
 
-export async function getImportInfo(input: {
-  data?: string
-}): Promise<ImportInfo>
-export async function getImportInfo(input: {
-  url?: string
-}): Promise<ImportInfo>
 export async function getImportInfo(
-  input: { data?: string } | { url?: string }
+  input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
   const importer = await getImporter(input as any)
   const info = importer.getInfo()
   return info
 }
 
-export async function getImporter(input: {
-  data?: string
-}): Promise<RestImporter>
-export async function getImporter(input: {
-  url?: string
-}): Promise<RestImporter>
 export async function getImporter(
-  input: { data?: string } | { url?: string }
+  input: { data: string } | { url: string }
 ): Promise<RestImporter> {
-  const { cacheKey, specsCache, entry } = await getCacheContext(input)
+  const cacheKey = buildCacheKey(input)
+  const specsCache = await redis.clients.getOpenapiImporterClient()
+  const entry = await specsCache.get(cacheKey)
+
   if (entry) {
     const importer = RestImporter.hydrate(entry)
     if (importer) {
