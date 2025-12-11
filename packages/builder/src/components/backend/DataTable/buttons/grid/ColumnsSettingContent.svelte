@@ -18,7 +18,7 @@
   export let columns
   export let fromRelationshipField
 
-  const { datasource, dispatch, config } = getContext("grid")
+  const { datasource, dispatch } = getContext("grid")
 
   let relationshipPanelAnchor
   let relationshipFieldName
@@ -36,15 +36,9 @@
     {}
   )
 
-  $: viewHasCrudActions =
-    $config.canAddRows || $config.canEditRows || $config.canDeleteRows
-
   $: displayColumns = columns.map(c => {
     const isDisplayColumn = c.primaryDisplay
-    const isDisplayLocked =
-      isDisplayColumn &&
-      viewHasCrudActions &&
-      $datasource?.type !== "viewV2"
+    const isDisplayLocked = isDisplayColumn && $datasource?.type !== "viewV2"
     const isRequired =
       isDisplayLocked || helpers.schema.isRequired(c.schema.constraints)
 
