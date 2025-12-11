@@ -45,6 +45,13 @@ const buildHbsTagDecorations = (
 ) => {
   const decos = []
   const regex = new RegExp(FIND_ANY_HBS_REGEX)
+
+  // Get all cursor/selection positions to check if cursor is inside a binding
+  const cursorPositions = view.state.selection.ranges.map(r => ({
+    from: r.from,
+    to: r.to,
+  }))
+
   for (const { from, to } of view.visibleRanges) {
     const text = view.state.doc.sliceString(from, to)
     let match: RegExpExecArray | null
@@ -52,6 +59,15 @@ const buildHbsTagDecorations = (
     while ((match = regex.exec(text))) {
       const start = from + match.index
       const end = start + match[0].length
+
+      // Skip decoration if cursor is inside this binding range
+      const cursorInside = cursorPositions.some(
+        cursor => cursor.from > start && cursor.from < end
+      )
+      if (cursorInside) {
+        continue
+      }
+
       const clean = stripHbsDelimiters(match[0])
       const icon = bindingIcons?.[clean]
       const widget = new HbsTagWidget(clean, icon)
@@ -73,7 +89,11 @@ export const hbsTagPlugin = (
         this.decorations = buildHbsTagDecorations(view, bindingIcons)
       }
       update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged) {
+        if (
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet
+        ) {
           this.decorations = buildHbsTagDecorations(update.view, bindingIcons)
         }
       }
