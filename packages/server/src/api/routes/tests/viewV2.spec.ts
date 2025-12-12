@@ -430,7 +430,7 @@ if (descriptions.length) {
               })
             })
 
-            it("required fields cannot be marked as readonly", async () => {
+            it("required fields can be marked as readonly", async () => {
               const table = await config.api.table.save(
                 saveTableRequest({
                   schema: {
@@ -459,12 +459,12 @@ if (descriptions.length) {
                 },
               }
 
-              await config.api.viewV2.create(newView, {
-                status: 400,
-                body: {
-                  message:
-                    'You can\'t make "name" readonly because it is a required field.',
-                  status: 400,
+              const res = await config.api.viewV2.create(newView)
+              expect(res.schema).toEqual({
+                id: { visible: true },
+                name: {
+                  visible: true,
+                  readonly: true,
                 },
               })
             })

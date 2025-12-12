@@ -302,15 +302,6 @@ function checkRequiredFields(
       )
     }
 
-    if (
-      helpers.views.isBasicViewField(viewSchemaField) &&
-      viewSchemaField.readonly
-    ) {
-      throw new HTTPError(
-        `You can't make "${field.name}" readonly because it is a required field.`,
-        400
-      )
-    }
   }
 }
 
