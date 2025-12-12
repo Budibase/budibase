@@ -73,9 +73,14 @@ export const buildAutomationEndpoints = (
    * @param data the test data to run against the automation
    */
   testAutomation: async (automationId, data, options = {}) => {
-    const suffix = options.async ? "?async=true" : ""
+    const params = new URLSearchParams()
+    if (options.async) {
+      params.set("async", "true")
+    }
+    const qs = params.toString()
+    const url = `/api/automations/${automationId}/test${qs ? `?${qs}` : ""}`
     return await API.post({
-      url: `/api/automations/${automationId}/test${suffix}`,
+      url,
       body: data,
     })
   },

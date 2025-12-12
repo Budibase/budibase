@@ -46,7 +46,7 @@
     viewMode === ViewMode.LOGS && logStepData
       ? logStepData
       : progressResult
-        ? (progressResult as AutomationStepResult)
+        ? progressResult
         : automationStore.actions.processBlockResults(testResults, block)
 
   $: isRunning =
@@ -169,7 +169,7 @@
       </span>
     {:else if flowStatus && !hideStatus}
       {#if loopInfo?.total && $automationStore.inProgressTest}
-        <span class="flow-blue flow-status-btn">
+        <span class="flow-success flow-status-btn">
           <ActionButton
             size="S"
             icon={flowStatus.icon}
@@ -187,6 +187,27 @@
             }}
           >
             {completedLoopLabel}
+          </ActionButton>
+        </span>
+      {:else if viewMode === ViewMode.LOGS}
+        <span class="flow-warn flow-status-btn">
+          <ActionButton
+            size="S"
+            icon={flowStatus.icon}
+            tooltip={flowStatus?.tooltip}
+            on:click={async () => {
+              if (branch || !block || viewMode === ViewMode.LOGS) {
+                return
+              }
+              await automationStore.actions.selectNode(
+                block?.id,
+                flowStatus.type == FlowStatusType.SUCCESS
+                  ? DataMode.OUTPUT
+                  : DataMode.ERRORS
+              )
+            }}
+          >
+            {flowStatus.message}
           </ActionButton>
         </span>
       {:else}

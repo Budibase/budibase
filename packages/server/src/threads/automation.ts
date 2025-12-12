@@ -17,6 +17,7 @@ import {
   AutomationStep,
   AutomationStepResult,
   AutomationStepStatus,
+  AutomationTestProgressStatus,
   AutomationTriggerResult,
   Branch,
   BranchSearchFilters,
@@ -436,17 +437,20 @@ class Orchestrator {
         result.state = ctx.state
       }
 
+      const statusMap: Partial<
+        Record<AutomationStatus, AutomationTestProgressStatus>
+      > = {
+        [AutomationStatus.SUCCESS]: "success",
+        [AutomationStatus.ERROR]: "error",
+        [AutomationStatus.STOPPED]: "stopped",
+      }
+
       this.onProgress?.({
         automationId: this.automation._id!,
         appId: this.appId,
         blockId: trigger.id,
         stepId: trigger.stepId,
-        status:
-          result.status === AutomationStatus.ERROR
-            ? "error"
-            : result.status === AutomationStatus.STOPPED
-              ? "stopped"
-              : "success",
+        status: statusMap[result.status] || "error",
         occurredAt: Date.now(),
         result: trigger,
       })
