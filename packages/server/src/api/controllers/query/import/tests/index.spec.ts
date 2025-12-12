@@ -1,9 +1,26 @@
-import { events } from "@budibase/backend-core"
+let cacheStore: Record<string, any> = {}
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    cache: {
+      ...actual.cache,
+      get: jest.fn().mockImplementation(key => cacheStore[key]),
+      store: jest.fn().mockImplementation((key, value) => {
+        cacheStore[key] = value
+      }),
+    },
+  }
+})
+
+import { cache, events } from "@budibase/backend-core"
+import nock from "nock"
 import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
-import { RestImporter } from "../index"
+import { RestImporter, createImporter, getImportInfo } from "../index"
 
 type Assertions = Record<
   DatasetKey,
@@ -648,5 +665,109 @@ describe("Rest Importer", () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
     const info = await restImporter.getInfo()
     expect(info.securityHeaders).toEqual(["X-Apikey"])
+  })
+})
+
+describe("Importer caching", () => {
+  let cacheGetMock: jest.Mock
+  let cacheStoreMock: jest.Mock
+  const specUrl = "https://example.com/spec.json"
+
+  const buildMinimalOpenApiSpec = () =>
+    JSON.stringify({
+      openapi: "3.0.0",
+      info: { title: "Cache test" },
+      paths: {
+        "/users": {
+          get: {
+            responses: {
+              "200": {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+  const mockSpecRequest = (spec: string, url: string) => {
+    const parsed = new URL(url)
+    return nock(`${parsed.protocol}//${parsed.host}`)
+      .get(parsed.pathname + (parsed.search || ""))
+      .reply(200, spec)
+  }
+
+  beforeAll(() => {
+    cacheGetMock = cache.get as jest.Mock
+    cacheStoreMock = cache.store as jest.Mock
+  })
+
+  beforeEach(() => {
+    nock.cleanAll()
+    cacheGetMock.mockClear()
+    cacheStoreMock.mockClear()
+
+    cacheStore = {}
+  })
+
+  afterAll(() => {
+    nock.cleanAll()
+  })
+
+  it("caches fetched specs for url imports", async () => {
+    const spec = buildMinimalOpenApiSpec()
+    const scope = mockSpecRequest(spec, specUrl)
+
+    await createImporter({ url: specUrl })
+    await createImporter({ url: specUrl })
+
+    expect(scope.isDone()).toBe(true)
+  })
+
+  it("loads importer directly when cached type exists", async () => {
+    const spec = buildMinimalOpenApiSpec()
+
+    await createImporter({ data: spec })
+    expect(cacheStoreMock).toHaveBeenCalledTimes(1)
+
+    const result = await createImporter({ data: spec })
+    expect(result).toBeDefined()
+
+    const typeKeyCall = cacheGetMock.mock.calls.find(([key]) =>
+      key.endsWith(":type")
+    )
+    expect(typeKeyCall).toBeDefined()
+    expect(cacheStoreMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("includes static variables in import info responses", async () => {
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: { title: "Server Variables" },
+      servers: [
+        {
+          url: "https://{subdomain}.example.com",
+          variables: {
+            subdomain: {
+              default: "acme",
+            },
+          },
+        },
+      ],
+      paths: {
+        "/users": {
+          get: {
+            responses: {
+              "200": {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const info = await getImportInfo({ data: spec })
+    expect(info.staticVariables).toEqual({ subdomain: "acme" })
   })
 })
