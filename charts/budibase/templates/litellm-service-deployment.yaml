@@ -30,6 +30,14 @@ spec:
               value: {{ .Values.services.litellm.masterKey | quote }}
             - name: LITELLM_SALT_KEY
               value: {{ .Values.services.litellm.saltKey | quote }}
+          {{- if .Values.services.litellm.uiUsername }}
+            - name: UI_USERNAME
+              value: {{ .Values.services.litellm.uiUsername | quote }}
+          {{- end }}
+          {{- if .Values.services.litellm.uiPassword }}
+            - name: UI_PASSWORD
+              value: {{ .Values.services.litellm.uiPassword | quote }}
+          {{- end }}
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}
