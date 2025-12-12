@@ -10,8 +10,7 @@ let userClient: Client,
   socketClient: Client,
   inviteClient: Client,
   passwordResetClient: Client,
-  docWritethroughClient: Client,
-  openapiImporterClient: Client
+  docWritethroughClient: Client
 
 export async function init() {
   userClient = await Client.init(utils.Databases.USER_CACHE)
@@ -27,7 +26,6 @@ export async function init() {
     utils.SelectableDatabase.SOCKET_IO
   )
   docWritethroughClient = await Client.init(utils.Databases.DOC_WRITE_THROUGH)
-  openapiImporterClient = await Client.init(utils.Databases.OPENAPI_SPECS)
 }
 
 export async function shutdown() {
@@ -41,7 +39,6 @@ export async function shutdown() {
   await passwordResetClient?.finish()
   await socketClient?.finish()
   await docWritethroughClient?.finish()
-  await openapiImporterClient?.finish()
 }
 
 process.on("exit", async () => {
@@ -116,11 +113,4 @@ export async function getDocWritethroughClient() {
     await init()
   }
   return writethroughClient
-}
-
-export async function getOpenapiImporterClient() {
-  if (!openapiImporterClient) {
-    await init()
-  }
-  return openapiImporterClient
 }

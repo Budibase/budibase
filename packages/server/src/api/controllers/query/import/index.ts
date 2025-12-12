@@ -1,10 +1,4 @@
-import {
-  cache,
-  context,
-  events,
-  HTTPError,
-  redis,
-} from "@budibase/backend-core"
+import { cache, context, events, HTTPError } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
@@ -68,15 +62,12 @@ const assignDatasourceHeaderDefaults = (
 }
 
 const buildCacheKey = (input: ImporterInput) =>
-  crypto
+  `openapiSpecs:${crypto
     .createHash("sha512")
     .update(JSON.stringify("data" in input ? input.data : input.url))
-    .digest("hex")
+    .digest("hex")}`
 
 const persistImporterToCache = async (
-  specsCache: Awaited<
-    ReturnType<typeof redis.clients.getOpenapiImporterClient>
-  >,
   cacheKey: string,
   importer: RestImporter
 ): Promise<SerializedImportSource> => {
@@ -85,7 +76,7 @@ const persistImporterToCache = async (
     type: source.getImportSource(),
     payload: source.serialize(),
   }
-  await specsCache.store(cacheKey, entry, cache.TTL.ONE_DAY * 7)
+  await cache.store(cacheKey, entry, cache.TTL.ONE_DAY * 7)
   return entry
 }
 
@@ -117,8 +108,7 @@ export async function getImporter(
   input: { data: string } | { url: string }
 ): Promise<RestImporter> {
   const cacheKey = buildCacheKey(input)
-  const specsCache = await redis.clients.getOpenapiImporterClient()
-  const entry = await specsCache.get(cacheKey)
+  const entry = await cache.get(cacheKey)
 
   if (entry) {
     const importer = RestImporter.hydrate(entry)
@@ -128,7 +118,7 @@ export async function getImporter(
   }
 
   const importer = await createImporter(input)
-  await persistImporterToCache(specsCache, cacheKey, importer)
+  await persistImporterToCache(cacheKey, importer)
   return importer
 }
 

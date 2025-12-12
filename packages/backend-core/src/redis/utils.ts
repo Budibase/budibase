@@ -30,7 +30,6 @@ export enum Databases {
   BPM_EVENTS = "bpmEvents",
   DOC_WRITE_THROUGH = "docWriteThrough",
   RECAPTCHA_SESSION = "recaptchaSession",
-  OPENAPI_SPECS = "openapiSpecs",
 }
 
 /**
