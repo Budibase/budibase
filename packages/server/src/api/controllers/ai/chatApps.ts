@@ -2,25 +2,20 @@ import { HTTPError } from "@budibase/backend-core"
 import { ChatApp, UpdateChatAppRequest, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function fetchChatApp(
-  ctx: UserCtx<void, ChatApp | null, { agentId?: string }>
-) {
+export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
     ctx.body = chatApp
     return
   }
 
-  const agentId = Array.isArray(ctx.query.agentId)
-    ? ctx.query.agentId[0]
-    : ctx.query.agentId
-  const fallbackAgentId = agentId || (await sdk.ai.agents.fetch())[0]?._id
+  const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
   if (!fallbackAgentId) {
     throw new HTTPError("agentId is required to create a chat app", 400)
   }
 
   const created = await sdk.ai.chatApps.create({
-    agentIds: [fallbackAgentId],
+    agentId: fallbackAgentId,
   })
   ctx.body = created
 }
@@ -34,8 +29,8 @@ export async function updateChatApp(
     ? { ...chatApp, _id: chatApp._id || chatAppIdFromPath }
     : chatApp
 
-  if (!resolvedChatApp.agentIds?.length) {
-    throw new HTTPError("agentIds is required", 400)
+  if (!resolvedChatApp.agentId) {
+    throw new HTTPError("agentId is required", 400)
   }
   const updated = await sdk.ai.chatApps.update(resolvedChatApp)
   ctx.body = updated
@@ -66,18 +61,11 @@ export async function setChatAppAgent(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  const agentIds = chatApp.agentIds || []
-  if (!agentIds.includes(agentId)) {
-    throw new HTTPError("agentId is not part of this chat app", 400)
-  }
+  await sdk.ai.agents.getOrThrow(agentId)
 
-  const reorderedAgentIds = [
-    agentId,
-    ...agentIds.filter(existing => existing !== agentId),
-  ]
   const updated = await sdk.ai.chatApps.update({
     ...chatApp,
-    agentIds: reorderedAgentIds,
+    agentId,
   })
   ctx.body = updated
 }

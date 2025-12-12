@@ -94,12 +94,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!existingChat) {
       throw new HTTPError("chat not found", 404)
     }
+    if (existingChat.chatAppId !== chatAppId) {
+      throw new HTTPError("chat does not belong to this chat app", 400)
+    }
     if (existingChat.userId && existingChat.userId !== userId) {
       throw new HTTPError("Forbidden", 403)
     }
   }
 
-  const agentId = chatApp.agentIds?.[0]
+  const agentId = chatApp.agentId
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)

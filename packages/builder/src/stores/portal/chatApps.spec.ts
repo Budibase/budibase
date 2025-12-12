@@ -31,16 +31,16 @@ describe("chatAppsStore", () => {
     setChatAppAgent.mockReset()
   })
 
-  it("reorders agentIds when preferred agent differs", async () => {
+  it("updates agentId when preferred agent differs", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      agentIds: ["agent-1"],
+      agentId: "agent-1",
     }
     const updated: ChatApp = {
       ...chatApp,
       _rev: "2",
-      agentIds: ["agent-2", "agent-1"],
+      agentId: "agent-2",
     }
     fetchChatApp.mockResolvedValue(chatApp)
     setChatAppAgent.mockResolvedValue(updated)

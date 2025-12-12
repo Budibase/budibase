@@ -2,8 +2,8 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { ChatApp, DocumentType } from "@budibase/types"
 
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
-  live: chatApp.live ?? false,
   ...chatApp,
+  live: chatApp.live ?? false,
 })
 
 export async function getSingle(): Promise<ChatApp | undefined> {
@@ -36,8 +36,8 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
   if (existing) {
     throw new HTTPError("Chat App already exists for this workspace", 400)
   }
-  if (!chatApp.agentIds?.length) {
-    throw new HTTPError("agentIds is required", 400)
+  if (!chatApp.agentId) {
+    throw new HTTPError("agentId is required", 400)
   }
 
   const now = new Date().toISOString()
@@ -60,6 +60,9 @@ export async function update(chatApp: ChatApp) {
   const existing = await db.tryGet<ChatApp>(chatApp._id)
   if (!existing) {
     throw new HTTPError("Chat App not found", 404)
+  }
+  if (!chatApp.agentId) {
+    throw new HTTPError("agentId is required", 400)
   }
 
   const now = new Date().toISOString()

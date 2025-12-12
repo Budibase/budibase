@@ -41,10 +41,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       return null
     }
 
-    if (preferredAgentId && chatApp.agentIds?.length) {
-      if (chatApp.agentIds[0] !== preferredAgentId) {
-        chatApp = await API.setChatAppAgent(chatApp._id, preferredAgentId)
-      }
+    if (preferredAgentId && chatApp.agentId !== preferredAgentId) {
+      chatApp = await API.setChatAppAgent(chatApp._id, preferredAgentId)
     }
 
     this.update(state => {

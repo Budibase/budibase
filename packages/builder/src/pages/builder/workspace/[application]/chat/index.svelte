@@ -39,13 +39,10 @@
     const workspaceId = $params?.application
     if (agentId) {
       await agentsStore.selectAgent(agentId, workspaceId)
-      await chatAppsStore.initChats(workspaceId, agentId)
-      const resolvedChatAppId = $chatAppsStore.chatAppId || ""
-      chat = {
-        ...INITIAL_CHAT,
-        chatAppId: resolvedChatAppId,
+      await chatAppsStore.ensureChatApp(workspaceId, agentId)
+      if (!chat.chatAppId && $chatAppsStore.chatAppId) {
+        chat = { ...chat, chatAppId: $chatAppsStore.chatAppId }
       }
-      chatAppsStore.clearCurrentChatId()
     } else {
       await agentsStore.selectAgent(undefined, workspaceId)
       chatAppsStore.reset(workspaceId)
@@ -160,9 +157,11 @@
 
   onMount(async () => {
     await agentsStore.init()
-    await chatAppsStore.initChats($params?.application, undefined)
-
-    const initialAgentId = $agentsStore.agents[0]?._id
+    const chatApp = await chatAppsStore.initChats(
+      $params?.application,
+      undefined
+    )
+    const initialAgentId = chatApp?.agentId
     if (!initialAgentId) {
       return
     }

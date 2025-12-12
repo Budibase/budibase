@@ -115,13 +115,14 @@ export const buildChatAppEndpoints = (
   },
 
   fetchChatApp: async (workspaceId?: string) => {
+    const url = "/api/chatapps"
     const headers = workspaceId
       ? {
           [Header.APP_ID]: workspaceId,
         }
       : undefined
     return await API.get({
-      url: `/api/chatapps`,
+      url,
       ...(headers && { headers }),
     })
   },

@@ -29,7 +29,7 @@ describe("chat conversations authorization", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          agentIds: ["agent-1"],
+          agentId: "agent-1",
           createdAt: now,
           updatedAt: now,
         }
