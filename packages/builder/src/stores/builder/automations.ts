@@ -1378,10 +1378,13 @@ const automationActions = (store: AutomationStore) => ({
     stopTestStatusPolling()
     testStatusTimer = setInterval(async () => {
       try {
-        const status: TestProgressState =
+        const status: TestProgressState | null =
           await API.getAutomationTestStatus(automationId)
+        if (!status) {
+          return
+        }
         const events: AutomationTestProgressEvent[] = Object.values(
-          status?.events || {}
+          status.events || {}
         )
         events.forEach(event =>
           store.actions.handleTestProgress({
@@ -1389,7 +1392,7 @@ const automationActions = (store: AutomationStore) => ({
             automationId,
           })
         )
-        if (status?.completed && status.result) {
+        if (status.completed && status.result) {
           store.actions.handleTestProgress({
             automationId,
             status: "complete",

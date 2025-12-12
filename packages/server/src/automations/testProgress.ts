@@ -1,46 +1,39 @@
 import {
-  AutomationStepResult,
-  AutomationTriggerResult,
-  TestAutomationResponse,
+  AutomationTestProgressEvent,
+  TestProgressState,
 } from "@budibase/types"
 
-export type AutomationTestProgressStatus =
-  | "running"
-  | "success"
-  | "error"
-  | "stopped"
-  | "complete"
+export type { AutomationTestProgressEvent }
 
-export interface AutomationTestProgressEvent {
-  automationId: string
-  appId?: string
-  blockId?: string
-  stepId?: string
-  status: AutomationTestProgressStatus
-  occurredAt: number
-  result?:
-    | AutomationStepResult
-    | AutomationTriggerResult
-    | TestAutomationResponse
-  message?: string
-  loop?: {
-    current: number
-    total: number
+interface AutomationTestProgressStateWithTimestamp extends TestProgressState {
+  createdAt: number
+}
+
+const progressState = new Map<string, AutomationTestProgressStateWithTimestamp>()
+
+// TTL for test progress entries (5 minutes)
+const TEST_PROGRESS_TTL_MS = 5 * 60 * 1000
+// Cleanup interval (run every minute)
+const CLEANUP_INTERVAL_MS = 60 * 1000
+
+// Periodically clean up old test progress entries to prevent memory leaks
+const cleanupInterval = setInterval(() => {
+  const now = Date.now()
+  for (const [key, state] of progressState.entries()) {
+    if (now - state.createdAt > TEST_PROGRESS_TTL_MS) {
+      progressState.delete(key)
+    }
   }
+}, CLEANUP_INTERVAL_MS)
+
+// Prevent the cleanup interval from keeping the process alive
+if (cleanupInterval.unref) {
+  cleanupInterval.unref()
 }
 
-interface AutomationTestProgressState {
-  lastUpdated: number
-  events: Record<string, AutomationTestProgressEvent>
-  completed?: boolean
-  result?:
-    | TestAutomationResponse
-    | AutomationStepResult
-    | AutomationTriggerResult
-  error?: string
+export function stopCleanup() {
+  clearInterval(cleanupInterval)
 }
-
-const progressState = new Map<string, AutomationTestProgressState>()
 
 const getKey = (appId: string | undefined, automationId: string) =>
   `${appId || "unknown"}:${automationId}`
@@ -56,7 +49,8 @@ export function recordTestProgress(
     ({
       events: {},
       lastUpdated: 0,
-    } as AutomationTestProgressState)
+      createdAt: Date.now(),
+    } as AutomationTestProgressStateWithTimestamp)
 
   if (event.blockId) {
     state.events[event.blockId] = event

@@ -45,8 +45,15 @@ export interface UIAutomation extends Automation {
   publishStatus: PublishStatusResource
 }
 
+export type AutomationTestProgressStatus =
+  | "running"
+  | "success"
+  | "error"
+  | "stopped"
+  | "complete"
+
 export interface AutomationTestProgressEntry {
-  status: "running" | "success" | "error" | "stopped" | "complete"
+  status: AutomationTestProgressStatus
   occurredAt: number
   result?:
     | AutomationStepResult
@@ -60,7 +67,7 @@ export interface AutomationTestProgressEvent {
   appId?: string
   blockId?: string
   stepId?: string
-  status: AutomationTestProgressEntry["status"]
+  status: AutomationTestProgressStatus
   occurredAt: number
   result?:
     | AutomationStepResult

@@ -2,6 +2,7 @@ import {
   clearTestProgress,
   getTestProgress,
   recordTestProgress,
+  stopCleanup,
 } from "../testProgress"
 
 describe("automation test progress cache", () => {
@@ -10,6 +11,10 @@ describe("automation test progress cache", () => {
 
   afterEach(() => {
     clearTestProgress(appId, automationId)
+  })
+
+  afterAll(() => {
+    stopCleanup()
   })
 
   it("records step progress and exposes it via getter", () => {
