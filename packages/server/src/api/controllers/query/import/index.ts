@@ -158,7 +158,7 @@ export class RestImporter {
   static init = async (data: string) => {
     const importer = new RestImporter()
     for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
-      if (await source.isSupported(data)) {
+      if (await source.tryLoad(data)) {
         importer.source = source
         break
       }

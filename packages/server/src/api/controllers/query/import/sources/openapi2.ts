@@ -139,7 +139,7 @@ export class OpenAPI2 extends OpenAPISource {
     return metadata
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI2(document)) {

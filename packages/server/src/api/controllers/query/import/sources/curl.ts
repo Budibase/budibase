@@ -51,7 +51,7 @@ const parseCookie = (curl: any) => {
 export class Curl extends ImportSource {
   curl: any
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
       this.curl = parseCurl(data)
     } catch (err) {

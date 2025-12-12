@@ -251,7 +251,7 @@ export class OpenAPI3 extends OpenAPISource {
     return this.securityHeaders.has(name.toLowerCase())
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
