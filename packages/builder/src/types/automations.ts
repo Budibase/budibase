@@ -22,6 +22,8 @@ import {
   Branch,
   LayoutDirection,
   LoopV2Step,
+  AutomationTestProgressEvent,
+  InProgressTestState,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -177,39 +179,10 @@ export interface SchemaConfigProps {
   wrapped?: boolean
 }
 
-export interface AutomationTestProgressEntry {
-  status: "running" | "success" | "error" | "stopped" | "complete"
-  occurredAt: number
-  result?:
-    | AutomationStepResult
-    | AutomationTriggerResult
-    | TestAutomationResponse
-  message?: string
-}
-
-export interface AutomationTestProgressEvent {
-  automationId: string
-  appId?: string
-  blockId?: string
-  stepId?: string
-  status: AutomationTestProgressEntry["status"]
-  occurredAt: number
-  result?:
-    | AutomationStepResult
-    | AutomationTriggerResult
-    | TestAutomationResponse
-  message?: string
-}
-
-export interface InProgressTestState {
-  automationId: string
-  startedAt: number
-}
-
 export interface AutomationStoreState<T extends Automation = Automation> {
   automations: T[]
   testResults?: TestAutomationResponse
-  testProgress?: Record<string, AutomationTestProgressEntry>
+  testProgress?: Record<string, AutomationTestProgressEvent>
   inProgressTest?: InProgressTestState
   showTestModal: boolean
   blockDefinitions: BlockDefinitions

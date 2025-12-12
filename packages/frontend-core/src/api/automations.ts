@@ -10,6 +10,7 @@ import {
   SearchAutomationLogsResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestProgressState,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
@@ -43,9 +44,7 @@ export interface AutomationEndpoints {
     data: TestAutomationRequest,
     options?: { async?: boolean }
   ) => Promise<TestAutomationResponse>
-  getAutomationTestStatus: (
-    automationId: string
-  ) => Promise<Record<string, any>>
+  getAutomationTestStatus: (automationId: string) => Promise<TestProgressState>
   getAutomationDefinitions: () => Promise<GetAutomationStepDefinitionsResponse>
   getAutomationLogs: (
     options: SearchAutomationLogsRequest

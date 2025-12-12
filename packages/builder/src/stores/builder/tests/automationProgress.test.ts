@@ -1,19 +1,45 @@
-import { get } from "svelte/store"
+import { beforeEach, afterEach, describe, it, vi } from "vitest"
+import { get, writable } from "svelte/store"
 import { automationStore } from "../automations"
 import {
+  type Automation,
   AutomationActionStepId,
   AutomationTriggerStepId,
+  AutomationStatus,
+  type AutomationResults,
+  AutomationStepType,
 } from "@budibase/types"
+import { type AutomationTestProgressEvent } from "@budibase/types"
 
-const automation: any = {
+vi.mock("@/stores/builder", () => {
+  return {
+    appStore: writable({}),
+    deploymentStore: writable({}),
+    permissions: writable({}),
+    tables: writable({ list: [] }),
+    workspaceDeploymentStore: writable({ automations: {} }),
+  }
+})
+
+const automation: Automation = {
   _id: "auto1",
   name: "Auto",
+  appId: "app1",
   definition: {
     trigger: {
       id: "trigger1",
       stepId: AutomationTriggerStepId.APP,
+      type: AutomationStepType.TRIGGER,
+      name: "App trigger",
+      tagline: "",
+      icon: "",
+      description: "",
       inputs: {},
       schema: {
+        inputs: {
+          required: [],
+          properties: {},
+        },
         outputs: {
           required: [],
           properties: {},
@@ -28,7 +54,7 @@ describe("automation test progress handling", () => {
   beforeEach(() => {
     automationStore.update(state => {
       state.automations = [automation]
-      state.selectedAutomationId = automation._id
+      state.selectedAutomationId = automation._id!
       state.testProgress = {}
       state.inProgressTest = undefined
       state.testResults = undefined
@@ -48,30 +74,37 @@ describe("automation test progress handling", () => {
   })
 
   it("marks a step as running", () => {
-    automationStore.actions.handleTestProgress({
-      automationId: automation._id,
+    const event: AutomationTestProgressEvent = {
+      automationId: automation._id!,
       blockId: "step1",
       stepId: AutomationActionStepId.SERVER_LOG,
       status: "running",
       occurredAt: Date.now(),
-    } as any)
+    }
+    automationStore.actions.handleTestProgress(event)
 
     const state = get(automationStore)
     expect(state.testProgress?.["step1"]?.status).toEqual("running")
   })
 
   it("stores completion results and clears in-progress state", () => {
-    const result: any = {
-      status: "success",
-      trigger: {},
-      steps: [],
+    const triggerResult = {
+      id: "trigger1",
+      stepId: AutomationTriggerStepId.APP,
+      outputs: {},
     }
-    automationStore.actions.handleTestProgress({
-      automationId: automation._id,
+    const result: AutomationResults = {
+      status: AutomationStatus.SUCCESS,
+      trigger: triggerResult,
+      steps: [triggerResult],
+    }
+    const event: AutomationTestProgressEvent = {
+      automationId: automation._id!,
       status: "complete",
       occurredAt: Date.now(),
       result,
-    } as any)
+    }
+    automationStore.actions.handleTestProgress(event)
 
     const state = get(automationStore)
     expect(state.testResults).toBe(result)

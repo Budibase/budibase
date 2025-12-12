@@ -31,9 +31,13 @@ import {
   ViewMode,
   type FormUpdate,
   type StepInputs,
-  AutomationTestProgressEvent,
-  InProgressTestState,
 } from "@/types/automations"
+import {
+  AutomationTestProgressEvent,
+  TestProgressState,
+  isTestAutomationResponse,
+} from "@budibase/types"
+
 import { notifications } from "@budibase/bbui"
 import { QueryUtils, Utils } from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
@@ -1358,12 +1362,13 @@ const automationActions = (store: AutomationStore) => ({
     })
     try {
       await API.testAutomation(automation._id!, testData, { async: true })
-    } catch (err: any) {
+    } catch (err) {
       store.update(state => {
         state.inProgressTest = undefined
         return state
       })
-      const message = err.message || err.status || JSON.stringify(err)
+      const e = err as { message?: string; status?: string | number }
+      const message = e.message || e.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
     store.actions.startTestPolling(automation._id!)
@@ -1373,7 +1378,8 @@ const automationActions = (store: AutomationStore) => ({
     stopTestStatusPolling()
     testStatusTimer = setInterval(async () => {
       try {
-        const status: any = await API.getAutomationTestStatus(automationId)
+        const status: TestProgressState =
+          await API.getAutomationTestStatus(automationId)
         const events: AutomationTestProgressEvent[] = Object.values(
           status?.events || {}
         )
@@ -1407,12 +1413,10 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     store.update(state => {
-      state.inProgressTest =
-        state.inProgressTest ||
-        ({
-          automationId: event.automationId,
-          startedAt: event.occurredAt,
-        } as InProgressTestState)
+      state.inProgressTest = state.inProgressTest || {
+        automationId: event.automationId,
+        startedAt: event.occurredAt,
+      }
 
       if (event.blockId) {
         const existing = state.testProgress || {}
@@ -1421,14 +1425,17 @@ const automationActions = (store: AutomationStore) => ({
           [event.blockId]: {
             status: event.status,
             occurredAt: event.occurredAt,
-            result: event.result as any,
+            result: event.result,
             message: event.message,
+            automationId: event.automationId,
           },
         }
       }
 
       if (event.status === "complete" && event.result) {
-        state.testResults = event.result as any
+        if (isTestAutomationResponse(event.result)) {
+          state.testResults = event.result
+        }
         state.testProgress = {}
         state.inProgressTest = undefined
         stopTestStatusPolling()

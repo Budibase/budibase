@@ -267,12 +267,12 @@ export async function test(
 
   const { request, appId } = ctx
   const { body } = request
+  const query = ctx.request.query as Record<string, unknown>
+  const bodyAsync = body?.async
   const asyncFlag =
-    isQsTrue((ctx.request.query as any)?.async) ||
-    isQsTrue((body as any)?.async)
+    isQsTrue(String(query?.async)) || isQsTrue(String(bodyAsync))
 
-  const testBody = { ...body }
-  delete (testBody as any).async
+  const { async: _async, ...testBody } = body
 
   let table: Table | undefined
   if (coreSdk.automations.isRowAction(automation) && testBody.row?.tableId) {
@@ -342,7 +342,7 @@ export async function test(
   ctx.body = await runTest()
 }
 
-export async function testStatus(ctx: UserCtx<void, any>) {
+export async function testStatus(ctx: UserCtx<void, unknown>) {
   const automationId = ctx.params.id
   const status = getTestProgress(ctx.appId, automationId)
   ctx.body = status || {}
