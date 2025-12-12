@@ -14,24 +14,24 @@ describe("Curl Import", () => {
   })
 
   it("validates unsupported data", async () => {
-    expect(await curl.isSupported("{}")).toBe(false)
-    expect(await curl.isSupported("")).toBe(false)
+    expect(await curl.tryLoad("{}")).toBe(false)
+    expect(await curl.tryLoad("")).toBe(false)
   })
 
   const init = async (file: string) => {
-    await curl.isSupported(getData(file))
+    await curl.tryLoad(getData(file))
   }
 
   it("returns import info", async () => {
     await init("get")
-    const info = await curl.getInfo()
+    const info = curl.getInfo()
     expect(info.name).toBe("example.com")
   })
 
   describe("Returns queries", () => {
     const getQueries = async (file: string) => {
       await init(file)
-      const queries = await curl.getQueries("fake_datasource_id")
+      const queries = curl.getQueries("fake_datasource_id")
       expect(queries.length).toBe(1)
       return queries
     }

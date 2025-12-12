@@ -42,6 +42,15 @@ export abstract class OpenAPISource extends ImportSource {
 
     const parsedInput = prepareDocument(data)
     const document = await SwaggerParser.parse(parsedInput, baseOptions)
+    return document
+  }
+
+  validate = async (document: OpenAPI.Document): Promise<OpenAPI.Document> => {
+    const baseOptions = {
+      resolve: {
+        external: false,
+      },
+    }
 
     try {
       return await SwaggerParser.validate(document)

@@ -1,11 +1,11 @@
-const fs = require("fs")
-const path = require("path")
-const SwaggerParser = require("@apidevtools/swagger-parser")
-const { BodyType } = require("@budibase/types")
+import fs from "fs"
+import path from "path"
+import SwaggerParser from "@apidevtools/swagger-parser"
+import { BodyType } from "@budibase/types"
 
-const { OpenAPI3 } = require("../../openapi3")
+import { OpenAPI3 } from "../../openapi3"
 
-const getData = (file, extension) => {
+const getData = (file: string, extension: string) => {
   return fs.readFileSync(
     path.join(__dirname, `./data/${file}/${file}.${extension}`),
     "utf8"
@@ -13,7 +13,7 @@ const getData = (file, extension) => {
 }
 
 describe("OpenAPI3 Import", () => {
-  let openapi3
+  let openapi3: OpenAPI3
 
   beforeEach(() => {
     openapi3 = new OpenAPI3()
@@ -29,12 +29,12 @@ describe("OpenAPI3 Import", () => {
 
     // non json / yaml
     data = "curl http://example.com"
-    supported = await openapi3.isSupported(data)
+    supported = await openapi3.tryLoad(data)
     expect(supported).toBe(false)
 
     // Empty
     data = ""
-    supported = await openapi3.isSupported(data)
+    supported = await openapi3.tryLoad(data)
     expect(supported).toBe(false)
   })
 
@@ -47,14 +47,14 @@ describe("OpenAPI3 Import", () => {
       openapi: "3.0.0",
       info: {},
       paths: {},
-    }
+    } as any
 
     parseSpy.mockResolvedValue(document)
     validateSpy.mockRejectedValue(new Error("validation failed"))
     const dereferenced = { ...document, dereferenced: true }
     dereferenceSpy.mockResolvedValue(dereferenced)
 
-    const supported = await openapi3.isSupported("{}")
+    const supported = await openapi3.tryLoad("{}")
     expect(supported).toBe(true)
     expect(openapi3.document).toBe(dereferenced)
 
@@ -96,10 +96,10 @@ describe("OpenAPI3 Import", () => {
       },
     })
 
-    const supported = await openapi3.isSupported(spec)
+    const supported = await openapi3.tryLoad(spec)
     expect(supported).toBe(true)
 
-    const [query] = await openapi3.getQueries("datasourceId")
+    const [query] = openapi3.getQueries("datasourceId")
     expect(query.fields.path).toBe(
       "https://{{subdomain}}.{{domain}}.com/api/trigger_categories/jobs"
     )
@@ -150,9 +150,9 @@ describe("OpenAPI3 Import", () => {
       },
     })
 
-    await openapi3.isSupported(spec)
+    await openapi3.tryLoad(spec)
 
-    const [query] = await openapi3.getQueries("datasourceId", {
+    const [query] = openapi3.getQueries("datasourceId", {
       staticVariables: {
         subdomain: "example",
         domain: "zendesk",
@@ -173,15 +173,19 @@ describe("OpenAPI3 Import", () => {
     )
   })
 
-  const runTests = async (filename, test, assertions) => {
+  const runTests = async (
+    filename: string,
+    test: (file: any, extension: any, assertions: any) => Promise<void>,
+    assertions?: any
+  ) => {
     for (let extension of ["json", "yaml"]) {
       await test(filename, extension, assertions)
     }
   }
 
-  const testImportInfo = async (file, extension) => {
-    await openapi3.isSupported(getData(file, extension))
-    const info = await openapi3.getInfo()
+  const testImportInfo = async (file: string, extension: string) => {
+    await openapi3.tryLoad(getData(file, extension))
+    const info = openapi3.getInfo()
     expect(info.name).toBe("Swagger Petstore - OpenAPI 3.0")
   }
 
@@ -190,21 +194,28 @@ describe("OpenAPI3 Import", () => {
   })
 
   describe("Returns queries", () => {
-    const indexQueries = queries => {
-      return queries.reduce((acc, query) => {
-        acc[query.name] = query
-        return acc
-      }, {})
+    const indexQueries = (queries: any[]) => {
+      return queries.reduce(
+        (acc: { [x: string]: any }, query: { name: string | number }) => {
+          acc[query.name] = query
+          return acc
+        },
+        {}
+      )
     }
 
-    const getQueries = async (file, extension) => {
-      await openapi3.isSupported(getData(file, extension))
-      const queries = await openapi3.getQueries()
+    const getQueries = async (file: string, extension: string) => {
+      await openapi3.tryLoad(getData(file, extension))
+      const queries = openapi3.getQueries("datasourceId")
       expect(queries.length).toBe(6)
       return indexQueries(queries)
     }
 
-    const testVerb = async (file, extension, assertions) => {
+    const testVerb = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, method] of Object.entries(assertions)) {
         expect(queries[operationId].queryVerb).toBe(method)
@@ -223,7 +234,11 @@ describe("OpenAPI3 Import", () => {
       await runTests("crud", testVerb, assertions)
     })
 
-    const testPath = async (file, extension, assertions) => {
+    const testPath = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, urlPath] of Object.entries(assertions)) {
         expect(queries[operationId].fields.path).toBe(urlPath)
@@ -242,7 +257,11 @@ describe("OpenAPI3 Import", () => {
       await runTests("crud", testPath, assertions)
     })
 
-    const testHeaders = async (file, extension, assertions) => {
+    const testHeaders = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, headers] of Object.entries(assertions)) {
         expect(queries[operationId].fields.headers).toStrictEqual(headers)
@@ -341,12 +360,12 @@ describe("OpenAPI3 Import", () => {
         },
       })
 
-      const supported = await openapi3.isSupported(spec)
+      const supported = await openapi3.tryLoad(spec)
       expect(supported).toBe(true)
 
-      const [query] = await openapi3.getQueries("datasourceId")
+      const [query] = openapi3.getQueries("datasourceId")
       expect(query.fields.bodyType).toBe(BodyType.ENCODED)
-      expect(query.fields.headers["Content-Type"]).toBe(
+      expect(query.fields.headers?.["Content-Type"]).toBe(
         "application/x-www-form-urlencoded"
       )
       expect(query.fields.requestBody).toEqual({
@@ -370,7 +389,11 @@ describe("OpenAPI3 Import", () => {
       )
     })
 
-    const testQuery = async (file, extension, assertions) => {
+    const testQuery = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, queryString] of Object.entries(assertions)) {
         expect(queries[operationId].fields.queryString).toStrictEqual(
@@ -391,7 +414,11 @@ describe("OpenAPI3 Import", () => {
       await runTests("crud", testQuery, assertions)
     })
 
-    const testParameters = async (file, extension, assertions) => {
+    const testParameters = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, parameters] of Object.entries(assertions)) {
         expect(queries[operationId].parameters).toStrictEqual(parameters)
@@ -476,7 +503,11 @@ describe("OpenAPI3 Import", () => {
       await runTests("crud", testParameters, assertions)
     })
 
-    const testBody = async (file, extension, assertions) => {
+    const testBody = async (
+      file: any,
+      extension: any,
+      assertions: { [s: string]: unknown } | ArrayLike<unknown>
+    ) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, body] of Object.entries(assertions)) {
         expect(queries[operationId].fields.requestBody).toStrictEqual(body)

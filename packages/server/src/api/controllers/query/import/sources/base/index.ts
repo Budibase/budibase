@@ -18,6 +18,7 @@ export interface ImportInfo {
   docsUrl?: string
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
+  staticVariables?: Record<string, string>
 }
 
 enum MethodToVerb {
@@ -34,12 +35,13 @@ export interface GetQueriesOptions {
 }
 
 export abstract class ImportSource {
-  abstract isSupported(data: string): Promise<boolean>
-  abstract getInfo(): Promise<ImportInfo>
+  abstract tryLoad(data: string): Promise<boolean>
+  abstract load(data: string): Promise<void>
+  abstract getInfo(): ImportInfo
   abstract getQueries(
     datasourceId: string,
     options?: GetQueriesOptions
-  ): Promise<Query[]>
+  ): Query[]
   abstract getImportSource(): string
 
   protected buildEndpointId = (method: string, path: string): string => {

@@ -39,8 +39,8 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { RestImporter } from "./import"
-import fetch from "node-fetch"
+import { createImporter, getImportInfo } from "./import"
+import { ImportInfo } from "./import/sources/base"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -72,44 +72,13 @@ export async function fetchQueries(ctx: UserCtx<void, FetchQueriesResponse>) {
   ctx.body = await sdk.queries.fetch()
 }
 
-const resolveImportData = async (
-  ctx: UserCtx,
-  payload: { data?: string; url?: string }
-) => {
-  const data = payload.data?.trim()
-  if (data) {
-    return payload.data as string
-  }
-
-  const url = payload.url?.trim()
-  if (url) {
-    try {
-      const response = await fetch(url)
-      if (!response.ok) {
-        ctx.throw(
-          response.status,
-          `Failed to fetch import data (status ${response.status})`
-        )
-      }
-      return await response.text()
-    } catch (error: any) {
-      const message = error?.message || "Unknown error"
-      ctx.throw(502, `Failed to fetch import data - ${message}`)
-    }
-  }
-
-  ctx.throw(400, "Import data is required")
-}
-
 const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
   const body = ctx.request.body
-  const data = await resolveImportData(ctx, body)
 
-  const importer = new RestImporter(data)
-  await importer.init()
-  const importInfo = await importer.getInfo()
+  const importer = await createImporter(body)
+  const importInfo = importer.getInfo()
 
   let datasourceId
   if (!body.datasourceId) {
@@ -173,18 +142,23 @@ export { _import as import }
 export async function importInfo(
   ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
 ) {
-  const data = await resolveImportData(ctx, ctx.request.body)
-  const importer = new RestImporter(data)
-  await importer.init()
-  const info = await importer.getInfo()
-  const staticVariables = importer.getStaticServerVariables()
+  const { body } = ctx.request
+
+  let info: ImportInfo
+  if (body.data) {
+    info = await getImportInfo({ data: body.data })
+  } else if (body.url) {
+    info = await getImportInfo({ url: body.url })
+  } else {
+    ctx.throw(400, "Import data or url is required")
+  }
   ctx.body = {
     name: info.name,
     url: info.url,
     docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
     securityHeaders: info.securityHeaders || [],
-    staticVariables,
+    staticVariables: info.staticVariables || {},
   }
 }
 
