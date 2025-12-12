@@ -37,32 +37,17 @@
   )
 
   $: displayColumns = columns.map(c => {
+    const isDisplayColumn = c.primaryDisplay
+    const isDisplayLocked = isDisplayColumn && $datasource?.type !== "viewV2"
     const isRequired =
-      c.primaryDisplay || helpers.schema.isRequired(c.schema.constraints)
+      isDisplayLocked || helpers.schema.isRequired(c.schema.constraints)
 
     const defaultPermission = permissions[0]
     const requiredTooltips = {
-      [FieldPermissions.WRITABLE]: (() => {
-        if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (c.primaryDisplay) {
-            return "Display column must be writable"
-          }
-          if (isRequired) {
-            return "Required columns must be writable"
-          }
-        }
-      })(),
+      [FieldPermissions.WRITABLE]: (() => {})(),
       [FieldPermissions.READONLY]: (() => {
-        if (defaultPermission === FieldPermissions.WRITABLE) {
-          if (c.primaryDisplay) {
-            return "Display column cannot be read-only"
-          }
-          if (isRequired) {
-            return "Required columns cannot be read-only"
-          }
-        }
         if (defaultPermission === FieldPermissions.READONLY) {
-          if (c.primaryDisplay) {
+          if (isDisplayColumn) {
             return "Display column must be read-only"
           }
           if (isRequired) {
@@ -71,7 +56,7 @@
         }
       })(),
       [FieldPermissions.HIDDEN]: (() => {
-        if (c.primaryDisplay) {
+        if (isDisplayColumn) {
           return "Display column cannot be hidden"
         }
         if (isRequired) {
