@@ -62,6 +62,7 @@ export enum SourceName {
   POSTGRES = "POSTGRES",
   REDIS = "REDIS",
   REST = "REST",
+  SERVICENOW = "SERVICENOW",
   S3 = "S3",
   SNOWFLAKE = "SNOWFLAKE",
   SQL_SERVER = "SQL_SERVER",
@@ -98,7 +99,7 @@ export interface QueryDefinition {
   displayName?: string
   readable?: boolean
   customisable?: boolean
-  fields?: object
+  fields?: Record<string, DatasourceFieldConfig>
   urlDisplay?: boolean
   steps?: Array<StepDefinition>
 }
@@ -120,6 +121,7 @@ interface DatasourceBasicFieldConfig {
   deprecated?: boolean
   hidden?: string
   placeholder?: string
+  tooltip?: string
 }
 
 interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
@@ -135,7 +137,7 @@ interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
   }
 }
 
-type DatasourceFieldConfig =
+export type DatasourceFieldConfig =
   | DatasourceSelectFieldConfig
   | DatasourceFieldGroupConfig
   | DatasourceBasicFieldConfig

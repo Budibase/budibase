@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import ServiceNow from "./ServiceNow.svelte"
 
 const ICONS = {
   BUDIBASE: Budibase,
@@ -35,6 +36,7 @@ const ICONS = {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
+  SERVICENOW: ServiceNow,
   CUSTOM: Custom,
 }
 

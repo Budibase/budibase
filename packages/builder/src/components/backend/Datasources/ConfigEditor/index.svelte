@@ -34,6 +34,8 @@
 
     return keepOpen
   }
+
+  $: integrationType = integration.type === "API" ? "API" : "database"
 </script>
 
 <ModalContent
@@ -53,7 +55,7 @@
           icon="warning"
         />
       {/if}
-      <p>Connect your database to Budibase using the config below.</p>
+      <p>Connect your {integrationType} to Budibase using the config below.</p>
     </Body>
   </Layout>
 
@@ -68,7 +70,7 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder, tooltip }}
     <ConfigInput
       {type}
       {value}
@@ -76,6 +78,7 @@
       {name}
       {config}
       {placeholder}
+      {tooltip}
       on:blur={() => configStore.markFieldActive(key)}
       on:change={e => configStore.updateFieldValue(key, e.detail)}
       on:nestedFieldBlur={e =>
