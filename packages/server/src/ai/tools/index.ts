@@ -2,6 +2,7 @@ import { ToolType } from "@budibase/types"
 import { z } from "zod"
 
 export { default as budibase } from "./budibase"
+export * from "./restQuery"
 
 export interface ExecutableTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
   name: string

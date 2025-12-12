@@ -2,76 +2,8 @@ import { Agent, ToolMetadata, ToolType, SourceName } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
-import { type ExecutableTool } from "../../../../ai/tools"
-import { z } from "zod"
-import { context } from "@budibase/backend-core"
-import * as queryController from "../../../../api/controllers/query"
-import { buildCtx } from "../../../../automations/steps/utils"
+import { createRestQueryTool, type ExecutableTool } from "../../../../ai/tools"
 import sdk from "../../.."
-
-const sanitiseToolName = (name: string): string => {
-  if (name.length > 64) {
-    return name.substring(0, 64) + "..."
-  }
-  return name.replace(/[^a-zA-Z0-9_-]/g, "_")
-}
-
-const buildParametersSchema = (parameters: { name: string }[] = []) => {
-  const schemaFields: Record<string, z.ZodTypeAny> = {}
-
-  for (const param of parameters) {
-    schemaFields[param.name] = z
-      .string()
-      .optional()
-      .describe(`Parameter: ${param.name}`)
-  }
-
-  return z.object(schemaFields)
-}
-
-const createQueryTool = (
-  query: { name: string; _id?: string; parameters?: { name: string }[] },
-  datasourceName?: string
-): ExecutableTool => {
-  const toolName = sanitiseToolName(query.name)
-  const parametersSchema = buildParametersSchema(query.parameters || [])
-
-  const description = query.name
-
-  return {
-    name: toolName,
-    description,
-    parameters: parametersSchema,
-    sourceType: ToolType.REST_QUERY,
-    sourceLabel: datasourceName || "API",
-    handler: async (params: unknown) => {
-      const workspaceId = context.getWorkspaceId()
-      if (!workspaceId) {
-        return { error: "No app context available" }
-      }
-
-      const ctx: any = buildCtx(workspaceId, null, {
-        body: {
-          parameters: params,
-        },
-        params: {
-          queryId: query._id,
-        },
-      })
-
-      try {
-        await queryController.executeV2AsAutomation(ctx)
-        const { data, ...rest } = ctx.body
-        return { success: true, data, info: rest }
-      } catch (err: any) {
-        return {
-          success: false,
-          error: err.message || "Query execution failed",
-        }
-      }
-    },
-  }
-}
 
 export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
   return {
@@ -97,7 +29,7 @@ export async function getAvailableTools(): Promise<ExecutableTool[]> {
   const restQueryTools = queries
     .filter(query => restDatasourceNames.has(query.datasourceId))
     .map(query =>
-      createQueryTool(query, restDatasourceNames.get(query.datasourceId))
+      createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
   return [...budibaseTools, ...restQueryTools]
@@ -131,12 +63,15 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
+  // This is key. We only include tools that are actually enabled on the agent.
+  const tools =
+    enabledToolNames.size > 0
+      ? allTools.filter(tool => enabledToolNames.has(tool.name))
+      : allTools
+
   return {
     systemPrompt,
-    tools:
-      enabledToolNames.size > 0
-        ? allTools.filter(tool => enabledToolNames.has(tool.name))
-        : [],
+    tools,
   }
 }
 
