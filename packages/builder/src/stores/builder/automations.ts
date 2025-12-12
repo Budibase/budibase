@@ -1428,6 +1428,7 @@ const automationActions = (store: AutomationStore) => ({
             result: event.result,
             message: event.message,
             automationId: event.automationId,
+            loop: event.loop,
           },
         }
       }

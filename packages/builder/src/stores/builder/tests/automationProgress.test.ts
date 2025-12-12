@@ -87,6 +87,24 @@ describe("automation test progress handling", () => {
     expect(state.testProgress?.["step1"]?.status).toEqual("running")
   })
 
+  it("preserves loop iteration metadata on running events", () => {
+    const event: AutomationTestProgressEvent = {
+      automationId: automation._id!,
+      blockId: "step1",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      status: "running",
+      occurredAt: Date.now(),
+      loop: { current: 2, total: 5 },
+    }
+    automationStore.actions.handleTestProgress(event)
+
+    const state = get(automationStore)
+    expect(state.testProgress?.["step1"]?.loop).toEqual({
+      current: 2,
+      total: 5,
+    })
+  })
+
   it("stores completion results and clears in-progress state", () => {
     const triggerResult = {
       id: "trigger1",

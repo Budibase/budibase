@@ -41,4 +41,8 @@ export interface AutomationContext {
   _error: boolean
   _stepResults: AutomationStepResult[]
   _loopDepth?: number
+  _loopIteration?: {
+    current: number
+    total: number
+  }
 }

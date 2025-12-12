@@ -37,7 +37,6 @@
   $: viewMode = $automationStore.viewMode
   $: isTriggerBlock = block ? isTrigger(block) : false
   $: testResults = $automationStore.testResults as TestAutomationResponse
-
   $: progressResult =
     viewMode !== ViewMode.LOGS && block
       ? $automationStore.testProgress?.[block.id]?.result
@@ -55,6 +54,21 @@
     !!block &&
     $automationStore.inProgressTest &&
     $automationStore.testProgress?.[block.id]?.status === "running"
+
+  $: loopInfo =
+    viewMode !== ViewMode.LOGS && block
+      ? $automationStore.testProgress?.[block.id]?.loop
+      : undefined
+
+  $: runningLabel =
+    loopInfo && loopInfo.total
+      ? `Running (${loopInfo.current}/${loopInfo.total})`
+      : "Running"
+
+  $: completedLoopLabel =
+    loopInfo && loopInfo.total && flowStatus
+      ? `${flowStatus.message} ${loopInfo.current}/${loopInfo.total}`
+      : flowStatus?.message
 
   $: triggerRunning =
     viewMode !== ViewMode.LOGS &&
@@ -147,33 +161,56 @@
       <span />
     {/if}
     {#if isRunning && !isTriggerBlock}
-      <span class="flow-success flow-running flow-status-btn">
+      <span class="flow-blue flow-running flow-status-btn">
         <ActionButton size="S" active={false}>
-          <Spinner size="12" color="currentColor" />
-          Running
+          <Spinner size="12" />
+          {runningLabel}
         </ActionButton>
       </span>
     {:else if flowStatus && !hideStatus}
-      <span class={`flow-${flowStatus.type} flow-status-btn`}>
-        <ActionButton
-          size="S"
-          icon={flowStatus.icon}
-          tooltip={flowStatus?.tooltip}
-          on:click={async () => {
-            if (branch || !block || viewMode === ViewMode.LOGS) {
-              return
-            }
-            await automationStore.actions.selectNode(
-              block?.id,
-              flowStatus.type == FlowStatusType.SUCCESS
-                ? DataMode.OUTPUT
-                : DataMode.ERRORS
-            )
-          }}
-        >
-          {flowStatus.message}
-        </ActionButton>
-      </span>
+      {#if loopInfo?.total && $automationStore.inProgressTest}
+        <span class="flow-blue flow-status-btn">
+          <ActionButton
+            size="S"
+            icon={flowStatus.icon}
+            tooltip={flowStatus?.tooltip}
+            on:click={async () => {
+              if (branch || !block || viewMode === ViewMode.LOGS) {
+                return
+              }
+              await automationStore.actions.selectNode(
+                block?.id,
+                flowStatus.type == FlowStatusType.SUCCESS
+                  ? DataMode.OUTPUT
+                  : DataMode.ERRORS
+              )
+            }}
+          >
+            {completedLoopLabel}
+          </ActionButton>
+        </span>
+      {:else}
+        <span class={`flow-${flowStatus.type} flow-status-btn`}>
+          <ActionButton
+            size="S"
+            icon={flowStatus.icon}
+            tooltip={flowStatus?.tooltip}
+            on:click={async () => {
+              if (branch || !block || viewMode === ViewMode.LOGS) {
+                return
+              }
+              await automationStore.actions.selectNode(
+                block?.id,
+                flowStatus.type == FlowStatusType.SUCCESS
+                  ? DataMode.OUTPUT
+                  : DataMode.ERRORS
+              )
+            }}
+          >
+            {flowStatus.message}
+          </ActionButton>
+        </span>
+      {/if}
     {/if}
   {/if}
 </div>
@@ -191,6 +228,11 @@
   }
   .flow-item-status .block-type {
     pointer-events: none;
+  }
+
+  .flow-blue :global(.spectrum-ActionButton) {
+    background-color: var(--spectrum-global-color-blue-600);
+    border-color: var(--spectrum-global-color-blue-600);
   }
 
   .flow-success :global(.spectrum-ActionButton) {

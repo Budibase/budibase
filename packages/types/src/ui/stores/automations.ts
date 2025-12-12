@@ -67,6 +67,10 @@ export interface AutomationTestProgressEvent {
     | AutomationTriggerResult
     | TestAutomationResponse
   message?: string
+  loop?: {
+    current: number
+    total: number
+  }
 }
 
 export interface InProgressTestState {

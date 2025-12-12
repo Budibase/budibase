@@ -327,11 +327,13 @@ class Orchestrator {
   private reportStepProgress(
     step: Readonly<AutomationStep>,
     status: AutomationTestProgressEvent["status"],
-    result?: AutomationStepResult
+    result?: AutomationStepResult,
+    ctx?: AutomationContext
   ) {
     if (!this.onProgress) {
       return
     }
+    const loop = ctx?._loopIteration
     this.onProgress({
       automationId: this.automation._id!,
       appId: this.appId,
@@ -340,6 +342,7 @@ class Orchestrator {
       status,
       occurredAt: Date.now(),
       result,
+      ...(loop ? { loop } : {}),
     })
   }
 
@@ -507,7 +510,7 @@ class Orchestrator {
         }
 
         const step = steps[stepIndex]
-        this.reportStepProgress(step, "running")
+        this.reportStepProgress(step, "running", undefined, ctx)
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
             const branchResults = await this.executeBranchStep(ctx, step)
@@ -517,7 +520,8 @@ class Orchestrator {
               this.reportStepProgress(
                 step,
                 progressStatus(branchResults[0]),
-                branchResults[0]
+                branchResults[0],
+                ctx
               )
             }
             stepIndex++
@@ -533,7 +537,7 @@ class Orchestrator {
             } else {
               addToContext(step, result, true)
             }
-            this.reportStepProgress(step, progressStatus(result), result)
+            this.reportStepProgress(step, progressStatus(result), result, ctx)
             stepIndex++
             break
           }
@@ -553,7 +557,7 @@ class Orchestrator {
             )
             const latest = results.at(-1)
             if (latest) {
-              this.reportStepProgress(step, progressStatus(latest), latest)
+              this.reportStepProgress(step, progressStatus(latest), latest, ctx)
             }
             stepIndex++
             break
@@ -607,6 +611,8 @@ class Orchestrator {
           maxStoredResults
         )
 
+        const totalIterations = Math.min(iterable.length, maxIterations)
+
         for (; iterations < iterable.length; iterations++) {
           const currentItem = iterable[iterations]
 
@@ -642,7 +648,12 @@ class Orchestrator {
 
           // Save the current loop context to support nested loops
           const savedLoopContext = ctx.loop
+          const savedLoopIteration = ctx._loopIteration
           ctx.loop = { currentItem }
+          ctx._loopIteration = {
+            current: iterations + 1,
+            total: totalIterations,
+          }
           try {
             // For both legacy and new loops, we need to preserve the step index
             // so child steps don't affect the main step numbering
@@ -681,6 +692,7 @@ class Orchestrator {
           } finally {
             // Restore the previous loop context (for nested loops)
             ctx.loop = savedLoopContext
+            ctx._loopIteration = savedLoopIteration
           }
         }
 
