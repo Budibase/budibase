@@ -18,6 +18,7 @@ import {
   EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
+  isStaticFormula,
   LockName,
   LockType,
   Operation,
@@ -428,8 +429,11 @@ export async function search(
         },
       }
     } else if (sortField) {
+      const responseType = isStaticFormula(sortField)
+        ? sortField.responseType
+        : sortField.type
       const sortType =
-        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+        responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
       request.sort = {
         [mapToUserColumn(sortField.name)]: {
           direction: params.sortOrder || SortOrder.ASCENDING,
