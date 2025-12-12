@@ -20,7 +20,7 @@ import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
-import { RestImporter, createImporter, getImportInfo } from "../index"
+import { RestImporter, createImporter } from "../index"
 
 type Assertions = Record<
   DatasetKey,

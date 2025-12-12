@@ -40,6 +40,7 @@ import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { createImporter, getImportInfo } from "./import"
+import { ImportInfo } from "./import/sources/base"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -142,7 +143,15 @@ export async function importInfo(
   ctx: UserCtx<ImportRestQueryInfoRequest, ImportRestQueryInfoResponse>
 ) {
   const { body } = ctx.request
-  const info = await getImportInfo(body)
+
+  let info: ImportInfo
+  if (body.data) {
+    info = await getImportInfo({ data: body.data })
+  } else if (body.url) {
+    info = await getImportInfo({ url: body.url })
+  } else {
+    ctx.throw(400, "Import data or url is required")
+  }
   ctx.body = {
     name: info.name,
     url: info.url,
