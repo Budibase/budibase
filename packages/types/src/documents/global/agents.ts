@@ -4,6 +4,7 @@ import type { UIMessage } from "ai"
 export enum ToolType {
   BUDIBASE = "BUDIBASE",
   REST_QUERY = "REST_QUERY",
+  SEARCH = "SEARCH",
 }
 
 export interface ToolMetadata {
