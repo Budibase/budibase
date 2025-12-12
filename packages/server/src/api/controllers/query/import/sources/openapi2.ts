@@ -241,15 +241,6 @@ export class OpenAPI2 extends OpenAPISource {
     return "openapi2.0"
   }
 
-  serialize = (): { document: OpenAPIV2.Document } => {
-    return { document: this.document }
-  }
-
-  hydrate = (payload: { document: OpenAPIV2.Document }) => {
-    this.document = payload.document
-    this.setSecurityHeaders()
-  }
-
   getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     const url = this.getUrl()
     const queries = []

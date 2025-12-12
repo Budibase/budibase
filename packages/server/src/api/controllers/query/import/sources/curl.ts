@@ -89,14 +89,6 @@ export class Curl extends ImportSource {
     return "curl"
   }
 
-  serialize = (): { curl: any } => {
-    return { curl: this.curl }
-  }
-
-  hydrate = (payload: { curl: any }) => {
-    this.curl = payload.curl
-  }
-
   getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     const url = this.getUrl()
     const name = url.pathname

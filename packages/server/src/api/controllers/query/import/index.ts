@@ -14,11 +14,6 @@ interface ImportResult {
   queries: Query[]
 }
 
-interface SerializedImportSource {
-  type: string
-  payload: any
-}
-
 type ImporterInput = { data: string } | { url: string }
 
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
@@ -61,24 +56,11 @@ const assignDatasourceHeaderDefaults = (
   }
 }
 
-const buildCacheKey = (input: ImporterInput) =>
-  `openapiSpecs:${crypto
-    .createHash("sha512")
-    .update(JSON.stringify("data" in input ? input.data : input.url))
-    .digest("hex")}`
+const stringToHashKey = (input: string) =>
+  crypto.createHash("sha512").update(JSON.stringify(input)).digest("hex")
 
-const persistImporterToCache = async (
-  cacheKey: string,
-  importer: RestImporter
-): Promise<SerializedImportSource> => {
-  const source = importer.getSource()
-  const entry: SerializedImportSource = {
-    type: source.getImportSource(),
-    payload: source.serialize(),
-  }
-  await cache.store(cacheKey, entry, cache.TTL.ONE_DAY * 7)
-  return entry
-}
+const buildCacheKey = (input: ImporterInput) =>
+  `openapiSpecs:${stringToHashKey(JSON.stringify("data" in input ? input.data : input.url))}`
 
 async function fetchFromUrl(url: string): Promise<string> {
   try {
@@ -99,35 +81,28 @@ async function fetchFromUrl(url: string): Promise<string> {
 export async function getImportInfo(
   input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
-  const importer = await getImporter(input as any)
+  const importer = await createImporter(input as any)
   const info = importer.getInfo()
   return info
 }
 
-export async function getImporter(
-  input: { data: string } | { url: string }
-): Promise<RestImporter> {
-  const cacheKey = buildCacheKey(input)
-  const entry = await cache.get(cacheKey)
-
-  if (entry) {
-    const importer = RestImporter.hydrate(entry)
-    if (importer) {
-      return importer
-    }
+async function urlToSpecs(url: string): Promise<string> {
+  const cacheKey = `${buildCacheKey({ url })}:urlSpecs`
+  const cachedValue = await cache.get(cacheKey)
+  if (cachedValue) {
+    return cachedValue as string
   }
-
-  const importer = await createImporter(input)
-  await persistImporterToCache(cacheKey, importer)
-  return importer
+  const result = await fetchFromUrl(url)
+  await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7)
+  return result
 }
 
-async function createImporter(
+export async function createImporter(
   input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
   let data: string | undefined
   if ("url" in input && input.url) {
-    data = await fetchFromUrl(input.url)
+    data = await urlToSpecs(input.url)
   } else if ("data" in input) {
     data = input.data
   }
@@ -137,7 +112,19 @@ async function createImporter(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  return await RestImporter.init(data)
+  const importerTypeCacheKey = `${buildCacheKey({ data })}:type`
+  const cachedType = await cache.get(importerTypeCacheKey)
+
+  const result = await RestImporter.init(data, cachedType)
+  if (!cachedType) {
+    await cache.store(
+      importerTypeCacheKey,
+      result.getSource().getImportSource(),
+      cache.TTL.ONE_DAY * 7
+    )
+  }
+
+  return result
 }
 
 export class RestImporter {
@@ -145,32 +132,35 @@ export class RestImporter {
 
   private constructor() {}
 
-  static init = async (data: string) => {
+  static init = async (data: string, type?: string) => {
     const importer = new RestImporter()
-    for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
-      if (await source.tryLoad(data)) {
-        importer.source = source
-        break
+    if (type) {
+      const factory = SOURCE_FACTORIES[type]
+      if (!factory) {
+        throw new HTTPError("Unsupported import type", 400)
+      }
+
+      const source = factory()
+      const canLoad = await source.tryLoad(data)
+      if (!canLoad) {
+        throw new HTTPError(
+          `Unsupported data for the given type "${type}"`,
+          400
+        )
+      }
+      importer.source = source
+      return importer
+    } else {
+      for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
+        if (await source.tryLoad(data)) {
+          importer.source = source
+          break
+        }
       }
     }
     if (!importer.source) {
       throw new HTTPError("Unsupported import data", 400)
     }
-    return importer
-  }
-
-  static hydrate = (state: SerializedImportSource): RestImporter | null => {
-    const factory = SOURCE_FACTORIES[state.type]
-    if (!factory) {
-      return null
-    }
-    const source = factory()
-    if (!source.hydrate) {
-      return null
-    }
-    source.hydrate(state.payload)
-    const importer = new RestImporter()
-    importer.source = source
     return importer
   }
 

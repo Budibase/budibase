@@ -19,10 +19,6 @@ import {
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
-interface OpenAPI3SerializedState {
-  document: OpenAPIV3.Document
-  serverVariableBindings?: Record<string, string>
-}
 
 const isReferenceObject = (
   value: unknown
@@ -342,19 +338,6 @@ export class OpenAPI3 extends OpenAPISource {
 
   getImportSource(): string {
     return "openapi3.0"
-  }
-
-  serialize = (): OpenAPI3SerializedState => {
-    return {
-      document: this.document,
-      serverVariableBindings: this.serverVariableBindings,
-    }
-  }
-
-  hydrate = (payload: OpenAPI3SerializedState) => {
-    this.document = payload.document
-    this.serverVariableBindings = payload.serverVariableBindings || {}
-    this.setSecurityHeaders()
   }
 
   getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
