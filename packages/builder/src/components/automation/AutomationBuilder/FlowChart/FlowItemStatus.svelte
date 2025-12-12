@@ -12,6 +12,7 @@
     type AutomationStepResult,
     type AutomationTrigger,
     type AutomationTriggerResult,
+    type AutomationJob,
     type Branch,
     type DidNotTriggerResponse,
     type TestAutomationResponse,
@@ -24,6 +25,12 @@
   import { ActionButton } from "@budibase/bbui"
   import Spinner from "@/components/common/Spinner.svelte"
 
+  type StatusResult =
+    | AutomationTriggerResult
+    | AutomationStepResult
+    | DidNotTriggerResponse
+    | undefined
+
   export let block: AutomationStep | AutomationTrigger | undefined
   export let branch: Branch | undefined
   export let hideStatus: boolean | undefined = false
@@ -35,6 +42,7 @@
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: viewMode = $automationStore.viewMode
+  $: isLogsMode = viewMode === ViewMode.LOGS
   $: isTriggerBlock = block ? isTrigger(block) : false
   $: testResults = $automationStore.testResults as TestAutomationResponse
   $: progressResult =
@@ -42,12 +50,27 @@
       ? $automationStore.testProgress?.[block.id]?.result
       : null
 
-  $: blockResult =
-    viewMode === ViewMode.LOGS && logStepData
+  const isAutomationJob = (value: unknown): value is AutomationJob => {
+    if (!value || typeof value !== "object") {
+      return false
+    }
+    return "data" in value && "opts" in value
+  }
+
+  const toStatusResult = (value: unknown): StatusResult => {
+    if (!value || isAutomationJob(value)) {
+      return
+    }
+    return value as StatusResult
+  }
+
+  $: blockResult = toStatusResult(
+    isLogsMode && logStepData
       ? logStepData
       : progressResult
         ? progressResult
         : automationStore.actions.processBlockResults(testResults, block)
+  )
 
   $: isRunning =
     viewMode !== ViewMode.LOGS &&
@@ -70,28 +93,36 @@
       ? `${flowStatus.message} ${loopInfo.current}/${loopInfo.total}`
       : flowStatus?.message
 
-  $: triggerRunning =
-    viewMode !== ViewMode.LOGS &&
+  $: triggerAlwaysCompleted =
+    !isLogsMode &&
     !!block &&
     isTriggerBlock &&
     !!$automationStore.inProgressTest
 
-  $: flowStatus = getFlowStatus(blockResult, triggerRunning)
+  $: flowStatus = triggerAlwaysCompleted
+    ? {
+        message: "Completed",
+        icon: "CheckmarkCircle",
+        type: FlowStatusType.SUCCESS,
+      }
+    : getFlowStatus(blockResult)
+
+  const onStatusClick = async (status: FlowStatusType) => {
+    if (branch || !block || isLogsMode) {
+      return
+    }
+    await automationStore.actions.selectNode(
+      block?.id,
+      status === FlowStatusType.SUCCESS ? DataMode.OUTPUT : DataMode.ERRORS
+    )
+  }
 
   const getFlowStatus = (
     result?:
       | AutomationTriggerResult
       | AutomationStepResult
-      | DidNotTriggerResponse,
-    triggerRunning?: boolean
+      | DidNotTriggerResponse
   ): FlowItemStatus | undefined => {
-    if (triggerRunning) {
-      return {
-        message: "Completed",
-        icon: "CheckmarkCircle",
-        type: FlowStatusType.SUCCESS,
-      }
-    }
     if (!result || !block) {
       return
     }
@@ -99,7 +130,7 @@
 
     // Only check for filtered row triggers when we have test results, not log data
     const isFilteredRowTrigger =
-      viewMode !== "logs" &&
+      !isLogsMode &&
       isTriggerBlock &&
       testResults &&
       isDidNotTriggerResponse(testResults) &&
@@ -174,17 +205,7 @@
             size="S"
             icon={flowStatus.icon}
             tooltip={flowStatus?.tooltip}
-            on:click={async () => {
-              if (branch || !block || viewMode === ViewMode.LOGS) {
-                return
-              }
-              await automationStore.actions.selectNode(
-                block?.id,
-                flowStatus.type == FlowStatusType.SUCCESS
-                  ? DataMode.OUTPUT
-                  : DataMode.ERRORS
-              )
-            }}
+            on:click={async () => await onStatusClick(flowStatus.type)}
           >
             {completedLoopLabel}
           </ActionButton>
@@ -195,17 +216,6 @@
             size="S"
             icon={flowStatus.icon}
             tooltip={flowStatus?.tooltip}
-            on:click={async () => {
-              if (branch || !block || viewMode === ViewMode.LOGS) {
-                return
-              }
-              await automationStore.actions.selectNode(
-                block?.id,
-                flowStatus.type == FlowStatusType.SUCCESS
-                  ? DataMode.OUTPUT
-                  : DataMode.ERRORS
-              )
-            }}
           >
             {flowStatus.message}
           </ActionButton>
@@ -216,17 +226,7 @@
             size="S"
             icon={flowStatus.icon}
             tooltip={flowStatus?.tooltip}
-            on:click={async () => {
-              if (branch || !block || viewMode === ViewMode.LOGS) {
-                return
-              }
-              await automationStore.actions.selectNode(
-                block?.id,
-                flowStatus.type == FlowStatusType.SUCCESS
-                  ? DataMode.OUTPUT
-                  : DataMode.ERRORS
-              )
-            }}
+            on:click={async () => await onStatusClick(flowStatus.type)}
           >
             {flowStatus.message}
           </ActionButton>

@@ -1,7 +1,4 @@
-import {
-  AutomationTestProgressEvent,
-  TestProgressState,
-} from "@budibase/types"
+import { AutomationTestProgressEvent, TestProgressState } from "@budibase/types"
 
 export type { AutomationTestProgressEvent }
 
@@ -9,7 +6,10 @@ interface AutomationTestProgressStateWithTimestamp extends TestProgressState {
   createdAt: number
 }
 
-const progressState = new Map<string, AutomationTestProgressStateWithTimestamp>()
+const progressState = new Map<
+  string,
+  AutomationTestProgressStateWithTimestamp
+>()
 
 // TTL for test progress entries (5 minutes)
 const TEST_PROGRESS_TTL_MS = 5 * 60 * 1000
