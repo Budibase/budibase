@@ -8,6 +8,7 @@ import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import sdk from "../../../../sdk"
 import * as crypto from "crypto"
+import fetch from "node-fetch"
 
 interface ImportResult {
   errorQueries: Query[]
