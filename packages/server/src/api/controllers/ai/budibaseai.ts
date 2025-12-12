@@ -7,7 +7,6 @@ import {
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import { env } from "@budibase/backend-core"
-import * as tools from "../../../ai/tools"
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -37,9 +36,5 @@ export async function chatCompletion(
   }
 
   const llm = await ai.getLLMOrThrow()
-  const prompt = ai.LLMRequest.fromRequest(ctx.request.body)
-  if (ctx.request.body.useTools) {
-    prompt.tools.push(...tools.budibase)
-  }
   ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
 }

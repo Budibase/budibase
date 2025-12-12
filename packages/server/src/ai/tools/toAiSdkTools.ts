@@ -1,8 +1,8 @@
-import { Tool as BudibaseTool } from "@budibase/types"
 import { tool, type ToolSet } from "ai"
 import { z } from "zod"
+import type { ExecutableTool } from "."
 
-export function toAiSdkTools(tools: BudibaseTool[]): ToolSet {
+export function toAiSdkTools(tools: ExecutableTool[]): ToolSet {
   const mapped: ToolSet = {}
 
   for (const t of tools) {
