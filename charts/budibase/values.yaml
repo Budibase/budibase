@@ -605,6 +605,12 @@ services:
     saltKey: ""
     # -- The master key to use for litellm.
     masterKey: ""
+    # -- Optional username for LiteLLM Admin UI login.
+    # If not set, LiteLLM uses its built-in defaults.
+    uiUsername: ""
+    # -- Optional password for LiteLLM Admin UI login.
+    # If not set, LiteLLM uses its built-in defaults.
+    uiPassword: ""
     # -- Inline configuration passed to litellm as config.yaml.
     config: |
       general_settings:
