@@ -92,7 +92,7 @@
     "@types/uuid": "8.3.4",
     "chance": "1.1.8",
     "ioredis-mock": "8.9.0",
-    "nock": "^13.5.6",
+    "nock": "^14.0.10",
     "pino-pretty": "10.0.0",
     "pouchdb-adapter-memory": "7.2.2",
     "timekeeper": "2.2.0"
