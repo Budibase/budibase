@@ -232,8 +232,17 @@
 
         // Determine the initial value for this field, reusing the current
         // value if one exists
-        if (fieldState.value != null && fieldState.value !== "") {
+        const valueIsEmptyArray =
+          Array.isArray(fieldState.value) && fieldState.value.length === 0
+        const shouldUseNewDefault =
+          fieldState.value === undefined ||
+          fieldState.value === "" ||
+          valueIsEmptyArray ||
+          fieldState.value === fieldState.defaultValue
+        if (!shouldUseNewDefault && fieldState.value != null) {
           initialValue = fieldState.value
+        } else {
+          initialValue = defaultValue
         }
 
         // If this field has already been registered and we previously had an
