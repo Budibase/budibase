@@ -13,7 +13,7 @@
     FieldType,
   } from "@budibase/types"
 
-  type FieldInfo<T = any> = {
+  type FieldInfo<T = unknown> = {
     name: string
     step: number
     type: FieldType
@@ -226,24 +226,33 @@
       let initialError = null
       let fieldId = `id-${Helpers.uuid()}`
       const existingField = getField(field)
+
+      const hasUserValue = (
+        value: FieldInfo["fieldState"]["value"],
+        previousDefault: FieldInfo["fieldState"]["defaultValue"]
+      ) => {
+        if (
+          value === null ||
+          value === undefined ||
+          value === "" ||
+          value === previousDefault
+        ) {
+          return false
+        }
+        if (Array.isArray(value)) {
+          return value.length > 0
+        }
+        return true
+      }
       if (existingField) {
         const { fieldState } = get(existingField)
         fieldId = fieldState.fieldId
 
         // Determine the initial value for this field, reusing the current
         // value if one exists
-        const valueIsEmptyArray =
-          Array.isArray(fieldState.value) && fieldState.value.length === 0
-        const shouldUseNewDefault =
-          fieldState.value === undefined ||
-          fieldState.value === "" ||
-          valueIsEmptyArray ||
-          fieldState.value === fieldState.defaultValue
-        if (!shouldUseNewDefault && fieldState.value != null) {
-          initialValue = fieldState.value
-        } else {
-          initialValue = defaultValue
-        }
+        initialValue = hasUserValue(fieldState.value, fieldState.defaultValue)
+          ? fieldState.value
+          : defaultValue
 
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it
