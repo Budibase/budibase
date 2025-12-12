@@ -22,6 +22,8 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isCronTrigger,
+  isEmailTrigger,
   isLogicalFilter,
   LoopV2Step,
   LoopV2StepInputs,
@@ -39,6 +41,7 @@ import { AutomationContext } from "../definitions/automations"
 import env from "../environment"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import * as sdkUtils from "../sdk/utils"
+import sdk from "../sdk"
 import { WorkerCallback } from "./definitions"
 import { default as threadUtils } from "./utils"
 
@@ -218,6 +221,24 @@ function setTriggerOutput(result: AutomationResults, outputs: any) {
     ...outputs,
   }
   result.steps[0] = result.trigger
+}
+
+async function reloadAutomation(job: Job<AutomationData>) {
+  const trigger = job.data.automation?.definition?.trigger
+  if (!trigger || (!isCronTrigger(trigger) && !isEmailTrigger(trigger))) {
+    return
+  }
+
+  const appId = job.data.event.appId
+  const automationId = job.data.automation._id
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
+  if (!automationId) {
+    throw new Error("Unable to execute, event doesn't contain automation ID.")
+  }
+
+  job.data.automation = await sdk.automations.get(automationId)
 }
 
 class Orchestrator {
@@ -742,6 +763,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
     workspaceId,
     automationId,
     task: async () => {
+      await reloadAutomation(job)
       await context.ensureSnippetContext()
       const envVars = await sdkUtils.getEnvironmentVariables()
       await context.doInEnvironmentContext(envVars, async () => {
@@ -765,6 +787,7 @@ export async function executeInThread(
   }
 
   return await context.doInWorkspaceContext(appId, async () => {
+    await reloadAutomation(job)
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
