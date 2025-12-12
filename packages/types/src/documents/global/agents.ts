@@ -1,5 +1,4 @@
 import { Document, Tool } from "../../"
-import type { UIMessage } from "ai"
 
 export interface Agent extends Document {
   name: string
@@ -12,12 +11,6 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
-}
-
-export interface AgentChat extends Document {
-  agentId?: string
-  title: string
-  messages: UIMessage[]
 }
 
 export interface BaseToolSourceAuth {

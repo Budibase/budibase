@@ -1,13 +1,20 @@
 import {
   Agent,
-  AgentChat,
+  ChatApp,
+  ChatConversation,
   BudibaseToolSource,
   RestQueryToolSource,
 } from "../../../documents"
 
-export type ChatAgentRequest = AgentChat
+export type ChatAgentRequest = ChatConversation
 
-export type FetchAgentHistoryResponse = AgentChat[]
+export type FetchAgentHistoryResponse = ChatConversation[]
+
+export type CreateChatAppRequest = Omit<
+  ChatApp,
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+export type UpdateChatAppRequest = ChatApp
 
 export interface FetchAgentsResponse {
   agents: Agent[]
