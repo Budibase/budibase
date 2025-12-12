@@ -1,6 +1,6 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore } from "@/stores"
+  import { devToolsStore, builderStore, eventStore } from "@/stores"
   import { getContext, onMount } from "svelte"
   import { API } from "@/api"
 
@@ -34,6 +34,27 @@
     await devToolsStore.actions.changeRole(SELF_ROLE)
     roles = await API.getRoles()
   })
+
+  const togglePreviewDevice = () => {
+    const nextDevice = displayDevice === "mobile" ? "desktop" : "mobile"
+    builderStore.update(state => ({
+      ...state,
+      previewModalDevice: nextDevice === "mobile" ? "mobile" : null,
+    }))
+    eventStore.actions.dispatchEvent("set-preview-modal-device", {
+      device: nextDevice,
+    })
+  }
+
+  $: contextDevice = $context?.device?.mobile === true ? "mobile" : "desktop"
+
+  $: displayDevice =
+    $builderStore.previewModalDevice ||
+    $builderStore.previewDevice ||
+    contextDevice
+
+  $: previewIcon =
+    displayDevice === "mobile" ? "device-mobile-camera" : "monitor"
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
@@ -46,6 +67,14 @@
     autoWidth
     on:change={e => devToolsStore.actions.changeRole(e.detail)}
   />
+  {#if window.parent.isBuilder}
+    <ActionButton
+      quiet
+      icon={previewIcon}
+      aria-label="Toggle preview URL device"
+      on:click={togglePreviewDevice}
+    />
+  {/if}
   {#if !$context.device.mobile}
     <ActionButton
       quiet

@@ -25,6 +25,7 @@ interface BuilderStore {
   theme?: Theme | null
   customTheme?: AppCustomTheme | null
   previewDevice?: PreviewDevice
+  previewModalDevice?: PreviewDevice | null
   navigation?: AppNavigation | null
   hiddenComponentIds?: string[]
   usedPlugins?: Plugin[] | null
@@ -43,6 +44,7 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
+    previewModalDevice: null,
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,

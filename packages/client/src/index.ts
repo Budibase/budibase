@@ -61,6 +61,7 @@ declare global {
     "##BUDIBASE_PREVIEW_THEME##"?: Theme
     "##BUDIBASE_PREVIEW_CUSTOM_THEME##"?: AppCustomTheme
     "##BUDIBASE_PREVIEW_DEVICE##"?: PreviewDevice
+    "##BUDIBASE_PREVIEW_MODAL_DEVICE##"?: PreviewDevice
     "##BUDIBASE_APP_EMBEDDED##"?: string // This is a bool wrapped in a string
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
@@ -118,6 +119,7 @@ const loadBudibase = async () => {
     theme: window["##BUDIBASE_PREVIEW_THEME##"],
     customTheme: window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"],
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
+    previewModalDevice: window["##BUDIBASE_PREVIEW_MODAL_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],

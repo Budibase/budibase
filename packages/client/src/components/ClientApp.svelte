@@ -73,6 +73,9 @@
   let permissionError = false
   let embedNoScreens = false
 
+  $: displayPreviewDevice =
+    $builderStore.previewModalDevice || $builderStore.previewDevice
+
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
 
@@ -212,9 +215,9 @@
                       <div
                         id="clip-root"
                         class:preview={$builderStore.inBuilder}
-                        class:tablet-preview={$builderStore.previewDevice ===
-                          "tablet"}
-                        class:mobile-preview={$builderStore.previewDevice ===
+                        class:tablet-preview={displayPreviewDevice === "tablet"}
+                        class:mobile-preview={displayPreviewDevice === "mobile"}
+                        class:modal-mobile-preview={$builderStore.previewModalDevice ===
                           "mobile"}
                       >
                         <!-- Actual app -->
@@ -403,6 +406,13 @@
   #clip-root.mobile-preview {
     width: calc(390px + 12px);
     height: calc(844px + 12px);
+  }
+  #clip-root.modal-mobile-preview {
+    padding: 0;
+  }
+  #clip-root.modal-mobile-preview.mobile-preview {
+    width: 100%;
+    height: 100%;
   }
 
   /* Print styles */
