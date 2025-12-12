@@ -102,7 +102,7 @@ describe("Rest Importer", () => {
     assertions: Assertions
   ) => {
     await init(data)
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     expect(info.name).toBe(assertions[key].name)
     if (assertions[key].endpoints != null) {
       expect(info.endpoints.length).toBe(assertions[key].endpoints)
@@ -305,7 +305,7 @@ describe("Rest Importer", () => {
   it("imports only the selected endpoint", async () => {
     const dataset = oapi3CrudJson
     await init(dataset)
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     const endpoint = info.endpoints[0]
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
@@ -590,8 +590,10 @@ describe("Rest Importer", () => {
 
     await init(JSON.stringify(openapiWithServerVariables))
     const staticVariables = restImporter.getStaticServerVariables()
+    const info = restImporter.getInfo()
 
     expect(staticVariables).toEqual({ companyDomain: "acme" })
+    expect(info.staticVariables).toEqual(staticVariables)
   })
 
   const openapiWithHeaderSecurity = {
@@ -663,7 +665,7 @@ describe("Rest Importer", () => {
 
   it("exposes security headers via importer info", async () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     expect(info.securityHeaders).toEqual(["X-Apikey"])
   })
 })
@@ -738,36 +740,5 @@ describe("Importer caching", () => {
     )
     expect(typeKeyCall).toBeDefined()
     expect(cacheStoreMock).toHaveBeenCalledTimes(1)
-  })
-
-  it("includes static variables in import info responses", async () => {
-    const spec = JSON.stringify({
-      openapi: "3.0.0",
-      info: { title: "Server Variables" },
-      servers: [
-        {
-          url: "https://{subdomain}.example.com",
-          variables: {
-            subdomain: {
-              default: "acme",
-            },
-          },
-        },
-      ],
-      paths: {
-        "/users": {
-          get: {
-            responses: {
-              "200": {
-                description: "ok",
-              },
-            },
-          },
-        },
-      },
-    })
-
-    const info = await getImportInfo({ data: spec })
-    expect(info.staticVariables).toEqual({ subdomain: "acme" })
   })
 })
