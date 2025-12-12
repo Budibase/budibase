@@ -90,7 +90,10 @@ async function urlToSpecs(url: string): Promise<string> {
   const cacheKey = `${buildCacheKey({ url })}:urlSpecs`
   const cachedValue = await cache.get(cacheKey)
   if (cachedValue) {
-    return cachedValue as string
+    if (typeof cachedValue === "string") {
+      return cachedValue
+    }
+    return JSON.stringify(cachedValue)
   }
   const result = await fetchFromUrl(url)
   await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7)
