@@ -1,6 +1,7 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
   import type { ChatConversation } from "@budibase/types"
+  import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
@@ -10,9 +11,14 @@
   import type { UIMessage } from "ai"
   import { v4 as uuidv4 } from "uuid"
 
-  export let API = createAPIClient()
-
   export let workspaceId: string
+  export let API = createAPIClient({
+    attachHeaders: headers => {
+      if (workspaceId) {
+        headers[Header.APP_ID] = workspaceId
+      }
+    },
+  })
   export let chat: ChatConversation
   export let loading: boolean = false
 
