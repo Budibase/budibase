@@ -603,7 +603,8 @@ services:
     extraVolumes: []
     # -- The salt key to use for litellm.
     saltKey: ""
-    # -- The master key to use for litellm.
+    # -- The master key to use for LiteLLM admin/proxy endpoints.
+    # This is also passed to app-service to allow generating per-tenant virtual keys.
     masterKey: ""
     # -- Inline configuration passed to litellm as config.yaml.
     config: |
