@@ -55,3 +55,12 @@ export type CsvToJsonResponse = any[]
 export interface DeleteTableResponse {
   message: string
 }
+
+export interface PublishTableRequest {
+  seedProductionTables?: boolean
+}
+
+export interface PublishTableResponse {
+  tableId: string
+  publishedAt: string
+}
