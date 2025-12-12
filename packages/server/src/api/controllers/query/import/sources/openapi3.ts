@@ -249,11 +249,10 @@ export class OpenAPI3 extends OpenAPISource {
 
   tryLoad = async (data: string): Promise<boolean> => {
     try {
-      const document = await this.parseData(data)
+      let document = await this.parseData(data)
+      document = await this.validate(document)
       if (isOpenAPI3(document)) {
-        this.document = document
-        this.serverVariableBindings = {}
-        this.setSecurityHeaders()
+        this.loadDocument(document)
         return true
       } else {
         return false
@@ -261,6 +260,21 @@ export class OpenAPI3 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  load = async (data: string): Promise<void> => {
+    const document = await this.parseData(data)
+    if (isOpenAPI3(document)) {
+      this.loadDocument(document)
+      return
+    }
+    throw new Error("Failed to load OpenAPI 3 document")
+  }
+
+  private loadDocument = (document: OpenAPIV3.Document) => {
+    this.document = document
+    this.serverVariableBindings = {}
+    this.setSecurityHeaders()
   }
 
   getServerVariableBindings = () => {

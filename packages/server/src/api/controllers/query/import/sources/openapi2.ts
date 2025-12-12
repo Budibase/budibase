@@ -141,10 +141,10 @@ export class OpenAPI2 extends OpenAPISource {
 
   tryLoad = async (data: string): Promise<boolean> => {
     try {
-      const document = await this.parseData(data)
+      let document = await this.parseData(data)
+      document = await this.validate(document)
       if (isOpenAPI2(document)) {
-        this.document = document
-        this.setSecurityHeaders()
+        this.loadDocument(document)
         return true
       } else {
         return false
@@ -152,6 +152,20 @@ export class OpenAPI2 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  load = async (data: string): Promise<void> => {
+    const document = await this.parseData(data)
+    if (isOpenAPI2(document)) {
+      this.loadDocument(document)
+      return
+    }
+    throw new Error("Failed to load OpenAPI 2 document")
+  }
+
+  private loadDocument = (document: OpenAPIV2.Document) => {
+    this.document = document
+    this.setSecurityHeaders()
   }
 
   getUrl = (): URL | undefined => {

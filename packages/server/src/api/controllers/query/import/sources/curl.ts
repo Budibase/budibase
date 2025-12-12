@@ -60,6 +60,12 @@ export class Curl extends ImportSource {
     return true
   }
 
+  load = async (data: string): Promise<void> => {
+    if (!this.tryLoad(data)) {
+      throw new Error("Failed to load CURL document")
+    }
+  }
+
   getUrl = (): URL => {
     return new URL(this.curl.raw_url)
   }

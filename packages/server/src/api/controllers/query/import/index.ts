@@ -123,7 +123,7 @@ export async function createImporter(
     await cache.store(
       importerTypeCacheKey,
       result.getSource().getImportSource(),
-      cache.TTL.ONE_DAY * 7
+      cache.TTL.ONE_DAY * 200
     )
   }
 
@@ -144,13 +144,7 @@ export class RestImporter {
       }
 
       const source = factory()
-      const canLoad = await source.tryLoad(data)
-      if (!canLoad) {
-        throw new HTTPError(
-          `Unsupported data for the given type "${type}"`,
-          400
-        )
-      }
+      await source.load(data)
       importer.source = source
       return importer
     } else {
