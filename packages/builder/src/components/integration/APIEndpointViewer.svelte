@@ -49,6 +49,7 @@
     validateQuery,
     runQuery,
     keyValueArrayToRecord,
+    buildAuthConfigs,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
@@ -57,6 +58,7 @@
   import { EditorModes } from "../common/CodeEditor"
   import { readableToRuntimeMap, runtimeToReadableMap } from "@/dataBinding"
   import ResponsePanel from "./ResponsePanel.svelte"
+  import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
   export let datasourceId
@@ -66,6 +68,10 @@
       component: typeof APIEndpointVerbBadge
       props: { verb?: string; color?: string }
     }
+  }
+  type AuthConfigOption = {
+    label: string
+    value: string
   }
 
   const sidebarExpanded = writable(false)
@@ -88,6 +94,8 @@
   let response: PreviewQueryResponse
   let query: Query | undefined
   let template: RestTemplate | undefined
+  let datasource: Datasource | undefined
+  let authConfigs: AuthConfigOption[] = []
 
   // Reset state when datasourceId changes
   $: if (datasourceId) {
@@ -110,6 +118,7 @@
       d => d._id === datasourceId || query?.datasourceId === d._id
     )
   )
+  $: authConfigs = buildAuthConfigs(datasource as Datasource)
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
@@ -696,6 +705,14 @@
     </div>
     <div class="actions">
       <div class="grouped">
+        {#if query}
+          <AuthPicker
+            bind:authConfigId={query.fields.authConfigId}
+            bind:authConfigType={query.fields.authConfigType}
+            {authConfigs}
+            {datasourceId}
+          />
+        {/if}
         {#if endpointDocs}
           <ActionButton
             quiet
