@@ -17,6 +17,7 @@ import {
   AutomationStep,
   AutomationStepResult,
   AutomationStepStatus,
+  AutomationTestProgressStatus,
   AutomationTriggerResult,
   Branch,
   BranchSearchFilters,
@@ -41,6 +42,7 @@ import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import * as sdkUtils from "../sdk/utils"
 import { WorkerCallback } from "./definitions"
 import { default as threadUtils } from "./utils"
+import { AutomationTestProgressEvent } from "../automations/testProgress"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
@@ -224,10 +226,15 @@ class Orchestrator {
   private readonly job: AutomationJob
   private emitter: ContextEmitter
   private stopped: boolean
+  private readonly onProgress?: (event: AutomationTestProgressEvent) => void
 
-  constructor(job: Readonly<AutomationJob>) {
+  constructor(
+    job: Readonly<AutomationJob>,
+    opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
+  ) {
     this.job = job
     this.stopped = false
+    this.onProgress = opts.onProgress
 
     // Pre-process the automation to transform legacy loops
     this.job.data.automation = automationUtils.preprocessAutomation(
@@ -318,6 +325,28 @@ class Orchestrator {
     return context._error === true
   }
 
+  private reportStepProgress(
+    step: Readonly<AutomationStep>,
+    status: AutomationTestProgressEvent["status"],
+    result?: AutomationStepResult,
+    ctx?: AutomationContext
+  ) {
+    if (!this.onProgress) {
+      return
+    }
+    const loop = ctx?._loopIteration
+    this.onProgress({
+      automationId: this.automation._id!,
+      appId: this.appId,
+      blockId: step.id,
+      stepId: step.stepId,
+      status,
+      occurredAt: Date.now(),
+      result,
+      ...(loop ? { loop } : {}),
+    })
+  }
+
   async execute(): Promise<AutomationResults> {
     return await tracer.trace("execute", async span => {
       span.addTags({ appId: this.appId, automationId: this.automation._id })
@@ -341,6 +370,15 @@ class Orchestrator {
         steps: [trigger],
         status: AutomationStatus.SUCCESS,
       }
+
+      this.onProgress?.({
+        automationId: this.automation._id!,
+        appId: this.appId,
+        blockId: data.automation.definition.trigger.id,
+        stepId: data.automation.definition.trigger.stepId,
+        status: "running",
+        occurredAt: Date.now(),
+      })
 
       const ctx: AutomationContext = {
         trigger: trigger.outputs,
@@ -399,6 +437,24 @@ class Orchestrator {
         result.state = ctx.state
       }
 
+      const statusMap: Partial<
+        Record<AutomationStatus, AutomationTestProgressStatus>
+      > = {
+        [AutomationStatus.SUCCESS]: "success",
+        [AutomationStatus.ERROR]: "error",
+        [AutomationStatus.STOPPED]: "stopped",
+      }
+
+      this.onProgress?.({
+        automationId: this.automation._id!,
+        appId: this.appId,
+        blockId: trigger.id,
+        stepId: trigger.stepId,
+        status: statusMap[result.status] || "error",
+        occurredAt: Date.now(),
+        result: trigger,
+      })
+
       return result
     })
   }
@@ -410,6 +466,16 @@ class Orchestrator {
     return await tracer.trace("executeSteps", async () => {
       let stepIndex = 0
       const results: AutomationStepResult[] = []
+
+      const progressStatus = (result: AutomationStepResult) => {
+        if (result.outputs.success === false) {
+          return "error"
+        }
+        if (result.outputs.status === AutomationStatus.STOPPED) {
+          return "stopped"
+        }
+        return "success"
+      }
 
       function addToContext(
         step: AutomationStep,
@@ -448,11 +514,20 @@ class Orchestrator {
         }
 
         const step = steps[stepIndex]
+        this.reportStepProgress(step, "running", undefined, ctx)
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
             const branchResults = await this.executeBranchStep(ctx, step)
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
+            if (branchResults[0]) {
+              this.reportStepProgress(
+                step,
+                progressStatus(branchResults[0]),
+                branchResults[0],
+                ctx
+              )
+            }
             stepIndex++
             break
           }
@@ -466,6 +541,7 @@ class Orchestrator {
             } else {
               addToContext(step, result, true)
             }
+            this.reportStepProgress(step, progressStatus(result), result, ctx)
             stepIndex++
             break
           }
@@ -483,6 +559,10 @@ class Orchestrator {
                 return response
               })
             )
+            const latest = results.at(-1)
+            if (latest) {
+              this.reportStepProgress(step, progressStatus(latest), latest, ctx)
+            }
             stepIndex++
             break
           }
@@ -535,6 +615,8 @@ class Orchestrator {
           maxStoredResults
         )
 
+        const totalIterations = Math.min(iterable.length, maxIterations)
+
         for (; iterations < iterable.length; iterations++) {
           const currentItem = iterable[iterations]
 
@@ -570,7 +652,12 @@ class Orchestrator {
 
           // Save the current loop context to support nested loops
           const savedLoopContext = ctx.loop
+          const savedLoopIteration = ctx._loopIteration
           ctx.loop = { currentItem }
+          ctx._loopIteration = {
+            current: iterations + 1,
+            total: totalIterations,
+          }
           try {
             // For both legacy and new loops, we need to preserve the step index
             // so child steps don't affect the main step numbering
@@ -609,6 +696,7 @@ class Orchestrator {
           } finally {
             // Restore the previous loop context (for nested loops)
             ctx.loop = savedLoopContext
+            ctx._loopIteration = savedLoopIteration
           }
         }
 
@@ -757,7 +845,8 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
 }
 
 export async function executeInThread(
-  job: Job<AutomationData>
+  job: Job<AutomationData>,
+  opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
 ): Promise<AutomationResults> {
   const appId = job.data.event.appId
   if (!appId) {
@@ -768,7 +857,7 @@ export async function executeInThread(
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
-      const orchestrator = new Orchestrator(job)
+      const orchestrator = new Orchestrator(job, opts)
       return orchestrator.execute()
     })
   })
