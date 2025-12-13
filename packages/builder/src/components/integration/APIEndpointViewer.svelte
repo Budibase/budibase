@@ -716,7 +716,7 @@
     </div>
     <div class="actions">
       <div class="grouped">
-        {#if query}
+        {#if query && selectedEndpointOption}
           <AuthPicker
             bind:authConfigId={query.fields.authConfigId}
             bind:authConfigType={query.fields.authConfigType}
