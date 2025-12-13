@@ -36,7 +36,7 @@
 
   function addBasicConfiguration() {
     $goto(
-      `/builder/workspace/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
+      `/builder/workspace/${$appStore.appId}/apis/datasource/${datasourceId}?&tab=Authentication`
     )
   }
 
