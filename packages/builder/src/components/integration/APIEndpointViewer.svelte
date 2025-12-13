@@ -31,6 +31,7 @@
     type RestTemplate,
     type RestTemplateSpec,
     type PreviewQueryResponse,
+    type UIInternalDatasource,
   } from "@budibase/types"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
   import { RestBodyTypes } from "@/constants/backend"
@@ -94,7 +95,7 @@
   let response: PreviewQueryResponse
   let query: Query | undefined
   let template: RestTemplate | undefined
-  let datasource: Datasource | undefined
+  let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
@@ -222,7 +223,7 @@
       d => d._id === datasourceId || query?.datasourceId === d._id
     )
   )
-  $: authConfigs = buildAuthConfigs(datasource as Datasource)
+  $: authConfigs = buildAuthConfigs(datasource)
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
