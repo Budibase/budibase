@@ -17,6 +17,8 @@ spec:
       labels:
         io.kompose.service: redis-service
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
       - args:
         - redis-server 
