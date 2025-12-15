@@ -28,6 +28,7 @@
     type Query,
     type Datasource,
     type ImportEndpoint,
+    type RestTemplate,
     type RestTemplateSpec,
     type PreviewQueryResponse,
   } from "@budibase/types"
@@ -86,6 +87,7 @@
   let baseUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let query: Query | undefined
+  let template: RestTemplate | undefined
 
   // Reset state when datasourceId changes
   $: if (datasourceId) {
@@ -196,10 +198,10 @@
     : undefined
 
   // BB Rest template specs
-  $: templates = $restTemplates.templates
-  $: template = templates.find(
-    r => datasource && r.name == datasource.restTemplate
-  )
+  $: template =
+    datasource?.restTemplate && $restTemplates
+      ? restTemplates.getByName(datasource.restTemplate)
+      : undefined
   $: spec = template?.specs?.[0]
 
   // ENDPOINTS - only skip loading if we have both query Id AND metadata
