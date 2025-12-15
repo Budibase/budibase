@@ -131,7 +131,7 @@
           {/if}
         </span>
         <Button
-        secondary
+          secondary
           size="S"
           on:click={applyAllUpdates}
           disabled={applyingUpdates}
