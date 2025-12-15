@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Modal, Button, Divider, notifications } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
   import { beforeUrlChange } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
@@ -10,34 +10,35 @@
   import {
     type RestTemplateSpec,
     type RestTemplate,
+    type RestTemplateGroupName,
+    type RestTemplateGroup,
+    type TemplateSelectionContext,
+    type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
   import { goto } from "@roxi/routify"
+  import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()
   export const hide = () => modal.hide()
 
   let modal: Modal
-  let scrolling = false
-  let page: HTMLDivElement
   let loading = false
 
-  let selectedTemplate: RestTemplate | null = null
+  let selectedTemplate: TemplateSelectionContext | null = null
   let targetSpec: RestTemplateSpec | null = null
+  let templatesValue: RestTemplate[] = []
+  let templateGroupsValue: RestTemplateGroup<RestTemplateGroupName>[] = []
 
   $beforeUrlChange(() => {
     return true
   })
 
-  $: templates = $restTemplates?.templates
+  $: templatesValue = $restTemplates?.templates || []
+  $: templateGroupsValue = $restTemplates?.templateGroups || []
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === IntegrationTypes.REST
   )
-
-  const handleScroll = (e: Event) => {
-    const target = e.target as HTMLDivElement
-    scrolling = target?.scrollTop !== 0
-  }
 
   // CUSTOM REST
   const handleCustom = async (integration?: UIIntegration) => {
@@ -129,7 +130,9 @@
     return config
   }
 
-  const handleTemplateSelection = async (template: RestTemplate) => {
+  const handleTemplateSelection = async (
+    template: TemplateSelectionContext
+  ) => {
     if (loading) return
 
     if (!restIntegration) {
@@ -153,8 +156,12 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
-        restTemplate: selectedTemplate.name,
-        restTemplateVersion: targetSpec.version,
+        ...(template.restTemplateName && targetSpec?.version
+          ? {
+              restTemplate: template.restTemplateName,
+              restTemplateVersion: targetSpec.version,
+            }
+          : {}),
       })
 
       await datasources.fetch()
@@ -175,255 +182,83 @@
   }
 
   const buildDatasourceName = (
-    template: RestTemplate,
-    spec: RestTemplateSpec
+    template: TemplateSelectionContext,
+    spec?: RestTemplateSpec | null
   ) => {
-    if (template.specs.length > 1 && spec.version) {
+    if (spec && template.specs.length > 1 && spec.version) {
       return `${template.name} (${spec.version})`
     }
     return template.name
   }
+
+  const onSelectTemplate = (
+    event: CustomEvent<TemplateSelectionEventDetail>
+  ) => {
+    if (event.detail.kind === "template") {
+      handleTemplateSelection({
+        name: event.detail.template.name,
+        description: event.detail.template.description,
+        specs: event.detail.template.specs,
+        icon: event.detail.template.icon,
+        restTemplateName: event.detail.template.name,
+      })
+      return
+    }
+
+    const groupSelection = event.detail
+    const group = templateGroupsValue.find(
+      templateGroup => templateGroup.name === groupSelection.groupName
+    )
+
+    if (!group) {
+      notifications.error("Template group configuration is missing.")
+      return
+    }
+
+    const selectedTemplate = group.templates.find(
+      template => template.name === groupSelection.template.name
+    )
+
+    if (!selectedTemplate) {
+      notifications.error("Selected template could not be found.")
+      return
+    }
+
+    handleTemplateSelection({
+      name: selectedTemplate.name,
+      description: selectedTemplate.description,
+      specs: selectedTemplate.specs,
+      icon: group.icon,
+      restTemplateName: selectedTemplate.name,
+    })
+  }
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal} on:hide>
+  <Modal bind:this={modal}>
     <div
-      class="api-dialog spectrum-Dialog spectrum-Dialog--large"
-      style="position: relative;"
+      class="spectrum-Dialog--large"
       role="dialog"
       tabindex="-1"
       aria-modal="true"
     >
-      <section class="spectrum-Dialog-content">
-        <div class="api-main" class:scrolling>
-          <div class="api-header">
-            <div>API connectors</div>
-            <div>
-              <Button
-                secondary
-                icon="plus"
-                disabled={loading}
-                on:click={() => {
-                  handleCustom(restIntegration)
-                }}
-              >
-                Custom REST API
-              </Button>
-            </div>
-          </div>
-          <Divider size={"S"} noMargin />
-          <div class="contents-wrap" on:scroll={handleScroll}>
-            <div class="shadow"></div>
-            <div bind:this={page} class="contents">
-              <div class="grid">
-                {#each templates as template}
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <!-- svelte-ignore a11y-no-static-element-interactions -->
-                  <div
-                    class="api"
-                    class:disabled={loading}
-                    on:click={() => {
-                      handleTemplateSelection(template)
-                    }}
-                  >
-                    <div class="api-icon">
-                      <img src={template.icon} alt={template.name} />
-                    </div>
-
-                    {template.name}
-                  </div>
-                {/each}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SelectCategoryAPIModal
+        templates={templatesValue}
+        templateGroups={templateGroupsValue}
+        {loading}
+        customDisabled={!restIntegration}
+        on:custom={() => handleCustom(restIntegration)}
+        on:selectTemplate={onSelectTemplate}
+      />
     </div>
   </Modal>
 </div>
 
 <style>
-  @property --shadow-opacity-1 {
-    syntax: "<number>";
-    initial-value: 0;
-    inherits: false;
-  }
-
-  @property --shadow-opacity-2 {
-    syntax: "<number>";
-    initial-value: 0;
-    inherits: false;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-  }
-
-  .api {
-    display: flex;
-    height: 38px;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition:
-      background-color 0.2s ease,
-      opacity 0.2s ease;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    background-color: var(--spectrum-global-color-gray-100);
-    position: relative;
-  }
-
-  .api:hover {
-    background-color: var(--spectrum-global-color-gray-300);
-  }
-
-  .api.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  .api.disabled img {
-    filter: grayscale(100%);
-    opacity: 0.6;
-  }
-
-  .api img {
-    width: 20px;
-    height: 20px;
-    transition:
-      filter 0.2s ease,
-      opacity 0.2s ease;
-  }
-  .api-icon {
-    border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    display: flex;
-    width: 36px;
-    height: 36px;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-  .api-header {
-    padding: var(--spacing-l) var(--spectrum-dialog-confirm-padding);
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--spectrum-global-color-gray-800);
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .api-main .contents {
-    padding-left: var(--spectrum-dialog-confirm-padding);
-    padding-right: var(--spectrum-dialog-confirm-padding);
-  }
-
-  .api-main :global(hr) {
-    background-color: var(--spectrum-global-color-gray-300);
-  }
-
-  /*
-    Add a shadow under the scrollbar
-  */
-  .contents-wrap {
-    flex: 1 1 auto;
-    overflow-y: auto;
-
-    min-height: 0;
-    position: relative;
-    background:
-      linear-gradient(
-        to right,
-        transparent calc(100% - 20px),
-        transparent calc(100% - 20px)
-      ),
-      linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, var(--shadow-opacity-1)) 0px,
-        rgba(0, 0, 0, var(--shadow-opacity-2)) 5px,
-        transparent 15px
-      );
-    background-repeat: no-repeat;
-    background-position: top right;
-    background-size:
-      100% 20px,
-      15px 20px;
-    transition:
-      --shadow-opacity-1 0.2s ease,
-      --shadow-opacity-2 0.2s ease;
-  }
-
-  .api-main.scrolling .contents-wrap {
-    --shadow-opacity-1: 0.2;
-    --shadow-opacity-2: 0.1;
-  }
-
-  .api-main.scrolling .shadow {
-    box-shadow: inset 0px 15px 10px -10px rgba(0, 0, 0, 0.2);
-  }
-
-  .api-main .shadow {
-    transition: box-shadow 0.2s ease;
-  }
-
-  .shadow {
-    width: 100%;
-    height: var(--spacing-l);
-    display: inline-block;
-    position: sticky;
-    top: 0;
-    left: 0;
-  }
-
-  .contents {
-    padding-bottom: 30px;
-  }
-
-  .spectrum-Dialog.spectrum-Dialog--large {
+  .spectrum-Dialog--large {
     width: 720px;
-    min-height: 320px;
+    min-height: 360px;
     max-height: 540px;
     height: auto;
-  }
-
-  .spectrum-Dialog-content {
-    margin: 0px;
-    padding: 0px;
-    border-radius: var(--spectrum-global-dimension-size-100);
-    width: 100%;
-    display: flex;
-    overflow: hidden;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .api-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--background);
-    min-height: 0;
-  }
-
-  .spectrum-Dialog-content :global(.nav_wrapper .nav) {
-    border-top-left-radius: var(--spectrum-global-dimension-size-100);
-    border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
-  }
-
-  .spectrum-Dialog-content :global(.nav_header) {
-    padding-top: var(--spacing-l);
-    padding-bottom: var(--spacing-l);
-    flex: 0 0 32px;
   }
 </style>
