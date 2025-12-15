@@ -1,5 +1,4 @@
 import https from "https"
-import { NodeHttpHandler } from "@smithy/node-http-handler"
 
 // Capture S3 constructor calls
 let s3ConstructorCalls: any[] = []
