@@ -2,6 +2,7 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
+  ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -9,6 +10,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
@@ -39,6 +41,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgent: async (agentId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}`,
+    })
+  },
+
+  fetchTools: async () => {
+    return await API.get({
+      url: `/api/agent/tools`,
     })
   },
 })

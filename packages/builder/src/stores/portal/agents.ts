@@ -26,7 +26,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   init = async () => {
-    await Promise.all([this.fetchAgents()])
+    await Promise.all([this.fetchAgents(), this.fetchTools()])
   }
 
   fetchAgents = async () => {
@@ -73,6 +73,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
     await this.fetchAgents()
+  }
+
+  fetchTools = async () => {
+    const tools = await API.fetchTools()
+    this.update(state => {
+      state.tools = tools
+      return state
+    })
+    return tools
   }
 }
 export const agentsStore = new AgentsStore()
