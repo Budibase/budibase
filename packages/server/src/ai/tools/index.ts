@@ -15,11 +15,11 @@ export interface ExecutableTool<
   R = unknown,
 > {
   name: string
+  sourceType: ToolType
+  sourceLabel: string
   description: string
   parameters: T
   handler: (args: z.input<T>) => Promise<ToolResult<R>>
-  sourceType: ToolType
-  sourceLabel?: string
 }
 
 export interface ServerToolArgs<T extends z.ZodTypeAny, R = unknown> {
