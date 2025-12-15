@@ -36,7 +36,6 @@ import {
   ImportToUpdateWorkspaceResponse,
   Layout,
   PlanType,
-  Plugin,
   RevertAppClientResponse,
   Row,
   Screen,
