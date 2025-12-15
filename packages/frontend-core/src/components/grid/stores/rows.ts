@@ -248,7 +248,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async $fetch => {
+    unsubscribe = (newFetch as any).subscribe(async ($fetch: any) => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
