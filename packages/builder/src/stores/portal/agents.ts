@@ -47,6 +47,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       })
       return
     }
+
+    this.update(state => {
+      state.currentAgentId = agentId
+      return state
+    })
   }
 
   createAgent = async (agent: CreateAgentRequest) => {
