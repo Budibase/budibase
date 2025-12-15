@@ -179,13 +179,12 @@ async function dev() {
   console.log(success("Password: ") + info(password))
 }
 
-async function migrateSvelte5(opts: any) {
-  // preflight: ensure inside plugin
+async function migrateSvelte5(opts: { yes: boolean; force: boolean }) {
+  // Preflight: ensure we are inside a plugin directory
   checkInPlugin()
 
-  const yes = !!opts?.yes
-  const force = !!opts?.force
-
+  const yes = Boolean(opts?.yes)
+  const force = Boolean(opts?.force)
   // optional git dirty check; allow override with --force
   let isDirty = false
   try {
