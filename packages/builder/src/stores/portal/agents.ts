@@ -2,18 +2,17 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
-  AgentToolSource,
-  AgentToolSourceWithTools,
   CreateAgentRequest,
-  CreateToolSourceRequest,
   UpdateAgentRequest,
+  ToolMetadata,
 } from "@budibase/types"
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
-  toolSources: AgentToolSourceWithTools[]
+  currentChatId?: string
+  tools: ToolMetadata[]
   agentsLoaded: boolean
 }
 
@@ -21,13 +20,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
     super({
       agents: [],
-      toolSources: [],
+      tools: [],
       agentsLoaded: false,
     })
   }
 
   init = async () => {
-    await this.fetchAgents()
+    await Promise.all([this.fetchAgents()])
   }
 
   fetchAgents = async () => {
@@ -44,80 +43,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     if (!agentId) {
       this.update(state => {
         state.currentAgentId = undefined
-        state.toolSources = []
         return state
       })
       return
     }
-
-    this.update(state => {
-      state.currentAgentId = agentId
-      return state
-    })
-
-    await this.fetchToolSources(agentId)
-  }
-
-  fetchToolSources = async (agentId: string) => {
-    if (!agentId) {
-      this.update(state => {
-        state.toolSources = []
-        return state
-      })
-      return []
-    }
-    const toolSources = await API.fetchToolSources(agentId)
-    this.update(state => {
-      state.toolSources = toolSources
-      return state
-    })
-    return toolSources
-  }
-
-  createToolSource = async (toolSource: CreateToolSourceRequest) => {
-    await API.createToolSource(toolSource)
-    if (toolSource.agentId) {
-      await Promise.all([
-        this.fetchToolSources(toolSource.agentId),
-        this.fetchAgents(),
-      ])
-    }
-    const newToolSourceWithTools = {
-      ...toolSource,
-      tools: [],
-    } as AgentToolSourceWithTools
-    return newToolSourceWithTools
-  }
-
-  updateToolSource = async (toolSource: AgentToolSource) => {
-    const updatedToolSource = await API.updateToolSource(toolSource)
-    this.update(state => {
-      const index = state.toolSources.findIndex(ts => ts.id === toolSource.id)
-      if (index !== -1) {
-        state.toolSources[index] = {
-          ...updatedToolSource,
-          tools: state.toolSources[index].tools,
-        }
-      }
-      return state
-    })
-    if (toolSource.agentId) {
-      await this.fetchAgents()
-    }
-    return updatedToolSource
-  }
-
-  deleteToolSource = async (toolSourceId: string) => {
-    await API.deleteToolSource(toolSourceId)
-    this.update(state => {
-      state.toolSources = state.toolSources.filter(ts => ts.id !== toolSourceId)
-      return state
-    })
-    await this.fetchAgents()
-  }
-
-  getToolSource = (type: string) => {
-    return get(this.store).toolSources.find(ts => ts.type === type)
   }
 
   createAgent = async (agent: CreateAgentRequest) => {
