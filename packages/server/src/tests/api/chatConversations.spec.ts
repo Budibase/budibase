@@ -191,3 +191,52 @@ describe("prepareChatConversationForSave", () => {
     expect(result.updatedAt).toEqual(now.toISOString())
   })
 })
+
+describe("chat conversation path validation", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init("chat-conversation-validation")
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("rejects mismatched chatAppId between path and body", async () => {
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(
+        "/api/chatapps/chatapp-path/conversations/new/stream"
+      )
+      .set(headers)
+      .send({
+        chatAppId: "chatapp-body",
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects mismatched chatConversationId between path and body", async () => {
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(
+        "/api/chatapps/chatapp-path/conversations/convo-path/stream"
+      )
+      .set(headers)
+      .send({
+        chatAppId: "chatapp-path",
+        _id: "convo-body",
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
+  })
+})

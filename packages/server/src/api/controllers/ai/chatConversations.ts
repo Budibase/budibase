@@ -67,14 +67,25 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chatAppIdFromPath = ctx.params?.chatAppId
   const chatConversationIdFromPath = ctx.params?.chatConversationId
   const userId = getGlobalUserId(ctx)
-  if (chatAppIdFromPath && !chat.chatAppId) {
-    chat.chatAppId = chatAppIdFromPath
+  if (
+    chatAppIdFromPath &&
+    chat.chatAppId &&
+    chat.chatAppId !== chatAppIdFromPath
+  ) {
+    throw new HTTPError("chatAppId in body does not match path", 400)
   }
   if (
     chatConversationIdFromPath &&
     chatConversationIdFromPath !== "new" &&
-    !chat._id
+    chat._id &&
+    chat._id !== chatConversationIdFromPath
   ) {
+    throw new HTTPError("chatConversationId in body does not match path", 400)
+  }
+  if (chatAppIdFromPath) {
+    chat.chatAppId = chatAppIdFromPath
+  }
+  if (chatConversationIdFromPath && chatConversationIdFromPath !== "new") {
     chat._id = chatConversationIdFromPath
   }
   const db = context.getWorkspaceDB()
