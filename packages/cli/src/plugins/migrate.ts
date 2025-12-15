@@ -162,11 +162,6 @@ export async function migrateRollupConfig(): Promise<MigrationResult> {
     }
   }
 
-  const backupPath = rollupFile ? `${rollupFile}.pre-svelte5` : undefined
-  if (backupPath && rollupFile) {
-    fs.writeFileSync(backupPath, originalSource)
-  }
-
   const newConfigPath = "rollup.config.mjs"
   const template = await loadRollupFromSkeleton()
   if (!template) {
@@ -175,6 +170,11 @@ export async function migrateRollupConfig(): Promise<MigrationResult> {
       message:
         "Failed to retrieve canonical rollup.config.mjs from skeleton. Please check your network or update the CLI.",
     }
+  }
+
+  const backupPath = rollupFile ? `${rollupFile}.pre-svelte5` : undefined
+  if (backupPath && rollupFile) {
+    fs.writeFileSync(backupPath, originalSource)
   }
   fs.writeFileSync(newConfigPath, template.source)
 
@@ -530,9 +530,32 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
 }
 
 export async function runSvelte5Migration() {
-  const pkgRes = migratePackageJson()
-  const schemaRes = migrateSchemaJson()
   const rollupRes = await migrateRollupConfig()
+  if (
+    rollupRes.message.includes(
+      "Failed to retrieve canonical rollup.config.mjs from skeleton"
+    )
+  ) {
+    return {
+      pkgRes: {
+        changed: false,
+        message:
+          "Skipped package.json migration due to Rollup template failure.",
+      },
+      schemaRes: {
+        changed: false,
+        message:
+          "Skipped schema.json migration due to Rollup template failure.",
+      },
+      rollupRes,
+      wrapperRes: {
+        changed: false,
+        message: "Skipped wrapper migration due to Rollup template failure.",
+      },
+    }
+  }
   const wrapperRes = migrateWrapper()
+  const schemaRes = migrateSchemaJson()
+  const pkgRes = migratePackageJson()
   return { pkgRes, schemaRes, rollupRes, wrapperRes }
 }

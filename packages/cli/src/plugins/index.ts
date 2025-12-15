@@ -179,9 +179,12 @@ async function dev() {
   console.log(success("Password: ") + info(password))
 }
 
-async function migrateSvelte5() {
+async function migrateSvelte5(opts: any) {
   // preflight: ensure inside plugin
   checkInPlugin()
+
+  const yes = !!opts?.yes
+  const force = !!opts?.force
 
   // optional git dirty check; allow override with --force
   let isDirty = false
@@ -191,7 +194,7 @@ async function migrateSvelte5() {
   } catch (_) {
     // if git not available, ignore
   }
-  if (isDirty && !process.argv.includes("--force")) {
+  if (isDirty && !force) {
     console.log(
       info(
         "Your git working directory is not clean. Commit or stash changes, or re-run with --force."
@@ -215,7 +218,7 @@ async function migrateSvelte5() {
   }
 
   // confirmation unless --yes
-  if (!process.argv.includes("--yes")) {
+  if (!yes) {
     const confirm = await questions.confirmation("Apply these changes now?")
     if (!confirm) {
       console.log(info("Migration aborted by user."))
@@ -226,6 +229,14 @@ async function migrateSvelte5() {
   // apply migrations
   console.log(info("Applying migrations..."))
   const results = await runSvelte5Migration()
+  if (
+    results.rollupRes?.message?.includes(
+      "Failed to retrieve canonical rollup.config.mjs from skeleton"
+    )
+  ) {
+    console.log(error(results.rollupRes.message))
+    return
+  }
   if (results.pkgRes?.message) {
     console.log(info(results.pkgRes.message))
   }
@@ -295,5 +306,15 @@ export default new Command(`${CommandWord.PLUGIN}`)
   .addSubOption(
     "--migrate-svelte5",
     "Migrate this plugin to the Svelte 5-compatible Budibase plugin format.",
-    migrateSvelte5
+    migrateSvelte5,
+    [
+      {
+        command: "--yes",
+        help: "Skip confirmation prompts during migration.",
+      },
+      {
+        command: "--force",
+        help: "Proceed even if the git working directory is not clean (still creates .pre-svelte5 backups).",
+      },
+    ]
   )
