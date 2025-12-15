@@ -265,7 +265,9 @@ export function migrateWrapper(): MigrationResult {
     try {
       fs.unlinkSync(legacyBoundary)
       changed = true
-      messages.push("Removed legacy lib/Boundary.js (incompatible with Svelte 5).")
+      messages.push(
+        "Removed legacy lib/Boundary.js (incompatible with Svelte 5)."
+      )
     } catch (err: any) {
       console.log(
         "Failed to delete legacy Boundary.js:",
