@@ -208,9 +208,7 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post(
-        "/api/chatapps/chatapp-path/conversations/new/stream"
-      )
+      .post("/api/chatapps/chatapp-path/conversations/new/stream")
       .set(headers)
       .send({
         chatAppId: "chatapp-body",
@@ -226,9 +224,7 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post(
-        "/api/chatapps/chatapp-path/conversations/convo-path/stream"
-      )
+      .post("/api/chatapps/chatapp-path/conversations/convo-path/stream")
       .set(headers)
       .send({
         chatAppId: "chatapp-path",
