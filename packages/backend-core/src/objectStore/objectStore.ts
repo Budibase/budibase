@@ -11,10 +11,12 @@ import {
 } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { NodeHttpHandler } from "@smithy/node-http-handler"
 import { utils } from "@budibase/shared-core"
 import { NodeJsClient } from "@smithy/types"
 import tracer from "dd-trace"
 import fs, { PathLike, ReadStream } from "fs"
+import https from "https"
 import fsp from "fs/promises"
 import fetch from "node-fetch"
 import { join } from "path"
@@ -137,6 +139,14 @@ export function ObjectStore(
     } else {
       config.endpoint = env.MINIO_URL
     }
+  }
+
+  // Allow skipping TLS verification for self-signed certificates
+  if (env.S3_IGNORE_SELF_SIGNED === "true") {
+    const agent = new https.Agent({ rejectUnauthorized: false })
+    config.requestHandler = new NodeHttpHandler({
+      httpsAgent: agent,
+    })
   }
 
   return new S3(config) as NodeJsClient<S3>
