@@ -8,8 +8,10 @@ describe("chat conversations authorization", () => {
   let userA: User
   let userB: User
   let chatApp: ChatApp
+  let otherChatApp: ChatApp
   let convoA: ChatConversation
   let convoB: ChatConversation
+  let otherAppConvo: ChatConversation
 
   beforeAll(async () => {
     await config.init("chat-conversation-scope")
@@ -49,9 +51,25 @@ describe("chat conversations authorization", () => {
           title: "user B conversation",
           createdAt: now,
         }
+        otherChatApp = {
+          _id: docIds.generateChatAppID(),
+          agentId: "agent-2",
+          createdAt: now,
+          updatedAt: now,
+        }
+        otherAppConvo = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: otherChatApp._id!,
+          userId: userA._id!,
+          messages: [],
+          title: "other app conversation",
+          createdAt: now,
+        }
         await db.put(chatApp)
         await db.put(convoA)
         await db.put(convoB)
+        await db.put(otherChatApp)
+        await db.put(otherAppConvo)
       }
     )
   })
@@ -98,6 +116,17 @@ describe("chat conversations authorization", () => {
 
     expect(res.status).toBe(200)
     expect(res.body._id).toBe(convoB._id)
+  })
+
+  it("blocks deleting a conversation from a different chat app", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .delete(`/api/chatapps/${chatApp._id}/conversations/${otherAppConvo._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(404)
   })
 })
 

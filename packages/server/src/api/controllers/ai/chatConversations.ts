@@ -231,13 +231,19 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const db = context.getWorkspaceDB()
 
   const chatConversationId = ctx.params.chatConversationId
+  const chatAppId = ctx.params.chatAppId
   const userId = getGlobalUserId(ctx)
   if (!chatConversationId) {
     throw new HTTPError("chatConversationId is required", 400)
   }
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
-  if (!chat) {
+  if (!chat || chat.chatAppId !== chatAppId) {
     throw new HTTPError("chat not found", 404)
   }
   if (chat.userId && chat.userId !== userId) {
