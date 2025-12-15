@@ -26,7 +26,7 @@
   $goto
 
   export let searchTerm
-  export let datasourceFilter = () => true
+  export let datasourceFilter = _ => true
   export let showAppUsers = true
   export let showManageRoles = true
   export let datasourceSort

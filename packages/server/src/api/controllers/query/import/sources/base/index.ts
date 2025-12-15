@@ -1,5 +1,6 @@
 import {
   BodyType,
+  ImportEndpoint,
   Query,
   QueryParameter,
   QueryVerb,
@@ -16,15 +17,7 @@ export interface ImportInfo {
   url?: string
   docsUrl?: string
   endpoints: ImportEndpoint[]
-}
-
-export interface ImportEndpoint {
-  id: string
-  name: string
-  method?: string
-  path?: string
-  description?: string
-  queryVerb?: QueryVerb
+  securityHeaders?: string[]
 }
 
 enum MethodToVerb {
@@ -287,5 +280,9 @@ export abstract class ImportSource {
     }
 
     return Object.keys(defaults).length ? defaults : undefined
+  }
+
+  getSecurityHeaders(): string[] {
+    return []
   }
 }

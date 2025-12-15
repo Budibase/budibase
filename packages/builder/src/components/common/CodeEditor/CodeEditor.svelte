@@ -74,6 +74,7 @@
   export let dropdown = DropdownPosition.Relative
   export let bindings: EnrichedBinding[] = []
   export let aiEnabled = true
+  export let lineWrapping = true
 
   const dispatch = createEventDispatcher()
 
@@ -262,7 +263,7 @@
       closeBrackets(),
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
       highlightSpecialChars(),
-      EditorView.lineWrapping,
+      ...(lineWrapping ? [EditorView.lineWrapping] : []),
       themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
   }

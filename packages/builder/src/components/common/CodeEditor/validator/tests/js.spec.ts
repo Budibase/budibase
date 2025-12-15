@@ -67,6 +67,37 @@ describe("js validator", () => {
     ])
   })
 
+  it("allows top level conditional returns", () => {
+    const text = `if (true) {
+      return "A"
+    } else {
+      return "B"
+    }`
+    const validators = {}
+
+    const result = validateJsTemplate(text, validators)
+    expect(result).toEqual([])
+  })
+
+  it("fails if the conditional return is not within a plain else block", () => {
+    const text = `if (false) {
+      return "A"
+    } else if (true) {
+      return "B"
+    }`
+    const validators = {}
+
+    const result = validateJsTemplate(text, validators)
+    expect(result).toEqual([
+      {
+        from: 0,
+        message: "Your code must return a value.",
+        severity: "error",
+        to: text.length,
+      },
+    ])
+  })
+
   describe("helpers", () => {
     const validators: CodeValidator = {
       helperFunction: {

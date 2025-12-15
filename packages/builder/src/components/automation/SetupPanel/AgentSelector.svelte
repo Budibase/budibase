@@ -13,7 +13,7 @@
     dispatch("change", e.detail)
   }
 
-  $: agents = $agentsStore.agents.filter(agent => agent.live)
+  $: agents = $agentsStore.agents
 
   onMount(async () => {
     if (!$agentsStore.agentsLoaded) {

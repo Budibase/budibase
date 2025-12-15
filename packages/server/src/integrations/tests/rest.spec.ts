@@ -1010,6 +1010,122 @@ describe("REST Integration", () => {
       const { data } = await integration.read({})
       expect(data).toEqual({ foo: "bar" })
     })
+
+    it("uses Agent when config rejectUnauthorized is false", async () => {
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/")
+          expect(options?.method).toEqual("GET")
+          expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+        },
+        { foo: "bar" }
+      )
+      const integration = new RestIntegration({
+        url: "https://example.com",
+        rejectUnauthorized: false,
+      })
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("does not use custom dispatcher when config rejectUnauthorized is true", async () => {
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/")
+          expect(options?.method).toEqual("GET")
+          expect(options?.dispatcher).toBeUndefined()
+        },
+        { foo: "bar" }
+      )
+      const integration = new RestIntegration({
+        url: "https://example.com",
+        rejectUnauthorized: true,
+      })
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("falls back to environment variable when config rejectUnauthorized is undefined", async () => {
+      const originalEnv = process.env.REST_REJECT_UNAUTHORIZED
+      try {
+        process.env.REST_REJECT_UNAUTHORIZED = "false"
+        // Force environment module to re-evaluate
+        const environment = require("../../environment").default
+        environment._set("REST_REJECT_UNAUTHORIZED", false)
+
+        queueJsonResponse(
+          (url, options) => {
+            expect(url).toEqual("https://example.com/")
+            expect(options?.method).toEqual("GET")
+            expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+          },
+          { foo: "bar" }
+        )
+        const integration = new RestIntegration({
+          url: "https://example.com",
+        })
+        const { data } = await integration.read({})
+        expect(data).toEqual({ foo: "bar" })
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env.REST_REJECT_UNAUTHORIZED = originalEnv
+        } else {
+          delete process.env.REST_REJECT_UNAUTHORIZED
+        }
+        const environment = require("../../environment").default
+        environment._set("REST_REJECT_UNAUTHORIZED", true)
+      }
+    })
+
+    it("does not use custom dispatcher when env REST_REJECT_UNAUTHORIZED is true (default)", async () => {
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("https://example.com/")
+          expect(options?.method).toEqual("GET")
+          expect(options?.dispatcher).toBeUndefined()
+        },
+        { foo: "bar" }
+      )
+      // No rejectUnauthorized in config, env defaults to true
+      const integration = new RestIntegration({
+        url: "https://example.com",
+      })
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("config rejectUnauthorized takes precedence over environment variable", async () => {
+      const originalEnv = process.env.REST_REJECT_UNAUTHORIZED
+      try {
+        process.env.REST_REJECT_UNAUTHORIZED = "true"
+        const environment = require("../../environment").default
+        environment._set("REST_REJECT_UNAUTHORIZED", true)
+
+        queueJsonResponse(
+          (url, options) => {
+            expect(url).toEqual("https://example.com/")
+            expect(options?.method).toEqual("GET")
+            // Config says false, so Agent should be used despite env being true
+            expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+          },
+          { foo: "bar" }
+        )
+        const integration = new RestIntegration({
+          url: "https://example.com",
+          rejectUnauthorized: false,
+        })
+        const { data } = await integration.read({})
+        expect(data).toEqual({ foo: "bar" })
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env.REST_REJECT_UNAUTHORIZED = originalEnv
+        } else {
+          delete process.env.REST_REJECT_UNAUTHORIZED
+        }
+        const environment = require("../../environment").default
+        environment._set("REST_REJECT_UNAUTHORIZED", true)
+      }
+    })
   })
 
   describe("File Handling", () => {

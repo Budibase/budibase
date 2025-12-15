@@ -62,7 +62,6 @@
     "@google-cloud/firestore": "7.8.0",
     "@koa/cors": "5.0.0",
     "@koa/router": "13.1.0",
-    "@modelcontextprotocol/sdk": "^1.11.4",
     "@octokit/rest": "^20.0.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",

@@ -35,6 +35,7 @@ export enum DatasourceFieldType {
   STRING = "string",
   CODE = "code",
   LONGFORM = "longForm",
+  SENSITIVE_LONGFORM = "sensitiveLongForm",
   BOOLEAN = "boolean",
   NUMBER = "number",
   PASSWORD = "password",
@@ -147,6 +148,7 @@ export interface DatasourceConfig {
 
 export interface Integration {
   docs: string
+  warningMessage?: string
   plus?: boolean
   isSQL?: boolean
   auth?: { type: string }

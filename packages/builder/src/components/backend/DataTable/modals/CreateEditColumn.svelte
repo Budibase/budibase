@@ -61,6 +61,7 @@
     AutoFieldSubType,
     FormulaResponseType,
     FieldSchemaConfig,
+    UIFieldSchema,
   } from "@budibase/types"
 
   export let field: FieldSchema
@@ -210,7 +211,8 @@
     : availableAutoColumns
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
-    canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
+    canBeDisplayColumn(editableColumn as UIFieldSchema) &&
+    !editableColumn.autocolumn
   $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== FieldType.LINK &&

@@ -1,16 +1,13 @@
 import { Tool } from "@budibase/types"
 import { z } from "zod"
 
-export { BambooHRClient } from "./bamboohr"
 export { default as budibase } from "./budibase"
-export { ConfluenceClient } from "./confluence"
-export { GitHubClient } from "./github"
 
 export interface ServerToolArgs<T extends z.ZodTypeAny> {
   name: string
   description: string
   parameters?: T
-  handler: (args: z.infer<T>) => Promise<string>
+  handler: (args: z.infer<T>) => Promise<unknown>
   strict?: boolean
 }
 
@@ -19,8 +16,7 @@ export function newTool<T extends z.ZodTypeAny>(
 ): Tool<T> {
   const parameters = tool.parameters ?? (z.object({}) as unknown as T)
 
-  // Create error-aware handler that validates and logs failures to server logs
-  const errorAwareHandler = async (rawArgs: unknown): Promise<string> => {
+  const errorAwareHandler = async (rawArgs: unknown): Promise<unknown> => {
     console.debug(`[TOOL DEBUG] Executing tool: ${tool.name}`)
     try {
       const parsed = parameters.parse(rawArgs) as z.infer<T>
@@ -28,10 +24,11 @@ export function newTool<T extends z.ZodTypeAny>(
       console.debug(`[TOOL DEBUG] Tool ${tool.name} succeeded`)
       return result
     } catch (error: any) {
-      console.error(`[TOOL ERROR] Tool '${tool.name}' failed:`, error)
-
-      // Still return the error message for the Agent
-      return `Error executing ${tool.name}: ${error.message}`
+      const message =
+        error.message ||
+        (typeof error === "object" ? JSON.stringify(error) : String(error))
+      console.error(`[TOOL ERROR] ${tool.name}: ${message}`)
+      return { error: message }
     }
   }
 

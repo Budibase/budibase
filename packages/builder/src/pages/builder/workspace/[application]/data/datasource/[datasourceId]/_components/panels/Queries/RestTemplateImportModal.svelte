@@ -26,7 +26,8 @@
   import type {
     Datasource,
     ImportRestQueryRequest,
-    QueryImportEndpoint,
+    ImportEndpoint,
+    RestTemplate,
   } from "@budibase/types"
 
   export let navigateDatasource = false
@@ -35,16 +36,15 @@
   export let onCancel: (() => void) | undefined = undefined
 
   $: datasource = $datasources.selected as Datasource
-  $: restTemplateList = $restTemplates.templates
-  let selectedEndpoint: QueryImportEndpoint | undefined
+  let selectedEndpoint: ImportEndpoint | undefined
+  let template: RestTemplate | undefined
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === datasource?.source
   )
-  $: template = datasource?.restTemplate
-    ? restTemplateList.find(
-        template => template.name === datasource.restTemplate
-      )
-    : undefined
+  $: template =
+    datasource?.restTemplate && $restTemplates
+      ? restTemplates.getByName(datasource.restTemplate)
+      : undefined
   $: selectedTemplateSpec = template
     ? template.specs?.find(
         spec => spec.version === datasource?.restTemplateVersion
@@ -55,7 +55,7 @@
   $: templateIcon = template?.icon
   $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
   $: templateEndpointDescription = selectedEndpoint?.description || ""
-  let endpointOptions: QueryImportEndpoint[] = []
+  let endpointOptions: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let endpointsLoading = false
   let endpointsError: string | null = null
@@ -117,9 +117,9 @@
     currentTemplateUrl = undefined
   }
 
-  const getEndpointId = (endpoint: QueryImportEndpoint) => endpoint.id
+  const getEndpointId = (endpoint: ImportEndpoint) => endpoint.id
 
-  const getEndpointIcon = (endpoint: QueryImportEndpoint) => {
+  const getEndpointIcon = (endpoint: ImportEndpoint) => {
     const method = (endpoint.method || "").toUpperCase()
     if (!method) {
       return undefined
@@ -142,10 +142,7 @@
     DELETE: 4,
   }
 
-  const compareEndpointOrder = (
-    a: QueryImportEndpoint,
-    b: QueryImportEndpoint
-  ) => {
+  const compareEndpointOrder = (a: ImportEndpoint, b: ImportEndpoint) => {
     const methodA = (a.method || "").toUpperCase()
     const methodB = (b.method || "").toUpperCase()
     const orderA = verbOrder[methodA] ?? 999

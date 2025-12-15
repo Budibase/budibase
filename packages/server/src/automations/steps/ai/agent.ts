@@ -2,25 +2,21 @@ import * as automationUtils from "../../automationUtils"
 import {
   AgentStepInputs,
   AgentStepOutputs,
-  AgentToolSource,
-  Tool,
+  AutomationStepInputBase,
 } from "@budibase/types"
+import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
-import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
-import { createOpenAI } from "@ai-sdk/openai"
-import {
-  Experimental_Agent as Agent,
-  extractReasoningMiddleware,
-  stepCountIs,
-  wrapLanguageModel,
-} from "ai"
+import { Experimental_Agent as Agent, stepCountIs } from "ai"
+import { v4 } from "uuid"
+import { isProdWorkspaceID } from "../../../db/utils"
 
 export async function run({
   inputs,
+  appId,
 }: {
   inputs: AgentStepInputs
-}): Promise<AgentStepOutputs> {
+} & AutomationStepInputBase): Promise<AgentStepOutputs> {
   const { agentId, prompt } = inputs
 
   if (!agentId) {
@@ -40,75 +36,47 @@ export async function run({
   try {
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-    // Build system prompt from agent configuration
-    let system = ""
-    if (agentConfig.promptInstructions) {
-      system += agentConfig.promptInstructions
-    }
-    if (agentConfig.goal) {
-      system += `\n\nYour goal: ${agentConfig.goal}`
-    }
-
-    // Collect tools from all tool sources
-    let toolGuidelines = ""
-    const allTools: Tool[] = []
-
-    for (const toolSource of agentConfig.allowedTools || []) {
-      const toolSourceInstance = createToolSourceInstance(
-        toolSource as AgentToolSource
-      )
-
-      if (!toolSourceInstance) {
-        continue
-      }
-
-      const guidelines = toolSourceInstance.getGuidelines()
-      if (guidelines) {
-        toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
-      }
-
-      const toolsToAdd = toolSourceInstance.getEnabledTools()
-      if (toolsToAdd.length > 0) {
-        allTools.push(...toolsToAdd)
+    if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
+      return {
+        success: false,
+        response:
+          "Agent is paused. Set it live to use it in published automations.",
       }
     }
 
-    // Append tool guidelines to system prompt
-    if (toolGuidelines) {
-      system += toolGuidelines
-    }
+    const { systemPrompt, tools: allTools } =
+      await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-    // Get LLM configuration
-    const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+    const { modelId, apiKey, baseUrl, modelName } =
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-    const openai = createOpenAI({
+    const litellm = ai.createLiteLLMOpenAI({
       apiKey,
-      baseURL: baseUrl,
+      baseUrl,
+      fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
     const aiTools = toAiSdkTools(allTools)
-
     const agent = new Agent({
-      model: wrapLanguageModel({
-        model: openai(modelId),
-        middleware: extractReasoningMiddleware({
-          tagName: "think",
-        }),
-      }),
-      system: system || undefined,
+      model: litellm.chat(modelId),
+      system: systemPrompt || undefined,
       tools: aiTools,
-      stopWhen: stepCountIs(10),
+      stopWhen: stepCountIs(30),
     })
 
     const result = await agent.generate({
       prompt,
+      providerOptions: {
+        litellm: ai.getLiteLLMProviderOptions(modelName),
+      },
     })
+
+    const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
 
     return {
       success: true,
       response: result.text,
-      steps: result.steps,
+      steps,
     }
   } catch (err: any) {
     return {

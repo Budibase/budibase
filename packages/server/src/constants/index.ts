@@ -2,6 +2,7 @@ import { constants, objectStore, roles } from "@budibase/backend-core"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  QueryVerb,
   Table,
   TableSourceType,
 } from "@budibase/types"
@@ -121,6 +122,14 @@ export enum BaseQueryVerbs {
   READ = "read",
   UPDATE = "update",
   DELETE = "delete",
+}
+
+export const QueryVerbToHttpMethod: Record<QueryVerb, string> = {
+  read: "get",
+  create: "post",
+  update: "put",
+  patch: "patch",
+  delete: "delete",
 }
 
 export enum InvalidColumns {
