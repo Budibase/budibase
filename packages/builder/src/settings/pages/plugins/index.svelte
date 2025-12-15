@@ -123,13 +123,18 @@
   {#if $featureFlags.PLUGIN_AUTO_UPDATE && $pluginUpdates.length}
     <Banner type="info" showCloseButton={false}>
       <div class="updates-banner">
-        <span>
-          {#if $pluginUpdates.length === 1}
-            1 plugin update available
-          {:else}
-            {$pluginUpdates.length} plugin updates available
-          {/if}
-        </span>
+        <div class="updates-text">
+          <span>
+            {#if $pluginUpdates.length === 1}
+              1 plugin update available
+            {:else}
+              {$pluginUpdates.length} plugin updates available
+            {/if}
+          </span>
+          <span class="updates-note">
+            Only Svelte 5 compatible plugins can be auto-updated
+          </span>
+        </div>
         <Button
           secondary
           size="S"
@@ -223,5 +228,14 @@
     justify-content: space-between;
     gap: var(--spacing-m);
     flex-wrap: wrap;
+  }
+  .updates-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  .updates-note {
+    font-size: var(--font-size-xs);
+    opacity: 0.8;
   }
 </style>
