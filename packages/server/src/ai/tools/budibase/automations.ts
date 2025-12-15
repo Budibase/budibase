@@ -1,10 +1,13 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
+import { ToolType } from "@budibase/types"
 
 export default [
   newTool({
     name: "list_automations",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "List all automations in the current app",
     handler: async () => {
       const automations = await sdk.automations.fetch()
@@ -14,6 +17,9 @@ export default [
 
   newTool({
     name: "get_automation",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
+
     description: "Get details about a specific automation by ID",
     parameters: z.object({
       automationId: z.string().describe("The ID of the automation to retrieve"),
@@ -26,6 +32,9 @@ export default [
 
   newTool({
     name: "trigger_automation",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
+
     description:
       "Manually trigger an automation with optional input data (only works for APP trigger type automations)",
     parameters: z.object({
