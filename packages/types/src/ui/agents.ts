@@ -1,11 +1,4 @@
 import type { StepResult, ToolSet } from "ai"
-import { ToolSourceType } from "../documents"
-
-export interface ToolSourceOption {
-  name: string
-  type: ToolSourceType
-  description: string
-}
 
 export type AgentStepResult<TOOLS extends ToolSet = ToolSet> = StepResult<TOOLS>
 
