@@ -141,3 +141,58 @@ export async function processUploaded(plugin: KoaFile, source: PluginSource) {
   clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
 }
+
+export const enrichUsedPluginSvelteMajors = async (
+  usedPlugins?: Plugin[]
+): Promise<Plugin[]> => {
+  if (!usedPlugins?.length) {
+    return []
+  }
+
+  const pluginIds = usedPlugins
+    .map(plugin => plugin?._id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0)
+
+  if (!pluginIds.length) {
+    return usedPlugins
+  }
+
+  try {
+    const globalDB = tenancy.getGlobalDB()
+    const response = await globalDB.allDocs<Plugin>({
+      include_docs: true,
+      keys: pluginIds,
+    })
+
+    const svelteMajorById = new Map<string, number>()
+    for (const row of response?.rows || []) {
+      const svelteMajor = row?.doc?.schema?.metadata?.svelteMajor
+      if (typeof row?.id === "string" && typeof svelteMajor === "number") {
+        svelteMajorById.set(row.id, svelteMajor)
+      }
+    }
+
+    return usedPlugins.map(plugin => {
+      const svelteMajor = svelteMajorById.get(plugin._id!)
+      if (typeof svelteMajor !== "number") {
+        return plugin
+      }
+
+      const schema = (plugin.schema || {}) as Plugin["schema"]
+      const metadata = schema?.metadata || {}
+
+      return {
+        ...plugin,
+        schema: {
+          ...schema,
+          metadata: {
+            ...metadata,
+            svelteMajor,
+          },
+        },
+      }
+    })
+  } catch (err) {
+    return usedPlugins
+  }
+}

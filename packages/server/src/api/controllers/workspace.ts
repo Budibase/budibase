@@ -36,6 +36,7 @@ import {
   ImportToUpdateWorkspaceResponse,
   Layout,
   PlanType,
+  Plugin,
   RevertAppClientResponse,
   Row,
   Screen,
@@ -348,6 +349,11 @@ export async function fetchAppPackage(
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
+    application.usedPlugins
+  )
+
+  // Ensure used plugins include schema metadata (e.g. schema.metadata.svelteMajor)
+  application.usedPlugins = await sdk.plugins.enrichUsedPluginSvelteMajors(
     application.usedPlugins
   )
 
