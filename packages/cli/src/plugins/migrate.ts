@@ -31,14 +31,15 @@ type AnalysisResult = {
 const bumpMinorVersion = (version: string | undefined): string | undefined => {
   if (!version || typeof version !== "string") return undefined
   const parts = version.trim().split(".")
+
   if (parts.length < 2) return undefined
-  const majorStr = parts[0]
-  const minorStr = parts[1]
-  const patchStr = parts[2]
+  const [majorStr, minorStr, patchStr] = parts
+
   if (!majorStr || !minorStr) return undefined
   const major = Number.parseInt(majorStr, 10)
   const minor = Number.parseInt(minorStr, 10)
   const patch = patchStr ? Number.parseInt(patchStr, 10) : 0
+
   if (
     Number.isNaN(major) ||
     Number.isNaN(minor) ||
