@@ -184,11 +184,6 @@
       <MarkdownViewer value={description || placeholder} />
     </div>
     {#if collapsible}
-      <div
-        class="description-viewer__fade"
-        aria-hidden={!expanded}
-        hidden={expanded}
-      />
       <button
         type="button"
         class="description-viewer__toggle"
@@ -220,6 +215,7 @@
 
   .description-content {
     overflow: auto;
+    position: relative;
   }
 
   .description-content--collapsed {
@@ -237,11 +233,14 @@
     );
   }
 
-  .description-viewer__fade {
+  .description-content--collapsed::after {
+    content: "";
     position: absolute;
-    pointer-events: none;
-    inset: calc(var(--description-collapsed-height) - 2em) 0 auto 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 2em;
+    pointer-events: none;
     background: linear-gradient(180deg, transparent 0%, var(--background) 100%);
   }
 
