@@ -835,22 +835,30 @@ export async function revertClient(
   ctx.body = updatedWorkspace
 }
 
-async function unpublishWorkspace(ctx: UserCtx) {
-  let appId = ctx.params.appId
-  appId = dbCore.getProdWorkspaceID(appId)
+async function unpublishWorkspace() {
+  const devWorkspaceId = context.getDevWorkspaceId()
+  const prodWorkspaceId = context.getProdWorkspaceId()
 
-  const db = context.getProdWorkspaceDB()
-  const result = await db.destroy()
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    await disableAllAppsAndAutomations()
 
-  await events.app.unpublished({ appId } as Workspace)
+    // Remove metadata doc so the workspace is treated as unpublished, without
+    // deleting production data.
+    const db = context.getWorkspaceDB()
+    const metadata = await db.tryGet<Workspace>(DocumentType.WORKSPACE_METADATA)
+    if (metadata) {
+      await db.remove(metadata)
+    }
+    await cleanupAutomations(prodWorkspaceId)
+  })
 
-  // automations only in production
-  await cleanupAutomations(appId)
+  await context.doInWorkspaceContext(devWorkspaceId, async () => {
+    await disableAllAppsAndAutomations()
+  })
 
-  await disableAllAppsAndAutomations()
+  await events.app.unpublished({ appId: prodWorkspaceId } as Workspace)
 
-  await cache.workspace.invalidateWorkspaceMetadata(appId)
-  return result
+  await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
 }
 
 async function invalidateWorkspaceCache(workspaceId: string) {
@@ -866,7 +874,10 @@ async function destroyWorkspace(ctx: UserCtx) {
   const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.params.appId)
   const devWorkspaceId = dbCore.getDevWorkspaceID(ctx.params.appId)
 
-  const app = await sdk.workspaces.metadata.get()
+  const app = await sdk.workspaces.metadata.tryGet()
+  if (!app) {
+    ctx.throw(404, "Workspace not found")
+  }
 
   // check if we need to unpublish first
   if (await dbCore.dbExists(prodWorkspaceId)) {
@@ -874,7 +885,11 @@ async function destroyWorkspace(ctx: UserCtx) {
     await sdk.workspaces.syncWorkspace(devWorkspaceId, {
       automationOnly: true,
     })
-    await unpublishWorkspace(ctx)
+    await events.app.unpublished({ appId: prodWorkspaceId } as Workspace)
+    await cleanupAutomations(prodWorkspaceId)
+    const prodDb = dbCore.getDB(prodWorkspaceId, { skip_setup: true })
+    await prodDb.destroy()
+    await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
   }
 
   const db = dbCore.getDB(devWorkspaceId)
@@ -919,17 +934,15 @@ export async function unpublish(
   ctx: UserCtx<void, UnpublishWorkspaceResponse>
 ) {
   const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.params.appId)
-  const dbExists = await dbCore.dbExists(prodWorkspaceId)
+  const isPublished = await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
 
   // check app has been published
-  if (!dbExists) {
+  if (!isPublished) {
     return ctx.throw(400, "Workspace has not been published.")
   }
 
   await workspaceMigrations.doInMigrationLock(prodWorkspaceId, async () => {
-    await preDestroyWorkspace(ctx)
-    await unpublishWorkspace(ctx)
-    await postDestroyWorkspace(ctx)
+    await unpublishWorkspace()
   })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "Workspace unpublished." }

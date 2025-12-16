@@ -108,6 +108,8 @@ spec:
           value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: S3_IGNORE_SELF_SIGNED
+          value: {{ .Values.services.objectStore.ignoreSelfSigned | quote }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
@@ -146,6 +148,10 @@ spec:
           value: http://worker-service:{{ .Values.services.worker.port }}
         - name: LITELLM_URL
           value: {{ .Values.globals.litellmUrl | quote }}
+        {{- if .Values.services.litellm.masterKey }}
+        - name: LITELLM_MASTER_KEY
+          value: {{ .Values.services.litellm.masterKey | quote }}
+        {{- end }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
