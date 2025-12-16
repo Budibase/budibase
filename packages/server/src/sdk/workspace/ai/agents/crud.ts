@@ -5,6 +5,8 @@ import {
   DocumentType,
   UpdateAgentRequest,
 } from "@budibase/types"
+import { listAgentFiles, removeAgentFile } from "./files"
+import { deleteAgentFileChunks } from "../rag"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
@@ -91,4 +93,12 @@ export async function remove(agentId: string) {
   const agent = await getOrThrow(agentId)
 
   await db.remove(agent)
+
+  const files = await listAgentFiles(agentId)
+  if (files.length > 0) {
+    await deleteAgentFileChunks(
+      files.map(file => file.ragSourceId).filter(Boolean)
+    )
+    await Promise.all(files.map(file => removeAgentFile(file)))
+  }
 }
