@@ -31,3 +31,22 @@ export interface AgentChat extends Document {
   title: string
   messages: UIMessage[]
 }
+
+export enum AgentFileStatus {
+  PROCESSING = "processing",
+  READY = "ready",
+  FAILED = "failed",
+}
+
+export interface AgentFile extends Document {
+  agentId: string
+  filename: string
+  mimetype?: string
+  size?: number
+  ragSourceId: string
+  status: AgentFileStatus
+  chunkCount: number
+  uploadedBy: string
+  errorMessage?: string
+  processedAt?: string
+}
