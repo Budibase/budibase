@@ -46,9 +46,6 @@ export interface DatasourceEndpoints {
   fetchRelationshipInfoForDatasource: (
     datasource: Datasource
   ) => Promise<FetchDatasourceRelationshipInfoResponse>
-  fetchExternalSchema: (
-    datasourceId: string
-  ) => Promise<FetchExternalSchemaResponse>
 }
 
 export const buildDatasourceEndpoints = (
@@ -153,15 +150,6 @@ export const buildDatasourceEndpoints = (
     >({
       url: `/api/datasources/relationships`,
       body: { datasource },
-    })
-  },
-
-  /**
-   * Fetches the external schema of a datasource
-   */
-  fetchExternalSchema: async (datasourceId: string) => {
-    return await API.get({
-      url: `/api/datasources/${datasourceId}/schema/external`,
     })
   },
 })
