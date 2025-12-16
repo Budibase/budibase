@@ -13,6 +13,9 @@ info:
   contact:
     name: ServiceNow Developer Program
     url: https://developer.servicenow.com/
+externalDocs:
+  description: ServiceNow SCIM API reference for Zurich
+  url: https://developer.servicenow.com/dev.do#!/reference/api/zurich/rest/scim-api
 servers:
   - url: https://{instance}.service-now.com/api/now
     description: Instance-specific base URL for SCIM

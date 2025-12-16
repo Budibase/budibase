@@ -17,7 +17,6 @@ import TwilioLogo from "assets/rest-template-icons/twilio.svg"
 import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
 import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
-
 interface RestTemplatesState {
   templates: RestTemplate[]
   templateGroups: RestTemplateGroup<RestTemplateGroupName>[]
@@ -496,7 +495,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     {
       name: "ServiceNow",
       description:
-        "Automate incidents, attachments, CMDB records, and generic table CRUD operations in ServiceNow.",
+        "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
       specs: [
         {
           version: "1.0.0",

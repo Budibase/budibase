@@ -32,11 +32,12 @@ import {
 } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
-  import type {
-    RestTemplate,
-    ImportEndpoint,
-    Datasource,
-  } from "@budibase/types"
+import type {
+  RestTemplate,
+  ImportEndpoint,
+  Datasource,
+  ImportRestQueryRequest,
+} from "@budibase/types"
   import { SourceName } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -198,11 +199,17 @@ import {
         restTemplateVersion: pendingSpec.version,
       }
 
-      const importResult = await queries.importQueries({
-        url: pendingSpec.url,
+      const importBody: ImportRestQueryRequest = {
         datasource: datasourcePayload,
         selectedEndpointId,
-      })
+      }
+      if (pendingSpec.url) {
+        importBody.url = pendingSpec.url
+      }
+      if (pendingSpec.data) {
+        importBody.data = pendingSpec.data
+      }
+      const importResult = await queries.importQueries(importBody)
 
       await Promise.all([datasources.fetch(), queries.fetch()])
 
