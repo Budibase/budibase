@@ -32,7 +32,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
   ensureChatApp = async (
     workspaceId?: string,
-    preferredAgentId?: string
+    agentId?: string
   ): Promise<ChatApp | null> => {
     const state = get(this.store)
     let chatApp = await API.fetchChatApp(workspaceId || state.workspaceId)
@@ -41,8 +41,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       return null
     }
 
-    if (preferredAgentId && chatApp.agentId !== preferredAgentId) {
-      chatApp = await API.setChatAppAgent(chatApp._id, preferredAgentId)
+    if (agentId && chatApp.agentId !== agentId) {
+      chatApp = await API.setChatAppAgent(chatApp._id, agentId)
     }
 
     this.update(state => {
@@ -72,11 +72,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return conversations
   }
 
-  initConversations = async (
-    workspaceId?: string,
-    fallbackAgentId?: string
-  ) => {
-    const chatApp = await this.ensureChatApp(workspaceId, fallbackAgentId)
+  initConversations = async (workspaceId?: string, agentId?: string) => {
+    const chatApp = await this.ensureChatApp(workspaceId, agentId)
     if (chatApp?._id) {
       await this.fetchConversations(chatApp._id)
     }

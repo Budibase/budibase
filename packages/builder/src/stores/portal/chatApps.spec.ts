@@ -31,7 +31,7 @@ describe("chatAppsStore", () => {
     setChatAppAgent.mockReset()
   })
 
-  it("updates agentId when preferred agent differs", async () => {
+  it("updates agentId when requested agent differs", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
