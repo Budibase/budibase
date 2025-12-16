@@ -14,6 +14,7 @@ export type RestTemplateName =
   | "Jira Cloud"
   | "Okta Management"
   | "PagerDuty"
+  | "ServiceNow"
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"
