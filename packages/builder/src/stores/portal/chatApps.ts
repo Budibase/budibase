@@ -4,27 +4,27 @@ import { ChatApp, ChatConversation } from "@budibase/types"
 import { get } from "svelte/store"
 
 interface ChatAppsStoreState {
-  chats: ChatConversation[]
+  conversations: ChatConversation[]
   chatAppId?: string
-  currentChatId?: string
+  currentConversationId?: string
   workspaceId?: string
 }
 
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   constructor() {
     super({
-      chats: [],
+      conversations: [],
       chatAppId: undefined,
-      currentChatId: undefined,
+      currentConversationId: undefined,
       workspaceId: undefined,
     })
   }
 
   reset = (workspaceId?: string) => {
     this.update(state => {
-      state.chats = []
+      state.conversations = []
       state.chatAppId = undefined
-      state.currentChatId = undefined
+      state.currentConversationId = undefined
       state.workspaceId = workspaceId || state.workspaceId
       return state
     })
@@ -54,53 +54,59 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return chatApp
   }
 
-  fetchChats = async (chatAppId?: string) => {
+  fetchConversations = async (chatAppId?: string) => {
     const targetChatAppId = chatAppId || get(this.store).chatAppId
     if (!targetChatAppId) {
       this.update(state => {
-        state.chats = []
+        state.conversations = []
         return state
       })
       return []
     }
 
-    const chats = await API.fetchChatHistory(targetChatAppId)
+    const conversations = await API.fetchChatHistory(targetChatAppId)
     this.update(state => {
-      state.chats = chats
+      state.conversations = conversations
       return state
     })
-    return chats
+    return conversations
   }
 
-  initChats = async (workspaceId?: string, fallbackAgentId?: string) => {
+  initConversations = async (
+    workspaceId?: string,
+    fallbackAgentId?: string
+  ) => {
     const chatApp = await this.ensureChatApp(workspaceId, fallbackAgentId)
     if (chatApp?._id) {
-      await this.fetchChats(chatApp._id)
+      await this.fetchConversations(chatApp._id)
     }
     return chatApp
   }
 
-  removeChat = async (chatConversationId: string, chatAppId?: string) => {
+  removeConversation = async (
+    chatConversationId: string,
+    chatAppId?: string
+  ) => {
     const targetChatAppId = chatAppId || get(this.store).chatAppId
     if (!targetChatAppId) {
       return
     }
     await API.deleteChatConversation(chatConversationId, targetChatAppId)
     if (targetChatAppId) {
-      await this.fetchChats(targetChatAppId)
+      await this.fetchConversations(targetChatAppId)
     }
   }
 
-  setCurrentChatId = (chatId: string) => {
+  setCurrentConversationId = (chatId: string) => {
     this.update(state => {
-      state.currentChatId = chatId
+      state.currentConversationId = chatId
       return state
     })
   }
 
-  clearCurrentChatId = () => {
+  clearCurrentConversationId = () => {
     this.update(state => {
-      state.currentChatId = undefined
+      state.currentConversationId = undefined
       return state
     })
   }

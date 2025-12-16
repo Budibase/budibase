@@ -36,7 +36,7 @@
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
 
-  $: chatHistory = $chatAppsStore.chats || []
+  $: conversationHistory = $chatAppsStore.conversations || []
   $: agents = $agentsStore.agents || []
 
   const selectAgent = async (agentId: string | null) => {
@@ -60,7 +60,7 @@
       ...selectedChat,
       chatAppId: selectedChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
-    chatAppsStore.setCurrentChatId(selectedChat._id!)
+    chatAppsStore.setCurrentConversationId(selectedChat._id!)
   }
 
   const deleteCurrentChat = async () => {
@@ -71,21 +71,21 @@
     deletingChat = true
 
     try {
-      await chatAppsStore.removeChat(chat._id, $chatAppsStore.chatAppId)
-      const remainingChats = $chatAppsStore.chats
-      if (remainingChats.length) {
-        const [nextChat] = remainingChats
+      await chatAppsStore.removeConversation(chat._id, $chatAppsStore.chatAppId)
+      const remainingConversations = $chatAppsStore.conversations
+      if (remainingConversations.length) {
+        const [nextChat] = remainingConversations
         chat = {
           ...nextChat,
           chatAppId: nextChat.chatAppId || $chatAppsStore.chatAppId || "",
         }
-        chatAppsStore.setCurrentChatId(nextChat._id!)
+        chatAppsStore.setCurrentConversationId(nextChat._id!)
       } else {
         chat = {
           ...INITIAL_CHAT,
           chatAppId: $chatAppsStore.chatAppId || "",
         }
-        chatAppsStore.clearCurrentChatId()
+        chatAppsStore.clearCurrentConversationId()
       }
     } catch (err) {
       const message =
@@ -102,7 +102,7 @@
       ...INITIAL_CHAT,
       chatAppId: $chatAppsStore.chatAppId || "",
     }
-    chatAppsStore.clearCurrentChatId()
+    chatAppsStore.clearCurrentConversationId()
   }
 
   const getChatPreview = (chat: ChatConversationLike): string => {
@@ -129,16 +129,16 @@
     }
 
     const { chatId, chat: savedChat } = event.detail
-    const updatedChats = await chatAppsStore.fetchChats(
+    const updatedConversations = await chatAppsStore.fetchConversations(
       $chatAppsStore.chatAppId
     )
     const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
 
     const newCurrentChat =
-      updatedChats.find(chatItem => chatItem._id === chatId) ||
+      updatedConversations.find(conversation => conversation._id === chatId) ||
       (lastMessageId
-        ? updatedChats.find(chatItem =>
-            chatItem.messages?.some(message => message.id === lastMessageId)
+        ? updatedConversations.find(conversation =>
+            conversation.messages?.some(message => message.id === lastMessageId)
           )
         : undefined)
 
@@ -150,7 +150,7 @@
       ...newCurrentChat,
       chatAppId: newCurrentChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
-    chatAppsStore.setCurrentChatId(newCurrentChat._id)
+    chatAppsStore.setCurrentConversationId(newCurrentChat._id)
   }
 
   const handleAgentChange = (event: CustomEvent<string>) => {
@@ -162,7 +162,7 @@
 
   onMount(async () => {
     await agentsStore.init()
-    const chatApp = await chatAppsStore.initChats(
+    const chatApp = await chatAppsStore.initConversations(
       $params?.application,
       undefined
     )
@@ -173,13 +173,13 @@
 
     await selectAgent(initialAgentId)
 
-    const initialChat = $chatAppsStore.chats[0]
+    const initialChat = $chatAppsStore.conversations[0]
     if (initialChat) {
       chat = {
         ...initialChat,
         chatAppId: initialChat.chatAppId || $chatAppsStore.chatAppId || "",
       }
-      chatAppsStore.setCurrentChatId(initialChat._id!)
+      chatAppsStore.setCurrentConversationId(initialChat._id!)
     }
   })
 </script>
@@ -207,16 +207,16 @@
           searchable={false}
         />
 
-        {#each chatHistory as chatItem}
+        {#each conversationHistory as conversation}
           <NavItem
-            text={chatItem.title || "Untitled Chat"}
-            subtext={getChatPreview(chatItem)}
-            on:click={() => selectChat(chatItem)}
-            selected={$chatAppsStore.currentChatId === chatItem._id}
+            text={conversation.title || "Untitled Chat"}
+            subtext={getChatPreview(conversation)}
+            on:click={() => selectChat(conversation)}
+            selected={$chatAppsStore.currentConversationId === conversation._id}
             withActions={false}
           />
         {/each}
-        {#if !chatHistory.length}
+        {#if !conversationHistory.length}
           <div class="empty-state">
             <Body size="S">
               No chat history yet.<br />

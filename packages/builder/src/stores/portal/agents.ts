@@ -11,7 +11,6 @@ import { derived } from "svelte/store"
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
-  currentChatId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
 }
