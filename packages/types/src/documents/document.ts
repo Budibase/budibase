@@ -42,6 +42,7 @@ export enum DocumentType {
   AGENT = "agent",
   AGENT_CHAT = "agentchat",
   AGENT_TOOL_SOURCE = "agenttoolsource",
+  AGENT_FILE = "agentfile",
   AI_CONFIG = "aiconfig",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
