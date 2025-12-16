@@ -2,6 +2,7 @@ import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   AgentChat,
+  AgentFileStatus,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
@@ -19,10 +20,37 @@ import {
   convertToModelMessages,
   extractReasoningMiddleware,
   generateText,
+  ModelMessage,
   streamText,
   wrapLanguageModel,
 } from "ai"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
+import { retrieveContextForSources } from "../../../sdk/workspace/ai/rag"
+
+const extractUserText = (message?: AgentChat["messages"][number]) => {
+  if (!message || !Array.isArray(message.parts)) {
+    return ""
+  }
+  return message.parts
+    .filter(part => part && typeof part === "object" && part["type"] === "text")
+    .map(part => (typeof part["text"] === "string" ? part["text"] : ""))
+    .join(" ")
+    .trim()
+}
+
+const findLatestUserQuestion = (chat: AgentChat) => {
+  const messages = chat.messages || []
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const current = messages[i]
+    if (current?.role === "user") {
+      const text = extractUserText(current)
+      if (text) {
+        return text
+      }
+    }
+  }
+  return ""
+}
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
@@ -42,6 +70,23 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const agentFiles = await sdk.ai.agents.listAgentFiles(agent._id!)
+  const readyFileSources = agentFiles
+    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
+    .map(file => file.ragSourceId)
+
+  const latestQuestion = findLatestUserQuestion(chat)
+  let retrievedContext = ""
+  if (latestQuestion && readyFileSources.length > 0) {
+    try {
+      retrievedContext = await retrieveContextForSources(
+        latestQuestion,
+        readyFileSources
+      )
+    } catch (error) {
+      console.log("Failed to retrieve agent context", error)
+    }
+  }
 
   const { systemPrompt: system, tools: allTools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
@@ -60,27 +105,41 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const model = openai.chat(modelId)
 
     const aiTools = toAiSdkTools(allTools)
-    const result = await streamText({
+    const convertedMessages = convertToModelMessages(chat.messages)
+    const messagesWithContext: ModelMessage[] =
+      retrievedContext.trim().length > 0
+        ? [
+            {
+              role: "system",
+              content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
+            },
+            ...convertedMessages,
+          ]
+        : convertedMessages
+
+    const result = streamText({
       model: wrapLanguageModel({
         model,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
       }),
-      messages: convertToModelMessages(chat.messages),
+      messages: messagesWithContext,
       system,
       tools: aiTools,
     })
 
     const title =
       chat.title ||
-      (
-        await generateText({
-          model,
-          messages: [convertToModelMessages(chat.messages)[0]],
-          system: ai.agentHistoryTitleSystemPrompt(),
-        })
-      ).text
+      (convertedMessages.length > 0
+        ? (
+            await generateText({
+              model,
+              messages: [convertedMessages[0]],
+              system: ai.agentHistoryTitleSystemPrompt(),
+            })
+          ).text
+        : "Conversation")
 
     ctx.respond = false
     result.pipeUIMessageStreamToResponse(ctx.res, {
