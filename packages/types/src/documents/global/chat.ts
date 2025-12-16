@@ -11,9 +11,13 @@ export interface ChatApp extends Document {
   settings?: Record<string, any>
 }
 
-export interface ChatConversation extends Document {
+export interface ChatConversationRequest extends Document {
   chatAppId: string
   userId?: string
   title?: string
   messages: UIMessage[]
+}
+
+export interface ChatConversation extends ChatConversationRequest {
+  userId: string
 }

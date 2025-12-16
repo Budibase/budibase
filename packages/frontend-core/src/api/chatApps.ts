@@ -1,6 +1,7 @@
 import {
   ChatAgentRequest,
   ChatConversation,
+  ChatConversationRequest,
   ChatApp,
   FetchAgentHistoryResponse,
   UpdateChatAppRequest,
@@ -12,7 +13,7 @@ import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface ChatAppEndpoints {
   streamChatConversation: (
-    chat: ChatConversation,
+    chat: ChatConversationRequest,
     workspaceId: string
   ) => Promise<AsyncIterable<UIMessage>>
   deleteChatConversation: (
@@ -27,7 +28,7 @@ export interface ChatAppEndpoints {
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
   setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatApp>
   createChatConversation: (
-    chat: Pick<ChatConversation, "chatAppId" | "title">,
+    chat: Pick<ChatConversationRequest, "chatAppId" | "title">,
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
@@ -141,7 +142,7 @@ export const buildChatAppEndpoints = (
   },
 
   createChatConversation: async (
-    chat: Pick<ChatConversation, "chatAppId" | "title">,
+    chat: Pick<ChatConversationRequest, "chatAppId" | "title">,
     workspaceId?: string
   ) => {
     const resolvedWorkspaceId = workspaceId || API.getAppID()

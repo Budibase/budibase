@@ -4,6 +4,7 @@ import {
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
+  ChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
   UserCtx,
@@ -24,7 +25,7 @@ interface PrepareChatConversationForSaveParams {
   userId: string
   title?: string
   messages: ChatConversation["messages"]
-  chat: Partial<ChatConversation>
+  chat: Partial<ChatConversationRequest>
   existingChat?: ChatConversation | null
 }
 
@@ -202,7 +203,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 }
 
 export async function createChatConversation(
-  ctx: UserCtx<Pick<ChatConversation, "chatAppId" | "title">, ChatConversation>
+  ctx: UserCtx<
+    Pick<ChatConversationRequest, "chatAppId" | "title">,
+    ChatConversation
+  >
 ) {
   const { title } = ctx.request.body
   const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId

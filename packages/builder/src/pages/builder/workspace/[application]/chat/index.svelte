@@ -12,13 +12,18 @@
     Select,
     notifications,
   } from "@budibase/bbui"
-  import type { ChatConversation } from "@budibase/types"
+  import type {
+    ChatConversation,
+    ChatConversationRequest,
+  } from "@budibase/types"
   import { params } from "@roxi/routify"
   import { onMount } from "svelte"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import type { Agent } from "@budibase/types"
 
-  const INITIAL_CHAT: Omit<ChatConversation, "_id" | "_rev"> = {
+  type ChatConversationLike = ChatConversation | ChatConversationRequest
+
+  const INITIAL_CHAT: Omit<ChatConversationRequest, "_id" | "_rev"> = {
     title: "",
     messages: [],
     chatAppId: "",
@@ -26,7 +31,7 @@
   const NO_MESSAGES_TEXT = "No messages"
   const NO_PREVIEW_TEXT = "No preview available"
 
-  let chat: ChatConversation = { ...INITIAL_CHAT }
+  let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
@@ -100,7 +105,7 @@
     chatAppsStore.clearCurrentChatId()
   }
 
-  const getChatPreview = (chat: ChatConversation): string => {
+  const getChatPreview = (chat: ChatConversationLike): string => {
     const messageCount = chat.messages.length
     if (!messageCount) {
       return NO_MESSAGES_TEXT
@@ -117,7 +122,7 @@
   }
 
   const handleChatSaved = async (
-    event: CustomEvent<{ chatId?: string; chat: ChatConversation }>
+    event: CustomEvent<{ chatId?: string; chat: ChatConversationLike }>
   ) => {
     if (!selectedAgentId) {
       return

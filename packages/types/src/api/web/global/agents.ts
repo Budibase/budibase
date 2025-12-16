@@ -1,6 +1,11 @@
-import { Agent, ChatApp, ChatConversation } from "../../../documents"
+import {
+  Agent,
+  ChatApp,
+  ChatConversation,
+  ChatConversationRequest,
+} from "../../../documents"
 
-export type ChatAgentRequest = ChatConversation
+export type ChatAgentRequest = ChatConversationRequest
 
 export type FetchAgentHistoryResponse = ChatConversation[]
 

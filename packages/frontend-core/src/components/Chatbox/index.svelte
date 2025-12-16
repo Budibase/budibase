@@ -1,6 +1,9 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type { ChatConversation } from "@budibase/types"
+  import type {
+    ChatConversation,
+    ChatConversationRequest,
+  } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
@@ -19,11 +22,13 @@
       }
     },
   })
-  export let chat: ChatConversation
+  type ChatConversationLike = ChatConversation | ChatConversationRequest
+
+  export let chat: ChatConversationLike
   export let loading: boolean = false
 
   const dispatch = createEventDispatcher<{
-    chatSaved: { chatId?: string; chat: ChatConversation }
+    chatSaved: { chatId?: string; chat: ChatConversationLike }
   }>()
 
   let inputValue = ""
@@ -31,7 +36,7 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
   let lastFocusedChatId: string | undefined
-  let lastFocusedNewChat: ChatConversation | undefined
+  let lastFocusedNewChat: ChatConversationLike | undefined
 
   $: if (chat?.messages?.length) {
     scrollToBottom()
@@ -115,7 +120,7 @@
       parts: [{ type: "text", text: inputValue }],
     }
 
-    const updatedChat: ChatConversation = {
+    const updatedChat: ChatConversationLike = {
       ...chat,
       chatAppId: chat.chatAppId,
       messages: [...chat.messages, userMessage],
