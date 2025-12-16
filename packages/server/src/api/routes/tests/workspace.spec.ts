@@ -1536,15 +1536,26 @@ describe("/applications", () => {
 
       await config.api.workspace.sync(workspace.appId)
 
-      // does exist in prod
-      const prodLogs = await config.getAutomationLogs()
-      expect(prodLogs.data.length).toBe(1)
+      const startkey = `${db.DocumentType.AUTOMATION_LOG}${db.SEPARATOR}`
+      const endkey = `${db.DocumentType.AUTOMATION_LOG}${db.SEPARATOR}${db.UNICODE_MAX}`
+
+      // exists in prod
+      const prodLogs = await db
+        .getDB(config.getProdWorkspaceId())
+        .allDocs({ startkey, endkey, include_docs: false })
+      expect(prodLogs.rows.length).toBe(1)
+
+      // doesn't exist in dev
+      const devLogs = await db
+        .getDB(config.getDevWorkspaceId())
+        .allDocs({ startkey, endkey, include_docs: false })
+      expect(devLogs.rows.length).toBe(0)
 
       await config.api.workspace.unpublish(workspace.appId)
 
-      // doesn't exist in dev
-      const devLogs = await config.getAutomationLogs()
-      expect(devLogs.data.length).toBe(0)
+      // logs remain visible from production after unpublish
+      const visibleLogsAfterUnpublish = await config.getAutomationLogs()
+      expect(visibleLogsAfterUnpublish.data.length).toBe(1)
     })
   })
 
