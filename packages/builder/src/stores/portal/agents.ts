@@ -38,7 +38,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return agents
   }
 
-  selectAgent = async (agentId: string | undefined, _workspaceId?: string) => {
+  selectAgent = async (agentId: string | undefined) => {
     if (!agentId) {
       this.update(state => {
         state.currentAgentId = undefined

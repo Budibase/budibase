@@ -43,13 +43,13 @@
     selectedAgentId = agentId
     const workspaceId = $params?.application
     if (agentId) {
-      await agentsStore.selectAgent(agentId, workspaceId)
+      await agentsStore.selectAgent(agentId)
       await chatAppsStore.ensureChatApp(workspaceId, agentId)
       if (!chat.chatAppId && $chatAppsStore.chatAppId) {
         chat = { ...chat, chatAppId: $chatAppsStore.chatAppId }
       }
     } else {
-      await agentsStore.selectAgent(undefined, workspaceId)
+      await agentsStore.selectAgent(undefined)
       chatAppsStore.reset(workspaceId)
       chat = { ...INITIAL_CHAT }
     }
