@@ -37,10 +37,10 @@
   import { RestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
-import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
-import {
-  buildUrl,
-  buildQueryBindings,
+  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
+  import {
+    buildUrl,
+    buildQueryBindings,
     buildDynamicVariables,
     rebuildVariables,
     prettifyQueryRequestBody,
@@ -50,10 +50,10 @@ import {
     validateQuery,
     runQuery,
     keyValueArrayToRecord,
-  buildAuthConfigs,
-} from "./query"
-import restUtils from "@/helpers/data/utils"
-import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
+    buildAuthConfigs,
+  } from "./query"
+  import restUtils from "@/helpers/data/utils"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"

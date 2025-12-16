@@ -5,19 +5,19 @@
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors" //??
-import { datasources } from "@/stores/builder/datasources"
-import { IntegrationTypes } from "@/constants/backend"
-import {
-  type RestTemplateSpec,
-  type RestTemplate,
-  type RestTemplateGroupName,
-  type RestTemplateGroup,
-  type TemplateSelectionContext,
-  type TemplateSelectionEventDetail,
-  type UIIntegration,
-} from "@budibase/types"
-import { goto } from "@roxi/routify"
-import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
+  import { datasources } from "@/stores/builder/datasources"
+  import { IntegrationTypes } from "@/constants/backend"
+  import {
+    type RestTemplateSpec,
+    type RestTemplate,
+    type RestTemplateGroupName,
+    type RestTemplateGroup,
+    type TemplateSelectionContext,
+    type TemplateSelectionEventDetail,
+    type UIIntegration,
+  } from "@budibase/types"
+  import { goto } from "@roxi/routify"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()

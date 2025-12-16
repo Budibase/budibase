@@ -68,9 +68,8 @@
   let currentTemplateSpecVersion: string | undefined
   let templateDocsBaseUrl: string | undefined
 
-  $: templateSpecImportRequest = getRestTemplateImportInfoRequest(
-    selectedTemplateSpec
-  )
+  $: templateSpecImportRequest =
+    getRestTemplateImportInfoRequest(selectedTemplateSpec)
 
   $: if (isTemplateDatasource && templateSpecImportRequest) {
     const specVersion = selectedTemplateSpec?.version
@@ -92,9 +91,7 @@
     templateDocsBaseUrl = undefined
   }
 
-  const loadTemplateEndpoints = async (
-    request: ImportRestQueryInfoRequest
-  ) => {
+  const loadTemplateEndpoints = async (request: ImportRestQueryInfoRequest) => {
     resetEndpoints()
     const requestId = ++loadRequestId
     endpointsLoading = true
@@ -125,7 +122,6 @@
       }
     }
   }
-
 
   const getEndpointId = (endpoint: ImportEndpoint) => endpoint.id
 

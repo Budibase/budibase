@@ -26,18 +26,18 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { configFromIntegration } from "@/stores/selectors"
   import { customQueryIconColor } from "@/helpers/data/utils"
-import {
-  formatEndpointLabel,
-  getRestTemplateImportInfoRequest,
-} from "@/helpers/restTemplates"
+  import {
+    formatEndpointLabel,
+    getRestTemplateImportInfoRequest,
+  } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
-import type {
-  RestTemplate,
-  ImportEndpoint,
-  Datasource,
-  ImportRestQueryRequest,
-} from "@budibase/types"
+  import type {
+    RestTemplate,
+    ImportEndpoint,
+    Datasource,
+    ImportRestQueryRequest,
+  } from "@budibase/types"
   import { SourceName } from "@budibase/types"
 
   let externalDatasourceModal: CreateExternalDatasourceModal
