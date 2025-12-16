@@ -33,7 +33,6 @@ describe("chat conversations authorization", () => {
           _id: docIds.generateChatAppID(),
           agentId: "agent-1",
           createdAt: now,
-          updatedAt: now,
         }
         convoA = {
           _id: docIds.generateChatConversationID(),
@@ -55,7 +54,6 @@ describe("chat conversations authorization", () => {
           _id: docIds.generateChatAppID(),
           agentId: "agent-2",
           createdAt: now,
-          updatedAt: now,
         }
         otherAppConvo = {
           _id: docIds.generateChatConversationID(),
