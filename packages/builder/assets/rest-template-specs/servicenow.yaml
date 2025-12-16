@@ -1,0 +1,604 @@
+openapi: 3.0.1
+info:
+  title: ServiceNow REST API
+  description: |
+    REST endpoints that power ServiceNow incident, user, attachment, and configuration
+    management. This template mirrors the Budibase ServiceNow integration so you can
+    import ready-made CRUD queries straight into your workspace.
+  version: 1.0.0
+  termsOfService: https://www.servicenow.com/
+  contact:
+    name: ServiceNow Developer Program
+    url: https://developer.servicenow.com/
+externalDocs:
+  description: ServiceNow REST API reference
+  url: https://developer.servicenow.com/dev.do#!/reference/api/rome/rest
+servers:
+  - url: https://{instance}.service-now.com/api
+    description: ServiceNow instance specific base URL
+    variables:
+      instance:
+        description: Subdomain of your ServiceNow instance
+        default: example
+security:
+  - BasicAuth: []
+tags:
+  - name: Incidents
+    description: Incident table CRUD endpoints
+  - name: Tables
+    description: Generic table record helpers that work with any ServiceNow table
+  - name: Users
+    description: Sys user CRUD operations
+  - name: Attachments
+    description: Attachment metadata operations
+  - name: Configuration
+    description: CMDB and configuration data
+  - name: Dictionary
+    description: Metadata describing configured fields and tables
+paths:
+  /now/table/incident:
+    get:
+      tags: [Incidents]
+      summary: List incidents
+      description: Retrieve incident records with optional queries, selected fields, and pagination.
+      operationId: listIncidents
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Incident records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags: [Incidents]
+      summary: Create incident
+      description: Create an incident record by supplying any fields supported by the table.
+      operationId: createIncident
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '201':
+          description: Created incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/incident/{sys_id}:
+    parameters:
+      - $ref: '#/components/parameters/SysIdPath'
+    get:
+      tags: [Incidents]
+      summary: Get incident
+      description: Retrieve a specific incident by Sys ID.
+      operationId: getIncident
+      parameters:
+        - $ref: '#/components/parameters/SysparmFields'
+      responses:
+        '200':
+          description: Incident detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      tags: [Incidents]
+      summary: Update incident
+      description: Update one or more fields on an incident record.
+      operationId: updateIncident
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '200':
+          description: Updated incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Incidents]
+      summary: Delete incident
+      description: Delete an incident by Sys ID.
+      operationId: deleteIncident
+      responses:
+        '204':
+          description: Incident deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/cmdb_ci_service:
+    get:
+      tags: [Configuration]
+      summary: List business services
+      description: List CMDB business service records from `cmdb_ci_service`.
+      operationId: listBusinessServices
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Business service records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/cmdb_ci:
+    get:
+      tags: [Configuration]
+      summary: List configuration items
+      description: Fetch CMDB configuration item records.
+      operationId: listConfigurationItems
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Configuration items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/cmn_department:
+    get:
+      tags: [Configuration]
+      summary: List departments
+      operationId: listDepartments
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Department records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/sys_dictionary:
+    get:
+      tags: [Dictionary]
+      summary: List dictionary entries
+      description: Inspect dictionary metadata such as field labels, choices, and help text.
+      operationId: listDictionaryEntries
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Dictionary rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/attachment:
+    get:
+      tags: [Attachments]
+      summary: List attachments
+      description: Retrieve file metadata for attachments filtered by table and optional query.
+      operationId: listAttachments
+      parameters:
+        - $ref: '#/components/parameters/AttachmentTableName'
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Attachment metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowAttachmentListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/attachment/{sys_id}:
+    parameters:
+      - $ref: '#/components/parameters/SysIdPath'
+    get:
+      tags: [Attachments]
+      summary: Get attachment
+      description: Fetch metadata for a specific attachment by Sys ID.
+      operationId: getAttachment
+      responses:
+        '200':
+          description: Attachment metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowAttachmentResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Attachments]
+      summary: Delete attachment
+      description: Permanently remove an attachment by Sys ID.
+      operationId: deleteAttachment
+      responses:
+        '204':
+          description: Attachment deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/{tableName}:
+    parameters:
+      - $ref: '#/components/parameters/TableNamePath'
+    get:
+      tags: [Tables]
+      summary: List table records
+      description: Generic helper for listing records from any ServiceNow table.
+      operationId: listTableRecords
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Table records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags: [Tables]
+      summary: Create table record
+      description: Insert a record into any ServiceNow table.
+      operationId: createTableRecord
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '201':
+          description: Created record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/{tableName}/{sys_id}:
+    parameters:
+      - $ref: '#/components/parameters/TableNamePath'
+      - $ref: '#/components/parameters/SysIdPath'
+    get:
+      tags: [Tables]
+      summary: Get table record
+      description: Retrieve a single record from any table.
+      operationId: getTableRecord
+      parameters:
+        - $ref: '#/components/parameters/SysparmFields'
+      responses:
+        '200':
+          description: Table record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      tags: [Tables]
+      summary: Update table record
+      description: Update an existing record from any table.
+      operationId: updateTableRecord
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '200':
+          description: Updated record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Tables]
+      summary: Delete table record
+      description: Delete a record from any ServiceNow table.
+      operationId: deleteTableRecord
+      responses:
+        '204':
+          description: Record deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/sys_user:
+    get:
+      tags: [Users]
+      summary: List users
+      description: List sys_user records and optionally filter with a query.
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: Users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags: [Users]
+      summary: Create user
+      operationId: createUser
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/sys_user/{sys_id}:
+    parameters:
+      - $ref: '#/components/parameters/SysIdPath'
+    get:
+      tags: [Users]
+      summary: Get user
+      description: Retrieve a user by Sys ID.
+      operationId: getUser
+      parameters:
+        - $ref: '#/components/parameters/SysparmFields'
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      tags: [Users]
+      summary: Update user
+      operationId: updateUser
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceNowRecordBody'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowRecordResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Users]
+      summary: Delete user
+      operationId: deleteUser
+      responses:
+        '204':
+          description: User deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/sys_user_group:
+    get:
+      tags: [Users]
+      summary: List user groups
+      operationId: listUserGroups
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: User groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /now/table/sys_user_role:
+    get:
+      tags: [Users]
+      summary: List user roles
+      operationId: listUserRoles
+      parameters:
+        - $ref: '#/components/parameters/SysparmQuery'
+        - $ref: '#/components/parameters/SysparmFields'
+        - $ref: '#/components/parameters/SysparmLimit'
+        - $ref: '#/components/parameters/SysparmOffset'
+      responses:
+        '200':
+          description: User roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceNowListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Provide the ServiceNow username and password for the target instance.
+  parameters:
+    SysparmQuery:
+      name: sysparm_query
+      in: query
+      description: Filter expression, e.g. `active=true^priority=1`. Leave blank for all records.
+      schema:
+        type: string
+    SysparmFields:
+      name: sysparm_fields
+      in: query
+      description: Comma-separated list of field names to return.
+      schema:
+        type: string
+    SysparmLimit:
+      name: sysparm_limit
+      in: query
+      description: Maximum number of records to return per request.
+      schema:
+        type: integer
+        minimum: 1
+        default: 25
+    SysparmOffset:
+      name: sysparm_offset
+      in: query
+      description: Record offset for pagination.
+      schema:
+        type: integer
+        minimum: 0
+    SysIdPath:
+      name: sys_id
+      in: path
+      required: true
+      description: Sys ID of the record.
+      schema:
+        type: string
+    TableNamePath:
+      name: tableName
+      in: path
+      required: true
+      description: Name of the ServiceNow table (alphanumeric characters and underscores only).
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_]+$'
+    AttachmentTableName:
+      name: table_name
+      in: query
+      required: true
+      description: Name of the table that owns attachments.
+      schema:
+        type: string
+  requestBodies:
+    ServiceNowRecordBody:
+      description: Arbitrary ServiceNow record payload. Fields vary per table.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceNowRecord'
+  responses:
+    ErrorResponse:
+      description: ServiceNow error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ServiceNowRecord:
+      description: Generic ServiceNow table record. Fields depend on the table definition.
+      type: object
+      additionalProperties: true
+      properties:
+        sys_id:
+          type: string
+          description: Unique ID generated by ServiceNow.
+        sys_created_on:
+          type: string
+          format: date-time
+        sys_updated_on:
+          type: string
+          format: date-time
+    ServiceNowListResponse:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceNowRecord'
+          description: Array of records from the requested table.
+      example:
+        result:
+          - sys_id: c6f8c2c1db0001107f82ffb5ca961987
+            number: INC0010001
+            short_description: Cannot access VPN
+          - sys_id: 62f7d6c1db0001107f82ffb5ca961931
+            number: INC0010002
+            short_description: Laptop screen damaged
+    ServiceNowRecordResponse:
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/ServiceNowRecord'
+      example:
+        result:
+          sys_id: c6f8c2c1db0001107f82ffb5ca961987
+          number: INC0010001
+          state: In Progress
+    ServiceNowAttachment:
+      type: object
+      additionalProperties: true
+      properties:
+        sys_id:
+          type: string
+        file_name:
+          type: string
+        content_type:
+          type: string
+        size_bytes:
+          type: integer
+        download_link:
+          type: string
+          format: uri
+    ServiceNowAttachmentListResponse:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceNowAttachment'
+      example:
+        result:
+          - sys_id: 9ad5d6c1db0001107f82ffb5ca961987
+            file_name: screenshot.png
+            download_link: https://example.service-now.com/sys_attachment.do?sys_id=9ad5d6c1db0001107f82ffb5ca961987
+    ServiceNowAttachmentResponse:
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/ServiceNowAttachment'
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            detail:
+              type: string
+      example:
+        error:
+          message: No Record found
+          detail: "No Record found"
