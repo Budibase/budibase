@@ -5,18 +5,19 @@
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors" //??
-  import { datasources } from "@/stores/builder/datasources"
-  import { IntegrationTypes } from "@/constants/backend"
-  import {
-    type RestTemplateSpec,
-    type RestTemplate,
-    type RestTemplateGroupName,
-    type RestTemplateGroup,
-    type TemplateSelectionContext,
-    type TemplateSelectionEventDetail,
-    type UIIntegration,
-  } from "@budibase/types"
-  import { goto } from "@roxi/routify"
+import { datasources } from "@/stores/builder/datasources"
+import { IntegrationTypes } from "@/constants/backend"
+import {
+  type RestTemplateSpec,
+  type RestTemplate,
+  type RestTemplateGroupName,
+  type RestTemplateGroup,
+  type TemplateSelectionContext,
+  type TemplateSelectionEventDetail,
+  type UIIntegration,
+} from "@budibase/types"
+import { goto } from "@roxi/routify"
+import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()
@@ -66,11 +67,12 @@
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
-    if (!spec?.url) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return undefined
     }
     try {
-      return await queries.fetchImportInfo({ url: spec.url })
+      return await queries.fetchImportInfo(request)
     } catch (err) {
       console.warn("Failed to load template metadata", err)
       return undefined

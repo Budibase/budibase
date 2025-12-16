@@ -37,10 +37,10 @@
   import { RestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
-  import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
-  import {
-    buildUrl,
-    buildQueryBindings,
+import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
+import {
+  buildUrl,
+  buildQueryBindings,
     buildDynamicVariables,
     rebuildVariables,
     prettifyQueryRequestBody,
@@ -50,9 +50,10 @@
     validateQuery,
     runQuery,
     keyValueArrayToRecord,
-    buildAuthConfigs,
-  } from "./query"
-  import restUtils from "@/helpers/data/utils"
+  buildAuthConfigs,
+} from "./query"
+import restUtils from "@/helpers/data/utils"
+import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
@@ -363,12 +364,13 @@
   }
 
   const loadEndpoints = async (spec?: RestTemplateSpec) => {
-    if (!spec) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return
     }
     try {
       endpointsLoading = true
-      const resp = await queries.fetchImportInfo({ url: spec.url })
+      const resp = await queries.fetchImportInfo(request)
       const { endpoints: respEndpoints, url } = resp || {}
       if (respEndpoints) {
         endpoints = respEndpoints

@@ -26,7 +26,10 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { configFromIntegration } from "@/stores/selectors"
   import { customQueryIconColor } from "@/helpers/data/utils"
-  import { formatEndpointLabel } from "@/helpers/restTemplates"
+import {
+  formatEndpointLabel,
+  getRestTemplateImportInfoRequest,
+} from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import { goto } from "@roxi/routify"
   import type {
@@ -95,7 +98,11 @@
     templateLoading = true
     templateLoadingPhase = "info"
     try {
-      const info = await queries.fetchImportInfo({ url: spec.url })
+      const request = getRestTemplateImportInfoRequest(spec)
+      if (!request) {
+        throw new Error("Template metadata is unavailable")
+      }
+      const info = await queries.fetchImportInfo(request)
 
       if (!info.endpoints?.length) {
         throw new Error("No endpoints found in this template")

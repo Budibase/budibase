@@ -3,7 +3,8 @@ export interface RestTemplateSpec {
     | `${number}-${number}-${number}`
     | `${number}.${number}`
     | `${number}.${number}.${number}`
-  url: string
+  url?: string
+  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
