@@ -6,13 +6,31 @@ jest.setTimeout(60_000)
 describe("rehydrateScheduledTriggers (integration)", () => {
   let redis: StartedTestContainer | undefined
 
-  let TestConfiguration: typeof import("../../tests/utilities/TestConfiguration").default
-  let createAutomationBuilder: typeof import("./utilities/AutomationTestBuilder").createAutomationBuilder
-  let rehydrateScheduledTriggers: typeof import("../rehydrate").rehydrateScheduledTriggers
-  let automationQueue: typeof import("../bullboard").automationQueue
-  let disableAllCrons: typeof import("../utils").disableAllCrons
-  let env: typeof import("../../environment").default
-  let coreQueue: typeof import("@budibase/backend-core").queue
+  const loadModules = async () => {
+    const { default: TestConfiguration } = await import(
+      "../../tests/utilities/TestConfiguration"
+    )
+    const { createAutomationBuilder } = await import(
+      "./utilities/AutomationTestBuilder"
+    )
+    const { rehydrateScheduledTriggers } = await import("../rehydrate")
+    const { automationQueue } = await import("../bullboard")
+    const { disableAllCrons } = await import("../utils")
+    const { default: env } = await import("../../environment")
+    const { queue: coreQueue } = await import("@budibase/backend-core")
+
+    return {
+      TestConfiguration,
+      createAutomationBuilder,
+      rehydrateScheduledTriggers,
+      automationQueue,
+      disableAllCrons,
+      env,
+      coreQueue,
+    }
+  }
+
+  let modules: Awaited<ReturnType<typeof loadModules>>
 
   const originalEnv = {
     BULL_TEST_REDIS_PORT: process.env.BULL_TEST_REDIS_PORT,
@@ -26,23 +44,14 @@ describe("rehydrateScheduledTriggers (integration)", () => {
 
     process.env.BULL_TEST_REDIS_PORT = `${redis.getMappedPort(6379)}`
     delete process.env.FORKED_PROCESS
-    ;({ default: TestConfiguration } = await import(
-      "../../tests/utilities/TestConfiguration"
-    ))
-    ;({ createAutomationBuilder } = await import(
-      "./utilities/AutomationTestBuilder"
-    ))
-    ;({ rehydrateScheduledTriggers } = await import("../rehydrate"))
-    ;({ automationQueue } = await import("../bullboard"))
-    ;({ disableAllCrons } = await import("../utils"))
-    ;({ default: env } = await import("../../environment"))
-    ;({ queue: coreQueue } = await import("@budibase/backend-core"))
+
+    modules = await loadModules()
   })
 
   afterAll(async () => {
     // Close Bull queues while Redis is still running to avoid connection errors.
-    if (coreQueue) {
-      await coreQueue.shutdown()
+    if (modules?.coreQueue) {
+      await modules.coreQueue.shutdown()
     }
     if (redis) {
       await redis.stop()
@@ -54,13 +63,22 @@ describe("rehydrateScheduledTriggers (integration)", () => {
         ;(process.env as any)[key] = value
       }
     }
-    if (env) {
-      env._set("SELF_HOSTED", originalEnv.SELF_HOSTED || "1")
-      env._set("MULTI_TENANCY", originalEnv.MULTI_TENANCY || "1")
+    if (modules?.env) {
+      modules.env._set("SELF_HOSTED", originalEnv.SELF_HOSTED || "1")
+      modules.env._set("MULTI_TENANCY", originalEnv.MULTI_TENANCY || "1")
     }
   })
 
   it("rehydrates cron triggers when repeatable jobs are missing", async () => {
+    const {
+      TestConfiguration,
+      automationQueue,
+      createAutomationBuilder,
+      disableAllCrons,
+      env,
+      rehydrateScheduledTriggers,
+    } = modules
+
     const config = new TestConfiguration()
     try {
       await config.init()
