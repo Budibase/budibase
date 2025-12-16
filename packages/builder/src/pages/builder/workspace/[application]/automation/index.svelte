@@ -1,6 +1,7 @@
 <script lang="ts">
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+  import DuplicateAutomationModal from "@/components/automation/AutomationPanel/DuplicateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
@@ -41,6 +42,7 @@
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">
+  let duplicateModal: ModalAPI
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
@@ -82,18 +84,6 @@
     }
   }
 
-  async function duplicateAutomation() {
-    if (!selectedAutomation) {
-      return
-    }
-    try {
-      await automationStore.actions.duplicate(selectedAutomation)
-      notifications.success("Automation has been duplicated successfully")
-    } catch (error) {
-      notifications.error("Error duplicating automation")
-    }
-  }
-
   const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
@@ -130,7 +120,7 @@
         icon: "copy",
         name: "Duplicate",
         visible: true,
-        callback: duplicateAutomation,
+        callback: () => duplicateModal?.show(),
         tooltip:
           automation.definition.trigger?.name === "Webhook"
             ? "Webhooks automations cannot be duplicated"
@@ -316,6 +306,14 @@
 </Modal>
 <Modal bind:this={webhookModal}>
   <CreateWebhookModal />
+</Modal>
+<Modal bind:this={duplicateModal}>
+  {#if selectedAutomation}
+    <DuplicateAutomationModal
+      automation={selectedAutomation}
+      onDuplicateSuccess={() => duplicateModal.hide()}
+    />
+  {/if}
 </Modal>
 
 {#if selectedAutomation}
