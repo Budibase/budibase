@@ -3,20 +3,18 @@ import { BudiStore } from "../BudiStore"
 import {
   Agent,
   AgentChat,
-  AgentToolSource,
-  AgentToolSourceWithTools,
   CreateAgentRequest,
-  CreateToolSourceRequest,
   UpdateAgentRequest,
+  ToolMetadata,
 } from "@budibase/types"
-import { get } from "svelte/store"
+import { derived } from "svelte/store"
 
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
   chats: AgentChat[]
   currentChatId?: string
-  toolSources: AgentToolSourceWithTools[]
+  tools: ToolMetadata[]
   agentsLoaded: boolean
 }
 
@@ -25,13 +23,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     super({
       agents: [],
       chats: [],
-      toolSources: [],
+      tools: [],
       agentsLoaded: false,
     })
   }
 
   init = async () => {
-    await this.fetchAgents()
+    await Promise.all([this.fetchAgents(), this.fetchTools()])
   }
 
   fetchAgents = async () => {
@@ -72,68 +70,20 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.currentAgentId = agentId
       if (agentId) {
         this.fetchChats(agentId)
-        this.fetchToolSources(agentId)
       } else {
         state.chats = []
-        state.toolSources = []
       }
       return state
     })
   }
 
-  fetchToolSources = async (agentId: string) => {
-    if (!agentId) {
-      this.update(state => {
-        state.toolSources = []
-        return state
-      })
-      return []
-    }
-    const toolSources = await API.fetchToolSources(agentId)
+  fetchTools = async () => {
+    const tools = await API.fetchTools()
     this.update(state => {
-      state.toolSources = toolSources
+      state.tools = tools
       return state
     })
-    return toolSources
-  }
-
-  createToolSource = async (toolSource: CreateToolSourceRequest) => {
-    await API.createToolSource(toolSource)
-    if (toolSource.agentId) {
-      await this.fetchToolSources(toolSource.agentId)
-    }
-    const newToolSourceWithTools = {
-      ...toolSource,
-      tools: [],
-    } as AgentToolSource
-    return newToolSourceWithTools
-  }
-
-  updateToolSource = async (toolSource: AgentToolSource) => {
-    const updatedToolSource = await API.updateToolSource(toolSource)
-    this.update(state => {
-      const index = state.toolSources.findIndex(ts => ts.id === toolSource.id)
-      if (index !== -1) {
-        state.toolSources[index] = {
-          ...updatedToolSource,
-          tools: state.toolSources[index].tools,
-        }
-      }
-      return state
-    })
-    return updatedToolSource
-  }
-
-  deleteToolSource = async (toolSourceId: string) => {
-    await API.deleteToolSource(toolSourceId)
-    this.update(state => {
-      state.toolSources = state.toolSources.filter(ts => ts.id !== toolSourceId)
-      return state
-    })
-  }
-
-  getToolSource = (type: string) => {
-    return get(this.store).toolSources.find(ts => ts.type === type)
+    return tools
   }
 
   setCurrentChatId = (chatId: string) => {
@@ -176,5 +126,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.fetchAgents()
   }
 }
-
 export const agentsStore = new AgentsStore()
+export const selectedAgent = derived(agentsStore, state =>
+  state.agents.find(a => a._id === state.currentAgentId)
+)

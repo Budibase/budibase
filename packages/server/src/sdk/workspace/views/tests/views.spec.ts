@@ -445,8 +445,10 @@ describe("table sdk", () => {
         } as TableSchema
 
         const result = syncSchema(_.cloneDeep(view), newTableSchema, {
-          old: "description",
-          updated: "updatedDescription",
+          renameColumn: {
+            old: "description",
+            updated: "updatedDescription",
+          },
         })
         expect(result).toEqual({
           ...view,
@@ -583,8 +585,10 @@ describe("table sdk", () => {
         } as TableSchema
 
         const result = syncSchema(_.cloneDeep(view), newTableSchema, {
-          old: "description",
-          updated: "updatedDescription",
+          renameColumn: {
+            old: "description",
+            updated: "updatedDescription",
+          },
         })
         expect(result).toEqual({
           ...view,
@@ -594,6 +598,34 @@ describe("table sdk", () => {
             updatedDescription: { visible: true, width: 150, icon: "ic-any" },
           },
         })
+      })
+
+      it("ignores pending renames when the view schema is already using the updated column name", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          schema: {
+            updatedDescription: { visible: true, width: 150, icon: "ic-any" },
+          },
+        }
+        const { description, ...newTableSchema } = {
+          ...basicTable.schema,
+          updatedDescription: {
+            ...basicTable.schema.description,
+            name: "updatedDescription",
+          },
+        } as TableSchema
+
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, {
+          renameColumn: {
+            old: "description",
+            updated: "updatedDescription",
+          },
+        })
+
+        expect(result.schema?.updatedDescription).toEqual(
+          view.schema?.updatedDescription
+        )
+        expect(result.schema?.description).toBeUndefined()
       })
 
       it("changing no UI schema will not affect the view", () => {
@@ -642,6 +674,44 @@ describe("table sdk", () => {
           undefined
         )
         expect(result).toEqual(view)
+      })
+
+      it("updates primaryDisplay to match the table when inheriting", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          primaryDisplay: "name",
+          schema: {
+            name: { visible: true, width: 100 },
+            description: { visible: false, readonly: true },
+          },
+        }
+
+        const result = syncSchema(_.cloneDeep(view), basicTable.schema, {
+          primaryDisplay: "description",
+          previousPrimaryDisplay: "name",
+        })
+
+        expect(result.primaryDisplay).toEqual("description")
+        expect(result.schema?.description?.visible).toBe(true)
+        expect(result.schema?.description?.readonly).toBe(false)
+      })
+
+      it("keeps custom view primaryDisplay when it differs from the table", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          primaryDisplay: "id",
+          schema: {
+            id: { visible: true, width: 20 },
+            name: { visible: true, width: 100 },
+          },
+        }
+
+        const result = syncSchema(_.cloneDeep(view), basicTable.schema, {
+          primaryDisplay: "description",
+          previousPrimaryDisplay: "name",
+        })
+
+        expect(result.primaryDisplay).toEqual("id")
       })
     })
   })

@@ -66,11 +66,11 @@
   const itemUpdate = (e: CustomEvent) => {
     // The item is a component instance. '_instanceName' === 'field'
     const item: Component = e.detail
-    const { label } = item
+    const { label, defaultOperator } = item
 
     const updated = parsedColumns.map(entry => {
       if (item._instanceName === entry.field) {
-        return { ...entry, label }
+        return { ...entry, label, defaultOperator }
       }
       return entry
     })
@@ -152,6 +152,8 @@
       listType={FilterSetting}
       listTypeProps={{
         bindings,
+        schema,
+        datasource: contextDS,
       }}
     />
   {:else}

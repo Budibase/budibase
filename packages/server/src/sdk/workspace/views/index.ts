@@ -478,19 +478,37 @@ export async function enrichSchema(
   return { ...view, schema }
 }
 
+export interface SyncSchemaOpts {
+  renameColumn?: RenameColumn
+  primaryDisplay?: string
+  previousPrimaryDisplay?: string
+}
+
 export function syncSchema(
   view: ViewV2,
   schema: TableSchema,
-  renameColumn: RenameColumn | undefined
+  opts: SyncSchemaOpts = {}
 ): ViewV2 {
-  if (renameColumn && view.schema) {
-    view.schema[renameColumn.updated] = view.schema[renameColumn.old]
+  const { renameColumn, primaryDisplay, previousPrimaryDisplay } = opts
+
+  if (renameColumn && view.schema && view.schema[renameColumn.old] != null) {
+    if (!view.schema[renameColumn.updated]) {
+      view.schema[renameColumn.updated] = view.schema[renameColumn.old]
+    }
     delete view.schema[renameColumn.old]
+  }
+
+  if (renameColumn && view.primaryDisplay === renameColumn.old) {
+    view.primaryDisplay = renameColumn.updated
   }
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
       const viewSchema = view.schema[fieldName]
+      if (!viewSchema) {
+        delete view.schema[fieldName]
+        continue
+      }
       if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }
@@ -499,6 +517,21 @@ export function syncSchema(
       if (!view.schema[fieldName]) {
         view.schema[fieldName] = { visible: false }
       }
+    }
+  }
+
+  if (
+    primaryDisplay &&
+    (view.primaryDisplay == null ||
+      view.primaryDisplay === previousPrimaryDisplay)
+  ) {
+    view.primaryDisplay = primaryDisplay
+    view.schema ??= {}
+    const displaySchema = view.schema[primaryDisplay] || {}
+    view.schema[primaryDisplay] = {
+      ...displaySchema,
+      visible: true,
+      readonly: false,
     }
   }
 

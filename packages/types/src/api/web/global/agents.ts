@@ -1,4 +1,4 @@
-import { Agent, AgentChat, AgentToolSource } from "../../../documents"
+import { Agent, AgentChat } from "../../../documents"
 
 export type ChatAgentRequest = AgentChat
 
@@ -6,20 +6,6 @@ export type FetchAgentHistoryResponse = AgentChat[]
 
 export interface FetchAgentsResponse {
   agents: Agent[]
-}
-
-export type CreateToolSourceRequest = Omit<
-  AgentToolSource,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
-> & {
-  agentId: string
-}
-
-export type UpdateToolSourceRequest = Omit<
-  AgentToolSource,
-  "createdAt" | "updatedAt"
-> & {
-  agentId: string
 }
 
 export type CreateAgentRequest = Omit<

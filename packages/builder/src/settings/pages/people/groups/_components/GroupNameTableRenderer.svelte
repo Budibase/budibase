@@ -9,7 +9,7 @@
 <div class="align">
   {#if value}
     <GroupIcon group={row} />
-    <div class="text">
+    <div class="text" title={value}>
       {value}
     </div>
   {:else}

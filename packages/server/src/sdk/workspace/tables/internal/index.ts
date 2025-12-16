@@ -115,7 +115,7 @@ export async function save(
   }
 
   // rename row fields when table column is renamed
-  if (renaming && table.schema[renaming.updated].type === FieldType.LINK) {
+  if (renaming && table.schema[renaming.updated]?.type === FieldType.LINK) {
     throw new Error("Cannot rename a linked column.")
   }
 
@@ -146,7 +146,11 @@ export async function save(
         table.views[view] = viewsSdk.syncSchema(
           oldTable.views[view] as ViewV2,
           table.schema,
-          renaming
+          {
+            renameColumn: renaming,
+            primaryDisplay: table.primaryDisplay,
+            previousPrimaryDisplay: oldTable?.primaryDisplay,
+          }
         )
       }
       continue

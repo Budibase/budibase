@@ -4,13 +4,15 @@
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { FIELDS } from "@/constants/backend"
-  import { Constants } from "@budibase/frontend-core"
+  import { Constants, QueryUtils } from "@budibase/frontend-core"
   import { FieldType } from "@budibase/types"
   import { componentStore } from "@/stores/builder"
 
   export let item
   export let anchor
   export let bindings
+  export let schema
+  export let datasource
 
   const dispatch = createEventDispatcher()
 
@@ -31,6 +33,18 @@
     }
   }
 
+  const getOperatorOptions = () => {
+    if (!item?.field || !schema?.[item.field]) {
+      return []
+    }
+    const schemaField = schema[item.field]
+    return QueryUtils.getValidOperatorsForType(
+      schemaField,
+      item.field,
+      datasource
+    )
+  }
+
   const parseSettings = settings => {
     let columnSettings = settings
       .filter(setting => setting.key !== "field")
@@ -46,6 +60,20 @@
     ) {
       return columnSettings.filter(x => x.key !== "conditions")
     }
+    const operatorOptions = getOperatorOptions()
+    if (operatorOptions.length) {
+      columnSettings = [
+        ...columnSettings,
+        {
+          type: "select",
+          label: "Default filter type",
+          key: "defaultOperator",
+          options: operatorOptions,
+          defaultValue: operatorOptions[0]?.value,
+          nested: true,
+        },
+      ]
+    }
     return columnSettings
   }
 
@@ -56,6 +84,7 @@
         _id: item._id,
         _instanceName: item.field,
         label: item.label,
+        defaultOperator: item.defaultOperator,
       }
     )
   }

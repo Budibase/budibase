@@ -1,13 +1,11 @@
 import {
   AgentChat,
-  AgentToolSource,
-  AgentToolSourceWithTools,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
-  CreateToolSourceRequest,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
+  ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -26,17 +24,22 @@ export interface AgentEndpoints {
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
-  createToolSource: (
-    toolSource: CreateToolSourceRequest
-  ) => Promise<{ created: true }>
-  updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
-  deleteToolSource: (toolSourceId: string) => Promise<{ deleted: true }>
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
 }
+
+const throwOnErrorChunk = () =>
+  new TransformStream<UIMessageChunk, UIMessageChunk>({
+    transform(chunk, controller) {
+      if (chunk.type === "error") {
+        throw new Error(chunk.errorText || "Agent action failed")
+      }
+      controller.enqueue(chunk)
+    },
+  })
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   agentChatStream: async (chat, workspaceId) => {
@@ -67,8 +70,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     const chunkStream = response.body
       .pipeThrough(new TextDecoderStream())
       .pipeThrough(createSseToJsonTransformStream<UIMessageChunk>())
+      .pipeThrough(throwOnErrorChunk())
 
-    return readUIMessageStream({ stream: chunkStream })
+    return readUIMessageStream({
+      stream: chunkStream,
+      terminateOnError: true,
+    })
   },
 
   removeChat: async (chatId: string) => {
@@ -83,29 +90,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchToolSources: async (agentId: string) => {
+  fetchTools: async () => {
     return await API.get({
-      url: `/api/agent/${agentId}/toolsource`,
-    })
-  },
-
-  createToolSource: async (toolSource: CreateToolSourceRequest) => {
-    return await API.post({
-      url: "/api/agent/toolsource",
-      body: toolSource as any,
-    })
-  },
-
-  updateToolSource: async (toolSource: AgentToolSource) => {
-    return await API.put({
-      url: "/api/agent/toolsource",
-      body: toolSource as any,
-    })
-  },
-
-  deleteToolSource: async (toolSourceId: string) => {
-    return await API.delete({
-      url: `/api/agent/toolsource/${toolSourceId}`,
+      url: `/api/agent/tools`,
     })
   },
 

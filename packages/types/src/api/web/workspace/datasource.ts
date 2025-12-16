@@ -68,7 +68,3 @@ export type FindDatasourcesResponse = Datasource
 export interface DeleteDatasourceResponse {
   message: string
 }
-
-export interface FetchExternalSchemaResponse {
-  schema: string
-}

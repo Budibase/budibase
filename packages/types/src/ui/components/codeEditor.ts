@@ -4,6 +4,10 @@ interface JSEditorMode {
   match: RegExp
 }
 
+interface JSONEditorMode {
+  name: "json"
+}
+
 interface HBSEditorMode {
   name: "handlebars"
   base: "text/html"
@@ -23,12 +27,14 @@ export type EditorMode =
   | HBSEditorMode
   | HTMLEditorMode
   | PureHTMLEditorMode
+  | JSONEditorMode
 
 type EditorModeMapBase =
   | (JSEditorMode & { key: "JS" })
   | (HBSEditorMode & { key: "Handlebars" })
   | (HTMLEditorMode & { key: "Text" })
   | (PureHTMLEditorMode & { key: "HTML" })
+  | (JSONEditorMode & { key: "JSON" })
 
 export type EditorModesMap = {
   [M in EditorModeMapBase as M["key"]]: Omit<M, "key">

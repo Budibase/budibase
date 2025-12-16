@@ -33,7 +33,7 @@
                   size="M"
                 />
               </span>
-            {:else if route.new}
+            {:else if nav.new}
               <NewPill />
             {/if}
           </div>

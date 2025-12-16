@@ -1,9 +1,11 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
 import {
+  BodyType,
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,
 } from "@budibase/types"
+import { QueryVerbToHttpMethod } from "../../../../../constants"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
@@ -12,30 +14,20 @@ import {
   buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
+  buildKeyValueRequestBody,
 } from "./utils/requestBody"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
 
-const parameterNotRef = (
-  param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
-): param is OpenAPIV3.ParameterObject => {
-  // all refs are deferenced by parser library
-  return true
-}
-
-const requestBodyNotRef = (
-  param: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.RequestBodyObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
-}
-
-const schemaNotRef = (
-  param: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.SchemaObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
+const isReferenceObject = (
+  value: unknown
+): value is OpenAPIV3.ReferenceObject => {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    Object.prototype.hasOwnProperty.call(value, "$ref")
+  )
 }
 
 const isOpenAPI3 = (
@@ -57,53 +49,6 @@ const isOperation = (
   return methods.includes(key)
 }
 
-const isParameter = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV3.ParameterObject => {
-  return !isOperation(key, pathItem)
-}
-
-const getRequestBody = (
-  operation: OpenAPIV3.OperationObject,
-  bindingRoot: string,
-  mimeTypeOverride?: string
-): GeneratedRequestBody | undefined => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    const supportedMimeTypes = getMimeTypes(operation)
-    const mimeType = mimeTypeOverride || supportedMimeTypes[0]
-    if (mimeType) {
-      // try get example from request
-      const content = request.content[mimeType]
-      if (!content) {
-        return undefined
-      }
-      if (content.example) {
-        return generateRequestBodyFromExample(content.example, bindingRoot)
-      }
-
-      // try get example from schema
-      if (schemaNotRef(content.schema)) {
-        const schema = content.schema
-        if (schema.example) {
-          return generateRequestBodyFromExample(schema.example, bindingRoot)
-        }
-        return generateRequestBodyFromSchema(schema, bindingRoot)
-      }
-    }
-  }
-  return undefined
-}
-
-const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    return Object.keys(request.content)
-  }
-  return []
-}
-
 /**
  * OpenAPI Version 3.0
  * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
@@ -111,6 +56,97 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
   serverVariableBindings: Record<string, string> = {}
+  private securityHeaders: Map<string, string> = new Map()
+
+  private resolveRef<T>(ref: string): T | undefined {
+    if (!ref || !ref.startsWith("#/")) {
+      return undefined
+    }
+    const parts = ref
+      .slice(2)
+      .split("/")
+      .map(part => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+
+    let current: any = this.document
+    for (let part of parts) {
+      if (current == null || typeof current !== "object") {
+        return undefined
+      }
+      current = current[part]
+    }
+    return current as T | undefined
+  }
+
+  private resolveMaybeRef<T>(
+    value: T | OpenAPIV3.ReferenceObject | undefined
+  ): T | undefined {
+    if (!value) {
+      return undefined
+    }
+    if (isReferenceObject(value)) {
+      return this.resolveRef<T>(value.$ref)
+    }
+    return value as T
+  }
+
+  private normalizeParameters(
+    params?: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[]
+  ): OpenAPIV3.ParameterObject[] {
+    if (!Array.isArray(params)) {
+      return []
+    }
+    const resolved: OpenAPIV3.ParameterObject[] = []
+    for (const param of params) {
+      const normalized = this.resolveMaybeRef<OpenAPIV3.ParameterObject>(param)
+      if (normalized) {
+        resolved.push(normalized)
+      }
+    }
+    return resolved
+  }
+
+  private getMimeTypes(operation: OpenAPIV3.OperationObject): string[] {
+    const request = this.resolveMaybeRef<OpenAPIV3.RequestBodyObject>(
+      operation.requestBody
+    )
+    if (request?.content) {
+      return Object.keys(request.content)
+    }
+    return []
+  }
+
+  private getRequestBody(
+    operation: OpenAPIV3.OperationObject,
+    bindingRoot: string,
+    mimeTypeOverride?: string
+  ): GeneratedRequestBody | undefined {
+    const request = this.resolveMaybeRef<OpenAPIV3.RequestBodyObject>(
+      operation.requestBody
+    )
+    if (!request) {
+      return undefined
+    }
+    const supportedMimeTypes = this.getMimeTypes(operation)
+    const mimeType = mimeTypeOverride || supportedMimeTypes[0]
+    if (!mimeType) {
+      return undefined
+    }
+    const content = request.content[mimeType]
+    if (!content) {
+      return undefined
+    }
+    if (content.example) {
+      return generateRequestBodyFromExample(content.example, bindingRoot)
+    }
+    const schema = this.resolveMaybeRef<OpenAPIV3.SchemaObject>(content.schema)
+    if (!schema) {
+      return undefined
+    }
+    if (schema.example) {
+      return generateRequestBodyFromExample(schema.example, bindingRoot)
+    }
+    return generateRequestBodyFromSchema(schema, bindingRoot)
+  }
 
   private getDocsUrl = (
     operation: OpenAPIV3.OperationObject
@@ -127,7 +163,8 @@ export class OpenAPI3 extends OpenAPISource {
     operation: OpenAPIV3.OperationObject,
     path: string,
     requestBody: GeneratedRequestBody | undefined,
-    parameters: QueryParameter[]
+    parameters: QueryParameter[],
+    bodyType?: BodyType
   ): RestTemplateQueryMetadata => {
     const metadata: RestTemplateQueryMetadata = {
       operationId: operation.operationId,
@@ -136,7 +173,14 @@ export class OpenAPI3 extends OpenAPISource {
       originalPath: path,
     }
 
-    const parsedBody = buildSerializableRequestBody(requestBody?.body)
+    let parsedBody = buildSerializableRequestBody(requestBody?.body)
+    if (
+      parsedBody !== undefined &&
+      bodyType &&
+      (bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED)
+    ) {
+      parsedBody = buildKeyValueRequestBody(parsedBody)
+    }
     if (parsedBody !== undefined) {
       metadata.originalRequestBody = parsedBody
     }
@@ -166,12 +210,50 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  private setSecurityHeaders = () => {
+    this.securityHeaders = new Map()
+    const securitySchemes = this.document.components?.securitySchemes
+    if (!securitySchemes) {
+      return
+    }
+    for (const scheme of Object.values(securitySchemes)) {
+      const resolvedScheme =
+        this.resolveMaybeRef<OpenAPIV3.SecuritySchemeObject>(
+          scheme as OpenAPIV3.SecuritySchemeObject | OpenAPIV3.ReferenceObject
+        )
+      const headerName = this.getSecuritySchemeHeader(resolvedScheme)
+      if (headerName) {
+        this.securityHeaders.set(headerName.toLowerCase(), headerName)
+      }
+    }
+  }
+
+  private getSecuritySchemeHeader(
+    scheme?: OpenAPIV3.SecuritySchemeObject
+  ): string | undefined {
+    if (!scheme) {
+      return undefined
+    }
+    if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
+      return scheme.name
+    }
+    return undefined
+  }
+
+  private isSecurityHeader(name?: string): boolean {
+    if (!name) {
+      return false
+    }
+    return this.securityHeaders.has(name.toLowerCase())
+  }
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document = await this.parseData(data)
       if (isOpenAPI3(document)) {
         this.document = document
         this.serverVariableBindings = {}
+        this.setSecurityHeaders()
         return true
       } else {
         return false
@@ -188,32 +270,48 @@ export class OpenAPI3 extends OpenAPISource {
     return { ...this.serverVariableBindings }
   }
 
-  private getEndpoints = (): ImportInfo["endpoints"] => {
+  getSecurityHeaders(): string[] {
+    return Array.from(new Set(this.securityHeaders.values()))
+  }
+
+  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
+    const queries = await this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
-    for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
-      if (!pathItemObject) {
+
+    for (const query of queries) {
+      const metadata = query.restTemplateMetadata
+      if (!metadata) {
         continue
       }
-      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
-        if (isParameter(key, opOrParams)) {
-          continue
-        }
-        const methodName = key
-        if (!this.isSupportedMethod(methodName)) {
-          continue
-        }
-        const operation = opOrParams as OpenAPIV3.OperationObject
-        const name = operation.operationId || path
-        endpoints.push({
-          id: this.buildEndpointId(methodName, path),
-          name,
-          method: methodName.toUpperCase(),
-          path,
-          description: operation.summary || operation.description,
-          queryVerb: this.verbFromMethod(methodName),
-        })
+
+      const path = metadata.originalPath || query.fields.path || ""
+      const method = QueryVerbToHttpMethod[query.queryVerb]
+
+      if (!this.isSupportedMethod(method)) {
+        continue
       }
+
+      endpoints.push({
+        id: this.buildEndpointId(method || "", path),
+        name: query.name,
+        method: method?.toUpperCase() || "",
+        path,
+        description: metadata.description,
+        queryVerb: query.queryVerb,
+        operationId: metadata.operationId,
+        docsUrl: metadata.docsUrl,
+        originalPath: metadata.originalPath,
+        originalRequestBody: metadata.originalRequestBody,
+        defaultBindings: metadata.defaultBindings,
+        bodyType: query.fields.bodyType,
+        headers:
+          query.fields.headers && Object.keys(query.fields.headers).length > 0
+            ? query.fields.headers
+            : undefined,
+        queryString: query.fields.queryString || undefined,
+      })
     }
+
     return endpoints
   }
 
@@ -232,7 +330,8 @@ export class OpenAPI3 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: this.getEndpoints(),
+      endpoints: await this.getEndpoints(),
+      securityHeaders: this.getSecurityHeaders(),
     }
   }
 
@@ -258,24 +357,17 @@ export class OpenAPI3 extends OpenAPISource {
     const staticVariables = options?.staticVariables || {}
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
-      // parameters that apply to every operation in the path
-      let pathParams: OpenAPIV3.ParameterObject[] = []
-
-      // pathItemObject can be undefined
       if (!pathItemObject) {
         continue
       }
+      const pathItem = pathItemObject as OpenAPIV3.PathItemObject
+      const pathParams = this.normalizeParameters(pathItem.parameters)
 
-      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
-        if (isParameter(key, opOrParams)) {
-          const pathParameters = opOrParams as OpenAPIV3.ParameterObject[]
-          pathParams.push(...pathParameters)
+      for (let [methodName, maybeOperation] of Object.entries(pathItem)) {
+        if (!isOperation(methodName, maybeOperation)) {
           continue
         }
-        // can not be a parameter, must be an operation
-        const operation = opOrParams as OpenAPIV3.OperationObject
-
-        const methodName = key
+        const operation = maybeOperation as OpenAPIV3.OperationObject
         if (!this.isSupportedMethod(methodName)) {
           continue
         }
@@ -286,11 +378,21 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: { [key: string]: unknown } = {}
-        const mimeTypes = getMimeTypes(operation)
+        const setHeader = (headerName: string, value: unknown) => {
+          if (!headerName) {
+            return
+          }
+          const normalized = headerName.toLowerCase()
+          const existingKey = Object.keys(headers).find(
+            existing => existing.toLowerCase() === normalized
+          )
+          headers[existingKey || headerName] = value
+        }
+        const mimeTypes = this.getMimeTypes(operation)
         const primaryMimeType = mimeTypes[0]
 
         const requestBody = this.methodHasRequestBody(methodName)
-          ? getRequestBody(
+          ? this.getRequestBody(
               operation,
               operation.operationId || path,
               primaryMimeType
@@ -306,46 +408,51 @@ export class OpenAPI3 extends OpenAPISource {
           }
         }
         if (primaryMimeType) {
-          headers["Content-Type"] = primaryMimeType
+          setHeader("Content-Type", primaryMimeType)
         }
 
         // combine the path parameters with the operation parameters
-        const operationParams = operation.parameters || []
+        const operationParams = this.normalizeParameters(operation.parameters)
         const allParams = [...pathParams, ...operationParams]
 
         for (let param of allParams) {
-          if (parameterNotRef(param)) {
-            switch (param.in) {
-              case "query": {
-                let prefix = ""
-                if (queryString) {
-                  prefix = "&"
-                }
-                queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
+          let skipParameterBinding = false
+          switch (param.in) {
+            case "query": {
+              let prefix = ""
+              if (queryString) {
+                prefix = "&"
+              }
+              queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
+              break
+            }
+            case "header":
+              if (this.isSecurityHeader(param.name)) {
+                skipParameterBinding = true
                 break
               }
-              case "header":
-                headers[param.name] = `{{${param.name}}}`
-                break
-              case "path":
-                // do nothing: param is already in the path
-                break
-              case "formData":
-                // future enhancement
-                break
-            }
+              setHeader(param.name, `{{${param.name}}}`)
+              break
+            case "path":
+              // do nothing: param is already in the path
+              break
+            case "formData":
+              // future enhancement
+              break
+          }
 
-            // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
-              let defaultValue = ""
-              if (
-                schemaNotRef(param.schema) &&
-                param.schema.default !== undefined
-              ) {
-                defaultValue = String(param.schema.default)
-              }
-              ensureParameter(param.name, defaultValue)
+          if (
+            !skipParameterBinding &&
+            ["query", "header", "path"].includes(param.in)
+          ) {
+            let defaultValue = ""
+            const schema = this.resolveMaybeRef<OpenAPIV3.SchemaObject>(
+              param.schema
+            )
+            if (schema?.default !== undefined) {
+              defaultValue = String(schema.default)
             }
+            ensureParameter(param.name, defaultValue)
           }
         }
 
@@ -360,11 +467,17 @@ export class OpenAPI3 extends OpenAPISource {
           ensureParameter(variableName, defaultValue)
         }
 
+        const bodyType =
+          mimeTypes.length > 0
+            ? this.bodyTypeFromMimeType(primaryMimeType)
+            : undefined
+
         const restTemplateMetadata = this.buildRestTemplateMetadata(
           operation,
           path,
           requestBody,
-          parameters
+          parameters,
+          bodyType
         )
 
         const query = this.constructQuery(
@@ -378,9 +491,7 @@ export class OpenAPI3 extends OpenAPISource {
           parameters,
           requestBody?.body,
           requestBody?.bindings ?? {},
-          mimeTypes.length > 0
-            ? this.bodyTypeFromMimeType(primaryMimeType)
-            : undefined,
+          bodyType,
           restTemplateMetadata
         )
         queries.push(query)

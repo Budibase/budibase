@@ -102,6 +102,8 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: S3_IGNORE_SELF_SIGNED
+          value: {{ .Values.services.objectStore.ignoreSelfSigned | quote }}
         - name: CLOUDFRONT_CDN
           value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
         - name: CLOUDFRONT_PUBLIC_KEY_ID
@@ -140,6 +142,8 @@ spec:
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN
           value: {{ .Values.globals.posthogToken }}
+        - name: LITELLM_URL
+          value: {{ .Values.globals.litellmUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: INTERNAL_ACCOUNT_PORTAL_URL

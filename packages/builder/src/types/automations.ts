@@ -29,6 +29,7 @@ export enum DataMode {
   INPUT = "data_in",
   OUTPUT = "data_out",
   ERRORS = "errors",
+  AGENT = "agent",
 }
 
 export enum ViewMode {
@@ -58,6 +59,7 @@ export enum SchemaFieldTypes {
   QUERY_PARAMS = "query_params",
   QUERY_LIMIT = "query_limit",
   CATEGORIES = "categories",
+  AGENT = "agent",
 }
 
 export type KeyValuePair = {

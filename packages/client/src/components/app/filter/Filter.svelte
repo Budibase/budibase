@@ -35,6 +35,7 @@
   export let targetComponent: any
   export let size: "S" | "M" | "L" = "M"
   export let buttonText: string | undefined = "Apply"
+  export let defaultOperator: string | undefined = undefined
 
   const memoFilters = memo({} as Record<string, SearchFilter>)
   const component = getContext("component")
@@ -414,6 +415,7 @@
           {filter}
           {schema}
           {buttonText}
+          {defaultOperator}
           operators={getOperators(config, schema)}
           on:change={e => {
             if (!e.detail) {

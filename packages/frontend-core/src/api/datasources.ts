@@ -11,7 +11,6 @@ import {
   FetchDatasourceRelationshipInfoResponse,
   FetchDatasourceViewInfoRequest,
   FetchDatasourceViewInfoResponse,
-  FetchExternalSchemaResponse,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   VerifyDatasourceRequest,

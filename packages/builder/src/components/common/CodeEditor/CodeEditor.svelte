@@ -49,6 +49,7 @@
   import { Compartment, EditorState } from "@codemirror/state"
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
+  import { json } from "@codemirror/lang-json"
   import { html } from "@codemirror/lang-html"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
@@ -58,6 +59,7 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
+  import { hbsTagPlugin } from "./hbsTags"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -72,6 +74,10 @@
   export let readonlyLineNumbers = false
   export let dropdown = DropdownPosition.Relative
   export let bindings: EnrichedBinding[] = []
+  export let bindingIcons: Record<string, string | undefined> = {}
+  export let aiEnabled = true
+  export let lineWrapping = true
+  export let renderBindingsAsTags = false
 
   const dispatch = createEventDispatcher()
 
@@ -88,8 +94,7 @@
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
-  $: aiGenEnabled = mode.name === "javascript" && !readonly
-
+  $: aiGenEnabled = mode.name === "javascript" && !readonly && aiEnabled
   $: {
     if (autofocus && isEditorInitialised) {
       editor.focus()
@@ -261,7 +266,7 @@
       closeBrackets(),
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
       highlightSpecialChars(),
-      EditorView.lineWrapping,
+      ...(lineWrapping ? [EditorView.lineWrapping] : []),
       themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
   }
@@ -328,6 +333,8 @@
     if (mode.name === "javascript") {
       complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
+    } else if (mode.name === "json") {
+      complete.push(json())
     }
     // HTML only plugins
     else if (mode.name === "html") {
@@ -335,7 +342,9 @@
     }
     // HBS only plugins
     else {
-      complete.push(hbsMatchDecoPlugin)
+      renderBindingsAsTags
+        ? complete.push(hbsTagPlugin(bindingIcons))
+        : complete.push(hbsMatchDecoPlugin)
     }
 
     if (placeholder) {
@@ -494,6 +503,30 @@
   }
   .code-editor > div {
     height: 100%;
+  }
+
+  /* HBS tags */
+  :global(.hbs-tag) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #215f9e33;
+    opacity: 1;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  :global(.hbs-tag__icon) {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  :global(.hbs-tag__text) {
+    line-height: 1.3;
   }
 
   /* Active line */

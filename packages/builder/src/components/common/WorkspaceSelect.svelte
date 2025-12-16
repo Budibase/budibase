@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
@@ -220,6 +220,14 @@
         >
           {ws.name}
           <div slot="right" class="fav-slot">
+            <div class="menu-item-error-status">
+              {#if Object.keys(ws.automationErrors || {}).length}
+                <StatusLight
+                  color="var(--spectrum-global-color-static-red-600)"
+                  size="M"
+                />
+              {/if}
+            </div>
             <button
               type="button"
               class="fav-icon-button fav-icon"
@@ -289,7 +297,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
+    width: 32px;
   }
   .fav-icon-button {
     background: transparent;
@@ -385,5 +393,10 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .menu-item-error-status {
+    width: 16px !important;
+    height: 18px;
   }
 </style>
