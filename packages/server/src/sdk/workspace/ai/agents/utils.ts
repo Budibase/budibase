@@ -1,4 +1,4 @@
-import { Agent, ToolMetadata, ToolType, SourceName } from "@budibase/types"
+import { Agent, ToolMetadata, SourceName } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"

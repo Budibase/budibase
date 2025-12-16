@@ -342,11 +342,9 @@
     }
     // HBS only plugins
     else {
-      if (renderBindingsAsTags) {
-        complete.push(hbsTagPlugin(bindingIcons))
-      } else {
-        complete.push(hbsMatchDecoPlugin)
-      }
+      renderBindingsAsTags
+        ? complete.push(hbsTagPlugin(bindingIcons))
+        : complete.push(hbsMatchDecoPlugin)
     }
 
     if (placeholder) {
