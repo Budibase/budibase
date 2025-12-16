@@ -1387,6 +1387,30 @@ describe("/applications", () => {
       )
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
+
+    it("should not delete production data when unpublishing and republishing", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      // Ensure the table exists in production
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const prodRow = await config.withProdApp(() =>
+        config.api.row.save(table._id!, { name: "Prod row" })
+      )
+
+      const prodRowsBefore = await config.withProdApp(() =>
+        config.api.row.search(table._id!, { query: {} })
+      )
+      expect(prodRowsBefore.rows.find(r => r._id === prodRow._id)).toBeDefined()
+
+      await config.api.workspace.unpublish(config.getDevWorkspaceId())
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const prodRowsAfter = await config.withProdApp(() =>
+        config.api.row.search(table._id!, { query: {} })
+      )
+      expect(prodRowsAfter.rows.find(r => r._id === prodRow._id)).toBeDefined()
+    })
   })
 
   describe("delete", () => {

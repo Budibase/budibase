@@ -41,8 +41,11 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
 
     // App must have been deployed first
     const db = context.getProdWorkspaceDB({ skip_setup: true })
-    const exists = await db.exists()
-    if (!exists) {
+
+    // The production db will still exist now (16/12/25). But the existence of the metadata docs
+    // is how we define whether the app is published or not.
+    const isPublished = await db.exists(DocumentType.WORKSPACE_METADATA)
+    if (!isPublished) {
       throw new queue.UnretriableError("App must be deployed to be reverted.")
     }
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
