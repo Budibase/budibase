@@ -1,4 +1,4 @@
-import { Agent, AgentChat } from "../../../documents"
+import { Agent, AgentChat, AgentFile } from "../../../documents"
 
 export type ChatAgentRequest = AgentChat
 
@@ -16,3 +16,11 @@ export type CreateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<Agent, "createdAt" | "updatedAt">
 export type UpdateAgentResponse = Agent
+
+export interface FetchAgentFilesResponse {
+  files: AgentFile[]
+}
+
+export interface AgentFileUploadResponse {
+  file: AgentFile
+}

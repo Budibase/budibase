@@ -13,6 +13,9 @@ builderAdminRoutes
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
+  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
+  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
+  .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
