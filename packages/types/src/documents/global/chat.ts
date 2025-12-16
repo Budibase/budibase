@@ -13,10 +13,14 @@ export interface ChatApp extends Document {
 
 export interface ChatConversationRequest extends Document {
   chatAppId: string
-  userId?: string
   title?: string
   messages: UIMessage[]
 }
+
+export type CreateChatConversationRequest = Pick<
+  ChatConversationRequest,
+  "chatAppId" | "title"
+>
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string

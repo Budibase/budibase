@@ -5,6 +5,7 @@ import {
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
+  CreateChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
   UserCtx,
@@ -204,7 +205,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
 export async function createChatConversation(
   ctx: UserCtx<
-    Pick<ChatConversationRequest, "chatAppId" | "title">,
+    CreateChatConversationRequest,
     ChatConversation
   >
 ) {

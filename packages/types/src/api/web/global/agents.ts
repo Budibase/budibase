@@ -3,11 +3,14 @@ import {
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
+  CreateChatConversationRequest,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
 
 export type FetchAgentHistoryResponse = ChatConversation[]
+
+export type { CreateChatConversationRequest }
 
 export type CreateChatAppRequest = Omit<
   ChatApp,
