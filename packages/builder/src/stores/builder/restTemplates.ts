@@ -420,12 +420,12 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Ansible Automation Platform",
+      name: "Ansible AWX",
       description:
         "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
       specs: [
         {
-          version: "devel",
+          version: "v2",
           url: "https://s3.amazonaws.com/awx-public-ci-files/devel/schema.json",
         },
       ],

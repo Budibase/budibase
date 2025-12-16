@@ -3,12 +3,14 @@ export interface RestTemplateSpec {
     | `${number}-${number}-${number}`
     | `${number}.${number}`
     | `${number}.${number}.${number}`
+    | `v${number}`
   url: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
+  | "Ansible AWX"
   | "BambooHR"
   | "GitHub"
   | "Jira Cloud"
