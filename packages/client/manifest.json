@@ -8974,5 +8974,55 @@
         "defaultValue": "Send"
       }
     ]
+  },
+  "gauge": {
+    "name": "Gauge Chart",
+    "description": "Gauge chart",
+    "icon": "speedometer",
+    "size": {
+      "width": 600,
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider",
+        "required": true
+      },
+      {
+        "type": "field",
+        "label": "Label column",
+        "key": "labelColumn",
+        "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
+        "required": true
+      },
+      {
+        "type": "field",
+        "label": "Data column",
+        "key": "valueColumn",
+        "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
+        "required": true
+      }
+    ]
   }
 }
