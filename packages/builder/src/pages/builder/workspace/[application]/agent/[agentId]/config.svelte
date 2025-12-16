@@ -46,6 +46,7 @@
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import FilesPanel from "./FilesPanel.svelte"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -645,6 +646,10 @@
               {/each}
             </div>
           {/if}
+
+          <div class="section files-section">
+            <FilesPanel currentAgentId={currentAgent?._id} />
+          </div>
         </Layout>
       </div>
     </div>
@@ -912,5 +917,11 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .files-section {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
   }
 </style>
