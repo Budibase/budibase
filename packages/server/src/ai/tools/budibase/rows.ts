@@ -1,11 +1,13 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
-import { RowSearchParams, SortOrder } from "@budibase/types"
+import { RowSearchParams, SortOrder, ToolType } from "@budibase/types"
 
 export default [
   newTool({
     name: "list_rows",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "List rows in a given table",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to list rows from"),
@@ -20,6 +22,8 @@ export default [
 
   newTool({
     name: "get_row",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "Get a specific row by ID",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table"),
@@ -33,6 +37,8 @@ export default [
 
   newTool({
     name: "create_row",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description:
       "Create a new row. Only include fields that match the table schema. " +
       "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
@@ -56,6 +62,8 @@ export default [
 
   newTool({
     name: "update_row",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description:
       "Update an existing row. " +
       "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
@@ -81,6 +89,8 @@ export default [
 
   newTool({
     name: "search_rows",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description:
       "Search for rows in a table based on criteria. " +
       "IMPORTANT: You can ONLY filter on fields that exist in the table schema. " +
