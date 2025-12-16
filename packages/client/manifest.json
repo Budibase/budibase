@@ -9012,9 +9012,9 @@
         "required": true
       },
       {
-        "type": "field",
-        "label": "Data column",
-        "key": "valueColumn",
+        "type": "multifield",
+        "label": "Data columns",
+        "key": "valueColumns",
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {
