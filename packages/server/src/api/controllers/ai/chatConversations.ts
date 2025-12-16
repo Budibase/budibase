@@ -204,10 +204,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 }
 
 export async function createChatConversation(
-  ctx: UserCtx<
-    CreateChatConversationRequest,
-    ChatConversation
-  >
+  ctx: UserCtx<CreateChatConversationRequest, ChatConversation>
 ) {
   const { title } = ctx.request.body
   const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
@@ -231,7 +228,6 @@ export async function createChatConversation(
     chat: {
       _id: chatId,
       chatAppId,
-      userId,
       title,
       messages: [],
     },
