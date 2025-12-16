@@ -16,12 +16,16 @@
   export let chat: AgentChat
   export let loading: boolean = false
 
-  const dispatch = createEventDispatcher<{ chatSaved: { chatId: string } }>()
+  const dispatch = createEventDispatcher<{
+    chatSaved: { chatId?: string; chat: AgentChat }
+  }>()
 
   let inputValue = ""
   let chatAreaElement: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
+  let lastFocusedChatId: string | undefined
+  let lastFocusedNewChat: AgentChat | undefined
 
   $: if (chat?.messages?.length) {
     scrollToBottom()
@@ -75,7 +79,7 @@
       }
 
       loading = false
-      dispatch("chatSaved", { chatId: chat._id || "" })
+      dispatch("chatSaved", { chatId: chat._id, chat })
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
@@ -110,6 +114,22 @@
       textareaElement.focus()
     }
   })
+
+  $: {
+    const currentId = chat?._id
+    const isNewChat =
+      !currentId && (!chat?.messages || chat.messages.length === 0)
+    const shouldFocus =
+      textareaElement &&
+      ((currentId && currentId !== lastFocusedChatId) ||
+        (isNewChat && chat && chat !== lastFocusedNewChat))
+
+    if (shouldFocus) {
+      tick().then(() => textareaElement?.focus())
+      lastFocusedChatId = currentId
+      lastFocusedNewChat = isNewChat ? chat : undefined
+    }
+  }
 
   onDestroy(() => {
     observer.disconnect()

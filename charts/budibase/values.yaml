@@ -601,6 +601,10 @@ services:
     extraVolumeMounts: []
     # -- Additional volumes on the litellm pod.
     extraVolumes: []
+    # -- The salt key to use for litellm.
+    saltKey: ""
+    # -- The master key to use for litellm.
+    masterKey: ""
     # -- Inline configuration passed to litellm as config.yaml.
     config: |
       general_settings:
@@ -630,6 +634,10 @@ services:
     # external object store, such as S3. Remember to set `minio: false` if you
     # do this.
     url: "http://minio-service:9000"
+    # -- Set to true to skip TLS certificate verification for S3-compatible
+    # storage endpoints using self-signed certificates. Only applies when
+    # using HTTPS endpoints. Defaults to false.
+    ignoreSelfSigned: false
     # -- How much storage to give Minio in its PersistentVolumeClaim.
     storage: 2Gi
     # -- If defined, storageClassName: <storageClass> If set to "-",

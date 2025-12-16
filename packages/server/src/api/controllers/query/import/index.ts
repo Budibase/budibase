@@ -28,6 +28,25 @@ const assignStaticVariableDefaults = (
   return changed
 }
 
+const assignDatasourceHeaderDefaults = (
+  target: Record<string, any>,
+  headerNames: string[]
+) => {
+  for (const headerName of headerNames) {
+    if (!headerName) {
+      continue
+    }
+    const normalized = headerName.toLowerCase()
+    const existingKey = Object.keys(target).find(
+      key => key?.toLowerCase() === normalized
+    )
+    if (existingKey) {
+      continue
+    }
+    target[headerName] = target[headerName] ?? ""
+  }
+}
+
 export class RestImporter {
   data: string
   sources: ImportSource[]
@@ -134,16 +153,30 @@ export class RestImporter {
     const config = datasource.config || (datasource.config = {})
     const defaults = this.getStaticServerVariables()
     const tokens = Object.keys(defaults || {}).filter(Boolean)
-    if (!tokens.length) {
-      return
+    if (tokens.length) {
+      config.staticVariables = config.staticVariables || {}
+      assignStaticVariableDefaults(config.staticVariables, tokens, defaults)
+      const templateStaticVariables = new Set(
+        config.templateStaticVariables || []
+      )
+      tokens.forEach(token => templateStaticVariables.add(token))
+      config.templateStaticVariables = Array.from(templateStaticVariables)
     }
-    config.staticVariables = config.staticVariables || {}
-    assignStaticVariableDefaults(config.staticVariables, tokens, defaults)
-    const templateStaticVariables = new Set(
-      config.templateStaticVariables || []
-    )
-    tokens.forEach(token => templateStaticVariables.add(token))
-    config.templateStaticVariables = Array.from(templateStaticVariables)
+
+    const securityHeaders = this.source.getSecurityHeaders()
+    if (securityHeaders.length) {
+      if (
+        !config.defaultHeaders ||
+        typeof config.defaultHeaders !== "object" ||
+        Array.isArray(config.defaultHeaders)
+      ) {
+        config.defaultHeaders = {}
+      }
+      assignDatasourceHeaderDefaults(
+        config.defaultHeaders as Record<string, any>,
+        securityHeaders
+      )
+    }
   }
 
   getStaticServerVariables = (): Record<string, string> => {

@@ -1,33 +1,40 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
+import { ToolType } from "@budibase/types"
 
 export default [
   newTool({
     name: "list_automations",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "List all automations in the current app",
     handler: async () => {
       const automations = await sdk.automations.fetch()
-      const formatted = JSON.stringify(automations, null, 2)
-      return `Here are the automations in the current app:\n\n${formatted}`
+      return { automations }
     },
   }),
 
   newTool({
     name: "get_automation",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
+
     description: "Get details about a specific automation by ID",
     parameters: z.object({
       automationId: z.string().describe("The ID of the automation to retrieve"),
     }),
     handler: async ({ automationId }: { automationId: string }) => {
       const automation = await sdk.automations.get(automationId)
-      const formatted = JSON.stringify(automation, null, 2)
-      return `Here are the details for automation ${automationId}:\n\n${formatted}`
+      return { automation }
     },
   }),
 
   newTool({
     name: "trigger_automation",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
+
     description:
       "Manually trigger an automation with optional input data (only works for APP trigger type automations)",
     parameters: z.object({
@@ -52,15 +59,14 @@ export default [
       try {
         parsedData = JSON.parse(fields)
       } catch (error) {
-        return `Error: Invalid JSON in fields parameter: ${error}`
+        return { error: `Invalid JSON in fields parameter: ${error}` }
       }
       const result = await sdk.automations.execution.trigger(
         automationId,
         parsedData || {},
         timeout ?? undefined
       )
-      const formatted = JSON.stringify(result, null, 2)
-      return `Successfully triggered automation:\n\n${formatted}`
+      return { result }
     },
   }),
 ]

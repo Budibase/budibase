@@ -738,21 +738,9 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    let response
-    try {
-      response = await this._req(workspaceController.unpublish, undefined, {
-        appId: this.devWorkspaceId,
-      })
-    } catch (err: unknown) {
-      // Ignore attempts to unpublish when there is no published workspace.
-      if (
-        !(err instanceof Error) ||
-        !err.message.includes("Workspace has not been published")
-      ) {
-        throw err
-      }
-    }
-    this.prodWorkspaceId = undefined
+    const response = await this._req(workspaceController.unpublish, undefined, {
+      appId: this.devWorkspaceId,
+    })
     this.prodWorkspace = undefined
     return response
   }

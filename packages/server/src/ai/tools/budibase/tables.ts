@@ -1,10 +1,13 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
+import { ToolType } from "@budibase/types"
 
 export default [
   newTool({
     name: "list_tables",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "List all tables in the current app",
     parameters: z.object({
       showSchema: z
@@ -15,35 +18,30 @@ export default [
         .default(false),
     }),
     handler: async ({ showSchema }) => {
-      let tables = await sdk.tables.getAllTables()
-      let formattedTables: { id: string; tableName: string }[] = []
+      const tables = await sdk.tables.getAllTables()
       if (!showSchema) {
-        formattedTables = tables.map(table => {
-          return {
+        return {
+          tables: tables.map(table => ({
             id: table._id!,
             tableName: table.name,
-          }
-        })
+          })),
+        }
       }
-      const formatted = JSON.stringify(
-        formattedTables.length ? formattedTables : tables,
-        null,
-        2
-      )
-      return `Here are the tables in the current app:\n\n${formatted}`
+      return { tables }
     },
   }),
 
   newTool({
     name: "get_table",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to retrieve"),
     }),
     handler: async ({ tableId }: { tableId: string }) => {
       const table = await sdk.tables.getTable(tableId)
-      const formatted = JSON.stringify(table, null, 2)
-      return `Here are the details for table ${tableId}:\n\n${formatted}`
+      return { table }
     },
   }),
 ]

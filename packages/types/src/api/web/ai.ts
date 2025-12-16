@@ -1,6 +1,5 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
-import type { z } from "zod"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -32,22 +31,11 @@ export type Message =
   | AssistantMessage
   | ToolMessage
 
-export interface ToolArgs<T extends z.ZodTypeAny = z.ZodTypeAny> {
-  name: string
-  description: string
-  parameters?: T
-  handler: (args: unknown) => Promise<string>
-  strict?: boolean
-}
-
-export type Tool<T extends z.ZodTypeAny = z.ZodTypeAny> = Required<ToolArgs<T>>
-
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 
 export interface ChatCompletionRequest {
   messages: Message[]
   format?: ResponseFormat
-  useTools?: boolean
 }
 
 export interface ChatCompletionResponse {

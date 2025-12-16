@@ -4,15 +4,10 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
+import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
-import { createOpenAI } from "@ai-sdk/openai"
-import {
-  Experimental_Agent as Agent,
-  extractReasoningMiddleware,
-  stepCountIs,
-  wrapLanguageModel,
-} from "ai"
+import { Experimental_Agent as Agent, stepCountIs } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 
@@ -52,23 +47,18 @@ export async function run({
     const { systemPrompt, tools: allTools } =
       await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-    const { modelId, apiKey, baseUrl } =
+    const { modelId, apiKey, baseUrl, modelName } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-    const openai = createOpenAI({
+    const litellm = ai.createLiteLLMOpenAI({
       apiKey,
-      baseURL: baseUrl,
+      baseUrl,
       fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
     const aiTools = toAiSdkTools(allTools)
     const agent = new Agent({
-      model: wrapLanguageModel({
-        model: openai.chat(modelId),
-        middleware: extractReasoningMiddleware({
-          tagName: "think",
-        }),
-      }),
+      model: litellm.chat(modelId),
       system: systemPrompt || undefined,
       tools: aiTools,
       stopWhen: stepCountIs(30),
@@ -76,12 +66,17 @@ export async function run({
 
     const result = await agent.generate({
       prompt,
+      providerOptions: {
+        litellm: ai.getLiteLLMProviderOptions(modelName),
+      },
     })
+
+    const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
 
     return {
       success: true,
       response: result.text,
-      steps: result.steps,
+      steps,
     }
   } catch (err: any) {
     return {

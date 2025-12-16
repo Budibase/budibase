@@ -44,6 +44,8 @@
   export let textAlign
   export let embedded = false
 
+  export let collapsible = false
+
   const NavigationClasses = {
     Top: "top",
     Left: "left",
@@ -62,6 +64,7 @@
   export let titleColor // CSS color string, only affects title
 
   let mobileOpen = false
+  let navCollapsed = false
 
   // Set some layout context. This isn't used in bindings but can be used
   // determine things about the current app layout.
@@ -259,7 +262,15 @@
             : null}
           style={navStyle}
         >
-          <div class="nav nav--{typeClass} size--{navWidthClass}">
+          <div
+            class="nav nav--{typeClass} size--{navWidthClass}"
+            class:collapsed={navCollapsed}
+            on:click={() => {
+              if (navCollapsed) {
+                navCollapsed = false
+              }
+            }}
+          >
             <div class="nav-header">
               {#if enrichedNavItems.length}
                 <div class="burger">
@@ -271,23 +282,35 @@
                   />
                 </div>
               {/if}
-              <div class="logo">
+              <div class="logo" class:collapsed-logo={navCollapsed}>
                 {#if logoPosition === "top"}
                   <Logo
                     {logoUrl}
                     {logoLinkUrl}
                     {openLogoLinkInNewTab}
-                    {hideLogo}
+                    hideLogo={hideLogo && !navCollapsed}
                     {title}
                     {linkable}
                     {isInternal}
                     {getSanitizedUrl}
                   />
                 {/if}
-                {#if !hideTitle && title}
+                {#if !hideTitle && title && !navCollapsed}
                   <Heading size={titleSize} {textAlign} color={titleColor}>
                     {title}
                   </Heading>
+                {/if}
+                {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
+                  <div
+                    class="nav-toggle"
+                    on:click|stopPropagation={() =>
+                      (navCollapsed = !navCollapsed)}
+                  >
+                    <i
+                      class="ph ph-sidebar-simple"
+                      style:color={"var(--navTextColor)"}
+                    />
+                  </div>
                 {/if}
               </div>
               {#if !embedded}
@@ -301,8 +324,9 @@
               class:visible={mobileOpen}
               on:click={() => (mobileOpen = false)}
             />
-            {#if enrichedNavItems.length}
-              <div class="links" class:visible={mobileOpen}>
+
+            <div class="links" class:visible={mobileOpen}>
+              {#if enrichedNavItems.length}
                 {#each enrichedNavItems as navItem}
                   {#if evaluateNavItemConditions(navItem._conditions)}
                     <NavItem
@@ -317,14 +341,16 @@
                       leftNav={navigation === "Left"}
                       {mobile}
                       {navStateStore}
+                      collapsed={navCollapsed}
                     />
                   {/if}
                 {/each}
-              </div>
-            {/if}
+              {/if}
+            </div>
+
             {#if !embedded}
-              <div class="user left">
-                <UserMenu />
+              <div class="user left" class:collapsed={navCollapsed}>
+                <UserMenu collapsed={navCollapsed} />
                 {#if logoPosition === "bottom"}
                   <div>
                     <Logo
@@ -539,6 +565,21 @@
   }
 
   /*  Nav components */
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: var(--spacing-s);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  .nav-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  .collapsed-logo {
+    cursor: pointer;
+  }
   .burger {
     display: none;
   }
@@ -588,6 +629,21 @@
   .desktop .nav--left {
     width: 250px;
     padding: var(--spacing-xl);
+    transition: width 0.2s ease-in-out;
+  }
+  .desktop .nav--left.collapsed {
+    width: 60px;
+    padding: var(--spacing-xl) var(--spacing-m);
+    cursor: pointer;
+  }
+  .desktop .nav--left.collapsed .logo {
+    justify-content: center;
+  }
+  .desktop .nav--left.collapsed .links :global(.link),
+  .desktop .nav--left.collapsed .links :global(.dropdown .text) {
+    padding: var(--spacing-xs);
+    justify-content: center;
+    width: 100%;
   }
   .desktop .nav--left .links {
     margin-top: var(--spacing-m);
@@ -611,7 +667,12 @@
   .user.left {
     display: flex;
     flex-direction: column;
+
     gap: var(--spacing-m);
+  }
+
+  .user.left.collapsed {
+    align-items: center;
   }
   .mobile .user.left {
     display: none;
