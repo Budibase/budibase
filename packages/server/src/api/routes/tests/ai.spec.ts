@@ -659,11 +659,13 @@ describe("BudibaseAI", () => {
     })
 
     it("creates an embedding config", async () => {
+      const embeddingValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-1", key: "embed-secret-1" })
-        .post("/health/test_connection")
-        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-1" })
         .post("/key/update")
@@ -675,6 +677,7 @@ describe("BudibaseAI", () => {
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("embed-model-1")
       expect(creationScope.isDone()).toBe(true)
+      expect(embeddingValidationScope.isDone()).toBe(true)
 
       const configs = await config.api.ai.fetchConfigs()
       expect(
@@ -683,11 +686,13 @@ describe("BudibaseAI", () => {
     })
 
     it("updates an embedding config", async () => {
+      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
-        .post("/health/test_connection")
-        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-2" })
         .post("/key/update")
@@ -698,6 +703,11 @@ describe("BudibaseAI", () => {
         name: "Semantic Search",
       })
       expect(creationScope.isDone()).toBe(true)
+      expect(creationValidationScope.isDone()).toBe(true)
+
+      const updateValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
 
       const updateScope = nock(environment.LITELLM_URL)
         .patch(`/model/${created.liteLLMModelId}/update`)
@@ -710,15 +720,18 @@ describe("BudibaseAI", () => {
         name: "Updated Embeddings",
       })
       expect(updateScope.isDone()).toBe(true)
+      expect(updateValidationScope.isDone()).toBe(true)
       expect(updated.name).toBe("Updated Embeddings")
     })
 
     it("deletes an embedding config and syncs LiteLLM models", async () => {
+      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-3", key: "embed-secret-3" })
-        .post("/health/test_connection")
-        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-3" })
         .post("/key/update")
@@ -728,6 +741,7 @@ describe("BudibaseAI", () => {
         ...defaultEmbeddingRequest,
       })
       expect(creationScope.isDone()).toBe(true)
+      expect(creationValidationScope.isDone()).toBe(true)
 
       const deleteScope = nock(environment.LITELLM_URL)
         .post("/key/update", body => {

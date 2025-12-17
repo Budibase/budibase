@@ -93,6 +93,7 @@ export async function create(
     name: config.model,
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
+    configType,
   })
 
   const newConfig: CustomAIProviderConfig = {
@@ -159,6 +160,7 @@ export async function update(
     name: config.model,
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
+    configType: config.configType,
   })
 
   await liteLLM.syncKeyModels()
@@ -230,7 +232,9 @@ export async function getLiteLLMModelConfigOrThrowByType(
   apiKey: string
   baseUrl: string
 }> {
-  const aiConfig = configId ? await find(configId) : await getDefault(configType)
+  const aiConfig = configId
+    ? await find(configId)
+    : await getDefault(configType)
   if (!aiConfig) {
     throw new HTTPError(
       `${configType === AIConfigType.EMBEDDINGS ? "Embedding" : "Chat"} config not found`,
