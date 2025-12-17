@@ -14,6 +14,7 @@
   import { onMount } from "svelte"
   import {
     UI_TRANSLATIONS,
+    TRANSLATION_CATEGORY_LABELS,
     filterValidTranslationOverrides,
     type TranslationCategory,
   } from "@budibase/shared-core"
@@ -22,13 +23,8 @@
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
 
-  const categoryLabels: Record<TranslationCategory, string> = {
-    userMenu: "User menu",
-    profileModal: "Profile modal",
-    passwordModal: "Password modal",
-    picker: "Picker",
-    recaptcha: "reCAPTCHA",
-  } as const
+  const categoryLabels: Record<TranslationCategory, string> =
+    TRANSLATION_CATEGORY_LABELS
 
   const categoryKeys = Object.keys(categoryLabels) as TranslationCategory[]
 
