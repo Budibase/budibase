@@ -10,7 +10,10 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
-import { BUILDER_URLS } from "@budibase/shared-core"
+import {
+  BUILDER_URLS,
+  filterValidTranslationOverrides,
+} from "@budibase/shared-core"
 import {
   AIInnerConfig,
   Config,
@@ -28,6 +31,7 @@ import {
   isRecaptchaConfig,
   isSettingsConfig,
   isSMTPConfig,
+  isTranslationsConfig,
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
@@ -39,6 +43,7 @@ import {
   SMTPInnerConfig,
   SSOConfig,
   SSOConfigType,
+  TranslationsConfigInner,
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
@@ -299,6 +304,50 @@ export async function processRecaptchaConfig(
   }
 }
 
+function prepareTranslationsConfig(
+  ctx: UserCtx,
+  config?: TranslationsConfigInner
+): TranslationsConfigInner {
+  const defaultLocale = config?.defaultLocale || "en"
+  const locales: TranslationsConfigInner["locales"] = {}
+  const now = new Date().toISOString()
+  const updatedBy = ctx.user?._id
+
+  Object.entries(config?.locales || {}).forEach(([locale, localeConfig]) => {
+    locales[locale] = {
+      label: localeConfig?.label,
+      overrides: filterValidTranslationOverrides(localeConfig?.overrides),
+      updatedAt: localeConfig?.updatedAt || now,
+      updatedBy: localeConfig?.updatedBy || updatedBy,
+    }
+  })
+
+  if (!locales[defaultLocale]) {
+    locales[defaultLocale] = {
+      label: defaultLocale === "en" ? "English" : defaultLocale,
+      overrides: {},
+      updatedAt: now,
+      updatedBy,
+    }
+  }
+
+  return {
+    defaultLocale,
+    locales,
+  }
+}
+
+async function processTranslationsConfig(
+  ctx: UserCtx,
+  config: TranslationsConfigInner
+) {
+  const enabled = await pro.features.isTranslationsEnabled()
+  if (!enabled) {
+    throw new ForbiddenError("License does not allow translations")
+  }
+  ctx.request.body.config = prepareTranslationsConfig(ctx, config)
+}
+
 export async function save(
   ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
 ) {
@@ -334,6 +383,9 @@ export async function save(
         break
       case ConfigType.RECAPTCHA:
         await processRecaptchaConfig(config, existingConfig?.config)
+        break
+      case ConfigType.TRANSLATIONS:
+        await processTranslationsConfig(ctx, config)
         break
     }
   } catch (err: any) {
@@ -436,11 +488,11 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
       break
   }
 
-  stripSecrets(config)
+  stripSecrets(config, ctx)
   ctx.body = config
 }
 
-function stripSecrets(config: Config) {
+function stripSecrets(config: Config, ctx?: UserCtx) {
   if (isAIConfig(config)) {
     for (const key in config.config) {
       if (config.config[key].apiKey) {
@@ -459,6 +511,11 @@ function stripSecrets(config: Config) {
     }
   } else if (isRecaptchaConfig(config)) {
     config.config.secretKey = PASSWORD_REPLACEMENT
+  } else if (isTranslationsConfig(config)) {
+    config.config = prepareTranslationsConfig(
+      ctx || ({} as UserCtx),
+      config.config
+    )
   }
 }
 

@@ -10,7 +10,7 @@ import { TestConfiguration, mocks, structures } from "../../../../tests"
 
 mocks.email.mock()
 
-const { google, smtp, settings, oidc } = structures.configs
+const { google, smtp, settings, oidc, translations } = structures.configs
 
 describe("configs", () => {
   const config = new TestConfiguration()
@@ -318,6 +318,38 @@ describe("configs", () => {
           config.cloudHosted()
         })
       })
+    })
+  })
+
+  describe("translations", () => {
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.licenses.useTranslations()
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+    })
+
+    it("should save translations when feature enabled", async () => {
+      await saveConfig(translations({ "userMenu.profile": "Profile test" }))
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.en.overrides["userMenu.profile"]).toEqual(
+        "Profile test"
+      )
+    })
+
+    it("should filter invalid override keys", async () => {
+      await saveConfig(translations({ invalid: "value" }))
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.en.overrides).toEqual({})
+    })
+
+    it("should reject when translations feature disabled", async () => {
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValueOnce(false)
+      await expect(
+        saveConfig(translations({ "userMenu.profile": "Profile test" }))
+      ).rejects.toThrow("License does not allow translations")
     })
   })
 

@@ -87,6 +87,25 @@ function recaptchaValidation() {
   }).required()
 }
 
+function translationsValidation() {
+  return Joi.object({
+    defaultLocale: Joi.string().required(),
+    locales: Joi.object()
+      .pattern(
+        Joi.string(),
+        Joi.object({
+          label: Joi.string().optional().allow("", null),
+          overrides: Joi.object()
+            .pattern(Joi.string(), Joi.string().allow(""))
+            .default({}),
+          updatedAt: Joi.string().optional(),
+          updatedBy: Joi.string().optional(),
+        }).required()
+      )
+      .required(),
+  })
+}
+
 function buildConfigSaveValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
@@ -107,6 +126,7 @@ function buildConfigSaveValidation() {
           { is: ConfigType.SCIM, then: scimValidation() },
           { is: ConfigType.AI, then: aiValidation() },
           { is: ConfigType.RECAPTCHA, then: recaptchaValidation() },
+          { is: ConfigType.TRANSLATIONS, then: translationsValidation() },
         ],
       }),
   }).required().unknown(true),
