@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import {
     Button,
     Layout,
@@ -34,6 +34,7 @@
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
+  import { bb } from "@/stores/bb"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -55,6 +56,8 @@
   let hasLicenseKey: boolean
   let customModalConfig: CustomAIProviderConfig | null = null
   let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
+
+  let embeddingsConfigSection: HTMLDivElement
 
   $: isCloud = $admin.cloud
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
@@ -200,10 +203,21 @@
       }
 
       customConfigs = await aiConfigsStore.fetch()
+
+      await handleInitialScroll()
     } catch {
       notifications.error("Error fetching AI settings")
     }
   })
+
+  async function handleInitialScroll() {
+    await tick()
+    if ($bb.settings?.route?.hash === "#EmbeddingsConfig") {
+      embeddingsConfigSection?.scrollIntoView({
+        behavior: "smooth",
+      })
+    }
+  }
 </script>
 
 {#if aiConfig}
@@ -274,7 +288,11 @@
     </div>
 
     {#if privateLLMSEnabled}
-      <div class="section">
+      <div
+        class="section"
+        id="EmbeddingsConfig"
+        bind:this={embeddingsConfigSection}
+      >
         <div class="section-header">
           <div class="section-title">Chat configuration</div>
           <Button size="S" cta on:click={() => openCustomAIConfigModal()}>

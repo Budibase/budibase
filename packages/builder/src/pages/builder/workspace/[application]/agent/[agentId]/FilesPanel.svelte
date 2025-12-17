@@ -94,7 +94,7 @@
   function handleUploadClick() {
     if (!hasEmbeddingConfig) {
       notifications.info("Add an embeddings configuration to enable uploads")
-      bb.settings("/ai")
+      bb.settings("/ai#EmbeddingsConfig")
       return
     }
     fileInput?.click()
