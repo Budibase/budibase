@@ -9112,13 +9112,17 @@
         "type": "number",
         "label": "Start Angle",
         "key": "startAngle",
-        "defaultValue": 0
+        "defaultValue": 0,
+        "max": 360,
+        "min": -360
       },
       {
         "type": "number",
         "label": "End Angle",
         "key": "endAngle",
-        "defaultValue": 360
+        "defaultValue": 360,
+        "max": 360,
+        "min": -360
       },
       {
         "type": "boolean",

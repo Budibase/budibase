@@ -41,10 +41,6 @@
           value: {
             fontSize: "16px",
           },
-          total: {
-            show: true,
-            label: title,
-          },
         },
         barLabels: {
           enabled: barLabels,
