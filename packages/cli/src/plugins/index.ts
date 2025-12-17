@@ -25,6 +25,28 @@ type PluginOpts = {
   init?: PluginType
 }
 
+function cleanupPreSvelte5Backups(paths: string[]) {
+  const deleted: string[] = []
+  const failed: { path: string; error: string }[] = []
+
+  for (const p of new Set(paths.filter(Boolean))) {
+    if (!fs.existsSync(p)) {
+      continue
+    }
+    try {
+      fs.unlinkSync(p)
+      deleted.push(p)
+    } catch (err: any) {
+      failed.push({
+        path: p,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
+  return { deleted, failed }
+}
+
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
     throw new Error(
@@ -216,6 +238,13 @@ async function migrateSvelte5(opts: { yes: boolean; force: boolean }) {
     console.log(info(" - " + line))
   }
 
+  const backupCandidates = [
+    "package.json.pre-svelte5",
+    "schema.json.pre-svelte5",
+    analysis.rollupFile ? `${analysis.rollupFile}.pre-svelte5` : undefined,
+    analysis.wrapperFile ? `${analysis.wrapperFile}.pre-svelte5` : undefined,
+  ]
+
   // confirmation unless --yes
   if (!yes) {
     const confirm = await questions.confirmation("Apply these changes now?")
@@ -264,11 +293,32 @@ async function migrateSvelte5(opts: { yes: boolean; force: boolean }) {
   console.log(info("Attempting build..."))
   try {
     await runPkgCommand("build")
+    const cleaned = cleanupPreSvelte5Backups(
+      backupCandidates.filter((p): p is string => Boolean(p))
+    )
     console.log(
       success(
         "Migration completed. Your plugin was migrated to Svelte 5 and built successfully."
       )
     )
+    if (cleaned.deleted.length) {
+      console.log(
+        info(
+          `Removed ${cleaned.deleted.length} pre-svelte5 backup file(s): ${cleaned.deleted.join(
+            ", "
+          )}`
+        )
+      )
+    }
+    if (cleaned.failed.length) {
+      console.log(
+        info(
+          `Failed to remove ${cleaned.failed.length} pre-svelte5 backup file(s): ${cleaned.failed
+            .map(f => `${f.path} (${f.error})`)
+            .join(", ")}`
+        )
+      )
+    }
   } catch (err: any) {
     console.log(
       error(
@@ -313,7 +363,7 @@ export default new Command(`${CommandWord.PLUGIN}`)
       },
       {
         command: "--force",
-        help: "Proceed even if the git working directory is not clean (still creates .pre-svelte5 backups).",
+        help: "Proceed even if the git working directory is not clean (creates .pre-svelte5 backups during migration, removed on success).",
       },
     ]
   )
