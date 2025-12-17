@@ -3,6 +3,7 @@ export type TranslationCategory =
   | "profileModal"
   | "passwordModal"
   | "picker"
+  | "recaptcha"
 
 export interface TranslationDefinitionInput {
   key: string

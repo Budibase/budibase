@@ -27,6 +27,7 @@
     profileModal: "Profile modal",
     passwordModal: "Password modal",
     picker: "Picker",
+    recaptcha: "reCAPTCHA",
   } as const
 
   const categoryKeys = Object.keys(categoryLabels) as TranslationCategory[]
