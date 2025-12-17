@@ -73,16 +73,14 @@
 
   onMount(async () => {
     await plugins.load()
-    if (get(featureFlags)?.PLUGIN_AUTO_UPDATE) {
-      try {
-        await plugins.checkUpdates()
-      } catch (err: any) {
-        notifications.error(
-          err?.message
-            ? `Failed to check plugin updates: ${err.message}`
-            : "Failed to check plugin updates"
-        )
-      }
+    try {
+      await plugins.checkUpdates()
+    } catch (err: any) {
+      notifications.error(
+        err?.message
+          ? `Failed to check plugin updates: ${err.message}`
+          : "Failed to check plugin updates"
+      )
     }
   })
 
@@ -120,7 +118,7 @@
 </script>
 
 <Layout noPadding gap="S">
-  {#if $featureFlags.PLUGIN_AUTO_UPDATE && $pluginUpdates.length}
+  {#if $pluginUpdates.length}
     <Banner type="info" showCloseButton={false}>
       <div class="updates-banner">
         <div class="updates-text">

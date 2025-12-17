@@ -161,9 +161,6 @@ export async function destroy(ctx: UserCtx<void, DeletePluginResponse>) {
 export async function checkUpdates(
   ctx: UserCtx<void, PluginUpdateCheckResponse>
 ) {
-  if (!(await features.isEnabled(FeatureFlag.PLUGIN_AUTO_UPDATE))) {
-    ctx.throw(404)
-  }
   const token = ctx.query.token as string | undefined
   ctx.body = await checkUpdatesSdk({ token })
 }
@@ -171,9 +168,6 @@ export async function checkUpdates(
 export async function applyUpdates(
   ctx: UserCtx<PluginUpdateApplyRequest, PluginUpdateApplyResponse>
 ) {
-  if (!(await features.isEnabled(FeatureFlag.PLUGIN_AUTO_UPDATE))) {
-    ctx.throw(404)
-  }
   const body = ctx.request.body || {}
   ctx.body = await applyUpdatesSdk(body)
 }

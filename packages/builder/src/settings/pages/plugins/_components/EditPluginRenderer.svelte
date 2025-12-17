@@ -38,7 +38,7 @@
 </script>
 
 <div class="actions">
-  {#if $featureFlags.PLUGIN_AUTO_UPDATE && updateInfo}
+  {#if updateInfo}
     <ActionButton size="S" on:click={updatePlugin} disabled={updating}>
       {updating ? "Updating..." : "Update"}
     </ActionButton>

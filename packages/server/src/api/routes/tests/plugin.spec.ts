@@ -262,13 +262,9 @@ describe("/plugins", () => {
     const repo = "budibase/auto-update-test"
     const pluginName = "auto-update-test"
     const pluginId = `plg_${pluginName}`
-    let cleanupFlags: (() => void) | undefined
     const githubUploadMock = github.githubUpload as jest.Mock
 
     beforeEach(async () => {
-      cleanupFlags = features.testutils.setFeatureFlags(config.getTenantId(), {
-        [FeatureFlag.PLUGIN_AUTO_UPDATE]: true,
-      })
       githubUploadMock.mockImplementation(async () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), "plugin-update-"))
         return {
@@ -315,7 +311,6 @@ describe("/plugins", () => {
     })
 
     afterEach(async () => {
-      cleanupFlags?.()
       githubUploadMock.mockReset()
       await config.doInTenant(async () => {
         const db = tenancy.getGlobalDB()
@@ -399,18 +394,6 @@ describe("/plugins", () => {
         expect(updatedPlugin?.version).toEqual("1.1.0")
         expect(updatedPlugin?.origin?.latestKnownVersion).toEqual("1.1.0")
       })
-    })
-
-    it("should return 404 when feature disabled", async () => {
-      cleanupFlags?.()
-      cleanupFlags = features.testutils.setFeatureFlags(config.getTenantId(), {
-        [FeatureFlag.PLUGIN_AUTO_UPDATE]: false,
-      })
-
-      await request
-        .get(`/api/plugin/updates`)
-        .set(config.defaultHeaders())
-        .expect(404)
     })
   })
 })
