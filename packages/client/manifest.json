@@ -9107,6 +9107,22 @@
         "label": "Animate",
         "key": "animate",
         "defaultValue": true
+      },
+      {
+        "type": "number",
+        "label": "Start Angle",
+        "key": "startAngle",
+        "min": 0,
+        "max": 360,
+        "defaultValue": 0
+      },
+      {
+        "type": "number",
+        "label": "End Angle",
+        "key": "endAngle",
+        "min": 0,
+        "max": 360,
+        "defaultValue": 360
       }
     ]
   }

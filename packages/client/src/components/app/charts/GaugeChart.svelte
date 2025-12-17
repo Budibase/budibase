@@ -12,6 +12,8 @@
   export let palette
   export let c1, c2, c3, c4, c5
   export let animate
+  export let startAngle
+  export let endAngle
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -24,8 +26,11 @@
     },
     plotOptions: {
       radialBar: {
+        startAngle,
+        endAngle,
         dataLabels: {
           name: {
+            show: true,
             fontSize: "22px",
           },
           value: {
