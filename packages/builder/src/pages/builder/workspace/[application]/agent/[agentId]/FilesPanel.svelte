@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { Button, Heading, notifications, ActionButton } from "@budibase/bbui"
-  import { AgentFileStatus, type AgentFile } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import {
+    AbsTooltip,
+    ActionButton,
+    Button,
+    Heading,
+    notifications,
+  } from "@budibase/bbui"
+  import { AgentFileStatus, type AgentFile } from "@budibase/types"
 
   export let currentAgentId: string | undefined
 
@@ -160,12 +166,13 @@
             )}
           </div>
           <div class="file-actions">
-            <ActionButton
-              icon="trash"
-              size="S"
-              tooltip="Remove file"
-              on:click={() => removeFile(file)}
-            />
+            <AbsTooltip text="Remove file">
+              <ActionButton
+                icon="trash"
+                size="S"
+                on:click={() => removeFile(file)}
+              />
+            </AbsTooltip>
           </div>
         </div>
       {/each}
