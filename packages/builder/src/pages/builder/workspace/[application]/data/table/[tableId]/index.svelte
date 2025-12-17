@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, notifications } from "@budibase/bbui"
+  import { Banner, Button, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -45,6 +45,7 @@
     FieldType,
     FormulaType,
   } from "@budibase/types"
+  import { readable } from "svelte/store"
 
   let generateButton: GridGenerateButton
   let grid: Grid
@@ -54,6 +55,11 @@
   let previousTableId: string | undefined
   let tablePublishing = false
   let prodRefreshKey = 0
+  let productionEmpty = false
+  const zeroStore = readable(0)
+  const falseStore = readable(false)
+  let productionRowCountStore = zeroStore
+  let productionLoadedStore = falseStore
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -111,11 +117,10 @@
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
     isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
-  $: hasProductionData = Boolean(isDeployed)
   $: productionUnavailable =
     isInternal &&
     isProductionMode &&
-    (!hasProductionData || missingProductionDefinition)
+    (!isDeployed || missingProductionDefinition)
   $: if (!isProductionMode) {
     missingProductionDefinition = false
   }
@@ -140,6 +145,19 @@
       )
     },
   }
+
+  $: productionRowCountStore =
+    isProductionMode && gridContext ? gridContext.rowCount : zeroStore
+  $: productionLoadedStore =
+    isProductionMode && gridContext ? gridContext.loaded : falseStore
+
+  $: productionEmpty =
+    isInternal &&
+    isProductionMode &&
+    isDeployed &&
+    $productionLoadedStore &&
+    $productionRowCountStore === 0 &&
+    !missingProductionDefinition
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || [])
@@ -294,6 +312,13 @@
           {:else if !isUsersTable}
             <GridImportButton />
             <GridExportButton />
+            {#if productionEmpty}
+              <Button
+                secondary
+              >
+                Seed from Dev
+              </Button>
+            {/if}
           {/if}
         </svelte:fragment>
         <svelte:fragment slot="controls-right">

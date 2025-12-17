@@ -35,6 +35,7 @@ interface RowStore {
 interface RowDerivedStore {
   rows: RowStore["rows"]
   rowLookupMap: Readable<Record<string, IndexedUIRow>>
+  rowCount: Readable<number>
 }
 
 interface RowActionStore {
@@ -168,12 +169,15 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
     return map
   })
 
+  const rowCount = derived(rows, $rows => $rows.length)
+
   return {
     rows: {
       ...rows,
       subscribe: enrichedRows.subscribe,
     },
     rowLookupMap,
+    rowCount,
   }
 }
 
