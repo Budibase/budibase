@@ -1,8 +1,9 @@
-import { Agent, ToolMetadata, SourceName } from "@budibase/types"
+import { Agent, ToolMetadata, SourceName, WebSearchProvider } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import { createRestQueryTool, type ExecutableTool } from "../../../../ai/tools"
+import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import sdk from "../../.."
 
 export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
@@ -15,9 +16,10 @@ export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
 }
 
 export async function getAvailableTools(): Promise<ExecutableTool[]> {
-  const [queries, datasources] = await Promise.all([
+  const [queries, datasources, webSearchConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
+    sdk.webSearchConfig.get(),
   ])
 
   const restDatasourceNames = new Map(
@@ -32,7 +34,18 @@ export async function getAvailableTools(): Promise<ExecutableTool[]> {
       createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
-  return [...budibaseTools, ...restQueryTools]
+  const tools: ExecutableTool[] = [...budibaseTools, ...restQueryTools]
+
+  // Add web search tool if configured and enabled
+  if (webSearchConfig?.enabled && webSearchConfig.apiKey) {
+    if (webSearchConfig.provider === WebSearchProvider.EXA) {
+      tools.push(createExaTool(webSearchConfig.apiKey))
+    } else if (webSearchConfig.provider === WebSearchProvider.PARALLEL) {
+      tools.push(createParallelTool(webSearchConfig.apiKey))
+    }
+  }
+
+  return tools
 }
 
 export async function getAvailableToolsMetadata(): Promise<ToolMetadata[]> {

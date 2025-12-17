@@ -46,6 +46,7 @@ export enum DocumentType {
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
   AUTO_COLUMN_STATE = "autocolumn_state",
+  WEB_SEARCH_CONFIG = "websearchconfig",
 }
 
 // these are the core documents that make up the data, design

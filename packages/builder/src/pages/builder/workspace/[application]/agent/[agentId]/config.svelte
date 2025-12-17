@@ -150,8 +150,9 @@
 
   $: filteredTools =
     toolSearch.trim().length === 0
-      ? availableTools
+      ? availableTools.filter(tool => tool.sourceType !== ToolType.SEARCH)
       : availableTools.filter(tool => {
+          if (tool.sourceType === ToolType.SEARCH) return false
           const query = toolSearch.toLowerCase()
           return (
             tool.name?.toLowerCase().includes(query) ||
@@ -201,12 +202,12 @@
     .map(runtimeBinding =>
       availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
     )
-    .filter(Boolean) as EnrichedTool[]
+    .filter((tool): tool is EnrichedTool => !!tool)
 
   function getToolSourceIcon(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
-  ) {
+  ): IconInfo | undefined {
     if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
       if (ds?.restTemplate) {
@@ -217,6 +218,12 @@
         )
       } else {
         return getIntegrationIcon(IntegrationTypes.REST)
+      }
+    }
+    if (sourceType === ToolType.SEARCH) {
+      // Return a globe icon for search tools
+      return {
+        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23666' d='M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z'/%3E%3Cpath fill='%23666' d='M8 1a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z'/%3E%3C/svg%3E",
       }
     }
     return { icon: BudibaseLogo }
@@ -580,7 +587,7 @@
           <div class="section tools-section">
             <div class="title-tools-bar">
               <Heading size="XS">Tools this agent can use:</Heading>
-              <div class="tools-popover-container" />
+              <div class="tools-popover-container"></div>
               <ToolsDropdown
                 {filteredTools}
                 {toolSections}
