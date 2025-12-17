@@ -3,13 +3,17 @@ import { newTool } from ".."
 import { z } from "zod"
 
 const exaSearchParams = z.object({
-  query: z.string(),
-  num_results: z.number(),
+  query: z.string().describe("The search query to find relevant information"),
+  num_results: z
+    .number()
+    .optional()
+    .default(10)
+    .describe("Number of results to return"),
 })
 
-export const createExaTool = () =>
+export const createExaTool = (apiKey: string) =>
   newTool({
-    name: "exa",
+    name: "exa_search",
     description: "Search the web using Exa",
     sourceType: ToolType.SEARCH,
     sourceLabel: "Exa Search",
@@ -18,7 +22,7 @@ export const createExaTool = () =>
       const response = await fetch("https://api.exa.ai/search", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.EXA_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

@@ -1,7 +1,17 @@
 <script lang="ts">
-  import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import { type ToolMetadata } from "@budibase/types"
+  import {
+    Body,
+    Button,
+    ActionMenu,
+    MenuItem,
+    ActionButton,
+    Icon,
+  } from "@budibase/bbui"
+  import { type ToolMetadata, ToolType } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
+  import { webSearchConfigStore } from "@/stores/portal"
+  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
+  import { onMount } from "svelte"
 
   interface EnrichedTool extends ToolMetadata {
     readableBinding: string
@@ -14,7 +24,35 @@
   export let toolSearch: string
   export let onToolClick: (_tool: EnrichedTool) => void
   export let onAddApiConnection: () => void
+  export let onWebSearchClick: (() => void) | undefined = undefined
+
   let toolsMenu: ActionMenu | undefined
+  let webSearchConfigModal: WebSearchConfigModal
+
+  $: webSearchConfig = $webSearchConfigStore.config
+  $: webSearchEnabled = webSearchConfig?.enabled ?? false
+
+  // Find the web search tool in the available tools (if it exists)
+  $: webSearchTool = filteredTools.find(
+    tool => tool.sourceType === ToolType.SEARCH
+  )
+
+  function handleWebSearchClick() {
+    if (webSearchEnabled && webSearchTool) {
+      onToolClick(webSearchTool)
+    } else if (onWebSearchClick) {
+      onWebSearchClick()
+    }
+  }
+
+  function openWebSearchConfig() {
+    toolsMenu?.hide()
+    webSearchConfigModal?.show()
+  }
+
+  onMount(() => {
+    webSearchConfigStore.fetch()
+  })
 </script>
 
 <ActionMenu
@@ -38,14 +76,40 @@
       />
     </div>
 
-    {#if filteredTools.length === 0}
-      <div class="tool-empty">
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          No tools available
-        </Body>
+    <div class="tools-menu-content">
+      <div class="tool-section">
+        <MenuItem on:click={handleWebSearchClick}>
+          <div style="justify-content: space-between;" class="tool-item">
+            <div class="tool-item">
+              <div class="tool-item-icon">
+                <Icon name="Globe" size="S" />
+              </div>
+              <span class="tool-item-label">Web search</span>
+              {#if webSearchEnabled}
+                <Icon
+                  name="tick"
+                  size="S"
+                  color="var(--spectrum-semantic-positive-color-default)"
+                />
+              {/if}
+            </div>
+            <Icon
+              size="S"
+              name="gear"
+              hoverable={true}
+              on:click={openWebSearchConfig}
+            />
+          </div>
+        </MenuItem>
       </div>
-    {:else}
-      <div class="tools-menu-content">
+
+      {#if filteredTools.length === 0}
+        <div class="tool-empty">
+          <Body size="S" color="var(--spectrum-global-color-gray-600)">
+            No other tools available
+          </Body>
+        </div>
+      {:else}
         {#each Object.keys(toolSections) as section}
           <div class="tool-section">
             <div class="tool-section-header">
@@ -85,10 +149,12 @@
             {/each}
           </div>
         {/each}
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 </ActionMenu>
+
+<WebSearchConfigModal bind:this={webSearchConfigModal} />
 
 <style>
   .tools-menu-header {

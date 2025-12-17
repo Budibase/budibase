@@ -14,6 +14,9 @@ builderAdminRoutes
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .get("/api/agent/tools", ai.fetchTools)
+  .get("/api/agent/websearch/config", ai.getWebSearchConfig)
+  .post("/api/agent/websearch/config", ai.saveWebSearchConfig)
+  .delete("/api/agent/websearch/config", ai.deleteWebSearchConfig)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
