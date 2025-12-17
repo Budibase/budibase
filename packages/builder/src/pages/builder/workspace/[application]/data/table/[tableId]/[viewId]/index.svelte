@@ -102,7 +102,7 @@
   }
 
   const publishProductionTable = async (seedProductionTables: boolean) => {
-    if (tablePublishing) {
+    if (tablePublishing || !tableId) {
       return
     }
     tablePublishing = true
@@ -110,7 +110,7 @@
       ? "Error seeding and publishing table"
       : "Error publishing table"
     try {
-      await API.publishTable(tableId!, { seedProductionTables })
+      await API.publishTable(tableId, { seedProductionTables })
       await workspaceDeploymentStore.fetch()
       prodRefreshKey += 1
       missingProductionDefinition = false
