@@ -738,7 +738,6 @@ export default class TestConfiguration {
     const response = await this._req(workspaceController.unpublish, undefined, {
       appId: this.devWorkspaceId,
     })
-    this.prodWorkspaceId = undefined
     this.prodWorkspace = undefined
     return response
   }
