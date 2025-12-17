@@ -4,7 +4,6 @@ import { Automation, AutomationResults, Workspace } from "@budibase/types"
 import sizeof from "object-sizeof"
 import env from "../../environment"
 
-const DEFAULT_MAX_LOG_SIZE_MB = 5
 const MB_IN_BYTES = 1024 * 1024
 
 function sanitiseResults(results: AutomationResults, maxLogSizeMb: number) {
@@ -28,8 +27,7 @@ export async function storeLog(
   if (env.DISABLE_AUTOMATION_LOGS) {
     return
   }
-  const maxLogSizeMb =
-    Number(env.AUTOMATION_MAX_LOG_SIZE_MB) || DEFAULT_MAX_LOG_SIZE_MB
+  const maxLogSizeMb = env.AUTOMATION_MAX_LOG_SIZE_MB
   const bytes = sizeof(results)
   if (bytes / MB_IN_BYTES > maxLogSizeMb) {
     sanitiseResults(results, maxLogSizeMb)
