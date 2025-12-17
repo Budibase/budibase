@@ -5,9 +5,17 @@ import {
   CustomAIProviderConfig,
   DocumentType,
   PASSWORD_REPLACEMENT,
+  AIConfigType,
 } from "@budibase/types"
 import environment from "../../environment"
 import * as liteLLM from "./litellm"
+
+const withDefaults = (
+  config: CustomAIProviderConfig
+): CustomAIProviderConfig => ({
+  ...config,
+  configType: config.configType ?? AIConfigType.COMPLETIONS,
+})
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getGlobalDB()
@@ -20,6 +28,7 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .map(withDefaults)
 }
 
 export async function find(
@@ -27,17 +36,23 @@ export async function find(
 ): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getGlobalDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
-
-  return result
+  return result ? withDefaults(result) : result
 }
 
-async function ensureSingleDefault(currentId?: string) {
+async function ensureSingleDefault(
+  configType: AIConfigType,
+  currentId?: string
+) {
   const configs = await fetch()
   const db = context.getGlobalDB()
   const updates: CustomAIProviderConfig[] = []
 
   for (const config of configs) {
-    if (!config.isDefault || config._id === currentId) {
+    if (
+      config.configType !== configType ||
+      !config.isDefault ||
+      config._id === currentId
+    ) {
       continue
     }
     updates.push({
@@ -71,6 +86,7 @@ export async function create(
   await ensureLiteLLMConfigured()
 
   const db = context.getGlobalDB()
+  const configType = config.configType ?? AIConfigType.COMPLETIONS
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
@@ -88,13 +104,14 @@ export async function create(
     model: config.model,
     apiKey: config.apiKey,
     liteLLMModelId: modelId,
+    configType,
   }
 
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
 
   if (newConfig.isDefault) {
-    await ensureSingleDefault(newConfig._id)
+    await ensureSingleDefault(configType, newConfig._id)
   }
 
   await liteLLM.syncKeyModels()
@@ -121,6 +138,8 @@ export async function update(
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
+    configType:
+      config.configType ?? existing.configType ?? AIConfigType.COMPLETIONS,
   }
 
   const db = context.getGlobalDB()
@@ -128,7 +147,10 @@ export async function update(
   updatedConfig._rev = rev
 
   if (updatedConfig.isDefault) {
-    await ensureSingleDefault(updatedConfig._id)
+    await ensureSingleDefault(
+      updatedConfig.configType ?? AIConfigType.COMPLETIONS,
+      updatedConfig._id
+    )
   }
 
   await liteLLM.updateModel({
@@ -153,9 +175,11 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getDefault(): Promise<CustomAIProviderConfig | undefined> {
+async function getDefault(
+  type: AIConfigType = AIConfigType.COMPLETIONS
+): Promise<CustomAIProviderConfig | undefined> {
   const allConfigs = await fetch()
-  return allConfigs.find(c => c.isDefault)
+  return allConfigs.find(c => c.configType === type && c.isDefault)
 }
 
 async function getLiteLLMSecretKey() {
@@ -164,7 +188,7 @@ async function getLiteLLMSecretKey() {
 }
 
 export async function getLLMOrThrow() {
-  const aiConfig = await getDefault()
+  const aiConfig = await getDefault(AIConfigType.COMPLETIONS)
   if (!aiConfig) {
     throw new HTTPError("Chat config not found", 422)
   }
@@ -191,9 +215,27 @@ export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
   apiKey: string
   baseUrl: string
 }> {
-  const aiConfig = configId ? await find(configId) : await getDefault()
+  return await getLiteLLMModelConfigOrThrowByType(
+    configId,
+    AIConfigType.COMPLETIONS
+  )
+}
+
+export async function getLiteLLMModelConfigOrThrowByType(
+  configId?: string,
+  configType: AIConfigType = AIConfigType.COMPLETIONS
+): Promise<{
+  modelName: string
+  modelId: string
+  apiKey: string
+  baseUrl: string
+}> {
+  const aiConfig = configId ? await find(configId) : await getDefault(configType)
   if (!aiConfig) {
-    throw new HTTPError("Chat config not found", 400)
+    throw new HTTPError(
+      `${configType === AIConfigType.EMBEDDINGS ? "Embedding" : "Chat"} config not found`,
+      400
+    )
   }
 
   const secretKey = await getLiteLLMSecretKey()

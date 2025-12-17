@@ -1,4 +1,4 @@
-import type { AgentFile } from "@budibase/types"
+import { AIConfigType, type AgentFile } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
 import { parse as parseYaml } from "yaml"
@@ -39,7 +39,10 @@ const yamlExtensions = new Set([".yaml", ".yml"])
 const buildRagConfig = async (): Promise<RagConfig> => {
   try {
     const { apiKey, baseUrl, modelId } =
-      await sdk.embeddingConfigs.getLiteLLMEmbeddingConfigOrThrow()
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrowByType(
+        undefined,
+        AIConfigType.EMBEDDINGS
+      )
     return {
       databaseUrl: environment.LITELLM_DATABASE_URL,
       embeddingModel: modelId,

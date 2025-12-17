@@ -168,6 +168,9 @@ export async function syncKeyModels() {
   }
 
   const aiConfigs = await sdk.aiConfigs.fetch()
+  const modelIds = aiConfigs
+    .map(c => c.liteLLMModelId)
+    .filter((id): id is string => !!id)
 
   const requestOptions = {
     method: "POST",
@@ -177,7 +180,7 @@ export async function syncKeyModels() {
     },
     body: JSON.stringify({
       key: liteLLM.keyId,
-      models: aiConfigs.map(c => c.liteLLMModelId),
+      models: modelIds,
     }),
   }
 
