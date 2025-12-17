@@ -34,7 +34,8 @@
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { getContext } from "svelte"
-  import { API } from "@/api"
+  import { onDestroy } from "svelte"
+  import { API, productionAPI } from "@/api"
   import {
     DataEnvironmentMode,
     type Table,
@@ -45,7 +46,6 @@
     FieldType,
     FormulaType,
   } from "@budibase/types"
-  import { readable } from "svelte/store"
 
   let generateButton: GridGenerateButton
   let grid: Grid
@@ -56,10 +56,8 @@
   let tablePublishing = false
   let prodRefreshKey = 0
   let productionEmpty = false
-  const zeroStore = readable(0)
-  const falseStore = readable(false)
-  let productionRowCountStore = zeroStore
-  let productionLoadedStore = falseStore
+  let productionHasRows = true
+  let productionRowUnsubscribe: (() => void) | null = null
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -146,17 +144,41 @@
     },
   }
 
-  $: productionRowCountStore =
-    isProductionMode && gridContext ? gridContext.rowCount : zeroStore
-  $: productionLoadedStore =
-    isProductionMode && gridContext ? gridContext.loaded : falseStore
+  const syncProductionRowSubscription = (
+    shouldSubscribe: boolean,
+    context?: GridStore
+  ) => {
+    productionRowUnsubscribe?.()
+    productionRowUnsubscribe = null
+    if (!shouldSubscribe) {
+      productionHasRows = false
+      return
+    }
+    productionHasRows = true
+    checkProductionRowPresence()
+    if (context?.rowCount?.subscribe) {
+      const triggerCheck = () => {
+        productionHasRows = true
+        checkProductionRowPresence()
+      }
+      productionRowUnsubscribe = context.rowCount.subscribe(triggerCheck)
+    }
+  }
+
+  $: syncProductionRowSubscription(
+    isInternal &&
+      isProductionMode &&
+      isDeployed &&
+      !missingProductionDefinition &&
+      Boolean(id),
+    gridContext
+  )
 
   $: productionEmpty =
     isInternal &&
     isProductionMode &&
     isDeployed &&
-    $productionLoadedStore &&
-    $productionRowCountStore === 0 &&
+    !productionHasRows &&
     !missingProductionDefinition
 
   const makeRowActionButtons = (actions: any[]) => {
@@ -251,6 +273,31 @@
     }
     tablePublishing = false
   }
+
+  const checkProductionRowPresence = async () => {
+    const tableId = id
+    if (!tableId) {
+      return
+    }
+    try {
+      const res = await productionAPI.searchTable(tableId, {
+        query: {},
+        limit: 1,
+        paginate: true,
+      })
+      if (tableId === id) {
+        productionHasRows = Boolean(res?.rows?.length)
+      }
+    } catch (error) {
+      if (tableId === id) {
+        productionHasRows = true
+      }
+    }
+  }
+
+  onDestroy(() => {
+    productionRowUnsubscribe?.()
+  })
 </script>
 
 {#if $tables?.selected?.name}

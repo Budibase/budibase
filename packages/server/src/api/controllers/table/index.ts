@@ -55,7 +55,7 @@ import { handleDataImport } from "./utils"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
-import { getDocParams, getRowParams } from "../../../db/utils"
+import { getRowParams } from "../../../db/utils"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -347,7 +347,10 @@ export async function publish(
         })
       }
     } catch (error) {
-      console.warn(`Failed to copy dev rows to prod for table ${tableId}`, error)
+      console.warn(
+        `Failed to copy dev rows to prod for table ${tableId}`,
+        error
+      )
     }
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
