@@ -9012,7 +9012,7 @@
         "required": true
       },
       {
-        "type": "multifield",
+        "type": "field",
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
@@ -9022,6 +9022,21 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "boolean",
+        "label": "Automatic Max Value",
+        "key": "autoMaxValue"
+      },
+      {
+        "type": "text",
+        "label": "Max Value",
+        "key": "maxValue",
+        "info": "Defaults to the largest value selected.",
+        "dependsOn": {
+          "setting": "autoMaxValue",
+          "invert": true
+        }
       }
     ]
   }

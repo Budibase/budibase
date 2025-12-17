@@ -5,17 +5,18 @@
   export let dataProvider
   export let labelColumn
   export let valueColumns
+  export let autoMaxValue
+  export let maxValue
 
-  console.log(Array.isArray(valueColumns))
   //   export let title
   //   export let palette
   //   export let c1, c2, c3, c4, c5
 
-  $: series = getSeries(dataProvider, valueColumns)
+  $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
 
   $: options = {
-    series: series || [10, 10, 8],
+    series,
     chart: {
       height: 350,
       type: "radialBar",
@@ -34,7 +35,7 @@
             label: "Total",
             formatter: function (w) {
               // By default this function returns the average of all series. The below is just an example to show the use of custom formatter function
-              return 249
+              return 249 + " " + maxValue
             },
           },
         },
@@ -43,23 +44,34 @@
     labels: categories,
   }
 
-  // Coppied this from BarChart.Svelte - seems to be causing issues here, will rectify in the morning.
-  const getSeries = (dataProvider, valueColumns = []) => {
+  const getSeries = (dataProvider, valueColumn, autoMaxValue, maxValue) => {
     const rows = dataProvider.rows ?? []
 
-    return valueColumns.map(column => ({
-      name: column,
-      data: rows.map(row => {
-        const value = row?.[column]
-        console.log("54")
-        if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
-          console.log("THIS WAS TRYE")
-          return Date.parse(value)
-        }
+    const mappedValues = rows.map(row => {
+      const value = row?.[valueColumn]
 
-        return value
-      }),
-    }))
+      if (dataProvider?.schema?.[valueColumn]?.type === "datetime" && value) {
+        return Date.parse(value)
+      }
+
+      // This chart doesn't automatically parse strings into numbers
+      const numValue = parseFloat(value)
+      if (isNaN(numValue)) {
+        return 0
+      }
+
+      return numValue
+    })
+
+    if (autoMaxValue) {
+      const maxValue = Math.max(...mappedValues)
+      const autoMaxMappedValues = mappedValues.map(value => {
+        return (value / maxValue) * 100
+      })
+      console.log("autoMaxMappedValues", autoMaxMappedValues)
+      return autoMaxMappedValues
+    }
+    return mappedValues
   }
 
   const getCategories = (dataProvider, labelColumn) => {
@@ -76,7 +88,6 @@
       return value
     })
 
-    console.log(returnValue)
     return returnValue
   }
 </script>
