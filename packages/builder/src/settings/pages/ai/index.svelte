@@ -15,8 +15,8 @@
     aiConfigsStore,
     featureFlags,
     licensing,
+    auth,
   } from "@/stores/portal"
-  import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
@@ -30,6 +30,7 @@
     ConfigType,
     type AIConfig,
     type ProviderConfig,
+    AIConfigType,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
@@ -53,6 +54,7 @@
   let providers: { provider: AIProvider; config: ProviderConfig }[]
   let hasLicenseKey: boolean
   let customModalConfig: CustomAIProviderConfig | null = null
+  let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
 
   $: isCloud = $admin.cloud
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
@@ -66,7 +68,13 @@
       }))
     : []
 
-  $: customConfigs = $aiConfigsStore.customConfigs
+  $: customConfigs = $aiConfigsStore.customConfigs || []
+  $: chatConfigs = customConfigs.filter(
+    config => config.configType === AIConfigType.COMPLETIONS
+  )
+  $: embeddingConfigs = customConfigs.filter(
+    config => config.configType === AIConfigType.EMBEDDINGS
+  )
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -141,7 +149,11 @@
     await saveConfig(aiConfig)
   }
 
-  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
+  function openCustomAIConfigModal(
+    config?: CustomAIProviderConfig,
+    type: AIConfigType = AIConfigType.COMPLETIONS
+  ) {
+    modalConfigType = type
     customModalConfig = config
       ? {
           ...config,
@@ -270,9 +282,9 @@
           </Button>
         </div>
 
-        {#if customConfigs.length}
+        {#if chatConfigs.length}
           <div class="ai-list">
-            {#each customConfigs as config (config._id)}
+            {#each chatConfigs as config (config._id)}
               <CustomAIConfigTile
                 {config}
                 editHandler={() => openCustomAIConfigModal(config)}
@@ -282,6 +294,36 @@
         {:else}
           <div class="no-enabled">
             <Body size="S">No chat configurations yet</Body>
+          </div>
+        {/if}
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Embeddings configuration</div>
+          <Button
+            size="S"
+            cta
+            on:click={() =>
+              openCustomAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
+          >
+            Add configuration
+          </Button>
+        </div>
+
+        {#if embeddingConfigs.length}
+          <div class="ai-list">
+            {#each embeddingConfigs as config (config._id)}
+              <CustomAIConfigTile
+                {config}
+                editHandler={() =>
+                  openCustomAIConfigModal(config, AIConfigType.EMBEDDINGS)}
+              />
+            {/each}
+          </div>
+        {:else}
+          <div class="no-enabled">
+            <Body size="S">No embeddings configurations yet</Body>
           </div>
         {/if}
       </div>
@@ -311,6 +353,7 @@
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
     config={customModalConfig}
+    type={modalConfigType}
     on:hide={() => {
       customConfigModal.hide()
     }}
