@@ -8,12 +8,17 @@
   export let autoMaxValue
   export let maxValue
 
-  //   export let title
+  export let title
   export let palette
   export let c1, c2, c3, c4, c5
   export let animate
   export let startAngle
   export let endAngle
+  export let showTrack
+  export let lineCap
+  export let barLabels
+  export let offsetX
+  export let offsetY
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -38,12 +43,17 @@
           },
           total: {
             show: true,
-            label: "Total",
-            formatter: function (w) {
-              // By default this function returns the average of all series. The below is just an example to show the use of custom formatter function
-              return 249 + " " + maxValue
-            },
+            label: title,
           },
+        },
+        barLabels: {
+          enabled: barLabels,
+          useSeriesColors: true,
+          offsetX,
+          offsetY,
+        },
+        track: {
+          show: showTrack,
         },
       },
     },
@@ -51,6 +61,9 @@
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     animations: {
       enabled: animate,
+    },
+    stroke: {
+      lineCap: lineCap,
     },
   }
 
