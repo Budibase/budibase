@@ -1,12 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    ActionMenu,
-    MenuItem,
-    ActionButton,
-    Icon,
-  } from "@budibase/bbui"
+  import { Body, Button, ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import { type ToolMetadata, ToolType } from "@budibase/types"
   import type { IconInfo } from "@/helpers/integrationIcons"
   import { webSearchConfigStore } from "@/stores/portal"
