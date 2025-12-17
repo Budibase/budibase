@@ -31,7 +31,7 @@
     class="anchor"
     style:top={`${$contextMenuStore.position.y}px`}
     style:left={`${$contextMenuStore.position.x}px`}
-  />
+  ></div>
 {/key}
 
 <Popover

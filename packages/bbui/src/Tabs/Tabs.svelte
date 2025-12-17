@@ -123,14 +123,14 @@
       class="spectrum-Tabs-selectionIndicator"
       class:emphasized
       style="width: {width}; height: {height}; left: {left}; top: {top};"
-    />
+    ></div>
   {/if}
 </div>
 
 <div
   class="spectrum-Tabs-content spectrum-Tabs-content-{_id}"
   class:noPadding
-/>
+></div>
 
 <style>
   .spectrum-Tabs--quiet {

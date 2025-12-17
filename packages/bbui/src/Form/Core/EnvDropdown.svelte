@@ -154,7 +154,7 @@
                 <div class="spectrum-Menu-itemLabel">
                   <div class="primary-text">
                     {variable.name}
-                    <span />
+                    <span></span>
                   </div>
                 </div>
               </li>

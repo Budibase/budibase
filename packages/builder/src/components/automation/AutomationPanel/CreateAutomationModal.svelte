@@ -12,6 +12,8 @@
   } from "@budibase/bbui"
   import { TriggerStepID } from "@/constants/backend/automations"
 
+  $goto
+
   export let webhookModal
 
   let name

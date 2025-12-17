@@ -11,6 +11,8 @@
   } from "@/constants/backend"
   import { TableNames } from "@/constants"
 
+  $goto
+
   let modal
 
   $: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)

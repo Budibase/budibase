@@ -161,7 +161,7 @@
 </script>
 
 <div class="title">
-  <div class="heading" />
+  <div class="heading"></div>
 </div>
 <div class="flow">
   <SvelteFlow

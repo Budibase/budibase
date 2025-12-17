@@ -137,7 +137,7 @@
                     style="--color:{colorOption};"
                     class="circle"
                     class:selected={colorOption === option.color}
-                  />
+                  ></div>
                 {/each}
               </div>
             </Popover>

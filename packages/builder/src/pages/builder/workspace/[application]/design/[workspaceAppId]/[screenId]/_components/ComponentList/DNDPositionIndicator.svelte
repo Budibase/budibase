@@ -35,7 +35,7 @@
     class:inside={position === DropPosition.INSIDE}
     class="indicator"
     style="--x:{x}px; --y:{y}px; --width:{width}px; --height:{height}px"
-  />
+  ></div>
 {/if}
 
 <style>

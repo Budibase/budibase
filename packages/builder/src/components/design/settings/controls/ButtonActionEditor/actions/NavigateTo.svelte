@@ -48,7 +48,7 @@
       options={$urlOptions}
       appendBindingsAsOptions={false}
     />
-    <div />
+    <div></div>
     <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
   {:else}
     <DrawerBindableInput
@@ -60,7 +60,7 @@
       }}
       {bindings}
     />
-    <div />
+    <div></div>
     <Checkbox text="New Tab" bind:value={parameters.externalNewTab} />
   {/if}
 </div>

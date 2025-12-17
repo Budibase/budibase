@@ -153,7 +153,7 @@
       />
     {/if}
     {#if loading}
-      <div class="overlay" />
+      <div class="overlay"></div>
       <div class="loading">
         <ProgressCircle />
       </div>

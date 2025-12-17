@@ -166,7 +166,7 @@
           minHeight={100}
           placeholder="https://external.api.com&#013;https://*.domain.com"
         />
-        <div />
+        <div></div>
         <div class="buttons" use:routeActions>
           {#if !isNew}
             <Button warning quiet on:click={requestDeletion}>Delete</Button>

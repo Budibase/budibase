@@ -75,7 +75,7 @@
   style={`--color:${data.color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
   bind:this={anchor}
 >
-  <div class="color" />
+  <div class="color"></div>
   <div class="content">
     <div class="text">
       <div class="name">
