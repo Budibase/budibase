@@ -45,6 +45,7 @@
   }
 
   const getSeries = (dataProvider, valueColumn, autoMaxValue, maxValue) => {
+    console.log("getSeries is called!", maxValue)
     const rows = dataProvider.rows ?? []
 
     const mappedValues = rows.map(row => {
@@ -63,13 +64,24 @@
       return numValue
     })
 
+    // autoMaxValue - sets the highest value found to be a completed chart
     if (autoMaxValue) {
-      const maxValue = Math.max(...mappedValues)
+      const highestValuePassed = Math.max(...mappedValues)
       const autoMaxMappedValues = mappedValues.map(value => {
+        return (value / highestValuePassed) * 100
+      })
+      return autoMaxMappedValues
+    }
+
+    // customMaxValue - sets the top of the chart to that value, represents all values as a percentage of that value
+    console.log({ autoMaxValue }, Number(maxValue))
+    if (!autoMaxValue && Number(maxValue)) {
+      console.log("HEREREEREERERRRE")
+      const customMaxMappedValues = mappedValues.map(value => {
         return (value / maxValue) * 100
       })
-      console.log("autoMaxMappedValues", autoMaxMappedValues)
-      return autoMaxMappedValues
+      console.log({ customMaxMappedValues })
+      return customMaxMappedValues
     }
     return mappedValues
   }
