@@ -51,9 +51,11 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
+import { handleDataImport } from "./utils"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
+import { getDocParams, getRowParams } from "../../../db/utils"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -318,6 +320,35 @@ export async function publish(
   const seedProductionTables = !!ctx.request.body?.seedProductionTables
   if (!prodPublished) {
     await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
+  }
+  if (seedProductionTables) {
+    try {
+      const devDb = context.getWorkspaceDB()
+      const devRows = await devDb.allDocs(
+        getRowParams(tableId, null, {
+          include_docs: true,
+        })
+      )
+      const importRows = devRows.rows
+        .map(({ doc }: any) => doc)
+        .filter(doc => doc && !doc._deleted)
+        .map(doc => {
+          const { _rev, _attachments, ...rest } = doc
+          return rest
+        })
+
+      if (importRows.length) {
+        await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+          const prodTable = await sdk.tables.getTable(tableId)
+          await handleDataImport(prodTable, {
+            importRows,
+            userId: ctx.user._id,
+          })
+        })
+      }
+    } catch (error) {
+      console.warn(`Failed to copy dev rows to prod for table ${tableId}`, error)
+    }
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
   const matchesTable = (_id: string) =>

@@ -315,6 +315,8 @@
             {#if productionEmpty}
               <Button
                 secondary
+                disabled={tablePublishing}
+                on:click={() => publishProductionTable(true)}
               >
                 Seed from Dev
               </Button>
