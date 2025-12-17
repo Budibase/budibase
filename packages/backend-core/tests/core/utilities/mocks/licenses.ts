@@ -115,6 +115,10 @@ export const usePkceOidc = () => {
   return useFeature(Feature.PKCE_OIDC)
 }
 
+export const useTranslations = () => {
+  return useFeature(Feature.TRANSLATIONS)
+}
+
 export const useBudibaseAI = (opts?: { monthlyQuota?: number }) => {
   return useFeature(Feature.BUDIBASE_AI, {
     monthlyQuotas: [
