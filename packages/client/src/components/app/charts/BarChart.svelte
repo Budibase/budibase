@@ -111,7 +111,7 @@
   const getSeries = (dataProvider, valueColumns = []) => {
     const rows = dataProvider.rows ?? []
 
-    const mappedValueColumns = valueColumns.map(column => ({
+    return valueColumns.map(column => ({
       name: column,
       data: rows.map(row => {
         const value = row?.[column]
@@ -119,13 +119,10 @@
         if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
           return Date.parse(value)
         }
-        console.log("value", value)
+
         return value
       }),
     }))
-
-    console.log("mappedValueColumns", mappedValueColumns)
-    return mappedValueColumns
   }
 
   const getCategories = (dataProvider, labelColumn) => {
