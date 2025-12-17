@@ -9,8 +9,9 @@
   export let maxValue
 
   //   export let title
-  //   export let palette
-  //   export let c1, c2, c3, c4, c5
+  export let palette
+  export let c1, c2, c3, c4, c5
+  export let animate
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -42,6 +43,10 @@
       },
     },
     labels: categories,
+    colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
+    animations: {
+      enabled: animate,
+    },
   }
 
   const getSeries = (dataProvider, valueColumn, autoMaxValue, maxValue) => {
