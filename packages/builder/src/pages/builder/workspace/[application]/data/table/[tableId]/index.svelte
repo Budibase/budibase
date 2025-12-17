@@ -155,13 +155,14 @@
       return
     }
     productionHasRows = true
-    checkProductionRowPresence()
     if (context?.rowCount?.subscribe) {
       const triggerCheck = () => {
         productionHasRows = true
         checkProductionRowPresence()
       }
       productionRowUnsubscribe = context.rowCount.subscribe(triggerCheck)
+    } else {
+      checkProductionRowPresence()
     }
   }
 
