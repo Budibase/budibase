@@ -18,8 +18,6 @@
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
   import { routeActions } from "@/settings/pages"
-  import { featureFlags } from "@/stores/portal"
-  import { get } from "svelte/store"
 
   const schema = {
     name: {

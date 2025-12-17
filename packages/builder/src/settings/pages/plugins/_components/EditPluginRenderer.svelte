@@ -2,7 +2,6 @@
   import { ActionButton, Modal, notifications } from "@budibase/bbui"
   import EditPluginModal from "./EditPluginModal.svelte"
   import { plugins } from "@/stores/portal/plugins"
-  import { featureFlags } from "@/stores/portal"
 
   export let row
 

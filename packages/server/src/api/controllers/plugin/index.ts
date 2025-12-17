@@ -1,4 +1,4 @@
-import { plugins as pluginCore, features } from "@budibase/backend-core"
+import { plugins as pluginCore } from "@budibase/backend-core"
 import {
   PluginType,
   PluginSource,
@@ -14,7 +14,6 @@ import {
   PluginUpdateApplyRequest,
   PluginUpdateApplyResponse,
   PluginUpdateCheckResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import { sdk as pro } from "@budibase/pro"
 import {

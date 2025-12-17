@@ -323,7 +323,7 @@
 </Modal>
 
 {#await initPromise}
-  <div class="loading" />
+  <div class="loading"></div>
 {:then _}
   {#if $loaded || $admin.maintenance.length}
     <div class="content">

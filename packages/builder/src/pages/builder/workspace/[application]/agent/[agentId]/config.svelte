@@ -219,7 +219,7 @@
         return getIntegrationIcon(IntegrationTypes.REST)
       }
     }
-    return { icon: BudibaseLogo as any }
+    return { icon: BudibaseLogo }
   }
 
   const slugify = (str: string) =>
