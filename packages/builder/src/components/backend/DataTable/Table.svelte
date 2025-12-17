@@ -8,6 +8,9 @@
   import { createEventDispatcher } from "svelte"
   import { canBeSortColumn } from "@budibase/frontend-core"
 
+  $goto
+  $params
+
   export let schema = {}
   export let data = []
   export let tableId

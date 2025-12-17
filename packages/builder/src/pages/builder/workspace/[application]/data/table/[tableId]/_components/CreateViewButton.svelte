@@ -12,6 +12,8 @@
   import { viewsV2 } from "@/stores/builder"
   import { ViewV2Type } from "@budibase/types"
 
+  $goto
+
   export let table
   export let firstView = false
 

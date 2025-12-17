@@ -5,6 +5,8 @@
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { DataEnvironmentMode } from "@budibase/types"
 
+  $goto
+
   export let datasource
 
   let name = ""

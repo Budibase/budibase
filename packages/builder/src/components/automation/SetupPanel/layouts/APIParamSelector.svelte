@@ -23,6 +23,9 @@
   import { type AutomationContext } from "@/stores/builder/automations"
   import { runtimeToReadableBinding } from "@/dataBinding"
 
+  $goto
+  $params
+
   const dispatch = createEventDispatcher()
 
   type QueryWithIcon = Query & {

@@ -3,6 +3,8 @@
   import { redirect } from "@roxi/routify"
   import { CookieUtils } from "@budibase/frontend-core"
 
+  $redirect
+
   // If already authenticated, redirect away from the auth section.
   // Check this onMount rather than a reactive statement to avoid trumping
   // the login return URL functionality.

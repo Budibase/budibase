@@ -55,7 +55,7 @@
   aria-hidden={hidden ? "true" : "false"}
   aria-label={tooltip || name}
   title={tooltip}
-/>
+></i>
 
 <style>
   i {

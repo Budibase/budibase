@@ -5,6 +5,8 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { params } from "@roxi/routify"
 
+  $params
+
   let newScreenModal: NewScreen
 
   $: workspaceAppId = $params.workspaceAppId

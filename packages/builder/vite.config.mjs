@@ -3,6 +3,7 @@ import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 import path from "path"
+import { fileURLToPath } from "url"
 import typescript from "@rollup/plugin-typescript"
 
 const ignoredWarnings = [
@@ -11,6 +12,7 @@ const ignoredWarnings = [
   "module-script-reactive-declaration",
   "a11y-no-onchange",
   "a11y-click-events-have-key-events",
+  "element_invalid_self_closing_tag",
 ]
 
 const copyFonts = dest =>
@@ -42,6 +44,7 @@ const copyFonts = dest =>
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
   const env = loadEnv(mode, process.cwd())
+  const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
   // Plugins to only run in dev
   const devOnlyPlugins = [
@@ -76,8 +79,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       typescript({ outDir: "../server/builder/dist" }),
       svelte({
-        hot: !isProduction,
+        // Ensure this package's Svelte config is used
+        configFile: path.resolve(__dirname, "svelte.config.mjs"),
         emitCss: true,
+        // HMR is enabled automatically in dev; prefer compilerOptions.hmr (see svelte.config.mjs)
         onwarn: (warning, handler) => {
           // Ignore some warnings
           if (!ignoredWarnings.includes(warning.code)) {
@@ -96,11 +101,18 @@ export default defineConfig(({ mode }) => {
       ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
+      // Let vite-plugin-svelte manage Svelte library prebundling
       exclude: ["@roxi/routify", "fsevents"],
     },
     resolve: {
-      conditions: mode === "test" ? ["browser"] : [],
-      dedupe: ["@roxi/routify"],
+      conditions:
+        mode === "test"
+          ? ["browser"]
+          : !isProduction
+            ? ["svelte", "development", "browser", "default"]
+            : ["svelte", "production", "browser", "default"],
+
+      dedupe: ["@roxi/routify", "svelte"],
       alias: {
         "@budibase/types": path.resolve(__dirname, "../types/src"),
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),

@@ -45,7 +45,7 @@
     class="{iconClass} {size}"
     on:click={onClick}
     class:hoverable={onClick != null}
-  />
+  ></i>
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles}>
     <Placeholder />

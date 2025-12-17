@@ -70,7 +70,7 @@
     class="divider"
     class:disabled={searching}
     use:resizableHandle
-  />
+  ></div>
 </div>
 
 <NewScreenModal bind:this={newScreenModal} {workspaceAppId} />

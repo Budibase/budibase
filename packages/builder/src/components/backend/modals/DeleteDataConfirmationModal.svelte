@@ -18,6 +18,9 @@
   import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
+  $goto
+  $params
+
   export let source: Table | ViewV2 | Datasource | Query | undefined
 
   let confirmDeleteDialog: any
