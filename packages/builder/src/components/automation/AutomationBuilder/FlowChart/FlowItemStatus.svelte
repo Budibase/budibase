@@ -189,7 +189,7 @@
       <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
       >
     {:else}
-      <span />
+      <span></span>
     {/if}
     {#if isRunning && !isTriggerBlock}
       <span class="flow-blue flow-running flow-status-btn">

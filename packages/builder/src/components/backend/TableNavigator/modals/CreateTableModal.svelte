@@ -9,6 +9,9 @@
     DB_TYPE_INTERNAL,
   } from "@/constants/backend"
 
+  $goto
+  $url
+
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(
     source => source._id === $datasources.selected

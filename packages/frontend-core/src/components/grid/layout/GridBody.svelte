@@ -14,7 +14,7 @@
     dispatch,
     isDragging,
     config,
-    props,
+    props: gridProps,
   } = getContext("grid")
 
   let body
@@ -66,7 +66,7 @@
       </div>
     {/if}
   </GridScrollWrapper>
-  {#if $props.buttons?.length}
+  {#if $gridProps.buttons?.length}
     <ButtonColumn />
   {/if}
 </div>

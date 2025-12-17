@@ -196,7 +196,7 @@
     class="fill {themeClasses}"
     style={value ? `background: ${value};` : ""}
     class:placeholder={!value}
-  />
+  ></div>
 </div>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

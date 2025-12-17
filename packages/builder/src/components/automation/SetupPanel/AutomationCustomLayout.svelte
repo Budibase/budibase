@@ -22,7 +22,9 @@
         {bindings}
         {block}
         {context}
-        on:change={config.onChange}
+        on:change={e => {
+          if (config?.onChange) config.onChange(e)
+        }}
       />
     {:else}
       <PropField
@@ -36,7 +38,9 @@
           {bindings}
           {block}
           {context}
-          on:change={config.onChange}
+          on:change={e => {
+            if (config?.onChange) config.onChange(e)
+          }}
         />
       </PropField>
     {/if}

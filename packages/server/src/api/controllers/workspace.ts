@@ -351,6 +351,11 @@ export async function fetchAppPackage(
     application.usedPlugins
   )
 
+  // Ensure used plugins include schema metadata (e.g. schema.metadata.svelteMajor)
+  application.usedPlugins = await sdk.plugins.enrichUsedPluginSvelteMajors(
+    application.usedPlugins
+  )
+
   // Enrich PWA icon URLs if they exist
   if (application.pwa?.icons && application.pwa.icons.length > 0) {
     application.pwa.icons = await objectStore.enrichPWAImages(

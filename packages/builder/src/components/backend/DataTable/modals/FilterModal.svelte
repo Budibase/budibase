@@ -181,7 +181,7 @@
         {:else}
           <Icon hoverable name="x" on:click={() => removeFilter(idx)} />
           <!-- empty div to preserve spacing -->
-          <div />
+          <div></div>
         {/if}
       {/each}
     </div>

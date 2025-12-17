@@ -99,7 +99,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="root">
-  <div class="spacer" />
+  <div class="spacer"></div>
   {#each fields as field, idx}
     <div class="field">
       <Input
@@ -119,7 +119,7 @@
         on:click={() => {
           removeField(idx)
         }}
-      />
+      ></i>
     </div>
   {/each}
   <Button quiet secondary icon="plus" on:click={addField}>Add field</Button>
