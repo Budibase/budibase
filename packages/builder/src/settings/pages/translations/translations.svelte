@@ -9,9 +9,9 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
-  import { licensing } from "@/stores/portal/licensing"
-  import { API } from "@/api"
+  import { licensing, translations } from "@/stores/portal"
+  import type { TranslationOverrideMap } from "@/stores/portal/translations"
+  import { onMount } from "svelte"
   import {
     UI_TRANSLATIONS,
     filterValidTranslationOverrides,
@@ -92,20 +92,28 @@
 
   let selectedCategory = "userMenu"
   let searchTerm = ""
-  let overrides = { ...$appStore.translationOverrides }
+  let overrides: TranslationOverrideMap = {}
   let lastSyncedSignature = signature(overrides)
   let saving = false
   $: hasPendingChanges = signature(overrides) !== lastSyncedSignature
-  const refreshFromStore = () => {
-    const storeOverrides = $appStore.translationOverrides
-    const storeSignature = signature(storeOverrides)
-    if (storeSignature !== lastSyncedSignature) {
-      overrides = { ...storeOverrides }
+  $: activeLocale = $translations.config.defaultLocale
+  $: activeOverrides =
+    $translations.config.locales[activeLocale]?.overrides ?? {}
+  $: storeLoaded = $translations.loaded
+  const refreshFromStore = (force = false) => {
+    const storeSignature = signature(activeOverrides)
+    if (storeLoaded && (force || storeSignature !== lastSyncedSignature)) {
+      overrides = { ...activeOverrides }
       lastSyncedSignature = storeSignature
     }
   }
 
   $: refreshFromStore()
+
+  onMount(async () => {
+    await translations.init(true)
+    refreshFromStore(true)
+  })
 
   $: filteredRows = UI_TRANSLATIONS.filter(definition => {
     const inCategory =
@@ -147,13 +155,9 @@
       return
     }
     try {
-      await API.saveAppMetadata($appStore.appId, {
-        translationOverrides: payload,
-      })
-      appStore.update(state => ({
-        ...state,
-        translationOverrides: payload,
-      }))
+      await translations.saveLocaleOverrides(activeLocale, payload)
+      await translations.init(true)
+      refreshFromStore(true)
       lastSyncedSignature = nextSignature
       overrides = { ...payload }
       notifications.success("Translations saved successfully")
@@ -171,15 +175,15 @@
 
 <LockedFeature
   planType={"Enterprise"}
-  description={"Define custom text for user-facing elements across apps in this workspace."}
+  description={"Define custom text for user-facing elements across every workspace."}
   enabled={$licensing.translationsEnabled}
   upgradeButtonClick={licensing.goToUpgradePage}
 >
   <Layout noPadding>
     <div class="settings">
       <Body size="S">
-        Define custom text for user-facing elements across apps in this
-        workspace. Blank fields will fall back to Budibase defaults.
+        Define custom text for user-facing elements across all apps in your
+        Budibase installation. Blank fields fall back to Budibase defaults.
       </Body>
       <Divider noMargin />
       <div class="filters">
@@ -214,7 +218,7 @@
           <Button
             cta
             on:click={saveOverrides}
-            disabled={saving || !hasPendingChanges}
+            disabled={saving || !hasPendingChanges || !storeLoaded}
           >
             {saving ? "Saving..." : "Save"}
           </Button>
