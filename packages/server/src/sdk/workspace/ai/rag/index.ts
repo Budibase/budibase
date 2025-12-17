@@ -2,6 +2,7 @@ import type { AgentFile } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
 import { parse as parseYaml } from "yaml"
+import pdfParse from "pdf-parse"
 import sdk from "../../.."
 import environment from "../../../../environment"
 
@@ -36,13 +37,26 @@ const textFileExtensions = new Set([
 const yamlExtensions = new Set([".yaml", ".yml"])
 
 const buildRagConfig = async (): Promise<RagConfig> => {
-  const { apiKey, baseUrl } = await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
-  return {
-    databaseUrl: environment.LITELLM_DATABASE_URL,
-    embeddingModel: environment.AGENT_FILE_EMBEDDING_MODEL,
-    embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
-    baseUrl,
-    apiKey: "sk-1234", // TODO: Replace with actual apiKey when available
+  try {
+    const { apiKey, baseUrl, modelId } =
+      await sdk.embeddingConfigs.getLiteLLMEmbeddingConfigOrThrow()
+    return {
+      databaseUrl: environment.LITELLM_DATABASE_URL,
+      embeddingModel: modelId,
+      embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
+      baseUrl,
+      apiKey,
+    }
+  } catch (error) {
+    const { apiKey, baseUrl, modelId } =
+      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
+    return {
+      databaseUrl: environment.LITELLM_DATABASE_URL,
+      embeddingModel: modelId,
+      embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
+      baseUrl,
+      apiKey,
+    }
   }
 }
 
@@ -318,9 +332,26 @@ const upsertChunks = async (
   return { inserted, total: chunks.length }
 }
 
-const getTextFromBuffer = (buffer: Buffer, filename?: string) => {
-  const ext = (filename?.split(".").pop() || "").toLowerCase()
-  if (!filename) {
+const isPdfFile = (file?: AgentFile) => {
+  if (!file) {
+    return false
+  }
+  const mime = file.mimetype?.toLowerCase()
+  if (mime === "application/pdf") {
+    return true
+  }
+  const ext = (file.filename?.split(".").pop() || "").toLowerCase()
+  return ext === "pdf" || ext === ".pdf"
+}
+
+const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
+  if (isPdfFile(file)) {
+    const parsed = await pdfParse(buffer)
+    return (parsed.text || "").trim()
+  }
+
+  const ext = (file.filename?.split(".").pop() || "").toLowerCase()
+  if (!file.filename) {
     return buffer.toString("utf-8")
   }
   if (textFileExtensions.has(`.${ext}`) || textFileExtensions.has(ext)) {
@@ -337,7 +368,7 @@ export const ingestAgentFile = async (
 
   return await withClient(config, async client => {
     await ensureSchema(client, config)
-    const content = getTextFromBuffer(fileBuffer, agentFile.filename)
+    const content = await getTextFromBuffer(fileBuffer, agentFile)
     const chunks = createChunksFromContent(content, agentFile.filename)
     return await upsertChunks(client, config, agentFile.ragSourceId, chunks)
   })

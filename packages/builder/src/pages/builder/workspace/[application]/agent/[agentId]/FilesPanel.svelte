@@ -110,7 +110,7 @@
       >
       <input
         type="file"
-        accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv"
+        accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv,.pdf"
         hidden
         bind:this={fileInput}
         on:change={handleFileUpload}
@@ -118,8 +118,8 @@
     </div>
   </div>
   <p class="files-description">
-    Add text, Markdown, or OpenAPI YAML files to ground agent replies with your
-    own knowledge.
+    Add text, Markdown, OpenAPI YAML, or PDF files to ground agent replies with
+    your own knowledge.
   </p>
   {#if uploadError}
     <div class="upload-error">{uploadError}</div>

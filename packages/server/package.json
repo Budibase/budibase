@@ -115,6 +115,7 @@
     "openai": "5.12.1",
     "openapi-types": "9.3.1",
     "oracledb": "6.5.1",
+    "pdf-parse": "^2.4.5",
     "pg": "8.10.0",
     "pouchdb": "9.0.0",
     "pouchdb-all-dbs": "1.1.1",
