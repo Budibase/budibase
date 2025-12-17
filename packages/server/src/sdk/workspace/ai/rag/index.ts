@@ -2,7 +2,7 @@ import { AIConfigType, type AgentFile } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
 import { parse as parseYaml } from "yaml"
-import pdfParse from "pdf-parse"
+import { PDFParse } from "pdf-parse"
 import sdk from "../../.."
 import environment from "../../../../environment"
 
@@ -349,7 +349,8 @@ const isPdfFile = (file?: AgentFile) => {
 
 const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   if (isPdfFile(file)) {
-    const parsed = await pdfParse(buffer)
+    const parser = new PDFParse({ data: buffer as any })
+    const parsed = await parser.getText()
     return (parsed.text || "").trim()
   }
 
