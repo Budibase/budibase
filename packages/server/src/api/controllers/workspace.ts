@@ -14,7 +14,11 @@ import {
   utils,
 } from "@budibase/backend-core"
 import { groups, licensing, quotas } from "@budibase/pro"
-import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
+import {
+  DefaultAppTheme,
+  resolveWorkspaceTranslations,
+  sdk as sharedCoreSDK,
+} from "@budibase/shared-core"
 import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
@@ -333,6 +337,32 @@ export async function fetchAppDefinition(
   }
 }
 
+async function resolveGlobalTranslationOverrides(application: Workspace) {
+  const translationsConfig = await configs.getTranslationsConfigDoc()
+  const defaultLocale = translationsConfig.config.defaultLocale
+  const localeConfig = translationsConfig.config.locales[defaultLocale]
+  const existingOverrides = localeConfig?.overrides || {}
+  if (Object.keys(existingOverrides).length > 0) {
+    return { ...existingOverrides }
+  }
+
+  const workspaceOverrides = resolveWorkspaceTranslations(
+    application.translationOverrides
+  )
+  if (Object.keys(workspaceOverrides).length === 0) {
+    return {}
+  }
+
+  translationsConfig.config.locales[defaultLocale] = {
+    ...localeConfig,
+    overrides: workspaceOverrides,
+    updatedAt: new Date().toISOString(),
+    updatedBy: application.updatedBy,
+  }
+  await configs.save(translationsConfig)
+  return { ...workspaceOverrides }
+}
+
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
@@ -345,6 +375,10 @@ export async function fetchAppPackage(
       licensing.cache.getCachedLicense(),
       configs.getRecaptchaConfig(),
     ])
+
+  const translationOverrides =
+    await resolveGlobalTranslationOverrides(application)
+  application.translationOverrides = translationOverrides
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
@@ -1049,6 +1083,10 @@ export async function updateWorkspacePackage(
     const db = context.getWorkspaceDB()
     const application = await sdk.workspaces.metadata.get()
 
+    if ("translationOverrides" in workspacePackage) {
+      delete (workspacePackage as any).translationOverrides
+    }
+
     const newWorkspacePackage: Workspace = {
       ...application,
       ...workspacePackage,
@@ -1057,6 +1095,7 @@ export async function updateWorkspacePackage(
         ...workspacePackage.features,
       },
     }
+    delete (newWorkspacePackage as any).translationOverrides
     if (workspacePackage._rev !== application._rev) {
       newWorkspacePackage._rev = application._rev
     }
