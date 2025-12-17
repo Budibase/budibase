@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { agentsStore } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
+  import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -7,7 +8,11 @@
     Heading,
     notifications,
   } from "@budibase/bbui"
-  import { AgentFileStatus, type AgentFile } from "@budibase/types"
+  import {
+    AgentFileStatus,
+    AIConfigType,
+    type AgentFile,
+  } from "@budibase/types"
 
   export let currentAgentId: string | undefined
 
@@ -17,6 +22,9 @@
   let currentFiles: AgentFile[] = []
 
   $: currentFiles = $agentsStore.files || []
+  $: hasEmbeddingConfig = ($aiConfigsStore.customConfigs || []).some(
+    config => config.configType === AIConfigType.EMBEDDINGS
+  )
 
   const formatBytes = (size?: number) => {
     if (!size) {
@@ -83,6 +91,15 @@
     }
   }
 
+  function handleUploadClick() {
+    if (!hasEmbeddingConfig) {
+      notifications.info("Add an embeddings configuration to enable uploads")
+      bb.settings("/ai")
+      return
+    }
+    fileInput?.click()
+  }
+
   async function removeFile(file: AgentFile) {
     if (!currentAgentId) {
       return
@@ -111,7 +128,7 @@
         secondary
         icon="upload"
         disabled={!currentAgentId || uploadingFile}
-        on:click={() => fileInput?.click()}
+        on:click={handleUploadClick}
         >{uploadingFile ? "Uploading..." : "Upload file"}</Button
       >
       <input
