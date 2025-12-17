@@ -23,7 +23,6 @@
   $goto
   $isActive
   $params
-  $goto
 
   export let searchTerm
   export let datasourceFilter = _ => true

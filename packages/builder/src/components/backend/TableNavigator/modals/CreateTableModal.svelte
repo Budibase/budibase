@@ -3,14 +3,14 @@
   import { tables, datasources } from "@/stores/builder"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
-
-  $goto
-  $url
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
     DB_TYPE_INTERNAL,
   } from "@/constants/backend"
+
+  $goto
+  $url
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(

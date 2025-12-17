@@ -71,6 +71,10 @@
     }
   }
 
+  let hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
+    $appStore.appId
+  )
+
   $: hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
     $appStore.appId
   )
@@ -111,6 +115,7 @@
 
   const publishAnyway = async () => {
     acknowledgeSvelte4PluginWarning($appStore.appId)
+    hasAcknowledgedWarning = true
     actionMenu?.hide?.()
     menuOpen = false
     pluginWarningModal?.hide()

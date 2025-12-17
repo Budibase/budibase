@@ -18,7 +18,7 @@
   import { WorkspaceResource } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
 
-  $goto
+  $gotoStore
   $isActive
 
   export let datasource
