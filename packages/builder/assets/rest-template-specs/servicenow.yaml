@@ -238,7 +238,7 @@ paths:
     put:
       tags: [SCIM Users]
       summary: Replace SCIM user
-      description: Replace the `sys_user`. Omitted endpoints will be cleared.
+      description: Replace the `sys_user`. Omitted fields will be cleared.
       operationId: replaceScimUser
       requestBody:
         $ref: '#/components/requestBodies/ScimUserBody'
@@ -391,6 +391,7 @@ paths:
     get:
       tags: [SCIM Resources]
       summary: Get cost center
+      operationId: getScimCostCenter
       responses:
         '200':
           description: Cost center record
@@ -404,6 +405,7 @@ paths:
     get:
       tags: [SCIM Resources]
       summary: List departments
+      operationId: listScimDepartments
       responses:
         '200':
           description: Department list
@@ -417,6 +419,7 @@ paths:
     get:
       tags: [SCIM Resources]
       summary: Get department
+      operationId: getScimDepartment
       responses:
         '200':
           description: Department record
