@@ -1638,6 +1638,47 @@ if (descriptions.length) {
             expect(prodRowsAfter.length).toBe(1)
             expect(prodRowsAfter[0]._id).toEqual(devRow._id)
           })
+
+          it("does not reseed a non-empty production table", async () => {
+            const table = await config.api.table.save(basicTable())
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfterFirstSeed = await config.api.row.fetchProd(
+              table._id!
+            )
+            expect(prodRowsAfterFirstSeed.length).toBe(1)
+            expect(prodRowsAfterFirstSeed[0]._id).toEqual(devRow._id)
+            expect(prodRowsAfterFirstSeed[0].name).toEqual("dev-row")
+
+            await config.api.row.patch(table._id!, {
+              tableId: table._id!,
+              _id: devRow._id!,
+              _rev: devRow._rev!,
+              name: "dev-row-updated",
+            })
+            await config.api.row.save(table._id!, {
+              name: "dev-row-2",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfterSecondSeed = await config.api.row.fetchProd(
+              table._id!
+            )
+            expect(prodRowsAfterSecondSeed.length).toBe(1)
+            expect(prodRowsAfterSecondSeed[0]._id).toEqual(devRow._id)
+            expect(prodRowsAfterSecondSeed[0].name).toEqual("dev-row")
+          })
         }
       })
 
