@@ -22,8 +22,9 @@ function getPublishedState(
 }
 
 export async function status() {
-  const prodDb = context.getProdWorkspaceDB()
-  const productionExists = await prodDb.exists()
+  const prodWorkspaceId = context.getProdWorkspaceId()
+  const productionExists =
+    await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
   type State = {
     automations: Automation[]
     workspaceApps: WorkspaceApp[]
