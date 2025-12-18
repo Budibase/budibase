@@ -81,6 +81,7 @@ import type { User } from "@budibase/types"
   $: portalLabels = resolveTranslationGroup("portal", translationOverrides)
   $: profileLabels = resolveTranslationGroup("profileModal", translationOverrides)
   $: passwordLabels = resolveTranslationGroup("passwordModal", translationOverrides)
+  $: menuLabels = resolveTranslationGroup("userMenu", translationOverrides)
 
   $: currentUser = $auth.user as User | undefined
   $: greetingText = processStringSync(portalLabels.greeting, {
@@ -108,7 +109,7 @@ import type { User } from "@budibase/types"
                 icon="user-circle-gear"
                 on:click={() => userInfoModal.show()}
               >
-                {portalLabels.menuProfile}
+                {menuLabels.profile}
               </MenuItem>
               <MenuItem
                 icon="lock"
@@ -122,15 +123,15 @@ import type { User } from "@budibase/types"
                   }
                 }}
               >
-                {portalLabels.menuPassword}
+                {menuLabels.password}
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem icon="user-gear" on:click={() => $goto("/builder")}>
-                  {portalLabels.menuDevMode}
+                  {menuLabels.portal}
                 </MenuItem>
               {/if}
               <MenuItem icon="sign-out" on:click={logout}
-                >{portalLabels.menuLogout}</MenuItem
+                >{menuLabels.logout}</MenuItem
               >
             </ActionMenu>
           </div>

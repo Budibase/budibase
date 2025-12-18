@@ -4,26 +4,6 @@ const category = "portal"
 
 export const portalTranslations = createTranslationDefinitions(category, [
   {
-    key: "menuProfile",
-    name: "Menu item: My profile",
-    defaultValue: "My profile",
-  },
-  {
-    key: "menuPassword",
-    name: "Menu item: Update password",
-    defaultValue: "Update password",
-  },
-  {
-    key: "menuDevMode",
-    name: "Menu item: Open developer mode",
-    defaultValue: "Open developer mode",
-  },
-  {
-    key: "menuLogout",
-    name: "Menu item: Log out",
-    defaultValue: "Log out",
-  },
-  {
     key: "greeting",
     name: "Greeting heading",
     defaultValue: "Hey {{name}}",
