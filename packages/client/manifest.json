@@ -8981,9 +8981,8 @@
     "icon": "speedometer",
     "size": {
       "width": 600,
-      "height": 600
+      "height": 420
     },
-    "styles": ["size"],
     "grid": {
       "hAlign": "stretch",
       "vAlign": "center"
@@ -9040,6 +9039,17 @@
         ]
       },
       {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "420"
+      },
+      {
         "type": "boolean",
         "label": "Automatic Max Value",
         "key": "autoMaxValue"
@@ -9048,7 +9058,6 @@
         "type": "text",
         "label": "Max Value",
         "key": "maxValue",
-        "info": "Defaults to the largest value selected.",
         "dependsOn": {
           "setting": "autoMaxValue",
           "invert": true
@@ -9136,14 +9145,15 @@
         "type": "number",
         "label": "End Angle",
         "key": "endAngle",
-        "defaultValue": 360,
+        "defaultValue": 270,
         "max": 360,
         "min": -360
       },
       {
         "type": "boolean",
         "label": "Show track",
-        "key": "showTrack"
+        "key": "showTrack",
+        "defaultValue": true
       },
       {
         "type": "select",
@@ -9155,7 +9165,8 @@
       {
         "type": "boolean",
         "label": "Show bar labels",
-        "key": "barLabels"
+        "key": "barLabels",
+        "defaultValue": true
       },
       {
         "type": "number",
@@ -9170,7 +9181,7 @@
         "label": "Offset-X",
         "key": "offsetX",
         "dependsOn": "barLabels",
-        "defaultValue": 0
+        "defaultValue": -16
       },
       {
         "type": "number",

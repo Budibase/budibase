@@ -25,6 +25,8 @@
   export let imageURL
   export let imageWidth
   export let imageHeight
+  export let height
+  export let width
 
   console.log({ showImage, imageURL, imageWidth, imageHeight })
 
@@ -34,7 +36,8 @@
   $: options = {
     series,
     chart: {
-      height: 700,
+      height: Number(height),
+      width,
       type: "radialBar",
       animations: {
         enabled: animate ?? true,
