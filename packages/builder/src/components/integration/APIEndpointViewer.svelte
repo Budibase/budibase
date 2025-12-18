@@ -121,10 +121,9 @@
     baseUrl?: string
   ): Query => {
     const updated = structuredClone(sourceQuery)
-    const fullPath =
-      endpoint && baseUrl
-        ? constructFullPath(baseUrl, endpoint?.path || "")
-        : ""
+    const fullPath = endpoint
+      ? constructFullPath(baseUrl, endpoint?.path || "")
+      : ""
     const defaultBindings = endpoint?.defaultBindings || {}
     const staticVariables = datasource?.config?.staticVariables || {}
     const allBindings = { ...defaultBindings }
@@ -239,7 +238,7 @@
     : {}
 
   // Init and build full API path if the query is new
-  $: if (selectedEndpointOption && baseUrl && query && !query._id) {
+  $: if (selectedEndpointOption && query && !query._id) {
     query = {
       ...query,
       fields: {
