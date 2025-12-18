@@ -13,11 +13,10 @@
 
   export let datasource
 
-  $: templateIcon = datasource?.restTemplate
-    ? $restTemplates.templates.find(
-        template => template.name === datasource.restTemplate
-      )?.icon
-    : undefined
+  $: templateIcon =
+    datasource?.restTemplate && $restTemplates
+      ? restTemplates.getByName(datasource.restTemplate)?.icon
+      : undefined
 
   let editModal
   let deleteConfirmationModal

@@ -49,7 +49,7 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title="Edit Automation"
+    title="Edit automation"
     confirmText="Save"
     size="L"
     onConfirm={saveAutomation}

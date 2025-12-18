@@ -1,5 +1,6 @@
 <script>
   import { flip } from "svelte/animate"
+  import { tick } from "svelte"
   import { dndzone } from "svelte-dnd-action"
   import {
     Icon,
@@ -147,7 +148,11 @@
     selectedAction = newAction
   }
 
-  const selectAction = action => () => {
+  const selectAction = action => async () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    await tick()
     selectedAction = action
     originalActionIndex = actions.findIndex(item => item.id === action.id)
   }

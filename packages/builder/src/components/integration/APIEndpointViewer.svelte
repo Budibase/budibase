@@ -28,8 +28,10 @@
     type Query,
     type Datasource,
     type ImportEndpoint,
+    type RestTemplate,
     type RestTemplateSpec,
     type PreviewQueryResponse,
+    type UIInternalDatasource,
   } from "@budibase/types"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
   import { RestBodyTypes } from "@/constants/backend"
@@ -48,6 +50,7 @@
     validateQuery,
     runQuery,
     keyValueArrayToRecord,
+    buildAuthConfigs,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
@@ -56,6 +59,7 @@
   import { EditorModes } from "../common/CodeEditor"
   import { readableToRuntimeMap, runtimeToReadableMap } from "@/dataBinding"
   import ResponsePanel from "./ResponsePanel.svelte"
+  import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
   export let datasourceId
@@ -65,6 +69,10 @@
       component: typeof APIEndpointVerbBadge
       props: { verb?: string; color?: string }
     }
+  }
+  type AuthConfigOption = {
+    label: string
+    value: string
   }
 
   const sidebarExpanded = writable(false)
@@ -86,6 +94,98 @@
   let baseUrl: string | undefined = undefined
   let response: PreviewQueryResponse
   let query: Query | undefined
+  let template: RestTemplate | undefined
+  let datasource: Datasource | UIInternalDatasource | undefined
+  let authConfigs: AuthConfigOption[] = []
+  const ensureQueryDefaults = (target: Query) => {
+    if (!target.fields?.disabledHeaders) {
+      target.fields.disabledHeaders = {}
+    }
+    for (let header of Object.keys(target.fields?.headers || {})) {
+      if (!target.fields.disabledHeaders[header]) {
+        target.fields.disabledHeaders[header] = false
+      }
+    }
+    if (!target.transformer) {
+      target.transformer = "return data"
+    }
+    if (!target.fields.bodyType) {
+      target.fields.bodyType = target.fields.requestBody
+        ? BodyType.JSON
+        : BodyType.NONE
+    }
+  }
+  const applyEndpointDefaults = (
+    sourceQuery: Query,
+    endpoint: EndpointWithIcon,
+    baseUrl?: string
+  ): Query => {
+    const updated = structuredClone(sourceQuery)
+    const fullPath =
+      endpoint && baseUrl
+        ? constructFullPath(baseUrl, endpoint?.path || "")
+        : ""
+    const defaultBindings = endpoint?.defaultBindings || {}
+    const staticVariables = datasource?.config?.staticVariables || {}
+    const allBindings = { ...defaultBindings }
+    for (const name of Object.keys(staticVariables)) {
+      allBindings[name] = `{{ ${name} }}`
+    }
+    const parameters = Object.entries(allBindings).map(
+      ([name, defaultValue]) => ({
+        name,
+        default: defaultValue,
+      })
+    )
+    const bodyType =
+      endpoint?.bodyType ||
+      (endpoint?.originalRequestBody ? BodyType.JSON : BodyType.NONE)
+    let requestBody = endpoint?.originalRequestBody
+    const isKeyValueBodyType =
+      bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED
+    if (requestBody && typeof requestBody === "object" && !isKeyValueBodyType) {
+      requestBody = JSON.stringify(requestBody, null, 2)
+    }
+    const headers = endpoint?.headers || {}
+    const disabledHeaders: Record<string, boolean> = {}
+    for (const header of Object.keys(headers)) {
+      disabledHeaders[header] = false
+    }
+    updated.datasourceId = datasourceId
+    updated.name = endpoint?.name || updated.name
+    updated.queryVerb = endpoint?.queryVerb || updated.queryVerb
+    if (!updated.fields?.disabledHeaders) {
+      updated.fields.disabledHeaders = {}
+    }
+    updated.fields = {
+      ...updated.fields,
+      path: fullPath,
+      queryString: endpoint?.queryString || "",
+      headers,
+      disabledHeaders,
+      requestBody,
+      bodyType,
+    }
+    updated.parameters = parameters
+    updated.transformer = updated.transformer || "return data"
+    if (!updated.fields.bodyType) {
+      updated.fields.bodyType = BodyType.NONE
+    }
+    updated.schema = updated.schema || {}
+    updated.readable = true
+    updated.restTemplateMetadata = endpoint
+      ? {
+          operationId: endpoint.operationId,
+          docsUrl: endpoint.docsUrl,
+          description: endpoint.description,
+          originalPath: endpoint.originalPath,
+          originalRequestBody: endpoint.originalRequestBody,
+          defaultBindings: endpoint.defaultBindings,
+        }
+      : undefined
+
+    return updated
+  }
 
   // Reset state when datasourceId changes
   $: if (datasourceId) {
@@ -97,17 +197,33 @@
 
   // Build selectedEndpointOption from query metadata or fetch endpoints if needed
   $: if (query) {
+    ensureQueryDefaults(query)
     syncEndpointFromQuery(query, endpoints)
   }
 
-  // QUERY/DATASOURCE INIT
-  $: baseQuery = getSelectedQuery(queryId, datasourceId)
-  $: query = initializeQuery(baseQuery, selectedEndpointOption, baseUrl)
+  let queryKey: string | undefined
+  let appliedEndpointKey: string | undefined
+  let isNewQuery = false
+  $: storeQuery = getSelectedQuery(queryId, datasourceId)
+  $: isNewQuery = !storeQuery?._id
+  $: {
+    const key = storeQuery?._id || `new::${datasourceId || ""}`
+    if (!query || key !== queryKey) {
+      query = structuredClone(storeQuery)
+      queryKey = key
+      queryParams = undefined
+      originalBuiltQuery = undefined
+      if (query?._id) {
+        appliedEndpointKey = undefined
+      }
+    }
+  }
   $: datasource = structuredClone(
     $datasources.list.find(
       d => d._id === datasourceId || query?.datasourceId === d._id
     )
   )
+  $: authConfigs = buildAuthConfigs(datasource)
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
@@ -196,10 +312,10 @@
     : undefined
 
   // BB Rest template specs
-  $: templates = $restTemplates.templates
-  $: template = templates.find(
-    r => datasource && r.name == datasource.restTemplate
-  )
+  $: template =
+    datasource?.restTemplate && $restTemplates
+      ? restTemplates.getByName(datasource.restTemplate)
+      : undefined
   $: spec = template?.specs?.[0]
 
   // ENDPOINTS - only skip loading if we have both query Id AND metadata
@@ -229,116 +345,21 @@
   })()
   $: endpointVerbColor = selectedEndpointOption?.icon?.props?.color
   $: endpointDocs = selectedEndpointOption?.docsUrl
-
-  const initializeQuery = (
-    sourceQuery: Query | undefined,
-    endpoint?: EndpointWithIcon,
-    baseUrl?: string
-  ): Query | undefined => {
-    if (!sourceQuery) return undefined
-
-    const initialized = structuredClone(sourceQuery)
-
-    // Initialize headers and ensure migration
-    if (!initialized.fields?.disabledHeaders) {
-      initialized.fields.disabledHeaders = {}
-    }
-    for (let header of Object.keys(initialized.fields?.headers || {})) {
-      if (!initialized.fields.disabledHeaders[header]) {
-        initialized.fields.disabledHeaders[header] = false
-      }
-    }
-
-    // Initialize default query fields if missing
-    if (!initialized.transformer) {
-      initialized.transformer = "return data"
-    }
-
-    if (!initialized.fields.bodyType) {
-      if (initialized.fields.requestBody) {
-        initialized.fields.bodyType = BodyType.JSON
-      } else {
-        initialized.fields.bodyType = BodyType.NONE
-      }
-    }
-
-    if (!sourceQuery._id) {
-      const fullPath =
-        endpoint && baseUrl
-          ? constructFullPath(baseUrl, endpoint?.path || "")
-          : ""
-
-      const defaultBindings = endpoint?.defaultBindings || {}
-
-      // Include static vars as bindings.
-      const staticVariables = datasource?.config?.staticVariables || {}
-      const allBindings = { ...defaultBindings }
-
-      // Add static variables with binding syntax as defaults
-      for (const [name, _] of Object.entries(staticVariables)) {
-        allBindings[name] = `{{ ${name} }}`
-      }
-
-      const parameters = Object.entries(allBindings).map(
-        ([name, defaultValue]) => ({
-          name,
-          default: defaultValue,
-        })
-      )
-
-      const bodyType =
-        endpoint?.bodyType ||
-        (endpoint?.originalRequestBody ? BodyType.JSON : BodyType.NONE)
-
-      let requestBody = endpoint?.originalRequestBody
-      const isKeyValueBodyType =
-        bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED
-
-      if (
-        requestBody &&
-        typeof requestBody === "object" &&
-        !isKeyValueBodyType
-      ) {
-        requestBody = JSON.stringify(requestBody, null, 2)
-      }
-
-      // Use headers from endpoint metadata
-      const headers = endpoint?.headers || {}
-      const disabledHeaders: Record<string, boolean> = {}
-      for (const header of Object.keys(headers)) {
-        disabledHeaders[header] = false
-      }
-
-      return {
-        datasourceId: datasourceId,
-        name: endpoint?.name,
-        queryVerb: endpoint?.queryVerb,
-        fields: {
-          path: fullPath,
-          queryString: endpoint?.queryString || "",
-          headers,
-          disabledHeaders,
-          requestBody,
-          bodyType,
-        },
-        parameters,
-        transformer: "return data",
-        schema: {},
-        readable: true,
-        restTemplateMetadata: endpoint
-          ? {
-              operationId: endpoint.operationId,
-              docsUrl: endpoint.docsUrl,
-              description: endpoint.description,
-              originalPath: endpoint.originalPath,
-              originalRequestBody: endpoint.originalRequestBody,
-              defaultBindings: endpoint.defaultBindings,
-            }
-          : undefined,
-      } as Query
-    }
-
-    return initialized
+  $: endpointTemplateKey =
+    isNewQuery && selectedEndpointOption
+      ? `${selectedEndpointOption.id || selectedEndpointOption.path || ""}::${
+          baseUrl || ""
+        }`
+      : undefined
+  $: if (
+    query &&
+    isNewQuery &&
+    selectedEndpointOption &&
+    endpointTemplateKey &&
+    endpointTemplateKey !== appliedEndpointKey
+  ) {
+    query = applyEndpointDefaults(query, selectedEndpointOption, baseUrl)
+    appliedEndpointKey = endpointTemplateKey
   }
 
   const loadEndpoints = async (spec?: RestTemplateSpec) => {
@@ -510,7 +531,9 @@
         throw new Error("Could not refresh query")
       }
 
-      query = initializeQuery(updatedQuery)
+      query = structuredClone(updatedQuery)
+      queryKey = updatedQuery._id || queryKey
+      appliedEndpointKey = undefined
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
@@ -694,6 +717,14 @@
     </div>
     <div class="actions">
       <div class="grouped">
+        {#if query && selectedEndpointOption}
+          <AuthPicker
+            bind:authConfigId={query.fields.authConfigId}
+            bind:authConfigType={query.fields.authConfigType}
+            {authConfigs}
+            {datasourceId}
+          />
+        {/if}
         {#if endpointDocs}
           <ActionButton
             quiet

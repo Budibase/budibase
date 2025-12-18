@@ -31,10 +31,15 @@ type AnalysisResult = {
 const bumpMinorVersion = (version: string | undefined): string | undefined => {
   if (!version || typeof version !== "string") return undefined
   const parts = version.trim().split(".")
+
   if (parts.length < 2) return undefined
-  const major = Number.parseInt(parts[0], 10)
-  const minor = Number.parseInt(parts[1], 10)
-  const patch = parts.length > 2 ? Number.parseInt(parts[2], 10) : 0
+  const [majorStr, minorStr, patchStr] = parts
+
+  if (!majorStr || !minorStr) return undefined
+  const major = Number.parseInt(majorStr, 10)
+  const minor = Number.parseInt(minorStr, 10)
+  const patch = patchStr ? Number.parseInt(patchStr, 10) : 0
+
   if (
     Number.isNaN(major) ||
     Number.isNaN(minor) ||
@@ -158,11 +163,6 @@ export async function migrateRollupConfig(): Promise<MigrationResult> {
     }
   }
 
-  const backupPath = rollupFile ? `${rollupFile}.pre-svelte5` : undefined
-  if (backupPath && rollupFile) {
-    fs.writeFileSync(backupPath, originalSource)
-  }
-
   const newConfigPath = "rollup.config.mjs"
   const template = await loadRollupFromSkeleton()
   if (!template) {
@@ -171,6 +171,11 @@ export async function migrateRollupConfig(): Promise<MigrationResult> {
       message:
         "Failed to retrieve canonical rollup.config.mjs from skeleton. Please check your network or update the CLI.",
     }
+  }
+
+  const backupPath = rollupFile ? `${rollupFile}.pre-svelte5` : undefined
+  if (backupPath && rollupFile) {
+    fs.writeFileSync(backupPath, originalSource)
   }
   fs.writeFileSync(newConfigPath, template.source)
 
@@ -206,15 +211,14 @@ export function migrateWrapper(): MigrationResult {
     }
   }
   const src = fs.readFileSync(wrapperFile, "utf8")
-  if (src.includes("<svelte:boundary>")) {
-    return {
-      changed: false,
-      message: `${wrapperFile} already uses <svelte:boundary>. Skipping.`,
-    }
-  }
 
-  const backupPath = `${wrapperFile}.pre-svelte5`
-  fs.writeFileSync(backupPath, src)
+  const usesLegacyBoundary =
+    src.includes("Boundary.js") ||
+    src.includes("createBoundary") ||
+    /<Boundary[\s>]/.test(src)
+
+  const hasSvelteBoundary = src.includes("<svelte:boundary>")
+  const shouldRewrite = !hasSvelteBoundary || usesLegacyBoundary
 
   const newWrapper = `<script>
   import Component from "../src/Component.svelte"
@@ -235,13 +239,36 @@ export function migrateWrapper(): MigrationResult {
 </style>
 `
 
-  fs.writeFileSync(wrapperFile, newWrapper)
+  let changed = false
+  let before: string | undefined
+  let after: string | undefined
+  const messages: string[] = []
+
+  if (shouldRewrite) {
+    const backupPath = `${wrapperFile}.pre-svelte5`
+    fs.writeFileSync(backupPath, src)
+    fs.writeFileSync(wrapperFile, newWrapper)
+    changed = true
+    before = src
+    after = newWrapper
+    messages.push(
+      `Updated ${wrapperFile} to use <svelte:boundary>, $$restProps, and error UI.`
+    )
+  } else {
+    messages.push(
+      `${wrapperFile} already looks Svelte 5 compatible (uses <svelte:boundary> with no legacy Boundary.js wrapper).`
+    )
+  }
 
   // Clean up legacy Boundary.js if present
   const legacyBoundary = path.join(path.dirname(wrapperFile), "Boundary.js")
   if (fs.existsSync(legacyBoundary)) {
     try {
       fs.unlinkSync(legacyBoundary)
+      changed = true
+      messages.push(
+        "Removed legacy lib/Boundary.js (incompatible with Svelte 5)."
+      )
     } catch (err: any) {
       console.log(
         "Failed to delete legacy Boundary.js:",
@@ -251,10 +278,10 @@ export function migrateWrapper(): MigrationResult {
   }
 
   return {
-    changed: true,
-    before: src,
-    after: newWrapper,
-    message: `Updated ${wrapperFile} to use <svelte:boundary> and $$restProps.`,
+    changed,
+    before,
+    after,
+    message: messages.join(" "),
   }
 }
 
@@ -404,6 +431,11 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   } else {
     report.push("package.json appears to already depend on Svelte 5.")
   }
+  if (pkg?.dependencies?.["@crownframework/svelte-error-boundary"]) {
+    report.push(
+      "Detected @crownframework/svelte-error-boundary; migration will replace it with <svelte:boundary> in lib/Wrapper.svelte."
+    )
+  }
   if (
     projectedVersion &&
     currentVersion &&
@@ -499,9 +531,32 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
 }
 
 export async function runSvelte5Migration() {
-  const pkgRes = migratePackageJson()
-  const schemaRes = migrateSchemaJson()
   const rollupRes = await migrateRollupConfig()
+  if (
+    rollupRes.message.includes(
+      "Failed to retrieve canonical rollup.config.mjs from skeleton"
+    )
+  ) {
+    return {
+      pkgRes: {
+        changed: false,
+        message:
+          "Skipped package.json migration due to Rollup template failure.",
+      },
+      schemaRes: {
+        changed: false,
+        message:
+          "Skipped schema.json migration due to Rollup template failure.",
+      },
+      rollupRes,
+      wrapperRes: {
+        changed: false,
+        message: "Skipped wrapper migration due to Rollup template failure.",
+      },
+    }
+  }
   const wrapperRes = migrateWrapper()
+  const schemaRes = migrateSchemaJson()
+  const pkgRes = migratePackageJson()
   return { pkgRes, schemaRes, rollupRes, wrapperRes }
 }

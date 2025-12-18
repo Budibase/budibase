@@ -1,9 +1,7 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
-  createToolSourceValidator,
   updateAgentValidator,
-  updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
@@ -15,6 +13,7 @@ builderAdminRoutes
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
+  .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
@@ -25,24 +24,6 @@ builderAdminRoutes
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
-  .post(
-    "/api/agent/toolsource",
-    createToolSourceValidator(),
-    ai.createToolSource
-  )
-  .put(
-    "/api/agent/toolsource",
-
-    updateToolSourceValidator(),
-    ai.updateToolSource
-  )
-  .delete(
-    "/api/agent/toolsource/:toolSourceId",
-
-    ai.deleteToolSource
-  )
-  .get("/api/agent/toolsource/:toolSourceType/tools", ai.fetchAvailableTools)
-  .get("/api/agent/:agentId/toolsource", ai.fetchToolSources)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

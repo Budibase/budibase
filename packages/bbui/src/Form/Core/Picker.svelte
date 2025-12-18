@@ -7,7 +7,7 @@
   import "@spectrum-css/menu/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
-  import { createEventDispatcher, onDestroy } from "svelte"
+  import { createEventDispatcher, onDestroy, tick } from "svelte"
   import clickOutside from "../../Actions/clickOutside"
   import Icon from "../../Icon/Icon.svelte"
   import Popover from "../../Popover/Popover.svelte"
@@ -74,11 +74,19 @@
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
 
+  const maxHeight = 360
+  const VIRTUALIZATION_THRESHOLD = 200
+  const VIRTUALIZATION_OVERSCAN = 6
+  const OPTION_HEIGHT = 36
+
   const dispatch = createEventDispatcher()
 
   let button: HTMLButtonElement | null = null
   let component: HTMLUListElement | null = null
   let optionIconDescriptor: ResolvedIcon | null = null
+  let virtualizedOptions: Array<{ option: O; idx: number }> = []
+  let virtualPaddingTop = 0
+  let virtualPaddingBottom = 0
 
   const resolveIcon = (icon: PickerIconInput): ResolvedIcon | null => {
     if (!icon) {
@@ -105,6 +113,22 @@
     searchTerm,
     getOptionLabel
   )
+  $: virtualizationEnabled = filteredOptions.length > VIRTUALIZATION_THRESHOLD
+  $: {
+    if (!virtualizationEnabled) {
+      virtualizedOptions = filteredOptions.map((option, idx) => ({
+        option,
+        idx,
+      }))
+      virtualPaddingTop = 0
+      virtualPaddingBottom = 0
+    } else {
+      tick().then(updateVirtualSlice)
+    }
+  }
+  $: if (virtualizationEnabled && component) {
+    tick().then(updateVirtualSlice)
+  }
 
   const onClick = (e: MouseEvent) => {
     e.preventDefault()
@@ -158,9 +182,43 @@
     }
   }
 
-  $: component?.addEventListener("scroll", onScroll)
+  const updateVirtualSlice = () => {
+    if (!virtualizationEnabled || !component) {
+      return
+    }
+    const total = filteredOptions.length
+    if (!total) {
+      virtualizedOptions = []
+      virtualPaddingTop = 0
+      virtualPaddingBottom = 0
+      return
+    }
+    const scrollTop = component.scrollTop
+    const baseStart = Math.floor(scrollTop / OPTION_HEIGHT)
+    const startIndex = Math.max(baseStart - VIRTUALIZATION_OVERSCAN, 0)
+    const visibleCount =
+      Math.ceil(maxHeight / OPTION_HEIGHT) + VIRTUALIZATION_OVERSCAN * 2
+    const endIndex = Math.min(startIndex + visibleCount, total)
+    virtualPaddingTop = startIndex * OPTION_HEIGHT
+    virtualPaddingBottom = Math.max(total - endIndex, 0) * OPTION_HEIGHT
+    virtualizedOptions = filteredOptions
+      .slice(startIndex, endIndex)
+      .map((option, offset) => ({
+        option,
+        idx: startIndex + offset,
+      }))
+  }
+
+  const handleScroll = (event: Event) => {
+    const target = event.currentTarget as HTMLElement
+    onScroll(event)
+    if (virtualizationEnabled && target === component) {
+      updateVirtualSlice()
+    }
+  }
+
   onDestroy(() => {
-    component?.removeEventListener("scroll", onScroll)
+    component = null
   })
 </script>
 
@@ -209,7 +267,7 @@
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : undefined}
   customHeight={customPopoverHeight}
-  maxHeight={360}
+  {maxHeight}
 >
   <div
     class="popover-content"
@@ -226,7 +284,12 @@
         placeholder={searchPlaceholder}
       />
     {/if}
-    <ul class="spectrum-Menu" role="listbox" bind:this={component}>
+    <ul
+      class="spectrum-Menu"
+      role="listbox"
+      bind:this={component}
+      on:scroll={handleScroll}
+    >
       {#if showSelectAll && filteredOptions.length > 0}
         <li
           class="spectrum-Menu-item select-all-item"
@@ -269,7 +332,14 @@
         </li>
       {/if}
       {#if filteredOptions.length}
-        {#each filteredOptions as option, idx (getOptionValue(option, idx) ?? idx)}
+        {#if virtualizationEnabled && virtualPaddingTop > 0}
+          <li
+            class="virtual-spacer"
+            aria-hidden="true"
+            style={`height:${virtualPaddingTop}px`}
+          />
+        {/if}
+        {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -321,6 +391,13 @@
             </div>
           </li>
         {/each}
+        {#if virtualizationEnabled && virtualPaddingBottom > 0}
+          <li
+            class="virtual-spacer"
+            aria-hidden="true"
+            style={`height:${virtualPaddingBottom}px`}
+          />
+        {/if}
       {/if}
     </ul>
 
@@ -461,5 +538,11 @@
   }
   .select-all-item .select-all-check {
     display: block;
+  }
+  .virtual-spacer {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
   }
 </style>

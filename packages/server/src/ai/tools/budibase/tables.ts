@@ -1,10 +1,13 @@
 import { z } from "zod"
 import { newTool } from ".."
 import sdk from "../../../sdk"
+import { ToolType } from "@budibase/types"
 
 export default [
   newTool({
     name: "list_tables",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "List all tables in the current app",
     parameters: z.object({
       showSchema: z
@@ -30,6 +33,8 @@ export default [
 
   newTool({
     name: "get_table",
+    sourceType: ToolType.BUDIBASE,
+    sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to retrieve"),

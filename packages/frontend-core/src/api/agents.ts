@@ -1,14 +1,11 @@
 import {
   AgentChat,
-  AgentToolSource,
-  AgentToolSourceWithTools,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
-  CreateToolSourceRequest,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
-  Tool,
+  ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -27,13 +24,7 @@ export interface AgentEndpoints {
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchToolSources: (agentId: string) => Promise<AgentToolSourceWithTools[]>
-  fetchAvailableTools: (toolSourceType: string) => Promise<Tool[]>
-  createToolSource: (
-    toolSource: CreateToolSourceRequest
-  ) => Promise<{ created: true }>
-  updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
-  deleteToolSource: (toolSourceId: string) => Promise<{ deleted: true }>
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
@@ -99,35 +90,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchToolSources: async (agentId: string) => {
+  fetchTools: async () => {
     return await API.get({
-      url: `/api/agent/${agentId}/toolsource`,
-    })
-  },
-
-  fetchAvailableTools: async (toolSourceType: string) => {
-    return await API.get({
-      url: `/api/agent/toolsource/${toolSourceType}/tools`,
-    })
-  },
-
-  createToolSource: async (toolSource: CreateToolSourceRequest) => {
-    return await API.post({
-      url: "/api/agent/toolsource",
-      body: toolSource as any,
-    })
-  },
-
-  updateToolSource: async (toolSource: AgentToolSource) => {
-    return await API.put({
-      url: "/api/agent/toolsource",
-      body: toolSource as any,
-    })
-  },
-
-  deleteToolSource: async (toolSourceId: string) => {
-    return await API.delete({
-      url: `/api/agent/toolsource/${toolSourceId}`,
+      url: `/api/agent/tools`,
     })
   },
 

@@ -1,19 +1,30 @@
-import { Tool } from "@budibase/types"
+import { ToolType } from "@budibase/types"
 import { z } from "zod"
 
 export { default as budibase } from "./budibase"
+export * from "./restQuery"
+
+export interface ExecutableTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
+  name: string
+  description: string
+  parameters: T
+  handler: (args: unknown) => Promise<unknown>
+  sourceType: ToolType
+  sourceLabel?: string
+}
 
 export interface ServerToolArgs<T extends z.ZodTypeAny> {
   name: string
+  sourceType: ToolType
+  sourceLabel: string
   description: string
   parameters?: T
   handler: (args: z.infer<T>) => Promise<unknown>
-  strict?: boolean
 }
 
 export function newTool<T extends z.ZodTypeAny>(
   tool: ServerToolArgs<T>
-): Tool<T> {
+): ExecutableTool<T> {
   const parameters = tool.parameters ?? (z.object({}) as unknown as T)
 
   const errorAwareHandler = async (rawArgs: unknown): Promise<unknown> => {
@@ -33,10 +44,11 @@ export function newTool<T extends z.ZodTypeAny>(
   }
 
   return {
-    strict: tool.strict ?? true,
     parameters,
     description: tool.description,
     handler: errorAwareHandler,
     name: tool.name,
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
   }
 }
