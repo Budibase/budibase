@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Checkbox, Icon, Drawer, Button } from "@budibase/bbui"
+  import type { LabelPosition } from "@budibase/bbui"
   import { createEventDispatcher, setContext } from "svelte"
   import {
     readableToRuntimeBinding,
@@ -14,14 +15,13 @@
   export let bindings: any[] = []
   export let text: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: "above" | "side" = "above"
+  export let labelPosition: LabelPosition = "above"
   export let helpText: string | undefined = undefined
   export let disabled: boolean = false
   export let allowHBS: boolean = true
   export let allowJS: boolean = true
   export let allowHelpers: boolean = true
   export let allowHTML: boolean = false
-  export let allowSnippets: boolean = true
   export let key: string | null = null
   export let title: string | undefined = undefined
   export let disableBindings: boolean = false
@@ -29,8 +29,13 @@
   export let context: any | undefined = undefined
   export let size: "S" | "M" | "L" | "XL" = "M"
 
+  type DrawerHandle = {
+    hide: () => void
+    show: () => void
+  }
+
   const dispatch = createEventDispatcher()
-  let bindingDrawer
+  let bindingDrawer: DrawerHandle | null = null
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -112,7 +117,7 @@
     currentVal = readableToRuntimeBinding(bindings, parsed)
     dispatch("change", currentVal)
     builderStore.propertyFocus(null)
-    bindingDrawer.hide()
+    bindingDrawer?.hide()
   }
 
   setContext("binding-drawer-actions", {
@@ -150,7 +155,7 @@
         class="icon"
         on:click={() => {
           builderStore.propertyFocus(key)
-          bindingDrawer.show()
+          bindingDrawer?.show()
         }}
       >
         <Icon size="S" weight="fill" name="lightning" />
@@ -180,7 +185,6 @@
     {allowJS}
     {allowHelpers}
     {allowHTML}
-    {allowSnippets}
     {context}
   />
 </Drawer>
