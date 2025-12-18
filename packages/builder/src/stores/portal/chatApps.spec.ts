@@ -4,8 +4,42 @@ import type { ChatApp } from "@budibase/types"
 
 vi.mock("@/stores/builder", async () => {
   const { writable } = await import("svelte/store")
+  const initialState = {
+    appId: "workspace-123",
+    name: "",
+    url: "",
+    libraries: [],
+    clientFeatures: {
+      spectrumThemes: false,
+      intelligentLoading: false,
+      deviceAwareness: false,
+      state: false,
+      rowSelection: false,
+      customThemes: false,
+      devicePreview: false,
+      messagePassing: false,
+      continueIfAction: false,
+      showNotificationAction: false,
+      sidePanel: false,
+    },
+    typeSupportPresets: {},
+    features: {
+      componentValidation: false,
+      disableUserMetadata: false,
+    },
+    clientLibPath: "",
+    hasLock: true,
+    appInstance: null,
+    initialised: false,
+    hasAppPackage: false,
+    usedPlugins: [],
+    automations: {},
+    routes: {},
+    scripts: [],
+    translationOverrides: {},
+  }
   return {
-    appStore: writable({ appId: "workspace-123" }),
+    appStore: writable(initialState),
   }
 })
 
@@ -37,7 +71,7 @@ describe("chatAppsStore", () => {
     fetchChatApp.mockReset()
     updateChatApp.mockReset()
     setChatAppAgent.mockReset()
-    appStore.set({ appId: "workspace-123" })
+    appStore.set({ ...get(appStore), appId: "workspace-123" })
   })
 
   it("updates agentId when requested agent differs", async () => {
