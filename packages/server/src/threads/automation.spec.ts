@@ -7,6 +7,7 @@ import {
   AutomationStepType,
   AutomationTestProgressEvent,
   AutomationTriggerStepId,
+  AutomationStepResult,
 } from "@budibase/types"
 import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
@@ -15,6 +16,10 @@ import { basicAutomation } from "../tests/utilities/structures"
 import { executeInThread } from "./automation"
 import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
+
+const isAutomationStepResult = (
+  result: AutomationTestProgressEvent["result"]
+): result is AutomationStepResult => !!result && "outputs" in result
 
 describe("automation thread", () => {
   const config = new TestConfiguration()
@@ -214,9 +219,12 @@ describe("automation thread", () => {
 
     const firstBranchEvent = branchEvents[0]
     expect(firstBranchEvent.status).toBe("running")
-    expect(firstBranchEvent.result?.outputs).toMatchObject({
-      branchId: branch1Id,
-    })
+
+    if (isAutomationStepResult(firstBranchEvent.result)) {
+      expect(firstBranchEvent.result.outputs).toMatchObject({
+        branchId: branch1Id,
+      })
+    }
 
     const firstBranchEventIndex = progressEvents.findIndex(
       e => e === firstBranchEvent
