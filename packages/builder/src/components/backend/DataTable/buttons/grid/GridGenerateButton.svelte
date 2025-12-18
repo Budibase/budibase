@@ -16,8 +16,6 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import { BlockDefinitionTypes } from "@budibase/types"
 
-  $goto
-
   const { datasource } = getContext("grid")
 
   let popover: DetailPopover

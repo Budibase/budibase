@@ -3,8 +3,6 @@
   import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
 
-  $redirect
-
   onMount(async () => {
     const { list, selected, hasData } = $datasources
     if (selected) {

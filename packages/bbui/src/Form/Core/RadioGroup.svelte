@@ -49,7 +49,7 @@
           class="spectrum-Radio-input"
           {disabled}
         />
-        <span class="spectrum-Radio-button"></span>
+        <span class="spectrum-Radio-button" />
         <label for="" class="spectrum-Radio-label">
           {getOptionLabel(option)}
         </label>

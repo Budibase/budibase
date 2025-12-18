@@ -3,8 +3,6 @@
   import { queries } from "@/stores/builder"
   import { redirect } from "@roxi/routify"
 
-  $redirect
-
   onMount(async () => {
     const { list, selected } = $queries
     if (selected) {

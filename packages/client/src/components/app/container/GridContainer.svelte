@@ -163,12 +163,12 @@
   {#if inBuilder}
     <div class="underlay-h">
       {#each { length: rows } as _}
-        <div class="placeholder-h"></div>
+        <div class="placeholder-h" />
       {/each}
     </div>
     <div class="underlay-v">
       {#each { length: GridColumns } as _}
-        <div class="placeholder-v"></div>
+        <div class="placeholder-v" />
       {/each}
     </div>
   {/if}

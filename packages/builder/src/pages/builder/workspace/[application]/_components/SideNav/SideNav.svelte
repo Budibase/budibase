@@ -77,9 +77,6 @@
     return target?.backupErrors || {}
   }
 
-  $goto
-  $url
-
   type ResourceLinkFn = (_id: string) => string
 
   interface UIFavouriteResource {

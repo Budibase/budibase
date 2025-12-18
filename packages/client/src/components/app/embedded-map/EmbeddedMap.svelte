@@ -389,7 +389,7 @@
     id={embeddedMapId}
     class="embedded embedded-map"
     bind:this={mapContainerEl}
-  ></div>
+  />
 
   {#if candidateMarkerPosition}
     <div class="button-container">

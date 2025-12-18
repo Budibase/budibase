@@ -22,9 +22,6 @@
   import { onDestroy, onMount } from "svelte"
   import { get } from "svelte/store"
 
-  $goto
-  $isActive
-  $goto
   let iframe
   let layout
   let screen
@@ -277,8 +274,8 @@
     bind:this={iframe}
     src={`/app/${$appStore.appId}/preview`}
     class:hidden={loading || error}
-  ></iframe>
-  <div class="underlay"></div>
+  />
+  <div class="underlay" />
   <div
     class="add-component"
     class:active={isAddingComponent}

@@ -1,6 +1,13 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import { type EnrichedTool } from "@budibase/types"
+  import { type ToolMetadata } from "@budibase/types"
+  import type { IconInfo } from "@/helpers/integrationIcons"
+
+  interface EnrichedTool extends ToolMetadata {
+    readableBinding: string
+    runtimeBinding: string
+    icon?: IconInfo
+  }
 
   export let filteredTools: EnrichedTool[]
   export let toolSections: Record<string, EnrichedTool[]>

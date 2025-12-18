@@ -43,7 +43,7 @@
     target="_blank"
     href="https://docs.budibase.com/docs/trigger"
   >
-    <i class="ri-information-line"></i>
+    <i class="ri-information-line" />
     <span>Learn about webhooks</span>
   </a>
 </ModalContent>

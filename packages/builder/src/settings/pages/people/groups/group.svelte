@@ -25,8 +25,6 @@
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
 
-  $goto
-
   export let groupId
 
   const routing = getContext("routing")

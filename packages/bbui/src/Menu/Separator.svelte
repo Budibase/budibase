@@ -1,1 +1,1 @@
-<li class="spectrum-Menu-divider" role="separator"></li>
+<li class="spectrum-Menu-divider" role="separator" />

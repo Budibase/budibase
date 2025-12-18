@@ -6,5 +6,3 @@ globalBuilderRoutes
   .post("/api/plugin", controller.create)
   .get("/api/plugin", controller.fetch)
   .delete("/api/plugin/:pluginId", controller.destroy)
-  .get("/api/plugin/updates", controller.checkUpdates)
-  .post("/api/plugin/updates", controller.applyUpdates)

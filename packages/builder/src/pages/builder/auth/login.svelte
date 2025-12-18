@@ -21,8 +21,6 @@
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
 
-  $goto
-
   let loaded = false
   let form
   let errors = {}

@@ -15,8 +15,6 @@
   import Logo from "assets/bb-emblem.svg"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
-  $goto
-
   let form
   let errors = {}
   let formData = {}

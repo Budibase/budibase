@@ -14,8 +14,6 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
 
-  $goto
-
   let email = ""
   let form
   let error
