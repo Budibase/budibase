@@ -32,6 +32,12 @@ import {
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
+import {
+  AutomationTestProgressEvent,
+  TestProgressState,
+  isTestAutomationResponse,
+} from "@budibase/types"
+
 import { notifications } from "@budibase/bbui"
 import { QueryUtils, Utils } from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
@@ -96,6 +102,7 @@ import { rowActions } from "./rowActions"
 
 const initialAutomationState: AutomationStoreState = {
   automations: [],
+  testProgress: {},
   showTestModal: false,
   blockDefinitions: {
     TRIGGER: {},
@@ -104,6 +111,15 @@ const initialAutomationState: AutomationStoreState = {
   },
   selectedAutomationId: null,
   viewMode: ViewMode.EDITOR,
+}
+
+let testStatusTimer: NodeJS.Timeout | undefined
+
+const stopTestStatusPolling = () => {
+  if (testStatusTimer) {
+    clearInterval(testStatusTimer)
+    testStatusTimer = undefined
+  }
 }
 
 const getFinalDefinitions = (
@@ -1333,15 +1349,108 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   test: async (automation: Automation, testData: any) => {
-    let result: TestAutomationResponse
+    const startedAt = Date.now()
+    stopTestStatusPolling()
+    store.update(state => {
+      state.inProgressTest = {
+        automationId: automation._id!,
+        startedAt,
+      }
+      state.testProgress = {}
+      state.testResults = undefined
+      return state
+    })
     try {
-      result = await API.testAutomation(automation._id!, testData)
-    } catch (err: any) {
-      const message = err.message || err.status || JSON.stringify(err)
+      await API.testAutomation(automation._id!, testData, { async: true })
+    } catch (err) {
+      store.update(state => {
+        state.inProgressTest = undefined
+        return state
+      })
+      const e = err as { message?: string; status?: string | number }
+      const message = e.message || e.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
+    store.actions.startTestPolling(automation._id!)
+  },
+
+  startTestPolling: (automationId: string) => {
+    stopTestStatusPolling()
+    testStatusTimer = setInterval(async () => {
+      try {
+        const status: TestProgressState | null =
+          await API.getAutomationTestStatus(automationId)
+        if (!status) {
+          return
+        }
+        const events: AutomationTestProgressEvent[] = Object.values(
+          status.events || {}
+        )
+        events.forEach(event =>
+          store.actions.handleTestProgress({
+            ...event,
+            automationId,
+          })
+        )
+        if (status.completed && status.result) {
+          store.actions.handleTestProgress({
+            automationId,
+            status: "complete",
+            occurredAt: status.lastUpdated || Date.now(),
+            result: status.result,
+          })
+        }
+      } catch (err) {
+        stopTestStatusPolling()
+        store.update(state => {
+          state.inProgressTest = undefined
+          return state
+        })
+      }
+    }, 2000)
+  },
+
+  handleTestProgress: (event: AutomationTestProgressEvent) => {
+    if (!event?.automationId) {
+      return
+    }
+    const selectedId = get(selectedAutomation)?.data?._id
+    if (selectedId && event.automationId !== selectedId) {
+      return
+    }
+
     store.update(state => {
-      state.testResults = result
+      state.inProgressTest = state.inProgressTest || {
+        automationId: event.automationId,
+        startedAt: event.occurredAt,
+      }
+
+      if (event.blockId) {
+        const existing = state.testProgress || {}
+        state.testProgress = {
+          ...existing,
+          [event.blockId]: {
+            status: event.status,
+            occurredAt: event.occurredAt,
+            result: event.result,
+            message: event.message,
+            automationId: event.automationId,
+            loop: event.loop,
+          },
+        }
+      }
+
+      if (event.status === "complete" && event.result) {
+        if (isTestAutomationResponse(event.result)) {
+          state.testResults = event.result
+        }
+        state.testProgress = {}
+        state.inProgressTest = undefined
+        stopTestStatusPolling()
+      } else if (event.status === "error" && !event.blockId) {
+        state.inProgressTest = undefined
+        stopTestStatusPolling()
+      }
       return state
     })
   },
