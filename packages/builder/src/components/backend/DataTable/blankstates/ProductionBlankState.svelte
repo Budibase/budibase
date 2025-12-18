@@ -56,7 +56,7 @@
       <div class="card-title">Publish</div>
       <div class="card-body">
         <div class="card-text">
-          Publish Dev schema to Prod (no data copied).
+          Publish Dev schema to Prod (without copying any data).
         </div>
         <Button disabled={loading} on:click={publishEmpty}>
           <div class="button-content" aria-live="polite">
