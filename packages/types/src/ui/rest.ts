@@ -4,7 +4,7 @@ export interface RestTemplateSpec {
     | `${number}.${number}`
     | `${number}.${number}.${number}`
     | `v${number}`
-  url: string
+  url?: string
   data?: string
 }
 
