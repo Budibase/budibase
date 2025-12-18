@@ -6,12 +6,14 @@ vi.mock("@/api", () => {
   const fetchChatApp = vi.fn()
   const updateChatApp = vi.fn()
   const setChatAppAgent = vi.fn()
+  const getAppID = vi.fn()
 
   return {
     API: {
       fetchChatApp,
       updateChatApp,
       setChatAppAgent,
+      getAppID,
     },
   }
 })
@@ -22,6 +24,7 @@ import { chatAppsStore } from "./chatApps"
 const fetchChatApp = vi.mocked(API.fetchChatApp)
 const updateChatApp = vi.mocked(API.updateChatApp)
 const setChatAppAgent = vi.mocked(API.setChatAppAgent)
+const getAppID = vi.mocked(API.getAppID)
 
 describe("chatAppsStore", () => {
   beforeEach(() => {
@@ -29,6 +32,8 @@ describe("chatAppsStore", () => {
     fetchChatApp.mockReset()
     updateChatApp.mockReset()
     setChatAppAgent.mockReset()
+    getAppID.mockReset()
+    getAppID.mockReturnValue("workspace-123")
   })
 
   it("updates agentId when requested agent differs", async () => {
@@ -45,9 +50,10 @@ describe("chatAppsStore", () => {
     fetchChatApp.mockResolvedValue(chatApp)
     setChatAppAgent.mockResolvedValue(updated)
 
-    const result = await chatAppsStore.ensureChatApp("workspace-123", "agent-2")
+    const result = await chatAppsStore.ensureChatApp("agent-2")
 
-    expect(fetchChatApp).toHaveBeenCalledWith("workspace-123")
+    expect(getAppID).toHaveBeenCalled()
+    expect(fetchChatApp).toHaveBeenCalledWith()
     expect(setChatAppAgent).toHaveBeenCalledWith("chatapp-1", "agent-2")
     expect(get(chatAppsStore.store).chatAppId).toEqual("chatapp-1")
     expect(result).toEqual(updated)
@@ -56,7 +62,7 @@ describe("chatAppsStore", () => {
   it("returns null when chat app cannot be fetched", async () => {
     fetchChatApp.mockResolvedValue(null)
 
-    const result = await chatAppsStore.ensureChatApp("workspace-123", "agent-2")
+    const result = await chatAppsStore.ensureChatApp("agent-2")
 
     expect(result).toBeNull()
   })

@@ -7,35 +7,44 @@ interface ChatAppsStoreState {
   conversations: ChatConversation[]
   chatAppId?: string
   currentConversationId?: string
-  workspaceId?: string
 }
 
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
+  private workspaceId?: string
+
   constructor() {
     super({
       conversations: [],
       chatAppId: undefined,
       currentConversationId: undefined,
-      workspaceId: undefined,
     })
   }
 
-  reset = (workspaceId?: string) => {
+  private syncWorkspace = () => {
+    const workspaceId = API.getAppID()
+    if (workspaceId && this.workspaceId && workspaceId !== this.workspaceId) {
+      this.reset()
+    }
+    this.workspaceId = workspaceId
+    return workspaceId
+  }
+
+  reset = () => {
     this.update(state => {
       state.conversations = []
       state.chatAppId = undefined
       state.currentConversationId = undefined
-      state.workspaceId = workspaceId || state.workspaceId
       return state
     })
   }
 
-  ensureChatApp = async (
-    workspaceId?: string,
-    agentId?: string
-  ): Promise<ChatApp | null> => {
-    const state = get(this.store)
-    let chatApp = await API.fetchChatApp(workspaceId || state.workspaceId)
+  ensureChatApp = async (agentId?: string): Promise<ChatApp | null> => {
+    const workspaceId = this.syncWorkspace()
+    if (!workspaceId) {
+      return null
+    }
+
+    let chatApp = await API.fetchChatApp()
 
     if (!chatApp?._id) {
       return null
@@ -47,7 +56,6 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
     this.update(state => {
       state.chatAppId = chatApp._id
-      state.workspaceId = workspaceId || state.workspaceId
       return state
     })
 
@@ -72,8 +80,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return conversations
   }
 
-  initConversations = async (workspaceId?: string, agentId?: string) => {
-    const chatApp = await this.ensureChatApp(workspaceId, agentId)
+  initConversations = async (agentId?: string) => {
+    const chatApp = await this.ensureChatApp(agentId)
     if (chatApp?._id) {
       await this.fetchConversations(chatApp._id)
     }
