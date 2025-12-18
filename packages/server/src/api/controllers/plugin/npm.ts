@@ -1,4 +1,9 @@
-import { getPluginMetadata } from "../../../utilities/fileSystem"
+import {
+  getPluginMetadata,
+  findFileRec,
+  extractTarball,
+  deleteFolderFileSystem,
+} from "../../../utilities/fileSystem"
 import fetch from "node-fetch"
 import { join } from "path"
 import { downloadUnzipTarball } from "./utils"
@@ -35,7 +40,17 @@ export async function npmUpload(url: string, name: string, headers = {}) {
   }
 
   const path = await downloadUnzipTarball(npmTarballUrl, pluginName, headers)
-  const pluginRoot = join(path, "package", "dist")
+  const tarballPluginFile = findFileRec(path, ".tar.gz")
+  if (!tarballPluginFile) {
+    throw new Error("Tarball plugin file not found")
+  }
 
-  return await getPluginMetadata(pluginRoot)
+  try {
+    await extractTarball(tarballPluginFile, path)
+    deleteFolderFileSystem(join(path, "package"))
+  } catch (err: any) {
+    throw new Error(err)
+  }
+
+  return await getPluginMetadata(path)
 }

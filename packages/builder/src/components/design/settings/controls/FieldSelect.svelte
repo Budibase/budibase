@@ -10,8 +10,6 @@
   import { debounce } from "lodash"
   import { params } from "@roxi/routify"
 
-  $params
-
   export let componentInstance = {}
   export let value = ""
   export let placeholder

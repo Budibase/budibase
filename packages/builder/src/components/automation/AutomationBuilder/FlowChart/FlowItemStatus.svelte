@@ -114,7 +114,7 @@
       <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
       >
     {:else}
-      <span></span>
+      <span />
     {/if}
     {#if blockResult && flowStatus && !hideStatus}
       <span class={`flow-${flowStatus.type} flow-status-btn`}>

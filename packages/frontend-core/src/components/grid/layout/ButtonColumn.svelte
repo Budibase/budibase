@@ -8,7 +8,7 @@
   const {
     renderedRows,
     hoveredRowId,
-    gridProps,
+    props,
     width,
     rows,
     focusedRow,
@@ -26,7 +26,7 @@
 
   let container
 
-  $: buttons = getButtons($gridProps)
+  $: buttons = getButtons($props)
   $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
@@ -116,11 +116,11 @@
               class="buttons"
               class:offset={$showVScrollbar && $showHScrollbar}
             >
-              {#if $gridProps.buttonsCollapsed}
+              {#if $props.buttonsCollapsed}
                 {#if rowButtons.length > 0}
                   <CollapsedButtonGroup
                     buttons={makeCollapsedButtons(rowButtons, row)}
-                    text={$gridProps.buttonsCollapsedText || "Action"}
+                    text={$props.buttonsCollapsedText || "Action"}
                     align="right"
                     offset={5}
                     size="S"
@@ -128,7 +128,7 @@
                     on:mouseenter={() => ($hoveredRowId = row._id)}
                   />
                 {:else}
-                  <div class="button-placeholder-collapsed"></div>
+                  <div class="button-placeholder-collapsed" />
                 {/if}
               {:else}
                 {#each rowButtons as button}
@@ -143,13 +143,13 @@
                     on:click={() => handleClick(button, row)}
                   >
                     {#if button.icon}
-                      <i class="{button.icon} S"></i>
+                      <i class="{button.icon} S" />
                     {/if}
                     {button.text || "Button"}
                   </Button>
                 {/each}
                 {#if rowButtons.length === 0}
-                  <div class="button-placeholder"></div>
+                  <div class="button-placeholder" />
                 {/if}
               {/if}
             </div>

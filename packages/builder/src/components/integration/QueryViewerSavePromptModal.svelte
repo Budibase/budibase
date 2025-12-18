@@ -2,9 +2,6 @@
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Body, Modal, ModalContent } from "@budibase/bbui"
 
-  $beforeUrlChange
-  $goto
-
   export let checkIsModified = () => {}
   export let attemptSave = () => {}
   let modal

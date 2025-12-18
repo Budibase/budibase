@@ -34,8 +34,6 @@
   import Spaceman from "assets/bb-space-man.svg"
   import { onMount } from "svelte"
 
-  $goto // manually initialize the helper
-
   let loaded: boolean = false
   let userInfoModal: Modal
   let changePasswordModal: Modal
@@ -142,10 +140,7 @@
                     rel="noreferrer"
                     href={getUrl(app)}
                   >
-                    <div
-                      class="preview"
-                      use:gradient={{ seed: app.name }}
-                    ></div>
+                    <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
                       <Body size="S">

@@ -5,8 +5,6 @@
   import { appStore } from "@/stores/builder"
   import { API } from "@/api"
 
-  $goto
-
   export let appId
   export let appName
   export let onDeleteSuccess = () => {

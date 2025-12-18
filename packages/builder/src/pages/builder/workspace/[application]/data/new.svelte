@@ -18,9 +18,6 @@
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
   import { IntegrationTypes } from "@/constants/backend"
 
-  $goto
-  $params
-
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
 

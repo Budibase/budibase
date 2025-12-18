@@ -4,8 +4,6 @@
   import { redirect } from "@roxi/routify"
   import { TableNames } from "@/constants"
 
-  $redirect
-
   onMount(() => {
     if ($tables.selected) {
       $redirect(`./${$tables.selected._id}`)

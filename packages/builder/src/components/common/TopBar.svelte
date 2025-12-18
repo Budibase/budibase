@@ -12,8 +12,6 @@
   import type { PopoverAPI } from "@budibase/bbui"
   import { url } from "@roxi/routify"
 
-  $url
-
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true

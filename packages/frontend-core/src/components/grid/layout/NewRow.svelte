@@ -188,17 +188,14 @@
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
-    <div
-      class="underlay sticky"
-      transition:fade|local={{ duration: 130 }}
-    ></div>
-    <div class="underlay" transition:fade|local={{ duration: 130 }}></div>
+    <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
+    <div class="underlay" transition:fade|local={{ duration: 130 }} />
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
       <div class="row">
         <GutterCell expandable on:expand={addViaModal} rowHovered>
           <Icon name="plus" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
-            <div in:fade={{ duration: 130 }} class="loading-overlay"></div>
+            <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
         </GutterCell>
         {#if $displayColumn}
@@ -217,7 +214,7 @@
               <div class="readonly-overlay">Can't edit auto column</div>
             {/if}
             {#if isAdding}
-              <div in:fade={{ duration: 130 }} class="loading-overlay"></div>
+              <div in:fade={{ duration: 130 }} class="loading-overlay" />
             {/if}
           </DataCell>
         {/if}
@@ -243,7 +240,7 @@
                 <div class="readonly-overlay">Can't edit auto column</div>
               {/if}
               {#if isAdding}
-                <div in:fade={{ duration: 130 }} class="loading-overlay"></div>
+                <div in:fade={{ duration: 130 }} class="loading-overlay" />
               {/if}
             </DataCell>
           {/each}

@@ -6,17 +6,17 @@
 </script>
 
 <div class:sideNav id="clientAppSkeletonLoader" class="skeleton">
-  <div class="animation" class:noAnimation></div>
+  <div class="animation" class:noAnimation />
 
   {#if !hideDevTools}
-    <div class="devTools"></div>
+    <div class="devTools" />
   {/if}
   <div class="main">
-    <div class="nav"></div>
+    <div class="nav" />
     <div class="body">
-      <div class="bodyVerticalPadding"></div>
+      <div class="bodyVerticalPadding" />
       <div class="bodyHorizontal">
-        <div class="bodyHorizontalPadding"></div>
+        <div class="bodyHorizontalPadding" />
         <svg
           class="svg"
           xmlns="http://www.w3.org/2000/svg"
@@ -42,13 +42,13 @@
             mask="url(#mask)"
           />
         </svg>
-        <div class="bodyHorizontalPadding"></div>
+        <div class="bodyHorizontalPadding" />
       </div>
-      <div class="bodyVerticalPadding"></div>
+      <div class="bodyVerticalPadding" />
     </div>
   </div>
   {#if !hideFooter}
-    <div class="footer"></div>
+    <div class="footer" />
   {/if}
 </div>
 
