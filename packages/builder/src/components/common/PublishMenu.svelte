@@ -6,8 +6,6 @@
     ActionMenu,
     PopoverAlignment,
     MenuItem,
-    Modal,
-    ModalContent,
   } from "@budibase/bbui"
   import {
     deploymentStore,
@@ -15,69 +13,14 @@
     workspaceAppStore,
     workspaceDeploymentStore,
     tables,
-    appStore,
   } from "@/stores/builder"
-  import { type Plugin, TableSourceType } from "@budibase/types"
+  import { TableSourceType } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
-  let actionMenu: any
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
   let seedProductionTables = false
   let menuOpen = false
-  let pluginWarningModal: Modal | undefined
-  let pendingSeedProductionTables = false
-
-  const CURRENT_SVELTE_MAJOR = 5
-  const LEGACY_SVELTE_MAJOR = 4
-
-  const getPluginSvelteMajor = (plugin: Plugin): number | undefined => {
-    const major = plugin?.schema?.metadata?.svelteMajor
-    return typeof major === "number" ? major : undefined
-  }
-
-  const getEffectivePluginSvelteMajor = (plugin: Plugin): number => {
-    return getPluginSvelteMajor(plugin) ?? LEGACY_SVELTE_MAJOR
-  }
-
-  $: incompatiblePlugins = ($appStore.usedPlugins || []).filter(plugin => {
-    const major = getPluginSvelteMajor(plugin)
-    // `schema.metadata.svelteMajor` only exists on Svelte 5 plugins - treat
-    // absence as legacy (Svelte 4).
-    return major !== CURRENT_SVELTE_MAJOR
-  })
-
-  const hasAcknowledgedSvelte4PluginWarning = (appId?: string) => {
-    const key = `bb:publish:svelte4-plugin-warning-ack:${appId}`
-    if (!key || typeof window === "undefined") {
-      return false
-    }
-    try {
-      return window.localStorage.getItem(key) === "1"
-    } catch (err) {
-      return false
-    }
-  }
-
-  const acknowledgeSvelte4PluginWarning = (appId?: string) => {
-    const key = `bb:publish:svelte4-plugin-warning-ack:${appId}`
-    if (!key || typeof window === "undefined") {
-      return
-    }
-    try {
-      window.localStorage.setItem(key, "1")
-    } catch (err) {
-      // Ignore storage failures (e.g. privacy mode)
-    }
-  }
-
-  let hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
-  )
-
-  $: hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
-  )
 
   // Get all internal tables and check if they're published
   $: unpublishedInternalTableIds = $tables.list
@@ -90,42 +33,14 @@
 
   $: hasEmptyProdTables = unpublishedInternalTableIds.length > 0
 
-  const showPluginWarningModal = () => {
-    pendingSeedProductionTables = seedProductionTables
-    actionMenu?.hide?.()
-    menuOpen = false
-    pluginWarningModal?.show()
-  }
-
   const publish = async () => {
-    if (incompatiblePlugins.length && !hasAcknowledgedWarning) {
-      showPluginWarningModal()
-      return
-    }
-    actionMenu?.hide?.()
-    menuOpen = false
-    await publishWithoutChecks(seedProductionTables)
-  }
-
-  const publishWithoutChecks = async (seedProdTables: boolean) => {
-    await deploymentStore.publishApp({ seedProductionTables: seedProdTables })
+    await deploymentStore.publishApp({ seedProductionTables })
     publishSuccessPopover?.show()
     seedProductionTables = false
-  }
-
-  const publishAnyway = async () => {
-    acknowledgeSvelte4PluginWarning($appStore.appId)
-    hasAcknowledgedWarning = true
-    actionMenu?.hide?.()
-    menuOpen = false
-    pluginWarningModal?.hide()
-    await publishWithoutChecks(pendingSeedProductionTables)
-    pendingSeedProductionTables = false
   }
 </script>
 
 <ActionMenu
-  bind:this={actionMenu}
   disabled={$deploymentStore.isPublishing}
   roundedPopover
   on:open={() => (menuOpen = true)}
@@ -143,7 +58,7 @@
         <Icon size="M" name="arrow-circle-up" />
         <span>Publish</span>
       </div>
-      <div class="separator"></div>
+      <div class="separator" />
       <div
         bind:this={publishPopoverAnchor}
         class="publish-dropdown"
@@ -204,40 +119,6 @@
     </Body>
   </div>
 </Popover>
-
-<Modal bind:this={pluginWarningModal}>
-  <ModalContent
-    title="Svelte 4 plugins detected"
-    confirmText="Publish anyway"
-    cancelText="Cancel"
-    warning
-    disabled={$deploymentStore.isPublishing}
-    onConfirm={publishAnyway}
-  >
-    <Body size="S">
-      Some plugins in this workspace were built for Svelte 4 and may not work
-      correctly until they are updated to Svelte 5.
-    </Body>
-
-    {#if incompatiblePlugins.length}
-      <div class="plugin-warning-list">
-        <ul>
-          {#each incompatiblePlugins as plugin (plugin._id || plugin.name)}
-            <li>
-              <span class="plugin-name">{plugin.name}</span>
-              {#if plugin.version}
-                <span class="plugin-version">v{plugin.version}</span>
-              {/if}
-              <span class="plugin-svelte-major">
-                Svelte {getEffectivePluginSvelteMajor(plugin)}
-              </span>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-  </ModalContent>
-</Modal>
 
 <style>
   .publish-menu {
@@ -307,35 +188,5 @@
   .seed-publish.disabled .menu-item-header,
   .seed-publish.disabled .menu-item-text {
     color: unset;
-  }
-
-  .plugin-warning-list {
-    margin-top: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-100);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
-    padding: var(--spacing-m);
-  }
-  .plugin-warning-list ul {
-    margin: 0;
-    padding-left: var(--spacing-m);
-  }
-  .plugin-warning-list li {
-    display: flex;
-    gap: var(--spacing-s);
-    align-items: center;
-    margin: var(--spacing-s) 0;
-  }
-  .plugin-name {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .plugin-version {
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .plugin-svelte-major {
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-700);
   }
 </style>

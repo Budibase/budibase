@@ -3,8 +3,6 @@
   import { queries } from "@/stores/builder"
   import { goto } from "@roxi/routify"
 
-  $goto
-
   export let datasource
 
   let dynamicVariables = []

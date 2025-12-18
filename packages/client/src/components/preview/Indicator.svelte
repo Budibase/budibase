@@ -73,7 +73,7 @@
         data-side={side}
         data-id={componentId}
       >
-        <div class="anchor-inner"></div>
+        <div class="anchor-inner" />
       </div>
     {/each}
   {/if}

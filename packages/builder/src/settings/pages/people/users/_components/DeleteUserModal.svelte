@@ -3,8 +3,6 @@
   import { Body, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
 
-  $goto
-
   export let user
 
   async function deleteUser() {

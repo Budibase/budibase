@@ -14,8 +14,6 @@
   import { get } from "svelte/store"
   import { onMount } from "svelte"
 
-  $goto
-
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
   $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud

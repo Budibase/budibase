@@ -1,27 +1,7 @@
-import type { Component } from "svelte"
 import { Input, Select } from "@budibase/bbui"
 import ColorPicker from "@/components/design/settings/controls/ColorPicker.svelte"
 
-interface StyleOption {
-  label: string
-  value: string
-}
-
-interface StyleSetting {
-  label: string
-  key: string
-  control: Component<any>
-  placeholder?: string
-  options?: StyleOption[]
-  column?: string
-}
-
-interface StyleGroup {
-  label: string
-  settings: StyleSetting[]
-}
-
-export const margin: StyleGroup = {
+export const margin = {
   label: "Margin",
   settings: [
     {
@@ -107,7 +87,7 @@ export const margin: StyleGroup = {
   ],
 }
 
-export const padding: StyleGroup = {
+export const padding = {
   label: "Padding",
   settings: [
     {
@@ -193,7 +173,7 @@ export const padding: StyleGroup = {
   ],
 }
 
-export const size: StyleGroup = {
+export const size = {
   label: "Size",
   settings: [
     {
@@ -211,7 +191,7 @@ export const size: StyleGroup = {
   ],
 }
 
-export const font: StyleGroup = {
+export const font = {
   label: "Font",
   settings: [
     {
@@ -222,7 +202,7 @@ export const font: StyleGroup = {
   ],
 }
 
-export const background: StyleGroup = {
+export const background = {
   label: "Background",
   settings: [
     {
@@ -310,7 +290,7 @@ export const background: StyleGroup = {
   ],
 }
 
-export const border: StyleGroup = {
+export const border = {
   label: "Border",
   settings: [
     {
@@ -380,4 +360,4 @@ export const border: StyleGroup = {
   ],
 }
 
-export const all: StyleGroup[] = [margin]
+export const all = [margin]

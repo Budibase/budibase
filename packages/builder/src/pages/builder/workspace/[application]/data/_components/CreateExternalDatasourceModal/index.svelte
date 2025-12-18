@@ -12,8 +12,6 @@
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "@/stores/selectors"
 
-  $goto
-
   export let loading = false
   const store = createDatasourceCreationStore()
   const onGoogleAuth = createOnGoogleAuthStore()

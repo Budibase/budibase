@@ -24,7 +24,7 @@
       on:dblclick={() => resize.actions.resetSize(column)}
       style={getStyle(column, $scrollLeft)}
     >
-      <div class="resize-indicator"></div>
+      <div class="resize-indicator" />
     </div>
   {/each}
 {/if}

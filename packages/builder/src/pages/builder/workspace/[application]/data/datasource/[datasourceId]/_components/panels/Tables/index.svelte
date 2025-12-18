@@ -6,8 +6,6 @@
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
 
-  $goto
-
   export let datasource
 
   let tableSchema = {

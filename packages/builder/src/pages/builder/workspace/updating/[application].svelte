@@ -14,9 +14,6 @@
     appStore.update(state => ({ ...state, appId: application }))
   }
 
-  $params
-  $redirect
-
   async function isMigrationDone() {
     const response = await API.getMigrationStatus()
     return response.migrated

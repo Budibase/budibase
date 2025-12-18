@@ -4,10 +4,9 @@
   import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
   import BudibaseAILogo from "./logos/BBAI.svelte"
   import type { AIProvider, ProviderConfig } from "@budibase/types"
+  import { type ComponentType } from "svelte"
 
-  type LogoComponent = typeof BudibaseAILogo
-
-  const logos: Partial<Record<AIProvider, LogoComponent>> = {
+  const logos: Partial<Record<AIProvider, ComponentType>> = {
     BudibaseAI: BudibaseAILogo,
     OpenAI: OpenAILogo,
     AzureOpenAI: AzureOpenAILogo,
@@ -21,13 +20,7 @@
 <div class="option">
   <div class="details">
     <div class="icon">
-      {#if logos[config.provider]}
-        <svelte:component
-          this={logos[config.provider]}
-          height="26"
-          width="26"
-        />
-      {/if}
+      <svelte:component this={logos[config.provider]} height="26" width="26" />
     </div>
     <div class="header">
       <Body size="S" weight={"600"}>{config.name}</Body>

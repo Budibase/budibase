@@ -37,8 +37,6 @@
     },
   ]
 
-  $params
-
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
   let templateIcon

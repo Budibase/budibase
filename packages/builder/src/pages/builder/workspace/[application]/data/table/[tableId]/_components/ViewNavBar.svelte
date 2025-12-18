@@ -31,9 +31,6 @@
   import { WorkspaceResource, DataEnvironmentMode } from "@budibase/types"
   import { API } from "@/api"
 
-  $params
-  $url
-
   const favourites = workspaceFavouriteStore.lookup
 
   // View overflow

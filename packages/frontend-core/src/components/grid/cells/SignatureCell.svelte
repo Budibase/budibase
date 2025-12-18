@@ -11,12 +11,7 @@
   export let readonly = false
   export let api
 
-  const {
-    API,
-    notifications,
-    props: gridProps,
-    datasource,
-  } = getContext("grid")
+  const { API, notifications, props, datasource } = getContext("grid")
 
   let isOpen = false
   let modal
@@ -78,7 +73,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="signature-cell"
-  class:light={!$gridProps?.darkMode}
+  class:light={!$props?.darkMode}
   class:editable
   bind:this={anchor}
   on:click={editable ? open : null}
@@ -93,7 +88,7 @@
   onConfirm={saveSignature}
   title={schema?.name}
   {value}
-  darkMode={$gridProps.darkMode}
+  darkMode={$props.darkMode}
   bind:this={modal}
 />
 
@@ -103,7 +98,7 @@
       {#if value?.key}
         <div class="signature-wrap">
           <CoreSignature
-            darkMode={$gridProps.darkMode}
+            darkMode={$props.darkMode}
             editable={false}
             {value}
             on:change={saveSignature}

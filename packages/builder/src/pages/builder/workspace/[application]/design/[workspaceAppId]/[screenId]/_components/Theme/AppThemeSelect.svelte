@@ -21,7 +21,7 @@
       class:selected={themeMeta.id === $themeStore.theme}
       on:click={() => onChangeTheme(themeMeta.id)}
     >
-      <div class="color {getThemeClassNames(themeMeta.id)}"></div>
+      <div class="color {getThemeClassNames(themeMeta.id)}" />
       {themeMeta.name}
     </div>
   {/each}

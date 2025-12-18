@@ -5,9 +5,6 @@
   import { IntegrationTypes } from "@/constants/backend"
   import { datasources } from "@/stores/builder"
 
-  $params
-  $redirect
-
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
   $: {
     if (!datasource) {

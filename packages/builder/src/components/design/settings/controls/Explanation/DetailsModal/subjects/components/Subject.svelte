@@ -26,7 +26,7 @@
     </slot>
   </span>
 </div>
-<div class="divider"></div>
+<div class="divider" />
 <div bind:this={body} class="body">
   <slot />
 </div>

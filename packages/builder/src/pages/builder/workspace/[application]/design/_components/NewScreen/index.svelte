@@ -27,7 +27,6 @@
   let title: string
   let rootModal: Modal
   let createScreenModal: CreateScreenModal
-  let cancelHandler: (_e: CustomEvent<ModalCancelFrom>) => void = () => {}
   let selectedType: AutoScreenTypes | undefined
   let currentStepIndex: number
 
@@ -66,7 +65,7 @@
     createScreenModal.show(type, workspaceAppId)
 
     const selectedTypeSnapshot = selectedType
-    cancelHandler = e => {
+    createScreenModal.$on("cancel", e => {
       if (
         [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
           e.detail
@@ -75,7 +74,7 @@
         selectedType = selectedTypeSnapshot
         rootModal.show()
       }
-    }
+    })
   }
 </script>
 
@@ -193,7 +192,7 @@
   </ModalContent>
 </Modal>
 
-<CreateScreenModal on:cancel={cancelHandler} bind:this={createScreenModal} />
+<CreateScreenModal bind:this={createScreenModal} />
 
 <style>
   .subHeading {

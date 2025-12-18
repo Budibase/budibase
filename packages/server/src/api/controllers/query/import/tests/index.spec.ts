@@ -617,6 +617,26 @@ describe("Rest Importer", () => {
     },
   }
 
+  const openapiWithoutServers = {
+    openapi: "3.0.0",
+    info: {
+      title: "Missing Servers",
+      version: "1.0.0",
+    },
+    paths: {
+      "/items": {
+        get: {
+          operationId: "listItems",
+          responses: {
+            "200": {
+              description: "OK",
+            },
+          },
+        },
+      },
+    },
+  }
+
   it("adds datasource header defaults from OpenAPI security schemes", async () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
     const datasource: Datasource = {
@@ -649,5 +669,26 @@ describe("Rest Importer", () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
     const info = await restImporter.getInfo()
     expect(info.securityHeaders).toEqual(["X-Apikey"])
+  })
+
+  it("adds a baseUrl static variable when no server URL exists", async () => {
+    await init(JSON.stringify(openapiWithoutServers))
+    const staticVariables = restImporter.getStaticServerVariables()
+
+    expect(staticVariables).toEqual({ baseUrl: "" })
+  })
+
+  it("prefixes imported paths with the baseUrl binding when no server URL exists", async () => {
+    await init(JSON.stringify(openapiWithoutServers))
+    const datasource = await config.createDatasource()
+    const importResult = await config.doInContext(config.devWorkspaceId, () =>
+      restImporter.importQueries(datasource._id)
+    )
+
+    expect(importResult.queries.length).toBe(1)
+    const [query] = importResult.queries
+    expect(query.fields.path).toBe("{{baseUrl}}/items")
+
+    jest.clearAllMocks()
   })
 })

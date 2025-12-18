@@ -14,8 +14,6 @@
   import ErrorsBox from "@/components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
-  $goto
-
   export let row = {}
 
   const dispatch = createEventDispatcher()

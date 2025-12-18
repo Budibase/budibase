@@ -18,8 +18,6 @@
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { routeActions } from "."
 
-  $redirect
-
   let loading = false
 
   // Only admins allowed here

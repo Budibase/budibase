@@ -10,8 +10,6 @@
   } from "@/constants/backend"
   import { onMount } from "svelte"
 
-  $goto
-
   let modal
 
   $: builderStore.selectResource(DEFAULT_BB_DATASOURCE_ID)

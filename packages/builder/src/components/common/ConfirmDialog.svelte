@@ -20,17 +20,9 @@
   export const hide = () => {
     modal.hide()
   }
-
-  const handleHide = () => {
-    if (onClose) {
-      onClose()
-      return
-    }
-    onCancel?.()
-  }
 </script>
 
-<Modal bind:this={modal} on:hide={handleHide}>
+<Modal bind:this={modal} on:hide={onClose ?? onCancel}>
   <ModalContent
     onConfirm={onOk}
     {onCancel}

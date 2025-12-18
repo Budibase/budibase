@@ -4,8 +4,6 @@
   import { datasources } from "@/stores/builder"
   import { onMount } from "svelte"
 
-  $redirect
-
   onMount(() => {
     // Get first valid table ID of first datasource
     let tableId: string = TableNames.USERS

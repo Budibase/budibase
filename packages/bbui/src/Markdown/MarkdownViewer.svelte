@@ -23,7 +23,7 @@
   }
 </script>
 
-<div class="markdown-viewer" style="height:{height};" bind:this={ref}></div>
+<div class="markdown-viewer" style="height:{height};" bind:this={ref} />
 
 <style>
   .markdown-viewer {

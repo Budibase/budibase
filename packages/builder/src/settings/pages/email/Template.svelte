@@ -13,6 +13,7 @@
   import Editor from "@/components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
   import type { Template, GlobalTemplateBinding } from "@budibase/types"
+
   import { type Routing } from "@/types/routing"
   import { type Readable } from "svelte/store"
   import { routeActions } from ".."
@@ -192,7 +193,7 @@
       </Tab>
       <Tab title="Preview">
         <div class="preview">
-          <iframe title="preview" srcdoc={previewContent}></iframe>
+          <iframe title="preview" srcdoc={previewContent} />
         </div>
       </Tab>
     </Tabs>

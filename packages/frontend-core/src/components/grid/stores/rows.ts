@@ -1,5 +1,5 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { DataFetch, DataFetchDefinition, fetchData } from "../../../fetch"
+import { DataFetch, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
   generateRowID,
@@ -248,18 +248,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    type GridFetchSnapshot = {
-      rows: Row[]
-      loading: boolean
-      loaded: boolean
-      resetKey: string
-      hasNextPage: boolean
-      error: { message: string; status: number; url: string } | null
-      definition?: DataFetchDefinition | null
-    }
-
-    const fetchStore = newFetch as unknown as Readable<GridFetchSnapshot>
-    unsubscribe = fetchStore.subscribe(async $fetch => {
+    unsubscribe = newFetch.subscribe(async $fetch => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
@@ -488,7 +477,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Create rows
-    let saved: UIRow[] = []
+    let saved = []
     let failed = 0
     for (let i = 0; i < count; i++) {
       try {
@@ -707,7 +696,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
     // Update rows
     const $columnLookupMap = get(columnLookupMap)
-    let updated: UIRow[] = []
+    let updated = []
     let failed = 0
     for (let i = 0; i < count; i++) {
       const rowId = rowIds[i]
@@ -786,7 +775,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     if (resetRows) {
       rowCacheMap = {}
     }
-    let rowsToAppend: Row[] = []
+    let rowsToAppend = []
     let newRow
     const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < newRows.length; i++) {

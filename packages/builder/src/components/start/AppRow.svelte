@@ -2,17 +2,13 @@
   import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
   import { auth } from "@/stores/portal"
-  import { goto as gotoStore } from "@roxi/routify"
   import { Body, Button, Icon } from "@budibase/bbui"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
+  import { goto } from "@roxi/routify"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-
-  // Initialize Routify store and derive callable function
-  $gotoStore
-  $: goto = $gotoStore
 
   export let app
   export let lockedAction
@@ -35,11 +31,11 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../workspace/${app.devId}`)
+    $goto(`../../workspace/${app.devId}`)
   }
 
   const goToOverview = () => {
-    goto && goto(`../../workspace/${app.devId}/settings`)
+    $goto(`../../workspace/${app.devId}/settings`)
   }
 
   const goToApp = () => {
