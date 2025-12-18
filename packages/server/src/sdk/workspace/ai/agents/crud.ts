@@ -12,6 +12,7 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
+  ragMinDistance: agent.ragMinDistance,
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -60,6 +61,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
+    ragMinDistance: request.ragMinDistance,
   }
 
   const { rev } = await db.put(agent)
@@ -81,6 +83,7 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...request,
     updatedAt: new Date().toISOString(),
     enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
+    ragMinDistance: request.ragMinDistance,
   }
 
   const { rev } = await db.put(updated)

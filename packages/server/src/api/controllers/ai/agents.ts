@@ -36,7 +36,7 @@ import {
 const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
   files: AgentFile[]
-) => {
+): AgentMessageRagSource[] => {
   const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
   const summary = new Map<string, AgentMessageRagSource>()
 
@@ -107,11 +107,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
+  const minSimilarity = agent.ragMinDistance
+
   if (latestQuestion && readyFileSources.length > 0) {
     try {
       const result = await retrieveContextForSources(
         latestQuestion,
-        readyFileSources
+        readyFileSources,
+        undefined,
+        minSimilarity
       )
       retrievedContext = result.text
       if (result.chunks.length > 0) {
@@ -279,6 +283,7 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
+    ragMinDistance: body.ragMinDistance,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -306,6 +311,7 @@ export async function updateAgent(
     live: body.live,
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
+    ragMinDistance: body.ragMinDistance,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

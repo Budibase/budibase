@@ -406,7 +406,8 @@ export interface RetrievedContextResult {
 export const retrieveContextForSources = async (
   question: string,
   sourceIds: string[],
-  topK = 4
+  topK = 4,
+  similarityThreshold: number
 ): Promise<RetrievedContextResult> => {
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
     return { text: "", chunks: [] }
@@ -418,7 +419,7 @@ export const retrieveContextForSources = async (
     const vector = vectorLiteral(queryEmbedding)
     const { rows } = await client.query(
       `
-        SELECT source, chunk_text, chunk_hash
+        SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance
         FROM ${TABLE_NAME}
         WHERE source = ANY($2::text[])
         ORDER BY embedding <=> $1::vector
@@ -429,11 +430,24 @@ export const retrieveContextForSources = async (
     if (rows.length === 0) {
       return { text: "", chunks: [] }
     }
-    const chunks: RetrievedContextChunk[] = rows.map(row => ({
-      sourceId: row.source,
-      chunkText: row.chunk_text,
-      chunkHash: row.chunk_hash,
-    }))
+
+    const maxDistance = 1 - similarityThreshold
+    const chunks: RetrievedContextChunk[] = rows
+      .filter(row => {
+        if (similarityThreshold === 0) {
+          return true
+        }
+        const distance = Number(row.distance ?? 1)
+        return distance <= maxDistance
+      })
+      .map(row => ({
+        sourceId: row.source,
+        chunkText: row.chunk_text,
+        chunkHash: row.chunk_hash,
+      }))
+    if (chunks.length === 0) {
+      return { text: "", chunks: [] }
+    }
     return {
       text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
       chunks,

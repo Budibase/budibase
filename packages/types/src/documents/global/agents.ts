@@ -24,6 +24,7 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
+  ragMinDistance: number
 }
 
 export interface AgentMessageRagSource {

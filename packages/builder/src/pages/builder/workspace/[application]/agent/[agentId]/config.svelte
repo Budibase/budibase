@@ -52,7 +52,7 @@
   let draftAgentId: string | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
-  let draft = {
+  let draft: Agent = {
     name: "",
     description: "",
     aiconfig: "",
@@ -61,6 +61,7 @@
     icon: "",
     iconColor: "",
     enabledTools: [] as string[],
+    ragMinDistance: 0.7,
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -103,6 +104,7 @@
       icon: currentAgent.icon || "",
       iconColor: currentAgent.iconColor || "",
       enabledTools: currentAgent.enabledTools || [],
+      ragMinDistance: currentAgent.ragMinDistance,
     }
     draftAgentId = currentAgent._id
   }
@@ -532,6 +534,21 @@
                 icon="sliders-horizontal"
                 tooltip="Manage AI configurations"
                 on:click={() => bb.settings("/ai")}
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <Input
+                label="Minimum similarity"
+                labelPosition="left"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                bind:value={draft.ragMinDistance}
+                helperText="Chunks below this cosine similarity are ignored when building context."
+                on:change={() => scheduleSave(true)}
               />
             </div>
           </div>
