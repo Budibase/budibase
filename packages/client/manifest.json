@@ -9158,6 +9158,14 @@
       },
       {
         "type": "number",
+        "label": "Text size",
+        "key": "textSize",
+        "defaultValue": 16,
+        "min": 8,
+        "max": 48
+      },
+      {
+        "type": "number",
         "label": "Offset-X",
         "key": "offsetX",
         "dependsOn": "barLabels",

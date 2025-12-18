@@ -20,8 +20,9 @@
   export let barLabels
   export let offsetX
   export let offsetY
+  export let textSize
 
-  console.log({ palette })
+  console.log({ showTrack })
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -29,7 +30,7 @@
   $: options = {
     series,
     chart: {
-      height: 350,
+      height: 700,
       type: "radialBar",
       events: {
         dataPointSelection: function (event, chartContext, config) {
@@ -46,7 +47,7 @@
         endAngle,
         dataLabels: {
           name: {
-            show: true,
+            show: false,
             fontSize: "22px",
           },
           value: {
@@ -58,9 +59,13 @@
           useSeriesColors: true,
           offsetX,
           offsetY,
+          fontSize: `${textSize}px`,
         },
         track: {
           show: showTrack,
+          strokeWidth: "25%",
+          background: "#808080",
+          opacity: 0.5,
         },
       },
     },
