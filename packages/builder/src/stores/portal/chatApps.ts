@@ -29,7 +29,9 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       return undefined
     }
 
-    const nextAppId: string | undefined = get(appStore)?.appId || undefined
+    type AppStoreState = { appId?: string }
+    const state = get(appStore as any) as AppStoreState
+    const nextAppId: string | undefined = state?.appId || undefined
     if (this.currentAppId && nextAppId && this.currentAppId !== nextAppId) {
       this.reset()
     }
