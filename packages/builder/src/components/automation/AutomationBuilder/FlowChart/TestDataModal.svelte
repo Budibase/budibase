@@ -122,6 +122,7 @@
     await tick()
     try {
       await automationStore.actions.test($selectedAutomation.data, testData)
+      automationStore.update(state => ({ ...state, showTestModal: false }))
     } catch (error) {
       notifications.error(error)
     }
