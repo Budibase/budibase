@@ -1402,6 +1402,10 @@ const automationActions = (store: AutomationStore) => ({
         }
       } catch (err) {
         stopTestStatusPolling()
+        store.update(state => {
+          state.inProgressTest = undefined
+          return state
+        })
       }
     }, 2000)
   },

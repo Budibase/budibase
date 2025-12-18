@@ -230,7 +230,7 @@
           </ActionButton>
         </span>
       {:else if viewMode === ViewMode.LOGS}
-        <span class="flow-warn flow-status-btn">
+        <span class={`flow-${flowStatus.type} flow-status-btn`}>
           <ActionButton
             size="S"
             icon={flowStatus.icon}

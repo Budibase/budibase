@@ -58,8 +58,10 @@ export function recordTestProgress(
     state.events["__automation__"] = event
   }
 
-  if (event.status === "complete" && event.result) {
-    state.result = event.result
+  if (event.status === "complete") {
+    if (event.result) {
+      state.result = event.result
+    }
     state.completed = true
   }
 
