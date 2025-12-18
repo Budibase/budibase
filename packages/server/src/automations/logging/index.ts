@@ -4,11 +4,10 @@ import { Automation, AutomationResults, Workspace } from "@budibase/types"
 import sizeof from "object-sizeof"
 import env from "../../environment"
 
-const MAX_LOG_SIZE_MB = 5
 const MB_IN_BYTES = 1024 * 1024
 
-function sanitiseResults(results: AutomationResults) {
-  const message = `[removed] - max results size of ${MAX_LOG_SIZE_MB}MB exceeded`
+function sanitiseResults(results: AutomationResults, maxLogSizeMb: number) {
+  const message = `[removed] - max results size of ${maxLogSizeMb}MB exceeded`
   for (let step of results.steps) {
     step.inputs = {
       message,
@@ -28,9 +27,10 @@ export async function storeLog(
   if (env.DISABLE_AUTOMATION_LOGS) {
     return
   }
+  const maxLogSizeMb = env.AUTOMATION_MAX_LOG_SIZE_MB
   const bytes = sizeof(results)
-  if (bytes / MB_IN_BYTES > MAX_LOG_SIZE_MB) {
-    sanitiseResults(results)
+  if (bytes / MB_IN_BYTES > maxLogSizeMb) {
+    sanitiseResults(results, maxLogSizeMb)
   }
   try {
     await automations.logs.storeLog(automation, results)
