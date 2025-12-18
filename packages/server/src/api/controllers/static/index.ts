@@ -44,7 +44,6 @@ import {
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
-import { render } from "svelte/server"
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
@@ -273,7 +272,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
       }
 
-      const { head, body } = await render(AppComponent, { props: { props } })
+      const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
@@ -314,8 +313,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       ctx.body = await processString(appHbs, {
         head: `${head}${extraHead}`,
-        body: body,
-        css: `:root{${themeVariables}}`,
+        body: html,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId: workspaceId,
         embedded: bbHeaderEmbed,
         nonce: ctx.state.nonce,
@@ -372,15 +371,11 @@ export const serveBuilderPreview = async function (
 }
 
 function serveLocalFile(ctx: Ctx, fileName: string) {
-  // Resolve via the package.json to avoid ESM/CJS export resolution issues
-  // with require.resolve on packages that mark "type":"module".
-  const pkgJsonPath = require.resolve("@budibase/client/package.json")
-  const pkgDir = path.dirname(pkgJsonPath)
-  const distFromPkg = join(pkgDir, "dist")
-  //normal fallback
-  const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  const root = nodeModulesDist || distFromPkg
-  return send(ctx, fileName, { root })
+  const tsPath = join(require.resolve("@budibase/client"), "..")
+  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  return send(ctx, fileName, {
+    root: !fs.existsSync(rootPath) ? tsPath : rootPath,
+  })
 }
 
 export const serveClientLibrary = async function (

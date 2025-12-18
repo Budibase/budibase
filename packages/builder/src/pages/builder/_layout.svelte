@@ -37,9 +37,6 @@
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { writable } from "svelte/store"
 
-  $isActive
-  $redirect
-
   let initPromise
   let loaded = writable(false)
   let commandPaletteModal
@@ -323,7 +320,7 @@
 </Modal>
 
 {#await initPromise}
-  <div class="loading"></div>
+  <div class="loading" />
 {:then _}
   {#if $loaded || $admin.maintenance.length}
     <div class="content">

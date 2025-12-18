@@ -6,8 +6,6 @@
   import { ActionButton, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
 
-  $goto
-
   let promptText = ""
 
   $: isEnabled = $auth?.user?.llm && !$licensing.aiCreditsExceeded

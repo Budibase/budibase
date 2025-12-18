@@ -17,7 +17,7 @@
   }
 </script>
 
-<textarea class="json" disabled value={string}></textarea>
+<textarea class="json" disabled value={string} />
 
 <style>
   .json {

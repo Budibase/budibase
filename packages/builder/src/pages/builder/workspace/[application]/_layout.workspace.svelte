@@ -51,7 +51,7 @@
 <div class="root" class:blur={$previewStore.showPreview}>
   <SideNav bind:this={sideNav} />
   {#await promise}
-    <div class="loading"></div>
+    <div class="loading" />
   {:then _}
     <div class="body">
       <slot />

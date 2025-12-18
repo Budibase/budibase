@@ -1,4 +1,4 @@
-<div class="grid-popover-container"></div>
+<div class="grid-popover-container" />
 
 <style>
   .grid-popover-container {

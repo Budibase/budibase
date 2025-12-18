@@ -4,10 +4,8 @@
   import { createEventDispatcher } from "svelte"
   import { PhosphorIcons } from "./icons"
   import TextField from "../Form/Core/TextField.svelte"
-  import ActionButton from "../ActionButton/ActionButton.svelte"
-  import Body from "../Typography/Body.svelte"
+  import { ActionButton, Body, PopoverAlignment } from "@budibase/bbui"
   import Popover from "../Popover/Popover.svelte"
-  import { PopoverAlignment } from "../constants"
 
   export let value: string | undefined
 

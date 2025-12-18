@@ -10,8 +10,6 @@
   import Tooltip from "../Tooltip.svelte"
   import ViewImportSelection from "@/components/backend/Datasources/TableImportSelection/ViewImportSelection.svelte"
 
-  $goto
-
   export let datasource
 
   $: queryList = $queries.list.filter(

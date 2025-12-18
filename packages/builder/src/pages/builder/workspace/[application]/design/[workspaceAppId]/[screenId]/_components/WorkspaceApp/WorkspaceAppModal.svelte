@@ -20,8 +20,6 @@
   import type { ZodType } from "zod"
   import { z } from "zod"
 
-  $goto
-
   export let workspaceApp: UIWorkspaceApp | null = null
 
   let modal: Modal

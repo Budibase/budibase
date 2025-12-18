@@ -26,8 +26,6 @@
     ViewV2,
   } from "@budibase/types"
 
-  $goto
-
   let mode: AutoScreenTypes
   let workspaceAppId: string | undefined
 

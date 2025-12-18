@@ -31,11 +31,11 @@
     class="container spectrum {$themeStore.theme}"
     transition:fly={{ duration: 260, y: 130 }}
   >
-    <div class="header placeholder"></div>
+    <div class="header placeholder" />
     <div class="loading placeholder">
       <ProgressCircle />
     </div>
-    <iframe title="Budibase App Preview" {src}></iframe>
+    <iframe title="Budibase App Preview" {src} />
   </div>
 </div>
 

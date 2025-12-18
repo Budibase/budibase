@@ -14,7 +14,6 @@
   export let name: string
   export let config: any = undefined
   export let placeholder: string | undefined = undefined
-  export let visible: boolean = true
 
   // don't pass "number" type as it stops those options from being configurable
   // with an environment variable
@@ -50,7 +49,6 @@
   {name}
   {config}
   {placeholder}
-  {visible}
   on:blur
   on:change
   on:nestedFieldBlur
