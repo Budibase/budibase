@@ -26,7 +26,7 @@
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import ProductionBlankState from "@/components/backend/DataTable/blankstates/ProductionBlankState.svelte"
-  import { API } from "@/api"
+  import { publishTableToProduction } from "@/utils/publishTableToProduction"
 
   let generateButton: GridGenerateButton
   let missingProductionDefinition = false
@@ -110,8 +110,7 @@
       ? "Error seeding and publishing table"
       : "Error publishing table"
     try {
-      await API.publishTable(tableId, { seedProductionTables })
-      await workspaceDeploymentStore.fetch()
+      await publishTableToProduction(tableId, seedProductionTables)
       prodRefreshKey += 1
       missingProductionDefinition = false
       notifications.success("Table published to production")

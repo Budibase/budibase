@@ -35,7 +35,8 @@
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { getContext } from "svelte"
   import { onDestroy } from "svelte"
-  import { API, productionAPI } from "@/api"
+  import { productionAPI } from "@/api"
+  import { publishTableToProduction } from "@/utils/publishTableToProduction"
   import {
     DataEnvironmentMode,
     type Table,
@@ -261,8 +262,7 @@
       ? "Error seeding and publishing table"
       : "Error publishing table"
     try {
-      await API.publishTable(id, { seedProductionTables })
-      await workspaceDeploymentStore.fetch()
+      await publishTableToProduction(id, seedProductionTables)
       if (isProductionMode && gridContext?.rows?.actions?.refreshData) {
         await gridContext.rows.actions.refreshData()
       }
