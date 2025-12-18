@@ -1,6 +1,7 @@
 export { default as BindableCombobox } from "./BindableCombobox.svelte"
 export { default as BindingPanel } from "./BindingPanel.svelte"
 export { default as BindingSidePanel } from "./BindingSidePanel.svelte"
+export { default as DrawerBindableCheckbox } from "./DrawerBindableCheckbox.svelte"
 export { default as DrawerBindableCombobox } from "./DrawerBindableCombobox.svelte"
 export { default as ClientBindingPanel } from "./ClientBindingPanel.svelte"
 export { default as DrawerBindableInput } from "./DrawerBindableInput.svelte"
