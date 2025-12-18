@@ -2,7 +2,6 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { get } from "svelte/store"
-import { appStore } from "@/stores/builder"
 
 interface ChatAppsStoreState {
   conversations: ChatConversation[]
@@ -17,15 +16,25 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       chatAppId: undefined,
       currentConversationId: undefined,
     })
+  }
 
-    let prevAppId: string | undefined
-    appStore.subscribe(state => {
-      const nextAppId = state.appId || undefined
-      if (prevAppId && nextAppId && prevAppId !== nextAppId) {
-        this.reset()
-      }
-      prevAppId = nextAppId
-    })
+  private currentAppId?: string
+
+  private getWorkspaceId = async () => {
+    // Dynamic import avoids a circular dependency with `@/stores/builder` which
+    // itself imports from `@/stores/portal`.
+    const mod = await import("@/stores/builder")
+    const appStore: any = (mod as any).appStore
+    if (typeof appStore?.subscribe !== "function") {
+      return undefined
+    }
+
+    const nextAppId: string | undefined = get(appStore)?.appId || undefined
+    if (this.currentAppId && nextAppId && this.currentAppId !== nextAppId) {
+      this.reset()
+    }
+    this.currentAppId = nextAppId
+    return nextAppId
   }
 
   reset = () => {
@@ -38,7 +47,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   }
 
   ensureChatApp = async (agentId?: string): Promise<ChatApp | null> => {
-    const workspaceId = get(appStore).appId
+    const workspaceId = await this.getWorkspaceId()
     if (!workspaceId) {
       return null
     }
