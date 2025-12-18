@@ -21,8 +21,12 @@
   export let offsetX
   export let offsetY
   export let textSize
+  export let showImage
+  export let imageURL
+  export let imageWidth
+  export let imageHeight
 
-  console.log({ showTrack })
+  console.log({ showImage, imageURL, imageWidth, imageHeight })
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -66,6 +70,14 @@
           strokeWidth: "25%",
           background: "#808080",
           opacity: 0.5,
+        },
+        hollow: {
+          margin: 15,
+          image: showImage ? imageURL : "",
+          imageClipped: false,
+          imageWidth,
+          imageHeight,
+          position: "back",
         },
       },
     },
@@ -140,3 +152,6 @@
 </script>
 
 <ApexChart {options} />
+
+<style>
+</style>

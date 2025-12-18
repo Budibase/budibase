@@ -8981,8 +8981,9 @@
     "icon": "speedometer",
     "size": {
       "width": 600,
-      "height": 420
+      "height": 600
     },
+    "styles": ["size"],
     "grid": {
       "hAlign": "stretch",
       "vAlign": "center"
@@ -9177,6 +9178,29 @@
         "key": "offsetY",
         "dependsOn": "barLabels",
         "defaultValue": 0
+      },
+      {
+        "type": "boolean",
+        "label": "Show Image",
+        "key": "showImage"
+      },
+      {
+        "type": "text",
+        "label": "Image URL",
+        "key": "imageURL",
+        "dependsOn": "showImage"
+      },
+      {
+        "type": "number",
+        "label": "Image width",
+        "key": "imageWidth",
+        "dependsOn": "showImage"
+      },
+      {
+        "type": "number",
+        "label": "Image height",
+        "key": "imageHeight",
+        "dependsOn": "showImage"
       }
     ]
   }
