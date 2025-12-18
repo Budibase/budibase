@@ -220,6 +220,7 @@ describe("automation thread", () => {
     const firstBranchEvent = branchEvents[0]
     expect(firstBranchEvent.status).toBe("running")
 
+    expect(isAutomationStepResult(firstBranchEvent.result)).toBe(true)
     if (isAutomationStepResult(firstBranchEvent.result)) {
       expect(firstBranchEvent.result.outputs).toMatchObject({
         branchId: branch1Id,
