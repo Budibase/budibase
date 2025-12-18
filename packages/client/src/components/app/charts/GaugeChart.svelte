@@ -36,12 +36,16 @@
     chart: {
       height: 700,
       type: "radialBar",
+      animations: {
+        enabled: animate ?? true,
+        animateGradually: { enabled: animate ?? true },
+        dynamicAnimation: { enabled: animate ?? true },
+      },
       events: {
-        dataPointSelection: function (event, chartContext, config) {
-          console.log({ event, chartContext, config })
-          const lineIndex = config.dataPointIndex
-          const row = dataProvider.rows[lineIndex]
-          handleLineClick(row, lineIndex)
+        dataPointSelection: function (event, chartContext, opts) {
+          const index = opts?.dataPointIndex
+          const line = dataProvider?.rows?.[index]
+          handleLineClick(line, index)
         },
       },
     },
@@ -83,9 +87,6 @@
     },
     labels: categories,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
-    animations: {
-      enabled: animate,
-    },
     stroke: {
       lineCap: lineCap,
     },
