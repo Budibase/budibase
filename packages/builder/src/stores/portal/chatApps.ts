@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { get } from "svelte/store"
+import { appStore } from "@/stores/builder"
 
 interface ChatAppsStoreState {
   conversations: ChatConversation[]
@@ -10,23 +11,21 @@ interface ChatAppsStoreState {
 }
 
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
-  private workspaceId?: string
-
   constructor() {
     super({
       conversations: [],
       chatAppId: undefined,
       currentConversationId: undefined,
     })
-  }
 
-  private syncWorkspace = () => {
-    const workspaceId = API.getAppID()
-    if (workspaceId && this.workspaceId && workspaceId !== this.workspaceId) {
-      this.reset()
-    }
-    this.workspaceId = workspaceId
-    return workspaceId
+    let prevAppId: string | undefined
+    appStore.subscribe(state => {
+      const nextAppId = state.appId || undefined
+      if (prevAppId && nextAppId && prevAppId !== nextAppId) {
+        this.reset()
+      }
+      prevAppId = nextAppId
+    })
   }
 
   reset = () => {
@@ -39,12 +38,12 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   }
 
   ensureChatApp = async (agentId?: string): Promise<ChatApp | null> => {
-    const workspaceId = this.syncWorkspace()
+    const workspaceId = get(appStore).appId
     if (!workspaceId) {
       return null
     }
 
-    let chatApp = await API.fetchChatApp()
+    let chatApp = await API.fetchChatApp(workspaceId)
 
     if (!chatApp?._id) {
       return null

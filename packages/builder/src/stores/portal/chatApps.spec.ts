@@ -2,29 +2,34 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
 import type { ChatApp } from "@budibase/types"
 
+vi.mock("@/stores/builder", async () => {
+  const { writable } = await import("svelte/store")
+  return {
+    appStore: writable({ appId: "workspace-123" }),
+  }
+})
+
 vi.mock("@/api", () => {
   const fetchChatApp = vi.fn()
   const updateChatApp = vi.fn()
   const setChatAppAgent = vi.fn()
-  const getAppID = vi.fn()
 
   return {
     API: {
       fetchChatApp,
       updateChatApp,
       setChatAppAgent,
-      getAppID,
     },
   }
 })
 
 import { API } from "@/api"
+import { appStore } from "@/stores/builder"
 import { chatAppsStore } from "./chatApps"
 
 const fetchChatApp = vi.mocked(API.fetchChatApp)
 const updateChatApp = vi.mocked(API.updateChatApp)
 const setChatAppAgent = vi.mocked(API.setChatAppAgent)
-const getAppID = vi.mocked(API.getAppID)
 
 describe("chatAppsStore", () => {
   beforeEach(() => {
@@ -32,8 +37,7 @@ describe("chatAppsStore", () => {
     fetchChatApp.mockReset()
     updateChatApp.mockReset()
     setChatAppAgent.mockReset()
-    getAppID.mockReset()
-    getAppID.mockReturnValue("workspace-123")
+    appStore.set({ appId: "workspace-123" })
   })
 
   it("updates agentId when requested agent differs", async () => {
@@ -52,8 +56,7 @@ describe("chatAppsStore", () => {
 
     const result = await chatAppsStore.ensureChatApp("agent-2")
 
-    expect(getAppID).toHaveBeenCalled()
-    expect(fetchChatApp).toHaveBeenCalledWith()
+    expect(fetchChatApp).toHaveBeenCalledWith("workspace-123")
     expect(setChatAppAgent).toHaveBeenCalledWith("chatapp-1", "agent-2")
     expect(get(chatAppsStore.store).chatAppId).toEqual("chatapp-1")
     expect(result).toEqual(updated)
