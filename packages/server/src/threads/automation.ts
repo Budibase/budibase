@@ -535,7 +535,6 @@ class Orchestrator {
         }
 
         const step = steps[stepIndex]
-        this.reportStepProgress(step, "running", undefined, ctx)
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
             const branchResults = await this.executeBranchStep(ctx, step)
@@ -553,6 +552,7 @@ class Orchestrator {
             break
           }
           case AutomationActionStepId.LOOP_V2: {
+            this.reportStepProgress(step, "running", undefined, ctx)
             const result = await this.executeLoopStep(ctx, step)
             if (step.isLegacyLoop) {
               const childStep = step.inputs.children?.[0]
@@ -567,6 +567,7 @@ class Orchestrator {
             break
           }
           default: {
+            this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
               await quotas.addAction(async () => {
@@ -744,14 +745,21 @@ class Orchestrator {
       for (const branch of branches) {
         if (await branchMatches(ctx, branch)) {
           span.addTags({ branchName: branch.name, branchId: branch.id })
-          return [
-            stepSuccess(step, {
-              branchName: branch.name,
-              status: `${branch.name} branch taken`,
-              branchId: `${branch.id}`,
-            }),
-            ...(await this.executeSteps(ctx, children?.[branch.id] || [])),
-          ]
+          const selection = stepSuccess(step, {
+            branchName: branch.name,
+            status: `${branch.name} branch taken`,
+            branchId: `${branch.id}`,
+          })
+
+          // Emit an early "running" update with the selected branch ID so the
+          // builder can indicate which branch is active while children execute.
+          this.reportStepProgress(step, "running", selection, ctx)
+
+          const childResults = await this.executeSteps(
+            ctx,
+            children?.[branch.id] || []
+          )
+          return [selection, ...childResults]
         }
       }
 

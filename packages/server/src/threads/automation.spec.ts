@@ -5,6 +5,7 @@ import {
   AutomationStep,
   AutomationEventType,
   AutomationStepType,
+  AutomationTestProgressEvent,
   AutomationTriggerStepId,
 } from "@budibase/types"
 import { Job } from "bull"
@@ -13,6 +14,7 @@ import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
 import { executeInThread } from "./automation"
 import sdk from "../sdk"
+import { automations } from "@budibase/shared-core"
 
 describe("automation thread", () => {
   const config = new TestConfiguration()
@@ -138,5 +140,90 @@ describe("automation thread", () => {
       step => step.stepId === AutomationActionStepId.SERVER_LOG
     )
     expect(logStepResult).toBeUndefined()
+  })
+
+  it("emits selected branch ID while branch children execute", async () => {
+    const appId = config.getDevWorkspaceId()
+
+    const branch1Id = "branch-1"
+    const branch2Id = "branch-2"
+    const branchStepId = "branch-step"
+    const childStepId = "branch-child-step"
+
+    const { id: _ignored, ...serverLogDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+
+    const branchStep: AutomationStep = {
+      ...automations.steps.branch.definition,
+      id: branchStepId,
+      stepId: AutomationActionStepId.BRANCH,
+      inputs: {
+        branches: [
+          { id: branch1Id, name: "Branch 1", condition: {} },
+          { id: branch2Id, name: "Branch 2", condition: {} },
+        ],
+        children: {
+          [branch1Id]: [
+            {
+              ...serverLogDefinition,
+              id: childStepId,
+              stepId: AutomationActionStepId.SERVER_LOG,
+              inputs: { text: "child step" },
+            },
+          ],
+          [branch2Id]: [],
+        },
+      },
+    }
+
+    const job = {
+      data: {
+        automation: basicAutomation({
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [branchStep],
+          },
+        }),
+        event: {
+          appId,
+        },
+      },
+    } as Job<AutomationData>
+
+    const progressEvents: AutomationTestProgressEvent[] = []
+    await executeInThread(job, {
+      onProgress: event => progressEvents.push(event),
+    })
+
+    const branchEvents = progressEvents.filter(e => e.blockId === branchStepId)
+    expect(branchEvents.length).toBeGreaterThan(0)
+
+    const firstBranchEvent = branchEvents[0]
+    expect(firstBranchEvent.status).toBe("running")
+    expect(firstBranchEvent.result?.outputs).toMatchObject({
+      branchId: branch1Id,
+    })
+
+    const firstBranchEventIndex = progressEvents.findIndex(
+      e => e === firstBranchEvent
+    )
+    const firstChildRunningIndex = progressEvents.findIndex(
+      e => e.blockId === childStepId && e.status === "running"
+    )
+    expect(firstChildRunningIndex).toBeGreaterThan(firstBranchEventIndex)
   })
 })

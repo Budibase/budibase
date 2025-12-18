@@ -76,7 +76,26 @@
     viewMode !== ViewMode.LOGS &&
     !!block &&
     $automationStore.inProgressTest &&
-    $automationStore.testProgress?.[block.id]?.status === "running"
+    $automationStore.testProgress?.[block.id]?.status === "running" &&
+    (!branch ||
+      !isBranchStep(block) ||
+      (() => {
+        const progress = $automationStore.testProgress?.[block.id]?.result
+        if (!progress || typeof progress !== "object") {
+          return false
+        }
+        if (!("outputs" in progress)) {
+          return false
+        }
+        const outputs = progress.outputs
+        if (!outputs || typeof outputs !== "object") {
+          return false
+        }
+        if (!("branchId" in outputs)) {
+          return false
+        }
+        return outputs.branchId === branch.id
+      })())
 
   $: loopInfo =
     viewMode !== ViewMode.LOGS && block
