@@ -3,6 +3,7 @@ import { profileModalTranslations } from "./profileModal"
 import { passwordModalTranslations } from "./passwordModal"
 import { pickerTranslations } from "./picker"
 import { recaptchaTranslations } from "./recaptcha"
+import { portalTranslations } from "./portal"
 import type {
   TranslationCategory,
   TranslationDefinition,
@@ -16,6 +17,7 @@ export {
   passwordModalTranslations,
   pickerTranslations,
   recaptchaTranslations,
+  portalTranslations,
 }
 
 const translationModules = [
@@ -24,15 +26,18 @@ const translationModules = [
   passwordModalTranslations,
   pickerTranslations,
   recaptchaTranslations,
+  portalTranslations,
 ]
 
-export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> = {
-  userMenu: "User menu",
-  profileModal: "Profile modal",
-  passwordModal: "Password modal",
-  picker: "Picker",
-  recaptcha: "reCAPTCHA",
-}
+export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
+  {
+    userMenu: "User menu",
+    profileModal: "Profile modal",
+    passwordModal: "Password modal",
+    picker: "Picker",
+    recaptcha: "reCAPTCHA",
+    portal: "Portal",
+  }
 
 // Central export of all translation definitions across modules.
 // Add new translation modules to this list.
