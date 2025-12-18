@@ -11,7 +11,7 @@ import {
   DocumentType,
   Workspace,
 } from "@budibase/types"
-
+import { isWorkspacePublished } from "../workspace/workspaces/utils"
 let _devRevertProcessor: DevRevertProcessor | undefined
 
 class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
@@ -41,8 +41,9 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
 
     // App must have been deployed first
     const db = context.getProdWorkspaceDB({ skip_setup: true })
-    const exists = await db.exists()
-    if (!exists) {
+
+    const isPublished = await isWorkspacePublished(productionAppId)
+    if (!isPublished) {
       throw new queue.UnretriableError("App must be deployed to be reverted.")
     }
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)

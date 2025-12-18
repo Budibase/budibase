@@ -5,6 +5,7 @@ import {
   RestTemplateName,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
@@ -420,6 +421,18 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
 
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
+    {
+      name: "Ansible AWX",
+      description:
+        "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
+      specs: [
+        {
+          version: "v2",
+          url: "https://s3.amazonaws.com/awx-public-ci-files/devel/schema.json",
+        },
+      ],
+      icon: AnsibleLogo,
+    },
     {
       name: "BambooHR",
       description:
