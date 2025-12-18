@@ -504,7 +504,6 @@
   }
 
   function hideDeleteDialog() {
-    confirmDeleteDialog.hide()
     deleteColName = ""
   }
 

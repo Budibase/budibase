@@ -137,7 +137,7 @@
     </div>
 
     {#if blocks.length - 1 !== idx}
-      <div class="separator" />
+      <div class="separator"></div>
     {/if}
   {/each}
 </div>

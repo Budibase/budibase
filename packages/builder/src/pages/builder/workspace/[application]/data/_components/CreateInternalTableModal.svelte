@@ -3,6 +3,8 @@
   import { goto } from "@roxi/routify"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
+  $goto
+
   let modal
   let promptUpload = false
 
