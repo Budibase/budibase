@@ -9,7 +9,7 @@
   export let maxValue
   export let onClick
 
-  // export let title - Still want to add a title in here somewhere
+  export let title
   export let palette
   export let c1, c2, c3, c4, c5
   export let animate
@@ -27,6 +27,7 @@
   export let imageHeight
   export let height
   export let width
+  export let titleSize
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -56,11 +57,23 @@
         endAngle,
         dataLabels: {
           name: {
-            show: false,
+            show: true,
             fontSize: "22px",
           },
           value: {
             fontSize: "16px",
+            formatter: function (val) {
+              val.toFixed(2) + "%"
+            },
+          },
+          total: {
+            show: true,
+            label: title,
+            // Nothingburger function to override default behaviour
+            formatter: function (w) {
+              return
+            },
+            fontSize: `${titleSize}px`,
           },
         },
         barLabels: {

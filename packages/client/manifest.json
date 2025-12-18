@@ -9172,6 +9172,7 @@
         "type": "number",
         "label": "Text size",
         "key": "textSize",
+        "dependsOn": "barLabels",
         "defaultValue": 16,
         "min": 8,
         "max": 48
@@ -9212,6 +9213,12 @@
         "label": "Image height",
         "key": "imageHeight",
         "dependsOn": "showImage"
+      },
+      {
+        "type": "number",
+        "label": "Title size",
+        "key": "titleSize",
+        "defaultValue": 16
       }
     ]
   }
