@@ -14,6 +14,8 @@ import {
   SqlClient,
   EnrichedQueryJson,
   SqlQueryBinding,
+  DatasourceRelationshipConfig,
+  DatasourceRelationshipType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -25,6 +27,7 @@ import {
 } from "./utils"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
+import { v4 as uuidv4 } from "uuid"
 
 import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
@@ -67,6 +70,7 @@ const SCHEMA: Integration = {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
   },
+  relationships: true,
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -188,6 +192,88 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   WHERE pg_namespace.nspname = ANY(current_schemas(false))
     AND pg_table_is_visible(pg_class.oid)
     AND pg_class.relkind = 'v';
+  `
+
+  RELATIONSHIPS_SQL = () => `
+  SELECT
+    tc.table_schema,
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_schema AS foreign_table_schema,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+  FROM
+    information_schema.table_constraints AS tc
+    JOIN information_schema.key_column_usage AS kcu
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    JOIN information_schema.constraint_column_usage AS ccu
+      ON ccu.constraint_name = tc.constraint_name
+      AND ccu.table_schema = tc.table_schema
+  WHERE
+    tc.constraint_type = 'FOREIGN KEY'
+    AND tc.table_schema = ANY(current_schemas(false));
+  `
+
+  // SQL to identify junction tables for many-to-many relationships.
+  // A junction table must have exactly 2 foreign keys that reference exactly 2 different tables,
+  // and contain no additional non-nullable columns (ensuring it's purely a junction table).
+  //
+  // table_fks - Count FKs, distinct tables, and collect FK columns with ARRAY_AGG
+  // valid_junction_tables - Filter for valid junction tables using ANY() operator
+  // Main SELECT - Direct joins for final FK details
+  JUNCTION_TABLES_SQL = () => `
+  WITH table_fks AS (
+    SELECT
+      tc.table_name,
+      COUNT(*) as fk_count,
+      COUNT(DISTINCT ccu.table_name) as distinct_referenced_tables,
+      ARRAY_AGG(kcu.column_name ORDER BY kcu.column_name) as fk_columns
+    FROM
+      information_schema.table_constraints AS tc
+      JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name
+        AND ccu.table_schema = tc.table_schema
+    WHERE
+      tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_schema = ANY(current_schemas(false))
+    GROUP BY tc.table_name
+  ),
+  valid_junction_tables AS (
+    SELECT table_name
+    FROM table_fks
+    WHERE fk_count = 2 AND distinct_referenced_tables = 2
+      AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns c
+        WHERE c.table_name = table_fks.table_name
+          AND c.table_schema = ANY(current_schemas(false))
+          AND NOT (c.column_name = ANY(table_fks.fk_columns))
+          AND c.is_nullable = 'NO'
+          AND c.column_default IS NULL
+      )
+  )
+  SELECT
+    jt.table_name as junction_table,
+    ccu.table_name as referenced_table,
+    kcu.column_name as fk_column,
+    ccu.column_name as referenced_column
+  FROM valid_junction_tables jt
+  JOIN information_schema.table_constraints AS tc
+    ON tc.table_name = jt.table_name
+    AND tc.constraint_type = 'FOREIGN KEY'
+    AND tc.table_schema = ANY(current_schemas(false))
+  JOIN information_schema.key_column_usage AS kcu
+    ON tc.constraint_name = kcu.constraint_name
+    AND tc.table_schema = kcu.table_schema
+  JOIN information_schema.constraint_column_usage AS ccu
+    ON ccu.constraint_name = tc.constraint_name
+    AND ccu.table_schema = tc.table_schema
+  ORDER BY jt.table_name, ccu.table_name;
   `
 
   COLUMNS_SQL = () => `
@@ -444,6 +530,112 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const views: string[] = viewsResponse.rows.map(row => row.view_name)
 
       return views
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getRelationships(
+    tableNames?: string[]
+  ): Promise<DatasourceRelationshipConfig[]> {
+    try {
+      await this.openConnection()
+
+      // Get many-to-one relationships
+      const relationshipsResponse = await this.client.query(
+        this.RELATIONSHIPS_SQL()
+      )
+
+      // Get junction table information
+      const junctionResponse = await this.client.query(
+        this.JUNCTION_TABLES_SQL()
+      )
+
+      // Get list of junction table names
+      const junctionTableNames = [
+        ...new Set(junctionResponse.rows.map(row => row.junction_table)),
+      ]
+
+      // Create many-to-one relationship configs
+      const manyToOneRelationships: DatasourceRelationshipConfig[] =
+        relationshipsResponse.rows
+          .filter(row => row.table_name !== row.foreign_table_name) // Exclude self-referencing relationships
+          .filter(row => !junctionTableNames.includes(row.table_name)) // Exclude relationships from junction tables
+          .filter(
+            row =>
+              !tableNames ||
+              (tableNames.includes(row.table_name) &&
+                tableNames.includes(row.foreign_table_name))
+          ) // Filter for imported tables if tableNames is provided
+          .map(row => ({
+            _id: uuidv4(), // Generate a unique ID for the relationship
+            label: `${row.table_name}.${row.column_name} → ${row.foreign_table_name}.${row.foreign_column_name}`,
+            sourceTable: row.table_name,
+            sourceColumn: row.column_name,
+            targetTable: row.foreign_table_name,
+            targetColumn: row.foreign_column_name,
+            relationshipType: DatasourceRelationshipType.MANY_TO_ONE,
+          }))
+
+      // Create many-to-many relationship configs from junction tables
+      const manyToManyRelationships: DatasourceRelationshipConfig[] = []
+      const junctionGroups: { [key: string]: any[] } = {}
+
+      // Group junction FKs by junction table
+      junctionResponse.rows.forEach(row => {
+        if (!junctionGroups[row.junction_table]) {
+          junctionGroups[row.junction_table] = []
+        }
+        junctionGroups[row.junction_table].push(row)
+      })
+
+      // Create many-to-many relationships for each junction table
+      Object.entries(junctionGroups).forEach(([junctionTable, fks]) => {
+        if (fks.length === 2) {
+          const [fk1, fk2] = fks
+          // Sort the FKs by referenced table name to ensure consistent ordering
+          const sortedFks = [fk1, fk2].sort((a, b) =>
+            a.referenced_table.localeCompare(b.referenced_table)
+          )
+          const [firstFk, secondFk] = sortedFks
+
+          // Only create if both referenced tables are in the imported tables (if tableNames provided)
+          if (
+            !tableNames ||
+            (tableNames.includes(firstFk.referenced_table) &&
+              tableNames.includes(secondFk.referenced_table))
+          ) {
+            manyToManyRelationships.push({
+              _id: uuidv4(),
+              label: `${firstFk.referenced_table} ↔ ${secondFk.referenced_table} (via ${junctionTable})`,
+              sourceTable: secondFk.referenced_table, // Swap: second table becomes source
+              sourceColumn: secondFk.fk_column, // FK column in junction table pointing to second table
+              targetTable: firstFk.referenced_table, // Swap: first table becomes target
+              targetColumn: firstFk.fk_column, // FK column in junction table pointing to first table
+              relationshipType: DatasourceRelationshipType.MANY_TO_MANY,
+              junctionTable: junctionTable,
+            })
+          }
+        }
+      })
+
+      // Combine and sort all relationships
+      const allRelationships = [
+        ...manyToOneRelationships,
+        ...manyToManyRelationships,
+      ]
+      const sortedRelationships = allRelationships.sort((a, b) => {
+        // Sort by source table first, then by relationship type, then by source column
+        if (a.sourceTable !== b.sourceTable) {
+          return a.sourceTable.localeCompare(b.sourceTable)
+        }
+        if (a.relationshipType !== b.relationshipType) {
+          return a.relationshipType.localeCompare(b.relationshipType)
+        }
+        return a.sourceColumn.localeCompare(b.sourceColumn)
+      })
+
+      return sortedRelationships
     } finally {
       await this.closeConnection()
     }
