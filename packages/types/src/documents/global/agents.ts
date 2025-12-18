@@ -26,10 +26,21 @@ export interface Agent extends Document {
   enabledTools?: string[]
 }
 
+export interface AgentMessageRagSource {
+  sourceId: string
+  fileId?: string
+  filename?: string
+  chunkCount: number
+}
+
+export interface AgentMessageMetadata {
+  ragSources?: AgentMessageRagSource[]
+}
+
 export interface AgentChat extends Document {
   agentId?: string
   title: string
-  messages: UIMessage[]
+  messages: UIMessage<AgentMessageMetadata>[]
 }
 
 export enum AgentFileStatus {

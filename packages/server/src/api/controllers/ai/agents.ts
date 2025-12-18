@@ -2,7 +2,10 @@ import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   AgentChat,
+  AgentFile,
   AgentFileStatus,
+  AgentMessageMetadata,
+  AgentMessageRagSource,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
@@ -25,7 +28,33 @@ import {
   wrapLanguageModel,
 } from "ai"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
-import { retrieveContextForSources } from "../../../sdk/workspace/ai/rag"
+import {
+  retrieveContextForSources,
+  RetrievedContextChunk,
+} from "../../../sdk/workspace/ai/rag"
+
+const toSourceMetadata = (
+  chunks: RetrievedContextChunk[],
+  files: AgentFile[]
+) => {
+  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const summary = new Map<string, AgentMessageRagSource>()
+
+  for (const chunk of chunks) {
+    const file = fileBySourceId.get(chunk.sourceId)
+    if (!summary.has(chunk.sourceId)) {
+      summary.set(chunk.sourceId, {
+        sourceId: chunk.sourceId,
+        fileId: file?._id,
+        filename: file?.filename ?? chunk.sourceId,
+        chunkCount: 0,
+      })
+    }
+    const entry = summary.get(chunk.sourceId)!
+    entry.chunkCount += 1
+  }
+  return Array.from(summary.values())
+}
 
 const extractUserText = (message?: AgentChat["messages"][number]) => {
   if (!message || !Array.isArray(message.parts)) {
@@ -77,12 +106,17 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
+  let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
   if (latestQuestion && readyFileSources.length > 0) {
     try {
-      retrievedContext = await retrieveContextForSources(
+      const result = await retrieveContextForSources(
         latestQuestion,
         readyFileSources
       )
+      retrievedContext = result.text
+      if (result.chunks.length > 0) {
+        ragSourcesMetadata = toSourceMetadata(result.chunks, agentFiles)
+      }
     } catch (error) {
       console.log("Failed to retrieve agent context", error)
     }
@@ -142,8 +176,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         : "Conversation")
 
     ctx.respond = false
+    const messageMetadata =
+      ragSourcesMetadata && ragSourcesMetadata.length > 0
+        ? { ragSources: ragSourcesMetadata }
+        : undefined
+
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
+      ...(messageMetadata && {
+        messageMetadata: () => messageMetadata,
+      }),
       onFinish: async ({ messages }) => {
         const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
         const existingChat = chat._id

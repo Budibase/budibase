@@ -14,14 +14,14 @@ import {
 
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
-import { readUIMessageStream, UIMessage, UIMessageChunk } from "ai"
+import { readUIMessageStream, UIMessageChunk } from "ai"
 import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface AgentEndpoints {
   agentChatStream: (
     chat: AgentChat,
     workspaceId: string
-  ) => Promise<AsyncIterable<UIMessage>>
+  ) => Promise<AsyncIterable<AgentChat["messages"][number]>>
 
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>

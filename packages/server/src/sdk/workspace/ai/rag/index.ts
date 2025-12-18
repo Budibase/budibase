@@ -392,13 +392,24 @@ export const deleteAgentFileChunks = async (sourceIds: string[]) => {
   })
 }
 
+export interface RetrievedContextChunk {
+  sourceId: string
+  chunkText: string
+  chunkHash: string
+}
+
+export interface RetrievedContextResult {
+  text: string
+  chunks: RetrievedContextChunk[]
+}
+
 export const retrieveContextForSources = async (
   question: string,
   sourceIds: string[],
   topK = 4
-): Promise<string> => {
+): Promise<RetrievedContextResult> => {
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
-    return ""
+    return { text: "", chunks: [] }
   }
   const config = await buildRagConfig()
   return await withClient(config, async client => {
@@ -407,7 +418,7 @@ export const retrieveContextForSources = async (
     const vector = vectorLiteral(queryEmbedding)
     const { rows } = await client.query(
       `
-        SELECT chunk_text
+        SELECT source, chunk_text, chunk_hash
         FROM ${TABLE_NAME}
         WHERE source = ANY($2::text[])
         ORDER BY embedding <=> $1::vector
@@ -416,8 +427,16 @@ export const retrieveContextForSources = async (
       [vector, sourceIds, topK]
     )
     if (rows.length === 0) {
-      return ""
+      return { text: "", chunks: [] }
     }
-    return rows.map(row => row.chunk_text).join("\n\n")
+    const chunks: RetrievedContextChunk[] = rows.map(row => ({
+      sourceId: row.source,
+      chunkText: row.chunk_text,
+      chunkHash: row.chunk_hash,
+    }))
+    return {
+      text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
+      chunks,
+    }
   })
 }
