@@ -15,6 +15,8 @@
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
 
+  $goto
+
   type Config = { label: string; value: string }
 
   export let authConfigId: string | undefined

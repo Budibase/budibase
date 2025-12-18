@@ -456,7 +456,7 @@
         />
       </div>
       <div class="form-row">
-        <span />
+        <span></span>
         <Tags>
           <Tag closable={false}>openid</Tag>
           {#each providers.oidc.config.configs[0]["scopes"] || [...defaultScopes] as tag, idx}

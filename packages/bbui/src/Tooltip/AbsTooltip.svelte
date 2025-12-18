@@ -97,7 +97,7 @@
       transition:fade|local={{ duration: 130 }}
     >
       <span class="spectrum-Tooltip-label">{text}</span>
-      <span class="spectrum-Tooltip-tip" style={tipStyle} />
+      <span class="spectrum-Tooltip-tip" style={tipStyle}></span>
     </span>
   </Portal>
 {/if}

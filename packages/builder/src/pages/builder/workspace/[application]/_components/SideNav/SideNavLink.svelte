@@ -2,6 +2,8 @@
   import { Icon } from "@budibase/bbui"
   import { isActive } from "@roxi/routify"
 
+  $isActive
+
   export let text: string
   export let icon: string | undefined = undefined
   export let url: string | undefined = undefined

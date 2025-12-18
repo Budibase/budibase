@@ -13,10 +13,22 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import { events, objectStore } from "@budibase/backend-core"
-import { PluginSource } from "@budibase/types"
+jest.mock("../../controllers/plugin/github", () => {
+  const actual = jest.requireActual("../../controllers/plugin/github")
+  return {
+    ...actual,
+    githubUpload: jest.fn(actual.githubUpload),
+  }
+})
+
+import fs from "fs"
+import os from "os"
+import path from "path"
+import { events, objectStore, tenancy } from "@budibase/backend-core"
+import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
+import * as github from "../../controllers/plugin/github"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
@@ -243,6 +255,145 @@ describe("/plugins", () => {
       })
       expect(plugin._id).toEqual("plg_comment-box")
       expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("updates", () => {
+    const repo = "budibase/auto-update-test"
+    const pluginName = "auto-update-test"
+    const pluginId = `plg_${pluginName}`
+    const githubUploadMock = github.githubUpload as jest.Mock
+
+    beforeEach(async () => {
+      githubUploadMock.mockImplementation(async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "plugin-update-"))
+        return {
+          metadata: {
+            package: {
+              name: pluginName,
+              version: "1.1.0",
+              description: "Updated plugin",
+            },
+            schema: {
+              type: PluginType.COMPONENT,
+              metadata: { svelteMajor: 5 },
+              hash: "hash-1-1-0",
+            },
+          },
+          directory: dir,
+        }
+      })
+
+      await config.doInTenant(async () => {
+        const db = tenancy.getGlobalDB()
+        await db.put({
+          _id: pluginId,
+          description: "A test plugin",
+          name: pluginName,
+          version: "1.0.0",
+          source: PluginSource.GITHUB,
+          package: {
+            name: pluginName,
+            version: "1.0.0",
+            description: "Test plugin",
+          },
+          hash: "hash-1-0-0",
+          schema: {
+            type: PluginType.COMPONENT,
+          },
+          origin: {
+            source: "github",
+            url: `https://github.com/${repo}`,
+            repo,
+          },
+        })
+      })
+    })
+
+    afterEach(async () => {
+      githubUploadMock.mockReset()
+      await config.doInTenant(async () => {
+        const db = tenancy.getGlobalDB()
+        try {
+          const existing = await db.get(pluginId)
+          await db.remove(existing)
+        } catch (_) {
+          // ignore
+        }
+      })
+    })
+
+    it("should list available updates", async () => {
+      nock("https://api.github.com")
+        .get(`/repos/${repo}/releases/latest`)
+        .reply(
+          200,
+          {
+            tag_name: "v1.1.0",
+            html_url: `https://github.com/${repo}/releases/tag/v1.1.0`,
+            published_at: "2024-01-01T00:00:00Z",
+            body: "Changelog",
+            assets: [
+              {
+                content_type: "application/gzip",
+                browser_download_url: `https://github.com/${repo}/releases/download/v1.1.0/${pluginName}-1.1.0.tar.gz`,
+              },
+            ],
+          },
+          { ETag: '"etag-1"' }
+        )
+
+      const res = await request
+        .get(`/api/plugin/updates`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.updates).toBeDefined()
+      expect(res.body.updates.length).toEqual(1)
+      expect(res.body.updates[0].pluginId).toEqual(pluginId)
+      expect(res.body.updates[0].latestVersion).toEqual("1.1.0")
+      expect(githubUploadMock).toHaveBeenCalled()
+    })
+
+    it("should apply updates", async () => {
+      nock("https://api.github.com")
+        .get(`/repos/${repo}/releases/latest`)
+        .reply(
+          200,
+          {
+            tag_name: "v1.1.0",
+            html_url: `https://github.com/${repo}/releases/tag/v1.1.0`,
+            published_at: "2024-01-01T00:00:00Z",
+            body: "Changelog",
+            assets: [
+              {
+                content_type: "application/gzip",
+                browser_download_url: `https://github.com/${repo}/releases/download/v1.1.0/${pluginName}-1.1.0.tar.gz`,
+              },
+            ],
+          },
+          { ETag: '"etag-apply"' }
+        )
+
+      const res = await request
+        .post(`/api/plugin/updates`)
+        .set(config.defaultHeaders())
+        .send({ pluginIds: [pluginId] })
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.updated.length).toEqual(1)
+      expect(res.body.updated[0].updatedVersion).toEqual("1.1.0")
+      expect(res.body.failed.length).toEqual(0)
+      expect(githubUploadMock).toHaveBeenCalled()
+
+      await config.doInTenant(async () => {
+        const db = tenancy.getGlobalDB()
+        const updatedPlugin = await db.tryGet<Plugin>(pluginId)
+        expect(updatedPlugin?.version).toEqual("1.1.0")
+        expect(updatedPlugin?.origin?.latestKnownVersion).toEqual("1.1.0")
+      })
     })
   })
 })

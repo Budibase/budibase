@@ -9,6 +9,8 @@
   import { menu } from "@/stores/portal"
   import { bb } from "@/stores/bb"
 
+  $isActive
+
   export let visible = false
 
   const dispatch = createEventDispatcher()
@@ -23,7 +25,7 @@
     class="mobile-nav-underlay"
     transition:fade={{ duration: 130 }}
     on:click={close}
-  />
+  ></div>
 {/if}
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->

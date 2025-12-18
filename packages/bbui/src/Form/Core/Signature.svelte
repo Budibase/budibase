@@ -188,7 +188,7 @@
         id="signature-canvas"
         bind:this={canvasRef}
         style="--max-sig-width: {width}px; --max-sig-height: {height}px"
-      />
+      ></canvas>
       {#if editable}
         <div class="indicator-overlay">
           <div class="sign-here">

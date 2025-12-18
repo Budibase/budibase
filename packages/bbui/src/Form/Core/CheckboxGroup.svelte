@@ -7,7 +7,7 @@
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import "@spectrum-css/radio/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { Icon } from "@budibase/bbui"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let direction: "horizontal" | "vertical" = "vertical"
   export let value: V[] = []

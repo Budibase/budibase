@@ -19,7 +19,7 @@
   <div class="main">
     <div class="content" class:wide class:noPadding class:narrow class:narrower>
       <slot />
-      <div class="fix-scroll-padding" />
+      <div class="fix-scroll-padding"></div>
     </div>
   </div>
   <div

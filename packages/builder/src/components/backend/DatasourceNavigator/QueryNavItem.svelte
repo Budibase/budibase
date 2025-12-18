@@ -18,6 +18,9 @@
   import { WorkspaceResource } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
 
+  $gotoStore
+  $isActive
+
   export let datasource
   export let query
 

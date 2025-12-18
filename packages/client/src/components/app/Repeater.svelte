@@ -28,7 +28,7 @@
       </Provider>
     {/each}
   {:else if loaded && noRowsMessage}
-    <div class="noRows"><i class="ri-list-check-2" />{noRowsMessage}</div>
+    <div class="noRows"><i class="ri-list-check-2"></i>{noRowsMessage}</div>
   {/if}
 </Container>
 

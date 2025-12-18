@@ -23,7 +23,7 @@
     isSelectingCells,
     selectedCellMap,
     selectedCellCount,
-    props,
+    props: gridProps,
     buttonColumnWidth,
   } = getContext("grid")
 
@@ -32,7 +32,7 @@
     $hoveredRowId === row._id && (!$selectedCellCount || !$isSelectingCells)
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
-  $: hasButtons = $props?.buttons?.length > 0
+  $: hasButtons = $gridProps?.buttons?.length > 0
   $: needsButtonSpacer = hasButtons && $buttonColumnWidth > 0
 </script>
 

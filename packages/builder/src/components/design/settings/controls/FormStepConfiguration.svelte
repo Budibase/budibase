@@ -55,7 +55,7 @@
   $: stepInstance = {
     _id: savedInstance._id || Helpers.uuid(),
     _component: savedInstance._component || componentType,
-    _instanceName: `Step ${currentStep + 1}`,
+    _instanceName: `Step ${$currentStep + 1}`,
     title: savedInstance.title ?? defaults?.title,
     buttons: savedInstance.buttons || defaults?.buttons,
     buttonsCollapsed: savedInstance.buttonsCollapsed,

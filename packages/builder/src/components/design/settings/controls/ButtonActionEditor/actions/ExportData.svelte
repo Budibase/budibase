@@ -99,7 +99,7 @@
       options={componentOptions}
       on:change={() => (parameters.columns = [])}
     />
-    <span />
+    <span></span>
     <Label small>Export as</Label>
     <Select bind:value={parameters.type} options={FORMATS} />
     <Select

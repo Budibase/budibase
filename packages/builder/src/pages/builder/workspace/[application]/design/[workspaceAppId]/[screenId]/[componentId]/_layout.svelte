@@ -13,9 +13,19 @@
   import NavigationPanel from "./_components/Navigation/index.svelte"
   import ScreenSettingsPanel from "./_components/Screen/index.svelte"
 
+  // Extract stores from namespace for Svelte 5 compatibility
+  const { goto, params, url, redirect, isActive, page, layout } = routify
+
+  $goto
+  $params
+  $url
+  $redirect
+  $isActive
+  $page
+  $layout
+
   $: componentId = $componentStore.selectedComponentId
   $: builderStore.selectResource(componentId)
-  $: params = routify.params
   $: routeComponentId = $params.componentId
 
   // Hide new component panel whenever component ID changes

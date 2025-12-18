@@ -37,6 +37,8 @@
   import NoResults from "../_components/NoResults.svelte"
   import { appsStore } from "@/stores/portal"
 
+  $url
+
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">

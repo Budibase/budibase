@@ -163,7 +163,7 @@
   >
     <div class="wrap">
       {#if $view?.dragging && dragging}
-        <div class="drag-placeholder" style={placeholderDims} />
+        <div class="drag-placeholder" style={placeholderDims}></div>
       {/if}
       <div
         bind:this={blockEle}

@@ -3,6 +3,9 @@
   import { datasources } from "@/stores/builder"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
 
+  $goto
+  $params
+
   const handleOpen = (modal, params) => {
     if (params["?promptQuery"] && modal?.show) {
       modal.show()

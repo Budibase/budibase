@@ -9,7 +9,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class:indented class:selected on:click class={className}>
-  <i class={icon} />
+  <i class={icon}></i>
   <span>{title}</span>
   <slot />
 </div>

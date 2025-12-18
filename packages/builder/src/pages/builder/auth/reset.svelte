@@ -13,6 +13,9 @@
   import { PasswordRepeatInput } from "@budibase/frontend-core"
   import { onMount } from "svelte"
 
+  $goto
+  $params
+
   const resetCode = $params["?code"]
   let form
   let loaded = false
@@ -93,7 +96,7 @@
           {/if}
         </Button>
       </Layout>
-      <div />
+      <div></div>
     </Layout>
   </div>
 </div>

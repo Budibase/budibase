@@ -112,6 +112,7 @@
   {@html props.headAppScripts || ""}
 </svelte:head>
 
+<!-- eslint-disable-next-line svelte/no-raw-special-elements -->
 <body id="app">
   {#if props.showSkeletonLoader}
     <ClientAppSkeleton
@@ -129,7 +130,7 @@
       </h2>
     {:else}
       <h2>We couldn't find that application</h2>
-      <p />
+      <p></p>
     {/if}
   </div>
   {#if props.recaptchaKey}

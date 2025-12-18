@@ -208,7 +208,7 @@
                 </Layout>
               </div>
             </div>
-            <div class="separator" />
+            <div class="separator"></div>
             {#if index === query.fields.steps.length - 1}
               <Icon
                 disabled={!editable}

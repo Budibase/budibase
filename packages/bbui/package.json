@@ -3,11 +3,11 @@
   "description": "A UI solution used in the different Budibase projects.",
   "version": "0.0.0",
   "license": "MPL-2.0",
-  "svelte": "src/index.ts",
   "module": "dist/bbui.mjs",
   "exports": {
     ".": {
-      "import": "./dist/bbui.mjs"
+      "import": "./dist/bbui.mjs",
+      "svelte": "./src/index.ts"
     },
     "./package.json": "./package.json"
   },
@@ -16,7 +16,7 @@
     "dev": "vite build --watch --mode=dev"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "1.4.0",
+    "@sveltejs/vite-plugin-svelte": "^6.1.3",
     "vite-plugin-css-injected-by-js": "3.5.2"
   },
   "keywords": [

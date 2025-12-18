@@ -3,6 +3,8 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
+  $redirect
+
   let loaded = false
 
   $: cloud = $admin.cloud

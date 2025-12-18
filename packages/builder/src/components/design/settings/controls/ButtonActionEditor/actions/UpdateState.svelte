@@ -43,9 +43,9 @@
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}
     />
-    <div />
+    <div></div>
     <Checkbox bind:value={parameters.persist} text="Persist this value" />
-    <div />
+    <div></div>
     <Body size="XS">
       Persisted values will remain even after reloading the page or closing the
       browser.

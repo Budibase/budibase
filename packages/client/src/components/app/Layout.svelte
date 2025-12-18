@@ -309,7 +309,7 @@
                     <i
                       class="ph ph-sidebar-simple"
                       style:color={"var(--navTextColor)"}
-                    />
+                    ></i>
                   </div>
                 {/if}
               </div>
@@ -323,7 +323,7 @@
               class="mobile-click-handler"
               class:visible={mobileOpen}
               on:click={() => (mobileOpen = false)}
-            />
+            ></div>
 
             <div class="links" class:visible={mobileOpen}>
               {#if enrichedNavItems.length}
@@ -399,7 +399,7 @@
       />
     </div>
   </div>
-  <div class="modal-container" />
+  <div class="modal-container"></div>
 </div>
 
 <style>

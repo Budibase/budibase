@@ -180,7 +180,7 @@
 <div
   style={`--code-mirror-height: ${editorHeight}px; --code-mirror-width: ${editorWidth}px;`}
 >
-  <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
+  <textarea tabindex="0" bind:this={refs.editor} readonly {value}></textarea>
 </div>
 
 <style>

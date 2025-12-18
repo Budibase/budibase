@@ -15,6 +15,8 @@
   import NewPill from "@/components/common/NewPill.svelte"
   import { featureFlags } from "@/stores/portal"
 
+  $goto
+
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
   ghost.src =

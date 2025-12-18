@@ -26,7 +26,7 @@
     type="checkbox"
     class="spectrum-Switch-input"
   />
-  <span class="spectrum-Switch-switch" />
+  <span class="spectrum-Switch-switch"></span>
   {#if text}
     <label class="spectrum-Switch-label" for={id}>{text}</label>
   {/if}

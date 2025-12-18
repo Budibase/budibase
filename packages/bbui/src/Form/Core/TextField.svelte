@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
+  import type { FullAutoFill } from "svelte/elements"
   import type { UIEvent } from "@budibase/types"
 
   export let value: string | null = null
@@ -13,7 +14,7 @@
   export let quiet = false
   export let align: "left" | "right" | "center" | undefined = undefined
   export let autofocus: boolean | null = false
-  export let autocomplete: boolean | string | undefined
+  export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -69,12 +70,16 @@
     return type === "number" ? "decimal" : "text"
   }
 
+  let autocompleteValue: FullAutoFill | null | undefined
+
   $: autocompleteValue =
     typeof autocomplete === "boolean"
       ? autocomplete
         ? "on"
         : "off"
-      : undefined
+      : autocomplete === null
+        ? null
+        : autocomplete
 
   onMount(async () => {
     if (disabled) return
