@@ -21,7 +21,12 @@
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    webSearchConfigStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -33,8 +38,11 @@
   import { onDestroy, onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
-  import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
+  import type { IconInfo } from "@/helpers/integrationIcons"
   import ToolsDropdown from "./ToolsDropdown.svelte"
+  import ToolIcon from "./ToolIcon.svelte"
+  import type { AgentTool } from "./toolTypes"
+  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
 
   import {
     EditorModes,
@@ -43,9 +51,19 @@
     bindingsToCompletions,
   } from "@/components/common/CodeEditor"
   import BudibaseLogo from "../logos/Budibase.svelte"
+  import WebSearchLogo from "../logos/WebSearch.svelte"
+  import RestLogo from "../logos/Rest.svelte"
+  import {
+    REST_TAG_ICON_URL,
+    WEB_SEARCH_TAG_ICON_URL,
+  } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
-  import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+
+  // Code editor tag icons must be URL strings (see `hbsTags.ts`).
+  // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
+  const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
+  const RestIconSvg = REST_TAG_ICON_URL
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
@@ -59,7 +77,6 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-    enabledTools: [] as string[],
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -77,20 +94,18 @@
     }
   }
 
-  interface EnrichedTool extends ToolMetadata {
-    readableBinding: string
-    runtimeBinding: string
-    icon?: IconInfo
-  }
-
-  let availableTools: EnrichedTool[] = []
-  let filteredTools: EnrichedTool[] = []
-  let toolSections: Record<string, EnrichedTool[]> = {}
+  let availableTools: AgentTool[] = []
+  let filteredTools: AgentTool[] = []
+  let toolSections: Record<string, AgentTool[]> = {}
   let readableToRuntimeBinding: Record<string, string> = {}
   let readableToIcon: Record<string, string | undefined> = {}
-  let enabledToolsWithDetails: EnrichedTool[] = []
+  let includedToolRuntimeBindings: string[] = []
+  let includedToolsWithDetails: AgentTool[] = []
+  let webSearchConfigModal: WebSearchConfigModal
 
   $: currentAgent = $selectedAgent
+  $: webSearchConfig = $webSearchConfigStore.config
+  $: webSearchEnabled = webSearchConfig?.enabled ?? false
 
   $: if (currentAgent && currentAgent._id !== draftAgentId) {
     draft = {
@@ -101,7 +116,6 @@
       promptInstructions: currentAgent.promptInstructions || "",
       icon: currentAgent.icon || "",
       iconColor: currentAgent.iconColor || "",
-      enabledTools: currentAgent.enabledTools || [],
     }
     draftAgentId = currentAgent._id
   }
@@ -111,56 +125,133 @@
     value: config._id || "",
   }))
 
-  $: availableTools = ($agentsStore.tools || []).map(tool => {
-    const sourceType = tool.sourceType
-    const sourceLabel = tool.sourceLabel
-    const prefix = getBindingPrefix(sourceType, sourceLabel)
-
-    return {
-      ...tool,
-      sourceLabel,
+  const resolveAgentToolIcons = (
+    tool: ToolMetadata,
+    {
       sourceType,
-      readableBinding: `${prefix}.${tool.name}`,
-      runtimeBinding: tool.name,
-      icon: getToolSourceIcon(sourceType, sourceLabel),
+      sourceLabel,
+    }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
+  ): { icon?: IconInfo; tagIconUrl?: string } => {
+    if (sourceType === ToolType.BUDIBASE) {
+      return {
+        icon: { icon: BudibaseLogo },
+        tagIconUrl: BudibaseLogoSvg,
+      }
     }
+
+    if (sourceType === ToolType.SEARCH) {
+      return {
+        icon: { icon: WebSearchLogo },
+        tagIconUrl: WebSearchIconSvg,
+      }
+    }
+
+    if (sourceType === ToolType.REST_QUERY) {
+      const ds = $datasources.list.find(d => d.name === sourceLabel)
+      const templateIconUrl = ds?.restTemplate
+        ? restTemplates.getByName(ds.restTemplate)?.icon
+        : undefined
+
+      if (templateIconUrl) {
+        return { icon: { url: templateIconUrl }, tagIconUrl: templateIconUrl }
+      }
+
+      return { icon: { icon: RestLogo }, tagIconUrl: RestIconSvg }
+    }
+
+    return {}
+  }
+
+  $: {
+    const tools = $agentsStore.tools || []
+    availableTools = tools.map(tool => {
+      const sourceType = tool.sourceType
+      const sourceLabel = tool.sourceLabel
+
+      if (sourceType === ToolType.SEARCH) {
+        const prefix = getBindingPrefix(sourceType, sourceLabel)
+        const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+          sourceType,
+          sourceLabel,
+        })
+        return {
+          ...tool,
+          sourceLabel: "Search",
+          name: "web_search",
+          readableBinding: `${prefix}.web_search`,
+          runtimeBinding: tool.name,
+          icon,
+          tagIconUrl,
+        }
+      }
+
+      const prefix = getBindingPrefix(sourceType, sourceLabel)
+      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+        sourceType,
+        sourceLabel,
+      })
+
+      return {
+        ...tool,
+        sourceLabel,
+        sourceType,
+        readableBinding: `${prefix}.${tool.name}`,
+        runtimeBinding: tool.name,
+        icon,
+        tagIconUrl,
+      }
+    })
+  }
+
+  $: readableToRuntimeBinding = (() => {
+    const map = availableTools.reduce(
+      (acc, tool) => {
+        if (tool.readableBinding && tool.runtimeBinding) {
+          acc[tool.readableBinding] = tool.runtimeBinding
+        }
+        return acc
+      },
+      {} as Record<string, string>
+    )
+    // Backwards-compat for legacy synthetic Web Search binding
+    const searchTool = availableTools.find(
+      t => t.sourceType === ToolType.SEARCH
+    )
+    if (searchTool?.runtimeBinding) {
+      map["Web Search"] = searchTool.runtimeBinding
+    }
+    return map
+  })()
+
+  $: readableToIcon = (() => {
+    const map = availableTools.reduce(
+      (acc, tool) => {
+        if (tool.readableBinding) {
+          acc[tool.readableBinding] = tool.tagIconUrl
+        }
+        return acc
+      },
+      {} as Record<string, string | undefined>
+    )
+    // Backwards-compat for legacy synthetic Web Search binding
+    const searchTool = availableTools.find(
+      t => t.sourceType === ToolType.SEARCH
+    )
+    if (searchTool) {
+      map["Web Search"] = searchTool.tagIconUrl
+    }
+    return map
+  })()
+
+  $: filteredTools = availableTools.filter(tool => {
+    const query = toolSearch.toLowerCase()
+    return (
+      tool.name?.toLowerCase().includes(query) ||
+      tool.readableBinding?.toLowerCase().includes(query)
+    )
   })
 
-  $: readableToRuntimeBinding = availableTools.reduce(
-    (acc, tool) => {
-      if (tool.readableBinding && tool.runtimeBinding) {
-        acc[tool.readableBinding] = tool.runtimeBinding
-      }
-      return acc
-    },
-    {} as Record<string, string>
-  )
-
-  $: readableToIcon = availableTools.reduce(
-    (acc, tool) => {
-      if (tool.readableBinding) {
-        acc[tool.readableBinding] =
-          tool.icon?.url ||
-          (tool.sourceType === ToolType.BUDIBASE ? BudibaseLogoSvg : undefined)
-      }
-      return acc
-    },
-    {} as Record<string, string | undefined>
-  )
-
-  $: filteredTools =
-    toolSearch.trim().length === 0
-      ? availableTools.filter(tool => tool.sourceType !== ToolType.SEARCH)
-      : availableTools.filter(tool => {
-          if (tool.sourceType === ToolType.SEARCH) return false
-          const query = toolSearch.toLowerCase()
-          return (
-            tool.name?.toLowerCase().includes(query) ||
-            tool.readableBinding?.toLowerCase().includes(query)
-          )
-        })
-
-  $: toolSections = filteredTools.reduce<Record<string, EnrichedTool[]>>(
+  $: toolSections = filteredTools.reduce<Record<string, AgentTool[]>>(
     (acc, tool) => {
       const key = getSectionName(tool.sourceType)
       acc[key] = acc[key] || []
@@ -170,19 +261,24 @@
     {}
   )
 
-  $: promptBindings = availableTools
-    .filter(tool => !!tool.name)
-    .map(tool => ({
-      runtimeBinding: tool.runtimeBinding,
-      readableBinding: tool.readableBinding,
-      category: getSectionName(tool.sourceType),
-      display: {
-        name: formatToolLabel(tool),
-        type: "tool",
-        rank: 1,
-      },
-      icon: tool.icon?.url,
-    }))
+  $: promptBindings = (() => {
+    return availableTools
+      .filter(tool => !!tool.name)
+      .map(tool => ({
+        runtimeBinding: tool.runtimeBinding,
+        readableBinding: tool.readableBinding,
+        category: getSectionName(tool.sourceType),
+        display: {
+          name:
+            tool.sourceType === ToolType.SEARCH
+              ? "Web search"
+              : formatToolLabel(tool),
+          type: "tool",
+          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
+        },
+        icon: tool.tagIconUrl,
+      }))
+  })()
 
   $: promptCompletions =
     promptBindings.length > 0
@@ -193,41 +289,16 @@
         ]
       : []
 
-  $: syncEnabledToolsFromPrompt(
+  $: includedToolRuntimeBindings = getIncludedToolRuntimeBindings(
     draft.promptInstructions,
     readableToRuntimeBinding
   )
 
-  $: enabledToolsWithDetails = (draft.enabledTools || [])
+  $: includedToolsWithDetails = includedToolRuntimeBindings
     .map(runtimeBinding =>
       availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
     )
-    .filter((tool): tool is EnrichedTool => !!tool)
-
-  function getToolSourceIcon(
-    sourceType: ToolType | undefined,
-    sourceLabel: string | undefined
-  ): IconInfo | undefined {
-    if (sourceType === ToolType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d.name === sourceLabel)
-      if (ds?.restTemplate) {
-        return getIntegrationIcon(
-          IntegrationTypes.REST,
-          ds.restTemplate,
-          restTemplates.getByName(ds.restTemplate)?.icon
-        )
-      } else {
-        return getIntegrationIcon(IntegrationTypes.REST)
-      }
-    }
-    if (sourceType === ToolType.SEARCH) {
-      // Return a globe icon for search tools
-      return {
-        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23666' d='M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z'/%3E%3Cpath fill='%23666' d='M8 1a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z'/%3E%3C/svg%3E",
-      }
-    }
-    return { icon: BudibaseLogo }
-  }
+    .filter((tool): tool is AgentTool => !!tool)
 
   const slugify = (str: string) =>
     str
@@ -242,6 +313,9 @@
     if (sourceType === ToolType.BUDIBASE) {
       return "budibase"
     }
+    if (sourceType === ToolType.SEARCH) {
+      return "search"
+    }
     if (sourceType === ToolType.REST_QUERY && sourceLabel) {
       return `api.${slugify(sourceLabel)}`
     }
@@ -251,6 +325,9 @@
   const getSectionName = (sourceType: ToolType | undefined): string => {
     if (sourceType === ToolType.BUDIBASE) {
       return "Budibase"
+    }
+    if (sourceType === ToolType.SEARCH) {
+      return "Knowledge sources"
     }
     if (sourceType === ToolType.REST_QUERY) {
       return "API tools"
@@ -265,13 +342,7 @@
       : sanitised
   }
 
-  const removeEnabledTool = (tool: EnrichedTool) => {
-    draft.enabledTools = (draft.enabledTools || []).filter(
-      binding => binding !== tool.runtimeBinding
-    )
-  }
-
-  const findAutomationForTool = (tool: EnrichedTool) => {
+  const findAutomationForTool = (tool: AgentTool) => {
     const targetName = normaliseToolNameForMatch(
       tool.runtimeBinding || tool.name || ""
     )
@@ -282,7 +353,7 @@
     )
   }
 
-  const findQueryForTool = (tool: EnrichedTool) => {
+  const findQueryForTool = (tool: AgentTool) => {
     const targetName = normaliseToolNameForMatch(
       tool.runtimeBinding || tool.name || ""
     )
@@ -293,7 +364,7 @@
     )
   }
 
-  const getToolResourcePath = (tool: EnrichedTool): string | null => {
+  const getToolResourcePath = (tool: AgentTool): string | null => {
     if (tool.sourceType === ToolType.BUDIBASE) {
       const automation = findAutomationForTool(tool)
       if (automation?._id) {
@@ -310,7 +381,7 @@
     return null
   }
 
-  const navigateToTool = (tool: EnrichedTool) => {
+  const navigateToTool = (tool: AgentTool) => {
     const path = getToolResourcePath(tool)
     if (path) {
       $goto(path)
@@ -320,13 +391,13 @@
   }
 
   // list_tables -> List tables
-  const formatToolLabel = (tool: EnrichedTool) =>
+  const formatToolLabel = (tool: AgentTool) =>
     tool.name
       .split("_")
       .join(" ")
       .replace(/\b\w/g, l => l.toUpperCase())
 
-  const handleToolClick = (tool: EnrichedTool) => {
+  const handleToolClick = (tool: AgentTool) => {
     if (!tool.readableBinding) {
       return
     }
@@ -354,12 +425,12 @@
       .replace(/\s*\}\}\s*$/, "")
       .trim()
 
-  const syncEnabledToolsFromPrompt = (
+  const getIncludedToolRuntimeBindings = (
     prompt: string | undefined | null,
     bindingsMap: Record<string, string> = readableToRuntimeBinding
   ) => {
     const matches = (prompt || "").match(/\{\{[^}]+\}\}/g) || []
-    const next = Array.from(
+    return Array.from(
       new Set(
         matches
           .map(normaliseBinding)
@@ -367,14 +438,24 @@
           .filter(Boolean)
       )
     )
+  }
 
-    const current = draft.enabledTools || []
-    if (
-      next.length !== current.length ||
-      next.some(tool => !current.includes(tool))
-    ) {
-      draft.enabledTools = next
+  const escapeRegExp = (str: string) =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+  const removeToolBindingFromPrompt = (tool: AgentTool) => {
+    if (!tool.readableBinding) {
+      return
     }
+    const current = draft.promptInstructions || ""
+    const binding = escapeRegExp(tool.readableBinding)
+    const regex = new RegExp(`\\{\\{\\s*${binding}\\s*\\}\\}`, "g")
+    const next = current.replace(regex, "").replace(/\n{3,}/g, "\n\n")
+    draft.promptInstructions = next
+  }
+
+  const configureWebSearch = () => {
+    webSearchConfigModal?.show()
   }
 
   async function saveAgent({
@@ -390,6 +471,7 @@
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
+        enabledTools: includedToolRuntimeBindings,
       })
 
       if (showNotifications) {
@@ -429,6 +511,7 @@
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
+        enabledTools: includedToolRuntimeBindings,
         live: nextLive,
       })
       await deploymentStore.publishApp()
@@ -448,7 +531,11 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      webSearchConfigStore.fetch(),
+    ])
   })
 
   onDestroy(() => {
@@ -574,7 +661,7 @@
                     weight="bold"
                   />
                   <span class="bindings-pill-text">
-                    {enabledToolsWithDetails.length} Binding{enabledToolsWithDetails.length !==
+                    {includedToolsWithDetails.length} Binding{includedToolsWithDetails.length !==
                     1
                       ? "s"
                       : ""}
@@ -594,29 +681,22 @@
                 bind:toolSearch
                 onToolClick={handleToolClick}
                 onAddApiConnection={() => $goto(`./apis`)}
+                {webSearchEnabled}
+                onConfigureWebSearch={configureWebSearch}
               />
             </div>
           </div>
-          {#if enabledToolsWithDetails.length > 0}
+          {#if includedToolsWithDetails.length > 0}
             <div class="tools-list">
-              {#each enabledToolsWithDetails as tool (tool.runtimeBinding)}
+              {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
                 <div class="tool-card">
                   <div class="tool-main">
                     <div class="tool-item-icon">
-                      {#if tool.icon?.url}
-                        <img
-                          src={tool.icon.url}
-                          alt=""
-                          width="18"
-                          height="18"
-                        />
-                      {:else if tool.icon?.icon}
-                        <svelte:component
-                          this={tool.icon.icon}
-                          height="18"
-                          width="18"
-                        />
-                      {/if}
+                      <ToolIcon
+                        icon={tool.icon}
+                        size={18}
+                        fallbackIcon="Wrench"
+                      />
                     </div>
                     <div class="tool-label">
                       <span>
@@ -635,16 +715,22 @@
                           tooltip="Tool actions"
                         />
                       </div>
-                      <MenuItem on:click={() => navigateToTool(tool)}>
-                        Navigate to resource
-                      </MenuItem>
+                      {#if tool.sourceType === ToolType.SEARCH}
+                        <MenuItem on:click={configureWebSearch}>
+                          Configure web search
+                        </MenuItem>
+                      {:else if getToolResourcePath(tool)}
+                        <MenuItem on:click={() => navigateToTool(tool)}>
+                          Navigate to resource
+                        </MenuItem>
+                      {/if}
                       <MenuItem
                         on:click={() => {
-                          removeEnabledTool(tool)
+                          removeToolBindingFromPrompt(tool)
                           scheduleSave(true)
                         }}
                       >
-                        Remove from agent
+                        Remove from instructions
                       </MenuItem>
                     </ActionMenu>
                   </div>
@@ -658,6 +744,8 @@
     <div class="config-pane config-preview"></div>
   </div>
 </div>
+
+<WebSearchConfigModal bind:this={webSearchConfigModal} />
 
 <style>
   .config-wrapper {

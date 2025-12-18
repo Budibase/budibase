@@ -1,51 +1,23 @@
 <script lang="ts">
   import { Body, Button, ActionMenu, MenuItem, Icon } from "@budibase/bbui"
-  import { type ToolMetadata, ToolType } from "@budibase/types"
-  import type { IconInfo } from "@/helpers/integrationIcons"
-  import { webSearchConfigStore } from "@/stores/portal"
-  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-  import { onMount } from "svelte"
+  import { ToolType } from "@budibase/types"
+  import type { AgentTool } from "./toolTypes"
+  import ToolIcon from "./ToolIcon.svelte"
 
-  interface EnrichedTool extends ToolMetadata {
-    readableBinding: string
-    runtimeBinding: string
-    icon?: IconInfo
-  }
-
-  export let filteredTools: EnrichedTool[]
-  export let toolSections: Record<string, EnrichedTool[]>
+  export let filteredTools: AgentTool[]
+  export let toolSections: Record<string, AgentTool[]>
   export let toolSearch: string
-  export let onToolClick: (_tool: EnrichedTool) => void
+  export let onToolClick: (_tool: AgentTool) => void
   export let onAddApiConnection: () => void
-  export let onWebSearchClick: (() => void) | undefined = undefined
+  export let webSearchEnabled = false
+  export let onConfigureWebSearch: () => void
 
   let toolsMenu: ActionMenu | undefined
-  let webSearchConfigModal: WebSearchConfigModal
 
-  $: webSearchConfig = $webSearchConfigStore.config
-  $: webSearchEnabled = webSearchConfig?.enabled ?? false
-
-  // Find the web search tool in the available tools (if it exists)
-  $: webSearchTool = filteredTools.find(
-    tool => tool.sourceType === ToolType.SEARCH
-  )
-
-  function handleWebSearchClick() {
-    if (webSearchEnabled && webSearchTool) {
-      onToolClick(webSearchTool)
-    } else if (onWebSearchClick) {
-      onWebSearchClick()
-    }
-  }
-
-  function openWebSearchConfig() {
+  const openWebSearchConfig = () => {
     toolsMenu?.hide()
-    webSearchConfigModal?.show()
+    onConfigureWebSearch()
   }
-
-  onMount(() => {
-    webSearchConfigStore.fetch()
-  })
 </script>
 
 <ActionMenu
@@ -70,36 +42,10 @@
     </div>
 
     <div class="tools-menu-content">
-      <div class="tool-section">
-        <MenuItem on:click={handleWebSearchClick}>
-          <div style="justify-content: space-between;" class="tool-item">
-            <div class="tool-item">
-              <div class="tool-item-icon">
-                <Icon name="Globe" size="S" />
-              </div>
-              <span class="tool-item-label">Web search</span>
-              {#if webSearchEnabled}
-                <Icon
-                  name="tick"
-                  size="S"
-                  color="var(--spectrum-semantic-positive-color-default)"
-                />
-              {/if}
-            </div>
-            <Icon
-              size="S"
-              name="gear"
-              hoverable={true}
-              on:click={openWebSearchConfig}
-            />
-          </div>
-        </MenuItem>
-      </div>
-
       {#if filteredTools.length === 0}
         <div class="tool-empty">
           <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            No other tools available
+            No tools available
           </Body>
         </div>
       {:else}
@@ -120,23 +66,54 @@
               {/if}
             </div>
             {#each toolSections[section] as tool}
-              <MenuItem on:click={() => onToolClick(tool)}>
+              <MenuItem
+                on:click={() => {
+                  if (
+                    tool.sourceType === ToolType.SEARCH &&
+                    !webSearchEnabled
+                  ) {
+                    openWebSearchConfig()
+                    return
+                  }
+                  onToolClick(tool)
+                }}
+              >
                 <div class="tool-item">
                   <div class="tool-item-icon">
-                    {#if tool?.icon?.icon}
-                      <svelte:component
-                        this={tool.icon.icon}
-                        height="16"
-                        width="16"
-                      />
-                    {:else if tool?.icon?.url}
-                      <img src={tool.icon.url} alt="" width="16" height="16" />
-                    {/if}
+                    <ToolIcon
+                      icon={tool.icon}
+                      size={16}
+                      fallbackIcon="Wrench"
+                    />
                   </div>
                   <span class="tool-item-label">
-                    {#if tool.sourceLabel}{tool.sourceLabel}:
-                    {/if}{tool.name}
+                    {#if tool.sourceType === ToolType.SEARCH}
+                      Web search
+                    {:else}
+                      {#if tool.sourceLabel}{tool.sourceLabel}:
+                      {/if}{tool.name}
+                    {/if}
                   </span>
+                  {#if tool.sourceType === ToolType.SEARCH}
+                    <div class="web-search-actions">
+                      {#if webSearchEnabled}
+                        <Icon
+                          name="check"
+                          size="S"
+                          color="var(--spectrum-semantic-positive-color-default)"
+                        />
+                      {/if}
+                      <Icon
+                        size="S"
+                        name="gear"
+                        hoverable={true}
+                        on:click={event => {
+                          event.stopPropagation()
+                          openWebSearchConfig()
+                        }}
+                      />
+                    </div>
+                  {/if}
                 </div>
               </MenuItem>
             {/each}
@@ -146,8 +123,6 @@
     </div>
   </div>
 </ActionMenu>
-
-<WebSearchConfigModal bind:this={webSearchConfigModal} />
 
 <style>
   .tools-menu-header {
@@ -199,6 +174,13 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .web-search-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
   }
 
   .tool-item-icon {
