@@ -28,8 +28,6 @@
   export let height
   export let width
 
-  console.log({ showImage, imageURL, imageWidth, imageHeight })
-
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
 
