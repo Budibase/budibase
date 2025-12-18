@@ -46,6 +46,10 @@
       }
     }
 
+    if (e.key === "Enter" && e.isComposing) {
+      return
+    }
+
     // Sugar for preventing default
     const handle = fn => {
       e.preventDefault()
