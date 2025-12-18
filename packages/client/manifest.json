@@ -9055,6 +9055,11 @@
         "settings": [
           {
             "type": "boolean",
+            "label": "Show percentage on hover",
+            "key": "showPercentage"
+          },
+          {
+            "type": "boolean",
             "label": "Automatic Max Value",
             "key": "autoMaxValue"
           },

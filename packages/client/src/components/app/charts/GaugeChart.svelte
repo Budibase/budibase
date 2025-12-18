@@ -1,6 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
-  import { formatters, parsePalette } from "./utils"
+  import { parsePalette } from "./utils"
 
   export let dataProvider
   export let labelColumn
@@ -28,6 +28,7 @@
   export let height
   export let width
   export let titleSize
+  export let showPercentage
 
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -61,10 +62,12 @@
             fontSize: "22px",
           },
           value: {
+            show: showPercentage,
             fontSize: "16px",
             formatter: function (val) {
-              val.toFixed(2) + "%"
+              return Number(val).toFixed(2) + "%"
             },
+            color: "var(--spectrum-global-color-gray-600)",
           },
           total: {
             show: true,
@@ -74,6 +77,7 @@
               return
             },
             fontSize: `${titleSize}px`,
+            color: "var(--spectrum-global-color-gray-600)",
           },
         },
         barLabels: {
