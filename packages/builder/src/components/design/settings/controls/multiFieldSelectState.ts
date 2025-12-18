@@ -2,7 +2,7 @@ const toArray = (value?: unknown): string[] => {
   return Array.isArray(value) ? [...value] : []
 }
 
-const hasOptions = (options?: string[]): boolean => {
+const hasOptions = (options?: string[]): options is string[] => {
   return Array.isArray(options) && options.length > 0
 }
 
