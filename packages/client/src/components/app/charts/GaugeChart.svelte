@@ -90,6 +90,9 @@
     },
     labels: categories,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
+    theme: {
+      palette: parsePalette(palette),
+    },
     stroke: {
       lineCap: lineCap,
     },
