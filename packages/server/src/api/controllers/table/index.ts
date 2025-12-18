@@ -321,6 +321,7 @@ export async function publish(
   if (!prodPublished) {
     await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
   }
+
   if (seedProductionTables) {
     try {
       const devDb = context.getWorkspaceDB()
@@ -339,10 +340,25 @@ export async function publish(
 
       if (importRows.length) {
         await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+          const prodDb = context.getWorkspaceDB()
+          const existingProdRows = await prodDb.allDocs(
+            getRowParams(tableId, null, {
+              include_docs: true,
+              limit: 1,
+            })
+          )
+          const hasProdRows = existingProdRows.rows.some(
+            (row: any) => row.doc && !row.doc._deleted
+          )
+          if (hasProdRows) {
+            return
+          }
+
           const prodTable = await sdk.tables.getTable(tableId)
           await handleDataImport(prodTable, {
             importRows,
             userId: ctx.user._id,
+            identifierFields: ["_id"],
           })
         })
       }
@@ -371,7 +387,7 @@ export async function publish(
 
   await replication.replicate(
     replication.appReplicateOpts({
-      tablesToSync: seedProductionTables ? [tableId] : undefined,
+      tablesToSync: undefined,
       checkpoint: false,
       filter: (doc: any) => {
         const _id = doc?._id as string
