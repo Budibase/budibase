@@ -7,8 +7,9 @@
   export let valueColumns
   export let autoMaxValue
   export let maxValue
+  export let onClick
 
-  export let title
+  // export let title - Still want to add a title in here somewhere
   export let palette
   export let c1, c2, c3, c4, c5
   export let animate
@@ -20,6 +21,8 @@
   export let offsetX
   export let offsetY
 
+  console.log({ palette })
+
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
 
@@ -28,6 +31,14 @@
     chart: {
       height: 350,
       type: "radialBar",
+      events: {
+        dataPointSelection: function (event, chartContext, config) {
+          console.log({ event, chartContext, config })
+          const lineIndex = config.dataPointIndex
+          const row = dataProvider.rows[lineIndex]
+          handleLineClick(row, lineIndex)
+        },
+      },
     },
     plotOptions: {
       radialBar: {
@@ -64,7 +75,6 @@
   }
 
   const getSeries = (dataProvider, valueColumn, autoMaxValue, maxValue) => {
-    console.log("getSeries is called!", maxValue)
     const rows = dataProvider.rows ?? []
 
     const mappedValues = rows.map(row => {
@@ -93,13 +103,10 @@
     }
 
     // customMaxValue - sets the top of the chart to that value, represents all values as a percentage of that value
-    console.log({ autoMaxValue }, Number(maxValue))
     if (!autoMaxValue && Number(maxValue)) {
-      console.log("HEREREEREERERRRE")
       const customMaxMappedValues = mappedValues.map(value => {
         return (value / maxValue) * 100
       })
-      console.log({ customMaxMappedValues })
       return customMaxMappedValues
     }
     return mappedValues
@@ -120,6 +127,10 @@
     })
 
     return returnValue
+  }
+
+  function handleLineClick(line, index) {
+    onClick?.({ line, index })
   }
 </script>
 

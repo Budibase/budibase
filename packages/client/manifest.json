@@ -9024,6 +9024,21 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On line click",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked line",
+            "key": "line"
+          },
+          {
+            "label": "Line index",
+            "key": "index"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Automatic Max Value",
         "key": "autoMaxValue"
