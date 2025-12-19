@@ -1,12 +1,11 @@
 import { AIConfigType, type AgentFile } from "@budibase/types"
 import * as crypto from "crypto"
-import { Client } from "pg"
 import { parse as parseYaml } from "yaml"
 import { PDFParse } from "pdf-parse"
 import sdk from "../../.."
 import environment from "../../../../environment"
+import { createVectorStore, type ChunkInput } from "../vectorStore"
 
-const TABLE_NAME = "bb_agent_chunks"
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 
@@ -63,47 +62,11 @@ const buildRagConfig = async (): Promise<RagConfig> => {
   }
 }
 
-const withClient = async <T>(
-  config: RagConfig,
-  handler: (client: Client) => Promise<T>
-): Promise<T> => {
-  const client = new Client({
-    connectionString: config.databaseUrl,
+const getVectorStore = (config: RagConfig) =>
+  createVectorStore({
+    databaseUrl: config.databaseUrl,
+    embeddingDimensions: config.embeddingDimensions,
   })
-  await client.connect()
-  try {
-    return await handler(client)
-  } finally {
-    await client.end()
-  }
-}
-
-const ensureSchema = async (client: Client, config: RagConfig) => {
-  await client.query("CREATE EXTENSION IF NOT EXISTS vector")
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
-      id SERIAL PRIMARY KEY,
-      source TEXT NOT NULL,
-      chunk_hash TEXT UNIQUE NOT NULL,
-      chunk_text TEXT NOT NULL,
-      embedding vector(${config.embeddingDimensions}) NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `)
-  await client.query(
-    `CREATE INDEX IF NOT EXISTS ${TABLE_NAME}_source_idx ON ${TABLE_NAME} (source)`
-  )
-  await client.query(`
-    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}_embedding_idx
-    ON ${TABLE_NAME}
-    USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100)
-  `)
-}
-
-const vectorLiteral = (values: number[]) => {
-  return `[${values.map(value => Number(value) || 0).join(",")}]`
-}
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -284,57 +247,6 @@ const getEmbedding = async (config: RagConfig, text: string) => {
   return embedding as number[]
 }
 
-const upsertChunks = async (
-  client: Client,
-  config: RagConfig,
-  sourceId: string,
-  chunks: string[]
-): Promise<ChunkResult> => {
-  if (chunks.length === 0) {
-    await client.query(`DELETE FROM ${TABLE_NAME} WHERE source = $1`, [
-      sourceId,
-    ])
-    return { inserted: 0, total: 0 }
-  }
-
-  const hashes = chunks.map(chunk => hashChunk(chunk))
-
-  await client.query(
-    `DELETE FROM ${TABLE_NAME} WHERE source = $1 AND NOT (chunk_hash = ANY($2::text[]))`,
-    [sourceId, hashes]
-  )
-
-  const existing = await client.query(
-    `SELECT chunk_hash FROM ${TABLE_NAME} WHERE source = $1 AND chunk_hash = ANY($2::text[])`,
-    [sourceId, hashes]
-  )
-  const existingHashes = new Set(existing.rows.map(row => row.chunk_hash))
-
-  let inserted = 0
-  for (let i = 0; i < chunks.length; i += 1) {
-    const chunk = chunks[i]
-    const chunkHash = hashes[i]
-    if (existingHashes.has(chunkHash)) {
-      continue
-    }
-    const embedding = await getEmbedding(config, chunk)
-    await client.query(
-      `
-        INSERT INTO ${TABLE_NAME} (source, chunk_hash, chunk_text, embedding)
-        VALUES ($1, $2, $3, $4::vector)
-        ON CONFLICT (chunk_hash) DO UPDATE
-          SET chunk_text = EXCLUDED.chunk_text,
-              embedding = EXCLUDED.embedding,
-              source = EXCLUDED.source
-      `,
-      [sourceId, chunkHash, chunk, vectorLiteral(embedding)]
-    )
-    inserted += 1
-  }
-
-  return { inserted, total: chunks.length }
-}
-
 const isPdfFile = (file?: AgentFile) => {
   if (!file) {
     return false
@@ -369,13 +281,26 @@ export const ingestAgentFile = async (
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
   const config = await buildRagConfig()
+  const vectorStore = getVectorStore(config)
+  const content = await getTextFromBuffer(fileBuffer, agentFile)
+  const chunks = createChunksFromContent(content, agentFile.filename)
 
-  return await withClient(config, async client => {
-    await ensureSchema(client, config)
-    const content = await getTextFromBuffer(fileBuffer, agentFile)
-    const chunks = createChunksFromContent(content, agentFile.filename)
-    return await upsertChunks(client, config, agentFile.ragSourceId, chunks)
-  })
+  if (chunks.length === 0) {
+    await vectorStore.upsertSourceChunks(agentFile.ragSourceId, [])
+    return { inserted: 0, total: 0 }
+  }
+
+  const payloads: ChunkInput[] = []
+  for (const chunk of chunks) {
+    const embedding = await getEmbedding(config, chunk)
+    payloads.push({
+      hash: hashChunk(chunk),
+      text: chunk,
+      embedding,
+    })
+  }
+
+  return await vectorStore.upsertSourceChunks(agentFile.ragSourceId, payloads)
 }
 
 export const deleteAgentFileChunks = async (sourceIds: string[]) => {
@@ -383,13 +308,8 @@ export const deleteAgentFileChunks = async (sourceIds: string[]) => {
     return
   }
   const config = await buildRagConfig()
-  await withClient(config, async client => {
-    await ensureSchema(client, config)
-    await client.query(
-      `DELETE FROM ${TABLE_NAME} WHERE source = ANY($1::text[])`,
-      [sourceIds]
-    )
-  })
+  const vectorStore = getVectorStore(config)
+  await vectorStore.deleteBySourceIds(sourceIds)
 }
 
 export interface RetrievedContextChunk {
@@ -413,44 +333,27 @@ export const retrieveContextForSources = async (
     return { text: "", chunks: [] }
   }
   const config = await buildRagConfig()
-  return await withClient(config, async client => {
-    await ensureSchema(client, config)
-    const queryEmbedding = await getEmbedding(config, question)
-    const vector = vectorLiteral(queryEmbedding)
-    const { rows } = await client.query(
-      `
-        SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance
-        FROM ${TABLE_NAME}
-        WHERE source = ANY($2::text[])
-        ORDER BY embedding <=> $1::vector
-        LIMIT $3
-      `,
-      [vector, sourceIds, topK]
-    )
-    if (rows.length === 0) {
-      return { text: "", chunks: [] }
-    }
+  const vectorStore = getVectorStore(config)
+  const queryEmbedding = await getEmbedding(config, question)
+  const rows = await vectorStore.queryNearest(queryEmbedding, sourceIds, topK)
+  if (rows.length === 0) {
+    return { text: "", chunks: [] }
+  }
 
-    const maxDistance = 1 - similarityThreshold
-    const chunks: RetrievedContextChunk[] = rows
-      .filter(row => {
-        if (similarityThreshold === 0) {
-          return true
-        }
-        const distance = Number(row.distance ?? 1)
-        return distance <= maxDistance
-      })
-      .map(row => ({
-        sourceId: row.source,
-        chunkText: row.chunk_text,
-        chunkHash: row.chunk_hash,
-      }))
-    if (chunks.length === 0) {
-      return { text: "", chunks: [] }
-    }
-    return {
-      text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
-      chunks,
-    }
-  })
+  const maxDistance = similarityThreshold === 0 ? 1 : 1 - similarityThreshold
+  const filtered = rows.filter(row => row.distance <= maxDistance)
+  if (filtered.length === 0) {
+    return { text: "", chunks: [] }
+  }
+
+  const chunks: RetrievedContextChunk[] = filtered.map(row => ({
+    sourceId: row.source,
+    chunkText: row.chunkText,
+    chunkHash: row.chunkHash,
+  }))
+
+  return {
+    text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
+    chunks,
+  }
 }
