@@ -42,6 +42,7 @@ import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
+import { VectorStoreEndpoints } from "./vectorStores"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -155,4 +156,5 @@ export type APIClient = BaseAPIClient &
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
+    vectorStore: VectorStoreEndpoints
   }

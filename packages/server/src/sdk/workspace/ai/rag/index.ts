@@ -66,9 +66,9 @@ const buildRagConfig = async (): Promise<RagConfig> => {
 
 const resolveVectorDatabaseUrl = async () => {
   try {
-    const vectorConfig = await sdk.vectorStores.getDefault()
-    if (vectorConfig) {
-      return buildPgConnectionString(vectorConfig)
+    const vectorStore = await sdk.vectorStores.getDefault()
+    if (vectorStore) {
+      return buildPgConnectionString(vectorStore)
     }
   } catch (error) {
     // ignore and fallback

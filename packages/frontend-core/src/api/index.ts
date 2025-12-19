@@ -55,6 +55,7 @@ import { buildDeploymentEndpoints } from "./deploy"
 import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
+import { buildVectorStoreEndpoints } from "./vectorStores"
 
 export type { APIClient } from "./types"
 
@@ -281,6 +282,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   return {
     ...API,
     ...buildAIEndpoints(API),
+    ...buildVectorStoreEndpoints(API),
     ...buildAnalyticsEndpoints(API),
     ...buildAppEndpoints(API),
     ...buildAttachmentEndpoints(API),

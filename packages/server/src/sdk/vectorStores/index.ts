@@ -106,5 +106,5 @@ async function ensureSingleDefault(config: VectorStore) {
   }
 }
 
-export const sanitizeVectorConfigs = (configs: VectorStore[]) =>
+export const sanitizeVectorStoreConfigs = (configs: VectorStore[]) =>
   configs.map(sanitizeConfig)

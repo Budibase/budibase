@@ -8,6 +8,7 @@
     notifications,
     Modal,
     Icon,
+    Input,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
   import {
@@ -31,10 +32,12 @@
     type AIConfig,
     type ProviderConfig,
     AIConfigType,
+    type VectorStore,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import { bb } from "@/stores/bb"
+  import { vectorStoreStore } from "@/stores/portal"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -56,8 +59,19 @@
   let hasLicenseKey: boolean
   let customModalConfig: CustomAIProviderConfig | null = null
   let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
-
+  let vectorDbConfigDraft: VectorStore = {
+    name: "Workspace vector store",
+    provider: "pgvector",
+    host: "",
+    port: "5432",
+    database: "",
+    user: "",
+    password: "",
+    isDefault: true,
+  }
+  let vectorConfigDraftId: string | undefined
   let embeddingsConfigSection: HTMLDivElement
+  let activeTab: "models" | "embeddings" = "models"
 
   $: isCloud = $admin.cloud
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
@@ -78,6 +92,26 @@
   $: embeddingConfigs = customConfigs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
+  $: currentVectorConfig = $vectorStoreStore.configs?.[0]
+  $: if (
+    currentVectorConfig &&
+    currentVectorConfig._id !== vectorConfigDraftId
+  ) {
+    vectorDbConfigDraft = { ...currentVectorConfig }
+    vectorConfigDraftId = currentVectorConfig._id
+  } else if (!currentVectorConfig && vectorConfigDraftId) {
+    vectorDbConfigDraft = {
+      name: "Workspace vector store",
+      provider: "pgvector",
+      host: "",
+      port: "5432",
+      database: "",
+      user: "",
+      password: "",
+      isDefault: true,
+    }
+    vectorConfigDraftId = undefined
+  }
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -190,6 +224,30 @@
     localStorage.setItem(bannerKey, "true")
   }
 
+  async function saveVectorDbSettings() {
+    try {
+      const payload = {
+        ...vectorDbConfigDraft,
+        provider: "pgvector",
+        isDefault: true,
+      }
+      if (vectorDbConfigDraft._id) {
+        await vectorStoreStore.updateVectorStore({
+          ...payload,
+          _id: vectorDbConfigDraft._id,
+          _rev: vectorDbConfigDraft._rev,
+        })
+      } else {
+        await vectorStoreStore.createVectorStore({
+          ...payload,
+        })
+      }
+      notifications.success("Vector DB settings saved")
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to save vector settings")
+    }
+  }
+
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
@@ -203,6 +261,7 @@
       }
 
       customConfigs = await aiConfigsStore.fetch()
+      await vectorStoreStore.fetchVectorStores()
 
       await handleInitialScroll()
     } catch {
@@ -213,6 +272,7 @@
   async function handleInitialScroll() {
     await tick()
     if ($bb.settings?.route?.hash === "#EmbeddingsConfig") {
+      activeTab = "embeddings"
       embeddingsConfigSection?.scrollIntoView({
         behavior: "smooth",
       })
@@ -260,65 +320,82 @@
       </div>
     {/if}
 
-    <div class="section">
-      <div class="section-title">Enabled</div>
-      {#if activeProvider}
-        <AIConfigTile
-          config={getProviderConfig(activeProvider).config}
-          editHandler={() => handleEnable(activeProvider)}
-          disableHandler={() => disableProvider(activeProvider)}
-        />
-      {:else}
-        <div class="no-enabled">
-          <Body size="S">No LLMs are enabled</Body>
-        </div>
-      {/if}
-      {#if disabledProviders.length > 0}
-        <div class="section-title disabled-title">Disabled</div>
-        <div class="ai-list">
-          {#each disabledProviders as { provider, config } (provider)}
-            <AIConfigTile
-              {config}
-              editHandler={() => handleEnable(provider)}
-              disableHandler={() => disableProvider(provider)}
-            />
-          {/each}
-        </div>
-      {/if}
+    <div class="tabs">
+      <button
+        class:active={activeTab === "models"}
+        on:click={() => (activeTab = "models")}
+      >
+        LLM configuration
+      </button>
+      <button
+        class:active={activeTab === "embeddings"}
+        on:click={() => (activeTab = "embeddings")}
+      >
+        Embeddings configuration
+      </button>
     </div>
 
-    {#if privateLLMSEnabled}
+    {#if activeTab === "models"}
+      <div class="section">
+        <div class="section-title">Enabled</div>
+        {#if activeProvider}
+          <AIConfigTile
+            config={getProviderConfig(activeProvider).config}
+            editHandler={() => handleEnable(activeProvider)}
+            disableHandler={() => disableProvider(activeProvider)}
+          />
+        {:else}
+          <div class="no-enabled">
+            <Body size="S">No LLMs are enabled</Body>
+          </div>
+        {/if}
+        {#if disabledProviders.length > 0}
+          <div class="section-title disabled-title">Disabled</div>
+          <div class="ai-list">
+            {#each disabledProviders as { provider, config } (provider)}
+              <AIConfigTile
+                {config}
+                editHandler={() => handleEnable(provider)}
+                disableHandler={() => disableProvider(provider)}
+              />
+            {/each}
+          </div>
+        {/if}
+      </div>
+
+      {#if privateLLMSEnabled}
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Chat configuration</div>
+            <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
+              Add configuration
+            </Button>
+          </div>
+
+          {#if chatConfigs.length}
+            <div class="ai-list">
+              {#each chatConfigs as config (config._id)}
+                <CustomAIConfigTile
+                  {config}
+                  editHandler={() => openCustomAIConfigModal(config)}
+                />
+              {/each}
+            </div>
+          {:else}
+            <div class="no-enabled">
+              <Body size="S">No chat configurations yet</Body>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    {:else if privateLLMSEnabled}
       <div
         class="section"
         id="EmbeddingsConfig"
         bind:this={embeddingsConfigSection}
       >
         <div class="section-header">
-          <div class="section-title">Chat configuration</div>
-          <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
-            Add configuration
-          </Button>
-        </div>
-
-        {#if chatConfigs.length}
-          <div class="ai-list">
-            {#each chatConfigs as config (config._id)}
-              <CustomAIConfigTile
-                {config}
-                editHandler={() => openCustomAIConfigModal(config)}
-              />
-            {/each}
-          </div>
-        {:else}
-          <div class="no-enabled">
-            <Body size="S">No chat configurations yet</Body>
-          </div>
-        {/if}
-      </div>
-
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Embeddings configuration</div>
+          <div class="section-title">Embeddings models</div>
           <Button
             size="S"
             cta
@@ -344,6 +421,53 @@
             <Body size="S">No embeddings configurations yet</Body>
           </div>
         {/if}
+      </div>
+
+      <div class="section vector-section">
+        <div class="section-header">
+          <div class="section-title">Vector database</div>
+        </div>
+        <div class="vector-form">
+          <Input
+            label="Provider"
+            labelPosition="left"
+            value="pgvector"
+            disabled
+          />
+          <Input
+            label="Host"
+            labelPosition="left"
+            bind:value={vectorDbConfigDraft.host}
+            placeholder="127.0.0.1"
+          />
+          <Input
+            label="Port"
+            labelPosition="left"
+            bind:value={vectorDbConfigDraft.port}
+            placeholder="5432"
+          />
+          <Input
+            label="Database"
+            labelPosition="left"
+            bind:value={vectorDbConfigDraft.database}
+          />
+          <Input
+            label="User"
+            labelPosition="left"
+            bind:value={vectorDbConfigDraft.user}
+          />
+          <Input
+            label="Password"
+            type="password"
+            labelPosition="left"
+            bind:value={vectorDbConfigDraft.password}
+          />
+        </div>
+        <div class="vector-actions">
+          <Button primary on:click={saveVectorDbSettings}>
+            Save vector settings
+          </Button>
+        </div>
       </div>
     {/if}
   </Layout>
@@ -409,6 +533,27 @@
     gap: var(--spacing-m);
   }
 
+  .tabs {
+    display: flex;
+    gap: var(--spacing-s);
+    margin: var(--spacing-m) 0;
+  }
+
+  .tabs button {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 999px;
+    background: transparent;
+    padding: var(--spacing-xs) var(--spacing-m);
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .tabs button.active {
+    background: var(--bb-indigo);
+    border-color: var(--bb-indigo);
+    color: #fff;
+  }
+
   .ai-list {
     margin-top: var(--spacing-l);
     margin-bottom: var(--spacing-l);
@@ -454,5 +599,22 @@
     color: var(--spectrum-global-color-gray-900);
     font-weight: 500;
     font-size: 14px;
+  }
+
+  .vector-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .vector-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-m);
+  }
+
+  .vector-actions {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>
