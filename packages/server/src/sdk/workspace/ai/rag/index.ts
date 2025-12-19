@@ -3,7 +3,6 @@ import * as crypto from "crypto"
 import { parse as parseYaml } from "yaml"
 import { PDFParse } from "pdf-parse"
 import sdk from "../../.."
-import environment from "../../../../environment"
 import { createVectorStore, type ChunkInput } from "../vectorStore"
 
 const DEFAULT_CHUNK_SIZE = 1500
@@ -38,42 +37,27 @@ const yamlExtensions = new Set([".yaml", ".yml"])
 const buildRagConfig = async (): Promise<RagConfig> => {
   const databaseUrl = await resolveVectorDatabaseUrl()
 
-  try {
-    const { apiKey, baseUrl, modelId } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrowByType(
-        undefined,
-        AIConfigType.EMBEDDINGS
-      )
-    return {
-      databaseUrl,
-      embeddingModel: modelId,
-      embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
-      baseUrl,
-      apiKey,
-    }
-  } catch (error) {
-    const { apiKey, baseUrl, modelId } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
-    return {
-      databaseUrl,
-      embeddingModel: modelId,
-      embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
-      baseUrl,
-      apiKey,
-    }
+  const { apiKey, baseUrl, modelId } =
+    await sdk.aiConfigs.getLiteLLMModelConfigOrThrowByType({
+      configType: AIConfigType.EMBEDDINGS,
+    })
+  return {
+    databaseUrl,
+    embeddingModel: modelId,
+    embeddingDimensions: 768, // TODO: configure via settings
+    baseUrl,
+    apiKey,
   }
 }
 
 const resolveVectorDatabaseUrl = async () => {
-  try {
-    const vectorStore = await sdk.vectorStores.getDefault()
-    if (vectorStore) {
-      return buildPgConnectionString(vectorStore)
-    }
-  } catch (error) {
-    // ignore and fallback
+  const vectorStore = await sdk.vectorStores.getDefault()
+  if (!vectorStore) {
+    throw new Error("No default vector store configured")
   }
-  return environment.LITELLM_DATABASE_URL
+
+  // TODO: support other vector store types
+  return buildPgConnectionString(vectorStore)
 }
 
 const getVectorStore = (config: RagConfig) =>

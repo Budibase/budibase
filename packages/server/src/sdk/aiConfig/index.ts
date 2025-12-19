@@ -217,16 +217,19 @@ export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
   apiKey: string
   baseUrl: string
 }> {
-  return await getLiteLLMModelConfigOrThrowByType(
+  return await getLiteLLMModelConfigOrThrowByType({
     configId,
-    AIConfigType.COMPLETIONS
-  )
+    configType: AIConfigType.COMPLETIONS,
+  })
 }
 
-export async function getLiteLLMModelConfigOrThrowByType(
-  configId?: string,
-  configType: AIConfigType = AIConfigType.COMPLETIONS
-): Promise<{
+export async function getLiteLLMModelConfigOrThrowByType({
+  configId,
+  configType,
+}: {
+  configId?: string
+  configType: AIConfigType
+}): Promise<{
   modelName: string
   modelId: string
   apiKey: string

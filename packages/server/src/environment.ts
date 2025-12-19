@@ -159,13 +159,6 @@ const environment = {
     process.env.LITELLM_URL ||
     `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
   LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
-  LITELLM_DATABASE_URL:
-    process.env.LITELLM_DATABASE_URL ||
-    "postgresql://llmproxy:dbpassword9090@localhost:5433/litellm",
-  AGENT_FILE_EMBEDDING_MODEL:
-    process.env.AGENT_FILE_EMBEDDING_MODEL || "ollama-embeddings",
-  AGENT_FILE_EMBEDDING_DIMENSIONS:
-    parseIntSafe(process.env.AGENT_FILE_EMBEDDING_DIMENSIONS) || 768,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
