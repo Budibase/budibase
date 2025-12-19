@@ -154,7 +154,7 @@
   }
 
   const getSeries = (dataProvider, valueColumn, autoMaxValue, maxValue) => {
-    const rows = dataProvider.rows ?? []
+    const rows = dataProvider?.rows ?? []
 
     const mappedValues = rows.map(row => {
       const value = row?.[valueColumn]
