@@ -83,7 +83,7 @@ services:
       start_period: 40s
 
   litellm-db:
-    image: pgvector/pgvector:pg16
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_DB: litellm
