@@ -169,12 +169,17 @@
         return 0
       }
 
+      if (numValue <= 0) {
+        return 0
+      }
+
       return numValue
     })
 
     // autoMaxValue - sets the highest value found to be a completed chart
     if (autoMaxValue) {
-      const highestValuePassed = Math.max(...mappedValues)
+      let highestValuePassed = Math.max(...mappedValues)
+      highestValuePassed <= 0 ? (highestValuePassed = 1) : ""
       const autoMaxMappedValues = mappedValues.map(value => {
         return (value / highestValuePassed) * 100
       })
