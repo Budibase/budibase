@@ -17,7 +17,7 @@
   export let endAngle
   export let showTrack
   export let lineCap
-  export let barLabels
+  export let dataLabels
   export let offsetX
   export let offsetY
   export let textSize
@@ -81,7 +81,7 @@
           },
         },
         barLabels: {
-          enabled: barLabels,
+          enabled: dataLabels,
           useSeriesColors: true,
           offsetX,
           offsetY,

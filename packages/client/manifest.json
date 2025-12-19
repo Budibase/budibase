@@ -6166,6 +6166,10 @@
           {
             "label": "Area",
             "value": "area"
+          },
+          {
+            "label": "Gauge",
+            "value": "gauge"
           }
         ]
       },
@@ -6721,6 +6725,148 @@
             "type": "text",
             "label": "X axis label",
             "key": "xAxisLabel"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Gauge Chart",
+        "icon": "speedometer",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "gauge"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label column",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Data column",
+            "key": "valueColumn",
+            "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "label": "Show percentage on hover",
+            "key": "showPercentage"
+          },
+          {
+            "type": "boolean",
+            "label": "Automatic max value",
+            "key": "autoMaxValue"
+          },
+          {
+            "type": "text",
+            "label": "Max value",
+            "key": "maxValue",
+            "info": "Scales values relative to this maximum",
+            "dependsOn": {
+              "setting": "autoMaxValue",
+              "invert": true
+            }
+          },
+          {
+            "type": "number",
+            "label": "Title size",
+            "key": "titleSize",
+            "defaultValue": 16
+          },
+          {
+            "type": "boolean",
+            "label": "Data labels",
+            "key": "dataLabels",
+            "defaultValue": true
+          },
+          {
+            "type": "boolean",
+            "label": "Show track",
+            "key": "showTrack",
+            "defaultValue": true
+          },
+          {
+            "type": "select",
+            "label": "Line Cap",
+            "key": "lineCap",
+            "options": ["butt", "square", "round"],
+            "defaultValue": "square"
+          },
+          {
+            "type": "number",
+            "label": "Text size",
+            "key": "textSize",
+            "dependsOn": "dataLabels",
+            "defaultValue": 16,
+            "min": 8,
+            "max": 48
+          },
+          {
+            "type": "number",
+            "label": "Offset-X",
+            "key": "offsetX",
+            "dependsOn": "dataLabels",
+            "defaultValue": -16
+          },
+          {
+            "type": "number",
+            "label": "Offset-Y",
+            "key": "offsetY",
+            "dependsOn": "dataLabels",
+            "defaultValue": 0
+          },
+          {
+            "type": "number",
+            "label": "Start Angle",
+            "key": "startAngle",
+            "defaultValue": 0,
+            "max": 360,
+            "min": -360
+          },
+          {
+            "type": "number",
+            "label": "End Angle",
+            "key": "endAngle",
+            "defaultValue": 270,
+            "max": 360,
+            "min": -360
+          },
+          {
+            "type": "boolean",
+            "label": "Show image",
+            "key": "showImage"
+          },
+          {
+            "type": "text",
+            "label": "Image URL",
+            "key": "imageURL",
+            "dependsOn": "showImage"
+          },
+          {
+            "type": "number",
+            "label": "Image width",
+            "key": "imageWidth",
+            "dependsOn": "showImage"
+          },
+          {
+            "type": "number",
+            "label": "Image height",
+            "key": "imageHeight",
+            "dependsOn": "showImage"
           }
         ]
       }
@@ -9088,7 +9234,7 @@
           {
             "type": "boolean",
             "label": "Show bar labels",
-            "key": "barLabels",
+            "key": "dataLabels",
             "defaultValue": true
           },
           {
@@ -9109,7 +9255,7 @@
             "type": "number",
             "label": "Text size",
             "key": "textSize",
-            "dependsOn": "barLabels",
+            "dependsOn": "dataLabels",
             "defaultValue": 16,
             "min": 8,
             "max": 48
@@ -9118,14 +9264,14 @@
             "type": "number",
             "label": "Offset-X",
             "key": "offsetX",
-            "dependsOn": "barLabels",
+            "dependsOn": "dataLabels",
             "defaultValue": -16
           },
           {
             "type": "number",
             "label": "Offset-Y",
             "key": "offsetY",
-            "dependsOn": "barLabels",
+            "dependsOn": "dataLabels",
             "defaultValue": 0
           },
           {
