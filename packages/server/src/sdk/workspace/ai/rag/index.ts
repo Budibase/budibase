@@ -1,4 +1,4 @@
-import { AIConfigType, type AgentFile } from "@budibase/types"
+import { AIConfigType, type AgentFile, type VectorStore } from "@budibase/types"
 import * as crypto from "crypto"
 import { parse as parseYaml } from "yaml"
 import { PDFParse } from "pdf-parse"
@@ -36,6 +36,8 @@ const textFileExtensions = new Set([
 const yamlExtensions = new Set([".yaml", ".yml"])
 
 const buildRagConfig = async (): Promise<RagConfig> => {
+  const databaseUrl = await resolveVectorDatabaseUrl()
+
   try {
     const { apiKey, baseUrl, modelId } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrowByType(
@@ -43,7 +45,7 @@ const buildRagConfig = async (): Promise<RagConfig> => {
         AIConfigType.EMBEDDINGS
       )
     return {
-      databaseUrl: environment.LITELLM_DATABASE_URL,
+      databaseUrl,
       embeddingModel: modelId,
       embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
       baseUrl,
@@ -53,7 +55,7 @@ const buildRagConfig = async (): Promise<RagConfig> => {
     const { apiKey, baseUrl, modelId } =
       await sdk.aiConfigs.getLiteLLMModelConfigOrThrow()
     return {
-      databaseUrl: environment.LITELLM_DATABASE_URL,
+      databaseUrl,
       embeddingModel: modelId,
       embeddingDimensions: environment.AGENT_FILE_EMBEDDING_DIMENSIONS,
       baseUrl,
@@ -62,11 +64,32 @@ const buildRagConfig = async (): Promise<RagConfig> => {
   }
 }
 
+const resolveVectorDatabaseUrl = async () => {
+  try {
+    const vectorConfig = await sdk.vectorStores.getDefault()
+    if (vectorConfig) {
+      return buildPgConnectionString(vectorConfig)
+    }
+  } catch (error) {
+    // ignore and fallback
+  }
+  return environment.LITELLM_DATABASE_URL
+}
+
 const getVectorStore = (config: RagConfig) =>
   createVectorStore({
     databaseUrl: config.databaseUrl,
     embeddingDimensions: config.embeddingDimensions,
   })
+
+const buildPgConnectionString = (config: VectorStore) => {
+  const userPart = config.user ? encodeURIComponent(config.user) : ""
+  const passwordPart = config.password
+    ? `:${encodeURIComponent(config.password)}`
+    : ""
+  const auth = userPart || passwordPart ? `${userPart}${passwordPart}@` : ""
+  return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
+}
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")

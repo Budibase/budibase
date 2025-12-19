@@ -148,3 +148,7 @@ export const generateWorkspaceAppID = () => {
 export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
+
+export const generateVectorStoreID = () => {
+  return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
+}

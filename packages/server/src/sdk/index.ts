@@ -22,6 +22,7 @@ import * as views from "./workspace/views"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 import * as aiConfigs from "./aiConfig"
+import * as vectorStores from "./vectorStores"
 
 const sdk = {
   backups,
@@ -48,6 +49,7 @@ const sdk = {
   dev,
   workspace,
   aiConfigs,
+  vectorStores,
 }
 
 // default export for TS

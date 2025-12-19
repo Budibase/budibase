@@ -27,6 +27,10 @@ builderAdminRoutes
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
+  .get("/api/vector-store", ai.fetchVectorStoreConfigs)
+  .post("/api/vector-store", ai.createVectorStoreConfig)
+  .put("/api/vector-store", ai.updateVectorStoreConfig)
+  .delete("/api/vector-store/:id", ai.deleteVectorStoreConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
