@@ -197,7 +197,7 @@
   }
 
   const getCategories = (dataProvider, labelColumn) => {
-    const rows = dataProvider.rows ?? []
+    const rows = dataProvider??.rows ?? []
 
     const returnValue = rows.map(row => {
       const value = row?.[labelColumn]
