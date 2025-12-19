@@ -25,6 +25,7 @@ export interface Agent extends Document {
   createdBy?: string
   enabledTools?: string[]
   ragMinDistance: number
+  ragTopK: number
 }
 
 export interface AgentMessageRagSource {

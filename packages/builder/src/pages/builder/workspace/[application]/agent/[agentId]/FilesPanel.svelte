@@ -120,82 +120,76 @@
   }
 </script>
 
-<div class="section files-section">
-  <div class="files-header-row">
-    <Heading size="XS">Knowledge base</Heading>
-    <div class="files-actions">
-      <Button
-        secondary
-        icon="upload"
-        disabled={!currentAgentId || uploadingFile}
-        on:click={handleUploadClick}
-        >{uploadingFile ? "Uploading..." : "Upload file"}</Button
-      >
-      <input
-        type="file"
-        accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv,.pdf"
-        hidden
-        bind:this={fileInput}
-        on:change={handleFileUpload}
-      />
-    </div>
+<div class="files-header-row">
+  <Heading size="XS">Knowledge base</Heading>
+  <div class="files-actions">
+    <Button
+      secondary
+      icon="upload"
+      disabled={!currentAgentId || uploadingFile}
+      on:click={handleUploadClick}
+      >{uploadingFile ? "Uploading..." : "Upload file"}</Button
+    >
+    <input
+      type="file"
+      accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv,.pdf"
+      hidden
+      bind:this={fileInput}
+      on:change={handleFileUpload}
+    />
   </div>
-  <p class="files-description">
-    Add text, Markdown, OpenAPI YAML, or PDF files to ground agent replies with
-    your own knowledge.
-  </p>
-  {#if uploadError}
-    <div class="upload-error">{uploadError}</div>
-  {/if}
-  {#if currentFiles.length === 0}
-    <div class="files-empty">
-      No files have been uploaded for this agent yet.
-    </div>
-  {:else}
-    <div class="files-table">
-      <div class="files-row files-row-header">
-        <div>Name</div>
-        <div>Status</div>
-        <div>Chunks</div>
-        <div>Size</div>
-        <div>Updated</div>
-        <div />
-      </div>
-      {#each currentFiles as file (file._id)}
-        <div class="files-row">
-          <div class="file-name">
-            <span class="file-title">{file.filename}</span>
-            <span class="file-meta">{file.mimetype || "text"}</span>
-            {#if file.status === AgentFileStatus.FAILED && file.errorMessage}
-              <span class="file-error">{file.errorMessage}</span>
-            {/if}
-          </div>
-          <div
-            class={`file-status status-${(file.status || "").toLowerCase()}`}
-          >
-            {formatFileStatus(file)}
-          </div>
-          <div>{file.chunkCount ?? 0}</div>
-          <div>{formatBytes(file.size)}</div>
-          <div>
-            {formatTimestamp(
-              file.processedAt || file.updatedAt || file.createdAt
-            )}
-          </div>
-          <div class="file-actions">
-            <AbsTooltip text="Remove file">
-              <ActionButton
-                icon="trash"
-                size="S"
-                on:click={() => removeFile(file)}
-              />
-            </AbsTooltip>
-          </div>
-        </div>
-      {/each}
-    </div>
-  {/if}
 </div>
+<p class="files-description">
+  Add text, Markdown, OpenAPI YAML, or PDF files to ground agent replies with
+  your own knowledge.
+</p>
+{#if uploadError}
+  <div class="upload-error">{uploadError}</div>
+{/if}
+{#if currentFiles.length === 0}
+  <div class="files-empty">No files have been uploaded for this agent yet.</div>
+{:else}
+  <div class="files-table">
+    <div class="files-row files-row-header">
+      <div>Name</div>
+      <div>Status</div>
+      <div>Chunks</div>
+      <div>Size</div>
+      <div>Updated</div>
+      <div />
+    </div>
+    {#each currentFiles as file (file._id)}
+      <div class="files-row">
+        <div class="file-name">
+          <span class="file-title">{file.filename}</span>
+          <span class="file-meta">{file.mimetype || "text"}</span>
+          {#if file.status === AgentFileStatus.FAILED && file.errorMessage}
+            <span class="file-error">{file.errorMessage}</span>
+          {/if}
+        </div>
+        <div class={`file-status status-${(file.status || "").toLowerCase()}`}>
+          {formatFileStatus(file)}
+        </div>
+        <div>{file.chunkCount ?? 0}</div>
+        <div>{formatBytes(file.size)}</div>
+        <div>
+          {formatTimestamp(
+            file.processedAt || file.updatedAt || file.createdAt
+          )}
+        </div>
+        <div class="file-actions">
+          <AbsTooltip text="Remove file">
+            <ActionButton
+              icon="trash"
+              size="S"
+              on:click={() => removeFile(file)}
+            />
+          </AbsTooltip>
+        </div>
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <style>
   .config-wrapper {

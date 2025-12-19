@@ -108,13 +108,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
   const minSimilarity = agent.ragMinDistance
+  const topK = agent.ragTopK ?? 4
 
   if (latestQuestion && readyFileSources.length > 0) {
     try {
       const result = await retrieveContextForSources(
         latestQuestion,
         readyFileSources,
-        undefined,
+        topK,
         minSimilarity
       )
       retrievedContext = result.text
@@ -284,6 +285,7 @@ export async function createAgent(
     createdBy: globalId,
     enabledTools: body.enabledTools,
     ragMinDistance: body.ragMinDistance,
+    ragTopK: body.ragTopK,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -312,6 +314,7 @@ export async function updateAgent(
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
     ragMinDistance: body.ragMinDistance,
+    ragTopK: body.ragTopK,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

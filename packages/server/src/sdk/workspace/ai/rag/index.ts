@@ -406,7 +406,7 @@ export interface RetrievedContextResult {
 export const retrieveContextForSources = async (
   question: string,
   sourceIds: string[],
-  topK = 4,
+  topK: number,
   similarityThreshold: number
 ): Promise<RetrievedContextResult> => {
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {

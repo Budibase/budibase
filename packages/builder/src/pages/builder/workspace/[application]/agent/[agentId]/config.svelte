@@ -62,6 +62,7 @@
     iconColor: "",
     enabledTools: [] as string[],
     ragMinDistance: 0.7,
+    ragTopK: 4,
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -105,6 +106,7 @@
       iconColor: currentAgent.iconColor || "",
       enabledTools: currentAgent.enabledTools || [],
       ragMinDistance: currentAgent.ragMinDistance,
+      ragTopK: currentAgent.ragTopK,
     }
     draftAgentId = currentAgent._id
   }
@@ -664,6 +666,35 @@
             </div>
           {/if}
 
+          <div class="section rag-settings">
+            <Heading size="XS">Relevant context</Heading>
+            <div class="rag-grid">
+              <Input
+                label="Minimum similarity"
+                labelPosition="left"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                bind:value={draft.ragMinDistance}
+                helperText="Chunks below this cosine similarity are ignored."
+                on:change={() => scheduleSave(true)}
+                required
+              />
+              <Input
+                label="Chunks to retrieve"
+                labelPosition="left"
+                type="number"
+                min="1"
+                max="10"
+                step="1"
+                bind:value={draft.ragTopK}
+                helperText="Number of chunks retrieved for each query."
+                on:change={() => scheduleSave(true)}
+                required
+              />
+            </div>
+          </div>
           <div class="section files-section">
             <FilesPanel currentAgentId={currentAgent?._id} />
           </div>
@@ -936,7 +967,8 @@
     cursor: pointer;
   }
 
-  .files-section {
+  .files-section,
+  .rag-settings {
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     padding-top: var(--spacing-m);
     gap: var(--spacing-s);
