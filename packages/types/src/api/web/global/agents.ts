@@ -16,7 +16,7 @@ export type CreateChatAppRequest = Omit<
   ChatApp,
   "_id" | "_rev" | "createdAt" | "updatedAt"
 >
-export type UpdateChatAppRequest = ChatApp
+export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
