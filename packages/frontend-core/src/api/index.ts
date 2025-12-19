@@ -282,7 +282,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   return {
     ...API,
     ...buildAIEndpoints(API),
-    ...buildVectorStoreEndpoints(API),
     ...buildAnalyticsEndpoints(API),
     ...buildAppEndpoints(API),
     ...buildAttachmentEndpoints(API),
@@ -326,5 +325,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),
+    vectorStore: buildVectorStoreEndpoints(API),
   }
 }

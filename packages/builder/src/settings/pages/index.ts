@@ -1,5 +1,3 @@
-import { ComponentType } from "svelte"
-
 // General
 import ProfilePage from "@/settings/pages/profile.svelte"
 import UsersPage from "@/settings/pages/people/users/index.svelte"
@@ -13,6 +11,7 @@ import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
 import AIPage from "@/settings/pages/ai/index.svelte"
+import EmbeddingsPage from "@/settings/pages/ai/embeddings.svelte"
 import AuthPage from "@/settings/pages/auth/index.svelte"
 import OrgPage from "@/settings/pages/organisation.svelte"
 import BrandingPage from "@/settings/pages/branding.svelte"
@@ -34,7 +33,7 @@ import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
-const componentMap: Record<string, ComponentType> = {
+const componentMap = {
   profile: ProfilePage,
   users: UsersPage,
   user: UserPage,
@@ -47,6 +46,7 @@ const componentMap: Record<string, ComponentType> = {
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
   ai: AIPage,
+  embeddings: EmbeddingsPage,
   auth: AuthPage,
   org: OrgPage,
   branding: BrandingPage,
