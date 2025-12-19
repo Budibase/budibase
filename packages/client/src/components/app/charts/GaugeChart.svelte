@@ -30,6 +30,37 @@
   export let titleSize
   export let showPercentage
 
+  const formatPercentage = value => {
+    const numericValue = Number(value)
+    if (!Number.isFinite(numericValue)) {
+      return ""
+    }
+    return `${numericValue.toFixed(2)}%`
+  }
+
+  const showSingleValuePercentage = (w, hoveredValue) => {
+    if (!showPercentage) {
+      return
+    }
+    const hasSingleSeries =
+      Array.isArray(w?.config?.series) && w.config.series.length === 1
+    if (!hasSingleSeries) {
+      return
+    }
+    const group = w?.globals?.dom?.baseEl?.querySelector(
+      ".apexcharts-datalabels-group"
+    )
+    if (!group) {
+      return
+    }
+    const valueElement = group.querySelector(".apexcharts-datalabel-value")
+    if (!valueElement) {
+      return
+    }
+    valueElement.textContent =
+      hoveredValue == null ? "" : formatPercentage(hoveredValue)
+  }
+
   $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
 
@@ -50,6 +81,15 @@
           const line = dataProvider?.rows?.[index]
           handleLineClick(line, index)
         },
+        dataPointMouseEnter: function (event, chartContext, opts) {
+          const w = opts?.w
+          const seriesIndex = opts?.seriesIndex
+          const hoveredValue = w?.config?.series?.[seriesIndex]
+          showSingleValuePercentage(w, hoveredValue)
+        },
+        dataPointMouseLeave: function (event, chartContext, opts) {
+          showSingleValuePercentage(opts?.w, null)
+        },
       },
     },
     plotOptions: {
@@ -65,7 +105,7 @@
             show: showPercentage,
             fontSize: "16px",
             formatter: function (val) {
-              return Number(val).toFixed(2) + "%"
+              return formatPercentage(val)
             },
             color: "var(--spectrum-global-color-gray-600)",
           },
