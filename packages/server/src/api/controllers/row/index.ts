@@ -1,7 +1,7 @@
 import archiver from "archiver"
 import stream from "stream"
 
-import { context, events, objectStore } from "@budibase/backend-core"
+import { context, events, objectStore, users } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { dataFilters } from "@budibase/shared-core"
 import {
@@ -148,6 +148,23 @@ export async function fetchLegacyView(ctx: any) {
 
 export async function fetch(ctx: UserCtx<void, FetchRowsResponse>) {
   const { tableId } = utils.getSourceId(ctx)
+  if (!isExternalTableID(tableId)) {
+    const appId = ctx.appId
+    const isBuilder = appId
+      ? users.isBuilder(ctx.user, appId)
+      : users.hasBuilderPermissions(ctx.user)
+    try {
+      await context.getWorkspaceDB().get(tableId)
+    } catch (err) {
+      const error = err as { status?: number }
+      if (error.status !== 404) {
+        throw err
+      }
+      if (!isBuilder) {
+        return ctx.throw(404, "Table not found")
+      }
+    }
+  }
   ctx.body = await sdk.rows.fetch(tableId)
 }
 
