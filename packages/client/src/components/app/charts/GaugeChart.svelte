@@ -73,7 +73,7 @@
             show: true,
             label: title,
             // Nothingburger function to override default behaviour
-            formatter: function (w) {
+            formatter: function () {
               return
             },
             fontSize: `${titleSize}px`,
