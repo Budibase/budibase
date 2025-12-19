@@ -9187,7 +9187,8 @@
       {
         "type": "text",
         "label": "Width",
-        "key": "width"
+        "key": "width",
+        "defaultValue": "600"
       },
       {
         "type": "text",
@@ -9229,7 +9230,9 @@
             "type": "number",
             "label": "Title size",
             "key": "titleSize",
-            "defaultValue": 16
+            "defaultValue": 16,
+            "min": 8,
+            "max": 48
           },
           {
             "type": "boolean",
