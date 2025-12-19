@@ -137,7 +137,13 @@ async function getTableForFetch(tableId: string): Promise<Table> {
   try {
     return await sdk.tables.getTable(tableId)
   } catch (err) {
-    const devTable = await getDevTableWhenProdMissing(tableId, err)
+    const error = err as { status: number }
+    const status = error.status
+    if (status !== 404) {
+      throw err
+    }
+
+    const devTable = await getDevTableWhenProdMissing(tableId)
     if (!devTable) {
       throw err
     }
@@ -146,15 +152,10 @@ async function getTableForFetch(tableId: string): Promise<Table> {
 }
 
 async function getDevTableWhenProdMissing(
-  tableId: string,
-  error: unknown
+  tableId: string
 ): Promise<Table | undefined> {
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId || !isProdWorkspaceID(workspaceId)) {
-    return
-  }
-  const status = (error as any)?.status ?? (error as any)?.statusCode
-  if (status !== 404) {
     return
   }
 
