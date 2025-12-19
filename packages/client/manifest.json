@@ -9305,13 +9305,15 @@
             "type": "number",
             "label": "Image width",
             "key": "imageWidth",
-            "dependsOn": "showImage"
+            "dependsOn": "showImage",
+            "defaultValue": 160
           },
           {
             "type": "number",
             "label": "Image height",
             "key": "imageHeight",
-            "dependsOn": "showImage"
+            "dependsOn": "showImage",
+            "defaultValue": 160
           }
         ]
       },
