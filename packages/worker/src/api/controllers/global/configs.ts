@@ -24,7 +24,9 @@ import {
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
+  GetPublicTranslationsResponse,
   GoogleInnerConfig,
+  TranslationOverrides,
   isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
@@ -47,6 +49,8 @@ import {
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
+
+const PUBLIC_TRANSLATION_PREFIXES = ["login.", "forgotPassword."]
 import env from "../../../environment"
 import * as email from "../../../utilities/email"
 import { checkAnyUserExists } from "../../../utilities/users"
@@ -333,6 +337,33 @@ function prepareTranslationsConfig(
 
   return {
     defaultLocale,
+    locales,
+  }
+}
+
+function filterPublicTranslations(
+  config: TranslationsConfigInner
+): TranslationsConfigInner {
+  const locales: TranslationsConfigInner["locales"] = {}
+  for (const [locale, localeConfig] of Object.entries(config.locales || {})) {
+    const overrides = Object.entries(localeConfig?.overrides || {}).reduce(
+      (acc, [key, value]) => {
+        if (
+          PUBLIC_TRANSLATION_PREFIXES.some(prefix => key.startsWith(prefix))
+        ) {
+          acc[key] = value
+        }
+        return acc
+      },
+      {} as TranslationOverrides
+    )
+    locales[locale] = {
+      ...localeConfig,
+      overrides,
+    }
+  }
+  return {
+    defaultLocale: config.defaultLocale,
     locales,
   }
 }
@@ -634,6 +665,17 @@ export async function publicSettings(
         googleCallbackUrl,
       },
     }
+  } catch (err: any) {
+    ctx.throw(err.status, err)
+  }
+}
+
+export async function publicTranslations(
+  ctx: Ctx<void, GetPublicTranslationsResponse>
+) {
+  try {
+    const configDoc = await configs.getTranslationsConfigDoc()
+    ctx.body = filterPublicTranslations(configDoc.config)
   } catch (err: any) {
     ctx.throw(err.status, err)
   }

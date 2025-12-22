@@ -161,4 +161,5 @@ loggedInRoutes
   .get("/api/global/configs/checklist", controller.configChecklist)
   .get("/api/global/configs/public", controller.publicSettings)
   .get("/api/global/configs/public/oidc", controller.publicOidc)
+  .get("/api/global/configs/public/translations", controller.publicTranslations)
   .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)

@@ -325,16 +325,18 @@ describe("configs", () => {
     beforeEach(async () => {
       await config.deleteConfig(ConfigType.TRANSLATIONS)
       mocks.licenses.useTranslations()
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(true)
     })
 
     afterEach(async () => {
       await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.pro.features.isTranslationsEnabled.mockReset()
     })
 
     it("should save translations when feature enabled", async () => {
-      await saveConfig(translations({ "userMenu.profile": "Profile test" }))
+      await saveConfig(translations({ "login.emailLabel": "Profile test" }))
       const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
-      expect(saved.config.locales.en.overrides["userMenu.profile"]).toEqual(
+      expect(saved.config.locales.en.overrides["login.emailLabel"]).toEqual(
         "Profile test"
       )
     })
@@ -346,9 +348,9 @@ describe("configs", () => {
     })
 
     it("should reject when translations feature disabled", async () => {
-      mocks.pro.features.isTranslationsEnabled.mockResolvedValueOnce(false)
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(false)
       await expect(
-        saveConfig(translations({ "userMenu.profile": "Profile test" }))
+        saveConfig(translations({ "login.emailLabel": "Profile test" }))
       ).rejects.toThrow("License does not allow translations")
     })
   })
@@ -402,6 +404,16 @@ describe("configs", () => {
       }
       delete body._rev
       expect(body).toEqual(expected)
+    })
+  })
+
+  describe("GET /api/global/configs/public/translations", () => {
+    it("should return translation overrides", async () => {
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(true)
+      await saveConfig(translations({ "login.emailLabel": "Hello" }))
+      const res = await config.api.configs.getPublicTranslations()
+      expect(res.body.defaultLocale).toEqual("en")
+      expect(res.body.locales.en.overrides["login.emailLabel"]).toEqual("Hello")
     })
   })
 })
