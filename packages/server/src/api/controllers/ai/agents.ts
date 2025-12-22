@@ -1,6 +1,7 @@
 import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
+  Agent,
   AgentChat,
   AgentFile,
   AgentFileStatus,
@@ -32,6 +33,49 @@ import {
   retrieveContextForSources,
   RetrievedContextChunk,
 } from "../../../sdk/workspace/ai/rag"
+
+interface LegacyAgentRagFields {
+  ragMinDistance?: number
+  ragTopK?: number
+  embeddingModel?: string
+  vectorDb?: string
+}
+
+type PartialRagConfig = Partial<NonNullable<Agent["ragConfig"]>>
+
+const isCompleteRagConfig = (
+  config?: PartialRagConfig
+): config is NonNullable<Agent["ragConfig"]> => {
+  return (
+    !!config &&
+    typeof config.ragMinDistance === "number" &&
+    typeof config.ragTopK === "number" &&
+    typeof config.embeddingModel === "string" &&
+    config.embeddingModel !== "" &&
+    typeof config.vectorDb === "string" &&
+    config.vectorDb !== ""
+  )
+}
+
+const buildRagConfigFromLegacy = (
+  legacy: LegacyAgentRagFields
+): PartialRagConfig => ({
+  ragMinDistance: legacy.ragMinDistance,
+  ragTopK: legacy.ragTopK,
+  embeddingModel: legacy.embeddingModel,
+  vectorDb: legacy.vectorDb,
+})
+
+const resolveRagConfig = (
+  config: Agent["ragConfig"] | undefined,
+  legacy: LegacyAgentRagFields
+): Agent["ragConfig"] | undefined => {
+  if (isCompleteRagConfig(config)) {
+    return config
+  }
+  const legacyConfig = buildRagConfigFromLegacy(legacy)
+  return isCompleteRagConfig(legacyConfig) ? legacyConfig : undefined
+}
 
 const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
@@ -107,17 +151,20 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
-  const minSimilarity = agent.ragMinDistance
-  const topK = agent.ragTopK ?? 4
+  const ragConfig = agent.ragConfig
 
-  if (latestQuestion && readyFileSources.length > 0) {
+  if (
+    ragConfig &&
+    latestQuestion &&
+    readyFileSources.length > 0
+  ) {
     try {
       const result = await retrieveContextForSources(
         agent,
         latestQuestion,
         readyFileSources,
-        topK,
-        minSimilarity
+        ragConfig.ragTopK,
+        ragConfig.ragMinDistance
       )
       retrievedContext = result.text
       if (result.chunks.length > 0) {
@@ -272,13 +319,13 @@ export async function createAgent(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const legacyBody = body as LegacyAgentRagFields
+  const ragConfig = resolveRagConfig(body.ragConfig, legacyBody)
 
   const createRequest: RequiredKeys<CreateAgentRequest> = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    embeddingModel: body.embeddingModel,
-    vectorDb: body.vectorDb,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     icon: body.icon,
@@ -287,8 +334,7 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
-    ragMinDistance: body.ragMinDistance,
-    ragTopK: body.ragTopK,
+    ragConfig,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -301,6 +347,8 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
+  const legacyBody = body as LegacyAgentRagFields
+  const ragConfig = resolveRagConfig(body.ragConfig, legacyBody)
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -308,8 +356,6 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    embeddingModel: body.embeddingModel,
-    vectorDb: body.vectorDb,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     _deleted: false,
@@ -318,8 +364,7 @@ export async function updateAgent(
     live: body.live,
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
-    ragMinDistance: body.ragMinDistance,
-    ragTopK: body.ragTopK,
+    ragConfig,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

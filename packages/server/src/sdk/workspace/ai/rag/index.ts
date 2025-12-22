@@ -1,4 +1,9 @@
-import { type Agent, type AgentFile, type VectorDb } from "@budibase/types"
+import {
+  AgentRagConfig,
+  type Agent,
+  type AgentFile,
+  type VectorDb,
+} from "@budibase/types"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
@@ -34,11 +39,13 @@ const textFileExtensions = new Set([
 
 const yamlExtensions = new Set([".yaml", ".yml"])
 
-const buildRagConfig = async (agent: Agent): Promise<RagConfig> => {
-  const databaseUrl = await resolveVectorDatabaseConfig(agent.vectorDb)
+const buildRagConfig = async (
+  ragConfig: AgentRagConfig
+): Promise<RagConfig> => {
+  const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
   const { apiKey, baseUrl, modelId } =
-    await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.embeddingModel)
+    await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
   return {
     databaseUrl,
     embeddingModel: modelId,
@@ -289,7 +296,10 @@ export const ingestAgentFile = async (
   agentFile: AgentFile,
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
-  const config = await buildRagConfig(agent)
+  if (!agent.ragConfig) {
+    throw new Error("RAG not configured")
+  }
+  const config = await buildRagConfig(agent.ragConfig)
   const vectorDb = getVectorDb(config)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
@@ -313,13 +323,13 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  agent: Agent,
+  ragConfig: AgentRagConfig,
   sourceIds: string[]
 ) => {
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
-  const config = await buildRagConfig(agent)
+  const config = await buildRagConfig(ragConfig)
   const vectorDb = getVectorDb(config)
   await vectorDb.deleteBySourceIds(sourceIds)
 }
@@ -345,7 +355,11 @@ export const retrieveContextForSources = async (
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
     return { text: "", chunks: [] }
   }
-  const config = await buildRagConfig(agent)
+  if (!agent.ragConfig) {
+    throw new Error("RAG not configured")
+  }
+
+  const config = await buildRagConfig(agent.ragConfig)
   const vectorDb = getVectorDb(config)
   const queryEmbedding = await getEmbedding(config, question)
   const rows = await vectorDb.queryNearest(queryEmbedding, sourceIds, topK)

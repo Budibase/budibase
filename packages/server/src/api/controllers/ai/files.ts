@@ -109,7 +109,7 @@ export async function deleteAgentFile(
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
-  await deleteAgentFileChunks(agent, [file.ragSourceId])
+  await deleteAgentFileChunks(agent.ragConfig, [file.ragSourceId])
   await sdk.ai.agents.removeAgentFile(file)
   ctx.body = { deleted: true }
   ctx.status = 200

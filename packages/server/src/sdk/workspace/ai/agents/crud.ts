@@ -12,8 +12,7 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
-  embeddingModel: agent.embeddingModel,
-  vectorDb: agent.vectorDb,
+  ragConfig: agent.ragConfig,
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -62,10 +61,12 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    ragMinDistance: request.ragMinDistance,
-    ragTopK: request.ragTopK ?? 4,
-    embeddingModel: request.embeddingModel,
-    vectorDb: request.vectorDb,
+    ragConfig: request.ragConfig && {
+      ragMinDistance: request.ragConfig.ragMinDistance,
+      ragTopK: request.ragConfig.ragTopK,
+      embeddingModel: request.ragConfig.embeddingModel,
+      vectorDb: request.ragConfig.vectorDb,
+    },
   }
 
   const { rev } = await db.put(agent)
@@ -87,6 +88,12 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...request,
     updatedAt: new Date().toISOString(),
     enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
+    ragConfig: request.ragConfig && {
+      ragMinDistance: request.ragConfig.ragMinDistance,
+      ragTopK: request.ragConfig.ragTopK,
+      embeddingModel: request.ragConfig.embeddingModel,
+      vectorDb: request.ragConfig.vectorDb,
+    },
   }
 
   const { rev } = await db.put(updated)
@@ -100,12 +107,14 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  const files = await listAgentFiles(agentId)
-  if (files.length > 0) {
-    await deleteAgentFileChunks(
-      agent,
-      files.map(file => file.ragSourceId).filter(Boolean)
-    )
-    await Promise.all(files.map(file => removeAgentFile(file)))
+  if (agent.ragConfig) {
+    const files = await listAgentFiles(agentId)
+    if (files.length > 0) {
+      await deleteAgentFileChunks(
+        agent.ragConfig,
+        files.map(file => file.ragSourceId).filter(Boolean)
+      )
+      await Promise.all(files.map(file => removeAgentFile(file)))
+    }
   }
 }

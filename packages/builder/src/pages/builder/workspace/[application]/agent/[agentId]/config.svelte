@@ -65,6 +65,9 @@
   let completionConfigs: CustomAIProviderConfig[] = []
   let embeddingConfigs: CustomAIProviderConfig[] = []
   let vectorDbConfigs: VectorDb[] = []
+
+  let ragConfigDraft: Partial<NonNullable<Agent["ragConfig"]>> = {}
+
   let draft: Agent = {
     name: "",
     description: "",
@@ -74,10 +77,6 @@
     icon: "",
     iconColor: "",
     enabledTools: [] as string[],
-    ragMinDistance: 0.7,
-    ragTopK: 4,
-    embeddingModel: "",
-    vectorDb: "",
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -120,11 +119,8 @@
       icon: currentAgent.icon || "",
       iconColor: currentAgent.iconColor || "",
       enabledTools: currentAgent.enabledTools || [],
-      ragMinDistance: currentAgent.ragMinDistance,
-      ragTopK: currentAgent.ragTopK,
-      embeddingModel: currentAgent.embeddingModel || "",
-      vectorDb: currentAgent.vectorDb || "",
     }
+    ragConfigDraft = currentAgent.ragConfig ? { ...currentAgent.ragConfig } : {}
     draftAgentId = currentAgent._id
   }
 
@@ -696,7 +692,7 @@
             <Select
               label="Embeddings model"
               labelPosition="left"
-              bind:value={draft.embeddingModel}
+              bind:value={ragConfigDraft.embeddingModel}
               options={embeddingModelOptions}
               placeholder="Select embeddings model"
               disabled={!embeddingModelOptions.length}
@@ -706,7 +702,7 @@
             <Select
               label="Vector database"
               labelPosition="left"
-              bind:value={draft.vectorDb}
+              bind:value={ragConfigDraft.vectorDb}
               options={vectorDbOptions}
               placeholder="Select vector database"
               disabled={!vectorDbOptions.length}
@@ -723,7 +719,7 @@
                 min="0"
                 max="1"
                 step="0.05"
-                bind:value={draft.ragMinDistance}
+                bind:value={ragConfigDraft.ragMinDistance}
                 helpText="Chunks below this cosine similarity are ignored."
                 on:change={() => scheduleSave(true)}
                 required
@@ -735,7 +731,7 @@
                 min="1"
                 max="10"
                 step="1"
-                bind:value={draft.ragTopK}
+                bind:value={ragConfigDraft.ragTopK}
                 helpText="Number of chunks retrieved for each query."
                 on:change={() => scheduleSave(true)}
                 required
