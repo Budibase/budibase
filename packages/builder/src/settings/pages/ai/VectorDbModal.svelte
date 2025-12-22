@@ -36,14 +36,14 @@
   async function confirm() {
     try {
       if (draft._id) {
-        await vectorDbStore.updateVectorDb({
+        await vectorDbStore.edit({
           ...draft,
           provider: "pgvector",
           isDefault: true,
         })
         notifications.success("Vector database updated")
       } else {
-        await vectorDbStore.createVectorDb({
+        await vectorDbStore.create({
           ...draft,
           provider: "pgvector",
           isDefault: true,
@@ -61,7 +61,7 @@
       return
     }
     try {
-      await vectorDbStore.deleteVectorDb(draft._id)
+      await vectorDbStore.delete(draft._id)
       notifications.success("Vector database removed")
       onDelete?.()
     } catch (err: any) {

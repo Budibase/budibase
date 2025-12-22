@@ -52,10 +52,11 @@
   onMount(async () => {
     try {
       await aiConfigsStore.fetch()
-      await vectorDbStore.fetchVectorDbs()
+      await vectorDbStore.fetch()
     } catch (e) {
       notifications.error("Error fetching AI settings")
     }
+    fetch
   })
 </script>
 

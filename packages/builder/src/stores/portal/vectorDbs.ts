@@ -17,7 +17,7 @@ export class VectorDbStore extends BudiStore<VectorDbConfigState> {
     })
   }
 
-  fetchVectorDbs = async () => {
+  fetch = async () => {
     const configs = await API.vectorDb.fetch()
     this.update(state => {
       state.configs = configs
@@ -26,21 +26,22 @@ export class VectorDbStore extends BudiStore<VectorDbConfigState> {
     return configs
   }
 
-  createVectorDb = async (config: CreateVectorDbRequest) => {
+  create = async (config: CreateVectorDbRequest) => {
     const created = await API.vectorDb.create(config)
-    await this.fetchVectorDbs()
+    await this.fetch()
     return created
   }
 
-  updateVectorDb = async (config: UpdateVectorDbRequest) => {
+  edit = async (config: UpdateVectorDbRequest) => {
     const updated = await API.vectorDb.update(config)
-    await this.fetchVectorDbs()
+    await this.fetch()
+    this.update
     return updated
   }
 
-  deleteVectorDb = async (id: string) => {
+  delete = async (id: string) => {
     await API.vectorDb.delete(id)
-    await this.fetchVectorDbs()
+    await this.fetch()
   }
 }
 
