@@ -30,6 +30,7 @@ import { executeInThread } from "../threads/automation"
 import { checkTestFlag } from "../utilities/redis"
 import { automationQueue } from "./bullboard"
 import * as utils from "./utils"
+import { AutomationTestProgressEvent } from "./testProgress"
 
 export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
@@ -183,20 +184,25 @@ interface AutomationTriggerParams {
   table?: Table
 }
 
+export interface ExternalTriggerOptions {
+  getResponses?: boolean
+  onProgress?: (event: AutomationTestProgressEvent) => void
+}
+
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  options: { getResponses: true }
+  options: ExternalTriggerOptions & { getResponses: true }
 ): Promise<AutomationResults | DidNotTriggerResponse>
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  options?: { getResponses: false }
+  options?: ExternalTriggerOptions & { getResponses?: false }
 ): Promise<AutomationJob | DidNotTriggerResponse>
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  { getResponses }: { getResponses?: boolean } = {}
+  { getResponses, onProgress }: ExternalTriggerOptions = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
@@ -255,7 +261,7 @@ export async function externalTrigger(
       appId: context.getWorkspaceId(),
       automation,
     }
-    return executeInThread({ data } as AutomationJob)
+    return executeInThread({ data } as AutomationJob, { onProgress })
   } else {
     return automationQueue.add(data, JOB_OPTS)
   }
