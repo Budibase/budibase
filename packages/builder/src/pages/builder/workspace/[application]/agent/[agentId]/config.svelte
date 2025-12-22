@@ -21,12 +21,7 @@
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import {
-    agentsStore,
-    aiConfigsStore,
-    selectedAgent,
-    webSearchConfigStore,
-  } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -102,9 +97,12 @@
   let includedToolRuntimeBindings: string[] = []
   let includedToolsWithDetails: AgentTool[] = []
   let webSearchConfigModal: WebSearchConfigModal
+  let lastWebSearchConfigId: string | undefined
 
   $: currentAgent = $selectedAgent
-  $: webSearchConfig = $webSearchConfigStore.config
+  $: webSearchConfig = $aiConfigsStore.customConfigs.find(
+    config => config._id === draft.aiconfig
+  )?.webSearch
   $: webSearchEnabled = webSearchConfig?.enabled ?? false
 
   $: if (currentAgent && currentAgent._id !== draftAgentId) {
@@ -124,6 +122,14 @@
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
+
+  $: {
+    const nextAiconfigId = draft.aiconfig || undefined
+    if (nextAiconfigId !== lastWebSearchConfigId) {
+      lastWebSearchConfigId = nextAiconfigId
+      agentsStore.fetchTools(nextAiconfigId)
+    }
+  }
 
   const resolveAgentToolIcons = (
     tool: ToolMetadata,
@@ -531,11 +537,7 @@
   }
 
   onMount(async () => {
-    await Promise.all([
-      agentsStore.init(),
-      aiConfigsStore.fetch(),
-      webSearchConfigStore.fetch(),
-    ])
+    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
   })
 
   onDestroy(() => {
@@ -745,7 +747,10 @@
   </div>
 </div>
 
-<WebSearchConfigModal bind:this={webSearchConfigModal} />
+<WebSearchConfigModal
+  bind:this={webSearchConfigModal}
+  aiconfigId={draft.aiconfig}
+/>
 
 <style>
   .config-wrapper {

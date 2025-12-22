@@ -6,9 +6,7 @@ const parallelSearchParams = z.object({
   objective: z
     .string()
     .describe("Natural language description of what to search for"),
-  search_queries: z
-    .array(z.string())
-    .describe("Array of search query strings"),
+  search_queries: z.array(z.string()).describe("Array of search query strings"),
   max_results: z
     .number()
     .optional()

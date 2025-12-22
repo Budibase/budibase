@@ -8,9 +8,11 @@
     Body,
     notifications,
   } from "@budibase/bbui"
-  import { webSearchConfigStore } from "@/stores/portal"
+  import { aiConfigsStore } from "@/stores/portal"
   import { WebSearchProvider, PASSWORD_REPLACEMENT } from "@budibase/types"
   import { onMount } from "svelte"
+
+  export let aiconfigId: string | undefined
 
   export const show = () => {
     modal.show()
@@ -21,11 +23,12 @@
 
   let modal: Modal
   let loading = false
+  let apiKey = ""
 
   let draft = {
     provider: WebSearchProvider.EXA,
-    apiKey: "",
     enabled: false,
+    apiKey: "",
   }
 
   const providerOptions = [
@@ -33,24 +36,50 @@
     { label: "Parallel", value: WebSearchProvider.PARALLEL },
   ]
 
-  $: existingConfig = $webSearchConfigStore.config
+  $: existingConfig = $aiConfigsStore.customConfigs.find(
+    config => config._id === aiconfigId
+  )?.webSearch
 
   $: if (existingConfig && !loading) {
     draft = {
       provider: existingConfig.provider,
-      apiKey: existingConfig.apiKey,
       enabled: existingConfig.enabled,
+      apiKey: PASSWORD_REPLACEMENT,
     }
   }
 
   async function saveConfig() {
     loading = true
     try {
-      await webSearchConfigStore.save(
-        draft.provider,
-        draft.apiKey,
-        draft.enabled
+      if (!aiconfigId) {
+        notifications.error("Missing AI configuration")
+        return
+      }
+      const nextApiKey =
+        apiKey || (existingConfig?.apiKey ? PASSWORD_REPLACEMENT : "")
+
+      let aiConfig = $aiConfigsStore.customConfigs.find(
+        config => config._id === aiconfigId
       )
+      if (!aiConfig) {
+        await aiConfigsStore.fetch()
+        aiConfig = $aiConfigsStore.customConfigs.find(
+          config => config._id === aiconfigId
+        )
+      }
+      if (!aiConfig) {
+        notifications.error("AI configuration not found")
+        return
+      }
+
+      await aiConfigsStore.updateConfig({
+        ...aiConfig,
+        webSearch: {
+          provider: draft.provider,
+          apiKey: nextApiKey,
+          enabled: draft.enabled,
+        },
+      })
       notifications.success("Web search configuration saved")
       modal.hide()
     } catch (error) {
@@ -62,7 +91,9 @@
   }
 
   onMount(async () => {
-    await webSearchConfigStore.fetch()
+    if (!$aiConfigsStore.customConfigs.length) {
+      await aiConfigsStore.fetch()
+    }
   })
 </script>
 
@@ -95,10 +126,8 @@
       <Input
         label="API Key"
         type="password"
-        bind:value={draft.apiKey}
-        placeholder={existingConfig?.apiKey === PASSWORD_REPLACEMENT
-          ? "Enter new key or leave to keep existing"
-          : "Enter API key"}
+        bind:value={apiKey}
+        placeholder={"Enter API key"}
         disabled={!draft.enabled}
       />
 

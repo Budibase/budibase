@@ -1,4 +1,9 @@
-import { Agent, ToolMetadata, SourceName, WebSearchProvider } from "@budibase/types"
+import {
+  Agent,
+  ToolMetadata,
+  SourceName,
+  WebSearchProvider,
+} from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
@@ -15,12 +20,15 @@ export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
   }
 }
 
-export async function getAvailableTools(): Promise<ExecutableTool[]> {
-  const [queries, datasources, webSearchConfig] = await Promise.all([
+export async function getAvailableTools(
+  aiconfigId?: string
+): Promise<ExecutableTool[]> {
+  const [queries, datasources, aiConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
-    sdk.webSearchConfig.get(),
+    aiconfigId ? sdk.aiConfigs.find(aiconfigId) : Promise.resolve(undefined),
   ])
+  const webSearchConfig = aiConfig?.webSearch
 
   const restDatasourceNames = new Map(
     datasources
@@ -48,8 +56,10 @@ export async function getAvailableTools(): Promise<ExecutableTool[]> {
   return tools
 }
 
-export async function getAvailableToolsMetadata(): Promise<ToolMetadata[]> {
-  const tools = await getAvailableTools()
+export async function getAvailableToolsMetadata(
+  aiconfigId?: string
+): Promise<ToolMetadata[]> {
+  const tools = await getAvailableTools(aiconfigId)
   return tools.map(toToolMetadata)
 }
 
@@ -66,7 +76,7 @@ export async function buildPromptAndTools(
   tools: ExecutableTool[]
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
-  const allTools = await getAvailableTools()
+  const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({

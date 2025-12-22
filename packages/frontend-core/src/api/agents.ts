@@ -24,7 +24,7 @@ export interface AgentEndpoints {
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
 
-  fetchTools: () => Promise<ToolMetadata[]>
+  fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
@@ -90,9 +90,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchTools: async () => {
+  fetchTools: async aiconfigId => {
+    const query = aiconfigId
+      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
+      : ""
     return await API.get({
-      url: `/api/agent/tools`,
+      url: `/api/agent/tools${query}`,
     })
   },
 

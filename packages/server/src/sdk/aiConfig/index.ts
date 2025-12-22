@@ -118,6 +118,10 @@ export async function update(
   config.apiKey =
     config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
 
+  if (config.webSearch?.apiKey === PASSWORD_REPLACEMENT) {
+    config.webSearch.apiKey = existing.webSearch?.apiKey || ""
+  }
+
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
