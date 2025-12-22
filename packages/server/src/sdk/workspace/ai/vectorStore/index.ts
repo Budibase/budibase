@@ -1,9 +1,7 @@
-import type { VectorStore, VectorStoreConfig } from "./types"
 import { PgVectorStore } from "./pgVectorStore"
+import type { VectorDb, VectorStoreConfig } from "./types"
 
-export const createVectorStore = (
-  config: VectorStoreConfig
-): VectorStore => {
+export const createVectorStore = (config: VectorStoreConfig): VectorDb => {
   return new PgVectorStore(config)
 }
 

@@ -1,15 +1,15 @@
 import { HTTPError } from "@budibase/backend-core"
 import {
-  VectorStore,
-  VectorStoreListResponse,
-  CreateVectorStoreRequest,
-  UpdateVectorStoreRequest,
-  UserCtx,
+  CreateVectorDbRequest,
   PASSWORD_REPLACEMENT,
+  UpdateVectorDbRequest,
+  UserCtx,
+  VectorDb,
+  VectorDbListResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-const sanitize = (config: VectorStore): VectorStore => {
+const sanitize = (config: VectorDb): VectorDb => {
   if (!config.password) {
     return config
   }
@@ -20,14 +20,14 @@ const sanitize = (config: VectorStore): VectorStore => {
 }
 
 export const fetchVectorStoreConfigs = async (
-  ctx: UserCtx<void, VectorStoreListResponse>
+  ctx: UserCtx<void, VectorDbListResponse>
 ) => {
   const configs = await sdk.vectorStores.fetch()
   ctx.body = configs.map(sanitize)
 }
 
 export const createVectorStoreConfig = async (
-  ctx: UserCtx<CreateVectorStoreRequest, VectorStore>
+  ctx: UserCtx<CreateVectorDbRequest, VectorDb>
 ) => {
   const body = ctx.request.body
   if (!body.name) {
@@ -46,7 +46,7 @@ export const createVectorStoreConfig = async (
 }
 
 export const updateVectorStoreConfig = async (
-  ctx: UserCtx<UpdateVectorStoreRequest, VectorStore>
+  ctx: UserCtx<UpdateVectorDbRequest, VectorDb>
 ) => {
   const body = ctx.request.body
   if (!body._id) {

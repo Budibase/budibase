@@ -8,7 +8,7 @@
   import {
     AIConfigType,
     type CustomAIProviderConfig,
-    type VectorStore,
+    type VectorDb,
   } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
@@ -21,7 +21,7 @@
   let customModalConfig: CustomAIProviderConfig | null = null
   let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
   let vectorModal: { show: () => void; hide: () => void }
-  let vectorModalConfig: VectorStore | null = null
+  let vectorModalConfig: VectorDb | null = null
 
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
 
@@ -48,7 +48,7 @@
     customConfigModal?.show()
   }
 
-  const openVectorStoreModal = (config?: VectorStore) => {
+  const openVectorStoreModal = (config?: VectorDb) => {
     vectorModalConfig = config ?? null
     vectorModal.show()
   }

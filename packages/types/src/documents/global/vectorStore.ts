@@ -1,6 +1,6 @@
 import { Document } from "../../"
 
-export interface VectorStore extends Document {
+export interface VectorDb extends Document {
   name: string
   provider: string
   host: string

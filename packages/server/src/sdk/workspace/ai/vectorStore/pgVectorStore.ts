@@ -1,9 +1,9 @@
 import { Client } from "pg"
 import type {
-  VectorStore,
-  VectorStoreConfig,
   ChunkInput,
   QueryResultRow,
+  VectorDb,
+  VectorStoreConfig,
 } from "./types"
 
 const TABLE_NAME = "bb_agent_chunks"
@@ -11,7 +11,7 @@ const TABLE_NAME = "bb_agent_chunks"
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
-export class PgVectorStore implements VectorStore {
+export class PgVectorStore implements VectorDb {
   constructor(private readonly config: VectorStoreConfig) {}
 
   private async withClient<T>(handler: (client: Client) => Promise<T>) {

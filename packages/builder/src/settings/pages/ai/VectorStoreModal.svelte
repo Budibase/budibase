@@ -1,19 +1,19 @@
 <script lang="ts">
   import { vectorStoreStore } from "@/stores/portal"
   import {
-    ModalContent,
-    Input,
     Heading,
-    notifications,
+    Input,
     keepOpen,
     Label,
+    ModalContent,
+    notifications,
   } from "@budibase/bbui"
-  import type { VectorStore } from "@budibase/types"
+  import type { VectorDb } from "@budibase/types"
 
-  export let config: VectorStore | null
+  export let config: VectorDb | null
   export let onDelete: (() => void) | null = null
 
-  let draft: VectorStore = config
+  let draft: VectorDb = config
     ? { ...config }
     : {
         name: "",

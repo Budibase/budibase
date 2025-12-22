@@ -1,13 +1,13 @@
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
-  VectorStore,
-  CreateVectorStoreRequest,
-  UpdateVectorStoreRequest,
+  CreateVectorDbRequest,
+  UpdateVectorDbRequest,
+  VectorDb,
 } from "@budibase/types"
+import { BudiStore } from "../BudiStore"
 
 interface VectorStoreConfigState {
-  configs: VectorStore[]
+  configs: VectorDb[]
 }
 
 export class VectorStoreStore extends BudiStore<VectorStoreConfigState> {
@@ -26,13 +26,13 @@ export class VectorStoreStore extends BudiStore<VectorStoreConfigState> {
     return configs
   }
 
-  createVectorStore = async (config: CreateVectorStoreRequest) => {
+  createVectorStore = async (config: CreateVectorDbRequest) => {
     const created = await API.vectorStore.create(config)
     await this.fetchVectorStores()
     return created
   }
 
-  updateVectorStore = async (config: UpdateVectorStoreRequest) => {
+  updateVectorStore = async (config: UpdateVectorDbRequest) => {
     const updated = await API.vectorStore.update(config)
     await this.fetchVectorStores()
     return updated

@@ -18,7 +18,7 @@ export interface QueryResultRow {
   distance: number
 }
 
-export interface VectorStore {
+export interface VectorDb {
   upsertSourceChunks(
     sourceId: string,
     chunks: ChunkInput[]

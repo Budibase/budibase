@@ -1,11 +1,7 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import {
-  VectorStore,
-  DocumentType,
-  PASSWORD_REPLACEMENT,
-} from "@budibase/types"
+import { DocumentType, PASSWORD_REPLACEMENT, VectorDb } from "@budibase/types"
 
-const sanitizeConfig = (config: VectorStore): VectorStore => {
+const sanitizeConfig = (config: VectorDb): VectorDb => {
   if (!config.password) {
     return config
   }
@@ -15,23 +11,21 @@ const sanitizeConfig = (config: VectorStore): VectorStore => {
   }
 }
 
-export async function fetch(): Promise<VectorStore[]> {
+export async function fetch(): Promise<VectorDb[]> {
   const db = context.getWorkspaceDB()
-  const result = await db.allDocs<VectorStore>(
+  const result = await db.allDocs<VectorDb>(
     docIds.getDocParams(DocumentType.VECTOR_STORE, undefined, {
       include_docs: true,
     })
   )
 
-  return result.rows
-    .map(row => row.doc)
-    .filter((doc): doc is VectorStore => !!doc)
+  return result.rows.map(row => row.doc).filter((doc): doc is VectorDb => !!doc)
 }
 
-export async function create(config: VectorStore): Promise<VectorStore> {
+export async function create(config: VectorDb): Promise<VectorDb> {
   const db = context.getWorkspaceDB()
 
-  const newConfig: VectorStore = {
+  const newConfig: VectorDb = {
     _id: docIds.generateVectorStoreID(),
     isDefault: config.isDefault ?? false,
     name: config.name,
@@ -50,13 +44,13 @@ export async function create(config: VectorStore): Promise<VectorStore> {
   return newConfig
 }
 
-export async function update(config: VectorStore): Promise<VectorStore> {
+export async function update(config: VectorDb): Promise<VectorDb> {
   if (!config._id || !config._rev) {
     throw new HTTPError("id and rev required", 400)
   }
 
   const db = context.getWorkspaceDB()
-  const existing = await db.tryGet<VectorStore>(config._id)
+  const existing = await db.tryGet<VectorDb>(config._id)
   if (!existing) {
     throw new HTTPError("Vector store config not found", 404)
   }
@@ -66,7 +60,7 @@ export async function update(config: VectorStore): Promise<VectorStore> {
       ? existing.password
       : config.password
 
-  const updated: VectorStore = {
+  const updated: VectorDb = {
     ...existing,
     ...config,
     password,
@@ -82,16 +76,16 @@ export async function update(config: VectorStore): Promise<VectorStore> {
 export async function remove(id: string) {
   const db = context.getWorkspaceDB()
 
-  const existing = await db.get<VectorStore>(id)
+  const existing = await db.get<VectorDb>(id)
   await db.remove(existing)
 }
 
-export async function getDefault(): Promise<VectorStore | undefined> {
+export async function getDefault(): Promise<VectorDb | undefined> {
   const configs = await fetch()
   return configs.find(config => config.isDefault)
 }
 
-async function ensureSingleDefault(config: VectorStore) {
+async function ensureSingleDefault(config: VectorDb) {
   if (!config.isDefault) {
     return
   }
@@ -106,5 +100,5 @@ async function ensureSingleDefault(config: VectorStore) {
   }
 }
 
-export const sanitizeVectorStoreConfigs = (configs: VectorStore[]) =>
+export const sanitizeVectorStoreConfigs = (configs: VectorDb[]) =>
   configs.map(sanitizeConfig)

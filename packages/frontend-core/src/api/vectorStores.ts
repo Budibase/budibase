@@ -1,15 +1,15 @@
 import {
-  VectorStoreListResponse,
-  VectorStore,
-  CreateVectorStoreRequest,
-  UpdateVectorStoreRequest,
+  CreateVectorDbRequest,
+  UpdateVectorDbRequest,
+  VectorDb,
+  VectorDbListResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface VectorStoreEndpoints {
-  fetch: () => Promise<VectorStoreListResponse>
-  create: (config: CreateVectorStoreRequest) => Promise<VectorStore>
-  update: (config: UpdateVectorStoreRequest) => Promise<VectorStore>
+  fetch: () => Promise<VectorDbListResponse>
+  create: (config: CreateVectorDbRequest) => Promise<VectorDb>
+  update: (config: UpdateVectorDbRequest) => Promise<VectorDb>
   delete: (id: string) => Promise<{ deleted: true }>
 }
 

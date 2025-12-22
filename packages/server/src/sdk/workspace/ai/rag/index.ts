@@ -1,7 +1,7 @@
-import { AIConfigType, type AgentFile, type VectorStore } from "@budibase/types"
+import { AIConfigType, type AgentFile, type VectorDb } from "@budibase/types"
 import * as crypto from "crypto"
-import { parse as parseYaml } from "yaml"
 import { PDFParse } from "pdf-parse"
+import { parse as parseYaml } from "yaml"
 import sdk from "../../.."
 import { createVectorStore, type ChunkInput } from "../vectorStore"
 
@@ -66,7 +66,7 @@ const getVectorStore = (config: RagConfig) =>
     embeddingDimensions: config.embeddingDimensions,
   })
 
-const buildPgConnectionString = (config: VectorStore) => {
+const buildPgConnectionString = (config: VectorDb) => {
   const userPart = config.user ? encodeURIComponent(config.user) : ""
   const passwordPart = config.password
     ? `:${encodeURIComponent(config.password)}`

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Body, ActionButton } from "@budibase/bbui"
-  import type { VectorStore } from "@budibase/types"
+  import { ActionButton, Body } from "@budibase/bbui"
+  import type { VectorDb } from "@budibase/types"
 
-  export let config: VectorStore
+  export let config: VectorDb
   export let onEdit: (() => void) | null = null
 </script>
 
