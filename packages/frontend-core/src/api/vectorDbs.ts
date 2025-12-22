@@ -6,39 +6,39 @@ import {
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-export interface VectorStoreEndpoints {
+export interface VectorDbEndpoints {
   fetch: () => Promise<VectorDbListResponse>
   create: (config: CreateVectorDbRequest) => Promise<VectorDb>
   update: (config: UpdateVectorDbRequest) => Promise<VectorDb>
   delete: (id: string) => Promise<{ deleted: true }>
 }
 
-export const buildVectorStoreEndpoints = (
+export const buildVectorDbEndpoints = (
   API: BaseAPIClient
-): VectorStoreEndpoints => ({
+): VectorDbEndpoints => ({
   fetch: async () => {
     return await API.get({
-      url: "/api/vector-store",
+      url: "/api/vectordb",
     })
   },
 
   create: async config => {
     return await API.post({
-      url: "/api/vector-store",
+      url: "/api/vectordb",
       body: config,
     })
   },
 
   update: async config => {
     return await API.put({
-      url: "/api/vector-store",
+      url: "/api/vectordb",
       body: config,
     })
   },
 
   delete: async id => {
     return await API.delete({
-      url: `/api/vector-store/${id}`,
+      url: `/api/vectordb/${id}`,
     })
   },
 })

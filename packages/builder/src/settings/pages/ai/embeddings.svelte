@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    aiConfigsStore,
-    featureFlags,
-    vectorStoreStore,
-  } from "@/stores/portal"
+  import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
   import {
     AIConfigType,
@@ -13,8 +9,8 @@
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
-  import VectorStoreModal from "./VectorStoreModal.svelte"
-  import VectorStoreTile from "./VectorStoreTile.svelte"
+  import VectorDbModal from "./VectorDbModal.svelte"
+  import VectorDbTile from "./VectorDbTile.svelte"
 
   let customConfigModal: { show: () => void; hide: () => void }
 
@@ -29,7 +25,7 @@
   $: embeddingConfigs = customConfigs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
-  $: vectorStores = $vectorStoreStore.configs || []
+  $: vectorDbs = $vectorDbStore.configs || []
 
   function openCustomAIConfigModal(
     config?: CustomAIProviderConfig,
@@ -48,7 +44,7 @@
     customConfigModal?.show()
   }
 
-  const openVectorStoreModal = (config?: VectorDb) => {
+  const openVectorDbModal = (config?: VectorDb) => {
     vectorModalConfig = config ?? null
     vectorModal.show()
   }
@@ -56,7 +52,7 @@
   onMount(async () => {
     try {
       await aiConfigsStore.fetch()
-      await vectorStoreStore.fetchVectorStores()
+      await vectorDbStore.fetchVectorDbs()
     } catch (e) {
       notifications.error("Error fetching AI settings")
     }
@@ -98,17 +94,14 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">Vector databases</div>
-        <Button size="S" cta on:click={() => openVectorStoreModal()}>
+        <Button size="S" cta on:click={() => openVectorDbModal()}>
           Add database
         </Button>
       </div>
-      {#if vectorStores.length}
+      {#if vectorDbs.length}
         <div class="ai-list">
-          {#each vectorStores as config (config._id)}
-            <VectorStoreTile
-              {config}
-              onEdit={() => openVectorStoreModal(config)}
-            />
+          {#each vectorDbs as config (config._id)}
+            <VectorDbTile {config} onEdit={() => openVectorDbModal(config)} />
           {/each}
         </div>
       {:else}
@@ -121,7 +114,7 @@
 </Layout>
 
 <Modal bind:this={vectorModal}>
-  <VectorStoreModal
+  <VectorDbModal
     config={vectorModalConfig}
     onDelete={() => vectorModal.hide()}
     on:hide={() => vectorModal.hide()}

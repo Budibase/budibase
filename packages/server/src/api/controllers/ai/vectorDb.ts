@@ -19,14 +19,14 @@ const sanitize = (config: VectorDb): VectorDb => {
   }
 }
 
-export const fetchVectorStoreConfigs = async (
+export const fetchVectorDbConfigs = async (
   ctx: UserCtx<void, VectorDbListResponse>
 ) => {
-  const configs = await sdk.vectorStores.fetch()
+  const configs = await sdk.vectorDbs.fetch()
   ctx.body = configs.map(sanitize)
 }
 
-export const createVectorStoreConfig = async (
+export const createVectorDbConfig = async (
   ctx: UserCtx<CreateVectorDbRequest, VectorDb>
 ) => {
   const body = ctx.request.body
@@ -40,12 +40,12 @@ export const createVectorStoreConfig = async (
     throw new HTTPError("Only pgvector is supported currently", 400)
   }
 
-  const created = await sdk.vectorStores.create(body)
+  const created = await sdk.vectorDbs.create(body)
   ctx.body = sanitize(created)
   ctx.status = 201
 }
 
-export const updateVectorStoreConfig = async (
+export const updateVectorDbConfig = async (
   ctx: UserCtx<UpdateVectorDbRequest, VectorDb>
 ) => {
   const body = ctx.request.body
@@ -55,17 +55,17 @@ export const updateVectorStoreConfig = async (
   if (body.provider && body.provider !== "pgvector") {
     throw new HTTPError("Only pgvector is supported currently", 400)
   }
-  const updated = await sdk.vectorStores.update(body)
+  const updated = await sdk.vectorDbs.update(body)
   ctx.body = sanitize(updated)
 }
 
-export const deleteVectorStoreConfig = async (
+export const deleteVectorDbConfig = async (
   ctx: UserCtx<void, { deleted: true }, { id: string }>
 ) => {
   const { id } = ctx.params
   if (!id) {
     throw new HTTPError("Config ID is required", 400)
   }
-  await sdk.vectorStores.remove(id)
+  await sdk.vectorDbs.remove(id)
   ctx.body = { deleted: true }
 }

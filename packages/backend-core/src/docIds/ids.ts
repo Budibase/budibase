@@ -149,6 +149,6 @@ export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
 
-export const generateVectorStoreID = () => {
+export const generateVectorDbID = () => {
   return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }

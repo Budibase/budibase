@@ -1,6 +1,6 @@
 import type { Client } from "pg"
 
-export interface VectorStoreConfig {
+export interface VectorDbConfig {
   databaseUrl: string
   embeddingDimensions: number
 }

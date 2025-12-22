@@ -26,7 +26,7 @@ export async function create(config: VectorDb): Promise<VectorDb> {
   const db = context.getWorkspaceDB()
 
   const newConfig: VectorDb = {
-    _id: docIds.generateVectorStoreID(),
+    _id: docIds.generateVectorDbID(),
     isDefault: config.isDefault ?? false,
     name: config.name,
     provider: config.provider,
@@ -100,5 +100,5 @@ async function ensureSingleDefault(config: VectorDb) {
   }
 }
 
-export const sanitizeVectorStoreConfigs = (configs: VectorDb[]) =>
+export const sanitizeVectorDbConfigs = (configs: VectorDb[]) =>
   configs.map(sanitizeConfig)

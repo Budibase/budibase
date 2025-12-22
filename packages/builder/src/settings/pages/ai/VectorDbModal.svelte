@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { vectorStoreStore } from "@/stores/portal"
+  import { vectorDbStore } from "@/stores/portal"
   import {
     Heading,
     Input,
@@ -36,14 +36,14 @@
   async function confirm() {
     try {
       if (draft._id) {
-        await vectorStoreStore.updateVectorStore({
+        await vectorDbStore.updateVectorDb({
           ...draft,
           provider: "pgvector",
           isDefault: true,
         })
         notifications.success("Vector database updated")
       } else {
-        await vectorStoreStore.createVectorStore({
+        await vectorDbStore.createVectorDb({
           ...draft,
           provider: "pgvector",
           isDefault: true,
@@ -61,7 +61,7 @@
       return
     }
     try {
-      await vectorStoreStore.deleteVectorStore(draft._id)
+      await vectorDbStore.deleteVectorDb(draft._id)
       notifications.success("Vector database removed")
       onDelete?.()
     } catch (err: any) {

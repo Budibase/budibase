@@ -3,7 +3,7 @@ import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
 import sdk from "../../.."
-import { createVectorStore, type ChunkInput } from "../vectorStore"
+import { createVectorDb, type ChunkInput } from "../vectorDb"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -51,17 +51,17 @@ const buildRagConfig = async (): Promise<RagConfig> => {
 }
 
 const resolveVectorDatabaseUrl = async () => {
-  const vectorStore = await sdk.vectorStores.getDefault()
-  if (!vectorStore) {
+  const vectorDb = await sdk.vectorDbs.getDefault()
+  if (!vectorDb) {
     throw new Error("No default vector store configured")
   }
 
   // TODO: support other vector store types
-  return buildPgConnectionString(vectorStore)
+  return buildPgConnectionString(vectorDb)
 }
 
-const getVectorStore = (config: RagConfig) =>
-  createVectorStore({
+const getVectorDb = (config: RagConfig) =>
+  createVectorDb({
     databaseUrl: config.databaseUrl,
     embeddingDimensions: config.embeddingDimensions,
   })
@@ -288,12 +288,12 @@ export const ingestAgentFile = async (
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
   const config = await buildRagConfig()
-  const vectorStore = getVectorStore(config)
+  const vectorDb = getVectorDb(config)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
   if (chunks.length === 0) {
-    await vectorStore.upsertSourceChunks(agentFile.ragSourceId, [])
+    await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
     return { inserted: 0, total: 0 }
   }
 
@@ -307,7 +307,7 @@ export const ingestAgentFile = async (
     })
   }
 
-  return await vectorStore.upsertSourceChunks(agentFile.ragSourceId, payloads)
+  return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
 }
 
 export const deleteAgentFileChunks = async (sourceIds: string[]) => {
@@ -315,8 +315,8 @@ export const deleteAgentFileChunks = async (sourceIds: string[]) => {
     return
   }
   const config = await buildRagConfig()
-  const vectorStore = getVectorStore(config)
-  await vectorStore.deleteBySourceIds(sourceIds)
+  const vectorDb = getVectorDb(config)
+  await vectorDb.deleteBySourceIds(sourceIds)
 }
 
 export interface RetrievedContextChunk {
@@ -340,9 +340,9 @@ export const retrieveContextForSources = async (
     return { text: "", chunks: [] }
   }
   const config = await buildRagConfig()
-  const vectorStore = getVectorStore(config)
+  const vectorDb = getVectorDb(config)
   const queryEmbedding = await getEmbedding(config, question)
-  const rows = await vectorStore.queryNearest(queryEmbedding, sourceIds, topK)
+  const rows = await vectorDb.queryNearest(queryEmbedding, sourceIds, topK)
   if (rows.length === 0) {
     return { text: "", chunks: [] }
   }
