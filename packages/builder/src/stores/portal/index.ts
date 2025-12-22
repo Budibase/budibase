@@ -25,6 +25,5 @@ export { clientAppsStore } from "./clientApps"
 export { bannerStore } from "./banners"
 export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"
-export { webSearchConfigStore } from "./webSearchConfig"
 
 export const sideBarCollapsed = writable(false)

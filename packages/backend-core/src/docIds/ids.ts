@@ -144,11 +144,3 @@ export const generateWorkspaceAppID = () => {
 export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
-
-/**
- * Gets the web search config ID - there is only one per workspace.
- * @returns The web search config ID.
- */
-export const getWebSearchConfigID = () => {
-  return `${DocumentType.WEB_SEARCH_CONFIG}${SEPARATOR}config`
-}

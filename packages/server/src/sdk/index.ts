@@ -22,7 +22,6 @@ import * as views from "./workspace/views"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 import * as aiConfigs from "./aiConfig"
-import * as webSearchConfig from "./workspace/webSearchConfig"
 
 const sdk = {
   backups,
@@ -49,7 +48,6 @@ const sdk = {
   dev,
   workspace,
   aiConfigs,
-  webSearchConfig,
 }
 
 // default export for TS

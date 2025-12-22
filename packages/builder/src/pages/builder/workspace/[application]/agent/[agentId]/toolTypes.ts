@@ -7,4 +7,3 @@ export interface AgentTool extends ToolMetadata {
   icon?: IconInfo
   tagIconUrl?: string
 }
-

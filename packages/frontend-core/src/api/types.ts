@@ -42,7 +42,6 @@ import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
-import { WebSearchConfigEndpoints } from "./webSearchConfig"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -156,5 +155,4 @@ export type APIClient = BaseAPIClient &
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
-    webSearchConfig: WebSearchConfigEndpoints
   }
