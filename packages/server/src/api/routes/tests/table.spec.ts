@@ -1639,6 +1639,46 @@ if (descriptions.length) {
             expect(prodRowsAfter[0]._id).toEqual(devRow._id)
           })
 
+          it("strips timezone suffixes for ignoreTimezones fields when seeding", async () => {
+            const table = await config.api.table.save(
+              basicTable(undefined, {
+                schema: {
+                  date: {
+                    type: FieldType.DATETIME,
+                    name: "date",
+                    ignoreTimezones: true,
+                  },
+                },
+              })
+            )
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+              date: "2025-12-18T16:09:03.950Z",
+            })
+
+            await context.doInWorkspaceContext(
+              config.getDevWorkspaceId(),
+              async () => {
+                const db = context.getWorkspaceDB()
+                const storedRow = await db.get<Row>(devRow._id!)
+                await db.put({
+                  ...storedRow,
+                  date: "2025-12-18T16:09:03.950Z",
+                })
+              }
+            )
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRows = await config.api.row.fetchProd(table._id!)
+            expect(prodRows.length).toBe(1)
+            expect(prodRows[0].date).toEqual("2025-12-18T16:09:03.950")
+          })
+
           it("does not reseed a non-empty production table", async () => {
             const table = await config.api.table.save(basicTable())
             await config.api.workspace.publish(config.getDevWorkspaceId())
