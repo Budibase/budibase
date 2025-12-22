@@ -133,6 +133,7 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
+    "yaml": "^2.8.2",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
