@@ -1,17 +1,19 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
+  Agent,
   AgentFile,
   AgentFileStatus,
   DocumentType,
   RequiredKeys,
 } from "@budibase/types"
+import { deleteAgentFileChunks } from "../rag"
 
 interface CreateAgentFileOptions {
   agentId: string
   filename: string
   mimetype?: string
   size?: number
-  uploadedBy?: string
+  uploadedBy: string
 }
 
 export const createAgentFile = async (
@@ -80,7 +82,12 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     })
 }
 
-export const removeAgentFile = async (file: AgentFile) => {
+export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
+  if (!agent.ragConfig) {
+    throw new Error("RAG not configured")
+  }
+
+  await deleteAgentFileChunks(agent.ragConfig, [file.ragSourceId])
   const db = context.getWorkspaceDB()
   await db.remove(file)
 }

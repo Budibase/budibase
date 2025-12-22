@@ -7,10 +7,7 @@ import {
 } from "@budibase/types"
 import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
-import {
-  deleteAgentFileChunks,
-  ingestAgentFile,
-} from "../../../sdk/workspace/ai/rag"
+import { ingestAgentFile } from "../../../sdk/workspace/ai/rag"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -76,7 +73,7 @@ export async function uploadAgentFile(
     filename,
     mimetype,
     size: fileSize ?? buffer.byteLength,
-    uploadedBy: ctx.user?._id,
+    uploadedBy: ctx.user?._id!,
   })
 
   try {
@@ -94,7 +91,7 @@ export async function uploadAgentFile(
     agentFile.errorMessage = error?.message || "Failed to process uploaded file"
     agentFile.chunkCount = 0
     await sdk.ai.agents.updateAgentFile(agentFile)
-    throw new HTTPError(agentFile.errorMessage, 400)
+    throw new HTTPError(agentFile.errorMessage || "", 400)
   } finally {
     await unlinkSafe(filePath)
   }
@@ -109,8 +106,7 @@ export async function deleteAgentFile(
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
-  await deleteAgentFileChunks(agent.ragConfig, [file.ragSourceId])
-  await sdk.ai.agents.removeAgentFile(file)
+  await sdk.ai.agents.removeAgentFile(agent, file)
   ctx.body = { deleted: true }
   ctx.status = 200
 }
