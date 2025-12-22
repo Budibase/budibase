@@ -9,15 +9,28 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { organisation, auth } from "@/stores/portal"
+  import { organisation, auth, translations } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   let email = ""
   let form
   let error
   let submitted = false
+
+  $: translationOverrides = (() => {
+    if (!$translations.loaded) {
+      return {}
+    }
+    const locale = $translations.config.defaultLocale
+    return $translations.config.locales[locale]?.overrides ?? {}
+  })()
+  $: forgotLabels = resolveTranslationGroup(
+    "forgotPassword",
+    translationOverrides
+  )
 
   async function forgot() {
     form.validate()
@@ -27,7 +40,7 @@
     submitted = true
     try {
       await auth.forgotPassword(email)
-      notifications.success("Email sent - please check your inbox")
+      notifications.success(forgotLabels.success)
     } catch (err) {
       submitted = false
       notifications.error("Unable to send reset password link")
@@ -36,7 +49,10 @@
 
   onMount(async () => {
     try {
-      await organisation.init()
+      await Promise.all([
+        organisation.init(),
+        translations.init({ public: true }),
+      ])
     } catch (error) {
       notifications.error("Error getting org config")
     }
@@ -55,28 +71,27 @@
             <span class="back-chev" on:click={() => $goto("../")}>
               <Icon name="caret-left" size="XL" />
             </span>
-            Forgot your password?
+            {forgotLabels.heading}
           </div>
         </Heading>
       </span>
       <Layout gap="XS" noPadding>
         <Body size="M">
-          No problem! Just enter your account's email address and we'll send you
-          a link to reset it.
+          {forgotLabels.description}
         </Body>
       </Layout>
 
       <Layout gap="S" noPadding>
         <FancyForm bind:this={form}>
           <FancyInput
-            label="Email"
+            label={forgotLabels.emailLabel}
             value={email}
             on:change={e => {
               email = e.detail
             }}
             validate={() => {
               if (!email) {
-                return "Please enter your email"
+                return forgotLabels.emailError
               }
               return null
             }}
@@ -92,7 +107,7 @@
           cta
           on:click={forgot}
         >
-          Reset password
+          {forgotLabels.submit}
         </Button>
       </div>
     </Layout>
