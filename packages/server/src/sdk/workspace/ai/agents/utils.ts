@@ -43,9 +43,7 @@ export async function getAvailableTools(
     )
 
   const tools: ExecutableTool[] = [...budibaseTools, ...restQueryTools]
-
-  // Add web search tool if configured and enabled
-  if (webSearchConfig?.enabled && webSearchConfig.apiKey) {
+  if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
       tools.push(createExaTool(webSearchConfig.apiKey))
     } else if (webSearchConfig.provider === WebSearchProvider.PARALLEL) {

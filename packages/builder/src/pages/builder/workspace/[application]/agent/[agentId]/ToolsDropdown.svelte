@@ -48,7 +48,8 @@
             No tools available
           </Body>
         </div>
-      {:else}
+      {/if}
+      {#if filteredTools.length > 0}
         {#each Object.keys(toolSections) as section}
           <div class="tool-section">
             <div class="tool-section-header">

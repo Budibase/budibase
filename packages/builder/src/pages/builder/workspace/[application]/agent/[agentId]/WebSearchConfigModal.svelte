@@ -2,9 +2,8 @@
   import {
     Modal,
     ModalContent,
-    RadioGroup,
+    Select,
     Input,
-    Toggle,
     Body,
     notifications,
   } from "@budibase/bbui"
@@ -15,6 +14,16 @@
   export let aiconfigId: string | undefined
 
   export const show = () => {
+    const existing = $aiConfigsStore.customConfigs.find(
+      config => config._id === aiconfigId
+    )?.webSearch
+    if (existing) {
+      selectedProvider = existing.provider
+      apiKey = PASSWORD_REPLACEMENT
+    } else {
+      selectedProvider = WebSearchProvider.EXA
+      apiKey = ""
+    }
     modal.show()
   }
   export const hide = () => {
@@ -24,29 +33,28 @@
   let modal: Modal
   let loading = false
   let apiKey = ""
-
-  let draft = {
-    provider: WebSearchProvider.EXA,
-    enabled: false,
-    apiKey: "",
-  }
+  let selectedProvider = WebSearchProvider.EXA
 
   const providerOptions = [
-    { label: "Exa", value: WebSearchProvider.EXA },
-    { label: "Parallel", value: WebSearchProvider.PARALLEL },
+    {
+      label: "Exa",
+      value: WebSearchProvider.EXA,
+      url: "exa.ai",
+    },
+    {
+      label: "Parallel",
+      value: WebSearchProvider.PARALLEL,
+      url: "parallel.ai",
+    },
   ]
 
   $: existingConfig = $aiConfigsStore.customConfigs.find(
     config => config._id === aiconfigId
   )?.webSearch
 
-  $: if (existingConfig && !loading) {
-    draft = {
-      provider: existingConfig.provider,
-      enabled: existingConfig.enabled,
-      apiKey: PASSWORD_REPLACEMENT,
-    }
-  }
+  $: selectedProviderOption = providerOptions.find(
+    p => p.value === selectedProvider
+  )
 
   async function saveConfig() {
     loading = true
@@ -75,9 +83,8 @@
       await aiConfigsStore.updateConfig({
         ...aiConfig,
         webSearch: {
-          provider: draft.provider,
+          provider: selectedProvider,
           apiKey: nextApiKey,
-          enabled: draft.enabled,
         },
       })
       notifications.success("Web search configuration saved")
@@ -108,75 +115,33 @@
     onConfirm={saveConfig}
     disabled={loading}
   >
-    <div class="config-form">
-      <Toggle text="Enable Web Search" bind:value={draft.enabled} />
+    <Select
+      label="Provider"
+      bind:value={selectedProvider}
+      options={providerOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+    />
 
-      <div class="form-field">
-        <Body size="S">Provider</Body>
-        <RadioGroup
-          bind:value={draft.provider}
-          options={providerOptions}
-          direction="horizontal"
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          disabled={!draft.enabled}
-        />
-      </div>
+    <Input
+      label="API Key"
+      type="password"
+      bind:value={apiKey}
+      placeholder="Enter API key"
+    />
 
-      <Input
-        label="API Key"
-        type="password"
-        bind:value={apiKey}
-        placeholder={"Enter API key"}
-        disabled={!draft.enabled}
-      />
-
-      <div class="help-text">
-        {#if draft.provider === WebSearchProvider.EXA}
-          <Body size="XS">
-            Get your API key from <a
-              href="https://exa.ai"
-              target="_blank"
-              rel="noopener noreferrer">exa.ai</a
-            >
-          </Body>
-        {:else}
-          <Body size="XS">
-            Get your API key from <a
-              href="https://parallel.ai"
-              target="_blank"
-              rel="noopener noreferrer">parallel.ai</a
-            >
-          </Body>
-        {/if}
-      </div>
-    </div>
+    <Body size="S">
+      Get your API key from <a
+        href="https://{selectedProviderOption?.url}"
+        target="_blank"
+        rel="noopener noreferrer">{selectedProviderOption?.url}</a
+      >
+    </Body>
   </ModalContent>
 </Modal>
 
 <style>
-  .config-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .help-text {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .help-text a {
+  a {
     color: var(--spectrum-global-color-blue-600);
-    text-decoration: none;
-  }
-
-  .help-text a:hover {
-    text-decoration: underline;
   }
 </style>

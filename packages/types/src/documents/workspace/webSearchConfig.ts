@@ -8,5 +8,4 @@ export enum WebSearchProvider {
 export interface WebSearchConfig extends Document {
   provider: WebSearchProvider
   apiKey: string
-  enabled: boolean
 }
