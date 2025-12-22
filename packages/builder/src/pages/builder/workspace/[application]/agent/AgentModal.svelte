@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { AIConfigType } from "@budibase/types"
 
   export const show = () => {
     modal.show()
@@ -18,11 +19,17 @@
   let modal: Modal
 
   async function createAgent() {
-    const aiConfig = $aiConfigsStore.customConfigs.find(c => c.isDefault)?._id
+    const completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+      config => config.configType !== AIConfigType.EMBEDDINGS
+    )
+
+    const aiConfig =
+      completionConfigs.find(c => c.isDefault)?._id || completionConfigs[0]?._id
     if (!aiConfig) {
-      notifications.error("Default aiconfig not found")
+      notifications.error("No chat model configuration found")
       return
     }
+
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       aiconfig: aiConfig,
@@ -34,6 +41,7 @@
 
   onMount(() => {
     aiConfigsStore.fetch()
+    vectorDbStore.fetch()
   })
 </script>
 

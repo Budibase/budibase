@@ -12,16 +12,24 @@
     MenuItem,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
     type Agent,
+    type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type CaretPositionFn,
     type InsertAtPositionFn,
+    type VectorDb,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    vectorDbStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -52,6 +60,11 @@
   let draftAgentId: string | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
+  let embeddingModelOptions: { label: string; value: string }[] = []
+  let vectorDbOptions: { label: string; value: string }[] = []
+  let completionConfigs: CustomAIProviderConfig[] = []
+  let embeddingConfigs: CustomAIProviderConfig[] = []
+  let vectorDbConfigs: VectorDb[] = []
   let draft: Agent = {
     name: "",
     description: "",
@@ -63,6 +76,8 @@
     enabledTools: [] as string[],
     ragMinDistance: 0.7,
     ragTopK: 4,
+    embeddingModel: "",
+    vectorDb: "",
   }
 
   let getCaretPosition: CaretPositionFn | undefined
@@ -107,11 +122,33 @@
       enabledTools: currentAgent.enabledTools || [],
       ragMinDistance: currentAgent.ragMinDistance,
       ragTopK: currentAgent.ragTopK,
+      embeddingModel: currentAgent.embeddingModel || "",
+      vectorDb: currentAgent.vectorDb || "",
     }
     draftAgentId = currentAgent._id
   }
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType !== AIConfigType.EMBEDDINGS
+  )
+
+  $: embeddingConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType === AIConfigType.EMBEDDINGS
+  )
+
+  $: vectorDbConfigs = $vectorDbStore.configs || []
+
+  $: modelOptions = completionConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: embeddingModelOptions = embeddingConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: vectorDbOptions = vectorDbConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
@@ -446,7 +483,11 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      vectorDbStore.fetch(),
+    ])
   })
 
   onDestroy(() => {
@@ -536,21 +577,6 @@
                 icon="sliders-horizontal"
                 tooltip="Manage AI configurations"
                 on:click={() => bb.settings("/ai")}
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <Input
-                label="Minimum similarity"
-                labelPosition="left"
-                type="number"
-                min="0"
-                max="1"
-                step="0.05"
-                bind:value={draft.ragMinDistance}
-                helperText="Chunks below this cosine similarity are ignored when building context."
-                on:change={() => scheduleSave(true)}
               />
             </div>
           </div>
@@ -667,6 +693,27 @@
           {/if}
 
           <div class="section rag-settings">
+            <Select
+              label="Embeddings model"
+              labelPosition="left"
+              bind:value={draft.embeddingModel}
+              options={embeddingModelOptions}
+              placeholder="Select embeddings model"
+              disabled={!embeddingModelOptions.length}
+              helpText="Used when encoding knowledge base chunks."
+              on:change={() => scheduleSave(true)}
+            />
+            <Select
+              label="Vector database"
+              labelPosition="left"
+              bind:value={draft.vectorDb}
+              options={vectorDbOptions}
+              placeholder="Select vector database"
+              disabled={!vectorDbOptions.length}
+              helpText="Where embeddings are stored and queried."
+              on:change={() => scheduleSave(true)}
+            />
+
             <Heading size="XS">Relevant context</Heading>
             <div class="rag-grid">
               <Input
@@ -677,7 +724,7 @@
                 max="1"
                 step="0.05"
                 bind:value={draft.ragMinDistance}
-                helperText="Chunks below this cosine similarity are ignored."
+                helpText="Chunks below this cosine similarity are ignored."
                 on:change={() => scheduleSave(true)}
                 required
               />
@@ -689,7 +736,7 @@
                 max="10"
                 step="1"
                 bind:value={draft.ragTopK}
-                helperText="Number of chunks retrieved for each query."
+                helpText="Number of chunks retrieved for each query."
                 on:change={() => scheduleSave(true)}
                 required
               />

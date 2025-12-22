@@ -26,6 +26,8 @@ export interface Agent extends Document {
   enabledTools?: string[]
   ragMinDistance: number
   ragTopK: number
+  embeddingModel: string
+  vectorDb: string
 }
 
 export interface AgentMessageRagSource {

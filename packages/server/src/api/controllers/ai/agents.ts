@@ -113,6 +113,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   if (latestQuestion && readyFileSources.length > 0) {
     try {
       const result = await retrieveContextForSources(
+        agent,
         latestQuestion,
         readyFileSources,
         topK,
@@ -276,6 +277,8 @@ export async function createAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    embeddingModel: body.embeddingModel,
+    vectorDb: body.vectorDb,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     icon: body.icon,
@@ -305,6 +308,8 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    embeddingModel: body.embeddingModel,
+    vectorDb: body.vectorDb,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     _deleted: false,

@@ -211,38 +211,16 @@ export async function getLLMOrThrow() {
   return llm
 }
 
-export async function getLiteLLMModelConfigOrThrow(configId?: string): Promise<{
+export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   modelName: string
   modelId: string
   apiKey: string
   baseUrl: string
 }> {
-  return await getLiteLLMModelConfigOrThrowByType({
-    configId,
-    configType: AIConfigType.COMPLETIONS,
-  })
-}
+  const aiConfig = await find(configId)
 
-export async function getLiteLLMModelConfigOrThrowByType({
-  configId,
-  configType,
-}: {
-  configId?: string
-  configType: AIConfigType
-}): Promise<{
-  modelName: string
-  modelId: string
-  apiKey: string
-  baseUrl: string
-}> {
-  const aiConfig = configId
-    ? await find(configId)
-    : await getDefault(configType)
   if (!aiConfig) {
-    throw new HTTPError(
-      `${configType === AIConfigType.EMBEDDINGS ? "Embedding" : "Chat"} config not found`,
-      400
-    )
+    throw new HTTPError("Config not found", 400)
   }
 
   const secretKey = await getLiteLLMSecretKey()

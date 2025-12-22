@@ -80,7 +80,7 @@ export async function uploadAgentFile(
   })
 
   try {
-    const result = await ingestAgentFile(agentFile, buffer)
+    const result = await ingestAgentFile(agent, agentFile, buffer)
     agentFile.status = AgentFileStatus.READY
     agentFile.chunkCount = result.total
     agentFile.processedAt = new Date().toISOString()
@@ -104,12 +104,12 @@ export async function deleteAgentFile(
   ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  await sdk.ai.agents.getOrThrow(agentId)
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
   const file = await sdk.ai.agents.getAgentFileOrThrow(fileId)
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
-  await deleteAgentFileChunks([file.ragSourceId])
+  await deleteAgentFileChunks(agent, [file.ragSourceId])
   await sdk.ai.agents.removeAgentFile(file)
   ctx.body = { deleted: true }
   ctx.status = 200

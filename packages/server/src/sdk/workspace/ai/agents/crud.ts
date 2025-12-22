@@ -12,6 +12,8 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
+  embeddingModel: agent.embeddingModel,
+  vectorDb: agent.vectorDb,
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -62,6 +64,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     enabledTools: request.enabledTools || [],
     ragMinDistance: request.ragMinDistance,
     ragTopK: request.ragTopK ?? 4,
+    embeddingModel: request.embeddingModel,
+    vectorDb: request.vectorDb,
   }
 
   const { rev } = await db.put(agent)
@@ -99,6 +103,7 @@ export async function remove(agentId: string) {
   const files = await listAgentFiles(agentId)
   if (files.length > 0) {
     await deleteAgentFileChunks(
+      agent,
       files.map(file => file.ragSourceId).filter(Boolean)
     )
     await Promise.all(files.map(file => removeAgentFile(file)))

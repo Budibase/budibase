@@ -1,4 +1,4 @@
-import { AIConfigType, type AgentFile, type VectorDb } from "@budibase/types"
+import { type Agent, type AgentFile, type VectorDb } from "@budibase/types"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
@@ -34,13 +34,11 @@ const textFileExtensions = new Set([
 
 const yamlExtensions = new Set([".yaml", ".yml"])
 
-const buildRagConfig = async (): Promise<RagConfig> => {
-  const databaseUrl = await resolveVectorDatabaseUrl()
+const buildRagConfig = async (agent: Agent): Promise<RagConfig> => {
+  const databaseUrl = await resolveVectorDatabaseConfig(agent.vectorDb)
 
   const { apiKey, baseUrl, modelId } =
-    await sdk.aiConfigs.getLiteLLMModelConfigOrThrowByType({
-      configType: AIConfigType.EMBEDDINGS,
-    })
+    await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.embeddingModel)
   return {
     databaseUrl,
     embeddingModel: modelId,
@@ -50,14 +48,17 @@ const buildRagConfig = async (): Promise<RagConfig> => {
   }
 }
 
-const resolveVectorDatabaseUrl = async () => {
-  const vectorDb = await sdk.vectorDbs.getDefault()
+const resolveVectorDatabaseConfig = async (
+  vectorDbId: string
+): Promise<string> => {
+  const vectorDb = await sdk.vectorDbs.find(vectorDbId)
   if (!vectorDb) {
-    throw new Error("No default vector store configured")
+    throw new Error("No default vector db found")
   }
 
-  // TODO: support other vector store types
-  return buildPgConnectionString(vectorDb)
+  // TODO: support other vector db types
+  const connectionString = buildPgConnectionString(vectorDb)
+  return connectionString
 }
 
 const getVectorDb = (config: RagConfig) =>
@@ -284,10 +285,11 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
 }
 
 export const ingestAgentFile = async (
+  agent: Agent,
   agentFile: AgentFile,
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
-  const config = await buildRagConfig()
+  const config = await buildRagConfig(agent)
   const vectorDb = getVectorDb(config)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
@@ -310,11 +312,14 @@ export const ingestAgentFile = async (
   return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
 }
 
-export const deleteAgentFileChunks = async (sourceIds: string[]) => {
+export const deleteAgentFileChunks = async (
+  agent: Agent,
+  sourceIds: string[]
+) => {
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
-  const config = await buildRagConfig()
+  const config = await buildRagConfig(agent)
   const vectorDb = getVectorDb(config)
   await vectorDb.deleteBySourceIds(sourceIds)
 }
@@ -331,6 +336,7 @@ export interface RetrievedContextResult {
 }
 
 export const retrieveContextForSources = async (
+  agent: Agent,
   question: string,
   sourceIds: string[],
   topK: number,
@@ -339,7 +345,7 @@ export const retrieveContextForSources = async (
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
     return { text: "", chunks: [] }
   }
-  const config = await buildRagConfig()
+  const config = await buildRagConfig(agent)
   const vectorDb = getVectorDb(config)
   const queryEmbedding = await getEmbedding(config, question)
   const rows = await vectorDb.queryNearest(queryEmbedding, sourceIds, topK)

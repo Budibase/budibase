@@ -8,5 +8,4 @@ export interface VectorDb extends Document {
   database: string
   user?: string
   password?: string
-  isDefault: boolean
 }
