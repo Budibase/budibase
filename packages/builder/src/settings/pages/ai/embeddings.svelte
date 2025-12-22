@@ -1,44 +1,27 @@
 <script lang="ts">
-  import { onMount } from "svelte"
   import {
-    Button,
-    Layout,
-    Body,
-    notifications,
-    Modal,
-    Input,
-  } from "@budibase/bbui"
-  import { aiConfigsStore, featureFlags } from "@/stores/portal"
-
-  import { API } from "@/api"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
+    aiConfigsStore,
+    featureFlags,
+    vectorStoreStore,
+  } from "@/stores/portal"
+  import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
   import {
-    type CustomAIProviderConfig,
-    ConfigType,
-    type AIConfig,
     AIConfigType,
+    type CustomAIProviderConfig,
     type VectorStore,
   } from "@budibase/types"
+  import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
-  import { vectorStoreStore } from "@/stores/portal"
+  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import VectorStoreModal from "./VectorStoreModal.svelte"
+  import VectorStoreTile from "./VectorStoreTile.svelte"
 
-  let aiConfig: AIConfig
   let customConfigModal: { show: () => void; hide: () => void }
 
   let customModalConfig: CustomAIProviderConfig | null = null
   let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
-  let vectorDbConfigDraft: VectorStore = {
-    name: "Workspace vector store",
-    provider: "pgvector",
-    host: "",
-    port: "5432",
-    database: "",
-    user: "",
-    password: "",
-    isDefault: true,
-  }
-  let vectorConfigDraftId: string | undefined
-  let embeddingsConfigSection: HTMLDivElement
+  let vectorModal: { show: () => void; hide: () => void }
+  let vectorModalConfig: VectorStore | null = null
 
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
 
@@ -46,26 +29,7 @@
   $: embeddingConfigs = customConfigs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
-  $: currentVectorConfig = $vectorStoreStore.configs?.[0]
-  $: if (
-    currentVectorConfig &&
-    currentVectorConfig._id !== vectorConfigDraftId
-  ) {
-    vectorDbConfigDraft = { ...currentVectorConfig }
-    vectorConfigDraftId = currentVectorConfig._id
-  } else if (!currentVectorConfig && vectorConfigDraftId) {
-    vectorDbConfigDraft = {
-      name: "Workspace vector store",
-      provider: "pgvector",
-      host: "",
-      port: "5432",
-      database: "",
-      user: "",
-      password: "",
-      isDefault: true,
-    }
-    vectorConfigDraftId = undefined
-  }
+  $: vectorStores = $vectorStoreStore.configs || []
 
   function openCustomAIConfigModal(
     config?: CustomAIProviderConfig,
@@ -84,128 +48,85 @@
     customConfigModal?.show()
   }
 
-  async function saveVectorDbSettings() {
-    try {
-      const payload = {
-        ...vectorDbConfigDraft,
-        provider: "pgvector",
-        isDefault: true,
-      }
-      if (vectorDbConfigDraft._id) {
-        await vectorStoreStore.updateVectorStore({
-          ...payload,
-          _id: vectorDbConfigDraft._id,
-          _rev: vectorDbConfigDraft._rev,
-        })
-      } else {
-        await vectorStoreStore.createVectorStore({
-          ...payload,
-        })
-      }
-      notifications.success("Vector DB settings saved")
-    } catch (err: any) {
-      notifications.error(err.message || "Failed to save vector settings")
-    }
+  const openVectorStoreModal = (config?: VectorStore) => {
+    vectorModalConfig = config ?? null
+    vectorModal.show()
   }
 
   onMount(async () => {
     try {
-      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-
-      customConfigs = await aiConfigsStore.fetch()
+      await aiConfigsStore.fetch()
       await vectorStoreStore.fetchVectorStores()
-    } catch {
+    } catch (e) {
       notifications.error("Error fetching AI settings")
     }
   })
 </script>
 
-{#if aiConfig}
-  <Layout noPadding gap="S">
-    {#if privateLLMSEnabled}
-      <div
-        class="section"
-        id="EmbeddingsConfig"
-        bind:this={embeddingsConfigSection}
-      >
-        <div class="section-header">
-          <div class="section-title">Embeddings models</div>
-          <Button
-            size="S"
-            cta
-            on:click={() =>
-              openCustomAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
-          >
-            Add configuration
-          </Button>
-        </div>
-
-        {#if embeddingConfigs.length}
-          <div class="ai-list">
-            {#each embeddingConfigs as config (config._id)}
-              <CustomAIConfigTile
-                {config}
-                editHandler={() =>
-                  openCustomAIConfigModal(config, AIConfigType.EMBEDDINGS)}
-              />
-            {/each}
-          </div>
-        {:else}
-          <div class="no-enabled">
-            <Body size="S">No embeddings configurations yet</Body>
-          </div>
-        {/if}
+<Layout noPadding gap="S">
+  {#if privateLLMSEnabled}
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Embeddings models</div>
+        <Button
+          size="S"
+          cta
+          on:click={() =>
+            openCustomAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
+        >
+          Add configuration
+        </Button>
       </div>
 
-      <div class="section vector-section">
-        <div class="section-header">
-          <div class="section-title">Vector database</div>
+      {#if embeddingConfigs.length}
+        <div class="ai-list">
+          {#each embeddingConfigs as config (config._id)}
+            <CustomAIConfigTile
+              {config}
+              editHandler={() =>
+                openCustomAIConfigModal(config, AIConfigType.EMBEDDINGS)}
+            />
+          {/each}
         </div>
-        <div class="vector-form">
-          <Input
-            label="Provider"
-            labelPosition="left"
-            value="pgvector"
-            disabled
-          />
-          <Input
-            label="Host"
-            labelPosition="left"
-            bind:value={vectorDbConfigDraft.host}
-            placeholder="127.0.0.1"
-          />
-          <Input
-            label="Port"
-            labelPosition="left"
-            bind:value={vectorDbConfigDraft.port}
-            placeholder="5432"
-          />
-          <Input
-            label="Database"
-            labelPosition="left"
-            bind:value={vectorDbConfigDraft.database}
-          />
-          <Input
-            label="User"
-            labelPosition="left"
-            bind:value={vectorDbConfigDraft.user}
-          />
-          <Input
-            label="Password"
-            type="password"
-            labelPosition="left"
-            bind:value={vectorDbConfigDraft.password}
-          />
+      {:else}
+        <div class="no-enabled">
+          <Body size="S">No embeddings configurations yet</Body>
         </div>
-        <div class="vector-actions">
-          <Button primary on:click={saveVectorDbSettings}>
-            Save vector settings
-          </Button>
-        </div>
+      {/if}
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Vector databases</div>
+        <Button size="S" cta on:click={() => openVectorStoreModal()}>
+          Add database
+        </Button>
       </div>
-    {/if}
-  </Layout>
-{/if}
+      {#if vectorStores.length}
+        <div class="ai-list">
+          {#each vectorStores as config (config._id)}
+            <VectorStoreTile
+              {config}
+              onEdit={() => openVectorStoreModal(config)}
+            />
+          {/each}
+        </div>
+      {:else}
+        <div class="no-enabled">
+          <Body size="S">No vector databases configured yet</Body>
+        </div>
+      {/if}
+    </div>
+  {/if}
+</Layout>
+
+<Modal bind:this={vectorModal}>
+  <VectorStoreModal
+    config={vectorModalConfig}
+    onDelete={() => vectorModal.hide()}
+    on:hide={() => vectorModal.hide()}
+  />
+</Modal>
 
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
@@ -250,22 +171,5 @@
 
   .section-header .section-title {
     margin-bottom: 0;
-  }
-
-  .vector-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
-  .vector-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--spacing-m);
-  }
-
-  .vector-actions {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>
