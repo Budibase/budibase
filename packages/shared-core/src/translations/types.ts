@@ -5,6 +5,8 @@ export type TranslationCategory =
   | "picker"
   | "recaptcha"
   | "portal"
+  | "login"
+  | "forgotPassword"
 
 export interface TranslationDefinitionInput {
   key: string

@@ -4,6 +4,8 @@ import { passwordModalTranslations } from "./passwordModal"
 import { pickerTranslations } from "./picker"
 import { recaptchaTranslations } from "./recaptcha"
 import { portalTranslations } from "./portal"
+import { loginTranslations } from "./login"
+import { forgotPasswordTranslations } from "./forgotPassword"
 import type {
   TranslationCategory,
   TranslationDefinition,
@@ -18,6 +20,8 @@ export {
   pickerTranslations,
   recaptchaTranslations,
   portalTranslations,
+  loginTranslations,
+  forgotPasswordTranslations,
 }
 
 const translationModules = [
@@ -27,6 +31,8 @@ const translationModules = [
   pickerTranslations,
   recaptchaTranslations,
   portalTranslations,
+  loginTranslations,
+  forgotPasswordTranslations,
 ]
 
 export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
@@ -37,6 +43,8 @@ export const TRANSLATION_CATEGORY_LABELS: Record<TranslationCategory, string> =
     picker: "Picker",
     recaptcha: "reCAPTCHA",
     portal: "Portal",
+    login: "Login",
+    forgotPassword: "Forgot password",
   }
 
 // Central export of all translation definitions across modules.
