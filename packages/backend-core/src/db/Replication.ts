@@ -63,7 +63,7 @@ class Replication {
           this.source.get(documentId),
           this.target.get(documentId),
         ])
-        const versionsToJump = this.haveReplicationInconsistencies(
+        const versionsToJump = this.replicationDelta(
           sourceDocument,
           targetDocument
         )
@@ -81,10 +81,7 @@ class Replication {
     }
   }
 
-  private haveReplicationInconsistencies(
-    sourceDocument: Document,
-    targetDocument: Document
-  ) {
+  private replicationDelta(sourceDocument: Document, targetDocument: Document) {
     const sourceRevisionNumber = this.getRevisionNumber(sourceDocument)
     const targetRevisionNumber = this.getRevisionNumber(targetDocument)
     return targetRevisionNumber - sourceRevisionNumber
