@@ -2,6 +2,7 @@ import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
+import { tracer } from "dd-trace"
 
 const _PouchDB = PouchDB // Keep Prettier from removing import
 
@@ -71,10 +72,13 @@ class Replication {
           continue
         }
 
-        for (let i = 0; i <= versionsToJump; i++) {
-          const doc = await this.source.get(targetDocument._id)
-          await this.source.put(doc)
-        }
+        await tracer.trace("Replication.resolveInconsistencies", async span => {
+          span.addTags({ delta: versionsToJump, toFix: true })
+          for (let i = 0; i <= versionsToJump; i++) {
+            const doc = await this.source.get(targetDocument._id)
+            await this.source.put(doc)
+          }
+        })
       } catch (error) {
         console.warn("Cannot resolve inconsistencies for document", documentId)
       }
