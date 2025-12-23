@@ -54,9 +54,8 @@ class Replication {
     })
   }
 
-  // Resolves replication conflicts by treating source as the source of truth.
-  // For documents where target revision is higher than source, removes the target
-  // document and re-replicates from source to ensure source version prevails.
+  // If the target rev went ahead the source rev, replication will cause conflicts and the document will not update in the target.
+  // This function checks the delta, and updates the source document rev to be ahead of the target, allowing the document to be copied
   async resolveInconsistencies(documentIds: string[]) {
     for (const documentId of documentIds) {
       try {
