@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { createAPIClient } from "@budibase/frontend-core"
-import type { AgentChat } from "@budibase/types"
+import type { ChatConversationRequest } from "@budibase/types"
 
-const chat: AgentChat = {
+const chat: ChatConversationRequest = {
   title: "Test chat",
   messages: [],
+  chatAppId: "chatapp-123",
 }
 
 const createStreamResponse = (sse: string) =>
@@ -19,7 +20,7 @@ const drainStream = async (stream: AsyncIterable<unknown>) => {
   }
 }
 
-describe("agentChatStream error handling", () => {
+describe("streamChatConversation error handling", () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
@@ -36,7 +37,7 @@ describe("agentChatStream error handling", () => {
     const api = createAPIClient()
 
     await expect(async () => {
-      const stream = await api.agentChatStream(chat, "workspace-123")
+      const stream = await api.streamChatConversation(chat, "workspace-123")
       await drainStream(stream)
     }).rejects.toThrow("Custom agent failure")
   })
@@ -50,7 +51,7 @@ describe("agentChatStream error handling", () => {
     const api = createAPIClient()
 
     await expect(async () => {
-      const stream = await api.agentChatStream(chat, "workspace-123")
+      const stream = await api.streamChatConversation(chat, "workspace-123")
       await drainStream(stream)
     }).rejects.toThrow("Agent action failed")
   })
