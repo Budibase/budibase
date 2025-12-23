@@ -32,7 +32,10 @@ export const createExaTool = (apiKey: string) =>
       })
 
       if (!response.ok) {
-        throw new Error(`Exa error: ${response.status} ${response.statusText}`)
+        const errorBody = await response.text()
+        throw new Error(
+          `Exa error: ${response.status} ${response.statusText} - ${errorBody}`
+        )
       }
       return response.json()
     },

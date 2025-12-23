@@ -151,7 +151,9 @@ export async function fetchHistory(
 }
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
-  const aiconfigId = ctx.query.aiconfigId as string | undefined
+  const rawAiconfigId = ctx.query.aiconfigId
+  const aiconfigId =
+    typeof rawAiconfigId === "string" ? rawAiconfigId : undefined
   ctx.body = await sdk.ai.agents.getAvailableToolsMetadata(aiconfigId)
 }
 
