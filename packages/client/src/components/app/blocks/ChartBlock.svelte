@@ -51,6 +51,24 @@
   // Histogram
   export let bucketCount
 
+  // Gauge
+  export let autoMaxValue
+  export let maxValue
+  export let startAngle
+  export let endAngle
+  export let showTrack
+  export let lineCap
+  export let barLabels
+  export let offsetX
+  export let offsetY
+  export let textSize
+  export let showImage
+  export let imageURL
+  export let imageWidth
+  export let imageHeight
+  export let titleSize
+  export let showPercentage
+
   let dataProviderId
 </script>
 
@@ -78,7 +96,7 @@
           title: chartTitle,
           labelColumn,
           valueColumn,
-          valueColumns,
+          valueColumns: chartType === "gauge" ? valueColumn : valueColumns,
           palette,
           dataLabels,
           legend,
@@ -102,6 +120,22 @@
           c3,
           c4,
           c5,
+          autoMaxValue,
+          maxValue,
+          startAngle,
+          endAngle,
+          showTrack,
+          lineCap,
+          barLabels,
+          offsetX,
+          offsetY,
+          textSize,
+          showImage,
+          imageURL,
+          imageWidth,
+          imageHeight,
+          titleSize,
+          showPercentage,
         }}
       />
     {/if}

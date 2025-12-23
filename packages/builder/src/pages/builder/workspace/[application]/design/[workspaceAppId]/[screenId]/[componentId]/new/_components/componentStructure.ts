@@ -91,6 +91,7 @@ export function getComponentStructure({ chatbox } = { chatbox: false }) {
         "pie",
         "donut",
         "histogram",
+        "gauge",
       ],
     },
   ]
