@@ -1767,6 +1767,48 @@ if (descriptions.length) {
             expect(prodTable).toEqual(devTable)
           })
 
+          it("allows publishing the dev table document when production and dev rev are in the same rev count but different version", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            for (const workspaceId of [
+              config.getDevWorkspaceId(),
+              config.getProdWorkspaceId(),
+            ]) {
+              await context.doInWorkspaceContext(workspaceId, async () => {
+                const prodDb = context.getWorkspaceDB()
+                const prodTable = await prodDb.get<Table>(table._id!)
+                await prodDb.put({
+                  ...prodTable,
+                  name: generator.word(),
+                })
+              })
+            }
+
+            let devTable = await getDevTable()
+            let prodTable = await getProdTable()
+            expectsRevVersion(devTable, 2)
+            expectsRevVersion(prodTable, 2)
+            expect(devTable._rev).not.toEqual(prodTable._rev)
+
+            await config.api.table.publish(table._id!)
+
+            devTable = await getDevTable()
+            prodTable = await getProdTable()
+            expectsRevVersion(devTable, 2)
+            expect(prodTable).toEqual(devTable)
+            expect(devTable._rev).toEqual(prodTable._rev)
+          })
+
           it("does not tweak revs when production is not ahead", async () => {
             const table = await config.api.table.save(basicTable())
 
