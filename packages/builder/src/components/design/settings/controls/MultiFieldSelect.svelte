@@ -9,6 +9,7 @@
   import { Explanation } from "./Explanation"
   import { params } from "@roxi/routify"
   import { debounce } from "lodash"
+  import { MultiFieldSelectionState } from "./multiFieldSelectState"
 
   export let componentInstance = {}
   export let value = ""
@@ -20,21 +21,17 @@
   let contextTooltipVisible = false
 
   const dispatch = createEventDispatcher()
+  const selectionState = new MultiFieldSelectionState()
+  let boundValue = []
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = Object.keys(schema || {})
-  $: boundValue = getValidOptions(value, options)
+  $: selectionState.syncFromProps(value, options)
+  $: boundValue = selectionState.getSelection()
 
-  const getValidOptions = (selectedOptions, allOptions) => {
-    // Fix the hardcoded default string value
-    if (!Array.isArray(selectedOptions)) {
-      selectedOptions = []
-    }
-    return selectedOptions.filter(val => allOptions.indexOf(val) !== -1)
-  }
-
-  const setValue = value => {
-    boundValue = getValidOptions(value.detail, options)
+  const setValue = event => {
+    selectionState.applyUserSelection(event.detail, options)
+    boundValue = selectionState.getSelection()
     dispatch("change", boundValue)
   }
 
