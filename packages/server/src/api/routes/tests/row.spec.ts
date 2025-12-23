@@ -5,6 +5,7 @@ import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   InternalTable,
+  roles,
   setEnv,
   tenancy,
   utils,
@@ -1031,6 +1032,17 @@ if (descriptions.length) {
         it("returns 404 when table does not exist", async () => {
           await config.api.row.fetch("1234567", { status: 404 })
         })
+
+        isInternal &&
+          it("returns 404 in production for non-builders when table is dev-only", async () => {
+            const devOnlyTable = await config.api.table.save(defaultTable())
+
+            await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+              await config.api.row.fetchProd(devOnlyTable._id!, {
+                status: 404,
+              })
+            })
+          })
       })
 
       describe("update", () => {
