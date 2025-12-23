@@ -12,14 +12,19 @@ import sdk from "../../../sdk"
 const sanitizeConfig = (
   config: CustomAIProviderConfig
 ): CustomAIProviderConfig => {
-  if (!config.apiKey) {
-    return config
+  const sanitized: CustomAIProviderConfig = {
+    ...config,
+    ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
   }
 
-  return {
-    ...config,
-    apiKey: PASSWORD_REPLACEMENT,
+  if (sanitized.webSearch?.apiKey) {
+    sanitized.webSearch = {
+      ...sanitized.webSearch,
+      apiKey: PASSWORD_REPLACEMENT,
+    }
   }
+
+  return sanitized
 }
 
 export const fetchAIConfigs = async (
