@@ -333,7 +333,7 @@ describe("Replication", () => {
 
       await replication.resolveInconsistencies(["doc1"])
 
-      expect(mockSourceDb.put).toHaveBeenCalledTimes(4) // 3 versions to jump, so loop executes 4 times
+      expect(mockSourceDb.put).toHaveBeenCalledTimes(4) // the target is ahead of source 3 versions. Loop executes 4 times to ensure source rev exceeds target
       expect(mockTargetDb.remove).not.toHaveBeenCalled()
       expect(replication.replicate).not.toHaveBeenCalled()
     })
