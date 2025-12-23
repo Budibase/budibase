@@ -58,28 +58,27 @@ class Replication {
   // For documents where target revision is higher than source, removes the target
   // document and re-replicates from source to ensure source version prevails.
   async resolveInconsistencies(documentIds: string[]) {
-    const inconsistentDocumentIds: string[] = []
     for (const documentId of documentIds) {
       try {
         const [sourceDocument, targetDocument] = await Promise.all([
           this.source.get(documentId),
           this.target.get(documentId),
         ])
-        if (
-          this.haveReplicationInconsistencies(sourceDocument, targetDocument)
-        ) {
-          await this.target.remove({
-            _id: targetDocument._id,
-            _rev: targetDocument._rev,
-          })
-          inconsistentDocumentIds.push(sourceDocument._id)
+        const versionsToJump = this.haveReplicationInconsistencies(
+          sourceDocument,
+          targetDocument
+        )
+        if (versionsToJump <= 0) {
+          continue
+        }
+
+        for (let i = 0; i <= versionsToJump; i++) {
+          const doc = await this.source.get(targetDocument._id)
+          await this.source.put(doc)
         }
       } catch (error) {
         console.warn("Cannot resolve inconsistencies for document", documentId)
       }
-    }
-    if (inconsistentDocumentIds.length > 0) {
-      await this.replicate({ doc_ids: inconsistentDocumentIds })
     }
   }
 
@@ -89,7 +88,7 @@ class Replication {
   ) {
     const sourceRevisionNumber = this.getRevisionNumber(sourceDocument)
     const targetRevisionNumber = this.getRevisionNumber(targetDocument)
-    return targetRevisionNumber > sourceRevisionNumber
+    return targetRevisionNumber - sourceRevisionNumber
   }
 
   private getRevisionNumber(document: Document) {
