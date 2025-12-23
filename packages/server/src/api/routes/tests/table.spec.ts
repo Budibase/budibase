@@ -1719,6 +1719,77 @@ if (descriptions.length) {
             expect(prodRowsAfterSecondSeed[0]._id).toEqual(devRow._id)
             expect(prodRowsAfterSecondSeed[0].name).toEqual("dev-row")
           })
+
+          const expectsRevVersion = (table: Table, version: number) => {
+            expect(table).toMatchObject({
+              _id: table._id!,
+              _rev: expect.stringMatching(new RegExp(`^${version}-\\w+`)),
+            })
+            expect(table).not.toHaveProperty("_deleted")
+          }
+
+          it("allows publishing the dev table document when production rev is ahead", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const prodWorkspaceId = config.getProdWorkspaceId()
+            await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+              const prodDb = context.getWorkspaceDB()
+              const prodTable = await prodDb.get<Table>(table._id!)
+              const res = await prodDb.put({
+                ...prodTable,
+                name: "prod-only-change",
+              })
+              await prodDb.put({
+                ...prodTable,
+                _rev: res.rev,
+                name: "prod-only-change",
+              })
+            })
+
+            expectsRevVersion(await getDevTable(), 1)
+            expectsRevVersion(await getProdTable(), 3)
+
+            await config.api.table.publish(table._id!)
+
+            const devTable = await getDevTable()
+            const prodTable = await getProdTable()
+            expectsRevVersion(devTable, 4)
+            expect(prodTable).toEqual(devTable)
+          })
+
+          it("does not tweak revs when production is not ahead", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            expectsRevVersion(await getDevTable(), 1)
+            expectsRevVersion(await getProdTable(), 1)
+
+            await config.api.table.publish(table._id!)
+
+            const devTable = await getDevTable()
+            const prodTable = await getProdTable()
+            expectsRevVersion(devTable, 1)
+            expect(prodTable).toEqual(devTable)
+          })
         }
       })
 
