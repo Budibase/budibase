@@ -84,7 +84,7 @@
     "@types/uuid": "8.3.4",
     "cheerio": "^1.0.0",
     "maildev": "^2.2.1",
-    "nock": "^13.5.4",
+    "nock": "^14.0.10",
     "nodemon": "2.0.15",
     "rimraf": "3.0.2",
     "superagent": "^10.1.1",

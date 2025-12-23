@@ -167,7 +167,7 @@
     "jest-extended": "^4.0.2",
     "jest-mock": "^30.0.5",
     "jest-openapi": "0.14.2",
-    "nock": "13.5.4",
+    "nock": "^14.0.10",
     "nodemon": "2.0.15",
     "openapi-typescript": "5.2.0",
     "rimraf": "3.0.2",
