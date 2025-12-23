@@ -2,6 +2,10 @@ import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   AgentChat,
+  AgentFile,
+  AgentFileStatus,
+  AgentMessageMetadata,
+  AgentMessageRagSource,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
@@ -19,10 +23,63 @@ import {
   convertToModelMessages,
   extractReasoningMiddleware,
   generateText,
+  ModelMessage,
   streamText,
   wrapLanguageModel,
 } from "ai"
 import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
+import {
+  retrieveContextForSources,
+  RetrievedContextChunk,
+} from "../../../sdk/workspace/ai/rag"
+
+const toSourceMetadata = (
+  chunks: RetrievedContextChunk[],
+  files: AgentFile[]
+): AgentMessageRagSource[] => {
+  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const summary = new Map<string, AgentMessageRagSource>()
+
+  for (const chunk of chunks) {
+    const file = fileBySourceId.get(chunk.sourceId)
+    if (!summary.has(chunk.sourceId)) {
+      summary.set(chunk.sourceId, {
+        sourceId: chunk.sourceId,
+        fileId: file?._id,
+        filename: file?.filename ?? chunk.sourceId,
+        chunkCount: 0,
+      })
+    }
+    const entry = summary.get(chunk.sourceId)!
+    entry.chunkCount += 1
+  }
+  return Array.from(summary.values())
+}
+
+const extractUserText = (message?: AgentChat["messages"][number]) => {
+  if (!message || !Array.isArray(message.parts)) {
+    return ""
+  }
+  return message.parts
+    .filter(part => part && typeof part === "object" && part["type"] === "text")
+    .map(part => (typeof part["text"] === "string" ? part["text"] : ""))
+    .join(" ")
+    .trim()
+}
+
+const findLatestUserQuestion = (chat: AgentChat) => {
+  const messages = chat.messages || []
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const current = messages[i]
+    if (current?.role === "user") {
+      const text = extractUserText(current)
+      if (text) {
+        return text
+      }
+    }
+  }
+  return ""
+}
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
@@ -42,6 +99,33 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const agentFiles = await sdk.ai.agents.listAgentFiles(agent._id!)
+  const readyFileSources = agentFiles
+    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
+    .map(file => file.ragSourceId)
+
+  const latestQuestion = findLatestUserQuestion(chat)
+  let retrievedContext = ""
+  let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
+  const ragConfig = agent.ragConfig
+
+  if (ragConfig && latestQuestion && readyFileSources.length > 0) {
+    try {
+      const result = await retrieveContextForSources(
+        agent,
+        latestQuestion,
+        readyFileSources,
+        ragConfig.ragTopK,
+        ragConfig.ragMinDistance
+      )
+      retrievedContext = result.text
+      if (result.chunks.length > 0) {
+        ragSourcesMetadata = toSourceMetadata(result.chunks, agentFiles)
+      }
+    } catch (error) {
+      console.log("Failed to retrieve agent context", error)
+    }
+  }
 
   const { systemPrompt: system, tools: allTools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
@@ -60,31 +144,53 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const model = openai.chat(modelId)
 
     const aiTools = toAiSdkTools(allTools)
-    const result = await streamText({
+    const convertedMessages = convertToModelMessages(chat.messages)
+    const messagesWithContext: ModelMessage[] =
+      retrievedContext.trim().length > 0
+        ? [
+            {
+              role: "system",
+              content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
+            },
+            ...convertedMessages,
+          ]
+        : convertedMessages
+
+    const result = streamText({
       model: wrapLanguageModel({
         model,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
       }),
-      messages: convertToModelMessages(chat.messages),
+      messages: messagesWithContext,
       system,
       tools: aiTools,
     })
 
     const title =
       chat.title ||
-      (
-        await generateText({
-          model,
-          messages: [convertToModelMessages(chat.messages)[0]],
-          system: ai.agentHistoryTitleSystemPrompt(),
-        })
-      ).text
+      (convertedMessages.length > 0
+        ? (
+            await generateText({
+              model,
+              messages: [convertedMessages[0]],
+              system: ai.agentHistoryTitleSystemPrompt(),
+            })
+          ).text
+        : "Conversation")
 
     ctx.respond = false
+    const messageMetadata =
+      ragSourcesMetadata && ragSourcesMetadata.length > 0
+        ? { ragSources: ragSourcesMetadata }
+        : undefined
+
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
+      ...(messageMetadata && {
+        messageMetadata: () => messageMetadata,
+      }),
       onFinish: async ({ messages }) => {
         const chatId = chat._id ?? docIds.generateAgentChatID(agent._id!)
         const existingChat = chat._id
@@ -178,6 +284,7 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
+    ragConfig: body.ragConfig,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -205,6 +312,7 @@ export async function updateAgent(
     live: body.live,
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
+    ragConfig: body.ragConfig,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

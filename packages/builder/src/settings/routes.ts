@@ -132,7 +132,18 @@ export const orgRoutes = (
       access: () => isAdmin,
       path: "ai",
       icon: "sparkle",
-      comp: Pages.get("ai"),
+      routes: [
+        {
+          path: "aisettings",
+          title: "AI Settings",
+          comp: Pages.get("ai"),
+        },
+        {
+          path: "embedding-settings",
+          title: "Embeddings",
+          comp: Pages.get("embeddings"),
+        },
+      ],
     },
     {
       section: "Auth",

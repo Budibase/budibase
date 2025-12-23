@@ -2,6 +2,7 @@ import { configs, context, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 import sdk from ".."
 import env from "../../environment"
+import { AIConfigType } from "@budibase/types"
 
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
@@ -35,6 +36,7 @@ export async function addModel(model: {
   name: string
   baseUrl: string
   apiKey: string | undefined
+  configType: AIConfigType
 }): Promise<string> {
   const { name, baseUrl, provider, apiKey } = model
   await validateConfig(model)
@@ -77,6 +79,7 @@ export async function updateModel(model: {
   name: string
   baseUrl: string
   apiKey: string | undefined
+  configType: AIConfigType
 }) {
   const { llmModelId, name, baseUrl, provider, apiKey } = model
   await validateConfig(model)
@@ -125,8 +128,39 @@ export async function validateConfig(model: {
   name: string
   baseUrl: string
   apiKey: string | undefined
+  configType: AIConfigType
 }) {
-  const { name, baseUrl, provider, apiKey } = model
+  const { name, baseUrl, provider, apiKey, configType } = model
+
+  if (configType === AIConfigType.EMBEDDINGS) {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+    if (apiKey) {
+      headers.Authorization = `Bearer ${apiKey}`
+    }
+    const normalizedBase = baseUrl?.replace(/\/+$/, "") || baseUrl
+    const response = await fetch(
+      `${normalizedBase || "https://api.openai.com"}/v1/embeddings`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: name,
+          input: "Budibase embedding validation",
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new HTTPError(
+        `Error validating configuration: ${text || response.statusText}`,
+        400
+      )
+    }
+    return
+  }
 
   const requestOptions = {
     method: "POST",
@@ -168,6 +202,9 @@ export async function syncKeyModels() {
   }
 
   const aiConfigs = await sdk.aiConfigs.fetch()
+  const modelIds = aiConfigs
+    .map(c => c.liteLLMModelId)
+    .filter((id): id is string => !!id)
 
   const requestOptions = {
     method: "POST",
@@ -177,7 +214,7 @@ export async function syncKeyModels() {
     },
     body: JSON.stringify({
       key: liteLLM.keyId,
-      models: aiConfigs.map(c => c.liteLLMModelId),
+      models: modelIds,
     }),
   }
 

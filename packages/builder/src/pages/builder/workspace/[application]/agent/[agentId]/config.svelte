@@ -12,16 +12,24 @@
     MenuItem,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
     type Agent,
+    type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type CaretPositionFn,
     type InsertAtPositionFn,
+    type VectorDb,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    vectorDbStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -46,12 +54,21 @@
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import FilesPanel from "./FilesPanel.svelte"
 
   let currentAgent: Agent | undefined
   let draftAgentId: string | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
-  let draft = {
+  let embeddingModelOptions: { label: string; value: string }[] = []
+  let vectorDbOptions: { label: string; value: string }[] = []
+  let completionConfigs: CustomAIProviderConfig[] = []
+  let embeddingConfigs: CustomAIProviderConfig[] = []
+  let vectorDbConfigs: VectorDb[] = []
+
+  let ragConfigDraft: Partial<NonNullable<Agent["ragConfig"]>> = {}
+
+  let draft: Agent = {
     name: "",
     description: "",
     aiconfig: "",
@@ -103,10 +120,31 @@
       iconColor: currentAgent.iconColor || "",
       enabledTools: currentAgent.enabledTools || [],
     }
+    ragConfigDraft = currentAgent.ragConfig ? { ...currentAgent.ragConfig } : {}
     draftAgentId = currentAgent._id
   }
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType !== AIConfigType.EMBEDDINGS
+  )
+
+  $: embeddingConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType === AIConfigType.EMBEDDINGS
+  )
+
+  $: vectorDbConfigs = $vectorDbStore.configs || []
+
+  $: modelOptions = completionConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: embeddingModelOptions = embeddingConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: vectorDbOptions = vectorDbConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
@@ -441,7 +479,11 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      vectorDbStore.fetch(),
+    ])
   })
 
   onDestroy(() => {
@@ -645,6 +687,60 @@
               {/each}
             </div>
           {/if}
+
+          <div class="section rag-settings">
+            <Select
+              label="Embeddings model"
+              labelPosition="left"
+              bind:value={ragConfigDraft.embeddingModel}
+              options={embeddingModelOptions}
+              placeholder="Select embeddings model"
+              disabled={!embeddingModelOptions.length}
+              helpText="Used when encoding knowledge base chunks."
+              on:change={() => scheduleSave(true)}
+            />
+            <Select
+              label="Vector database"
+              labelPosition="left"
+              bind:value={ragConfigDraft.vectorDb}
+              options={vectorDbOptions}
+              placeholder="Select vector database"
+              disabled={!vectorDbOptions.length}
+              helpText="Where embeddings are stored and queried."
+              on:change={() => scheduleSave(true)}
+            />
+
+            <Heading size="XS">Relevant context</Heading>
+            <div class="rag-grid">
+              <Input
+                label="Minimum similarity"
+                labelPosition="left"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                bind:value={ragConfigDraft.ragMinDistance}
+                helpText="Chunks below this cosine similarity are ignored."
+                on:change={() => scheduleSave(true)}
+                required
+              />
+              <Input
+                label="Chunks to retrieve"
+                labelPosition="left"
+                type="number"
+                min="1"
+                max="10"
+                step="1"
+                bind:value={ragConfigDraft.ragTopK}
+                helpText="Number of chunks retrieved for each query."
+                on:change={() => scheduleSave(true)}
+                required
+              />
+            </div>
+          </div>
+          <div class="section files-section">
+            <FilesPanel currentAgentId={currentAgent?._id} />
+          </div>
         </Layout>
       </div>
     </div>
@@ -912,5 +1008,12 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .files-section,
+  .rag-settings {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
   }
 </style>
