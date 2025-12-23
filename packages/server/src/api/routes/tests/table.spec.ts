@@ -1804,7 +1804,7 @@ if (descriptions.length) {
 
             devTable = await getDevTable()
             prodTable = await getProdTable()
-            expectsRevVersion(devTable, 2)
+            expectsRevVersion(devTable, 3)
             expect(prodTable).toEqual(devTable)
             expect(devTable._rev).toEqual(prodTable._rev)
           })
