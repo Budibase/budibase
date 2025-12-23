@@ -84,7 +84,7 @@ class Replication {
 
         await tracer.trace("Replication.resolveInconsistencies", async span => {
           span.addTags({
-            delta: versionsToJump,
+            versionsToJump,
             toFix: true,
             id: documentId,
             sourceRev: sourceDocument._rev,
