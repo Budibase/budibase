@@ -6,11 +6,14 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  DatasourceRelationshipConfig,
   DeleteDatasourceResponse,
   Document,
   DynamicVariable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchDatasourceRelationshipInfoRequest,
+  FetchDatasourceRelationshipInfoResponse,
   FetchDatasourceViewInfoRequest,
   FetchDatasourceViewInfoResponse,
   FetchDatasourcesResponse,
@@ -98,6 +101,40 @@ export async function viewInformation(
 
   ctx.body = {
     views: views.sort(),
+    error,
+  }
+}
+
+export async function getRelationshipInformation(
+  ctx: UserCtx<
+    FetchDatasourceRelationshipInfoRequest,
+    FetchDatasourceRelationshipInfoResponse
+  >
+) {
+  const { datasource } = ctx.request.body
+  let relationships: DatasourceRelationshipConfig[] = []
+  let error: string | undefined
+
+  try {
+    const enrichedDatasource =
+      await sdk.datasources.getAndMergeDatasource(datasource)
+    const connector = (await sdk.datasources.getConnector(
+      enrichedDatasource
+    )) as DatasourcePlus
+
+    if (connector.getRelationships) {
+      // Extract imported table names from datasource.entities
+      const importedTableNames = Object.keys(datasource.entities || {})
+      relationships = await connector.getRelationships(importedTableNames)
+    } else {
+      error = "Relationship fetching not supported by datasource"
+    }
+  } catch (err) {
+    error = (err as Error).message || "Unknown error"
+  }
+
+  ctx.body = {
+    relationships: relationships.sort((a, b) => a.label.localeCompare(b.label)),
     error,
   }
 }
