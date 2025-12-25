@@ -1,9 +1,10 @@
 <script>
   import { screenStore } from "@/stores/builder"
   import { onMount } from "svelte"
-  import { Label, Checkbox, Select } from "@budibase/bbui"
+  import { Label, Select, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
+  import DrawerBindableCheckbox from "@/components/common/bindings/DrawerBindableCheckbox.svelte"
 
   export let parameters
   export let bindings = []
@@ -49,7 +50,12 @@
       appendBindingsAsOptions={false}
     />
     <div />
-    <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+    <DrawerBindableCheckbox
+      text="Open screen in modal"
+      value={parameters.peek}
+      on:change={event => (parameters.peek = event.detail)}
+      {bindings}
+    />
   {:else}
     <DrawerBindableInput
       title="Destination"
