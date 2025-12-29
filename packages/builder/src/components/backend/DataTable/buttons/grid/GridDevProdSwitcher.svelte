@@ -17,11 +17,8 @@
   $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-  $: disabled = !isDeployed && !tableDatasource?.usesEnvironmentVariables
-  $: tooltip =
-    isInternal && !isDeployed
-      ? "Please publish to view production"
-      : "No production environment variables"
+  $: disabled = !isInternal && !tableDatasource?.usesEnvironmentVariables
+  $: tooltip = "No production environment variables"
 
   $: switcherProps = {
     leftIcon: "wrench",
@@ -34,12 +31,6 @@
         ? "left"
         : "right") as "left" | "right",
     disabled,
-  }
-
-  const selected = () => {
-    if (disabled && !isInternal) return "right" as "left" | "right"
-    if (isDevMode) return "left"
-    return "right"
   }
 
   const handleLeft = () =>
