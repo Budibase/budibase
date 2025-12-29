@@ -30,7 +30,6 @@ import {
   LoopV2StepInputs,
 } from "@budibase/types"
 import { Job } from "bull"
-import crypto from "crypto"
 import tracer from "dd-trace"
 import { cloneDeep } from "lodash/fp"
 import * as actions from "../automations/actions"
@@ -64,15 +63,9 @@ function getAutomationLogContext(job: Job<AutomationData>) {
 
 function getErrorLogDetails(err: any) {
   const message = err?.message ?? `${err}`
-  const errorHash =
-    typeof message === "string"
-      ? crypto.createHash("sha1").update(message).digest("hex").slice(0, 12)
-      : undefined
-
   return {
     name: err?.name,
     code: err?.code,
-    errorHash,
     messagePreview:
       typeof message === "string"
         ? message.slice(0, ERROR_PREVIEW_LENGTH)
