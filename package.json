@@ -40,7 +40,8 @@
     "typescript": "5.9.2",
     "typescript-eslint": "8.17.0",
     "update-dotenv": "1.1.1",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "ai": "^6.0.0"
   },
   "scripts": {
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
