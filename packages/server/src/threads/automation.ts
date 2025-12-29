@@ -30,6 +30,7 @@ import {
   LoopV2StepInputs,
 } from "@budibase/types"
 import { Job } from "bull"
+import crypto from "crypto"
 import tracer from "dd-trace"
 import { cloneDeep } from "lodash/fp"
 import * as actions from "../automations/actions"
@@ -50,6 +51,34 @@ import { AutomationTestProgressEvent } from "../automations/testProgress"
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
+const ERROR_PREVIEW_LENGTH = 512
+
+function getAutomationLogContext(job: Job<AutomationData>) {
+  const appId = job.data.event.appId
+  const automationId = job.data.automation?._id
+  const tenantId = context.getTenantIDFromWorkspaceID(appId!)
+  const trigger = job.data.automation?.definition?.trigger?.event
+
+  return { tenantId, appId, automationId, trigger }
+}
+
+function getErrorLogDetails(err: any) {
+  const message = err?.message ?? `${err}`
+  const errorHash =
+    typeof message === "string"
+      ? crypto.createHash("sha1").update(message).digest("hex").slice(0, 12)
+      : undefined
+
+  return {
+    name: err?.name,
+    code: err?.code,
+    errorHash,
+    messagePreview:
+      typeof message === "string"
+        ? message.slice(0, ERROR_PREVIEW_LENGTH)
+        : undefined,
+  }
+}
 
 function stepSuccess(
   step: Readonly<AutomationStep>,
@@ -867,6 +896,12 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
         try {
           callback(null, await orchestrator.execute())
         } catch (err) {
+          console.error(
+            "automation worker failed",
+            { _logKey: "automation", ...getAutomationLogContext(job) },
+            { _logKey: "bull", jobId: job.id },
+            { _logKey: "error", ...getErrorLogDetails(err) }
+          )
           callback(err)
         }
       })
