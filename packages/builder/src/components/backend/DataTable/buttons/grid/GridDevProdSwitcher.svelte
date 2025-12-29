@@ -1,19 +1,11 @@
 <script lang="ts">
   import { Switcher, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { DataEnvironmentMode } from "@budibase/types"
-  import {
-    dataEnvironmentStore,
-    workspaceDeploymentStore,
-    tables,
-    datasources,
-  } from "@/stores/builder"
+  import { dataEnvironmentStore, tables, datasources } from "@/stores/builder"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   $: isDevMode = $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
-  $: tableId = $tables.selected?._id!
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
-  $: isDeployed =
-    isInternal && $workspaceDeploymentStore.tables[tableId]?.published
   $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
