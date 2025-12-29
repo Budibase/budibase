@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Switcher, AbsTooltip, TooltipPosition } from "@budibase/bbui"
+  import { DataEnvironmentMode } from "@budibase/types"
   import {
     dataEnvironmentStore,
     workspaceDeploymentStore,
     tables,
     datasources,
   } from "@/stores/builder"
-  import { DataEnvironmentMode } from "@budibase/types"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   $: isDevMode = $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
@@ -28,12 +28,14 @@
     leftText: "Dev",
     rightIcon: "pulse",
     rightText: "Prod",
-    selected: (disabled && !isInternal
-      ? "right"
-      : isDevMode
-        ? "left"
-        : "right") as "left" | "right",
+    selected: selected(),
     disabled,
+  }
+
+  const selected = () => {
+    if (disabled && !isInternal) return "right" as "left" | "right"
+    if (isDevMode) return "left"
+    return "right"
   }
 
   const handleLeft = () =>
