@@ -123,7 +123,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         ragSourcesMetadata = toSourceMetadata(result.chunks, agentFiles)
       }
     } catch (error) {
-      console.log("Failed to retrieve agent context", error)
+      // TODO: implement logging and fallbacks
+      console.error("Failed to retrieve agent context", error)
     }
   }
 
