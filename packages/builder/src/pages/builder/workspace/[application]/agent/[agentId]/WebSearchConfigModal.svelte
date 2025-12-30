@@ -48,10 +48,6 @@
     },
   ]
 
-  $: existingConfig = $aiConfigsStore.customConfigs.find(
-    config => config._id === aiconfigId
-  )?.webSearchConfig
-
   $: selectedProviderOption = providerOptions.find(
     p => p.value === selectedProvider
   )
@@ -63,8 +59,7 @@
         notifications.error("Missing AI configuration")
         return
       }
-      const nextApiKey =
-        apiKey || (existingConfig?.apiKey ? existingConfig.apiKey : "")
+      const nextApiKey = apiKey
 
       let aiConfig = $aiConfigsStore.customConfigs.find(
         config => config._id === aiconfigId

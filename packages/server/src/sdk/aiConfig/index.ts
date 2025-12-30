@@ -151,6 +151,7 @@ export async function update(
       baseUrl: updatedConfig.baseUrl,
       apiKey: updatedConfig.apiKey,
     })
+    await liteLLM.syncKeyModels()
   }
 
   return updatedConfig
