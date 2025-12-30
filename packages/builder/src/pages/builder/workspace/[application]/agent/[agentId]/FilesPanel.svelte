@@ -198,33 +198,6 @@
 {/if}
 
 <style>
-  /* Override input backgrounds to match design */
-  :global(
-    .config-form .spectrum-Textfield-input,
-    .config-form .spectrum-Picker
-  ) {
-    background-color: var(--background) !important;
-  }
-
-  /* Align left-position labels into a clean column */
-  :global(.config-form .spectrum-Form-item:not(.above)) {
-    display: grid;
-    grid-template-columns: 120px 1fr 20px;
-    column-gap: var(--spacing-m);
-  }
-
-  :global(.config-form .container) {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    gap: var(--spectrum-alias-grid-gutter-medium);
-  }
-
-  :global(.tools-popover-container .spectrum-Popover) {
-    background-color: var(--background-alt);
-  }
-
   .files-header-row {
     display: flex;
     justify-content: space-between;
