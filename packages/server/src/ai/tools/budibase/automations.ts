@@ -2,8 +2,9 @@ import { ToolType } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
+import type { BudibaseToolDefinition } from "."
 
-export default [
+const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
   {
     name: "list_automations",
     sourceType: ToolType.BUDIBASE,
@@ -83,3 +84,5 @@ export default [
     }),
   },
 ]
+
+export default AUTOMATION_TOOLS
