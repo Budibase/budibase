@@ -8,7 +8,7 @@
     notifications,
   } from "@budibase/bbui"
   import { aiConfigsStore } from "@/stores/portal"
-  import { WebSearchProvider, PASSWORD_REPLACEMENT } from "@budibase/types"
+  import { WebSearchProvider } from "@budibase/types"
   import { onMount } from "svelte"
 
   export let aiconfigId: string | undefined
@@ -16,10 +16,10 @@
   export const show = () => {
     const existing = $aiConfigsStore.customConfigs.find(
       config => config._id === aiconfigId
-    )?.webSearch
+    )?.webSearchConfig
     if (existing) {
       selectedProvider = existing.provider
-      apiKey = PASSWORD_REPLACEMENT
+      apiKey = existing.apiKey || ""
     } else {
       selectedProvider = WebSearchProvider.EXA
       apiKey = ""
@@ -50,7 +50,7 @@
 
   $: existingConfig = $aiConfigsStore.customConfigs.find(
     config => config._id === aiconfigId
-  )?.webSearch
+  )?.webSearchConfig
 
   $: selectedProviderOption = providerOptions.find(
     p => p.value === selectedProvider
@@ -64,7 +64,7 @@
         return
       }
       const nextApiKey =
-        apiKey || (existingConfig?.apiKey ? PASSWORD_REPLACEMENT : "")
+        apiKey || (existingConfig?.apiKey ? existingConfig.apiKey : "")
 
       let aiConfig = $aiConfigsStore.customConfigs.find(
         config => config._id === aiconfigId
@@ -82,7 +82,7 @@
 
       await aiConfigsStore.updateConfig({
         ...aiConfig,
-        webSearch: {
+        webSearchConfig: {
           provider: selectedProvider,
           apiKey: nextApiKey,
         },

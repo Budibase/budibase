@@ -102,8 +102,10 @@
   $: currentAgent = $selectedAgent
   $: webSearchConfig = $aiConfigsStore.customConfigs.find(
     config => config._id === draft.aiconfig
-  )?.webSearch
-  $: webSearchConfigured = Boolean(webSearchConfig?.apiKey)
+  )?.webSearchConfig
+  $: webSearchConfigured = Boolean(
+    webSearchConfig?.apiKey && webSearchConfig.provider
+  )
 
   const getWebSearchRuntimeBinding = () => {
     if (!webSearchConfigured || !webSearchConfig) {

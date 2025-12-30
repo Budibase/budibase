@@ -8,5 +8,5 @@ export interface CustomAIProviderConfig extends Document {
   model: string
   apiKey?: string
   liteLLMModelId: string
-  webSearch?: WebSearchConfig
+  webSearchConfig?: WebSearchConfig
 }

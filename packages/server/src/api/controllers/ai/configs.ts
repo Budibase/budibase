@@ -17,9 +17,9 @@ const sanitizeConfig = (
     ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
   }
 
-  if (sanitized.webSearch?.apiKey) {
-    sanitized.webSearch = {
-      ...sanitized.webSearch,
+  if (sanitized.webSearchConfig?.apiKey) {
+    sanitized.webSearchConfig = {
+      ...sanitized.webSearchConfig,
       apiKey: PASSWORD_REPLACEMENT,
     }
   }

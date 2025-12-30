@@ -28,7 +28,7 @@ export async function getAvailableTools(
     sdk.datasources.fetch(),
     aiconfigId ? sdk.aiConfigs.find(aiconfigId) : Promise.resolve(undefined),
   ])
-  const webSearchConfig = aiConfig?.webSearch
+  const webSearchConfig = aiConfig?.webSearchConfig
 
   const restDatasourceNames = new Map(
     datasources
