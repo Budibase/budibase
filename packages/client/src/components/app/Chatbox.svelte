@@ -1,11 +1,11 @@
 <script lang="ts">
   import { appStore } from "@/stores"
   import { Chatbox } from "@budibase/frontend-core"
-  import type { AgentChat } from "@budibase/types"
+  import type { ChatConversationRequest } from "@budibase/types"
 
   export let intro: string = "Ask our assistant anything about this app."
 
-  let chat: AgentChat = { title: "", messages: [] }
+  let chat: ChatConversationRequest = { title: "", messages: [], chatAppId: "" }
   $: workspaceId = $appStore?.appId ?? null
 </script>
 
