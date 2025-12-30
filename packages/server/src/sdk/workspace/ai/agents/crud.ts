@@ -114,7 +114,7 @@ export async function remove(agentId: string) {
         agent.ragConfig,
         files.map(file => file.ragSourceId).filter(Boolean)
       )
-      await Promise.all(files.map(file => removeAgentFile(file)))
+      await Promise.all(files.map(file => removeAgentFile(agent, file)))
     }
   }
 }
