@@ -52,6 +52,9 @@ export const updateVectorDbConfig = async (
   if (!body._id) {
     throw new HTTPError("Config ID is required", 400)
   }
+  if (!body._rev) {
+    throw new HTTPError("Revision is required", 400)
+  }
   if (body.provider && body.provider !== "pgvector") {
     throw new HTTPError("Only pgvector is supported currently", 400)
   }
