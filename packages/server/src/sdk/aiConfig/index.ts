@@ -136,14 +136,16 @@ export async function update(
     await ensureSingleDefault(updatedConfig._id)
   }
 
-  const shouldUpdateLiteLLMModel =
-    existing.provider !== updatedConfig.provider ||
-    existing.model !== updatedConfig.model ||
-    existing.baseUrl !== updatedConfig.baseUrl ||
-    existing.apiKey !== updatedConfig.apiKey
+  const isWebSearchOnlyUpdate =
+    existing.name === updatedConfig.name &&
+    existing.isDefault === updatedConfig.isDefault &&
+    existing.provider === updatedConfig.provider &&
+    existing.model === updatedConfig.model &&
+    existing.baseUrl === updatedConfig.baseUrl &&
+    existing.apiKey === updatedConfig.apiKey
 
-  // Web Search is stored under configs, but we don't want to update it LiteLLM also when we save it.
-  if (shouldUpdateLiteLLMModel) {
+  // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
+  if (!isWebSearchOnlyUpdate) {
     await liteLLM.updateModel({
       llmModelId: updatedConfig.liteLLMModelId,
       provider: updatedConfig.provider,
