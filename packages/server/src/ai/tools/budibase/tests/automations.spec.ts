@@ -163,10 +163,12 @@ describe("AI Tools - Automations", () => {
         .save()
 
       const tool = getTriggerAutomationTool()
-      const result = (await tool.handler({
-        automationId: targetAutomation._id!,
-        fields: "invalid json",
-      })) as TriggerAutomationResult
+      const result = (await runInContext(() =>
+        tool.handler({
+          automationId: targetAutomation._id!,
+          fields: "invalid json",
+        })
+      )) as TriggerAutomationResult
 
       expect(isErrorResult(result)).toBe(true)
       if (isErrorResult(result)) {
