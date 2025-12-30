@@ -55,47 +55,54 @@ export class PgVectorDb implements VectorDb {
   ): Promise<{ inserted: number; total: number }> {
     return await this.withClient(async client => {
       await this.ensureSchema(client)
-
-      if (chunks.length === 0) {
-        await client.query(`DELETE FROM ${TABLE_NAME} WHERE source = $1`, [
-          sourceId,
-        ])
-        return { inserted: 0, total: 0 }
-      }
-
-      const hashes = chunks.map(chunk => chunk.hash)
-
-      await client.query(
-        `DELETE FROM ${TABLE_NAME} WHERE source = $1 AND NOT (chunk_hash = ANY($2::text[]))`,
-        [sourceId, hashes]
-      )
-
-      const existing = await client.query(
-        `SELECT chunk_hash FROM ${TABLE_NAME} WHERE source = $1 AND chunk_hash = ANY($2::text[])`,
-        [sourceId, hashes]
-      )
-      const existingHashes = new Set(existing.rows.map(row => row.chunk_hash))
-
-      let inserted = 0
-      for (const chunk of chunks) {
-        if (existingHashes.has(chunk.hash)) {
-          continue
+      await client.query("BEGIN")
+      try {
+        if (chunks.length === 0) {
+          await client.query(`DELETE FROM ${TABLE_NAME} WHERE source = $1`, [
+            sourceId,
+          ])
+          await client.query("COMMIT")
+          return { inserted: 0, total: 0 }
         }
-        await client.query(
-          `
-            INSERT INTO ${TABLE_NAME} (source, chunk_hash, chunk_text, embedding)
-            VALUES ($1, $2, $3, $4::vector)
-            ON CONFLICT (chunk_hash) DO UPDATE
-              SET chunk_text = EXCLUDED.chunk_text,
-                  embedding = EXCLUDED.embedding,
-                  source = EXCLUDED.source
-          `,
-          [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
-        )
-        inserted += 1
-      }
 
-      return { inserted, total: chunks.length }
+        const hashes = chunks.map(chunk => chunk.hash)
+
+        await client.query(
+          `DELETE FROM ${TABLE_NAME} WHERE source = $1 AND NOT (chunk_hash = ANY($2::text[]))`,
+          [sourceId, hashes]
+        )
+
+        const existing = await client.query(
+          `SELECT chunk_hash FROM ${TABLE_NAME} WHERE source = $1 AND chunk_hash = ANY($2::text[])`,
+          [sourceId, hashes]
+        )
+        const existingHashes = new Set(existing.rows.map(row => row.chunk_hash))
+
+        let inserted = 0
+        for (const chunk of chunks) {
+          if (existingHashes.has(chunk.hash)) {
+            continue
+          }
+          await client.query(
+            `
+              INSERT INTO ${TABLE_NAME} (source, chunk_hash, chunk_text, embedding)
+              VALUES ($1, $2, $3, $4::vector)
+              ON CONFLICT (chunk_hash) DO UPDATE
+                SET chunk_text = EXCLUDED.chunk_text,
+                    embedding = EXCLUDED.embedding,
+                    source = EXCLUDED.source
+            `,
+            [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
+          )
+          inserted += 1
+        }
+
+        await client.query("COMMIT")
+        return { inserted, total: chunks.length }
+      } catch (error) {
+        await client.query("ROLLBACK")
+        throw error
+      }
     })
   }
 
