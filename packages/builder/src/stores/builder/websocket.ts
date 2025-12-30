@@ -20,6 +20,7 @@ import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
 import {
   Automation,
+  type AutomationTestProgressEvent,
   Datasource,
   Role,
   Table,
@@ -137,6 +138,13 @@ export const createBuilderWebsocket = (appId: string) => {
     BuilderSocketEvent.AutomationChange,
     ({ id, automation }: { id: string; automation: Automation }) => {
       automationStore.actions.replace(id, automation)
+    }
+  )
+
+  socket.on(
+    BuilderSocketEvent.AutomationTestProgress,
+    (event: AutomationTestProgressEvent) => {
+      automationStore.actions.handleTestProgress(event)
     }
   )
 

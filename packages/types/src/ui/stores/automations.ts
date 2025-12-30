@@ -2,8 +2,13 @@ import {
   GetAutomationActionDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
   PublishStatusResource,
+  TestAutomationResponse,
 } from "../../api"
-import { Automation } from "../../documents"
+import {
+  Automation,
+  AutomationStepResult,
+  AutomationTriggerResult,
+} from "../../documents"
 
 export interface BlockPath {
   stepIdx: number
@@ -38,4 +43,52 @@ export interface BlockDefinitions {
 
 export interface UIAutomation extends Automation {
   publishStatus: PublishStatusResource
+}
+
+export type AutomationTestProgressStatus =
+  | "running"
+  | "success"
+  | "error"
+  | "stopped"
+  | "complete"
+
+export interface AutomationTestProgressEntry {
+  status: AutomationTestProgressStatus
+  occurredAt: number
+  result?:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | TestAutomationResponse
+  message?: string
+}
+
+export interface AutomationTestProgressEvent {
+  automationId: string
+  appId?: string
+  blockId?: string
+  stepId?: string
+  status: AutomationTestProgressStatus
+  occurredAt: number
+  result?:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | TestAutomationResponse
+  message?: string
+  loop?: {
+    current: number
+    total: number
+  }
+}
+
+export interface InProgressTestState {
+  automationId: string
+  startedAt: number
+}
+
+export type TestProgressState = {
+  lastUpdated: number
+  events: Record<string, AutomationTestProgressEvent>
+  completed?: boolean
+  result?: AutomationTestProgressEvent["result"]
+  error?: string
 }
