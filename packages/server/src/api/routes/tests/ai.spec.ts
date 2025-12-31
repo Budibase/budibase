@@ -676,6 +676,7 @@ describe("BudibaseAI", () => {
       })
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("embed-model-1")
+      expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
       expect(creationScope.isDone()).toBe(true)
       expect(embeddingValidationScope.isDone()).toBe(true)
 
