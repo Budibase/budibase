@@ -7,11 +7,18 @@ import {
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
-import { createRestQueryTool, type ExecutableTool } from "../../../../ai/tools"
-import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import {
+  createRestQueryTool,
+  toToolSet,
+  type AiToolDefinition,
+} from "../../../../ai/tools"
 import sdk from "../../.."
+import {
+  createExaTool,
+  createParallelTool,
+} from "packages/server/src/ai/tools/search"
 
-export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
+export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
     description: tool.description,
@@ -22,7 +29,7 @@ export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
 
 export async function getAvailableTools(
   aiconfigId?: string
-): Promise<ExecutableTool[]> {
+): Promise<AiToolDefinition[]> {
   const [queries, datasources, aiConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
@@ -42,7 +49,7 @@ export async function getAvailableTools(
       createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
-  const tools: ExecutableTool[] = [...budibaseTools, ...restQueryTools]
+  const tools: AiToolDefinition[] = [...budibaseTools, ...restQueryTools]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
       tools.push(createExaTool(webSearchConfig.apiKey))
@@ -71,7 +78,7 @@ export async function buildPromptAndTools(
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
-  tools: ExecutableTool[]
+  tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
   const allTools = await getAvailableTools(agent.aiconfig)
@@ -92,7 +99,7 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt,
-    tools,
+    tools: toToolSet(tools),
   }
 }
 

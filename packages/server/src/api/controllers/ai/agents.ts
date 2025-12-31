@@ -22,7 +22,6 @@ import {
   streamText,
   wrapLanguageModel,
 } from "ai"
-import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
@@ -43,7 +42,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  const { systemPrompt: system, tools: allTools } =
+  const { systemPrompt: system, tools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
       baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
       includeGoal: false,
@@ -59,7 +58,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
     const model = openai.chat(modelId)
 
-    const aiTools = toAiSdkTools(allTools)
     const result = await streamText({
       model: wrapLanguageModel({
         model,
@@ -67,9 +65,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           tagName: "think",
         }),
       }),
-      messages: convertToModelMessages(chat.messages),
+      messages: await convertToModelMessages(chat.messages),
       system,
-      tools: aiTools,
+      tools,
     })
 
     const title =
@@ -77,7 +75,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       (
         await generateText({
           model,
-          messages: [convertToModelMessages(chat.messages)[0]],
+          messages: [(await convertToModelMessages(chat.messages))[0]],
           system: ai.agentHistoryTitleSystemPrompt(),
         })
       ).text
