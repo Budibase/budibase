@@ -756,7 +756,9 @@ describe("BudibaseAI", () => {
       expect(deleteScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
-      expect(configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)).toHaveLength(0)
+      expect(
+        configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
+      ).toHaveLength(0)
     })
   })
 
