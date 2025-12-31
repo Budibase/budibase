@@ -19,7 +19,7 @@
         name: "",
         provider: "pgvector",
         host: "",
-        port: "5432",
+        port: 5432,
         database: "",
         user: "",
         password: "",
@@ -29,7 +29,7 @@
   $: canSave =
     draft.name.trim().length > 0 &&
     draft.host.trim().length > 0 &&
-    draft.port.trim().length > 0 &&
+    draft.port > 0 &&
     draft.database.trim().length > 0
 
   async function confirm() {
