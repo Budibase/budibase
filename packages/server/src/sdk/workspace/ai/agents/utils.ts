@@ -13,10 +13,7 @@ import {
   type AiToolDefinition,
 } from "../../../../ai/tools"
 import sdk from "../../.."
-import {
-  createExaTool,
-  createParallelTool,
-} from "packages/server/src/ai/tools/search"
+import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {

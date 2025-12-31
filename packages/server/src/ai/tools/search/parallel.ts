@@ -1,6 +1,7 @@
 import { ToolType } from "@budibase/types"
-import { newTool } from ".."
 import { z } from "zod"
+import { tool } from "ai"
+import { BudibaseToolDefinition } from "../budibase"
 
 const parallelSearchParams = z.object({
   objective: z
@@ -14,14 +15,15 @@ const parallelSearchParams = z.object({
     .describe("Maximum number of results to return"),
 })
 
-export const createParallelTool = (apiKey: string) =>
-  newTool({
-    name: "parallel_search",
+export const createParallelTool = (apiKey: string): BudibaseToolDefinition => ({
+  name: "parallel_search",
+  description: "Search the web using Parallel AI",
+  sourceType: ToolType.SEARCH,
+  sourceLabel: "Parallel Search",
+  tool: tool({
     description: "Search the web using Parallel AI",
-    sourceType: ToolType.SEARCH,
-    sourceLabel: "Parallel Search",
-    parameters: parallelSearchParams,
-    handler: async args => {
+    inputSchema: parallelSearchParams,
+    execute: async args => {
       const response = await fetch("https://api.parallel.ai/v1beta/search", {
         method: "POST",
         headers: {
@@ -44,4 +46,5 @@ export const createParallelTool = (apiKey: string) =>
       }
       return response.json()
     },
-  })
+  }),
+})

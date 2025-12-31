@@ -1,6 +1,7 @@
 import { ToolType } from "@budibase/types"
-import { newTool } from ".."
+import { tool } from "ai"
 import { z } from "zod"
+import { BudibaseToolDefinition } from "../budibase"
 
 const exaSearchParams = z.object({
   query: z.string().describe("The search query to find relevant information"),
@@ -11,14 +12,15 @@ const exaSearchParams = z.object({
     .describe("Number of results to return"),
 })
 
-export const createExaTool = (apiKey: string) =>
-  newTool({
-    name: "exa_search",
+export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
+  name: "exa_search",
+  sourceType: ToolType.SEARCH,
+  sourceLabel: "Exa",
+  description: "Search the web using Exa",
+  tool: tool({
     description: "Search the web using Exa",
-    sourceType: ToolType.SEARCH,
-    sourceLabel: "Exa Search",
-    parameters: exaSearchParams,
-    handler: async args => {
+    inputSchema: exaSearchParams,
+    execute: async args => {
       const response = await fetch("https://api.exa.ai/search", {
         method: "POST",
         headers: {
@@ -39,4 +41,5 @@ export const createExaTool = (apiKey: string) =>
       }
       return response.json()
     },
-  })
+  }),
+})
