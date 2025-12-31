@@ -67,14 +67,13 @@ export const getAgentFileOrThrow = async (fileId: string) => {
 export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
   const db = context.getWorkspaceDB()
   const response = await db.allDocs<AgentFile>(
-    docIds.getDocParams(DocumentType.AGENT_FILE, undefined, {
+    docIds.getDocParams(DocumentType.AGENT_FILE, agentId, {
       include_docs: true,
     })
   )
   return response.rows
     .map(row => row.doc)
-    .filter((file): file is AgentFile => !!file && !file._deleted)
-    .filter(file => file.agentId === agentId)
+    .filter(file => !!file)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -85,6 +84,9 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
   if (!agent.ragConfig) {
     throw new Error("RAG not configured")
+  }
+  if (!agent.ragConfig.enabled) {
+    throw new Error("RAG not enabled")
   }
 
   await deleteAgentFileChunks(agent.ragConfig, [file.ragSourceId])
