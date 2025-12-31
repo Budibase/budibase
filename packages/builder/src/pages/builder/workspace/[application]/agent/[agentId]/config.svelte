@@ -791,27 +791,19 @@
                   label="Minimum similarity"
                   labelPosition="left"
                   type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
                   bind:value={draft.ragConfig.ragMinDistance}
                   error={ragErrors.ragMinDistance}
                   helpText="Chunks below this cosine similarity are ignored."
                   on:change={() => scheduleSave(true)}
-                  required
                 />
                 <Input
                   label="Chunks to retrieve"
                   labelPosition="left"
                   type="number"
-                  min="1"
-                  max="10"
-                  step="1"
                   bind:value={draft.ragConfig.ragTopK}
                   error={ragErrors.ragTopK}
                   helpText="Number of chunks retrieved for each query."
                   on:change={() => scheduleSave(true)}
-                  required
                 />
               </div>
             </div>
