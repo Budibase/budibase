@@ -27,7 +27,6 @@ import {
   streamText,
   wrapLanguageModel,
 } from "ai"
-import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 import {
   retrieveContextForSources,
   RetrievedContextChunk,
@@ -128,7 +127,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
   }
 
-  const { systemPrompt: system, tools: allTools } =
+  const { systemPrompt: system, tools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
       baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
       includeGoal: false,
@@ -144,8 +143,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
     const model = openai.chat(modelId)
 
-    const aiTools = toAiSdkTools(allTools)
-    const convertedMessages = convertToModelMessages(chat.messages)
+    const convertedMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
       retrievedContext.trim().length > 0
         ? [
@@ -166,20 +164,18 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       }),
       messages: messagesWithContext,
       system,
-      tools: aiTools,
+      tools,
     })
 
     const title =
       chat.title ||
-      (convertedMessages.length > 0
-        ? (
-            await generateText({
-              model,
-              messages: [convertedMessages[0]],
-              system: ai.agentHistoryTitleSystemPrompt(),
-            })
-          ).text
-        : "Conversation")
+      (
+        await generateText({
+          model,
+          messages: [convertedMessages[0]],
+          system: ai.agentHistoryTitleSystemPrompt(),
+        })
+      ).text
 
     ctx.respond = false
     const messageMetadata =
