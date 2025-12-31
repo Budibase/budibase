@@ -1,5 +1,8 @@
 import TestConfiguration from "../TestConfiguration"
 import { AIAPI } from "./ai"
+import { AgentAPI } from "./ai/agent"
+import { AgentFilesAPI } from "./ai/agentFiles"
+import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
 import { AutomationAPI } from "./automation"
@@ -63,6 +66,9 @@ export default class API {
   recaptcha: RecaptchaAPI
   routing: RoutingAPI
   workspaceFavourites: WorkspaceFavouriteAPI
+  agent: AgentAPI
+  vectorDb: VectorDbAPI
+  agentFiles: AgentFilesAPI
 
   public: {
     user: UserPublicAPI
@@ -100,6 +106,9 @@ export default class API {
     this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
+    this.agent = new AgentAPI(config)
+    this.vectorDb = new VectorDbAPI(config)
+    this.agentFiles = new AgentFilesAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),
