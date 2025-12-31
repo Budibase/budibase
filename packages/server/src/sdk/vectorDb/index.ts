@@ -1,16 +1,6 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { DocumentType, PASSWORD_REPLACEMENT, VectorDb } from "@budibase/types"
 
-const sanitizeConfig = (config: VectorDb): VectorDb => {
-  if (!config.password) {
-    return config
-  }
-  return {
-    ...config,
-    password: PASSWORD_REPLACEMENT,
-  }
-}
-
 export async function fetch(): Promise<VectorDb[]> {
   const db = context.getGlobalDB()
   const result = await db.allDocs<VectorDb>(
@@ -85,6 +75,3 @@ export async function remove(id: string) {
   const existing = await db.get<VectorDb>(id)
   await db.remove(existing)
 }
-
-export const sanitizeVectorDbConfigs = (configs: VectorDb[]) =>
-  configs.map(sanitizeConfig)

@@ -60,7 +60,7 @@ const resolveVectorDatabaseConfig = async (
 ): Promise<string> => {
   const vectorDb = await sdk.vectorDbs.find(vectorDbId)
   if (!vectorDb) {
-    throw new Error("Vector db found")
+    throw new Error("Vector db not found")
   }
 
   // TODO: support other vector db types
