@@ -34,7 +34,7 @@ export class PgVectorDb implements VectorDb {
         source TEXT NOT NULL,
         chunk_hash TEXT UNIQUE NOT NULL,
         chunk_text TEXT NOT NULL,
-        embedding vector(${this.config.embeddingDimensions}) NOT NULL,
+        embedding vector(${Number(this.config.embeddingDimensions)}) NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `)
