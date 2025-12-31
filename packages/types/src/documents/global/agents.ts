@@ -31,7 +31,13 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
-  ragConfig?: AgentRagConfig
+  ragConfig?:
+    | ({
+        enabled: true
+      } & AgentRagConfig)
+    | ({
+        enabled: false
+      } & Partial<AgentRagConfig>)
 }
 
 export interface AgentMessageRagSource {

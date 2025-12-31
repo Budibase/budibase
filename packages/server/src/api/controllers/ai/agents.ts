@@ -107,7 +107,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
-  const ragConfig = agent.ragConfig
+  const ragConfig = agent.ragConfig?.enabled ? agent.ragConfig : undefined
 
   if (ragConfig && latestQuestion && readyFileSources.length > 0) {
     try {

@@ -296,7 +296,7 @@ export const ingestAgentFile = async (
   agentFile: AgentFile,
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
-  if (!agent.ragConfig) {
+  if (!agent.ragConfig?.enabled) {
     throw new Error("RAG not configured")
   }
   const config = await buildRagConfig(agent.ragConfig)
@@ -355,7 +355,7 @@ export const retrieveContextForSources = async (
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
     return { text: "", chunks: [] }
   }
-  if (!agent.ragConfig) {
+  if (!agent.ragConfig?.enabled) {
     throw new Error("RAG not configured")
   }
 

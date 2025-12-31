@@ -12,7 +12,6 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
-  ragConfig: agent.ragConfig,
 })
 
 export async function fetch(): Promise<Agent[]> {
@@ -61,12 +60,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    ragConfig: request.ragConfig && {
-      ragMinDistance: request.ragConfig.ragMinDistance,
-      ragTopK: request.ragConfig.ragTopK,
-      embeddingModel: request.ragConfig.embeddingModel,
-      vectorDb: request.ragConfig.vectorDb,
-    },
+    ragConfig: request.ragConfig,
   }
 
   const { rev } = await db.put(agent)
@@ -88,12 +82,7 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...request,
     updatedAt: new Date().toISOString(),
     enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
-    ragConfig: request.ragConfig && {
-      ragMinDistance: request.ragConfig.ragMinDistance,
-      ragTopK: request.ragConfig.ragTopK,
-      embeddingModel: request.ragConfig.embeddingModel,
-      vectorDb: request.ragConfig.vectorDb,
-    },
+    ragConfig: request.ragConfig,
   }
 
   const { rev } = await db.put(updated)
@@ -107,7 +96,8 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  if (agent.ragConfig) {
+  if (agent.ragConfig?.enabled) {
+    // TODO: check what happens with disabled
     const files = await listAgentFiles(agentId)
     if (files.length > 0) {
       await deleteAgentFileChunks(
