@@ -86,14 +86,13 @@ export async function create(
   await ensureLiteLLMConfigured()
 
   const db = context.getGlobalDB()
-  const configType = config.configType ?? AIConfigType.COMPLETIONS
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
     name: config.model,
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
-    configType,
+    configType: config.configType,
   })
 
   const newConfig: CustomAIProviderConfig = {
@@ -105,14 +104,14 @@ export async function create(
     model: config.model,
     apiKey: config.apiKey,
     liteLLMModelId: modelId,
-    configType,
+    configType: config.configType,
   }
 
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
 
   if (newConfig.isDefault) {
-    await ensureSingleDefault(configType, newConfig._id)
+    await ensureSingleDefault(config.configType, newConfig._id)
   }
 
   await liteLLM.syncKeyModels()
@@ -139,8 +138,6 @@ export async function update(
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
-    configType:
-      config.configType ?? existing.configType ?? AIConfigType.COMPLETIONS,
   }
 
   const db = context.getGlobalDB()
@@ -148,10 +145,7 @@ export async function update(
   updatedConfig._rev = rev
 
   if (updatedConfig.isDefault) {
-    await ensureSingleDefault(
-      updatedConfig.configType ?? AIConfigType.COMPLETIONS,
-      updatedConfig._id
-    )
+    await ensureSingleDefault(updatedConfig.configType, updatedConfig._id)
   }
 
   await liteLLM.updateModel({
@@ -178,7 +172,7 @@ export async function remove(id: string) {
 }
 
 async function getDefault(
-  type: AIConfigType = AIConfigType.COMPLETIONS
+  type: AIConfigType
 ): Promise<CustomAIProviderConfig | undefined> {
   const allConfigs = await fetch()
   return allConfigs.find(c => c.configType === type && c.isDefault)
