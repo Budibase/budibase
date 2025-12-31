@@ -23,7 +23,6 @@
         database: "",
         user: "",
         password: "",
-        isDefault: true,
       }
 
   $: isEdit = !!config?._id
@@ -39,14 +38,12 @@
         await vectorDbStore.edit({
           ...draft,
           provider: "pgvector",
-          isDefault: true,
         })
         notifications.success("Vector database updated")
       } else {
         await vectorDbStore.create({
           ...draft,
           provider: "pgvector",
-          isDefault: true,
         })
         notifications.success("Vector database created")
       }
