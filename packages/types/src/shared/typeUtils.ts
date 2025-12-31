@@ -45,6 +45,11 @@ export type WithDocMetadata<T extends Document> = WithRequired<
   "_id" | "_rev" | "createdAt" | "updatedAt"
 >
 
+export type ToDocCreateMetadata<T extends Document> = Omit<
+  WithRequired<T, "_id">,
+  "_rev" | "_deleted" | "createdAt" | "updatedAt"
+>
+
 export type ToDocUpdateMetadata<T extends Document> = Omit<
   WithRequired<T, "_id" | "_rev">,
   "_deleted" | "createdAt" | "updatedAt"

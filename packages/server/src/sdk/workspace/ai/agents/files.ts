@@ -5,6 +5,7 @@ import {
   AgentFileStatus,
   DocumentType,
   RequiredKeys,
+  ToDocCreateMetadata,
 } from "@budibase/types"
 import { deleteAgentFileChunks } from "../rag"
 
@@ -23,7 +24,7 @@ export const createAgentFile = async (
   const { agentId, filename, mimetype, size, uploadedBy } = options
   const _id = docIds.generateAgentFileID(agentId)
 
-  const doc: RequiredKeys<AgentFile> = {
+  const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
     _id,
     agentId,
     filename,
@@ -34,17 +35,16 @@ export const createAgentFile = async (
     uploadedBy,
     chunkCount: 0,
 
-    _rev: undefined,
     errorMessage: undefined,
     processedAt: undefined,
-    createdAt: undefined,
-    updatedAt: undefined,
-    _deleted: undefined,
   }
 
   const { rev } = await db.put(doc)
-  doc._rev = rev
-  return doc
+  const result: AgentFile = {
+    ...doc,
+    _rev: rev,
+  }
+  return result
 }
 
 export const updateAgentFile = async (file: AgentFile): Promise<AgentFile> => {
