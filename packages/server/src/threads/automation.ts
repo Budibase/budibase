@@ -917,14 +917,7 @@ export async function executeInThread(
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
       const orchestrator = new Orchestrator(job, opts)
-      return tracer.trace("automation.run", async span => {
-        span.addTags({
-          workspaceId,
-          automationId: job.data.automation?._id,
-          jobId: job.id,
-        })
-        return orchestrator.execute()
-      })
+      return orchestrator.execute()
     })
   })
 }
