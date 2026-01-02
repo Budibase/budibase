@@ -1,11 +1,11 @@
-import workerFarm from "worker-farm"
+import workerFarm, { Workers } from "worker-farm"
 import env from "../environment"
 import { AutomationJob } from "@budibase/types"
 import { QueryEvent } from "./definitions"
 
-export const ThreadType = {
-  QUERY: "query",
-  AUTOMATION: "automation",
+export enum ThreadType {
+  QUERY = "query",
+  AUTOMATION = "automation",
 }
 
 function typeToFile(type: any) {
@@ -25,10 +25,10 @@ function typeToFile(type: any) {
 }
 
 export class Thread {
-  type: any
-  count: any
-  workers: any
-  timeoutMs: any
+  type: ThreadType
+  count: number
+  workers?: Workers
+  timeoutMs?: number
   disableThreading: boolean
 
   static workerRefs: any[] = []
