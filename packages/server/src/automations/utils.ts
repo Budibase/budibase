@@ -5,6 +5,7 @@ import {
   Automation,
   AutomationJob,
   CronTriggerInputs,
+  EmailTriggerInputs,
   isCronTrigger,
   isEmailTrigger,
   MetadataType,
@@ -252,6 +253,14 @@ export async function enableCronOrEmailTrigger(
   }
 
   if (isEmailTrigger(trigger)) {
+    const inputs = trigger.inputs
+    if (!inputs || !isValidEmailTriggerInputs(inputs)) {
+      console.log("Automation email trigger inputs are not valid, disabling.", {
+        automationId: automation._id,
+        appId,
+      })
+      return { enabled: false, automation }
+    }
     const existingJobId = trigger.cronJobId
     const jobId = existingJobId || `${appId}_email_${utils.newid()}`
     await automationQueue.add(
@@ -277,6 +286,16 @@ export async function enableCronOrEmailTrigger(
   }
 
   return { enabled, automation }
+}
+
+function isValidEmailTriggerInputs(inputs: EmailTriggerInputs): boolean {
+  return !!(
+    inputs &&
+    inputs.host &&
+    inputs.port &&
+    inputs.username &&
+    inputs.password
+  )
 }
 
 /**
