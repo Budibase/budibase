@@ -141,7 +141,7 @@ export const flatten = (
 }
 
 export const match = (path: string, routes: Route[]) => {
-  let hash: string
+  let hash: string | undefined
   ;[path, hash] = path.split("#")
   if (!routes) {
     console.error("Router: No configured routes.")
