@@ -10,9 +10,13 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
-const config = new TestConfiguration()
-
 describe("agent files", () => {
+  const config = new TestConfiguration()
+
+  afterAll(() => {
+    config.end()
+  })
+
   const fileBuffer = Buffer.from("Hello from Budibase")
 
   const createAgentWithRag = async () => {

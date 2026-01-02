@@ -1,9 +1,13 @@
 import { PASSWORD_REPLACEMENT } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-const config = new TestConfiguration()
-
 describe("vector db configs", () => {
+  const config = new TestConfiguration()
+
+  afterAll(() => {
+    config.end()
+  })
+
   const vectorDbRequest = {
     name: "Primary Vector DB",
     provider: "pgvector",
