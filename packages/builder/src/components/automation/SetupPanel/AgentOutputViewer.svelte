@@ -1,23 +1,23 @@
 <script lang="ts">
   import {
-    Badge,
     Body,
     DetailSummary,
     Helpers,
     Icon,
-    List,
-    ListItem,
     MarkdownViewer,
     notifications,
   } from "@budibase/bbui"
-  import JSONViewer, {
-    type JSONViewerClickEvent,
-  } from "@/components/common/JSONViewer.svelte"
+  import ChainOfThought, {
+    type ChainStep,
+  } from "@/components/common/ChainOfThought.svelte"
+  import ChainOfThoughtModal from "@/components/common/ChainOfThoughtModal.svelte"
   import type { AgentStepOutputs } from "@budibase/types"
   import type { ContentPart, ToolCallDisplay } from "@budibase/types"
+  import type { LanguageModelUsage } from "ai"
 
   type ToolCallDisplayWithReasoning = ToolCallDisplay & {
     reasoningText?: string
+    stepIndex: number
   }
 
   type StepContentPart = ContentPart & {
@@ -30,18 +30,17 @@
 
   export let outputs: AgentStepOutputs
 
-  let expandedTools = new Set<string>()
-  let expandedReasoning = new Set<string>()
+  let modal: ChainOfThoughtModal
 
   $: response = outputs.response || ""
   $: steps = outputs.steps || []
+
   $: stepContentParts = steps.flatMap((step, stepIndex) =>
     (step.content as ContentPart[]).map(part => ({
       ...part,
       stepIndex,
     }))
   )
-
   $: toolCallParts = stepContentParts.filter(
     (part): part is StepToolCallPart => part.type === "tool-call"
   )
@@ -105,9 +104,36 @@
         output,
         status,
         reasoningText,
+        stepIndex: call.stepIndex,
       }
     }
   )
+
+  $: chainSteps = toolCallsDisplay.map(
+    (call): ChainStep => ({
+      id: call.toolCallId,
+      name: call.toolName,
+      displayName: call.displayName,
+      status: call.status,
+      reasoning: call.reasoningText,
+      input: call.input,
+      output: call.output,
+      usage: steps?.[call.stepIndex]?.usage,
+    })
+  )
+
+  $: aggregatedUsage = sumUsage(steps.map(step => step.usage))
+  $: usageMeta = formatUsageMeta(aggregatedUsage)
+  $: usageTimestamp = formatTimestamp(
+    steps?.[steps.length - 1]?.response?.timestamp
+  )
+  $: stepsMetaLine = [
+    chainSteps.length ? `${chainSteps.length} steps` : undefined,
+    usageMeta,
+    usageTimestamp,
+  ]
+    .filter(Boolean)
+    .join(" · ")
 
   function humanizeToolName(toolName: string): string {
     return toolName
@@ -122,43 +148,6 @@
     notifications.success("Copied to clipboard")
   }
 
-  const copyJsonValue = (event: JSONViewerClickEvent) => {
-    try {
-      const { value } = event.detail
-      const serialised =
-        typeof value === "string" ? value : JSON.stringify(value, null, 2)
-      Helpers.copyToClipboard(serialised)
-      notifications.success("Copied to clipboard")
-    } catch (error) {
-      notifications.error("Unable to copy value")
-    }
-  }
-
-  const getStatusLabel = (status: ToolCallDisplay["status"]): string => {
-    switch (status) {
-      case "completed":
-        return "Completed"
-      case "error":
-        return "Error"
-      case "failed":
-        return "Failed"
-      case "pending":
-        return "Pending"
-    }
-  }
-
-  const getStatusColor = (status: ToolCallDisplay["status"]): string => {
-    switch (status) {
-      case "completed":
-        return "var(--spectrum-global-color-static-green-500)"
-      case "error":
-      case "failed":
-        return "var(--spectrum-global-color-static-red-500)"
-      case "pending":
-        return "var(--spectrum-global-color-static-yellow-500)"
-    }
-  }
-
   function hasErrorOutput(output: unknown): boolean {
     return (
       typeof output === "object" &&
@@ -168,27 +157,117 @@
     )
   }
 
-  function toggleTool(toolCallId: string) {
-    if (expandedTools.has(toolCallId)) {
-      expandedTools.delete(toolCallId)
-    } else {
-      expandedTools.add(toolCallId)
-    }
-    expandedTools = new Set(expandedTools)
+  function openModal() {
+    modal?.show()
   }
 
-  function toggleReasoning(toolCallId: string) {
-    if (expandedReasoning.has(toolCallId)) {
-      expandedReasoning.delete(toolCallId)
-    } else {
-      expandedReasoning.add(toolCallId)
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value)
+
+  const toSafeNumber = (value: unknown): number | undefined => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return
     }
-    expandedReasoning = new Set(expandedReasoning)
+    return value
+  }
+
+  const sumUsage = (usages: Array<LanguageModelUsage | undefined>) => {
+    const values = usages.filter(Boolean)
+    if (values.length === 0) {
+      return
+    }
+
+    const sum = (key: keyof LanguageModelUsage) =>
+      values.reduce((acc, usage) => {
+        const raw = usage?.[key]
+        const num = toSafeNumber(raw)
+        return acc + (num ?? 0)
+      }, 0)
+
+    return {
+      inputTokens: sum("inputTokens"),
+      outputTokens: sum("outputTokens"),
+      totalTokens: sum("totalTokens"),
+      reasoningTokens: sum("reasoningTokens"),
+      cachedInputTokens: sum("cachedInputTokens"),
+    } satisfies LanguageModelUsage
+  }
+
+  const toDate = (value: unknown): Date | undefined => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value
+    }
+    if (typeof value === "string" || typeof value === "number") {
+      const date = new Date(value)
+      if (!Number.isNaN(date.getTime())) {
+        return date
+      }
+    }
+    return
+  }
+
+  const formatTimestamp = (value: unknown): string | undefined => {
+    const date = toDate(value)
+    if (!date) {
+      return
+    }
+    return new Intl.DateTimeFormat(undefined, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(date)
+  }
+
+  const formatUsageMeta = (usage?: LanguageModelUsage): string | undefined => {
+    if (!usage) {
+      return
+    }
+
+    const input = toSafeNumber(usage.inputTokens)
+    const output = toSafeNumber(usage.outputTokens)
+    const total = toSafeNumber(usage.totalTokens)
+    const reasoning = toSafeNumber(usage.reasoningTokens)
+    const cached = toSafeNumber(usage.cachedInputTokens)
+
+    const parts: string[] = []
+
+    if (typeof input === "number") {
+      parts.push(
+        `input: ${formatNumber(input)}${
+          typeof cached === "number" && cached > 0
+            ? ` (${formatNumber(cached)} cached)`
+            : ""
+        }`
+      )
+    }
+
+    if (typeof output === "number") {
+      parts.push(`output: ${formatNumber(output)}`)
+    }
+
+    if (typeof total === "number") {
+      parts.push(`total: ${formatNumber(total)}`)
+    }
+
+    if (typeof reasoning === "number" && reasoning > 0) {
+      parts.push(`reasoning: ${formatNumber(reasoning)}`)
+    }
+
+    return parts.length > 0 ? parts.join(" → ") : undefined
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<ChainOfThoughtModal
+  bind:this={modal}
+  steps={chainSteps}
+  {response}
+  title="Agent Execution Details"
+  meta={stepsMetaLine}
+/>
+
 <div class="agent-output-viewer">
   {#if response}
     <DetailSummary name="Agent response" initiallyShow padded>
@@ -196,8 +275,8 @@
         <div class="response-header">
           <Body size="S" weight="600">Final response</Body>
           <Icon
-            name="copy"
-            size="XS"
+            name="Copy"
+            size="S"
             hoverable
             on:click={() => copyToClipboard(response)}
           />
@@ -209,82 +288,23 @@
     </DetailSummary>
   {/if}
 
-  {#if toolCallsDisplay.length > 0}
+  {#if chainSteps.length > 0}
     <DetailSummary
-      name={`Steps (${toolCallsDisplay.length})`}
+      name={`Execution steps (${chainSteps.length})`}
       initiallyShow
       padded
     >
+      <button
+        slot="actions"
+        type="button"
+        class="expand-button"
+        on:click={openModal}
+      >
+        <Icon name="FullScreen" size="S" />
+        <span>Expand view</span>
+      </button>
       <div class="steps-section">
-        <List title={null}>
-          {#each toolCallsDisplay as toolCall (toolCall.toolCallId)}
-            {@const isExpanded = expandedTools.has(toolCall.toolCallId)}
-            <div class="step-item" class:expanded={isExpanded}>
-              <ListItem
-                icon="StatusLight"
-                iconColor={getStatusColor(toolCall.status)}
-                title={toolCall.displayName}
-                subtitle={toolCall.toolName}
-                hoverable
-                selected={isExpanded}
-                on:click={() => toggleTool(toolCall.toolCallId)}
-              >
-                <svelte:fragment slot="right">
-                  <Badge
-                    size="S"
-                    green={toolCall.status === "completed"}
-                    red={toolCall.status === "failed" ||
-                      toolCall.status === "error"}
-                  >
-                    {getStatusLabel(toolCall.status)}
-                  </Badge>
-                </svelte:fragment>
-              </ListItem>
-              {#if isExpanded}
-                <div class="step-details">
-                  {#if toolCall.reasoningText}
-                    <div class="detail-section reasoning-section">
-                      <div class="detail-label-row">
-                        <div class="detail-label">Reasoning</div>
-                        <span
-                          class="reasoning-toggle"
-                          on:click={() => toggleReasoning(toolCall.toolCallId)}
-                        >
-                          {expandedReasoning.has(toolCall.toolCallId)
-                            ? "Hide reasoning"
-                            : "Show reasoning"}
-                        </span>
-                      </div>
-                      {#if expandedReasoning.has(toolCall.toolCallId)}
-                        <div class="reasoning-body">
-                          <Body size="S">{toolCall.reasoningText}</Body>
-                        </div>
-                      {/if}
-                    </div>
-                  {/if}
-                  <div class="detail-section">
-                    <div class="detail-label">Input</div>
-                    <JSONViewer
-                      value={toolCall.input}
-                      showCopyIcon
-                      on:click-copy={copyJsonValue}
-                    />
-                  </div>
-                  {#if toolCall.output !== undefined}
-                    <div class="detail-section">
-                      <div class="detail-label">Output</div>
-                      <JSONViewer
-                        value={toolCall.output}
-                        showCopyIcon
-                        on:click-copy={copyJsonValue}
-                      />
-                    </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </List>
+        <ChainOfThought steps={chainSteps} simple />
       </div>
     </DetailSummary>
   {/if}
@@ -318,68 +338,32 @@
     word-break: break-word;
   }
 
-  .step-item {
+  .steps-section {
     display: flex;
     flex-direction: column;
-    margin-bottom: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
 
-  .step-details {
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-l) var(--spacing-l);
-    background-color: var(--spectrum-global-color-gray-50);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-top: none;
-    border-bottom-left-radius: var(--border-radius-s);
-    border-bottom-right-radius: var(--border-radius-s);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
-  .step-item.expanded :global(.list-item) {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .steps-section :global(.list-item) {
-    background: var(--spectrum-global-color-gray-75);
-  }
-
-  .detail-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .detail-label {
-    color: var(--spectrum-global-color-gray-600);
-    text-transform: uppercase;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-
-  .detail-label-row {
-    display: flex;
+  .expand-button {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--spacing-xs);
-  }
-
-  .reasoning-toggle {
-    cursor: pointer;
+    padding: var(--spacing-xs) var(--spacing-s);
+    background: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
     font-size: 11px;
     font-weight: 500;
-    color: var(--spectrum-global-color-gray-700);
+    color: var(--spectrum-global-color-gray-800);
+    cursor: pointer;
+    transition:
+      background 150ms ease,
+      border-color 150ms ease;
+    font-family: inherit;
   }
 
-  .reasoning-toggle:hover {
-    text-decoration: underline;
-  }
-
-  .reasoning-body {
-    padding-top: var(--spacing-xs);
-    white-space: pre-wrap;
-    word-break: break-word;
+  .expand-button:hover {
+    background: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-gray-400);
   }
 </style>

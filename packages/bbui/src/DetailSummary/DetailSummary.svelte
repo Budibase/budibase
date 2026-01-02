@@ -27,9 +27,14 @@
       class:open={show || !collapsible}
     >
       <div class="name">{name}</div>
-      {#if collapsible}
-        <Icon size="S" name={show ? "minus" : "plus"} />
-      {/if}
+      <div class="header-right">
+        <div class="actions" on:click|stopPropagation>
+          <slot name="actions" />
+        </div>
+        {#if collapsible}
+          <Icon size="S" name={show ? "minus" : "plus"} />
+        {/if}
+      </div>
     </div>
   {/if}
   <div
@@ -89,6 +94,19 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     user-select: none;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-s);
+    flex: 0 0 auto;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
   }
 
   .property-panel {
