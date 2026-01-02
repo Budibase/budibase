@@ -906,18 +906,25 @@ export async function executeInThread(
   job: Job<AutomationData>,
   opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
 ): Promise<AutomationResults> {
-  const appId = job.data.event.appId
-  if (!appId) {
-    throw new Error("Unable to execute, event doesn't contain app ID.")
+  const workspaceId = job.data.event.appId
+  if (!workspaceId) {
+    throw new Error("Unable to execute, event doesn't contain workspace ID.")
   }
 
-  return await context.doInWorkspaceContext(appId, async () => {
+  return await context.doInWorkspaceContext(workspaceId, async () => {
     await reloadAutomation(job)
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     return await context.doInEnvironmentContext(envVars, async () => {
       const orchestrator = new Orchestrator(job, opts)
-      return orchestrator.execute()
+      return tracer.trace("automation.run", async span => {
+        span.addTags({
+          workspaceId,
+          automationId: job.data.automation?._id,
+          jobId: job.id,
+        })
+        return orchestrator.execute()
+      })
     })
   })
 }
