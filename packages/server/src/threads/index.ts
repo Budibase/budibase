@@ -1,4 +1,4 @@
-import workerFarm, { Workers } from "worker-farm"
+import workerFarm, { Workers, FarmOptions } from "worker-farm"
 import env from "../environment"
 import { AutomationJob } from "@budibase/types"
 import { QueryEvent } from "./definitions"
@@ -8,7 +8,7 @@ export enum ThreadType {
   AUTOMATION = "automation",
 }
 
-function typeToFile(type: any) {
+function typeToFile(type: ThreadType) {
   let filename = null
   switch (type) {
     case ThreadType.QUERY:
@@ -31,9 +31,15 @@ export class Thread {
   timeoutMs?: number
   disableThreading: boolean
 
-  static workerRefs: any[] = []
+  static workerRefs: workerFarm.Workers[] = []
 
-  constructor(type: any, opts: any = { timeoutMs: null, count: 1 }) {
+  constructor(
+    type: ThreadType,
+    opts: { count?: number; timeoutMs?: number | null } = {
+      timeoutMs: null,
+      count: 1,
+    }
+  ) {
     this.type = type
     this.count = opts.count ? opts.count : 1
     this.disableThreading = this.shouldDisableThreading()
@@ -41,7 +47,7 @@ export class Thread {
       console.log(
         `[${env.FORKED_PROCESS_NAME}] initialising worker farm type=${type}`
       )
-      const workerOpts: any = {
+      const workerOpts: FarmOptions = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
         workerOptions: {
@@ -78,7 +84,7 @@ export class Thread {
     const timeout = this.timeoutMs
     return new Promise((resolve, reject) => {
       function fire(worker: any) {
-        worker.execute(job, (err: any, response: any) => {
+        worker.execute(job, (err: any, response: T) => {
           if (err && err.type === "TimeoutError") {
             reject(new Error(`Thread timeout exceeded ${timeout}ms timeout.`))
           } else if (err) {
@@ -90,7 +96,7 @@ export class Thread {
       }
       // if in test then don't use threading
       if (this.disableThreading) {
-        import(typeToFile(this.type)).then((thread: any) => {
+        import(typeToFile(this.type)).then(thread => {
           fire(thread)
         })
       } else {
