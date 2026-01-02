@@ -70,7 +70,7 @@
     "server-destroy": "1.0.1",
     "undici": "^7.16.0",
     "uuid": "^8.3.2",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",

@@ -1,0 +1,48 @@
+import {
+  Agent,
+  CreateAgentRequest,
+  CreateAgentResponse,
+  UpdateAgentRequest,
+  UpdateAgentResponse,
+} from "@budibase/types"
+import { Expectations, TestAPI } from "../base"
+
+export class AgentAPI extends TestAPI {
+  fetch = async (expectations?: Expectations): Promise<{ agents: Agent[] }> => {
+    return await this._get<{ agents: Agent[] }>(`/api/agent`, {
+      expectations,
+    })
+  }
+
+  create = async (
+    body: CreateAgentRequest,
+    expectations?: Expectations
+  ): Promise<CreateAgentResponse> => {
+    return await this._post<CreateAgentResponse>(`/api/agent`, {
+      body,
+      expectations: {
+        ...expectations,
+        status: expectations?.status || 201,
+      },
+    })
+  }
+
+  update = async (
+    body: UpdateAgentRequest,
+    expectations?: Expectations
+  ): Promise<UpdateAgentResponse> => {
+    return await this._put<UpdateAgentResponse>(`/api/agent`, {
+      body,
+      expectations,
+    })
+  }
+
+  remove = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<{ deleted: true }> => {
+    return await this._delete<{ deleted: true }>(`/api/agent/${agentId}`, {
+      expectations,
+    })
+  }
+}

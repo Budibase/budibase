@@ -6,22 +6,33 @@
     Layout,
     notifications,
     Select,
+    Toggle,
     ActionButton,
     Icon,
     ActionMenu,
     MenuItem,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
     type Agent,
+    type AgentRagConfig,
+    type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type CaretPositionFn,
     type InsertAtPositionFn,
+    type VectorDb,
+    type WithRequired,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    vectorDbStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -46,21 +57,19 @@
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "@/constants/backend"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import FilesPanel from "./FilesPanel.svelte"
+  import type { ZodType } from "zod"
+  import { z } from "zod"
 
   let currentAgent: Agent | undefined
-  let draftAgentId: string | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
-  let draft = {
-    name: "",
-    description: "",
-    aiconfig: "",
-    goal: "",
-    promptInstructions: "",
-    icon: "",
-    iconColor: "",
-    enabledTools: [] as string[],
-  }
+  let embeddingModelOptions: { label: string; value: string }[] = []
+  let vectorDbOptions: { label: string; value: string }[] = []
+  let completionConfigs: CustomAIProviderConfig[] = []
+  let embeddingConfigs: CustomAIProviderConfig[] = []
+  let vectorDbConfigs: VectorDb[] = []
+  let ragErrors: Record<string, string> = {}
 
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
@@ -92,21 +101,48 @@
 
   $: currentAgent = $selectedAgent
 
-  $: if (currentAgent && currentAgent._id !== draftAgentId) {
-    draft = {
-      name: currentAgent.name || "",
-      description: currentAgent.description || "",
-      aiconfig: currentAgent.aiconfig || "",
-      goal: currentAgent.goal || "",
-      promptInstructions: currentAgent.promptInstructions || "",
-      icon: currentAgent.icon || "",
-      iconColor: currentAgent.iconColor || "",
-      enabledTools: currentAgent.enabledTools || [],
-    }
-    draftAgentId = currentAgent._id
+  const defaultRagConfig: Agent["ragConfig"] = {
+    enabled: false,
+    ragMinDistance: 0.7,
+    ragTopK: 4,
+    embeddingModel: "",
+    vectorDb: "",
   }
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
+  let draft: WithRequired<Agent, "ragConfig">
+  $: draft = {
+    name: currentAgent?.name || "",
+    description: currentAgent?.description || "",
+    aiconfig: currentAgent?.aiconfig || "",
+    goal: currentAgent?.goal || "",
+    promptInstructions: currentAgent?.promptInstructions || "",
+    icon: currentAgent?.icon || "",
+    iconColor: currentAgent?.iconColor || "",
+    enabledTools: currentAgent?.enabledTools || [],
+    ragConfig: currentAgent?.ragConfig || defaultRagConfig,
+  }
+
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType !== AIConfigType.EMBEDDINGS
+  )
+
+  $: embeddingConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType === AIConfigType.EMBEDDINGS
+  )
+
+  $: vectorDbConfigs = $vectorDbStore.configs || []
+
+  $: modelOptions = completionConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: embeddingModelOptions = embeddingConfigs.map(config => ({
+    label: config.name || config._id || "Unnamed",
+    value: config._id || "",
+  }))
+
+  $: vectorDbOptions = vectorDbConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
@@ -370,6 +406,52 @@
     }
   }
 
+  const requiredString = (errorMessage: string) =>
+    z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
+
+  const requiredNumber = (errorMessage: string) =>
+    z.number({ required_error: errorMessage, invalid_type_error: errorMessage })
+
+  const ragConfigSchema = z.object({
+    enabled: z.boolean(),
+    embeddingModel: requiredString("Embeddings model is required."),
+    vectorDb: requiredString("Vector database is required."),
+    ragMinDistance: requiredNumber("Minimum similarity is required.")
+      .min(0, "Minimum similarity must be between 0 and 1.")
+      .max(1, "Minimum similarity must be between 0 and 1."),
+    ragTopK: requiredNumber("Chunks to retrieve is required.")
+      .int("Chunks to retrieve must be a whole number.")
+      .min(1, "Chunks to retrieve must be between 1 and 10.")
+      .max(10, "Chunks to retrieve must be between 1 and 10."),
+  }) satisfies ZodType<AgentRagConfig>
+
+  const getRagConfigPayload = () => {
+    const ragConfig: Partial<Agent["ragConfig"]> = {
+      ...draft.ragConfig,
+      enabled: true,
+    }
+
+    const validationResult = ragConfigSchema.safeParse(ragConfig)
+    ragErrors = {}
+    if (!validationResult.success) {
+      ragErrors = Object.values(validationResult.error.issues).reduce<
+        Record<string, string>
+      >((acc, issue) => {
+        const field = issue.path[0]
+        acc[field] = issue.message
+        return acc
+      }, {})
+      return undefined
+    }
+
+    return validationResult.data
+  }
+
+  const getDisabledRagConfig = (): Agent["ragConfig"] => ({
+    ...draft.ragConfig,
+    enabled: false,
+  })
+
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -379,10 +461,19 @@
     if (saving) return
 
     saving = true
+    const ragEnabled = !!draft.ragConfig.enabled
     try {
+      const ragConfig = ragEnabled
+        ? getRagConfigPayload()
+        : getDisabledRagConfig()
+      if (ragEnabled && !ragConfig) {
+        notifications.error("Complete all RAG settings to enable it.")
+        return
+      }
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
+        ragConfig,
       })
 
       if (showNotifications) {
@@ -416,13 +507,22 @@
 
     const nextLive = !currentAgent.live
 
+    const ragEnabled = !!draft.ragConfig.enabled
     try {
       togglingLive = true
+      const ragConfig = ragEnabled
+        ? getRagConfigPayload()
+        : getDisabledRagConfig()
+      if (ragEnabled && !ragConfig) {
+        notifications.error("Complete all RAG settings to enable it.")
+        return
+      }
 
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
         live: nextLive,
+        ragConfig,
       })
       await deploymentStore.publishApp()
       await agentsStore.fetchAgents()
@@ -441,7 +541,11 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      vectorDbStore.fetch(),
+    ])
   })
 
   onDestroy(() => {
@@ -502,8 +606,8 @@
             </div>
             <div class="form-icon">
               <EditableIcon
-                name={draft.icon}
-                color={draft.iconColor}
+                name={draft.icon || ""}
+                color={draft.iconColor || ""}
                 size="L"
                 on:change={e => {
                   draft.icon = e.detail.name
@@ -643,6 +747,68 @@
                   </div>
                 </div>
               {/each}
+            </div>
+          {/if}
+
+          <div class="section rag-settings">
+            <div class="rag-header">
+              <Heading size="XS">RAG enabled</Heading>
+              <Toggle
+                noPadding
+                bind:value={draft.ragConfig.enabled}
+                on:change={() => scheduleSave(true)}
+              />
+            </div>
+          </div>
+          {#if draft.ragConfig.enabled}
+            <div class="section rag-settings">
+              <Select
+                label="Embeddings model"
+                labelPosition="left"
+                bind:value={draft.ragConfig.embeddingModel}
+                options={embeddingModelOptions}
+                placeholder="Select embeddings model"
+                disabled={!embeddingModelOptions.length}
+                error={ragErrors.embeddingModel}
+                helpText="Used when encoding knowledge base chunks."
+                on:change={() => scheduleSave(true)}
+              />
+              <Select
+                label="Vector database"
+                labelPosition="left"
+                bind:value={draft.ragConfig.vectorDb}
+                options={vectorDbOptions}
+                placeholder="Select vector database"
+                disabled={!vectorDbOptions.length}
+                error={ragErrors.vectorDb}
+                helpText="Where embeddings are stored and queried."
+                on:change={() => scheduleSave(true)}
+              />
+
+              <Heading size="XS">Relevant context</Heading>
+              <div class="rag-grid">
+                <Input
+                  label="Minimum similarity"
+                  labelPosition="left"
+                  type="number"
+                  bind:value={draft.ragConfig.ragMinDistance}
+                  error={ragErrors.ragMinDistance}
+                  helpText="Chunks below this cosine similarity are ignored."
+                  on:change={() => scheduleSave(true)}
+                />
+                <Input
+                  label="Chunks to retrieve"
+                  labelPosition="left"
+                  type="number"
+                  bind:value={draft.ragConfig.ragTopK}
+                  error={ragErrors.ragTopK}
+                  helpText="Number of chunks retrieved for each query."
+                  on:change={() => scheduleSave(true)}
+                />
+              </div>
+            </div>
+            <div class="section files-section">
+              <FilesPanel currentAgentId={currentAgent?._id} />
             </div>
           {/if}
         </Layout>
@@ -912,5 +1078,19 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .files-section,
+  .rag-settings {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
+  }
+
+  .rag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 </style>

@@ -13,6 +13,9 @@ builderAdminRoutes
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
+  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
+  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
+  .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
@@ -24,6 +27,10 @@ builderAdminRoutes
   .post("/api/configs", ai.createAIConfig)
   .put("/api/configs", ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
+  .get("/api/vectordb", ai.fetchVectorDbConfigs)
+  .post("/api/vectordb", ai.createVectorDbConfig)
+  .put("/api/vectordb", ai.updateVectorDbConfig)
+  .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

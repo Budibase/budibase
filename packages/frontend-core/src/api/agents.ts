@@ -1,8 +1,10 @@
 import {
   AgentChat,
+  AgentFileUploadResponse,
   ChatAgentRequest,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentFilesResponse,
   FetchAgentHistoryResponse,
   FetchAgentsResponse,
   ToolMetadata,
@@ -12,14 +14,14 @@ import {
 
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
-import { readUIMessageStream, UIMessage, UIMessageChunk } from "ai"
+import { readUIMessageStream, UIMessageChunk } from "ai"
 import { createSseToJsonTransformStream } from "../utils/utils"
 
 export interface AgentEndpoints {
   agentChatStream: (
     chat: AgentChat,
     workspaceId: string
-  ) => Promise<AsyncIterable<UIMessage>>
+  ) => Promise<AsyncIterable<AgentChat["messages"][number]>>
 
   removeChat: (chatId: string) => Promise<void>
   fetchChats: (agentId: string) => Promise<FetchAgentHistoryResponse>
@@ -29,6 +31,15 @@ export interface AgentEndpoints {
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
+  fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
+  uploadAgentFile: (
+    agentId: string,
+    file: File
+  ) => Promise<AgentFileUploadResponse>
+  deleteAgentFile: (
+    agentId: string,
+    fileId: string
+  ) => Promise<{ deleted: true }>
 }
 
 const throwOnErrorChunk = () =>
@@ -119,6 +130,28 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgent: async (agentId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}`,
+    })
+  },
+
+  fetchAgentFiles: async (agentId: string) => {
+    return await API.get({
+      url: `/api/agent/${agentId}/files`,
+    })
+  },
+
+  uploadAgentFile: async (agentId: string, file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return await API.post<FormData, AgentFileUploadResponse>({
+      url: `/api/agent/${agentId}/files`,
+      body: formData,
+      json: false,
+    })
+  },
+
+  deleteAgentFile: async (agentId: string, fileId: string) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}/files/${fileId}`,
     })
   },
 })

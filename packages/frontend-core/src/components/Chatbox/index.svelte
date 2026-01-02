@@ -7,7 +7,6 @@
   import { onMount } from "svelte"
   import { createEventDispatcher } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import type { UIMessage } from "ai"
   import { v4 as uuidv4 } from "uuid"
 
   export let API = createAPIClient()
@@ -50,7 +49,7 @@
       chat = { title: "", messages: [] }
     }
 
-    const userMessage: UIMessage = {
+    const userMessage: AgentChat["messages"][0] = {
       id: uuidv4(),
       role: "user",
       parts: [{ type: "text", text: inputValue }],
@@ -193,6 +192,27 @@
               </div>
             {/if}
           {/each}
+          {#if message.metadata?.ragSources?.length}
+            <div class="sources">
+              <div class="sources-title">Sources</div>
+              <ul>
+                {#each message.metadata.ragSources as source (source.sourceId)}
+                  <li class="source-item">
+                    <span class="source-name"
+                      >{source.filename || source.sourceId}</span
+                    >
+                    {#if source.chunkCount > 0}
+                      <span class="source-count"
+                        >({source.chunkCount} chunk{source.chunkCount === 1
+                          ? ""
+                          : "s"})</span
+                      >
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
         </div>
       {/if}
     {/each}
@@ -387,5 +407,43 @@
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
     font-style: italic;
+  }
+
+  .sources {
+    margin-top: var(--spacing-m);
+    padding-top: var(--spacing-s);
+    border-top: 1px solid var(--grey-3);
+  }
+
+  .sources-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--spectrum-global-color-gray-600);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .sources ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .source-item {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .source-name {
+    font-weight: 500;
+  }
+
+  .source-count {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
