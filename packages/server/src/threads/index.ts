@@ -38,7 +38,7 @@ export class Thread {
     this.count = opts.count ? opts.count : 1
     this.disableThreading = this.shouldDisableThreading()
     if (!this.disableThreading) {
-      console.debug(
+      console.log(
         `[${env.FORKED_PROCESS_NAME}] initialising worker farm type=${type}`
       )
       const workerOpts: any = {
@@ -59,7 +59,7 @@ export class Thread {
       this.workers = workerFarm(workerOpts, typeToFile(type), ["execute"])
       Thread.workerRefs.push(this.workers)
     } else {
-      console.debug(
+      console.log(
         `[${env.FORKED_PROCESS_NAME}] skipping worker farm type=${type}`
       )
     }
