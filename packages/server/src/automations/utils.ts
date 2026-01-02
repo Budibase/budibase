@@ -255,6 +255,10 @@ export async function enableCronOrEmailTrigger(
   if (isEmailTrigger(trigger)) {
     const inputs = trigger.inputs
     if (!inputs || !isValidEmailTriggerInputs(inputs)) {
+      console.log("Automation email trigger inputs are not valid, disabling.", {
+        automationId: automation._id,
+        appId,
+      })
       return { enabled: false, automation }
     }
     const existingJobId = trigger.cronJobId
