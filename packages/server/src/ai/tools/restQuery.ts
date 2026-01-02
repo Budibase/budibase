@@ -11,6 +11,17 @@ export interface RestQueryToolsConfig {
   datasourceName?: string
 }
 
+type RestQueryToolResult =
+  | {
+      success: true
+      data: unknown
+      info: Record<string, unknown>
+    }
+  | {
+      success: false
+      error: string
+    }
+
 const sanitiseToolName = (name: string): string => {
   if (name.length > 64) {
     return name.substring(0, 64) + "..."
@@ -18,7 +29,7 @@ const sanitiseToolName = (name: string): string => {
   return name.replace(/[^a-zA-Z0-9_-]/g, "_")
 }
 
-const buildParametersSchema = (query: Query): z.ZodObject<any> => {
+const buildParametersSchema = (query: Query) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {}
 
   for (const param of query.parameters || []) {
@@ -50,10 +61,10 @@ export const createRestQueryTool = (
     tool: tool({
       description,
       inputSchema: parametersSchema,
-      execute: async (params: unknown) => {
+      execute: async (params): Promise<RestQueryToolResult> => {
         const workspaceId = context.getWorkspaceId()
         if (!workspaceId) {
-          return { error: "No app context available" }
+          return { success: false, error: "No app context available" }
         }
 
         const ctx: any = buildCtx(workspaceId, null, {
@@ -67,12 +78,13 @@ export const createRestQueryTool = (
 
         try {
           await queryController.executeV2AsAutomation(ctx)
-          const { data, ...rest } = ctx.body
-          return { success: true, data, info: rest }
-        } catch (err: any) {
+          const { data, ...info } = (ctx.body || {}) as Record<string, unknown>
+          return { success: true, data, info }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err)
           return {
             success: false,
-            error: err.message || "Query execution failed",
+            error: message || "Query execution failed",
           }
         }
       },

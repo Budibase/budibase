@@ -88,6 +88,7 @@ export async function create(
     model: config.model,
     apiKey: config.apiKey,
     liteLLMModelId: modelId,
+    ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
   }
 
   const { rev } = await db.put(newConfig)
@@ -118,6 +119,10 @@ export async function update(
   config.apiKey =
     config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
 
+  if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
+    config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
+  }
+
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
@@ -131,15 +136,25 @@ export async function update(
     await ensureSingleDefault(updatedConfig._id)
   }
 
-  await liteLLM.updateModel({
-    llmModelId: config.liteLLMModelId,
-    provider: config.provider,
-    name: config.model,
-    baseUrl: config.baseUrl,
-    apiKey: config.apiKey,
-  })
+  const isWebSearchOnlyUpdate =
+    existing.name === updatedConfig.name &&
+    existing.isDefault === updatedConfig.isDefault &&
+    existing.provider === updatedConfig.provider &&
+    existing.model === updatedConfig.model &&
+    existing.baseUrl === updatedConfig.baseUrl &&
+    existing.apiKey === updatedConfig.apiKey
 
-  await liteLLM.syncKeyModels()
+  // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
+  if (!isWebSearchOnlyUpdate) {
+    await liteLLM.updateModel({
+      llmModelId: updatedConfig.liteLLMModelId,
+      provider: updatedConfig.provider,
+      name: updatedConfig.model,
+      baseUrl: updatedConfig.baseUrl,
+      apiKey: updatedConfig.apiKey,
+    })
+    await liteLLM.syncKeyModels()
+  }
 
   return updatedConfig
 }

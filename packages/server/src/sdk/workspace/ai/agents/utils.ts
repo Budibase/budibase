@@ -1,4 +1,9 @@
-import { Agent, ToolMetadata, SourceName } from "@budibase/types"
+import {
+  Agent,
+  ToolMetadata,
+  SourceName,
+  WebSearchProvider,
+} from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
@@ -8,6 +13,7 @@ import {
   type AiToolDefinition,
 } from "../../../../ai/tools"
 import sdk from "../../.."
+import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -18,11 +24,15 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   }
 }
 
-export async function getAvailableTools(): Promise<AiToolDefinition[]> {
-  const [queries, datasources] = await Promise.all([
+export async function getAvailableTools(
+  aiconfigId?: string
+): Promise<AiToolDefinition[]> {
+  const [queries, datasources, aiConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
+    aiconfigId ? sdk.aiConfigs.find(aiconfigId) : Promise.resolve(undefined),
   ])
+  const webSearchConfig = aiConfig?.webSearchConfig
 
   const restDatasourceNames = new Map(
     datasources
@@ -36,11 +46,22 @@ export async function getAvailableTools(): Promise<AiToolDefinition[]> {
       createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
-  return [...budibaseTools, ...restQueryTools]
+  const tools: AiToolDefinition[] = [...budibaseTools, ...restQueryTools]
+  if (webSearchConfig?.apiKey) {
+    if (webSearchConfig.provider === WebSearchProvider.EXA) {
+      tools.push(createExaTool(webSearchConfig.apiKey))
+    } else if (webSearchConfig.provider === WebSearchProvider.PARALLEL) {
+      tools.push(createParallelTool(webSearchConfig.apiKey))
+    }
+  }
+
+  return tools
 }
 
-export async function getAvailableToolsMetadata(): Promise<ToolMetadata[]> {
-  const tools = await getAvailableTools()
+export async function getAvailableToolsMetadata(
+  aiconfigId?: string
+): Promise<ToolMetadata[]> {
+  const tools = await getAvailableTools(aiconfigId)
   return tools.map(toToolMetadata)
 }
 
@@ -57,7 +78,7 @@ export async function buildPromptAndTools(
   tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
-  const allTools = await getAvailableTools()
+  const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
