@@ -123,7 +123,7 @@ async function initDeployedApp(prodAppId: string) {
     .map(result => result.enabled)
     .filter(result => result).length
   console.log(
-    `Cleared ${count} old CRON, enabled ${enabledCount} new CRON triggers for app deployment`
+    `Cleared ${count} old CRON/email, enabled ${enabledCount} new CRON/email triggers for app deployment`
   )
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
