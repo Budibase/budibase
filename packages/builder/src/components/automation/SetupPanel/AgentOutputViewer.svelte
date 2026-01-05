@@ -7,10 +7,8 @@
     MarkdownViewer,
     notifications,
   } from "@budibase/bbui"
-  import ChainOfThought, {
-    type ChainStep,
-  } from "@/components/common/ChainOfThought.svelte"
-  import ChainOfThoughtModal from "@/components/common/ChainOfThoughtModal.svelte"
+  import ChainOfThought, { type ChainStep } from "./ChainOfThought.svelte"
+  import ChainOfThoughtModal from "./ChainOfThoughtModal.svelte"
   import type { AgentStepOutputs } from "@budibase/types"
   import type { ContentPart, ToolCallDisplay } from "@budibase/types"
   import type { LanguageModelUsage } from "ai"

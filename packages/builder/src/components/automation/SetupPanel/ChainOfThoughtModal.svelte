@@ -10,7 +10,12 @@
   import type { ModalAPI } from "@budibase/bbui"
   import { type ChainStep } from "./ChainOfThought.svelte"
   import { fade } from "svelte/transition"
-  import JSONViewer from "./JSONViewer.svelte"
+  import JSONViewer from "@/components/common/JSONViewer.svelte"
+  import {
+    getStatusActionButtonClass,
+    getStatusLabel,
+    getStatusLightColor,
+  } from "./chainOfThoughtStatus"
 
   export let steps: ChainStep[] = []
   export let response: string = ""
@@ -31,47 +36,6 @@
 
   function selectStep(step: ChainStep) {
     selectedStep = step
-  }
-
-  function getStatusLightColor(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "var(--spectrum-global-color-green-600)"
-      case "error":
-      case "failed":
-        return "var(--spectrum-global-color-red-600)"
-      case "pending":
-      default:
-        return "var(--spectrum-global-color-gray-600)"
-    }
-  }
-
-  function getStatusLabel(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "Completed"
-      case "error":
-      case "failed":
-        return "Failed"
-      case "pending":
-        return "Running"
-      default:
-        return "Unknown"
-    }
-  }
-
-  function getStatusActionButtonClass(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "flow-success"
-      case "error":
-      case "failed":
-        return "flow-error"
-      case "pending":
-        return "flow-blue"
-      default:
-        return "flow-warn"
-    }
   }
 </script>
 
@@ -465,3 +429,5 @@
     overflow: auto;
   }
 </style>
+
+

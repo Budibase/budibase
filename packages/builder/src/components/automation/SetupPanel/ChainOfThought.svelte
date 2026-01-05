@@ -1,11 +1,12 @@
 <script lang="ts" context="module">
   import type { LanguageModelUsage } from "ai"
+  import type { ChainStepStatus } from "./chainOfThoughtStatus"
 
   export interface ChainStep {
     id: string
     name: string
     displayName: string
-    status: "completed" | "error" | "failed" | "pending"
+    status: ChainStepStatus
     reasoning?: string
     input?: unknown
     output?: unknown
@@ -16,49 +17,14 @@
 <script lang="ts">
   import { fly } from "svelte/transition"
   import { StatusLight } from "@budibase/bbui"
+  import {
+    getStatusBadgeClass,
+    getStatusLabel,
+    getStatusLightColor,
+  } from "./chainOfThoughtStatus"
 
   export let steps: ChainStep[] = []
   export let simple: boolean = false
-
-  function getStatusLightColor(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "var(--spectrum-global-color-green-600)"
-      case "error":
-      case "failed":
-        return "var(--spectrum-global-color-red-600)"
-      case "pending":
-      default:
-        return "var(--spectrum-global-color-gray-600)"
-    }
-  }
-
-  function getStatusLabel(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "Completed"
-      case "error":
-      case "failed":
-        return "Failed"
-      case "pending":
-        return "Running"
-      default:
-        return "Unknown"
-    }
-  }
-
-  function getStatusBadgeClass(status: ChainStep["status"]): string {
-    switch (status) {
-      case "completed":
-        return "badge-positive"
-      case "error":
-      case "failed":
-        return "badge-negative"
-      case "pending":
-      default:
-        return "badge-neutral"
-    }
-  }
 </script>
 
 <div class="timeline" class:simple>
@@ -171,3 +137,5 @@
     color: var(--spectrum-global-color-gray-700);
   }
 </style>
+
+
