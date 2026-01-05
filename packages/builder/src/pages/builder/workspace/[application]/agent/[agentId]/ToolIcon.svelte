@@ -3,18 +3,16 @@
   import type { IconInfo } from "@/helpers/integrationIcons"
 
   export let icon: IconInfo | undefined
-  export let size = 16
+  export let size: "S" | "M" | "L" = "S"
   export let fallbackIcon: string | undefined = undefined
 
-  let fallbackSize: "S" | "M" = "S"
-  $: fallbackSize = size <= 16 ? "S" : "M"
-  $: sizeStr = String(size)
+  $: sizeStr = size === "S" ? "16" : size === "M" ? "18" : "24"
 </script>
 
 {#if icon?.url}
-  <img src={icon.url} alt="" width={size} height={size} />
+  <img src={icon.url} alt="" width={sizeStr} height={sizeStr} />
 {:else if icon?.icon}
   <svelte:component this={icon.icon} width={sizeStr} height={sizeStr} />
 {:else if fallbackIcon}
-  <Icon name={fallbackIcon} size={fallbackSize} />
+  <Icon name={fallbackIcon} {size} />
 {/if}

@@ -718,7 +718,7 @@
                     <div class="tool-item-icon">
                       <ToolIcon
                         icon={tool.icon}
-                        size={18}
+                        size="M"
                         fallbackIcon="Wrench"
                       />
                     </div>

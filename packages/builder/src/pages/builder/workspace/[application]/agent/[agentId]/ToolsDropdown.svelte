@@ -81,11 +81,7 @@
               >
                 <div class="tool-item">
                   <div class="tool-item-icon">
-                    <ToolIcon
-                      icon={tool.icon}
-                      size={16}
-                      fallbackIcon="Wrench"
-                    />
+                    <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
                   </div>
                   <span class="tool-item-label">
                     {#if tool.sourceType === ToolType.SEARCH}
