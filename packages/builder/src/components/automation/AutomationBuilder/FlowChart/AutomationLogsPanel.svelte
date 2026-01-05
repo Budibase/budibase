@@ -29,6 +29,9 @@
   let status = null
   let timeRange = null
   let loaded = false
+  let totalLogs = 0
+
+  const AUTOMATION_LOG_PAGE_SIZE = 10
 
   const allTimeOptions = [
     { value: "90-d", label: "Past 90 days" },
@@ -99,6 +102,7 @@
         startDate,
       })
       pageInfo.fetched(response.hasNextPage, response.nextPage)
+      totalLogs = response.totalLogs
       runHistory = response.data
     } catch (error) {
       notifications.error("Error fetching automation logs")
@@ -173,9 +177,12 @@
                 >
                   <div class="log-content">
                     <div class="log-info">
-                      <Body size="S" weight="600"
-                        >Log #{runHistory.length - idx}</Body
-                      >
+                      <Body size="S" weight="600">
+                        Log #{totalLogs -
+                          (($pageInfo.pageNumber - 1) *
+                            AUTOMATION_LOG_PAGE_SIZE +
+                            idx)}
+                      </Body>
                       <Body size="S">
                         {dayjs(log.createdAt).format("MMM DD, YYYY HH:mm")}
                       </Body>

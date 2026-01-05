@@ -20,7 +20,11 @@ import {
   migrateToInMemoryView,
 } from "../../../../../api/controllers/view/utils"
 import * as inMemoryViews from "../../../../../db/inMemoryView"
-import { getRowParams, InternalTables } from "../../../../../db/utils"
+import {
+  getRowParams,
+  InternalTables,
+  isProdWorkspaceID,
+} from "../../../../../db/utils"
 import env from "../../../../../environment"
 import { breakRowIdField } from "../../../../../integrations/utils"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
@@ -124,9 +128,44 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const table = await sdk.tables.getTable(tableId)
+  const table = await getTableForFetch(tableId)
   const rows = await fetchRaw(tableId)
   return await outputProcessing(table, rows)
+}
+
+async function getTableForFetch(tableId: string): Promise<Table> {
+  try {
+    return await sdk.tables.getTable(tableId)
+  } catch (err) {
+    const error = err as { status: number }
+    const status = error.status
+    if (status !== 404) {
+      throw err
+    }
+
+    const devTable = await getDevTableWhenProdMissing(tableId)
+    if (!devTable) {
+      throw err
+    }
+    return devTable
+  }
+}
+
+async function getDevTableWhenProdMissing(
+  tableId: string
+): Promise<Table | undefined> {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId || !isProdWorkspaceID(workspaceId)) {
+    return
+  }
+
+  const devWorkspaceId = context.getDevWorkspaceId()
+  return await context.doInWorkspaceContext(devWorkspaceId, async () => {
+    if (!(await sdk.tables.doesTableExist(tableId))) {
+      return
+    }
+    return await sdk.tables.getTable(tableId)
+  })
 }
 
 export async function fetchRaw(

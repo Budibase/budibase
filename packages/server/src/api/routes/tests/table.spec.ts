@@ -1548,6 +1548,293 @@ if (descriptions.length) {
         })
       })
 
+      describe("publish", () => {
+        if (isInternal) {
+          beforeEach(async () => {
+            await config.unpublish()
+          })
+
+          it("publishes the workspace before publishing a table", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            config.prodWorkspaceId = config
+              .getDevWorkspaceId()
+              .replace("_dev", "")
+            const prodRows = await config.api.row.fetchProd(table._id!)
+
+            expect(prodRows.length).toBe(1)
+            expect(prodRows[0]._id).toEqual(devRow._id)
+          })
+
+          it("does not seed other tables when publishing workspace from table publish", async () => {
+            const sourceTable = await config.api.table.save(basicTable())
+            const otherTable = await config.api.table.save(basicTable())
+
+            const sourceRow = await config.api.row.save(sourceTable._id!, {
+              name: "source-dev-row",
+            })
+            await config.api.row.save(otherTable._id!, {
+              name: "other-dev-row",
+            })
+
+            await config.api.table.publish(sourceTable._id!, {
+              seedProductionTables: true,
+            })
+
+            config.prodWorkspaceId = config
+              .getDevWorkspaceId()
+              .replace("_dev", "")
+
+            const prodSourceRows = await config.api.row.fetchProd(
+              sourceTable._id!
+            )
+            const prodOtherRows = await config.api.row.fetchProd(
+              otherTable._id!
+            )
+
+            expect(prodSourceRows.length).toBe(1)
+            expect(prodSourceRows[0]._id).toEqual(sourceRow._id)
+            expect(prodOtherRows.length).toBe(0)
+          })
+
+          it("only publishes the selected table when seeding an unpublished workspace", async () => {
+            const sourceTable = await config.api.table.save(basicTable())
+            const otherTable = await config.api.table.save(basicTable())
+
+            await config.api.table.publish(sourceTable._id!, {
+              seedProductionTables: true,
+            })
+
+            const status = await config.api.deploy.publishStatus()
+
+            expect(status.tables[sourceTable._id!].published).toBe(true)
+            expect(status.tables[otherTable._id!].published).toBe(false)
+          })
+
+          it("publishes table data to production when seeded", async () => {
+            const table = await config.api.table.save(basicTable())
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+            })
+
+            const prodRowsBefore = await config.api.row.fetchProd(table._id!)
+            expect(prodRowsBefore.length).toBe(0)
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfter = await config.api.row.fetchProd(table._id!)
+            expect(prodRowsAfter.length).toBe(1)
+            expect(prodRowsAfter[0]._id).toEqual(devRow._id)
+          })
+
+          it("strips timezone suffixes for ignoreTimezones fields when seeding", async () => {
+            const table = await config.api.table.save(
+              basicTable(undefined, {
+                schema: {
+                  date: {
+                    type: FieldType.DATETIME,
+                    name: "date",
+                    ignoreTimezones: true,
+                  },
+                },
+              })
+            )
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+              date: "2025-12-18T16:09:03.950Z",
+            })
+
+            await context.doInWorkspaceContext(
+              config.getDevWorkspaceId(),
+              async () => {
+                const db = context.getWorkspaceDB()
+                const storedRow = await db.get<Row>(devRow._id!)
+                await db.put({
+                  ...storedRow,
+                  date: "2025-12-18T16:09:03.950Z",
+                })
+              }
+            )
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRows = await config.api.row.fetchProd(table._id!)
+            expect(prodRows.length).toBe(1)
+            expect(prodRows[0].date).toEqual("2025-12-18T16:09:03.950")
+          })
+
+          it("does not reseed a non-empty production table", async () => {
+            const table = await config.api.table.save(basicTable())
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfterFirstSeed = await config.api.row.fetchProd(
+              table._id!
+            )
+            expect(prodRowsAfterFirstSeed.length).toBe(1)
+            expect(prodRowsAfterFirstSeed[0]._id).toEqual(devRow._id)
+            expect(prodRowsAfterFirstSeed[0].name).toEqual("dev-row")
+
+            await config.api.row.patch(table._id!, {
+              tableId: table._id!,
+              _id: devRow._id!,
+              _rev: devRow._rev!,
+              name: "dev-row-updated",
+            })
+            await config.api.row.save(table._id!, {
+              name: "dev-row-2",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRowsAfterSecondSeed = await config.api.row.fetchProd(
+              table._id!
+            )
+            expect(prodRowsAfterSecondSeed.length).toBe(1)
+            expect(prodRowsAfterSecondSeed[0]._id).toEqual(devRow._id)
+            expect(prodRowsAfterSecondSeed[0].name).toEqual("dev-row")
+          })
+
+          const expectsRevVersion = (table: Table, version: number) => {
+            expect(table).toMatchObject({
+              _id: table._id!,
+              _rev: expect.stringMatching(new RegExp(`^${version}-\\w+`)),
+            })
+            expect(table).not.toHaveProperty("_deleted")
+          }
+
+          it("allows publishing the dev table document when production rev is ahead", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            const prodWorkspaceId = config.getProdWorkspaceId()
+            await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+              const prodDb = context.getWorkspaceDB()
+              const prodTable = await prodDb.get<Table>(table._id!)
+              const res = await prodDb.put({
+                ...prodTable,
+                name: "prod-only-change",
+              })
+              await prodDb.put({
+                ...prodTable,
+                _rev: res.rev,
+                name: "prod-only-change",
+              })
+            })
+
+            expectsRevVersion(await getDevTable(), 1)
+            expectsRevVersion(await getProdTable(), 3)
+
+            await config.api.table.publish(table._id!)
+
+            const devTable = await getDevTable()
+            const prodTable = await getProdTable()
+            expectsRevVersion(devTable, 4)
+            expect(prodTable).toEqual(devTable)
+          })
+
+          it("allows publishing the dev table document when production and dev rev are in the same rev count but different version", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            for (const workspaceId of [
+              config.getDevWorkspaceId(),
+              config.getProdWorkspaceId(),
+            ]) {
+              await context.doInWorkspaceContext(workspaceId, async () => {
+                const prodDb = context.getWorkspaceDB()
+                const prodTable = await prodDb.get<Table>(table._id!)
+                await prodDb.put({
+                  ...prodTable,
+                  name: generator.word(),
+                })
+              })
+            }
+
+            let devTable = await getDevTable()
+            let prodTable = await getProdTable()
+            expectsRevVersion(devTable, 2)
+            expectsRevVersion(prodTable, 2)
+            expect(devTable._rev).not.toEqual(prodTable._rev)
+
+            await config.api.table.publish(table._id!)
+
+            devTable = await getDevTable()
+            prodTable = await getProdTable()
+            expectsRevVersion(devTable, 3)
+            expect(prodTable).toEqual(devTable)
+            expect(devTable._rev).toEqual(prodTable._rev)
+          })
+
+          it("does not tweak revs when production is not ahead", async () => {
+            const table = await config.api.table.save(basicTable())
+
+            const getTable = (workspaceId: string) =>
+              context.doInWorkspaceContext(workspaceId, () =>
+                context.getWorkspaceDB().get<Table>(table._id!)
+              )
+
+            const getProdTable = () => getTable(config.getProdWorkspaceId())
+            const getDevTable = () => getTable(config.getDevWorkspaceId())
+
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+
+            expectsRevVersion(await getDevTable(), 1)
+            expectsRevVersion(await getProdTable(), 1)
+
+            await config.api.table.publish(table._id!)
+
+            const devTable = await getDevTable()
+            const prodTable = await getProdTable()
+            expectsRevVersion(devTable, 1)
+            expect(prodTable).toEqual(devTable)
+          })
+        }
+      })
+
       describe.each([
         [RowExportFormat.CSV, (val: any) => JSON.stringify(val)],
         [RowExportFormat.JSON, (val: any) => val],
