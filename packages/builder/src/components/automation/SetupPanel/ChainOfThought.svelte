@@ -137,5 +137,3 @@
     color: var(--spectrum-global-color-gray-700);
   }
 </style>
-
-
