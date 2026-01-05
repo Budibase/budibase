@@ -170,24 +170,38 @@
   }
 
   const sumUsage = (usages: Array<LanguageModelUsage | undefined>) => {
-    const values = usages.filter(Boolean)
+    const values = usages.filter(
+      (usage): usage is LanguageModelUsage => !!usage
+    )
     if (values.length === 0) {
       return
     }
 
-    const sum = (key: keyof LanguageModelUsage) =>
+    const sum = (selector: (usage: LanguageModelUsage) => unknown) =>
       values.reduce((acc, usage) => {
-        const raw = usage?.[key]
-        const num = toSafeNumber(raw)
+        const num = toSafeNumber(selector(usage))
         return acc + (num ?? 0)
       }, 0)
 
     return {
-      inputTokens: sum("inputTokens"),
-      outputTokens: sum("outputTokens"),
-      totalTokens: sum("totalTokens"),
-      reasoningTokens: sum("reasoningTokens"),
-      cachedInputTokens: sum("cachedInputTokens"),
+      inputTokens: sum(usage => usage.inputTokens),
+      inputTokenDetails: {
+        noCacheTokens: sum(usage => usage.inputTokenDetails?.noCacheTokens),
+        cacheReadTokens: sum(usage => usage.inputTokenDetails?.cacheReadTokens),
+        cacheWriteTokens: sum(
+          usage => usage.inputTokenDetails?.cacheWriteTokens
+        ),
+      },
+      outputTokens: sum(usage => usage.outputTokens),
+      outputTokenDetails: {
+        textTokens: sum(usage => usage.outputTokenDetails?.textTokens),
+        reasoningTokens: sum(
+          usage => usage.outputTokenDetails?.reasoningTokens
+        ),
+      },
+      totalTokens: sum(usage => usage.totalTokens),
+      reasoningTokens: sum(usage => usage.reasoningTokens),
+      cachedInputTokens: sum(usage => usage.cachedInputTokens),
     } satisfies LanguageModelUsage
   }
 
