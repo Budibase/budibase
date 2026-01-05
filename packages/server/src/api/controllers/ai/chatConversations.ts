@@ -18,7 +18,6 @@ import {
   wrapLanguageModel,
 } from "ai"
 import sdk from "../../../sdk"
-import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -131,7 +130,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
-  const { systemPrompt: system, tools: allTools } =
+  const { systemPrompt: system, tools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
       baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
       includeGoal: false,
@@ -147,25 +146,27 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
     const model = openai.chat(modelId)
 
-    const aiTools = toAiSdkTools(allTools)
-    const result = await streamText({
+    const modelMessages = await convertToModelMessages(chat.messages)
+
+    const result = streamText({
       model: wrapLanguageModel({
         model,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
       }),
-      messages: convertToModelMessages(chat.messages),
+      messages: modelMessages,
       system,
-      tools: aiTools,
+      tools,
     })
 
+    const titleMessages = modelMessages.length > 0 ? [modelMessages[0]] : []
     const title =
       chat.title ||
       (
         await generateText({
           model,
-          messages: [convertToModelMessages(chat.messages)[0]],
+          messages: titleMessages,
           system: ai.agentHistoryTitleSystemPrompt(),
         })
       ).text
