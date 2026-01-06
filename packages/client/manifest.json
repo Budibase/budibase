@@ -9159,8 +9159,8 @@
       },
       {
         "type": "field",
-        "label": "Data columns",
-        "key": "valueColumns",
+        "label": "Data column",
+        "key": "valueColumn",
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {

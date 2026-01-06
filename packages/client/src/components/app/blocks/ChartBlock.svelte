@@ -23,7 +23,7 @@
   export let height
   export let width
 
-  // Pie/Donut
+  // Pie/Donut/Gauge
   export let valueColumn
 
   // Bar
@@ -96,7 +96,7 @@
           title: chartTitle,
           labelColumn,
           valueColumn,
-          valueColumns: chartType === "gauge" ? valueColumn : valueColumns,
+          valueColumns,
           palette,
           dataLabels,
           legend,
