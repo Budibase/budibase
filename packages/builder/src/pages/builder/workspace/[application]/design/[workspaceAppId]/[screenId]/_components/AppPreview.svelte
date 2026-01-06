@@ -57,6 +57,7 @@
       : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
+    previewModalDevice: $previewStore.modalDevice,
     messagePassing: $appStore.clientFeatures.messagePassing,
     navigation: $navigationStore,
     hiddenComponentIds:
@@ -197,6 +198,13 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)
+    } else if (type === "set-preview-modal-device") {
+      const { device } = data || {}
+      if (device === "mobile") {
+        previewStore.setModalDevice("mobile")
+      } else {
+        previewStore.resetModalDevice()
+      }
     } else if (type === "provide-context") {
       let context = data?.context
       if (context) {

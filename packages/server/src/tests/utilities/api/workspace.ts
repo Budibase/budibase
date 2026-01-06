@@ -1,4 +1,4 @@
-import { constants } from "@budibase/backend-core"
+import { constants, db as dbCore } from "@budibase/backend-core"
 import {
   DuplicateWorkspaceResponse,
   PublishWorkspaceRequest,
@@ -68,7 +68,7 @@ export class WorkspaceAPI extends TestAPI {
     if (!appId) {
       appId = this.config.getDevWorkspaceId()
     }
-    return await this._post<PublishWorkspaceResponse>(
+    const response = await this._post<PublishWorkspaceResponse>(
       `/api/applications/${appId}/publish`,
       {
         // While the publish endpoint does take an :appId parameter, it doesn't
@@ -80,6 +80,10 @@ export class WorkspaceAPI extends TestAPI {
         expectations,
       }
     )
+    if (appId === this.config.devWorkspaceId) {
+      this.config.prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+    }
+    return response
   }
 
   unpublish = async (

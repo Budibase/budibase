@@ -109,8 +109,11 @@
 
   const publishWithoutChecks = async (seedProdTables: boolean) => {
     await deploymentStore.publishApp({ seedProductionTables: seedProdTables })
+    if ($deploymentStore.isPublishing) {
+      return
+    }
+    await deploymentStore.publishApp()
     publishSuccessPopover?.show()
-    seedProductionTables = false
   }
 
   const publishAnyway = async () => {
@@ -244,10 +247,12 @@
     font-size: var(--font-size-l);
     display: flex;
     align-items: center;
+    gap: var(--spacing-s);
     background: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
     color: var(--spectrum-global-color-gray-50);
     cursor: pointer;
+    padding: var(--spacing-s) var(--spacing-l);
     transition: background-color 130ms ease-in-out;
   }
   .publish-menu.disabled {
@@ -256,38 +261,19 @@
     cursor: default;
     opacity: 0.8;
   }
-  .publish-menu-text {
-    padding: var(--spacing-s) var(--spacing-l);
+  .publish-menu span {
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
     font-size: var(--font-size-m);
   }
-  .publish-menu-text:hover {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 8px 0 0 8px;
+  .publish-menu:hover,
+  .publish-menu:focus-visible {
+    background-color: var(--spectrum-global-color-gray-700);
   }
-  .publish-menu.disabled .publish-menu-text:hover {
-    background-color: transparent;
-    border-radius: 0;
-  }
-  .publish-dropdown {
-    padding: var(--spacing-s) var(--spacing-m);
-  }
-  .publish-dropdown:hover,
-  .publish-dropdown.active {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 0 8px 8px 0;
-  }
-  .publish-menu.disabled .publish-dropdown:hover,
-  .publish-menu.disabled .publish-dropdown.active {
-    background-color: transparent;
-    border-radius: 0;
-  }
-  .separator {
-    width: 1px;
-    background: rgba(0, 0, 0, 0.4);
-    align-self: stretch;
+  .publish-menu.disabled:hover,
+  .publish-menu.disabled:focus-visible {
+    background-color: var(--spectrum-global-color-gray-400);
   }
   .popover-content {
     display: flex;
