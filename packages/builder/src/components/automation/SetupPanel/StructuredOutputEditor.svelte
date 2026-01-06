@@ -19,17 +19,6 @@
 
   const ajv = new Ajv()
 
-  /**
-   * Normalizes a JSON schema to be compatible with OpenAI's structured output requirements.
-   * This is the strictest format, so schemas that pass OpenAI validation should work with other providers.
-   *
-   * Fixes:
-   * - Adds `additionalProperties: false` to all object schemas (required by OpenAI)
-   * - Converts `required: true` boolean to proper array format
-   * - Ensures top-level type is "object" (wraps arrays if needed)
-   * - Recursively processes nested schemas
-   */
-  // Implemented via shared helper: helpers.structuredOutput.normalizeSchemaForStructuredOutput
   function sampleToJsonSchema(sample: unknown): JSONSchema {
     const rawSchema = toJsonSchema(sample) as Record<string, unknown>
     return helpers.structuredOutput.normalizeSchemaForStructuredOutput(

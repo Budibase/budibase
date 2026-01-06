@@ -1,7 +1,12 @@
 /**
  * Normalizes a JSON schema to be compatible with OpenAI structured output.
  * This is the strictest format, so schemas that pass OpenAI validation should hopefully work with other .
+ * Fixes:
+ * - Adds `additionalProperties: false` to all object schemas (required by OpenAI)
+ * - Converts `required: true` boolean to proper array format
+ * - Ensures top-level type is "object" (wraps arrays if needed)
  */
+
 export function normalizeSchemaForStructuredOutput(
   schema: Record<string, unknown>
 ): Record<string, unknown> {
