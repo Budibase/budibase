@@ -7,7 +7,6 @@ import {
   AutomationStepResult,
   AutomationTriggerResult,
 } from "@budibase/types"
-import type { ToolExecutionOptions } from "ai"
 import automationTools from "../automations"
 
 interface TriggerAutomationStepsResult {
