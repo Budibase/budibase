@@ -7,6 +7,7 @@ import {
   AutomationStepResult,
   AutomationTriggerResult,
 } from "@budibase/types"
+import type { ToolExecutionOptions } from "ai"
 import automationTools from "../automations"
 
 interface TriggerAutomationStepsResult {
@@ -33,6 +34,19 @@ describe("AI Tools - Automations", () => {
       throw new Error("trigger_automation tool not found")
     }
     return tool
+  }
+
+  const executeTool = async <T>(
+    toolDef: ReturnType<typeof getTriggerAutomationTool>,
+    input: unknown
+  ): Promise<T> => {
+    if (!toolDef.tool.execute) {
+      throw new Error("tool.execute is not a function")
+    }
+    return (await toolDef.tool.execute(input, {
+      toolCallId: "test-tool-call",
+      messages: [],
+    })) as T
   }
 
   const runInContext = async <T>(fn: () => Promise<T>): Promise<T> => {
@@ -74,7 +88,7 @@ describe("AI Tools - Automations", () => {
 
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: "{}",
         })
@@ -101,7 +115,7 @@ describe("AI Tools - Automations", () => {
       const startTime = performance.now()
 
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: "{}",
         })
@@ -127,7 +141,7 @@ describe("AI Tools - Automations", () => {
 
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: "{}",
         })
@@ -142,7 +156,7 @@ describe("AI Tools - Automations", () => {
     it("should return error for non-existent automation", async () => {
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: "non_existent_id",
           fields: "{}",
         })
@@ -164,7 +178,7 @@ describe("AI Tools - Automations", () => {
 
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: "invalid json",
         })
@@ -186,7 +200,7 @@ describe("AI Tools - Automations", () => {
 
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: JSON.stringify({ message: "Hello from agent" }),
         })
@@ -209,7 +223,7 @@ describe("AI Tools - Automations", () => {
 
       const tool = getTriggerAutomationTool()
       const result = (await runInContext(() =>
-        tool.handler({
+        executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
           fields: "{}",
           timeout: 0.1,
