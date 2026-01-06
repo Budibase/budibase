@@ -139,7 +139,7 @@
                           {/if}
                         </div>
                       </Tab>
-                      <Tab title="Final Response">
+                      <Tab title="Response">
                         <div class="tab-content">
                           {#if response}
                             <MarkdownViewer value={response} />

@@ -231,10 +231,10 @@
 
 <div class="agent-output-viewer">
   {#if response}
-    <DetailSummary name="Agent response" initiallyShow padded>
+    <DetailSummary name="Agent response" padded>
       <div class="response-section">
         <div class="response-header">
-          <Body size="S" weight="600">Final response</Body>
+          <Body size="S" weight="600">Response</Body>
           <Icon
             name="Copy"
             size="S"
