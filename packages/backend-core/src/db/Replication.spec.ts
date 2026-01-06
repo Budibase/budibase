@@ -8,6 +8,7 @@ const mockSourceDb = {
   },
   name: "source_db",
   get: jest.fn(),
+  put: jest.fn(),
 }
 
 const mockTargetDb = {
@@ -267,7 +268,7 @@ describe("Replication", () => {
     })
   })
 
-  describe("haveReplicationInconsistencies", () => {
+  describe("replicationDelta", () => {
     let replication: Replication
 
     beforeEach(() => {
@@ -281,19 +282,19 @@ describe("Replication", () => {
       {
         sourceRev: "5-abc123",
         targetRev: "8-def456",
-        expected: true,
+        expected: 3,
         description: "target has higher revision",
       },
       {
         sourceRev: "10-abc123",
         targetRev: "8-def456",
-        expected: false,
+        expected: -2,
         description: "source has higher revision",
       },
       {
         sourceRev: "5-abc123",
         targetRev: "5-def456",
-        expected: false,
+        expected: 0,
         description: "revisions are equal",
       },
     ])(
@@ -302,9 +303,10 @@ describe("Replication", () => {
         const sourceDoc = { _rev: sourceRev }
         const targetDoc = { _rev: targetRev }
 
-        const hasInconsistency = (
-          replication as any
-        ).haveReplicationInconsistencies(sourceDoc, targetDoc)
+        const hasInconsistency = (replication as any).replicationDelta(
+          sourceDoc,
+          targetDoc
+        )
         expect(hasInconsistency).toBe(expected)
       }
     )
@@ -322,24 +324,21 @@ describe("Replication", () => {
       jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
     })
 
-    it("should remove conflicted documents and replicate them", async () => {
+    it("should bump source revisions when target is ahead", async () => {
       const sourceDoc = { _id: "doc1", _rev: "5-abc123" }
       const targetDoc = { _id: "doc1", _rev: "8-def456" }
 
       mockSourceDb.get.mockResolvedValue(sourceDoc)
       mockTargetDb.get.mockResolvedValue(targetDoc)
-      mockTargetDb.remove.mockResolvedValue({})
 
       await replication.resolveInconsistencies(["doc1"])
 
-      expect(mockTargetDb.remove).toHaveBeenCalledWith({
-        _id: "doc1",
-        _rev: "8-def456",
-      })
-      expect(replication.replicate).toHaveBeenCalledWith({ doc_ids: ["doc1"] })
+      expect(mockSourceDb.put).toHaveBeenCalledTimes(4) // the target is ahead of source 3 versions. Loop executes 4 times to ensure source rev exceeds target
+      expect(mockTargetDb.remove).not.toHaveBeenCalled()
+      expect(replication.replicate).not.toHaveBeenCalled()
     })
 
-    it("should not remove documents without inconsistencies", async () => {
+    it("should skip documents without inconsistencies", async () => {
       const sourceDoc = { _id: "doc1", _rev: "8-abc123" }
       const targetDoc = { _id: "doc1", _rev: "5-def456" }
 
@@ -348,6 +347,7 @@ describe("Replication", () => {
 
       await replication.resolveInconsistencies(["doc1"])
 
+      expect(mockSourceDb.put).not.toHaveBeenCalled()
       expect(mockTargetDb.remove).not.toHaveBeenCalled()
       expect(replication.replicate).not.toHaveBeenCalled()
     })

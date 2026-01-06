@@ -98,6 +98,20 @@ export function isAutomationResults(
   )
 }
 
+export function isTestAutomationResponse(
+  value: unknown
+): value is TestAutomationResponse {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+  const v = value as Record<string, unknown>
+  return (
+    ("steps" in v && "trigger" in v) ||
+    ("outputs" in v && "message" in v) ||
+    ("data" in v && "opts" in v)
+  )
+}
+
 export type TestAutomationResponse =
   | AutomationResults
   | DidNotTriggerResponse

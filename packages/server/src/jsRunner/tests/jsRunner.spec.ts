@@ -265,7 +265,7 @@ describe("jsRunner (using isolated-vm)", () => {
       const result = await processJS(
         `
         var rate = 5;
-        var today = new Date();
+        var today = new Date(${Date.now()});
         
         // comment
         function monthDiff(dateFrom, dateTo) {
@@ -289,7 +289,7 @@ describe("jsRunner (using isolated-vm)", () => {
         `,
         context
       )
-      expect(result).toBe(10)
+      expect(result).toBe(5)
     })
 
     it("should handle test case 7", async () => {

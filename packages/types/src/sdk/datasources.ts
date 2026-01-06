@@ -217,4 +217,23 @@ export interface DatasourcePlus extends IntegrationBase {
   ): Promise<Schema>
   getTableNames(): Promise<string[]>
   getViewNames?(): Promise<string[]>
+  getRelationships?(
+    tableNames?: string[]
+  ): Promise<DatasourceRelationshipConfig[]>
+}
+
+export enum DatasourceRelationshipType {
+  MANY_TO_ONE = "many-to-one",
+  MANY_TO_MANY = "many-to-many",
+}
+
+export interface DatasourceRelationshipConfig {
+  _id: string
+  label: string
+  sourceTable: string
+  sourceColumn: string
+  targetTable: string
+  targetColumn: string
+  relationshipType: DatasourceRelationshipType
+  junctionTable?: string
 }

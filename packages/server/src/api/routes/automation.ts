@@ -46,3 +46,9 @@ authorizedRoutes
     paramResource("id"),
     controller.test
   )
+  .get(
+    "/api/automations/:id/test/status",
+    appInfoMiddleware({ appType: AppType.DEV }),
+    paramResource("id"),
+    controller.testStatus
+  )
