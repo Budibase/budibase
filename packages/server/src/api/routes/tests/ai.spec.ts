@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { zodResponseFormat } from "openai/helpers/zod"
 import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
@@ -32,6 +31,17 @@ import {
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 import environment from "../../../environment"
+
+function toResponseFormat(schema: any, name = "response") {
+  return {
+    type: "json_schema" as const,
+    json_schema: {
+      name,
+      strict: false,
+      schema: schema.toJSONSchema({ target: "draft-7" }),
+    },
+  }
+}
 
 function dedent(str: string) {
   return str
@@ -458,7 +468,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = zodResponseFormat(
+      const structuredOutput = toResponseFormat(
         z.object({
           [generator.word()]: z.string(),
         }),
@@ -650,21 +660,21 @@ describe("BudibaseAI", () => {
 
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
-    ) =>
+    ) => {
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: zodResponseFormat(ai.generationStructure, "key"),
+        format: toResponseFormat(ai.generationStructure),
       })
+    }
 
     const mockAIColumnGeneration = (
       generationStructure: ai.GenerationStructure,
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: zodResponseFormat(
+        format: toResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
-          ),
-          "key"
+          )
         ),
       })
 
@@ -672,7 +682,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
+        format: toResponseFormat(ai.tableDataStructuredOutput([])),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -1148,6 +1158,53 @@ describe("BudibaseAI", () => {
 
       const employees = await config.api.row.fetch(createdTables[1].id)
       expect(employees).toHaveLength(5)
+    })
+
+    // This scenario emerged when generated tables contained self-referential
+    // relationship. On delete, updates to the table caused conflicts and blocked
+    // deletion.
+    it("rejects self-referential relationships", async () => {
+      const prompt = "Create me a table for managing employees"
+      const generationStructure: ai.GenerationStructure = {
+        tables: [
+          {
+            name: "Employees",
+            primaryDisplay: "Name",
+            schema: [
+              {
+                name: "Name",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Manager",
+                type: FieldType.LINK,
+                tableId: "Employees",
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                reverseFieldName: "Reports",
+                relationshipId: "EmployeeManager",
+              },
+            ],
+          },
+        ],
+      }
+      mockAIGenerationStructure(generationStructure)
+
+      const aiColumnGeneration: ai.AIColumnSchemas = {
+        Employees: [],
+      }
+      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
+
+      const dataGeneration: Record<string, Record<string, any>[]> = {
+        Employees: [],
+      }
+      mockDataGeneration(dataGeneration)
+
+      await expect(config.api.ai.generateTables({ prompt })).rejects.toThrow(
+        "Self-referential relationships are not supported. Table Employees cannot link to itself."
+      )
     })
   })
 
