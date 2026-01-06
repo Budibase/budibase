@@ -11,7 +11,7 @@
   import ChainOfThoughtModal from "./ChainOfThoughtModal.svelte"
   import type { AgentStepOutputs } from "@budibase/types"
   import type { ContentPart, ToolCallDisplay } from "@budibase/types"
-  import type { LanguageModelUsage } from "ai"
+  import { type LanguageModelUsage } from "ai"
 
   type ToolCallDisplayWithReasoning = ToolCallDisplay & {
     reasoningText?: string
@@ -34,7 +34,7 @@
   $: steps = outputs.steps || []
 
   $: stepContentParts = steps.flatMap((step, stepIndex) =>
-    (step.content as ContentPart[]).map(part => ({
+    step.content.map(part => ({
       ...part,
       stepIndex,
     }))
