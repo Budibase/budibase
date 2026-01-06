@@ -6,8 +6,7 @@ import {
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
-import { toAiSdkTools } from "../../../ai/tools/toAiSdkTools"
-import { Experimental_Agent as Agent, stepCountIs } from "ai"
+import { ToolLoopAgent, stepCountIs } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 
@@ -44,7 +43,7 @@ export async function run({
       }
     }
 
-    const { systemPrompt, tools: allTools } =
+    const { systemPrompt, tools } =
       await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
     const { modelId, apiKey, baseUrl, modelName } =
@@ -56,19 +55,19 @@ export async function run({
       fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
-    const aiTools = toAiSdkTools(allTools)
-    const agent = new Agent({
+    const agent = new ToolLoopAgent({
       model: litellm.chat(modelId),
-      system: systemPrompt || undefined,
-      tools: aiTools,
+      instructions: systemPrompt || undefined,
+      tools,
+
       stopWhen: stepCountIs(30),
+      providerOptions: {
+        litellm: ai.getLiteLLMProviderOptions(modelName),
+      },
     })
 
     const result = await agent.generate({
       prompt,
-      providerOptions: {
-        litellm: ai.getLiteLLMProviderOptions(modelName),
-      },
     })
 
     const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
