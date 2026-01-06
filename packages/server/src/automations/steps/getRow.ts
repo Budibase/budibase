@@ -103,7 +103,6 @@ export async function run({
       rows = ctx.body ? ctx.body.rows : []
     }
 
-    console.log("ROWS ??? ", rows)
     return {
       row: rows && rows.length > 0 ? rows[0] : null,
       success: true,
