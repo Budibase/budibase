@@ -752,9 +752,19 @@ class InternalBuilder {
       }
     }
 
+    const useSqliteLikeWithoutLower =
+      this.client === SqlClient.SQL_LITE &&
+      this.query.meta?.sqliteUseLikeWithoutLower
+
     const like = (q: Knex.QueryBuilder, key: string, value: any) => {
       if (filters?.fuzzyOr || shouldOr) {
         q = q.or
+      }
+      if (useSqliteLikeWithoutLower) {
+        return q.whereRaw(`?? LIKE ?`, [
+          this.rawQuotedIdentifier(key),
+          `%${value}%`,
+        ])
       }
       if (
         this.client === SqlClient.ORACLE ||
@@ -844,15 +854,19 @@ class InternalBuilder {
                   subSubQuery = subSubQuery.and
                 }
 
-                const lower =
-                  typeof elem === "string" ? `"${elem.toLowerCase()}"` : elem
+                const useLower = !useSqliteLikeWithoutLower
+                const normalized =
+                  typeof elem === "string"
+                    ? `"${useLower ? elem.toLowerCase() : elem}"`
+                    : elem
+                const column = useLower
+                  ? "COALESCE(LOWER(??), '')"
+                  : "COALESCE(??, '')"
 
                 subSubQuery = subSubQuery.whereLike(
                   // @ts-expect-error knex types are wrong, raw is fine here
-                  this.knex.raw(`COALESCE(LOWER(??), '')`, [
-                    this.rawQuotedIdentifier(key),
-                  ]),
-                  `%${lower}%`
+                  this.knex.raw(column, [this.rawQuotedIdentifier(key)]),
+                  `%${normalized}%`
                 )
               }
             })
@@ -935,7 +949,12 @@ class InternalBuilder {
         if (shouldOr) {
           q = q.or
         }
-        if (
+        if (useSqliteLikeWithoutLower) {
+          return q.whereRaw(`?? LIKE ?`, [
+            this.rawQuotedIdentifier(key),
+            `${value}%`,
+          ])
+        } else if (
           this.client === SqlClient.ORACLE ||
           this.client === SqlClient.SQL_LITE
         ) {
