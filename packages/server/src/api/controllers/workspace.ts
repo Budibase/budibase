@@ -343,6 +343,9 @@ async function resolveGlobalTranslationOverrides(application: Workspace) {
   const localeConfig = translationsConfig.config.locales[defaultLocale]
   const existingOverrides = localeConfig?.overrides || {}
   if (Object.keys(existingOverrides).length > 0) {
+    if (application.translationOverrides) {
+      await clearWorkspaceTranslationOverrides(application)
+    }
     return { ...existingOverrides }
   }
 
@@ -360,7 +363,25 @@ async function resolveGlobalTranslationOverrides(application: Workspace) {
     updatedBy: application.updatedBy,
   }
   await configs.save(translationsConfig)
+  await clearWorkspaceTranslationOverrides(application)
   return { ...workspaceOverrides }
+}
+
+async function clearWorkspaceTranslationOverrides(application: Workspace) {
+  if (!application.translationOverrides) {
+    return
+  }
+  const updated: Workspace = {
+    ...application,
+  }
+  delete (updated as any).translationOverrides
+  await context.doInWorkspaceContext(application.appId, async () => {
+    const db = context.getWorkspaceDB()
+    const response = await db.put(updated)
+    updated._rev = response.rev
+  })
+  await cache.workspace.invalidateWorkspaceMetadata(application.appId, updated)
+  delete (application as any).translationOverrides
 }
 
 export async function fetchAppPackage(
