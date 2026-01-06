@@ -27,7 +27,7 @@ export async function run({
   inputs: GetRowStepInputs
   appId: string
 }): Promise<GetRowStepOutputs> {
-  const { tableId, filters, sortColumn, sortOrder } = inputs
+  const { tableId, rowId, filters, sortColumn, sortOrder } = inputs
   if (!tableId) {
     return {
       success: false,
@@ -35,6 +35,35 @@ export async function run({
       response: {
         message: "You must select a table to query.",
       },
+    }
+  }
+
+  if (rowId) {
+    const ctx = buildCtx(appId, null, {
+      params: {
+        tableId: decodeURIComponent(tableId),
+        rowId,
+      },
+    })
+
+    try {
+      await rowController.find(ctx)
+      return {
+        row: ctx.body || null,
+        success: true,
+      }
+    } catch (err) {
+      // continue
+    }
+  }
+
+  const hasFilters =
+    (filters && Object.keys(filters).length > 0) ||
+    (inputs["filters-def"] && inputs["filters-def"].length > 0)
+  if (!hasFilters) {
+    return {
+      success: false,
+      row: null,
     }
   }
 
@@ -74,6 +103,7 @@ export async function run({
       rows = ctx.body ? ctx.body.rows : []
     }
 
+    console.log("ROWS ??? ", rows)
     return {
       row: rows && rows.length > 0 ? rows[0] : null,
       success: true,
