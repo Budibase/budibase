@@ -6,6 +6,7 @@ import {
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
+import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
@@ -430,6 +431,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: AnsibleLogo,
+    },
+    {
+      name: "Attio",
+      description:
+        "CRM platform API for objects, records, lists, tasks, and webhooks",
+      specs: [
+        {
+          version: "2.0.0",
+          url: "https://api.attio.com/openapi/api",
+        },
+      ],
+      icon: AttioLogo,
     },
     {
       name: "BambooHR",
