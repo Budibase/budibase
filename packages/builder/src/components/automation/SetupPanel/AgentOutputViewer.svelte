@@ -177,7 +177,7 @@
       return
     }
 
-    const sum = (selector: (usage: LanguageModelUsage) => unknown) =>
+    const sum = (selector: (_usage: LanguageModelUsage) => unknown) =>
       values.reduce((acc, usage) => {
         const num = toSafeNumber(selector(usage))
         return acc + (num ?? 0)
