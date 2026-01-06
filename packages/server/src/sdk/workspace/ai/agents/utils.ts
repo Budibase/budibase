@@ -2,10 +2,14 @@ import { Agent, ToolMetadata, SourceName } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
-import { createRestQueryTool, type ExecutableTool } from "../../../../ai/tools"
+import {
+  createRestQueryTool,
+  toToolSet,
+  type AiToolDefinition,
+} from "../../../../ai/tools"
 import sdk from "../../.."
 
-export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
+export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
     description: tool.description,
@@ -14,7 +18,7 @@ export function toToolMetadata(tool: ExecutableTool): ToolMetadata {
   }
 }
 
-export async function getAvailableTools(): Promise<ExecutableTool[]> {
+export async function getAvailableTools(): Promise<AiToolDefinition[]> {
   const [queries, datasources] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
@@ -50,7 +54,7 @@ export async function buildPromptAndTools(
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
-  tools: ExecutableTool[]
+  tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
   const allTools = await getAvailableTools()
@@ -71,7 +75,7 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt,
-    tools,
+    tools: toToolSet(tools),
   }
 }
 

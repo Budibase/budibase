@@ -19,11 +19,10 @@
     "@types/koa": "2.13.4",
     "@types/nodemailer": "^6.4.17",
     "@types/redlock": "4.0.7",
-    "ai": "^5.0.93",
     "koa-useragent": "^4.1.0",
     "openai": "5.12.1",
     "rimraf": "3.0.2",
-    "zod": "^4.1.12"
+    "zod": "^4.2.1"
   },
   "dependencies": {
     "scim-patch": "^0.8.1"
