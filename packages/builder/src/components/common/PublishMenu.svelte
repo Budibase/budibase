@@ -79,17 +79,6 @@
     $appStore.appId
   )
 
-  // Get all internal tables and check if they're published
-  $: unpublishedInternalTableIds = $tables.list
-    .filter(table => table.sourceType === TableSourceType.INTERNAL)
-    .filter(table => {
-      const deploymentInfo = $workspaceDeploymentStore.tables[table._id!]
-      return !deploymentInfo || !deploymentInfo.published
-    })
-    .map(table => table._id!)
-
-  $: hasEmptyProdTables = unpublishedInternalTableIds.length > 0
-
   const showPluginWarningModal = () => {
     pendingSeedProductionTables = seedProductionTables
     actionMenu?.hide?.()
@@ -98,17 +87,17 @@
   }
 
   const publish = async () => {
+    console.log(incompatiblePlugins)
     if (incompatiblePlugins.length && !hasAcknowledgedWarning) {
       showPluginWarningModal()
       return
     }
     actionMenu?.hide?.()
     menuOpen = false
-    await publishWithoutChecks(seedProductionTables)
+    await publishWithoutChecks()
   }
 
-  const publishWithoutChecks = async (seedProdTables: boolean) => {
-    await deploymentStore.publishApp({ seedProductionTables: seedProdTables })
+  const publishWithoutChecks = async () => {
     if ($deploymentStore.isPublishing) {
       return
     }
@@ -122,67 +111,23 @@
     actionMenu?.hide?.()
     menuOpen = false
     pluginWarningModal?.hide()
-    await publishWithoutChecks(pendingSeedProductionTables)
+    await publishWithoutChecks()
     pendingSeedProductionTables = false
   }
 </script>
 
-<ActionMenu
-  bind:this={actionMenu}
-  disabled={$deploymentStore.isPublishing}
-  roundedPopover
-  on:open={() => (menuOpen = true)}
-  on:close={() => (menuOpen = false)}
+<div
+  class="publish-menu"
+  class:disabled={$deploymentStore.isPublishing}
+  role="button"
+  tabindex="0"
+  bind:this={publishPopoverAnchor}
+  on:click={publish}
+  on:keydown={e => e.key === "Enter" && publish()}
 >
-  <svelte:fragment slot="control">
-    <div class="publish-menu" class:disabled={$deploymentStore.isPublishing}>
-      <div
-        role="button"
-        tabindex="0"
-        on:click={publish}
-        on:keydown={e => e.key === "Enter" && publish()}
-        class="publish-menu-text"
-      >
-        <Icon size="M" name="arrow-circle-up" />
-        <span>Publish</span>
-      </div>
-      <div class="separator"></div>
-      <div
-        bind:this={publishPopoverAnchor}
-        class="publish-dropdown"
-        class:active={menuOpen}
-      >
-        <Icon size="M" name="caret-down" />
-      </div>
-    </div>
-  </svelte:fragment>
-
-  <MenuItem
-    icon="check"
-    iconHidden={seedProductionTables}
-    iconAlign="start"
-    on:click={() => (seedProductionTables = false)}
-  >
-    <div>
-      <div class="menu-item-header">Publish workspace</div>
-      <div class="menu-item-text">Publish changes to the workspace</div>
-    </div>
-  </MenuItem>
-  <MenuItem
-    icon="check"
-    iconAlign="start"
-    disabled={!hasEmptyProdTables}
-    iconHidden={!seedProductionTables || !hasEmptyProdTables}
-    on:click={() => (seedProductionTables = true)}
-  >
-    <div class="seed-publish" class:disabled={!hasEmptyProdTables}>
-      <div class="menu-item-header">Seed and publish</div>
-      <div class="menu-item-text">
-        Seed internal prod tables with dev data and publish workspace
-      </div>
-    </div>
-  </MenuItem>
-</ActionMenu>
+  <Icon size="M" name="arrow-circle-up" />
+  <span>Publish</span>
+</div>
 
 <Popover
   anchor={publishPopoverAnchor}
