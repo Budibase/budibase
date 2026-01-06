@@ -2,6 +2,7 @@ import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
+import { tracer } from "dd-trace"
 
 const _PouchDB = PouchDB // Keep Prettier from removing import
 
@@ -54,42 +55,57 @@ class Replication {
     })
   }
 
-  // Resolves replication conflicts by treating source as the source of truth.
-  // For documents where target revision is higher than source, removes the target
-  // document and re-replicates from source to ensure source version prevails.
+  // If the target rev went ahead the source rev, replication will cause conflicts and the document will not update in the target.
+  // This function checks the delta, and updates the source document rev to be ahead of the target, allowing the document to be copied
   async resolveInconsistencies(documentIds: string[]) {
-    const inconsistentDocumentIds: string[] = []
     for (const documentId of documentIds) {
       try {
         const [sourceDocument, targetDocument] = await Promise.all([
           this.source.get(documentId),
           this.target.get(documentId),
         ])
-        if (
-          this.haveReplicationInconsistencies(sourceDocument, targetDocument)
-        ) {
-          await this.target.remove({
-            _id: targetDocument._id,
-            _rev: targetDocument._rev,
-          })
-          inconsistentDocumentIds.push(sourceDocument._id)
+
+        const delta = this.replicationDelta(sourceDocument, targetDocument)
+        if (delta < 0) {
+          // The source document is ahead of the target, there will be no conflicts
+          continue
         }
+
+        if (delta === 0) {
+          if (sourceDocument._rev === targetDocument._rev) {
+            // The document is at the same version
+            continue
+          }
+          // They have the same count, but different version.
+          //  Both documents have been updated the same number of times, but they differ, so they need to be sync
+        }
+
+        const versionsToJump = delta + 1 // We always need the source to be one version ahead
+
+        await tracer.trace("Replication.resolveInconsistencies", async span => {
+          span.addTags({
+            versionsToJump,
+            toFix: true,
+            id: documentId,
+            sourceRev: sourceDocument._rev,
+            targetRev: targetDocument._rev,
+          })
+          for (let i = 0; i < versionsToJump; i++) {
+            const doc = await this.source.get(targetDocument._id)
+            await this.source.put(doc)
+          }
+        })
       } catch (error) {
         console.warn("Cannot resolve inconsistencies for document", documentId)
       }
     }
-    if (inconsistentDocumentIds.length > 0) {
-      await this.replicate({ doc_ids: inconsistentDocumentIds })
-    }
   }
 
-  private haveReplicationInconsistencies(
-    sourceDocument: Document,
-    targetDocument: Document
-  ) {
+  private replicationDelta(sourceDocument: Document, targetDocument: Document) {
     const sourceRevisionNumber = this.getRevisionNumber(sourceDocument)
     const targetRevisionNumber = this.getRevisionNumber(targetDocument)
-    return targetRevisionNumber > sourceRevisionNumber
+    const delta = targetRevisionNumber - sourceRevisionNumber
+    return delta
   }
 
   private getRevisionNumber(document: Document) {
