@@ -343,6 +343,7 @@ export type QueryRowsStepOutputs = BaseAutomationOutputs & {
 
 export type GetRowStepInputs = {
   tableId: string
+  rowId?: string
   filters?: SearchFilters
   "filters-def"?: any
   sortColumn?: string
