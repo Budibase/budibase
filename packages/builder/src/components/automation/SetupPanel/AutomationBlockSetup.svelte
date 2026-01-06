@@ -36,6 +36,7 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import AgentSelector from "./AgentSelector.svelte"
+  import OutputSchemaEditor from "./OutputSchemaEditor.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -735,9 +736,9 @@
     drawer.hide()
   }
 
-  function canShowField(value) {
+  function canShowField(value, currentInputData) {
     const dependsOn = value?.dependsOn
-    return !dependsOn || !!inputData[dependsOn]
+    return !dependsOn || !!currentInputData?.[dependsOn]
   }
 
   function shouldRenderField(value) {
@@ -787,7 +788,7 @@
   <!-- Custom Layouts -->
   {#if stepLayouts[block.stepId]}
     {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
-      {#if canShowField(stepLayouts[block.stepId].schema)}
+      {#if canShowField(stepLayouts[block.stepId].schema, inputData)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
             <PropField label={config.title} labelTooltip={config.tooltip}>
@@ -815,7 +816,7 @@
   {:else}
     <!-- Default Schema Property Layout -->
     {#each schemaProperties as [key, value]}
-      {#if canShowField(value)}
+      {#if canShowField(value, inputData)}
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
@@ -838,7 +839,7 @@
             </div>
           {/if}
           <div>
-            {#if value.type === "string" && value.enum && canShowField(value)}
+            {#if value.type === "string" && value.enum && canShowField(value, inputData)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
@@ -1006,6 +1007,11 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 title={value.title || "Agent"}
+              />
+            {:else if value.customType === "outputSchema"}
+              <OutputSchemaEditor
+                on:change={e => onChange({ [key]: e.detail })}
+                value={inputData[key]}
               />
             {:else if value.customType === "queryParams"}
               <QueryParamSelector

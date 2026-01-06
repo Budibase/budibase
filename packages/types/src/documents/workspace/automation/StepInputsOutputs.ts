@@ -265,12 +265,15 @@ export type ExtractFileDataStepOutputs = {
 export type AgentStepInputs = {
   agentId: string
   prompt: string
+  useStructuredOutput?: boolean
+  outputSchema?: Record<string, any>
 }
 
 export type AgentStepOutputs = {
   success: boolean
   response?: string
   steps?: Array<StepResult<ToolSet>>
+  output?: Record<string, any>
 }
 
 export type LoopV2StepInputs = {

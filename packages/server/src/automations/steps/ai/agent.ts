@@ -6,9 +6,37 @@ import {
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs } from "ai"
+import { ToolLoopAgent, stepCountIs, Output } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
+import { z } from "zod"
+
+function jsonSchemaToZod(schema: Record<string, any>) {
+  const shape: Record<string, z.ZodType<any>> = {}
+  for (const [key, value] of Object.entries(schema)) {
+    const type = (value as any).type || "string"
+    switch (type) {
+      case "string":
+        shape[key] = z.string()
+        break
+      case "number":
+        shape[key] = z.number()
+        break
+      case "boolean":
+        shape[key] = z.boolean()
+        break
+      case "object":
+        shape[key] = z.record(z.string(), z.any())
+        break
+      case "array":
+        shape[key] = z.array(z.any())
+        break
+      default:
+        shape[key] = z.any()
+    }
+  }
+  return z.object(shape)
+}
 
 export async function run({
   inputs,
@@ -16,7 +44,7 @@ export async function run({
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt } = inputs
+  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
 
   if (!agentId) {
     return {
@@ -55,15 +83,25 @@ export async function run({
       fetch: sdk.ai.agents.createLiteLLMFetch(v4()),
     })
 
+    let outputOption = undefined
+    if (
+      useStructuredOutput &&
+      outputSchema &&
+      Object.keys(outputSchema).length > 0
+    ) {
+      const zodSchema = jsonSchemaToZod(outputSchema)
+      outputOption = Output.object({ schema: zodSchema })
+    }
+
     const agent = new ToolLoopAgent({
       model: litellm.chat(modelId),
       instructions: systemPrompt || undefined,
       tools,
-
       stopWhen: stepCountIs(30),
       providerOptions: {
         litellm: ai.getLiteLLMProviderOptions(modelName),
       },
+      output: outputOption,
     })
 
     const result = await agent.generate({
@@ -76,6 +114,7 @@ export async function run({
       success: true,
       response: result.text,
       steps,
+      output: result.output,
     }
   } catch (err: any) {
     return {
