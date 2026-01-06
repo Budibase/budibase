@@ -6,6 +6,8 @@
     Body,
     MarkdownViewer,
     StatusLight,
+    Tabs,
+    Tab,
   } from "@budibase/bbui"
   import type { ModalAPI } from "@budibase/bbui"
   import { type ChainStep } from "./ChainOfThought.svelte"
@@ -24,6 +26,7 @@
 
   let modal: ModalAPI
   let selectedStep: ChainStep | null = null
+  let selectedTab = "Output"
 
   export function show() {
     modal?.show()
@@ -78,11 +81,6 @@
                   {/if}
                 </div>
                 <span class="step-name">{step.displayName}</span>
-                <span
-                  class={`status-pill ${getStatusActionButtonClass(step.status)}`}
-                >
-                  {getStatusLabel(step.status)}
-                </span>
               </button>
             {/each}
           </div>
@@ -110,35 +108,55 @@
                         <Icon name="Light" size="S" />
                         <span>Reasoning</span>
                       </div>
-                      <div class="section-content reasoning">
+                      <div class="reasoning-content">
                         <Body size="S">{selectedStep.reasoning}</Body>
                       </div>
                     </div>
                   {/if}
 
-                  {#if selectedStep.input !== undefined}
-                    <div class="section">
-                      <div class="section-label">
-                        <Icon name="Import" size="S" />
-                        <span>Input</span>
-                      </div>
-                      <div class="section-content code">
-                        <JSONViewer value={selectedStep.input} />
-                      </div>
-                    </div>
-                  {/if}
-
-                  {#if selectedStep.output !== undefined}
-                    <div class="section">
-                      <div class="section-label">
-                        <Icon name="Export" size="S" />
-                        <span>Output</span>
-                      </div>
-                      <div class="section-content code">
-                        <JSONViewer value={selectedStep.output} />
-                      </div>
-                    </div>
-                  {/if}
+                  <div class="tabs-container">
+                    <Tabs
+                      quiet
+                      noHorizPadding
+                      selected={selectedTab}
+                      on:select={e => {
+                        selectedTab = e.detail
+                      }}
+                    >
+                      <Tab title="Output">
+                        <div class="tab-content">
+                          {#if selectedStep.output !== undefined}
+                            <JSONViewer value={selectedStep.output} />
+                          {:else}
+                            <div class="empty-state">
+                              <Icon
+                                name="Export"
+                                size="L"
+                                color="var(--spectrum-global-color-gray-500)"
+                              />
+                              <Body size="S">No output data</Body>
+                            </div>
+                          {/if}
+                        </div>
+                      </Tab>
+                      <Tab title="Final Response">
+                        <div class="tab-content">
+                          {#if response}
+                            <MarkdownViewer value={response} />
+                          {:else}
+                            <div class="empty-state">
+                              <Icon
+                                name="Article"
+                                size="L"
+                                color="var(--spectrum-global-color-gray-500)"
+                              />
+                              <Body size="S">No response</Body>
+                            </div>
+                          {/if}
+                        </div>
+                      </Tab>
+                    </Tabs>
+                  </div>
                 </div>
               </div>
             {/key}
@@ -154,15 +172,6 @@
           {/if}
         </div>
       </div>
-
-      {#if response}
-        <div class="response-section">
-          <div class="panel-label">Final Response</div>
-          <div class="response-content">
-            <MarkdownViewer value={response} />
-          </div>
-        </div>
-      {/if}
     </div>
   </ModalContent>
 </Modal>
@@ -383,13 +392,10 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .section-content {
+  .reasoning-content {
     font-size: 13px;
     line-height: 1.5;
     color: var(--spectrum-global-color-gray-800);
-  }
-
-  .section-content.reasoning {
     white-space: pre-wrap;
     word-break: break-word;
     padding: var(--spacing-m);
@@ -397,12 +403,27 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
 
-  .section-content.code {
-    padding: var(--spacing-m);
-    border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+  .tabs-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tab-content {
+    padding: var(--spacing-m) 0;
     overflow: auto;
-    max-height: 240px;
+    max-height: 300px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-m);
+    padding: var(--spacing-xl);
+    color: var(--spectrum-global-color-gray-500);
   }
 
   .detail-empty {
@@ -413,19 +434,5 @@
     justify-content: center;
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-500);
-  }
-
-  .response-section {
-    flex-shrink: 0;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    padding-top: var(--spacing-m);
-  }
-
-  .response-content {
-    padding: var(--spacing-m);
-    border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    max-height: 160px;
-    overflow: auto;
   }
 </style>

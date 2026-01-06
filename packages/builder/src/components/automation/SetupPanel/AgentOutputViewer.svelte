@@ -7,11 +7,13 @@
     MarkdownViewer,
     notifications,
   } from "@budibase/bbui"
+  import { formatNumber } from "@budibase/frontend-core"
   import ChainOfThought, { type ChainStep } from "./ChainOfThought.svelte"
   import ChainOfThoughtModal from "./ChainOfThoughtModal.svelte"
   import type { AgentStepOutputs } from "@budibase/types"
   import type { ContentPart, ToolCallDisplay } from "@budibase/types"
   import { type LanguageModelUsage } from "ai"
+  import dayjs from "dayjs"
 
   type ToolCallDisplayWithReasoning = ToolCallDisplay & {
     reasoningText?: string
@@ -58,7 +60,7 @@
       let status: ToolCallDisplay["status"]
       if (!result) {
         status = "failed"
-      } else if (hasErrorOutput(output)) {
+      } else if (output?.error) {
         status = "error"
       } else {
         status = "completed"
@@ -146,30 +148,9 @@
     notifications.success("Copied to clipboard")
   }
 
-  function hasErrorOutput(output: unknown): boolean {
-    return (
-      typeof output === "object" &&
-      output !== null &&
-      "error" in output &&
-      !("success" in output && (output as { success: boolean }).success)
-    )
-  }
-
-  function openModal() {
-    modal?.show()
-  }
-
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value)
-
-  const toSafeNumber = (value: unknown): number | undefined => {
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      return
-    }
-    return value
-  }
-
-  const sumUsage = (usages: Array<LanguageModelUsage | undefined>) => {
+  const sumUsage = (
+    usages: Array<LanguageModelUsage | undefined>
+  ): LanguageModelUsage | undefined => {
     const values = usages.filter(
       (usage): usage is LanguageModelUsage => !!usage
     )
@@ -177,60 +158,31 @@
       return
     }
 
-    const sum = (selector: (_usage: LanguageModelUsage) => unknown) =>
-      values.reduce((acc, usage) => {
-        const num = toSafeNumber(selector(usage))
-        return acc + (num ?? 0)
-      }, 0)
+    const sum = (
+      selector: (_usage: LanguageModelUsage) => number | undefined
+    ) => values.reduce((acc, usage) => acc + (selector(usage) ?? 0), 0)
 
     return {
-      inputTokens: sum(usage => usage.inputTokens),
+      inputTokens: sum(u => u.inputTokens),
       inputTokenDetails: {
-        noCacheTokens: sum(usage => usage.inputTokenDetails?.noCacheTokens),
-        cacheReadTokens: sum(usage => usage.inputTokenDetails?.cacheReadTokens),
-        cacheWriteTokens: sum(
-          usage => usage.inputTokenDetails?.cacheWriteTokens
-        ),
+        noCacheTokens: sum(u => u.inputTokenDetails?.noCacheTokens),
+        cacheReadTokens: sum(u => u.inputTokenDetails?.cacheReadTokens),
+        cacheWriteTokens: sum(u => u.inputTokenDetails?.cacheWriteTokens),
       },
-      outputTokens: sum(usage => usage.outputTokens),
+      outputTokens: sum(u => u.outputTokens),
       outputTokenDetails: {
-        textTokens: sum(usage => usage.outputTokenDetails?.textTokens),
-        reasoningTokens: sum(
-          usage => usage.outputTokenDetails?.reasoningTokens
-        ),
+        textTokens: sum(u => u.outputTokenDetails?.textTokens),
+        reasoningTokens: sum(u => u.outputTokenDetails?.reasoningTokens),
       },
-      totalTokens: sum(usage => usage.totalTokens),
-      reasoningTokens: sum(usage => usage.reasoningTokens),
-      cachedInputTokens: sum(usage => usage.cachedInputTokens),
-    } satisfies LanguageModelUsage
+      totalTokens: sum(u => u.totalTokens),
+      reasoningTokens: sum(u => u.reasoningTokens),
+      cachedInputTokens: sum(u => u.cachedInputTokens),
+    }
   }
 
-  const toDate = (value: unknown): Date | undefined => {
-    if (value instanceof Date && !Number.isNaN(value.getTime())) {
-      return value
-    }
-    if (typeof value === "string" || typeof value === "number") {
-      const date = new Date(value)
-      if (!Number.isNaN(date.getTime())) {
-        return date
-      }
-    }
-    return
-  }
-
-  const formatTimestamp = (value: unknown): string | undefined => {
-    const date = toDate(value)
-    if (!date) {
-      return
-    }
-    return new Intl.DateTimeFormat(undefined, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(date)
+  const formatTimestamp = (value: Date): string | undefined => {
+    const display = Helpers.getDateDisplayValue(dayjs(value))
+    return display || undefined
   }
 
   const formatUsageMeta = (usage?: LanguageModelUsage): string | undefined => {
@@ -238,34 +190,31 @@
       return
     }
 
-    const input = toSafeNumber(usage.inputTokens)
-    const output = toSafeNumber(usage.outputTokens)
-    const total = toSafeNumber(usage.totalTokens)
-    const reasoning = toSafeNumber(usage.reasoningTokens)
-    const cached = toSafeNumber(usage.cachedInputTokens)
-
     const parts: string[] = []
 
-    if (typeof input === "number") {
-      parts.push(
-        `input: ${formatNumber(input)}${
-          typeof cached === "number" && cached > 0
-            ? ` (${formatNumber(cached)} cached)`
-            : ""
-        }`
-      )
-    }
+    const inputTokens = usage.inputTokens
+    const inputTokenDetails = usage.inputTokenDetails
+    const outputTokens = usage.outputTokens
+    const outputTokenDetails = usage.outputTokenDetails
+    const totalTokens = usage.totalTokens
 
-    if (typeof output === "number") {
-      parts.push(`output: ${formatNumber(output)}`)
+    if (inputTokens !== undefined) {
+      const cacheReadTokens = inputTokenDetails?.cacheReadTokens
+      const cachedPart =
+        cacheReadTokens && cacheReadTokens > 0
+          ? ` (${formatNumber(cacheReadTokens)} cached)`
+          : ""
+      parts.push(`input: ${formatNumber(inputTokens)}${cachedPart}`)
     }
-
-    if (typeof total === "number") {
-      parts.push(`total: ${formatNumber(total)}`)
+    if (outputTokens !== undefined) {
+      parts.push(`output: ${formatNumber(outputTokens)}`)
     }
-
-    if (typeof reasoning === "number" && reasoning > 0) {
-      parts.push(`reasoning: ${formatNumber(reasoning)}`)
+    if (totalTokens !== undefined) {
+      parts.push(`total: ${formatNumber(totalTokens)}`)
+    }
+    const reasoningTokens = outputTokenDetails?.reasoningTokens
+    if (reasoningTokens !== undefined && reasoningTokens > 0) {
+      parts.push(`reasoning: ${formatNumber(reasoningTokens)}`)
     }
 
     return parts.length > 0 ? parts.join(" → ") : undefined
@@ -310,7 +259,7 @@
         slot="actions"
         type="button"
         class="expand-button"
-        on:click={openModal}
+        on:click={modal?.show}
       >
         <Icon name="FullScreen" size="S" />
         <span>Expand view</span>
