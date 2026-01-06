@@ -1,4 +1,4 @@
-import { ProxyAgent } from "undici"
+import { Agent, ProxyAgent, Dispatcher } from "undici"
 
 /**
  * Check if a URL matches any pattern in the NO_PROXY list.
@@ -61,17 +61,12 @@ function isUrlMatchingNoProxy(url: string, noProxy: string): boolean {
 }
 
 /**
- * Creates a fetch dispatcher (ProxyAgent) that respects global-agent environment variables.
- * This is necessary because Node.js's native fetch uses undici which doesn't respect
- * the global-agent proxy configuration.
+ * Determines if the request should bypass the proxy.
  *
- * @param options Optional configuration for the ProxyAgent
- * @returns ProxyAgent if proxy is configured, undefined otherwise
+ * @param url The target URL
+ * @returns true if the request should go direct (no proxy)
  */
-function createProxyDispatcher(options?: {
-  rejectUnauthorized?: boolean
-  url?: string
-}): ProxyAgent | boolean {
+function shouldBypassProxy(url?: string): boolean {
   const httpProxy =
     process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY
   const httpsProxy =
@@ -79,38 +74,59 @@ function createProxyDispatcher(options?: {
 
   const proxyUrl = httpsProxy || httpProxy
 
+  // No proxy configured
   if (!proxyUrl || !proxyUrl.trim()) {
-    return false
+    return true
   }
 
-  const trimmedProxyUrl = proxyUrl.trim()
+  // Validate proxy URL format
+  try {
+    new URL(proxyUrl.trim())
+  } catch {
+    console.log("[fetch] Invalid proxy URL format:", proxyUrl)
+    return true
+  }
 
   // Check NO_PROXY patterns
-  const noProxy =
-    process.env.GLOBAL_AGENT_NO_PROXY || process.env.NO_PROXY || ""
-  if (options?.url && noProxy && isUrlMatchingNoProxy(options.url, noProxy)) {
-    console.log("[fetch] URL matches NO_PROXY pattern, bypassing proxy", {
-      url: options.url,
-      noProxy,
-    })
-    return false
+  if (url) {
+    const noProxy =
+      process.env.GLOBAL_AGENT_NO_PROXY || process.env.NO_PROXY || ""
+    if (noProxy && isUrlMatchingNoProxy(url, noProxy)) {
+      console.log("[fetch] URL matches NO_PROXY pattern, bypassing proxy", {
+        url,
+        noProxy,
+      })
+      return true
+    }
   }
 
-  // Validate URL format
-  try {
-    new URL(trimmedProxyUrl)
-  } catch (error) {
-    console.log("[fetch] Invalid proxy URL format:", proxyUrl)
-    return false
-  }
+  return false
+}
 
-  const rejectUnauthorized =
-    options?.rejectUnauthorized !== undefined
-      ? options?.rejectUnauthorized
-      : true
+/**
+ * Creates a direct Agent (no proxy).
+ */
+function createDirectAgent(rejectUnauthorized: boolean): Agent {
+  return new Agent({
+    connect: {
+      rejectUnauthorized,
+    },
+  })
+}
+
+/**
+ * Creates a ProxyAgent for proxied requests.
+ */
+function createProxyAgent(rejectUnauthorized: boolean): ProxyAgent {
+  const httpProxy =
+    process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY
+  const httpsProxy =
+    process.env.GLOBAL_AGENT_HTTPS_PROXY || process.env.HTTPS_PROXY
+
+  const proxyUrl = (httpsProxy || httpProxy)!.trim()
 
   console.log("[fetch] Creating ProxyAgent", {
-    proxyUrl: trimmedProxyUrl,
+    proxyUrl,
     rejectUnauthorized,
   })
 
@@ -119,54 +135,54 @@ function createProxyDispatcher(options?: {
     requestTls: { rejectUnauthorized?: boolean }
     proxyTls?: { rejectUnauthorized?: boolean }
   } = {
-    uri: trimmedProxyUrl,
+    uri: proxyUrl,
     requestTls: {
       rejectUnauthorized,
     },
   }
 
   // Only configure proxyTls if the proxy itself uses HTTPS
-  if (trimmedProxyUrl.startsWith("https://")) {
+  if (proxyUrl.startsWith("https://")) {
     proxyConfig.proxyTls = {
       rejectUnauthorized,
     }
   }
 
-  try {
-    return new ProxyAgent(proxyConfig)
-  } catch (error) {
-    console.log("[fetch] Failed to create ProxyAgent:", error)
-    return false
-  }
+  return new ProxyAgent(proxyConfig)
 }
 
-let cachedDispatcher: ProxyAgent | boolean | null = null
-
 /**
- * Get or create a cached proxy dispatcher.
- * The dispatcher is cached to avoid creating a new ProxyAgent for every request,
- * but only when no URL is provided (since NO_PROXY matching requires the URL).
+ * Creates a fetch dispatcher that respects global-agent environment variables.
+ * Always returns a usable Dispatcher - either a ProxyAgent or a direct Agent.
  *
- * @param options Optional configuration for the ProxyAgent
+ * @param options Configuration for the dispatcher
+ * @returns A Dispatcher (ProxyAgent for proxied requests, Agent for direct requests)
  */
-export function getProxyDispatcher(options?: {
+function createDispatcher(options?: {
   rejectUnauthorized?: boolean
   url?: string
-}): ProxyAgent | boolean {
-  // Don't cache if custom options are provided (including url for NO_PROXY checking)
-  if (options) {
-    return createProxyDispatcher(options) || false
+}): Dispatcher {
+  const rejectUnauthorized = options?.rejectUnauthorized ?? true
+
+  if (shouldBypassProxy(options?.url)) {
+    return createDirectAgent(rejectUnauthorized)
   }
 
-  if (cachedDispatcher === null) {
-    cachedDispatcher = createProxyDispatcher()
-  }
-  return cachedDispatcher || false
+  return createProxyAgent(rejectUnauthorized)
 }
 
 /**
- * Reset the cached proxy dispatcher. Used for testing.
+ * Get a dispatcher for fetch requests.
+ * Always returns a usable Dispatcher - either a ProxyAgent or a direct Agent.
+ * The dispatcher respects GLOBAL_AGENT_HTTP_PROXY, GLOBAL_AGENT_HTTPS_PROXY,
+ * GLOBAL_AGENT_NO_PROXY, and their standard equivalents.
+ *
+ * @param options Configuration for the dispatcher
+ * @returns A Dispatcher ready to use with fetch
  */
-export function resetProxyDispatcherCache(): void {
-  cachedDispatcher = null
+export function getDispatcher(options: {
+  rejectUnauthorized?: boolean
+  url: string
+}): Dispatcher {
+  return createDispatcher(options)
 }
