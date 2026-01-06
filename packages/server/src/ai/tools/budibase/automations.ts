@@ -67,12 +67,8 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
           ),
         timeout: z.number().nullish().describe("Timeout in seconds (optional)"),
       }),
-      execute: async (input: unknown) => {
-        const { automationId, fields, timeout } = input as {
-          automationId: string
-          fields: string
-          timeout?: number | null
-        }
+      execute: async input => {
+        const { automationId, fields, timeout } = input
         let parsedData
         try {
           parsedData = JSON.parse(fields)
@@ -112,7 +108,7 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
         } else {
           return {
             success: false,
-            error: (response as any).message || "Automation did not trigger",
+            error: response.message || "Automation did not trigger",
           }
         }
       },
