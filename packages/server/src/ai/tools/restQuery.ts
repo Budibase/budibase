@@ -1,7 +1,8 @@
-import { Query, ToolType } from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import { Query, ToolType } from "@budibase/types"
+import { tool } from "ai"
 import { z } from "zod"
-import type { ExecutableTool } from "."
+import { type AiToolDefinition } from "."
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "../../automations/steps/utils"
 
@@ -33,7 +34,7 @@ const buildParametersSchema = (query: Query): z.ZodObject<any> => {
 export const createRestQueryTool = (
   query: Query,
   datasourceName?: string
-): ExecutableTool => {
+): AiToolDefinition => {
   const toolName = sanitiseToolName(query.name)
   const parametersSchema = buildParametersSchema(query)
 
@@ -44,34 +45,37 @@ export const createRestQueryTool = (
   return {
     name: toolName,
     description,
-    parameters: parametersSchema,
     sourceType: ToolType.REST_QUERY,
     sourceLabel: datasourceName || "API",
-    handler: async (params: unknown) => {
-      const workspaceId = context.getWorkspaceId()
-      if (!workspaceId) {
-        return { error: "No app context available" }
-      }
-
-      const ctx: any = buildCtx(workspaceId, null, {
-        body: {
-          parameters: params,
-        },
-        params: {
-          queryId: query._id,
-        },
-      })
-
-      try {
-        await queryController.executeV2AsAutomation(ctx)
-        const { data, ...rest } = ctx.body
-        return { success: true, data, info: rest }
-      } catch (err: any) {
-        return {
-          success: false,
-          error: err.message || "Query execution failed",
+    tool: tool({
+      description,
+      inputSchema: parametersSchema,
+      execute: async (params: unknown) => {
+        const workspaceId = context.getWorkspaceId()
+        if (!workspaceId) {
+          return { error: "No app context available" }
         }
-      }
-    },
+
+        const ctx: any = buildCtx(workspaceId, null, {
+          body: {
+            parameters: params,
+          },
+          params: {
+            queryId: query._id,
+          },
+        })
+
+        try {
+          await queryController.executeV2AsAutomation(ctx)
+          const { data, ...rest } = ctx.body
+          return { success: true, data, info: rest }
+        } catch (err: any) {
+          return {
+            success: false,
+            error: err.message || "Query execution failed",
+          }
+        }
+      },
+    }),
   }
 }

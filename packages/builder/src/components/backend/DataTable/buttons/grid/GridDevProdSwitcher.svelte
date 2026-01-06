@@ -1,11 +1,7 @@
 <script lang="ts">
   import { Switcher, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { DataEnvironmentMode } from "@budibase/types"
-  import {
-    dataEnvironmentStore,
-    workspaceDeploymentStore,
-    tables,
-  } from "@/stores/builder"
+  import { dataEnvironmentStore, tables, datasources } from "@/stores/builder"
   import { TableNames } from "@/constants"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
@@ -13,44 +9,39 @@
   $: tableId = $tables.selected?._id!
   $: isBudiUsersTable = tableId === TableNames.USERS
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
-  $: isDeployed =
-    isInternal && $workspaceDeploymentStore.tables[tableId]?.published
-  $: hasProductionData = isInternal ? isDeployed : true
-  $: switcherDisabled = !isInternal
-  $: tooltip = isInternal
-    ? "Publish to view production data"
-    : "Dev data is only available for internal tables"
-  $: showTooltip = switcherDisabled || !hasProductionData
+  $: tableDatasource = $datasources.list.find(datasource => {
+    return datasource._id === $tables.selected?.sourceId
+  })
+  $: disabled = !isInternal && !tableDatasource?.usesEnvironmentVariables
+  $: tooltip = "No production environment variables"
   $: hideSwitcher = isBudiUsersTable
+
+  $: if (isBudiUsersTable) {
+    dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
+  }
 
   $: switcherProps = {
     leftIcon: "wrench",
     leftText: "Dev",
     rightIcon: "pulse",
     rightText: "Prod",
-    selected: (isDevMode ? "left" : "right") as "left" | "right",
-    disabled: switcherDisabled,
-  }
-
-  $: if (isBudiUsersTable) {
-    dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
-  }
-
-  $: if (switcherDisabled && isDevMode && !isBudiUsersTable) {
-    dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
+    selected: (disabled && !isInternal
+      ? "right"
+      : isDevMode
+        ? "left"
+        : "right") as "left" | "right",
+    disabled,
   }
 
   const handleLeft = () =>
     dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
-  const handleRight = () => {
-    if (switcherDisabled) return
+  const handleRight = () =>
     dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
-  }
 </script>
 
 {#if !hideSwitcher}
   <div class="wrapper">
-    {#if showTooltip}
+    {#if disabled}
       <AbsTooltip text={tooltip} position={TooltipPosition.Left}>
         <Switcher
           {...switcherProps}
