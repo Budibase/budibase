@@ -116,7 +116,6 @@
       displayName: call.displayName,
       status: call.status,
       reasoning: call.reasoningText,
-      input: call.input,
       output: call.output,
       usage: steps?.[call.stepIndex]?.usage,
     })

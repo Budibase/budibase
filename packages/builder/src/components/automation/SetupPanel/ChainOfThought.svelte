@@ -8,7 +8,6 @@
     displayName: string
     status: ChainStepStatus
     reasoning?: string
-    input?: unknown
     output?: unknown
     usage?: LanguageModelUsage
   }

@@ -40,6 +40,10 @@
   function selectStep(step: ChainStep) {
     selectedStep = step
   }
+
+  function selectTab(e: CustomEvent<string>) {
+    selectedTab = e.detail
+  }
 </script>
 
 <Modal bind:this={modal}>
@@ -119,9 +123,7 @@
                       quiet
                       noHorizPadding
                       selected={selectedTab}
-                      on:select={e => {
-                        selectedTab = e.detail
-                      }}
+                      on:select={selectTab}
                     >
                       <Tab title="Output">
                         <div class="tab-content">
