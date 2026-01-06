@@ -700,6 +700,7 @@ export class RestIntegration implements IntegrationBase {
     if (!isHttpMockingActive) {
       const proxyDispatcher = getProxyDispatcher({
         rejectUnauthorized,
+        url,
       })
       if (proxyDispatcher) {
         console.log("[rest integration] Using proxy for request", {
