@@ -1,7 +1,8 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { tables, datasources } from "@/stores/builder"
+  import { DataEnvironmentMode } from "@budibase/types"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
+  import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
   import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
@@ -69,6 +70,7 @@
     try {
       await beforeSave()
       table = await tables.save(newTable)
+      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
       await datasources.fetch()
       await afterSave(table)
     } catch (e) {

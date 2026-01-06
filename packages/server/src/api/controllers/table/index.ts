@@ -1,4 +1,11 @@
-import { csv, events, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  db as dbCore,
+  csv,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   canBeDisplayColumn,
   helpers,
@@ -17,6 +24,10 @@ import {
   FindTableResponse,
   MigrateTableRequest,
   MigrateTableResponse,
+  PublishTableRequest,
+  PublishTableResponse,
+  DocumentType,
+  SEPARATOR,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -25,6 +36,7 @@ import {
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
+  Row,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import {
@@ -34,14 +46,17 @@ import {
 } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { processTable } from "../../../sdk/workspace/tables/getters"
+import { publishWorkspaceInternal } from "../deploy"
 import {
   isRows,
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
+import { handleDataImport } from "./utils"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
+import { getRowParams } from "../../../db/utils"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -65,6 +80,30 @@ function checkDefaultFields(table: Table) {
       )
     }
   }
+}
+
+function stripIgnoreTimezoneSuffix(rows: Row[], table: Table): Row[] {
+  const columns = Object.entries(table.schema)
+    .filter(
+      ([_, schema]) =>
+        schema.type === FieldType.DATETIME &&
+        schema.ignoreTimezones &&
+        !schema.timeOnly
+    )
+    .map(([name]) => name)
+  if (!columns.length) {
+    return rows
+  }
+  return rows.map(row => {
+    const updates = columns.reduce<Row>((acc, column) => {
+      const value = row[column]
+      if (typeof value === "string" && value.endsWith("Z")) {
+        acc[column] = value.slice(0, -1)
+      }
+      return acc
+    }, {})
+    return Object.keys(updates).length ? { ...row, ...updates } : row
+  })
 }
 
 async function guardTable(table: Table, isCreate: boolean) {
@@ -279,4 +318,147 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 
   const processedTable = await processTable(duplicatedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
+}
+
+export async function publish(
+  ctx: UserCtx<PublishTableRequest, PublishTableResponse>
+) {
+  const tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+
+  if (!table) {
+    ctx.throw(404, "Table not found")
+  }
+
+  if (isExternalTable(table)) {
+    ctx.throw(
+      400,
+      "Publishing production data is only supported for internal tables"
+    )
+  }
+
+  const appId = context.getWorkspaceId()!
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+  const prodPublished =
+    await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
+
+  const seedProductionTables = !!ctx.request.body?.seedProductionTables
+  if (!prodPublished) {
+    await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
+  }
+
+  if (seedProductionTables) {
+    try {
+      const devDb = context.getWorkspaceDB()
+      const devRows = await devDb.allDocs(
+        getRowParams(tableId, null, {
+          include_docs: true,
+        })
+      )
+      const importRows = devRows.rows
+        .map(({ doc }: any) => doc)
+        .filter(doc => doc && !doc._deleted)
+        .map(doc => {
+          const { _rev, _attachments, ...rest } = doc
+          return rest
+        })
+
+      if (importRows.length) {
+        await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+          const prodDb = context.getWorkspaceDB()
+          const existingProdRows = await prodDb.allDocs(
+            getRowParams(tableId, null, {
+              include_docs: true,
+              limit: 1,
+            })
+          )
+          const hasProdRows = existingProdRows.rows.some(
+            (row: any) => row.doc && !row.doc._deleted
+          )
+          if (hasProdRows) {
+            return
+          }
+
+          const prodTable = await sdk.tables.getTable(tableId)
+          const sanitizedRows = stripIgnoreTimezoneSuffix(importRows, prodTable)
+          await handleDataImport(prodTable, {
+            importRows: sanitizedRows,
+            userId: ctx.user._id,
+            identifierFields: ["_id"],
+          })
+        })
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to copy dev rows to prod for table ${tableId}`,
+        error
+      )
+    }
+  }
+  const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
+  const matchesTable = (_id: string) =>
+    _id === tableId ||
+    _id.endsWith(`${SEPARATOR}${tableId}`) ||
+    _id.includes(tableSegment)
+  const isDataDoc = (_id: string) =>
+    _id.startsWith(`${DocumentType.ROW}${SEPARATOR}`) ||
+    _id.startsWith(`${DocumentType.LINK}${SEPARATOR}`)
+
+  const replication = new dbCore.Replication({
+    source: dbCore.getDevWorkspaceID(appId),
+    target: prodWorkspaceId,
+  })
+
+  await replication.resolveInconsistencies([tableId])
+
+  await replication.replicate(
+    replication.appReplicateOpts({
+      tablesToSync: undefined,
+      checkpoint: false,
+      filter: (doc: any) => {
+        const _id = doc?._id as string
+        if (!_id || _id.startsWith("_design")) {
+          return false
+        }
+        if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
+          return false
+        }
+        if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
+          return false
+        }
+        if (!matchesTable(_id)) {
+          return false
+        }
+        if (!seedProductionTables && isDataDoc(_id)) {
+          return false
+        }
+        return true
+      },
+    })
+  )
+
+  const metadata = await sdk.workspaces.metadata.tryGet({
+    production: true,
+  })
+
+  if (!metadata?._id) {
+    ctx.throw(
+      400,
+      "Production workspace metadata missing. Please publish the workspace first."
+    )
+  }
+
+  metadata.resourcesPublishedAt = {
+    ...metadata.resourcesPublishedAt,
+    [tableId]: new Date().toISOString(),
+  }
+
+  const prodDb = context.getProdWorkspaceDB()
+  await prodDb.put(metadata)
+  await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
+
+  ctx.body = {
+    tableId,
+    publishedAt: metadata.resourcesPublishedAt[tableId],
+  }
 }

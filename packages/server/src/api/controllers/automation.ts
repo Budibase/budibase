@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import { sdk as coreSdk } from "@budibase/shared-core"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Automation,
   AutomationActionStepId,
@@ -34,10 +35,17 @@ import {
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import * as triggers from "../../automations/triggers"
+import {
+  AutomationTestProgressEvent,
+  clearTestProgress,
+  recordTestProgress,
+  getTestProgress,
+} from "../../automations/testProgress"
 import { updateTestHistory } from "../../automations/utils"
 import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
+import { isQsTrue } from "../../utilities"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -246,7 +254,10 @@ function prepareTestInput(input: TestAutomationRequest) {
 }
 
 export async function test(
-  ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
+  ctx: UserCtx<
+    TestAutomationRequest & { async?: boolean },
+    TestAutomationResponse | { message: string }
+  >
 ) {
   const db = context.getWorkspaceDB()
   const automation = await db.tryGet<Automation>(ctx.params.id)
@@ -256,26 +267,83 @@ export async function test(
 
   const { request, appId } = ctx
   const { body } = request
+  const query = ctx.request.query as Record<string, unknown>
+  const bodyAsync = body?.async
+  const asyncFlag =
+    isQsTrue(String(query?.async)) || isQsTrue(String(bodyAsync))
+
+  const { async: _async, ...testBody } = body
 
   let table: Table | undefined
-  if (coreSdk.automations.isRowAction(automation) && body.row?.tableId) {
-    table = await sdk.tables.getTable(body.row?.tableId)
+  if (coreSdk.automations.isRowAction(automation) && testBody.row?.tableId) {
+    table = await sdk.tables.getTable(testBody.row?.tableId)
     if (!table) {
       throw new HTTPError("Table not found", 404)
     }
   }
 
-  ctx.body = await withTestFlag(automation._id!, async () => {
-    const occurredAt = new Date().getTime()
-    await updateTestHistory(automation, { ...body, occurredAt })
-    const input = prepareTestInput(body)
-    const user = sdk.users.getUserContextBindings(ctx.user)
-    return await triggers.externalTrigger(
-      { ...automation, disabled: false },
-      { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
-      { getResponses: true }
-    )
-  })
+  type ProgressEventInput = Omit<
+    AutomationTestProgressEvent,
+    "automationId" | "appId"
+  >
 
-  await events.automation.tested(automation)
+  const emitProgress = (event: ProgressEventInput) => {
+    const payload: AutomationTestProgressEvent = {
+      ...event,
+      automationId: automation._id!,
+      appId,
+    }
+    recordTestProgress(appId, automation._id!, payload)
+    builderSocket?.emitToRoom(
+      ctx,
+      ctx.appId,
+      BuilderSocketEvent.AutomationTestProgress,
+      payload,
+      { includeOriginator: true }
+    )
+  }
+
+  const runTest = async () => {
+    const occurredAt = new Date().getTime()
+    const result = await withTestFlag(automation._id!, async () => {
+      await updateTestHistory(automation, { ...testBody, occurredAt })
+      const input = prepareTestInput(testBody)
+      const user = sdk.users.getUserContextBindings(ctx.user)
+      return await triggers.externalTrigger(
+        { ...automation, disabled: false },
+        { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
+        { getResponses: true, onProgress: emitProgress }
+      )
+    })
+    await events.automation.tested(automation)
+    emitProgress({
+      status: "complete",
+      occurredAt: Date.now(),
+      result,
+    })
+    return result
+  }
+
+  clearTestProgress(appId, automation._id!)
+
+  if (asyncFlag) {
+    ctx.status = 202
+    ctx.body = { message: "Automation test started" }
+    runTest().catch(err => {
+      emitProgress({
+        status: "error",
+        occurredAt: Date.now(),
+        message: err?.message || "Automation test failed",
+      })
+    })
+    return
+  }
+
+  ctx.body = await runTest()
+}
+
+export async function testStatus(ctx: UserCtx<void, unknown>) {
+  const automationId = ctx.params.id
+  const status = getTestProgress(ctx.appId, automationId)
+  ctx.body = status || {}
 }
