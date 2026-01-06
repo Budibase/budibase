@@ -33,7 +33,7 @@ function isUrlMatchingNoProxy(url: string, noProxy: string): boolean {
       continue
     }
 
-    const ruleHostname = ruleMatch[1]
+    const ruleHostname = ruleMatch[1].toLowerCase()
     const rulePort = ruleMatch[2] || null
 
     // Check hostname match (supports wildcards like *.foo.com)
