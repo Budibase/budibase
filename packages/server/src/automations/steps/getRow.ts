@@ -64,6 +64,10 @@ export async function run({
     return {
       success: false,
       row: null,
+      response: {
+        message:
+          "You must provide a matching row ID or at least one filter to get row.",
+      },
     }
   }
 

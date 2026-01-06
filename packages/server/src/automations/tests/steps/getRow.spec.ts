@@ -74,6 +74,9 @@ describe("Get row automation step", () => {
 
     expect(result.steps[0].outputs.success).toBe(false)
     expect(result.steps[0].outputs.row).toBeNull()
+    expect(result.steps[0].outputs.response.message).toBe(
+      "You must provide a matching row ID or at least one filter to get row."
+    )
   })
 
   it("returns the row when rowId is provided even if filters don't match", async () => {
