@@ -433,6 +433,7 @@ paths:
     get:
       tags: [SCIM Resources]
       summary: List locations
+      operationId: listScimLocations
       responses:
         '200':
           description: Location list
@@ -446,6 +447,7 @@ paths:
     get:
       tags: [SCIM Resources]
       summary: Get location
+      operationId: getScimLocation
       responses:
         '200':
           description: Location record
