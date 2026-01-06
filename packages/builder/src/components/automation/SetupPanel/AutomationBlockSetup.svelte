@@ -36,7 +36,6 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import AgentSelector from "./AgentSelector.svelte"
-  import OutputSchemaEditor from "./OutputSchemaEditor.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -1007,11 +1006,6 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 title={value.title || "Agent"}
-              />
-            {:else if value.customType === "outputSchema"}
-              <OutputSchemaEditor
-                on:change={e => onChange({ [key]: e.detail })}
-                value={inputData[key]}
               />
             {:else if value.customType === "queryParams"}
               <QueryParamSelector

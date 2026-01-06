@@ -43,7 +43,7 @@
   import WebhookDisplay from "@/components/automation/Shared/WebhookDisplay.svelte"
   import CategorySelector from "./CategorySelector.svelte"
   import AgentSelector from "./AgentSelector.svelte"
-  import OutputSchemaEditor from "./OutputSchemaEditor.svelte"
+  import StructuredOutputEditor from "./StructuredOutputEditor.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
@@ -252,7 +252,7 @@
       fullWidth: true,
     },
     [SchemaFieldTypes.OUTPUT_SCHEMA]: {
-      comp: OutputSchemaEditor,
+      comp: StructuredOutputEditor,
       fullWidth: true,
     },
   }

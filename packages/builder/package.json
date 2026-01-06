@@ -78,12 +78,15 @@
     "remixicon": "2.5.0",
     "sanitize-html": "^2.13.0",
     "shortid": "2.2.15",
+    "ajv": "^8.17.1",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "^2.2.1",
+    "to-json-schema": "0.2.5",
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@types/to-json-schema": "^0.2.4",
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
     "@budibase/client": "*",
