@@ -4,7 +4,7 @@
 
   export let dataProvider
   export let labelColumn
-  export let valueColumns
+  export let valueColumn
   export let autoMaxValue
   export let maxValue
   export let onClick
@@ -61,7 +61,7 @@
       hoveredValue == null ? "" : formatPercentage(hoveredValue)
   }
 
-  $: series = getSeries(dataProvider, valueColumns, autoMaxValue, maxValue)
+  $: series = getSeries(dataProvider, valueColumn, autoMaxValue, maxValue)
   $: categories = getCategories(dataProvider, labelColumn)
 
   $: options = {
