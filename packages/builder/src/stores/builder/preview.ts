@@ -9,6 +9,7 @@ interface PreviewState {
   previewEventHandler: PreviewEventHandler | null
   showPreview: boolean
   selectedComponentContext: AppContext | null
+  modalDevice: PreviewDevice | null
 }
 
 const INITIAL_PREVIEW_STATE: PreviewState = {
@@ -16,6 +17,7 @@ const INITIAL_PREVIEW_STATE: PreviewState = {
   previewEventHandler: null,
   showPreview: false,
   selectedComponentContext: null,
+  modalDevice: null,
 }
 
 export class PreviewStore extends BudiStore<PreviewState> {
@@ -31,6 +33,8 @@ export class PreviewStore extends BudiStore<PreviewState> {
     this.setSelectedComponentContext =
       this.setSelectedComponentContext.bind(this)
     this.requestComponentContext = this.requestComponentContext.bind(this)
+    this.setModalDevice = this.setModalDevice.bind(this)
+    this.resetModalDevice = this.resetModalDevice.bind(this)
   }
 
   setDevice(device: PreviewDevice) {
@@ -38,6 +42,17 @@ export class PreviewStore extends BudiStore<PreviewState> {
       ...state,
       previewDevice: device,
     }))
+  }
+
+  setModalDevice(device: PreviewDevice | null) {
+    this.update(state => ({
+      ...state,
+      modalDevice: device,
+    }))
+  }
+
+  resetModalDevice() {
+    this.setModalDevice(null)
   }
 
   // Potential evt names "eject-block", "dragging-new-component"
