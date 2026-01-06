@@ -161,6 +161,27 @@ describe("SQL filter parameterization", () => {
     expect(result.bindings?.[0]).toContain("beta")
   })
 
+  it("uses SQLite LIKE without LOWER for umlaut starts-with filters", () => {
+    const table = buildTable({
+      item: {
+        name: "item",
+        type: FieldType.STRING,
+        externalType: "text",
+        constraints: baseConstraints,
+      },
+    })
+    const query = buildQuery(table, {
+      string: { item: "Ü" },
+    })
+    query.meta = { sqliteUseLikeWithoutLower: true }
+
+    const result = new Sql(SqlClient.SQL_LITE)._query(query) as SqlQuery
+
+    expect(result.sql).toContain("LIKE")
+    expect(result.sql).not.toContain("LOWER")
+    expect(result.bindings).toEqual(expect.arrayContaining(["Ü%"]))
+  })
+
   it("parameterizes MySQL JSON contains filters", () => {
     const table = buildTable({
       payload: {
