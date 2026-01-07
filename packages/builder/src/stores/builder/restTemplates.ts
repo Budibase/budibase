@@ -12,10 +12,12 @@ import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 import TwilioLogo from "assets/rest-template-icons/twilio.svg"
 import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
+import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -515,6 +517,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SlackLogo,
+    },
+    {
+      name: "ServiceNow",
+      description:
+        "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
+      specs: [
+        {
+          version: "1.0.0",
+          data: serviceNowSpecData,
+        },
+      ],
+      icon: ServiceNowLogo,
     },
     {
       name: "Stripe",
