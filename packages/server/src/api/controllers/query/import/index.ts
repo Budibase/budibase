@@ -85,7 +85,7 @@ async function fetchFromUrl(url: string): Promise<string> {
 export async function getImportInfo(
   input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
-  const importer = await createImporter(input as any)
+  const importer = await createImporter(input)
   const info = importer.getInfo()
   return info
 }
