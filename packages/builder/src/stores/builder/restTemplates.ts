@@ -53,18 +53,10 @@ import MastercardLogo from "assets/rest-template-icons/mastercard.svg"
 import MeasureoneLogo from "assets/rest-template-icons/measureone.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
-import NuapayLogo from "assets/rest-template-icons/nuapay.svg"
-import OfficientLogo from "assets/rest-template-icons/officient.svg"
-import OnedocLogo from "assets/rest-template-icons/onedoc.svg"
 import OysterLogo from "assets/rest-template-icons/oyster.svg"
-import PayfactoryLogo from "assets/rest-template-icons/payfactory.svg"
 import PeachPaymentsLogo from "assets/rest-template-icons/peach-payments.svg"
-import PeoplehrLogo from "assets/rest-template-icons/peoplehr.svg"
 import PinpointLogo from "assets/rest-template-icons/pinpoint.svg"
 import PodiumLogo from "assets/rest-template-icons/podium.svg"
-import ProliantLogo from "assets/rest-template-icons/proliant.svg"
-import PulzeAILogo from "assets/rest-template-icons/pulze-ai.svg"
-import RecruiterflowLogo from "assets/rest-template-icons/recruiterflow.svg"
 import RemoteLogo from "assets/rest-template-icons/remote.svg"
 import ResendLogo from "assets/rest-template-icons/resend.svg"
 import RiveryLogo from "assets/rest-template-icons/rivery.svg"
@@ -76,7 +68,6 @@ import ShortcutLogo from "assets/rest-template-icons/shortcut.svg"
 import SmartrecruitersLogo from "assets/rest-template-icons/smartrecruiters.svg"
 import SoftledgerLogo from "assets/rest-template-icons/softledger.svg"
 import SpotdraftLogo from "assets/rest-template-icons/spotdraft.svg"
-import StarkBankLogo from "assets/rest-template-icons/stark-bank.svg"
 import SumsubLogo from "assets/rest-template-icons/sumsub.svg"
 import SuprsendLogo from "assets/rest-template-icons/suprsend.svg"
 import TerminalLogo from "assets/rest-template-icons/terminal.svg"
@@ -84,7 +75,6 @@ import TheirstackLogo from "assets/rest-template-icons/theirstack.svg"
 import TilledLogo from "assets/rest-template-icons/tilled.svg"
 import TrelloLogo from "assets/rest-template-icons/trello.svg"
 import TremendousLogo from "assets/rest-template-icons/tremendous.svg"
-import VantageLogo from "assets/rest-template-icons/vantage.svg"
 import VerifiableLogo from "assets/rest-template-icons/verifiable.svg"
 import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
 import WorkableLogo from "assets/rest-template-icons/workable.svg"
@@ -696,9 +686,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BrevoLogo,
     },
     {
-      name: "Bulksms Com",
-      description:
-        "Overview The JSON REST API allows you to submit and receive BulkSMS messages.",
+      name: "BulkSMS",
+      description: "Allows you to submit and receive BulkSMS messages.",
       specs: [
         {
           version: "1.0.0",
@@ -983,7 +972,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LocalizelyLogo,
     },
     {
-      name: "Logisticsos",
+      name: "LogisticsOS",
       description:
         "Powered by world's most powerful route optimization engine.",
       specs: [
@@ -1042,42 +1031,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: NotionLogo,
     },
     {
-      name: "Nuapay",
-      description:
-        "The Nuapay TPP OpenBanking/PSD2. Provides PISP and Banks Endpoints",
-      specs: [
-        {
-          version: "1.16.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/nuapay/openapi.yaml",
-        },
-      ],
-      icon: NuapayLogo,
-    },
-    {
-      name: "Officient",
-      description:
-        "Officient offers an intuitive HRIS which helps manage all personnel administration through our HR platform & personalized employee self-services.",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/officient/openapi.yaml",
-        },
-      ],
-      icon: OfficientLogo,
-    },
-    {
-      name: "Onedoc",
-      description:
-        "Onedoc is an innovative API solution for developers, offering a simple and secure way to create and manage PDF documents using familiar technologie...",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/onedoc/openapi.yaml",
-        },
-      ],
-      icon: OnedocLogo,
-    },
-    {
       name: "Oyster HR",
       description:
         "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
@@ -1090,18 +1043,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: OysterLogo,
     },
     {
-      name: "Payfactory",
-      description:
-        "Payfactory specializes in embedded payment facilitation (payfac) services for ISVs and SaaS companies.",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/payfactory/openapi.yaml",
-        },
-      ],
-      icon: PayfactoryLogo,
-    },
-    {
       name: "Peach Payments",
       description: "Reconciliation API",
       specs: [
@@ -1111,17 +1052,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: PeachPaymentsLogo,
-    },
-    {
-      name: "Peoplehr",
-      description: "We think it's good to share.",
-      specs: [
-        {
-          version: "3.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/peoplehr/openapi.yaml",
-        },
-      ],
-      icon: PeoplehrLogo,
     },
     {
       name: "Pinpoint",
@@ -1144,42 +1074,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: PodiumLogo,
-    },
-    {
-      name: "Proliant",
-      description:
-        "Our customer - facing API allows clients to view and manage company and employee data with features that integrate customers' systems with ours. Th...",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/proliant/openapi.yaml",
-        },
-      ],
-      icon: ProliantLogo,
-    },
-    {
-      name: "Pulze AI",
-      description:
-        "At Pulze it's our mission to supercharge today's workforce with AI to maximize the world's prosperity.",
-      specs: [
-        {
-          version: "0.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/pulze-ai/openapi.yaml",
-        },
-      ],
-      icon: PulzeAILogo,
-    },
-    {
-      name: "Recruiterflow",
-      description:
-        "All requests to any Recruiterflow API must include the RF-Api-Key header.",
-      specs: [
-        {
-          version: "0.0.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/recruiterflow/openapi.yaml",
-        },
-      ],
-      icon: RecruiterflowLogo,
     },
     {
       name: "Remote",
@@ -1307,17 +1201,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SpotdraftLogo,
-    },
-    {
-      name: "Stark Bank",
-      description: "Stark Bank API for financial services in Brazil",
-      specs: [
-        {
-          version: "v2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/stark-bank/openapi.yaml",
-        },
-      ],
-      icon: StarkBankLogo,
     },
     {
       name: "Sumsub",
