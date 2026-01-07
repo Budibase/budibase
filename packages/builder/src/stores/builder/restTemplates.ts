@@ -16,7 +16,79 @@ import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 import TwilioLogo from "assets/rest-template-icons/twilio.svg"
 import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
-import DummyLogo from "assets/rest-template-icons/dummy.svg"
+import AshbyLogo from "assets/rest-template-icons/ashby.svg"
+import BanksapiLogo from "assets/rest-template-icons/banksapi.svg"
+import BaremetricsLogo from "assets/rest-template-icons/baremetrics.svg"
+import BillsbyLogo from "assets/rest-template-icons/billsby.svg"
+import BluesnapLogo from "assets/rest-template-icons/bluesnap.svg"
+import BreezyHRLogo from "assets/rest-template-icons/breezy-hr.svg"
+import BrevoLogo from "assets/rest-template-icons/brevo.svg"
+import BulksmsComLogo from "assets/rest-template-icons/bulksms-com.svg"
+import ButtondownLogo from "assets/rest-template-icons/buttondown.svg"
+import CleverLogo from "assets/rest-template-icons/clever.svg"
+import ClickupLogo from "assets/rest-template-icons/clickup.svg"
+import DeelLogo from "assets/rest-template-icons/deel.svg"
+import DixaLogo from "assets/rest-template-icons/dixa.svg"
+import DotsLogo from "assets/rest-template-icons/dots.svg"
+import FactorialLogo from "assets/rest-template-icons/factorial.svg"
+import FastspringLogo from "assets/rest-template-icons/fastspring.svg"
+import FountainLogo from "assets/rest-template-icons/fountain.svg"
+import GitlabLogo from "assets/rest-template-icons/gitlab.svg"
+import GoodyLogo from "assets/rest-template-icons/goody.svg"
+import HelcimLogo from "assets/rest-template-icons/helcim.svg"
+import HibobLogo from "assets/rest-template-icons/hibob.svg"
+import HomerunLogo from "assets/rest-template-icons/homerun.svg"
+import HypatosLogo from "assets/rest-template-icons/hypatos.svg"
+import IntercomLogo from "assets/rest-template-icons/intercom.svg"
+import IroncladLogo from "assets/rest-template-icons/ironclad.svg"
+import JinaAILogo from "assets/rest-template-icons/jina-ai.svg"
+import JobsoidLogo from "assets/rest-template-icons/jobsoid.svg"
+import KeatextAILogo from "assets/rest-template-icons/keatext-ai.svg"
+import KenjoLogo from "assets/rest-template-icons/kenjo.svg"
+import LambdaLogo from "assets/rest-template-icons/lambda.svg"
+import LobLogo from "assets/rest-template-icons/lob.svg"
+import LocalizelyLogo from "assets/rest-template-icons/localizely.svg"
+import LogisticsosLogo from "assets/rest-template-icons/logisticsos.svg"
+import MastercardLogo from "assets/rest-template-icons/mastercard.svg"
+import MeasureoneLogo from "assets/rest-template-icons/measureone.svg"
+import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
+import NotionLogo from "assets/rest-template-icons/notion.svg"
+import NuapayLogo from "assets/rest-template-icons/nuapay.svg"
+import OfficientLogo from "assets/rest-template-icons/officient.svg"
+import OnedocLogo from "assets/rest-template-icons/onedoc.svg"
+import OysterLogo from "assets/rest-template-icons/oyster.svg"
+import PayfactoryLogo from "assets/rest-template-icons/payfactory.svg"
+import PeachPaymentsLogo from "assets/rest-template-icons/peach-payments.svg"
+import PeoplehrLogo from "assets/rest-template-icons/peoplehr.svg"
+import PinpointLogo from "assets/rest-template-icons/pinpoint.svg"
+import PodiumLogo from "assets/rest-template-icons/podium.svg"
+import ProliantLogo from "assets/rest-template-icons/proliant.svg"
+import PulzeAILogo from "assets/rest-template-icons/pulze-ai.svg"
+import RecruiterflowLogo from "assets/rest-template-icons/recruiterflow.svg"
+import RemoteLogo from "assets/rest-template-icons/remote.svg"
+import ResendLogo from "assets/rest-template-icons/resend.svg"
+import RiveryLogo from "assets/rest-template-icons/rivery.svg"
+import SageLogo from "assets/rest-template-icons/sage.svg"
+import SecodaLogo from "assets/rest-template-icons/secoda.svg"
+import ShipengineLogo from "assets/rest-template-icons/shipengine.svg"
+import ShippoLogo from "assets/rest-template-icons/shippo.svg"
+import ShortcutLogo from "assets/rest-template-icons/shortcut.svg"
+import SmartrecruitersLogo from "assets/rest-template-icons/smartrecruiters.svg"
+import SoftledgerLogo from "assets/rest-template-icons/softledger.svg"
+import SpotdraftLogo from "assets/rest-template-icons/spotdraft.svg"
+import StarkBankLogo from "assets/rest-template-icons/stark-bank.svg"
+import SumsubLogo from "assets/rest-template-icons/sumsub.svg"
+import SuprsendLogo from "assets/rest-template-icons/suprsend.svg"
+import TerminalLogo from "assets/rest-template-icons/terminal.svg"
+import TheirstackLogo from "assets/rest-template-icons/theirstack.svg"
+import TilledLogo from "assets/rest-template-icons/tilled.svg"
+import TrelloLogo from "assets/rest-template-icons/trello.svg"
+import TremendousLogo from "assets/rest-template-icons/tremendous.svg"
+import VantageLogo from "assets/rest-template-icons/vantage.svg"
+import VerifiableLogo from "assets/rest-template-icons/verifiable.svg"
+import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
+import WorkableLogo from "assets/rest-template-icons/workable.svg"
+import XLogo from "assets/rest-template-icons/x.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -551,7 +623,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/ashby/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: AshbyLogo,
     },
     {
       name: "Banksapi",
@@ -562,7 +634,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/banksapi/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BanksapiLogo,
     },
     {
       name: "Baremetrics",
@@ -574,7 +646,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/baremetrics/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BaremetricsLogo,
     },
     {
       name: "Billsby",
@@ -586,7 +658,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/billsby/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BillsbyLogo,
     },
     {
       name: "Bluesnap",
@@ -597,7 +669,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/bluesnap/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BluesnapLogo,
     },
     {
       name: "Breezy HR",
@@ -609,7 +681,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/breezy-hr/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BreezyHRLogo,
     },
     {
       name: "Brevo",
@@ -621,7 +693,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/brevo/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BrevoLogo,
     },
     {
       name: "Bulksms Com",
@@ -633,7 +705,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/bulksms-com/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: BulksmsComLogo,
     },
     {
       name: "Buttondown",
@@ -644,7 +716,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/buttondown/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ButtondownLogo,
     },
     {
       name: "Clever",
@@ -655,7 +727,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clever/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: CleverLogo,
     },
     {
       name: "Clickup",
@@ -667,7 +739,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clickup/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ClickupLogo,
     },
     {
       name: "Deel",
@@ -678,7 +750,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/deel/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: DeelLogo,
     },
     {
       name: "Dixa",
@@ -690,7 +762,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/dixa/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: DixaLogo,
     },
     {
       name: "Dots",
@@ -701,7 +773,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/dots/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: DotsLogo,
     },
     {
       name: "Factorial",
@@ -713,7 +785,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/factorial/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: FactorialLogo,
     },
     {
       name: "Fastspring",
@@ -725,7 +797,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fastspring/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: FastspringLogo,
     },
     {
       name: "Fountain",
@@ -737,7 +809,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fountain/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: FountainLogo,
     },
     {
       name: "Gitlab",
@@ -748,7 +820,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/gitlab/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: GitlabLogo,
     },
     {
       name: "Goody",
@@ -760,7 +832,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/goody/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: GoodyLogo,
     },
     {
       name: "Helcim",
@@ -771,7 +843,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/helcim/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: HelcimLogo,
     },
     {
       name: "Hibob",
@@ -782,18 +854,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hibob/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Hive",
-      description: "We help teams move faster.",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hive/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
+      icon: HibobLogo,
     },
     {
       name: "Homerun",
@@ -804,7 +865,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/homerun/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: HomerunLogo,
     },
     {
       name: "Hypatos",
@@ -815,18 +876,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hypatos/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Innoship",
-      description: "Api service implementation (version:6.0.1.513)",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/innoship/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
+      icon: HypatosLogo,
     },
     {
       name: "Intercom",
@@ -837,7 +887,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/intercom/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: IntercomLogo,
     },
     {
       name: "Ironclad",
@@ -848,7 +898,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/ironclad/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: IroncladLogo,
     },
     {
       name: "Jina AI",
@@ -860,7 +910,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/jina-ai/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: JinaAILogo,
     },
     {
       name: "Jobsoid",
@@ -872,7 +922,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/jobsoid/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: JobsoidLogo,
     },
     {
       name: "Keatext AI",
@@ -884,7 +934,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/keatext-ai/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: KeatextAILogo,
     },
     {
       name: "Kenjo",
@@ -896,7 +946,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/kenjo/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: KenjoLogo,
     },
     {
       name: "Lambda",
@@ -907,7 +957,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/lambda/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: LambdaLogo,
     },
     {
       name: "Lob",
@@ -919,7 +969,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/lob/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: LobLogo,
     },
     {
       name: "Localizely",
@@ -930,7 +980,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/localizely/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: LocalizelyLogo,
     },
     {
       name: "Logisticsos",
@@ -942,7 +992,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/logisticsos/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: LogisticsosLogo,
     },
     {
       name: "Mastercard",
@@ -954,7 +1004,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/mastercard/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: MastercardLogo,
     },
     {
       name: "Measureone",
@@ -966,7 +1016,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/measureone/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: MeasureoneLogo,
     },
     {
       name: "Nanonets",
@@ -977,7 +1027,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/nanonets/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: NanonetsLogo,
     },
     {
       name: "Notion",
@@ -989,7 +1039,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/notion/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: NotionLogo,
     },
     {
       name: "Nuapay",
@@ -1001,7 +1051,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/nuapay/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: NuapayLogo,
     },
     {
       name: "Officient",
@@ -1013,7 +1063,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/officient/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: OfficientLogo,
     },
     {
       name: "Onedoc",
@@ -1025,19 +1075,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/onedoc/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: OnedocLogo,
     },
     {
-      name: "Oyster",
+      name: "Oyster HR",
       description:
-        "Oyster uses OAuth2 to enable customers to grant access to their data to third party applications. Customers also need to use this API to authentica...",
+        "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
       specs: [
         {
           version: "v1",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/oyster/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: OysterLogo,
     },
     {
       name: "Payfactory",
@@ -1049,7 +1099,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/payfactory/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PayfactoryLogo,
     },
     {
       name: "Peach Payments",
@@ -1060,7 +1110,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/peach-payments/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PeachPaymentsLogo,
     },
     {
       name: "Peoplehr",
@@ -1071,7 +1121,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/peoplehr/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PeoplehrLogo,
     },
     {
       name: "Pinpoint",
@@ -1082,7 +1132,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/pinpoint/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PinpointLogo,
     },
     {
       name: "Podium",
@@ -1093,7 +1143,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/podium/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PodiumLogo,
     },
     {
       name: "Proliant",
@@ -1105,7 +1155,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/proliant/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ProliantLogo,
     },
     {
       name: "Pulze AI",
@@ -1117,7 +1167,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/pulze-ai/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: PulzeAILogo,
     },
     {
       name: "Recruiterflow",
@@ -1129,7 +1179,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/recruiterflow/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: RecruiterflowLogo,
     },
     {
       name: "Remote",
@@ -1140,7 +1190,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/remote/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: RemoteLogo,
     },
     {
       name: "Resend",
@@ -1151,18 +1201,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/resend/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Retell AI",
-      description: "API for voice AI.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/retell-ai/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
+      icon: ResendLogo,
     },
     {
       name: "Rivery",
@@ -1174,7 +1213,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/rivery/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: RiveryLogo,
     },
     {
       name: "Sage",
@@ -1186,7 +1225,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/sage/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SageLogo,
     },
     {
       name: "Secoda",
@@ -1198,7 +1237,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/secoda/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SecodaLogo,
     },
     {
       name: "Shipengine",
@@ -1210,7 +1249,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shipengine/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ShipengineLogo,
     },
     {
       name: "Shippo",
@@ -1221,7 +1260,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shippo/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ShippoLogo,
     },
     {
       name: "Shortcut",
@@ -1232,7 +1271,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shortcut/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: ShortcutLogo,
     },
     {
       name: "Smartrecruiters",
@@ -1243,7 +1282,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/smartrecruiters/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SmartrecruitersLogo,
     },
     {
       name: "Softledger",
@@ -1255,7 +1294,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/softledger/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SoftledgerLogo,
     },
     {
       name: "Spotdraft",
@@ -1267,7 +1306,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/spotdraft/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SpotdraftLogo,
     },
     {
       name: "Stark Bank",
@@ -1278,7 +1317,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/stark-bank/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: StarkBankLogo,
     },
     {
       name: "Sumsub",
@@ -1290,7 +1329,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/sumsub/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SumsubLogo,
     },
     {
       name: "Suprsend",
@@ -1302,19 +1341,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/suprsend/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: SuprsendLogo,
     },
     {
       name: "Terminal",
       description:
-        "Terminal is a unified API that makes it easy to integrate with the leading telematics service providers. Contact Support: Name: Terminal Email: con...",
+        "Terminal is a unified API that makes it easy to integrate with the leading telematics service providers.",
       specs: [
         {
           version: "1.0.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/terminal/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: TerminalLogo,
     },
     {
       name: "Theirstack",
@@ -1325,7 +1364,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/theirstack/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: TheirstackLogo,
     },
     {
       name: "Tilled",
@@ -1336,7 +1375,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tilled/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: TilledLogo,
     },
     {
       name: "Trello",
@@ -1347,7 +1386,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/trello/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: TrelloLogo,
     },
     {
       name: "Tremendous",
@@ -1359,18 +1398,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tremendous/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Vantage",
-      description: "Vantage API",
-      specs: [
-        {
-          version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/vantage/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
+      icon: TremendousLogo,
     },
     {
       name: "Verifiable",
@@ -1381,7 +1409,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/verifiable/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: VerifiableLogo,
     },
     {
       name: "Volt IO",
@@ -1392,7 +1420,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/volt-io/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: VoltIOLogo,
     },
     {
       name: "Workable",
@@ -1404,7 +1432,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/workable/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: WorkableLogo,
     },
     {
       name: "X",
@@ -1415,7 +1443,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/x/openapi.yaml",
         },
       ],
-      icon: DummyLogo,
+      icon: XLogo,
     },
   ],
   templateGroups: [twilioRestTemplateGroup],
