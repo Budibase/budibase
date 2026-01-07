@@ -337,7 +337,7 @@
             class="virtual-spacer"
             aria-hidden="true"
             style={`height:${virtualPaddingTop}px`}
-          />
+          ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
           <li
@@ -396,7 +396,7 @@
             class="virtual-spacer"
             aria-hidden="true"
             style={`height:${virtualPaddingBottom}px`}
-          />
+          ></li>
         {/if}
       {/if}
     </ul>

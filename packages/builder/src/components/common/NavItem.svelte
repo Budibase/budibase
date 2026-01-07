@@ -193,9 +193,7 @@
     border: 0.5px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
   }
-  :is(.nav-item.selected):has(+ :is(ul)) {
-    border-radius: 8px 8px 0 0 !important;
-  }
+
   .nav-item.selected:hover {
     border-radius: 8px !important;
   }
