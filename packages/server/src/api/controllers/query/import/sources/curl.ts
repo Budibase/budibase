@@ -61,7 +61,7 @@ export class Curl extends ImportSource {
   }
 
   load = async (data: string): Promise<void> => {
-    if (!this.tryLoad(data)) {
+    if (!(await this.tryLoad(data))) {
       throw new Error("Failed to load CURL document")
     }
   }

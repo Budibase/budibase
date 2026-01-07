@@ -74,6 +74,9 @@ async function fetchFromUrl(url: string): Promise<string> {
     }
     return await response.text()
   } catch (error: any) {
+    if (error instanceof HTTPError) {
+      throw error
+    }
     const message = error?.message || "Unknown error"
     throw new HTTPError(`Failed to fetch import data - ${message}`, 502)
   }
@@ -149,7 +152,7 @@ export class RestImporter {
       importer.source = source
       return importer
     } else {
-      for (let source of [new OpenAPI2(), new OpenAPI3(), new Curl()]) {
+      for (let source of [new OpenAPI3(), new OpenAPI2(), new Curl()]) {
         if (await source.tryLoad(data)) {
           importer.source = source
           break
