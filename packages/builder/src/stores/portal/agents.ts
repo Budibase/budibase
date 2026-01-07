@@ -2,7 +2,6 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
-  AgentChat,
   AgentFile,
   CreateAgentRequest,
   UpdateAgentRequest,
@@ -13,8 +12,6 @@ import { derived } from "svelte/store"
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
-  chats: AgentChat[]
-  currentChatId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
   files: AgentFile[]
@@ -24,7 +21,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
     super({
       agents: [],
-      chats: [],
       tools: [],
       agentsLoaded: false,
       files: [],
@@ -45,37 +41,20 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return agents
   }
 
-  fetchChats = async (agentId: string) => {
+  selectAgent = async (agentId: string | undefined) => {
     if (!agentId) {
       this.update(state => {
-        state.chats = []
+        state.currentAgentId = undefined
         return state
       })
-      return []
+      return
     }
-    const chats = await API.fetchChats(agentId)
-    this.update(state => {
-      state.chats = chats
-      return state
-    })
-    return chats
-  }
 
-  removeChat = async (chatId: string, agentId?: string) => {
-    await API.removeChat(chatId)
-    if (agentId) {
-      await this.fetchChats(agentId)
-    }
-  }
-
-  selectAgent = (agentId: string | undefined) => {
     this.update(state => {
       state.currentAgentId = agentId
       if (agentId) {
-        this.fetchChats(agentId)
         this.fetchFiles(agentId)
       } else {
-        state.chats = []
         state.files = []
       }
       return state
@@ -89,20 +68,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return state
     })
     return tools
-  }
-
-  setCurrentChatId = (chatId: string) => {
-    this.update(state => {
-      state.currentChatId = chatId
-      return state
-    })
-  }
-
-  clearCurrentChatId = () => {
-    this.update(state => {
-      state.currentChatId = undefined
-      return state
-    })
   }
 
   createAgent = async (agent: CreateAgentRequest) => {

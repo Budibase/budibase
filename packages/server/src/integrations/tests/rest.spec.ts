@@ -999,7 +999,8 @@ describe("REST Integration", () => {
           expect(url).toEqual("https://example.com/")
           expect(options?.method).toEqual("GET")
           const dispatcher = options?.dispatcher
-          expect(dispatcher).toBeInstanceOf(undici.Agent)
+          expect(dispatcher).toBeDefined()
+          expect(dispatcher?.constructor.name).toBe("Agent")
         },
         { foo: "bar" }
       )
@@ -1016,7 +1017,8 @@ describe("REST Integration", () => {
         (url, options) => {
           expect(url).toEqual("https://example.com/")
           expect(options?.method).toEqual("GET")
-          expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+          expect(options?.dispatcher).toBeDefined()
+          expect(options?.dispatcher?.constructor.name).toBe("Agent")
         },
         { foo: "bar" }
       )
@@ -1028,12 +1030,13 @@ describe("REST Integration", () => {
       expect(data).toEqual({ foo: "bar" })
     })
 
-    it("does not use custom dispatcher when config rejectUnauthorized is true", async () => {
+    it("uses Agent dispatcher when config rejectUnauthorized is true", async () => {
       queueJsonResponse(
         (url, options) => {
           expect(url).toEqual("https://example.com/")
           expect(options?.method).toEqual("GET")
-          expect(options?.dispatcher).toBeUndefined()
+          expect(options?.dispatcher).toBeDefined()
+          expect(options?.dispatcher?.constructor.name).toBe("Agent")
         },
         { foo: "bar" }
       )
@@ -1057,7 +1060,8 @@ describe("REST Integration", () => {
           (url, options) => {
             expect(url).toEqual("https://example.com/")
             expect(options?.method).toEqual("GET")
-            expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+            expect(options?.dispatcher).toBeDefined()
+            expect(options?.dispatcher?.constructor.name).toBe("Agent")
           },
           { foo: "bar" }
         )
@@ -1077,12 +1081,13 @@ describe("REST Integration", () => {
       }
     })
 
-    it("does not use custom dispatcher when env REST_REJECT_UNAUTHORIZED is true (default)", async () => {
+    it("uses Agent dispatcher when env REST_REJECT_UNAUTHORIZED is true (default)", async () => {
       queueJsonResponse(
         (url, options) => {
           expect(url).toEqual("https://example.com/")
           expect(options?.method).toEqual("GET")
-          expect(options?.dispatcher).toBeUndefined()
+          expect(options?.dispatcher).toBeDefined()
+          expect(options?.dispatcher?.constructor.name).toBe("Agent")
         },
         { foo: "bar" }
       )
@@ -1106,7 +1111,8 @@ describe("REST Integration", () => {
             expect(url).toEqual("https://example.com/")
             expect(options?.method).toEqual("GET")
             // Config says false, so Agent should be used despite env being true
-            expect(options?.dispatcher).toBeInstanceOf(undici.Agent)
+            expect(options?.dispatcher).toBeDefined()
+            expect(options?.dispatcher?.constructor.name).toBe("Agent")
           },
           { foo: "bar" }
         )

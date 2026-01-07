@@ -242,7 +242,7 @@
   function getToolSourceIcon(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
-  ) {
+  ): IconInfo | undefined {
     if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
       if (ds?.restTemplate) {
@@ -684,7 +684,7 @@
           <div class="section tools-section">
             <div class="title-tools-bar">
               <Heading size="XS">Tools this agent can use:</Heading>
-              <div class="tools-popover-container" />
+              <div class="tools-popover-container"></div>
               <ToolsDropdown
                 {filteredTools}
                 {toolSections}

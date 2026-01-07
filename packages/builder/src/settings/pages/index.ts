@@ -1,3 +1,5 @@
+import type { Component } from "svelte"
+
 // General
 import ProfilePage from "@/settings/pages/profile.svelte"
 import UsersPage from "@/settings/pages/people/users/index.svelte"
@@ -65,10 +67,10 @@ const componentMap = {
   translations: Translations,
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
-}
+} satisfies Record<string, Component<any>>
 
 export const Pages = {
-  get: (key: keyof typeof componentMap) => {
+  get: (key: keyof typeof componentMap): Component<any> | undefined => {
     const component = componentMap[key]
     if (!component) {
       console.error(`Component not found for key: ${key}`)
