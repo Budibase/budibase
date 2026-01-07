@@ -42,7 +42,7 @@
 </script>
 
 <div class:disabled style={styleString}>
-  <textarea disabled {id} bind:this={element} />
+  <textarea disabled {id} bind:this={element}></textarea>
 </div>
 
 <style>

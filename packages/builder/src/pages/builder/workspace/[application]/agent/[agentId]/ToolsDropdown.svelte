@@ -18,6 +18,11 @@
     toolsMenu?.hide()
     onConfigureWebSearch()
   }
+
+  const handleWebSearchConfigClick = (event: MouseEvent) => {
+    event.stopPropagation()
+    openWebSearchConfig()
+  }
 </script>
 
 <ActionMenu
@@ -104,10 +109,7 @@
                         size="S"
                         name="gear"
                         hoverable={true}
-                        on:click={event => {
-                          event.stopPropagation()
-                          openWebSearchConfig()
-                        }}
+                        on:click={handleWebSearchConfigClick}
                       />
                     </div>
                   {/if}
