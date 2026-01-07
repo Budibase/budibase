@@ -6,6 +6,7 @@
     Tabs,
     Tab,
     Body,
+    Icon,
   } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -205,20 +206,10 @@
             <div class="input-section">
               <div class="section-header">
                 <span class="section-icon">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M4 4h8M4 8h6M4 12h8"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <Icon name="list" size="S" />
                 </span>
                 <Body size="S">Paste sample JSON data</Body>
               </div>
-              <p class="helper-text">
-                We'll automatically generate the schema from your example.
-              </p>
               <div class="editor-wrapper">
                 <CodeEditor
                   mode={EditorModes.JSON}
@@ -229,21 +220,7 @@
               </div>
               {#if sampleError}
                 <div class="error-banner" role="alert">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <circle
-                      cx="8"
-                      cy="8"
-                      r="7"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <path
-                      d="M8 4.5v4M8 10.5v1"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <Icon name="warning-circle" size="S" />
                   <span>{sampleError}</span>
                 </div>
               {/if}
@@ -256,30 +233,10 @@
             <div class="input-section">
               <div class="section-header">
                 <span class="section-icon">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <rect
-                      x="2"
-                      y="2"
-                      width="12"
-                      height="12"
-                      rx="2"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <path
-                      d="M5 6h6M5 8h4M5 10h6"
-                      stroke="currentColor"
-                      stroke-width="1"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <Icon name="brackets-curly" size="S" />
                 </span>
                 <Body size="S">Enter JSON Schema definition</Body>
               </div>
-              <p class="helper-text">
-                Provide a standard JSON Schema to validate the AI output
-                structure.
-              </p>
               <div class="editor-wrapper">
                 <CodeEditor
                   mode={EditorModes.JSON}
@@ -290,41 +247,14 @@
               </div>
               {#if schemaError}
                 <div class="error-banner" role="alert">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <circle
-                      cx="8"
-                      cy="8"
-                      r="7"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <path
-                      d="M8 4.5v4M8 10.5v1"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <Icon name="warning-circle" size="S" />
                   <span>{schemaError}</span>
                 </div>
               {/if}
               {#if validationErrors.length > 0}
                 <div class="validation-errors" role="alert">
                   <div class="validation-header">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8 1L15 14H1L8 1z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M8 6v4M8 12v1"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <Icon name="warning" size="S" />
                     <span>Schema validation issues</span>
                   </div>
                   <ul class="error-list">
@@ -343,29 +273,9 @@
         <div class="preview-section">
           <div class="preview-header">
             <span class="preview-icon">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle
-                  cx="8"
-                  cy="8"
-                  r="3"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M1 8c1.5-3 4-5 7-5s5.5 2 7 5c-1.5 3-4 5-7 5s-5.5-2-7-5z"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-              </svg>
+              <Icon name="eye" size="S" />
             </span>
             <Body size="S">Generated Schema Preview</Body>
-            <span class="preview-badge">
-              {#if previewSchema.properties}
-                {Object.keys(previewSchema.properties).length} fields
-              {:else}
-                Ready
-              {/if}
-            </span>
           </div>
           <div class="preview-editor">
             <CodeEditor
@@ -412,13 +322,6 @@
     border-radius: 6px;
     background: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .helper-text {
-    margin: 0;
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    line-height: 1.4;
   }
 
   .editor-wrapper {
@@ -517,18 +420,6 @@
       transparent
     );
     color: var(--spectrum-global-color-green-600);
-  }
-
-  .preview-badge {
-    margin-left: auto;
-    padding: 2px 8px;
-    background: var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-700);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   .preview-editor {

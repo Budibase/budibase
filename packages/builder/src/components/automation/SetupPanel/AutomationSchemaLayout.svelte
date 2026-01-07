@@ -119,6 +119,13 @@
     },
     [SchemaFieldTypes.BOOL]: {
       comp: Checkbox,
+      props: (opts: FieldProps = {} as FieldProps) => {
+        const { key, field } = opts
+        return {
+          text: field.title ?? getFieldLabel(key, field),
+        }
+      },
+      wrapped: false,
     },
     [SchemaFieldTypes.DATE]: {
       comp: DateSelector,
