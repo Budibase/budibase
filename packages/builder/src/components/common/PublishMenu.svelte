@@ -3,9 +3,7 @@
     Body,
     Icon,
     Popover,
-    ActionMenu,
     PopoverAlignment,
-    MenuItem,
     Modal,
     ModalContent,
   } from "@budibase/bbui"
@@ -13,20 +11,15 @@
     deploymentStore,
     automationStore,
     workspaceAppStore,
-    workspaceDeploymentStore,
-    tables,
     appStore,
   } from "@/stores/builder"
-  import { type Plugin, TableSourceType } from "@budibase/types"
+  import { type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-  let seedProductionTables = false
-  let menuOpen = false
   let pluginWarningModal: Modal | undefined
-  let pendingSeedProductionTables = false
 
   const CURRENT_SVELTE_MAJOR = 5
   const LEGACY_SVELTE_MAJOR = 4
@@ -80,20 +73,16 @@
   )
 
   const showPluginWarningModal = () => {
-    pendingSeedProductionTables = seedProductionTables
     actionMenu?.hide?.()
-    menuOpen = false
     pluginWarningModal?.show()
   }
 
   const publish = async () => {
-    console.log(incompatiblePlugins)
     if (incompatiblePlugins.length && !hasAcknowledgedWarning) {
       showPluginWarningModal()
       return
     }
     actionMenu?.hide?.()
-    menuOpen = false
     await publishWithoutChecks()
   }
 
@@ -109,10 +98,8 @@
     acknowledgeSvelte4PluginWarning($appStore.appId)
     hasAcknowledgedWarning = true
     actionMenu?.hide?.()
-    menuOpen = false
     pluginWarningModal?.hide()
     await publishWithoutChecks()
-    pendingSeedProductionTables = false
   }
 </script>
 
@@ -225,21 +212,6 @@
     gap: var(--spacing-s);
     padding: var(--spacing-m);
   }
-  .menu-item-header {
-    font-weight: 500;
-    font-size: 14px;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .menu-item-text {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
-    margin-top: 2px;
-  }
-  .seed-publish.disabled .menu-item-header,
-  .seed-publish.disabled .menu-item-text {
-    color: unset;
-  }
-
   .plugin-warning-list {
     margin-top: var(--spacing-m);
     background: var(--spectrum-global-color-gray-100);
