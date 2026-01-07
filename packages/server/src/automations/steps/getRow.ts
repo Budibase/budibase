@@ -27,13 +27,46 @@ export async function run({
   inputs: GetRowStepInputs
   appId: string
 }): Promise<GetRowStepOutputs> {
-  const { tableId, filters, sortColumn, sortOrder } = inputs
+  const { tableId, rowId, filters, sortColumn, sortOrder } = inputs
   if (!tableId) {
     return {
       success: false,
       row: null,
       response: {
         message: "You must select a table to query.",
+      },
+    }
+  }
+
+  if (rowId) {
+    const ctx = buildCtx(appId, null, {
+      params: {
+        tableId: decodeURIComponent(tableId),
+        rowId,
+      },
+    })
+
+    try {
+      await rowController.find(ctx)
+      return {
+        row: ctx.body || null,
+        success: true,
+      }
+    } catch (err) {
+      // continue
+    }
+  }
+
+  const hasFilters =
+    (filters && Object.keys(filters).length > 0) ||
+    (inputs["filters-def"] && inputs["filters-def"].length > 0)
+  if (!hasFilters) {
+    return {
+      success: false,
+      row: null,
+      response: {
+        message:
+          "You must provide a matching row ID or at least one filter to get row.",
       },
     }
   }
