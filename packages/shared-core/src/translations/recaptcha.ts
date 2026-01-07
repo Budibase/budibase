@@ -19,4 +19,3 @@ export const recaptchaTranslations = createTranslationDefinitions(category, [
     defaultValue: "Recaptcha verification failed, please try again",
   },
 ])
-

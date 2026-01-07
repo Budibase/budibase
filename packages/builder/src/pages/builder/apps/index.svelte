@@ -9,8 +9,8 @@
     organisation,
     translations,
   } from "@/stores/portal"
-import type { EnrichedApp } from "@/types"
-import type { User } from "@budibase/types"
+  import type { EnrichedApp } from "@/types"
+  import type { User } from "@budibase/types"
   import {
     ActionMenu,
     Body,
@@ -79,8 +79,14 @@ import type { User } from "@budibase/types"
   })()
 
   $: portalLabels = resolveTranslationGroup("portal", translationOverrides)
-  $: profileLabels = resolveTranslationGroup("profileModal", translationOverrides)
-  $: passwordLabels = resolveTranslationGroup("passwordModal", translationOverrides)
+  $: profileLabels = resolveTranslationGroup(
+    "profileModal",
+    translationOverrides
+  )
+  $: passwordLabels = resolveTranslationGroup(
+    "passwordModal",
+    translationOverrides
+  )
   $: menuLabels = resolveTranslationGroup("userMenu", translationOverrides)
 
   $: currentUser = $auth.user as User | undefined
