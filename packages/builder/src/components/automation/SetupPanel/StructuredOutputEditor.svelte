@@ -185,7 +185,7 @@
   }
 </script>
 
-<ActionButton fullWidth on:click={openModal}>
+<ActionButton on:click={openModal}>
   {fieldCount > 0
     ? `Edit Schema (${fieldCount} fields)`
     : "Define Output Schema"}
