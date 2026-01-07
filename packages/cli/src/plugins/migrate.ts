@@ -599,12 +599,12 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
     }
     if (hasNode16) {
       nodeVersionStatus = "needs-migration"
-      report.push(
-        "Will update GitHub workflow files: node-version 16 -> 18."
-      )
+      report.push("Will update GitHub workflow files: node-version 16 -> 18.")
     } else if (hasNode18OrHigher) {
       nodeVersionStatus = "looks-new"
-      report.push("GitHub workflow files already use node-version 18 or higher.")
+      report.push(
+        "GitHub workflow files already use node-version 18 or higher."
+      )
     } else {
       nodeVersionStatus = "looks-new"
       report.push(
