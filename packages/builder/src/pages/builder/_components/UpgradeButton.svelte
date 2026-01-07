@@ -1,9 +1,11 @@
 <script>
   import { Button } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "@/stores/portal"
   import { helpers, sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
 
+  $goto
   const { accountPortalUpgradeUrl } = helpers
 </script>
 

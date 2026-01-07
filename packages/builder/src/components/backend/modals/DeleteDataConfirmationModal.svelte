@@ -18,6 +18,9 @@
   import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
+  $goto
+  $params
+
   export let source: Table | ViewV2 | Datasource | Query | undefined
 
   let confirmDeleteDialog: any
@@ -193,7 +196,7 @@
 >
   <div class="content">
     {#if sourceType}
-      <p class="warning">
+      <div class="warning">
         {buildMessage(sourceType)}
         {#if affectedScreens.length > 0}
           <span class="screens">
@@ -208,7 +211,7 @@
             </ul>
           </span>
         {/if}
-      </p>
+      </div>
     {/if}
     <p class="warning">This action cannot be undone.</p>
   </div>

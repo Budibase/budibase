@@ -16,6 +16,9 @@
   import { goto, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 
+  $goto
+  $url
+
   const { datasource } = getContext("grid")
 
   let popover

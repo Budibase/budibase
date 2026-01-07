@@ -22,6 +22,9 @@
   import { onDestroy, onMount } from "svelte"
   import { get } from "svelte/store"
 
+  $goto
+  $isActive
+  $goto
   let iframe
   let layout
   let screen
@@ -54,6 +57,7 @@
       : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
+    previewModalDevice: $previewStore.modalDevice,
     messagePassing: $appStore.clientFeatures.messagePassing,
     navigation: $navigationStore,
     hiddenComponentIds:
@@ -194,6 +198,13 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)
+    } else if (type === "set-preview-modal-device") {
+      const { device } = data || {}
+      if (device === "mobile") {
+        previewStore.setModalDevice("mobile")
+      } else {
+        previewStore.resetModalDevice()
+      }
     } else if (type === "provide-context") {
       let context = data?.context
       if (context) {
@@ -274,8 +285,8 @@
     bind:this={iframe}
     src={`/app/${$appStore.appId}/preview`}
     class:hidden={loading || error}
-  />
-  <div class="underlay" />
+  ></iframe>
+  <div class="underlay"></div>
   <div
     class="add-component"
     class:active={isAddingComponent}

@@ -22,7 +22,8 @@
     if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType) {
       await renderChart(chartElement)
     } else {
-      await chart?.updateOptions(newOptions)
+      const animateUpdates = newOptions?.chart?.animations?.enabled ?? true
+      await chart?.updateOptions(newOptions, false, animateUpdates)
     }
   }
 
@@ -64,7 +65,7 @@
     class:hide={noData}
     use:styleable={$component.styles}
     bind:this={chartElement}
-  />
+  ></div>
   {#if $builderStore.inBuilder && noData}
     <div
       class="component-placeholder"

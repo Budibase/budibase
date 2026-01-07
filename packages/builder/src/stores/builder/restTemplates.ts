@@ -6,15 +6,18 @@ import {
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
+import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 import TwilioLogo from "assets/rest-template-icons/twilio.svg"
 import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
+import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -432,6 +435,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: AnsibleLogo,
     },
     {
+      name: "Attio",
+      description:
+        "CRM platform API for objects, records, lists, tasks, and webhooks",
+      specs: [
+        {
+          version: "2.0.0",
+          url: "https://api.attio.com/openapi/api",
+        },
+      ],
+      icon: AttioLogo,
+    },
+    {
       name: "BambooHR",
       description:
         "HRIS platform for employee records, time off, and performance management",
@@ -502,6 +517,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SlackLogo,
+    },
+    {
+      name: "ServiceNow",
+      description:
+        "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
+      specs: [
+        {
+          version: "1.0.0",
+          data: serviceNowSpecData,
+        },
+      ],
+      icon: ServiceNowLogo,
     },
     {
       name: "Stripe",

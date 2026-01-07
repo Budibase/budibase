@@ -4,18 +4,21 @@ export interface RestTemplateSpec {
     | `${number}.${number}`
     | `${number}.${number}.${number}`
     | `v${number}`
-  url: string
+  url?: string
+  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
+  | "Attio"
   | "Ansible AWX"
   | "BambooHR"
   | "GitHub"
   | "Jira Cloud"
   | "Okta Management"
   | "PagerDuty"
+  | "ServiceNow"
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"

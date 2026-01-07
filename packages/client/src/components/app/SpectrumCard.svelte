@@ -44,7 +44,7 @@
     <div
       class="spectrum-Card-coverPhoto"
       style="background-image: url({imageURL})"
-    />
+    ></div>
   {/if}
   <div class="spectrum-Card-container">
     <div class="spectrum-Card-body">
