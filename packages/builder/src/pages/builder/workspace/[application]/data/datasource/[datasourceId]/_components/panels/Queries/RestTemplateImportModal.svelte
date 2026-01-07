@@ -21,11 +21,15 @@
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import { customQueryIconColor } from "@/helpers/data/utils"
-  import { formatEndpointLabel } from "@/helpers/restTemplates"
+  import {
+    formatEndpointLabel,
+    getRestTemplateImportInfoRequest,
+  } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
   import type {
     Datasource,
     ImportRestQueryRequest,
+    ImportRestQueryInfoRequest,
     ImportEndpoint,
     RestTemplate,
   } from "@budibase/types"
@@ -50,7 +54,6 @@
         spec => spec.version === datasource?.restTemplateVersion
       ) || template.specs?.[0]
     : undefined
-  $: resolvedTemplateSpecUrl = selectedTemplateSpec?.url
   $: templateName = template?.name
   $: templateIcon = template?.icon
   $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
@@ -59,11 +62,24 @@
   let selectedEndpointId: string | undefined = undefined
   let endpointsLoading = false
   let endpointsError: string | null = null
-  let endpointsSourceUrl: string | undefined
   let loadRequestId = 0
   $: confirmDisabled = !selectedEndpointId || endpointsLoading
-  let currentTemplateUrl: string | undefined
+  let endpointsImportRequest: ImportRestQueryInfoRequest | undefined
+  let currentTemplateSpecVersion: string | undefined
   let templateDocsBaseUrl: string | undefined
+
+  $: templateSpecImportRequest =
+    getRestTemplateImportInfoRequest(selectedTemplateSpec)
+
+  $: if (isTemplateDatasource && templateSpecImportRequest) {
+    const specVersion = selectedTemplateSpec?.version
+    if (specVersion && specVersion !== currentTemplateSpecVersion) {
+      currentTemplateSpecVersion = specVersion
+      loadTemplateEndpoints(templateSpecImportRequest)
+    }
+  } else if (!isTemplateDatasource && currentTemplateSpecVersion) {
+    currentTemplateSpecVersion = undefined
+  }
 
   const resetEndpoints = () => {
     loadRequestId += 1
@@ -71,22 +87,22 @@
     selectedEndpointId = undefined
     endpointsError = null
     endpointsLoading = false
-    endpointsSourceUrl = undefined
+    endpointsImportRequest = undefined
     templateDocsBaseUrl = undefined
   }
 
-  const loadTemplateEndpoints = async (specUrl: string) => {
+  const loadTemplateEndpoints = async (request: ImportRestQueryInfoRequest) => {
     resetEndpoints()
     const requestId = ++loadRequestId
     endpointsLoading = true
     endpointsError = null
 
     try {
-      const info = await queries.fetchImportInfo({ url: specUrl })
+      const info = await queries.fetchImportInfo(request)
       if (requestId !== loadRequestId) {
         return
       }
-      endpointsSourceUrl = specUrl
+      endpointsImportRequest = request
       templateDocsBaseUrl = info.docsUrl
       endpointOptions = (info.endpoints || [])
         .slice()
@@ -99,22 +115,12 @@
       endpointsError = error?.message || "Failed to load endpoints"
       endpointOptions = []
       selectedEndpointId = undefined
-      endpointsSourceUrl = undefined
+      endpointsImportRequest = undefined
     } finally {
       if (requestId === loadRequestId) {
         endpointsLoading = false
       }
     }
-  }
-
-  $: if (isTemplateDatasource) {
-    const specUrl = resolvedTemplateSpecUrl
-    if (specUrl && specUrl !== currentTemplateUrl) {
-      currentTemplateUrl = specUrl
-      loadTemplateEndpoints(specUrl)
-    }
-  } else if (currentTemplateUrl) {
-    currentTemplateUrl = undefined
   }
 
   const getEndpointId = (endpoint: ImportEndpoint) => endpoint.id
@@ -170,7 +176,7 @@
         return keepOpen
       }
 
-      if (!endpointsSourceUrl) {
+      if (!endpointsImportRequest) {
         notifications.error("Import data is missing")
         return keepOpen
       }
@@ -180,10 +186,15 @@
       }
 
       const body: ImportRestQueryRequest = {
-        url: endpointsSourceUrl,
         datasourceId,
         datasource,
         selectedEndpointId,
+      }
+      if (endpointsImportRequest.url) {
+        body.url = endpointsImportRequest.url
+      }
+      if (endpointsImportRequest.data) {
+        body.data = endpointsImportRequest.data
       }
       const importResult = await queries.importQueries(body)
       if (!datasourceId) {
