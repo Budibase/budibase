@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { createEventDispatcher, onMount } from "svelte"
+  import toJsonSchema from "to-json-schema"
+  import Ajv from "ajv"
+  import type { JSONSchema7 } from "json-schema"
   import {
     ActionButton,
     Modal,
@@ -11,14 +15,36 @@
   import { helpers } from "@budibase/shared-core"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
-  import { createEventDispatcher, onMount } from "svelte"
-  import toJsonSchema from "to-json-schema"
-  import Ajv from "ajv"
-  import type { JSONSchema7 } from "json-schema"
 
   type JSONSchema = JSONSchema7
 
+  export let value: JSONSchema | Record<string, unknown> = {}
+
   const ajv = new Ajv()
+  const dispatch = createEventDispatcher()
+
+  let modal: Modal
+  let activeTab = "From Sample"
+
+  // Sample tab state
+  let sampleJson = ""
+  let sampleError = ""
+  let generatedSchema: JSONSchema | null = null
+
+  // Schema tab state
+  let schemaJson = ""
+  let schemaError = ""
+  let validationErrors: string[] = []
+
+  // Preview state
+  let previewSchema: JSONSchema | null = null
+
+  function initializeFromValue() {
+    if (value && Object.keys(value).length > 0) {
+      schemaJson = JSON.stringify(value, null, 2)
+      previewSchema = value as JSONSchema
+    }
+  }
 
   function sampleToJsonSchema(sample: unknown): JSONSchema {
     const rawSchema = toJsonSchema(sample) as Record<string, unknown>
@@ -47,46 +73,6 @@
 
     return { valid: false, errors }
   }
-
-  export let value: JSONSchema | Record<string, unknown> = {}
-
-  const dispatch = createEventDispatcher()
-  let modal: Modal
-  let activeTab = "From Sample"
-
-  // Sample tab state
-  let sampleJson = ""
-  let sampleError = ""
-  let generatedSchema: JSONSchema | null = null
-  // Schema tab state
-  let schemaJson = ""
-  let schemaError = ""
-  let validationErrors: string[] = []
-
-  // Preview state
-  let previewSchema: JSONSchema | null = null
-
-  $: fieldCount = countSchemaFields(value || {})
-
-  function countSchemaFields(
-    schema: JSONSchema | Record<string, unknown>
-  ): number {
-    if (schema && typeof schema === "object" && "properties" in schema) {
-      return Object.keys(schema.properties || {}).length
-    }
-    return Object.keys(schema || {}).length
-  }
-
-  function initializeFromValue() {
-    if (value && Object.keys(value).length > 0) {
-      schemaJson = JSON.stringify(value, null, 2)
-      previewSchema = value as JSONSchema
-    }
-  }
-
-  onMount(() => {
-    initializeFromValue()
-  })
 
   function onSampleChange(newValue: string) {
     sampleJson = newValue
@@ -145,6 +131,12 @@
     sampleError = ""
     schemaError = ""
     validationErrors = []
+
+    if (activeTab === "JSON Schema" && schemaJson.trim()) {
+      onSchemaChange(schemaJson)
+    } else if (activeTab === "From Sample" && sampleJson.trim()) {
+      onSampleChange(sampleJson)
+    }
   }
 
   function saveSchema() {
@@ -181,26 +173,31 @@
 
   function openModal() {
     initializeFromValue()
+    if (value && Object.keys(value).length > 0) {
+      activeTab = "JSON Schema"
+    } else {
+      activeTab = "From Sample"
+    }
     modal.show()
   }
+
+  onMount(() => {
+    initializeFromValue()
+  })
 </script>
 
-<ActionButton on:click={openModal}>
-  {fieldCount > 0
-    ? `Edit Schema (${fieldCount} fields)`
-    : "Define Output Schema"}
-</ActionButton>
+<ActionButton on:click={openModal}>Define output schema</ActionButton>
 
 <Modal bind:this={modal}>
   <ModalContent
-    title="Structured Output Schema"
-    confirmText="Save Schema"
+    title="Structured output schema"
+    confirmText="Save schema"
     onConfirm={saveSchema}
     disabled={!isValid(generatedSchema)}
     size="L"
   >
     <div class="schema-editor">
-      <Tabs selected={activeTab} on:select={handleTabChange}>
+      <Tabs noPadding quiet selected={activeTab} on:select={handleTabChange}>
         <Tab title="From Sample">
           <div class="tab-content">
             <div class="input-section">
@@ -235,7 +232,7 @@
                 <span class="section-icon">
                   <Icon name="brackets-curly" size="S" />
                 </span>
-                <Body size="S">Enter JSON Schema definition</Body>
+                <Body size="S">Enter JSON schema definition</Body>
               </div>
               <div class="editor-wrapper">
                 <CodeEditor
@@ -275,7 +272,7 @@
             <span class="preview-icon">
               <Icon name="eye" size="S" />
             </span>
-            <Body size="S">Generated Schema Preview</Body>
+            <Body size="S">Generated schema preview</Body>
           </div>
           <div class="preview-editor">
             <CodeEditor
@@ -398,7 +395,6 @@
     flex-direction: column;
     gap: var(--spacing-s);
     padding-top: var(--spacing-m);
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .preview-header {
