@@ -325,7 +325,7 @@
       on:keydown={handleKeyDown}
       placeholder="Ask anything"
       disabled={loading}
-    />
+    ></textarea>
   </div>
 </div>
 

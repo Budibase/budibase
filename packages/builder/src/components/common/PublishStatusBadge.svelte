@@ -35,11 +35,6 @@
       border: 1px solid #005d39;
     }
 
-    &.unpublished {
-      --color: var(--spectrum-global-color-orange-100);
-      border: 1px solid var(--spectrum-global-color-gray-400);
-    }
-
     &.disabled {
       --color: var(--spectrum-global-color-gray-300);
       border: 1px solid var(--spectrum-global-color-gray-400);

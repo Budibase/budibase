@@ -11,6 +11,7 @@ export interface RestTemplateSpec {
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
+  | "Attio"
   | "Ansible AWX"
   | "BambooHR"
   | "GitHub"

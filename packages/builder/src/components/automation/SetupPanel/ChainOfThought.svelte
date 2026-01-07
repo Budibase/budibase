@@ -37,7 +37,7 @@
           <StatusLight size="S" color={getStatusLightColor(step.status)} />
         </div>
         {#if !isLast}
-          <div class="connector" />
+          <div class="connector"></div>
         {/if}
       </div>
 
