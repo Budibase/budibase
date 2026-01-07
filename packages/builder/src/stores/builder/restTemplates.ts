@@ -542,18 +542,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: VirusTotalLogo,
     },
     {
-      name: "API Video",
-      description:
-        "Encodes on the go to facilitate immediate playback, enhancing viewer streaming experiences across multiple devices",
-      specs: [
-        {
-          version: "1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/api-video/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Ashby",
       description:
         "The public API for accessing resources in your Ashby instance.",
@@ -589,41 +577,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Beam",
-      description:
-        "Beam is the intelligent way to manage risk with laser precision in real time.",
-      specs: [
-        {
-          version: "0.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/beam/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Beamable",
-      description:
-        "Gateway to everything you need to build custom server logic via microservices",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/beamable/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Beehiiv",
-      description: "Swarm public API",
-      specs: [
-        {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/beehiiv/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Billsby",
       description:
         'Billsby is a feature-rich "Saas" recurring payment platform, ranked as the leading subscription billing software by G2.',
@@ -631,18 +584,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "1.3.5",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/billsby/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Bity",
-      description:
-        "The present document gives the technical details enabling one to make request to and understand the responses of the Exchange API.",
-      specs: [
-        {
-          version: "2.6.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/bity/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -683,30 +624,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Browse AI",
-      description:
-        "If you are still using the deprecated API v1 version, you can see its documentation here.",
-      specs: [
-        {
-          version: "v2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/browse-ai/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Browsercat",
-      description:
-        "Providing purr-fect headless browser access via utility endpoints and direct websocket connections.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/browsercat/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Bulksms Com",
       description:
         "Overview The JSON REST API allows you to submit and receive BulkSMS messages.",
@@ -730,36 +647,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Chatkitty",
-      description:
-        "OpenAPI specification (OAS) for the ChatKitty Platform API. See the Interactive Docs to try ChatKitty API methods without writing code, and get the...",
-      specs: [
-        {
-          version: "2.58.3",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/chatkitty/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Clever",
       description: "Serves the Clever Data API",
       specs: [
         {
           version: "3.1.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clever/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Clickfunnels",
-      description:
-        "Import data from other apps and sources into ClickFunnels and export data that you need somewhere",
-      specs: [
-        {
-          version: "V2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clickfunnels/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -772,18 +665,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "2.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clickup/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Currency Alliance",
-      description:
-        "Introduction The Currency Alliance API facilitates various use cases for Loyalty Commerce.",
-      specs: [
-        {
-          version: "3.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/currency-alliance/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -823,53 +704,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Ducky",
-      description:
-        "Ducky Data's APIs provide footprint data for a wide variety of products and circular services, as well as individuals, and consumption-based emissi...",
-      specs: [
-        {
-          version: "3.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/ducky/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Echelon",
-      description:
-        "Echelon solutions simplify your payment process, and offer a wide range of features & services to help your business run smoothly.",
-      specs: [
-        {
-          version: "2.47",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/echelon/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Elevenlabs",
-      description: "This is the documentation for the ElevenLabs API.",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/elevenlabs/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Epidemic Sound",
-      description:
-        "Epidemic Sound has transformed the soundtracking experience for global brands and professional creators, with an expansive catalog of world-class m...",
-      specs: [
-        {
-          version: "0.1.17",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/epidemic-sound/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Factorial",
       description:
         "Open Api Specifications available at Guides and support available at # Authentication The public API provides two methods of authentication, ApiKey...",
@@ -894,29 +728,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Flickr",
-      description: "A subset of Flickr's API defined in Swagger format.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/flickr/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Fordefi",
-      description:
-        "The future of institutional web3 wallets. For builders, traders, and operators, Fordefi's comprehensive MPC wallet platform and web3 gateway enable...",
-      specs: [
-        {
-          version: "0.2.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fordefi/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Fountain",
       description:
         "Fountain's all-in-one high volume hiring platform empowers the world's leading enterprises to find the right people through smart, fast, and seamle...",
@@ -924,17 +735,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "v2",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fountain/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Giphy",
-      description: "Giphy API",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/giphy/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -951,28 +751,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Global Predictions Inc",
-      description: "Global Predictions external api",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/global-predictions-inc/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Golioth",
-      description: "Built IoT your way without the stress.",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/golioth/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Goody",
       description:
         "Goody is a new way to send personal and business gifts as easily as a text message.",
@@ -980,29 +758,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "1.0.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/goody/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Griffin",
-      description: "OpenAPI example for Griffin.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/griffin/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Hathora",
-      description:
-        "Use the Hathora Cloud APIs to build and scale your game servers globally.",
-      specs: [
-        {
-          version: "0.0.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hathora/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1052,35 +807,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Httpbin",
-      description: "A simple HTTP Request & Response Service.",
-      specs: [
-        {
-          version: "0.9.2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/httpbin/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Hypatos",
       description: "The Hypatos API is organized around REST.",
       specs: [
         {
           version: "2.15.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hypatos/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Inmobile",
-      description:
-        "Used for external systems to send sms messages and to retrieve a status for...",
-      specs: [
-        {
-          version: "version 4",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/inmobile/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1237,35 +969,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Miso",
-      description:
-        "Overview Miso's approach to personalization is to train machine learning Engines on three core data sets: 1.",
-      specs: [
-        {
-          version: "1.1.4",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/miso/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Nanonets",
       description: "Welcome to the NanoNets API!",
       specs: [
         {
           version: "2.0.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/nanonets/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Notabene",
-      description: "The Notabene API is organized around REST.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/notabene/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1326,17 +1035,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "v1",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/oyster/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Partna",
-      description: "Coinprofile business API",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/partna/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1410,29 +1108,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Prolific",
-      description: "Prolific API for researchers",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/prolific/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Proovid",
-      description:
-        "Proovid API is a RESTful application that specializes in electronic verification (Proof of address and Proof of Identity) by employing an advanced...",
-      specs: [
-        {
-          version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/proovid/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Pulze AI",
       description:
         "At Pulze it's our mission to supercharge today's workforce with AI to maximize the world's prosperity.",
@@ -1445,39 +1120,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Quivr",
-      description: "Open-source RAG Framework",
-      specs: [
-        {
-          version: "0.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/quivr/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Radix",
-      description: "Job and profile matching using Artificial Intelligence.",
-      specs: [
-        {
-          version: "2024-04-02",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/radix/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Rated",
-      description: "Welcome to Rated API for developers!",
-      specs: [
-        {
-          version: "0.0.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/rated/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Recruiterflow",
       description:
         "All requests to any Recruiterflow API must include the RF-Api-Key header.",
@@ -1485,30 +1127,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "0.0.1",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/recruiterflow/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Redkik",
-      description:
-        "Redkik is a global InsurTech company with the mission to transform and improve the insurance industry for all parties within logistics and transpor...",
-      specs: [
-        {
-          version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/redkik/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Relynk",
-      description:
-        "Relynk empowers PropTech companies by providing seamless access to a commercial building's real-time data.",
-      specs: [
-        {
-          version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/relynk/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1559,18 +1177,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Rook",
-      description:
-        "Intro ROOK is a set of services that simplifies the collection, processing, and delivering of Users' HealthData from various data sources. ### Test...",
-      specs: [
-        {
-          version: "2.0.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/rook/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Sage",
       description:
         "All requests are required to be sent to your subdomain. To learn how to enable API in your Sage HR account, please visit",
@@ -1590,17 +1196,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "1.0.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/secoda/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Seel",
-      description: "Seel API",
-      specs: [
-        {
-          version: "1.3.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/seel/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1635,18 +1230,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "3.0",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shortcut/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Shutterstock",
-      description:
-        "The Shutterstock API provides access to Shutterstock's library of media, as well as information about customers' accounts and the contributors that...",
-      specs: [
-        {
-          version: "1.1.32",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shutterstock/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1687,18 +1270,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Sqala",
-      description:
-        "At Sqala, we believe that everyone deserves access to financial services, and we are committed to providing secure and reliable payment solutions t...",
-      specs: [
-        {
-          version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/sqala/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Stark Bank",
       description: "Stark Bank API for financial services in Brazil",
       specs: [
@@ -1734,30 +1305,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DummyLogo,
     },
     {
-      name: "Surfly",
-      description:
-        "By using the REST API, you can integrate our Co-browsing technology into your own application or build a thin layer around our technology.",
-      specs: [
-        {
-          version: "2.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/surfly/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Tavus",
-      description:
-        "We're an AI video research company making personalized video possible at scale.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tavus/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
       name: "Terminal",
       description:
         "Terminal is a unified API that makes it easy to integrate with the leading telematics service providers. Contact Support: Name: Terminal Email: con...",
@@ -1771,7 +1318,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Theirstack",
-      description: "Introduction Welcome to TheirStack’s API!",
+      description: "Find your next customer",
       specs: [
         {
           version: "1.0.0",
@@ -1793,8 +1340,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Trello",
-      description:
-        "This document describes the REST API of Trello as published by Trello.com. - Official Documentation - The HTML pages that were scraped in order to...",
+      description: "Capture, organize, and tackle your to-dos from anywhere.",
       specs: [
         {
           version: "1.0",
@@ -1811,18 +1357,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "2",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tremendous/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Tripadd",
-      description:
-        "TripAdd API enables you to create personalized travel ancillary product bundles and make orders.",
-      specs: [
-        {
-          version: "1.8.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tripadd/openapi.yaml",
         },
       ],
       icon: DummyLogo,
@@ -1856,40 +1390,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         {
           version: "2024.04.11",
           url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/volt-io/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Wannme",
-      description: "Welcome to WANNME Integration API",
-      specs: [
-        {
-          version: "2.7.8",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/wannme/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Wefitter",
-      description: "This is the WeFitter API",
-      specs: [
-        {
-          version: "v1.3",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/wefitter/openapi.yaml",
-        },
-      ],
-      icon: DummyLogo,
-    },
-    {
-      name: "Wikimedia",
-      description:
-        "This API provides cacheable and straightforward access to Wikimedia content and data, in machine-readable formats.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/wikimedia/openapi.yaml",
         },
       ],
       icon: DummyLogo,
