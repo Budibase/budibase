@@ -99,7 +99,7 @@
             class="dividerClickExtender"
             role="separator"
             use:resizableHandle
-          />
+          ></div>
         </div>
       </div>
     {/if}
