@@ -61,7 +61,7 @@
         <Button disabled={loading} on:click={publishEmpty}>
           <div class="button-content" aria-live="polite">
             {#if publishLoading}
-              <span class="spinner" aria-hidden="true" />
+              <span class="spinner" aria-hidden="true"></span>
             {/if}
             <span>{publishLoading ? "Publishing..." : "Publish"}</span>
           </div>
@@ -85,7 +85,7 @@
         >
           <div class="button-content" aria-live="polite">
             {#if seedLoading}
-              <span class="spinner" aria-hidden="true" />
+              <span class="spinner" aria-hidden="true"></span>
             {/if}
             <span
               >{seedLoading

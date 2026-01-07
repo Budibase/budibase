@@ -77,7 +77,7 @@
                     />
                   </div>
                   {#if !isLast}
-                    <div class="step-line" />
+                    <div class="step-line"></div>
                   {/if}
                 </div>
                 <span class="step-name">{step.displayName}</span>

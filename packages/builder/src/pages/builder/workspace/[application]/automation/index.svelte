@@ -365,11 +365,6 @@
     border: 1px solid transparent;
     padding: 3px 10px;
     height: auto;
-
-    &.is-selected {
-      background: var(--spectrum-global-color-gray-200);
-      border-color: var(--spectrum-global-color-gray-300);
-    }
   }
   .action-buttons {
     display: flex;
