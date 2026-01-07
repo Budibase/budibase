@@ -190,7 +190,7 @@
           }}
         />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true" />
+        <span class="header-actions-spacer" aria-hidden="true"></span>
       {/if}
       <WorkspaceSortMenu
         {currentSort}

@@ -215,17 +215,4 @@
   .nav:not(.pinned):not(.focused) .collapse_icon {
     display: none;
   }
-
-  @container (max-width: 239px) {
-    .favourite-wrapper {
-      display: none;
-      transition: all 130ms ease-in-out;
-    }
-    .favourite-title {
-      display: all 130ms ease-in-out;
-    }
-    .favourite-empty-state {
-      display: all 130ms ease-in-out;
-    }
-  }
 </style>
