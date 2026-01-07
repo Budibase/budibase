@@ -17,6 +17,7 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   if (typeof rawAiconfigId !== "string") {
     ctx.throw(400, "Invalid aiconfig ID")
   }
+  ctx.body = await sdk.ai.agents.getAvailableToolsMetadata(rawAiconfigId)
 }
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
