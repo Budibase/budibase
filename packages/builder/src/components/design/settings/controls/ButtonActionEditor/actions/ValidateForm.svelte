@@ -22,7 +22,7 @@
     getOptionLabel={x => x.readableBinding}
     getOptionValue={x => x.runtimeBinding}
   />
-  <div />
+  <div></div>
 </div>
 
 <style>

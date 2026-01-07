@@ -15,6 +15,9 @@
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
 
+  $goto
+  $params
+
   const inviteCode = $params["?code"]
   let form
   let formData = {}

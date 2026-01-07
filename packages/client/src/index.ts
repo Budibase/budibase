@@ -14,6 +14,7 @@ import {
   routeStore,
   notificationStore,
 } from "@/stores"
+import { mount } from "svelte"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
 import {
@@ -42,12 +43,35 @@ if (typeof window !== "undefined") {
   })
 }
 
-// Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
+import * as svelteStore from "svelte/store"
+// Legacy Svelte 4 runtime for plugin compatibility
+import * as svelteLegacy from "svelte-legacy"
 // @ts-ignore
-import * as internal from "svelte/internal"
-window.svelte_internal = internal
+import * as svelteLegacyStore from "svelte-legacy/store"
+// @ts-ignore
+import * as svelteInternal from "svelte/internal/client"
+// @ts-ignore
+import * as svelteLegacyInternal from "svelte-legacy/internal"
+
 window.svelte = svelte
+// Expose legacy runtime under dedicated globals so Svelte 5 consumers stay untouched
+// @ts-ignore - augmenting the window at runtime
+window.svelteLegacy = svelteLegacy
+// @ts-ignore - augmenting the window at runtime
+window.svelteLegacyStore = svelteLegacyStore
+// @ts-ignore - augmenting the window at runtime
+window.svelteLegacyInternal = svelteLegacyInternal
+// Provide the legacy global names that Svelte 4 bundles hardcode
+// @ts-ignore - augmenting the window at runtime
+window.svelte_internal = svelteLegacyInternal
+// @ts-ignore - augmenting the window at runtime
+window.svelte_store = svelteLegacyStore
+// Maintain existing camelCase aliases expected by some plugins
+// @ts-ignore - augmenting the window at runtime
+window.svelteStore = svelteStore
+// @ts-ignore - augmenting the window at runtime
+window.svelteInternal = svelteInternal
 
 // Extend global window scope
 declare global {
@@ -81,7 +105,8 @@ declare global {
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
-    svelte_internal: typeof internal
+    svelteStore: typeof svelteStore
+    svelteInternal: typeof svelteInternal
     INIT_TIME: number
   }
 }
@@ -106,7 +131,7 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: ClientApp | UpdatingApp
+let app: Record<string, unknown> | undefined
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
@@ -138,7 +163,7 @@ const loadBudibase = async () => {
 
   if (window.MIGRATING_APP) {
     if (!app) {
-      app = new UpdatingApp({
+      app = mount(UpdatingApp, {
         target: window.document.body,
       })
     }
@@ -211,7 +236,7 @@ const loadBudibase = async () => {
 
   // Create app if one hasn't been created yet
   if (!app) {
-    app = new ClientApp({
+    app = mount(ClientApp, {
       target: window.document.body,
     })
   }

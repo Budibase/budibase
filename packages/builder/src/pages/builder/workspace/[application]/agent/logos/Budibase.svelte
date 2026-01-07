@@ -1,6 +1,6 @@
-<script>
-  export let width
-  export let height
+<script lang="ts">
+  export let width: string | undefined = undefined
+  export let height: string | undefined = undefined
 </script>
 
 <svg
