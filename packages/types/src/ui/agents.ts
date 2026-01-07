@@ -1,4 +1,5 @@
 import type { StepResult, ToolSet } from "ai"
+import { ToolMetadata } from "../documents"
 
 export type AgentStepResult<TOOLS extends ToolSet = ToolSet> = StepResult<TOOLS>
 
@@ -22,4 +23,10 @@ export interface ToolCallDisplay<TOOLS extends ToolSet = ToolSet> {
   input: ViewerToolCall<TOOLS>["input"]
   output?: ViewerToolResult<TOOLS>["output"]
   status: "completed" | "failed" | "error" | "pending"
+}
+
+export interface EnrichedTool extends ToolMetadata {
+  readableBinding: string
+  runtimeBinding: string
+  icon?: { url?: string; icon?: any }
 }
