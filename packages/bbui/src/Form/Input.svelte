@@ -2,6 +2,7 @@
   import Field from "./Field.svelte"
   import TextField from "./Core/TextField.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { FullAutoFill } from "svelte/elements"
 
   export let value: any = undefined
   export let label: string | undefined = undefined
@@ -14,7 +15,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let autofocus: boolean | undefined = undefined
-  export let autocomplete: boolean | string | undefined = undefined
+  export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
   export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher<{

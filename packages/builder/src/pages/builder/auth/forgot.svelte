@@ -15,6 +15,8 @@
   import { goto } from "@roxi/routify"
   import { resolveTranslationGroup } from "@budibase/shared-core"
 
+  $goto
+
   let email = ""
   let form
   let error

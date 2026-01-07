@@ -65,7 +65,7 @@
     class:hide={noData}
     use:styleable={$component.styles}
     bind:this={chartElement}
-  />
+  ></div>
   {#if $builderStore.inBuilder && noData}
     <div
       class="component-placeholder"
