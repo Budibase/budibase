@@ -22,7 +22,8 @@
     if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType) {
       await renderChart(chartElement)
     } else {
-      await chart?.updateOptions(newOptions)
+      const animateUpdates = newOptions?.chart?.animations?.enabled ?? true
+      await chart?.updateOptions(newOptions, false, animateUpdates)
     }
   }
 
