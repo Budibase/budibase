@@ -366,7 +366,7 @@
 </Modal>
 
 <div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
-  <div class="nav_spacer" class:pinned={$pinned} />
+  <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
     class:pinned={$pinned}
