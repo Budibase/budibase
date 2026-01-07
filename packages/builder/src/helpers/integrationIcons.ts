@@ -1,6 +1,6 @@
 import ICONS from "@/components/backend/DatasourceNavigator/icons"
 import { integrations } from "@/stores/builder/integrations"
-import { get as svelteGet } from "svelte/store"
+import { get } from "svelte/store"
 import type { ComponentType } from "svelte"
 
 type IntegrationIcon = (typeof ICONS)[keyof typeof ICONS]
@@ -14,7 +14,7 @@ export const getIntegrationIcon = (
   schema?: unknown,
   iconUrl?: string
 ): IconInfo | undefined => {
-  const integrationList = svelteGet(integrations)
+  const integrationList = get(integrations)
   if (!integrationList) {
     return
   }

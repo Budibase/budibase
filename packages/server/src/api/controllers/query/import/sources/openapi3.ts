@@ -202,6 +202,14 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  private shouldAddBaseUrlBinding = (server?: ServerObject): boolean => {
+    const url = server?.url
+    if (!url) {
+      return true
+    }
+    return url.trim().length === 0
+  }
+
   private setServerVariableBindings = (server?: ServerObject) => {
     this.serverVariableBindings = {}
     const variables = server?.variables || {}
@@ -264,10 +272,15 @@ export class OpenAPI3 extends OpenAPISource {
   }
 
   getServerVariableBindings = () => {
+    const primaryServer = this.getPrimaryServer()
     if (!Object.keys(this.serverVariableBindings).length) {
-      this.setServerVariableBindings(this.getPrimaryServer())
+      this.setServerVariableBindings(primaryServer)
     }
-    return { ...this.serverVariableBindings }
+    const bindings = { ...this.serverVariableBindings }
+    if (this.shouldAddBaseUrlBinding(primaryServer)) {
+      bindings.baseUrl = bindings.baseUrl ?? ""
+    }
+    return bindings
   }
 
   getSecurityHeaders(): string[] {
@@ -346,11 +359,18 @@ export class OpenAPI3 extends OpenAPISource {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
     const primaryServer = this.getPrimaryServer()
+    const serverUrl = primaryServer?.url
+    const useBaseUrlBinding = this.shouldAddBaseUrlBinding(primaryServer)
     if (primaryServer) {
-      url = primaryServer.url
       serverVariables = primaryServer.variables || {}
+      if (serverUrl) {
+        url = serverUrl
+      }
     }
     this.setServerVariableBindings(primaryServer)
+    if (useBaseUrlBinding) {
+      url = "{baseUrl}"
+    }
 
     const queries: Query[] = []
     const filterIds = options?.filterIds

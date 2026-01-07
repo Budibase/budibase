@@ -102,6 +102,8 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: S3_IGNORE_SELF_SIGNED
+          value: {{ .Values.services.objectStore.ignoreSelfSigned | quote }}
         - name: CLOUDFRONT_CDN
           value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
         - name: CLOUDFRONT_PUBLIC_KEY_ID

@@ -1,6 +1,7 @@
 import { processEvent } from "./utils"
 import { automationQueue } from "./bullboard"
 import { rebootTrigger } from "./triggers"
+import { rehydrateScheduledTriggers } from "./rehydrate"
 import { automationsEnabled } from "../features"
 
 export { automationQueue } from "./bullboard"
@@ -19,6 +20,9 @@ export async function init() {
   const promise = automationQueue.process(async job => {
     await processEvent(job)
   })
+  // on init we need to rehydrate any scheduled triggers that may have been lost
+  // due to reddis being ephemeral in some self hosted deployments.
+  await rehydrateScheduledTriggers()
   // on init we need to trigger any reboot automations
   await rebootTrigger()
   return promise

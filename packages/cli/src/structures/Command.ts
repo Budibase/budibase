@@ -9,7 +9,7 @@ type CommandOpt = {
   command: string
   help: string
   func?: Function
-  extras: any[]
+  extras: { command: string; help: string }[]
 }
 
 export class Command {
@@ -55,11 +55,22 @@ export class Command {
     if (this.help) {
       command = command.description(getHelpDescription(thisCmd.help!))
     }
+    const seenExtras = new Set<string>()
     for (let opt of thisCmd.opts) {
       command = command.option(opt.command, getSubHelpDescription(opt.help))
+      for (let extra of opt.extras) {
+        if (!extra?.command || seenExtras.has(extra.command)) {
+          continue
+        }
+        seenExtras.add(extra.command)
+        command = command.option(
+          extra.command,
+          getSubHelpDescription(extra.help)
+        )
+      }
     }
     command.helpOption(
-      "--help",
+      "-h, --help",
       getSubHelpDescription(`Get help with ${this.command} options`)
     )
     command.action(async (options: Record<string, string>) => {

@@ -1,45 +1,26 @@
 import {
   Agent,
-  AgentChat,
-  BudibaseToolSource,
-  RestQueryToolSource,
+  ChatApp,
+  ChatConversation,
+  ChatConversationRequest,
+  CreateChatConversationRequest,
 } from "../../../documents"
 
-export type ChatAgentRequest = AgentChat
+export type ChatAgentRequest = ChatConversationRequest
 
-export type FetchAgentHistoryResponse = AgentChat[]
+export type FetchAgentHistoryResponse = ChatConversation[]
+
+export type { CreateChatConversationRequest }
+
+export type CreateChatAppRequest = Omit<
+  ChatApp,
+  "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
 }
-
-type CreateBudibaseToolSourceRequest = Omit<
-  BudibaseToolSource,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
->
-
-type CreateRestQueryToolSourceRequest = Omit<
-  RestQueryToolSource,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
->
-
-export type CreateToolSourceRequest =
-  | CreateBudibaseToolSourceRequest
-  | CreateRestQueryToolSourceRequest
-
-type UpdateBudibaseToolSourceRequest = Omit<
-  BudibaseToolSource,
-  "createdAt" | "updatedAt"
->
-
-type UpdateRestQueryToolSourceRequest = Omit<
-  RestQueryToolSource,
-  "createdAt" | "updatedAt"
->
-
-export type UpdateToolSourceRequest =
-  | (UpdateBudibaseToolSourceRequest & { agentId: string })
-  | (UpdateRestQueryToolSourceRequest & { agentId: string })
 
 export type CreateAgentRequest = Omit<
   Agent,

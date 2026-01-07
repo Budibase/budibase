@@ -269,13 +269,16 @@ export default class TestConfiguration {
 
   async withApp<R>(workspace: Workspace | string, f: () => Promise<R>) {
     const oldAppId = this.devWorkspaceId
+    const oldProdAppId = this.prodWorkspaceId
     this.devWorkspaceId =
       typeof workspace === "string" ? workspace : workspace.appId
+    this.prodWorkspaceId = dbCore.getProdWorkspaceID(this.devWorkspaceId)
     return await context.doInWorkspaceContext(this.devWorkspaceId, async () => {
       try {
         return await f()
       } finally {
         this.devWorkspaceId = oldAppId
+        this.prodWorkspaceId = oldProdAppId
       }
     })
   }
@@ -738,7 +741,6 @@ export default class TestConfiguration {
     const response = await this._req(workspaceController.unpublish, undefined, {
       appId: this.devWorkspaceId,
     })
-    this.prodWorkspaceId = undefined
     this.prodWorkspace = undefined
     return response
   }

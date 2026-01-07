@@ -1,7 +1,48 @@
-import { createToolSource } from "../../../../ai/tools/base/ToolSourceRegistry"
-import { Agent, Tool } from "@budibase/types"
+import { Agent, ToolMetadata, SourceName } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import type { StepResult, ToolSet } from "ai"
+import budibaseTools from "../../../../ai/tools/budibase"
+import {
+  createRestQueryTool,
+  toToolSet,
+  type AiToolDefinition,
+} from "../../../../ai/tools"
+import sdk from "../../.."
+
+export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
+  return {
+    name: tool.name,
+    description: tool.description,
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
+  }
+}
+
+export async function getAvailableTools(): Promise<AiToolDefinition[]> {
+  const [queries, datasources] = await Promise.all([
+    sdk.queries.fetch(),
+    sdk.datasources.fetch(),
+  ])
+
+  const restDatasourceNames = new Map(
+    datasources
+      .filter(ds => ds.source === SourceName.REST)
+      .map(ds => [ds._id, ds.name || "API"])
+  )
+
+  const restQueryTools = queries
+    .filter(query => restDatasourceNames.has(query.datasourceId))
+    .map(query =>
+      createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
+    )
+
+  return [...budibaseTools, ...restQueryTools]
+}
+
+export async function getAvailableToolsMetadata(): Promise<ToolMetadata[]> {
+  const tools = await getAvailableTools()
+  return tools.map(toToolMetadata)
+}
 
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
@@ -13,51 +54,33 @@ export async function buildPromptAndTools(
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
-  tools: Tool[]
+  tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
-  const allTools: Tool[] = []
-  const toolGuidelineEntries: { toolName: string; guidelines: string }[] = []
-
-  for (const toolSource of agent.allowedTools || []) {
-    const toolSourceInstance = createToolSource(toolSource)
-
-    if (!toolSourceInstance) {
-      continue
-    }
-
-    const guidelines = toolSourceInstance.getGuidelines()
-    if (guidelines) {
-      toolGuidelineEntries.push({
-        toolName: toolSourceInstance.getName(),
-        guidelines,
-      })
-    }
-    const toolsToAdd = await toolSourceInstance.getEnabledToolsAsync()
-    if (toolsToAdd.length > 0) {
-      allTools.push(...toolsToAdd)
-    }
-  }
-
-  const toolGuidelines =
-    ai.composeAutomationAgentToolGuidelines(toolGuidelineEntries)
+  const allTools = await getAvailableTools()
+  const enabledToolNames = new Set(agent.enabledTools || [])
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
     promptInstructions: agent.promptInstructions,
-    toolGuidelines,
     includeGoal,
   })
 
+  // This is key. We only include tools that are actually enabled on the agent.
+  const tools =
+    enabledToolNames.size > 0
+      ? allTools.filter(tool => enabledToolNames.has(tool.name))
+      : allTools
+
   return {
     systemPrompt,
-    tools: allTools,
+    tools: toToolSet(tools),
   }
 }
 
-export function createLiteLLMFetch(sessionId: string) {
-  return (
+export function createLiteLLMFetch(sessionId: string): typeof fetch {
+  const liteFetch = ((
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
   ) => {
@@ -71,7 +94,14 @@ export function createLiteLLMFetch(sessionId: string) {
       }
     }
     return fetch(input, init)
+  }) as typeof fetch
+
+  // Preserve the preconnect helper required by the OpenAI client typings.
+  if (typeof (fetch as any).preconnect === "function") {
+    ;(liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
+
+  return liteFetch
 }
 
 /**

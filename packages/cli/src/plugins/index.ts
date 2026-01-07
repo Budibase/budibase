@@ -25,6 +25,28 @@ type PluginOpts = {
   init?: PluginType
 }
 
+function cleanupPreSvelte5Backups(paths: string[]) {
+  const deleted: string[] = []
+  const failed: { path: string; error: string }[] = []
+
+  for (const p of new Set(paths.filter(Boolean))) {
+    if (!fs.existsSync(p)) {
+      continue
+    }
+    try {
+      fs.unlinkSync(p)
+      deleted.push(p)
+    } catch (err: any) {
+      failed.push({
+        path: p,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
+  return { deleted, failed }
+}
+
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
     throw new Error(
@@ -179,10 +201,12 @@ async function dev() {
   console.log(success("Password: ") + info(password))
 }
 
-async function migrateSvelte5() {
-  // preflight: ensure inside plugin
+async function migrateSvelte5(opts: { yes: boolean; force: boolean }) {
+  // Preflight: ensure we are inside a plugin directory
   checkInPlugin()
 
+  const yes = Boolean(opts?.yes)
+  const force = Boolean(opts?.force)
   // optional git dirty check; allow override with --force
   let isDirty = false
   try {
@@ -191,7 +215,7 @@ async function migrateSvelte5() {
   } catch (_) {
     // if git not available, ignore
   }
-  if (isDirty && !process.argv.includes("--force")) {
+  if (isDirty && !force) {
     console.log(
       info(
         "Your git working directory is not clean. Commit or stash changes, or re-run with --force."
@@ -214,8 +238,15 @@ async function migrateSvelte5() {
     console.log(info(" - " + line))
   }
 
+  const backupCandidates = [
+    "package.json.pre-svelte5",
+    "schema.json.pre-svelte5",
+    analysis.rollupFile ? `${analysis.rollupFile}.pre-svelte5` : undefined,
+    analysis.wrapperFile ? `${analysis.wrapperFile}.pre-svelte5` : undefined,
+  ]
+
   // confirmation unless --yes
-  if (!process.argv.includes("--yes")) {
+  if (!yes) {
     const confirm = await questions.confirmation("Apply these changes now?")
     if (!confirm) {
       console.log(info("Migration aborted by user."))
@@ -226,6 +257,14 @@ async function migrateSvelte5() {
   // apply migrations
   console.log(info("Applying migrations..."))
   const results = await runSvelte5Migration()
+  if (
+    results.rollupRes?.message?.includes(
+      "Failed to retrieve canonical rollup.config.mjs from skeleton"
+    )
+  ) {
+    console.log(error(results.rollupRes.message))
+    return
+  }
   if (results.pkgRes?.message) {
     console.log(info(results.pkgRes.message))
   }
@@ -254,11 +293,32 @@ async function migrateSvelte5() {
   console.log(info("Attempting build..."))
   try {
     await runPkgCommand("build")
+    const cleaned = cleanupPreSvelte5Backups(
+      backupCandidates.filter((p): p is string => Boolean(p))
+    )
     console.log(
       success(
         "Migration completed. Your plugin was migrated to Svelte 5 and built successfully."
       )
     )
+    if (cleaned.deleted.length) {
+      console.log(
+        info(
+          `Removed ${cleaned.deleted.length} pre-svelte5 backup file(s): ${cleaned.deleted.join(
+            ", "
+          )}`
+        )
+      )
+    }
+    if (cleaned.failed.length) {
+      console.log(
+        info(
+          `Failed to remove ${cleaned.failed.length} pre-svelte5 backup file(s): ${cleaned.failed
+            .map(f => `${f.path} (${f.error})`)
+            .join(", ")}`
+        )
+      )
+    }
   } catch (err: any) {
     console.log(
       error(
@@ -295,5 +355,15 @@ export default new Command(`${CommandWord.PLUGIN}`)
   .addSubOption(
     "--migrate-svelte5",
     "Migrate this plugin to the Svelte 5-compatible Budibase plugin format.",
-    migrateSvelte5
+    migrateSvelte5,
+    [
+      {
+        command: "--yes",
+        help: "Skip confirmation prompts during migration.",
+      },
+      {
+        command: "--force",
+        help: "Proceed even if the git working directory is not clean (creates .pre-svelte5 backups during migration, removed on success).",
+      },
+    ]
   )

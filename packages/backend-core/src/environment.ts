@@ -178,6 +178,7 @@ const environment = {
   AWS_REGION: process.env.AWS_REGION || "eu-west-1",
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
+  S3_IGNORE_SELF_SIGNED: process.env.S3_IGNORE_SELF_SIGNED,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   INTERNAL_API_KEY_FALLBACK: process.env.INTERNAL_API_KEY_FALLBACK,
   MULTI_TENANCY: process.env.MULTI_TENANCY,

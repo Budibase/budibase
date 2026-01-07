@@ -17,6 +17,10 @@ spec:
       labels:
         io.kompose.service: redis-service
     spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
       - args:
         - redis-server 

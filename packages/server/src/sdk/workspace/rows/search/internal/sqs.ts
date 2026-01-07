@@ -406,6 +406,7 @@ export async function search(
     filters: searchFilters,
     meta: {
       columnPrefix: USER_COLUMN_PREFIX,
+      sqliteUseLikeWithoutLower: true,
     },
     resource: {
       fields: await buildInternalFieldList(source, allTables, {

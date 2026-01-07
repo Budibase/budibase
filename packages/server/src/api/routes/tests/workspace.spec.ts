@@ -1163,6 +1163,23 @@ describe("/applications", () => {
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
+    it("should seed production tables when requested", async () => {
+      await config.unpublish()
+      const table = await config.api.table.save(basicTable())
+      const devRow = await config.api.row.save(table._id!, {
+        name: "dev-row",
+      })
+
+      await config.api.workspace.filteredPublish(workspace.appId, {
+        seedProductionTables: true,
+      })
+
+      const prodRows = await config.api.row.fetchProd(table._id!)
+
+      expect(prodRows).toHaveLength(1)
+      expect(prodRows[0]._id).toEqual(devRow._id)
+    })
+
     // API to publish filtered resources currently disabled, skip test while not needed
     it.skip("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources
@@ -1387,6 +1404,30 @@ describe("/applications", () => {
       )
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
+
+    it("should not delete production data when unpublishing and republishing", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      // Ensure the table exists in production
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const prodRow = await config.withProdApp(() =>
+        config.api.row.save(table._id!, { name: "Prod row" })
+      )
+
+      const prodRowsBefore = await config.withProdApp(() =>
+        config.api.row.search(table._id!, { query: {} })
+      )
+      expect(prodRowsBefore.rows.find(r => r._id === prodRow._id)).toBeDefined()
+
+      await config.api.workspace.unpublish(config.getDevWorkspaceId())
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const prodRowsAfter = await config.withProdApp(() =>
+        config.api.row.search(table._id!, { query: {} })
+      )
+      expect(prodRowsAfter.rows.find(r => r._id === prodRow._id)).toBeDefined()
+    })
   })
 
   describe("delete", () => {
@@ -1512,15 +1553,26 @@ describe("/applications", () => {
 
       await config.api.workspace.sync(workspace.appId)
 
-      // does exist in prod
-      const prodLogs = await config.getAutomationLogs()
-      expect(prodLogs.data.length).toBe(1)
+      const startkey = `${db.DocumentType.AUTOMATION_LOG}${db.SEPARATOR}`
+      const endkey = `${db.DocumentType.AUTOMATION_LOG}${db.SEPARATOR}${db.UNICODE_MAX}`
+
+      // exists in prod
+      const prodLogs = await db
+        .getDB(config.getProdWorkspaceId())
+        .allDocs({ startkey, endkey, include_docs: false })
+      expect(prodLogs.rows.length).toBe(1)
+
+      // doesn't exist in dev
+      const devLogs = await db
+        .getDB(config.getDevWorkspaceId())
+        .allDocs({ startkey, endkey, include_docs: false })
+      expect(devLogs.rows.length).toBe(0)
 
       await config.api.workspace.unpublish(workspace.appId)
 
-      // doesn't exist in dev
-      const devLogs = await config.getAutomationLogs()
-      expect(devLogs.data.length).toBe(0)
+      // logs remain visible from production after unpublish
+      const visibleLogsAfterUnpublish = await config.getAutomationLogs()
+      expect(visibleLogsAfterUnpublish.data.length).toBe(1)
     })
   })
 
@@ -1614,6 +1666,31 @@ describe("/applications", () => {
 
       // The result should be an array (even if empty in test mode due to all tables being synced)
       expect(Array.isArray(emptyTables)).toBe(true)
+    })
+
+    it("treats production tables with only deleted rows as empty for seeding", async () => {
+      const table = await config.api.table.save(basicTable())
+      await config.api.row.save(table._id!, { name: "Row 1" })
+      await config.api.row.save(table._id!, { name: "Row 2" })
+
+      await config.publish()
+
+      await config.withProdApp(async () => {
+        const prodRows = await config.api.row.fetch(table._id!)
+        await config.api.row.bulkDelete(table._id!, { rows: prodRows })
+
+        const remainingRows = await config.api.row.fetch(table._id!)
+        expect(remainingRows).toHaveLength(0)
+      })
+
+      const emptyTables = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          return await sdk.tables.listEmptyProductionTables()
+        }
+      )
+
+      expect(emptyTables).toContain(table._id)
     })
   })
 })

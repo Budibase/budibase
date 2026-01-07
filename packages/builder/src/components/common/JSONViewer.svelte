@@ -190,6 +190,7 @@
     gap: 8px;
     overflow: hidden;
     min-height: 0;
+    min-width: 0;
   }
 
   /* Expand arrow */
@@ -218,6 +219,7 @@
     font-size: 12px;
     align-items: center;
     width: 100%;
+    min-width: 0;
   }
 
   /* Size label and value according to type */
