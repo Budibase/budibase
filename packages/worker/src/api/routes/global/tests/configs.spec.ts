@@ -408,8 +408,18 @@ describe("configs", () => {
   })
 
   describe("GET /api/global/configs/public/translations", () => {
-    it("should return translation overrides", async () => {
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.licenses.useTranslations()
       mocks.pro.features.isTranslationsEnabled.mockResolvedValue(true)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.pro.features.isTranslationsEnabled.mockReset()
+    })
+
+    it("should return translation overrides", async () => {
       await saveConfig(translations({ "login.emailLabel": "Hello" }))
       const res = await config.api.configs.getPublicTranslations()
       expect(res.body.defaultLocale).toEqual("en")
