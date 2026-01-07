@@ -27,6 +27,10 @@
   import { FeatureFlag } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
 
+  $goto
+  $isActive
+  $params
+
   const modalContext = getContext(Context.Modal)
 
   let search

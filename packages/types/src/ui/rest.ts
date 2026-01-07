@@ -1,6 +1,11 @@
 export interface RestTemplateSpec {
-  version: string
-  url: string
+  version:
+    | `${number}`
+    | `${number}-${number}-${number}`
+    | `${number}.${number}.${number}`
+    | `v${number}`
+  url?: string
+  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
@@ -13,6 +18,7 @@ export type RestTemplateName =
   | "Jira Cloud"
   | "Okta Management"
   | "PagerDuty"
+  | "ServiceNow"
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"
@@ -20,7 +26,6 @@ export type RestTemplateName =
   | "Banksapi"
   | "Baremetrics"
   | "Billsby"
-  | "Bluesnap"
   | "Breezy HR"
   | "Brevo"
   | "BulkSMS"

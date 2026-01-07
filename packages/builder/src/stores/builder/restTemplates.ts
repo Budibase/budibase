@@ -12,6 +12,7 @@ import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 import TwilioLogo from "assets/rest-template-icons/twilio.svg"
@@ -20,7 +21,6 @@ import AshbyLogo from "assets/rest-template-icons/ashby.svg"
 import BanksapiLogo from "assets/rest-template-icons/banksapi.svg"
 import BaremetricsLogo from "assets/rest-template-icons/baremetrics.svg"
 import BillsbyLogo from "assets/rest-template-icons/billsby.svg"
-import BluesnapLogo from "assets/rest-template-icons/bluesnap.svg"
 import BreezyHRLogo from "assets/rest-template-icons/breezy-hr.svg"
 import BrevoLogo from "assets/rest-template-icons/brevo.svg"
 import BulksmsComLogo from "assets/rest-template-icons/bulksms-com.svg"
@@ -79,6 +79,7 @@ import VerifiableLogo from "assets/rest-template-icons/verifiable.svg"
 import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
 import WorkableLogo from "assets/rest-template-icons/workable.svg"
 import XLogo from "assets/rest-template-icons/x.svg"
+import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -580,6 +581,18 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SlackLogo,
     },
     {
+      name: "ServiceNow",
+      description:
+        "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
+      specs: [
+        {
+          version: "1.0.0",
+          data: serviceNowSpecData,
+        },
+      ],
+      icon: ServiceNowLogo,
+    },
+    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
@@ -649,17 +662,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: BillsbyLogo,
-    },
-    {
-      name: "Bluesnap",
-      description: "At BlueSnap, we look at payments a little differently.",
-      specs: [
-        {
-          version: "8976-Tools",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/bluesnap/openapi.yaml",
-        },
-      ],
-      icon: BluesnapLogo,
     },
     {
       name: "Breezy HR",

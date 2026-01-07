@@ -10,6 +10,7 @@ import "@budibase/frontend-core/src/themes/midnight.css"
 import "@spectrum-css/page/dist/index-vars.css"
 import "./global.css"
 import { suppressWarnings } from "./helpers/warnings"
+import { mount } from "svelte"
 import App from "./App.svelte"
 
 // Suppress svelte runtime warnings
@@ -19,6 +20,8 @@ suppressWarnings([
   "received an unexpected slot",
 ])
 
-export default new App({
+const app = mount(App, {
   target: document.getElementById("app"),
 })
+
+export default app
