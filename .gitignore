@@ -114,3 +114,4 @@ budibase-datasource
 *.iml
 .nx
 .claude
+.vscode/settings.json
