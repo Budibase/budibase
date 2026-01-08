@@ -630,7 +630,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Banksapi",
-      description: "BANKS/Connect API Reference",
+      description: "Comprehensive Data Access Access to hundreds of millions of accounts, securities accounts and financial products",
       specs: [
         {
           version: "2.0",
@@ -700,7 +700,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Buttondown",
-      description: "NinjaAPI",
+      description: "The last email platform you'll switch to.",
       specs: [
         {
           version: "1.0.0",
@@ -711,7 +711,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Clever",
-      description: "Serves the Clever Data API",
+      description: "Offers one secure place for teachers and students to access the applications they love and depend on.",
       specs: [
         {
           version: "3.1.0",
@@ -734,7 +734,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Deel",
-      description: "API specification for Deel HR user provisioning API.",
+      description: "The only platform that allows you to combine payroll, HR, performance, and compliance for any type of worker in 150 countries into a single HR platform.",
       specs: [
         {
           version: "1.25.0",
@@ -769,7 +769,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     {
       name: "Factorial",
       description:
-        "Open Api Specifications available at Guides and support available at # Authentication The public API provides two methods of authentication, ApiKey...",
+        "The business management software that connects all you need to manage your team. It automates repetitive tasks, from hiring and holidays to performance reviews.",
       specs: [
         {
           version: "1.0.0",
@@ -804,7 +804,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Gitlab",
-      description: "An OpenAPI definition for the GitLab REST API.",
+      description: "The most comprehensive DevSecOps platform.",
       specs: [
         {
           version: "v4",
@@ -849,7 +849,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Homerun",
-      description: "Homerun API",
+      description: "Applicant tracking and HR management made easy for growing teams. Beautiful job posts, leave tracking, employee data, and team insights—all in one place.",
       specs: [
         {
           version: "2.0.0",
@@ -860,7 +860,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Hypatos",
-      description: "The Hypatos API is organized around REST.",
+      description: "Say goodbye to manual errors and cut the risk of do-overs. Hypatos AI agents increase processing efficiency and keep it consistent with correct decisions powered by knowledge...",
       specs: [
         {
           version: "2.15.0",
@@ -871,7 +871,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Intercom",
-      description: "The intercom API.",
+      description: "The leading AI Agent for customer service delivering the highest quality answers and handling the most complex queries",
       specs: [
         {
           version: "2.9",
@@ -882,7 +882,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Ironclad",
-      description: "Ironclad's REST API.",
+      description: "Design and deploy any type of contract in minutes. Instantly surface insights from legal agreements; manage risk.",
       specs: [
         {
           version: "1",
@@ -964,7 +964,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Localizely",
-      description: "Getting startedLocalizely API is built on REST",
+      description: "A translation management system that helps you organize your software translation projects.",
       specs: [
         {
           version: "1.2.1",
@@ -1011,7 +1011,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Nanonets",
-      description: "Welcome to the NanoNets API!",
+      description: "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
       specs: [
         {
           version: "2.0.0",
@@ -1160,7 +1160,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Shortcut",
-      description: "Shortcut API",
+      description: "A fast, lightweight and enjoyable project management platform for product and engineering teams.",
       specs: [
         {
           version: "3.0",
@@ -1181,7 +1181,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SmartrecruitersLogo,
     },
     {
-      name: "Softledger",
+      name: "SoftLedger",
       description:
         "SoftLedger provides real-time visibility to critical financial data.",
       specs: [
@@ -1193,9 +1193,9 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SoftledgerLogo,
     },
     {
-      name: "Spotdraft",
+      name: "SpotDraft",
       description:
-        "SpotDraft Public API ## API Reference The SpotDraft API is organized around REST.",
+        "A contract lifecycle management solution built for fast growing businesses. Create, manage, sign and analyze your contracts all in one place.",
       specs: [
         {
           version: "v1",
@@ -1217,7 +1217,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SumsubLogo,
     },
     {
-      name: "Suprsend",
+      name: "SuprSend",
       description:
         "SuprSend is a central communication stack for easily creating, managing and delivering notifications to your end users on multiple channels. Our si...",
       specs: [
@@ -1287,7 +1287,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Verifiable",
-      description: "Verifiable API.",
+      description: "Discover credentialing solutions designed to optimize provider networks, powered by industry-leading primary source verification technology.",
       specs: [
         {
           version: "24.14.3.683",
@@ -1298,7 +1298,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Volt IO",
-      description: "Join the real-time revolution!",
+      description: "One integration to a world of real-time payments",
       specs: [
         {
           version: "2024.04.11",
