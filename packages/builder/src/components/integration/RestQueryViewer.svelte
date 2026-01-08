@@ -1,5 +1,5 @@
 <script>
-  import { beforeUrlChange, goto, params } from "@roxi/routify"
+  import { beforeUrlChange, goto as gotoStore, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
@@ -58,8 +58,11 @@
   } from "./query"
 
   $beforeUrlChange
-  $goto
+  $gotoStore
   $params
+
+  // Capture store value for use in async callbacks (Svelte 5 compatibility)
+  $: goto = $gotoStore
 
   export let queryId
   let lastViewedQueryId = null
@@ -239,7 +242,7 @@
       notifications.success(`Request saved successfully`)
       if (isNew && redirectIfNew) {
         isModified = false
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       query = getSelectedQuery()
