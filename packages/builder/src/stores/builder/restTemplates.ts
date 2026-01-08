@@ -495,7 +495,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: AttioLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "BambooHR",
@@ -508,7 +508,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: BambooHRLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "GitHub",
@@ -521,7 +521,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: GitHubLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "Jira Cloud",
@@ -534,7 +534,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: JiraLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "Okta Management",
@@ -547,7 +547,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: OktaLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "PagerDuty",
@@ -560,7 +560,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: PagerDutyLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "Slack Web API",
@@ -573,7 +573,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SlackLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "ServiceNow",
@@ -586,7 +586,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: ServiceNowLogo,
-      verified: true
+      verified: true,
     },
     {
       name: "VirusTotal",
@@ -599,7 +599,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: VirusTotalLogo,
-      verified: true
+      verified: true,
     },
     /**
      * UNVERIFIED
@@ -665,7 +665,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Banksapi",
-      description: "Comprehensive Data Access Access to hundreds of millions of accounts, securities accounts and financial products",
+      description:
+        "Comprehensive Data Access Access to hundreds of millions of accounts, securities accounts and financial products",
       specs: [
         {
           version: "2.0",
@@ -746,7 +747,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Clever",
-      description: "Offers one secure place for teachers and students to access the applications they love and depend on.",
+      description:
+        "Offers one secure place for teachers and students to access the applications they love and depend on.",
       specs: [
         {
           version: "3.1.0",
@@ -769,7 +771,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Deel",
-      description: "The only platform that allows you to combine payroll, HR, performance, and compliance for any type of worker in 150 countries into a single HR platform.",
+      description:
+        "The only platform that allows you to combine payroll, HR, performance, and compliance for any type of worker in 150 countries into a single HR platform.",
       specs: [
         {
           version: "1.25.0",
@@ -873,7 +876,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Homerun",
-      description: "Applicant tracking and HR management made easy for growing teams. Beautiful job posts, leave tracking, employee data, and team insights—all in one place.",
+      description:
+        "Applicant tracking and HR management made easy for growing teams. Beautiful job posts, leave tracking, employee data, and team insights—all in one place.",
       specs: [
         {
           version: "2.0.0",
@@ -884,7 +888,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Hypatos",
-      description: "Say goodbye to manual errors and cut the risk of do-overs. Hypatos AI agents increase processing efficiency and keep it consistent with correct decisions powered by knowledge...",
+      description:
+        "Say goodbye to manual errors and cut the risk of do-overs. Hypatos AI agents increase processing efficiency and keep it consistent with correct decisions powered by knowledge...",
       specs: [
         {
           version: "2.15.0",
@@ -895,7 +900,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Intercom",
-      description: "The leading AI Agent for customer service delivering the highest quality answers and handling the most complex queries",
+      description:
+        "The leading AI Agent for customer service delivering the highest quality answers and handling the most complex queries",
       specs: [
         {
           version: "2.9",
@@ -906,7 +912,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Ironclad",
-      description: "Design and deploy any type of contract in minutes. Instantly surface insights from legal agreements; manage risk.",
+      description:
+        "Design and deploy any type of contract in minutes. Instantly surface insights from legal agreements; manage risk.",
       specs: [
         {
           version: "1",
@@ -988,7 +995,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Localizely",
-      description: "A translation management system that helps you organize your software translation projects.",
+      description:
+        "A translation management system that helps you organize your software translation projects.",
       specs: [
         {
           version: "1.2.1",
@@ -1023,7 +1031,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Nanonets",
-      description: "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
+      description:
+        "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
       specs: [
         {
           version: "2.0.0",
@@ -1125,8 +1134,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Sage",
-      description:
-        "All requests are required to be sent to your subdomain.",
+      description: "All requests are required to be sent to your subdomain.",
       specs: [
         {
           version: "1.0",
@@ -1172,7 +1180,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Shortcut",
-      description: "A fast, lightweight and enjoyable project management platform for product and engineering teams.",
+      description:
+        "A fast, lightweight and enjoyable project management platform for product and engineering teams.",
       specs: [
         {
           version: "3.0",
@@ -1265,7 +1274,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Tilled",
-      description: "PayFac-as-a-Service combines easy-to-integrate payment technology, full-service offerings...",
+      description:
+        "PayFac-as-a-Service combines easy-to-integrate payment technology, full-service offerings...",
       specs: [
         {
           version: "1.0",
@@ -1299,7 +1309,8 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Verifiable",
-      description: "Discover credentialing solutions designed to optimize provider networks, powered by industry-leading primary source verification technology.",
+      description:
+        "Discover credentialing solutions designed to optimize provider networks, powered by industry-leading primary source verification technology.",
       specs: [
         {
           version: "24.14.3.683",

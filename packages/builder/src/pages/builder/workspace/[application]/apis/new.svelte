@@ -312,7 +312,10 @@
       return keepOpen
     }
     await unverifiedTemplateModal?.hide()
-    await importTemplateSelection(pendingUnverifiedTemplate, pendingUnverifiedSpec)
+    await importTemplateSelection(
+      pendingUnverifiedTemplate,
+      pendingUnverifiedSpec
+    )
   }
 
   const cancelUnverifiedTemplate = () => {
@@ -555,5 +558,4 @@
     display: flex;
     justify-content: flex-start;
   }
-
 </style>

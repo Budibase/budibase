@@ -17,9 +17,7 @@
       <Body>{template.name}</Body>
     </div>
     {#if template.verified}
-      <i
-        class="ph ph-seal-check verified-icon"
-        aria-label="Verified template"
+      <i class="ph ph-seal-check verified-icon" aria-label="Verified template"
       ></i>
     {/if}
   </div>
