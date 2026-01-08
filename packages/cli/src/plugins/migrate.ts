@@ -324,11 +324,20 @@ export function migratePackageJson(): MigrationResult {
   dev["@rollup/plugin-commonjs"] = "^25.0.7"
   dev["@rollup/plugin-node-resolve"] = "^15.2.3"
   dev["rollup-plugin-svelte"] = "^7.2.3"
-  // retain others as-is
+  // Bump backend-core for /plugins subpath export compatibility
+  if (dev["@budibase/backend-core"]) {
+    dev["@budibase/backend-core"] = "^2.8.0"
+  }
+  // Remove unused dependencies
   if (dev["npm-run-all"]) {
     delete dev["npm-run-all"]
   }
   json.devDependencies = dev
+
+  // Remove @crownframework/svelte-error-boundary as it's replaced by <svelte:boundary>
+  if (json.dependencies?.["@crownframework/svelte-error-boundary"]) {
+    delete json.dependencies["@crownframework/svelte-error-boundary"]
+  }
 
   if (!json.scripts) json.scripts = {}
   json.scripts["build"] = "rollup -c rollup.config.mjs"
