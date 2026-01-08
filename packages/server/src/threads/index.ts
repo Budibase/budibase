@@ -56,7 +56,11 @@ export class Thread {
             FORKED_PROCESS: "1",
             FORKED_PROCESS_NAME: type,
           },
-          execArgv: ["--enable-source-maps"],
+          execArgv: process.execArgv.some(arg =>
+            arg.startsWith("--enable-source-maps")
+          )
+            ? ["--enable-source-maps"]
+            : undefined,
         },
       }
       if (opts.timeoutMs) {
