@@ -473,8 +473,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Discord",
-      description:
-        "Discord API for guilds, channels, messages, and webhooks",
+      description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
         {
           version: "1.0.0",
