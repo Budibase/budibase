@@ -4,9 +4,9 @@
   import { datasources, tables } from "@/stores/builder"
   import { auth, licensing } from "@/stores/portal"
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
 
-  $goto
+  $: goto = $gotoStore
 
   let promptText = ""
 
@@ -25,7 +25,7 @@
       notifications.success(`Tables created successfully.`)
       await datasources.fetch()
       await tables.fetch()
-      $goto(`./table/${tableToRedirect.id}`)
+      goto(`./table/${tableToRedirect.id}`)
     } catch (e: any) {
       notifications.error(e.message)
     }

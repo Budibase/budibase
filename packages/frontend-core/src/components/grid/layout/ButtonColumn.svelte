@@ -8,7 +8,7 @@
   const {
     renderedRows,
     hoveredRowId,
-    gridProps,
+    props: gridProps,
     width,
     rows,
     focusedRow,
