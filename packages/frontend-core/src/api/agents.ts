@@ -10,7 +10,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  fetchTools: () => Promise<ToolMetadata[]>
+  fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
@@ -44,9 +44,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchTools: async () => {
+  fetchTools: async (aiconfigId?: string) => {
+    const query = aiconfigId
+      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
+      : ""
     return await API.get({
-      url: `/api/agent/tools`,
+      url: `/api/agent/tools${query}`,
     })
   },
 })
