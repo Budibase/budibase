@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import CreateExternalDatasourceModal from "../data/_components/CreateExternalDatasourceModal/index.svelte"
   import DatasourceOption from "../data/_components/DatasourceOption.svelte"
   import RestTemplateOption from "../data/_components/RestTemplateOption.svelte"
-  import UnverifiedTemplateModal from "./_components/UnverifiedTemplateModal.svelte"
   import CreationPage from "@/components/common/CreationPage.svelte"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
@@ -21,6 +21,7 @@
     Popover,
     Icon,
     PopoverAlignment,
+    Link,
     type PopoverAPI,
   } from "@budibase/bbui"
   import {
@@ -49,14 +50,11 @@
   let externalDatasourceLoading = false
   let templateVersionModal: Modal
   let templateEndpointModal: Modal
-  let unverifiedTemplateModal: UnverifiedTemplateModal
   let selectedTemplate: RestTemplate | null = null
   let templateLoading = false
   let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
   let pendingSpec: RestTemplate["specs"][number] | null = null
-  let pendingUnverifiedTemplate: RestTemplate | null = null
-  let pendingUnverifiedSpec: RestTemplate["specs"][number] | null = null
   let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
@@ -112,12 +110,6 @@
   ) => {
     if (!restIntegration) {
       notifications.error("REST API integration is unavailable.")
-      return
-    }
-    if (!template.verified) {
-      pendingUnverifiedTemplate = template
-      pendingUnverifiedSpec = spec
-      unverifiedTemplateModal?.show()
       return
     }
 
@@ -311,25 +303,6 @@
     await handleTemplateSelection(template, spec)
   }
 
-  const getSpecUrl = (spec: RestTemplate["specs"][number] | null) => {
-    return spec?.url || ""
-  }
-
-  const confirmUnverifiedTemplate = async () => {
-    if (!pendingUnverifiedTemplate || !pendingUnverifiedSpec) {
-      return keepOpen
-    }
-    await unverifiedTemplateModal?.hide()
-    await importTemplateSelection(
-      pendingUnverifiedTemplate,
-      pendingUnverifiedSpec
-    )
-  }
-
-  const cancelUnverifiedTemplate = () => {
-    pendingUnverifiedTemplate = null
-    pendingUnverifiedSpec = null
-  }
 
   const close = () => {
     if (restDatasources.length) {
@@ -338,6 +311,12 @@
       $goto("../")
     }
   }
+
+  onDestroy(() => {
+    if (templatesInfoTimeout) {
+      clearTimeout(templatesInfoTimeout)
+    }
+  })
 </script>
 
 <CreateExternalDatasourceModal
@@ -384,6 +363,8 @@
       <div
         class="info-icon-wrapper"
         bind:this={templatesInfoAnchor}
+        role="button"
+        tabindex="0"
         on:mouseenter={() => {
           if (templatesInfoTimeout) {
             clearTimeout(templatesInfoTimeout)
@@ -438,17 +419,18 @@
     }, 100)
   }}
 >
-  <Body size="S">
-    These templates are not verified by Budibase and we cannot guarantee the
-    validity of them. You can review all specs using the following link:{" "}
-    <a
-      href="https://github.com/Budibase/openapi-rest-templates"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      https://github.com/Budibase/openapi-rest-templates
-    </a>
-  </Body>
+  <div class="templates-popover-content">
+    <Body size="SM" color="var(--spectrum-global-color-gray-700)">
+      These templates are not verified by Budibase and we cannot guarantee the
+      validity of them. You can review all specs using the following link:{" "}
+      <Link
+        href="https://github.com/Budibase/openapi-rest-templates"
+        target="_blank"
+      >
+        https://github.com/Budibase/openapi-rest-templates
+      </Link>
+    </Body>
+  </div>
 </Popover>
 
 <Modal
@@ -536,13 +518,6 @@
   </ModalContent>
 </Modal>
 
-<UnverifiedTemplateModal
-  bind:this={unverifiedTemplateModal}
-  templateUrl={getSpecUrl(pendingUnverifiedSpec)}
-  on:confirm={confirmUnverifiedTemplate}
-  on:cancel={cancelUnverifiedTemplate}
-/>
-
 <style>
 
   .options {
@@ -560,6 +535,30 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  .templates-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-icon-wrapper {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .info-icon-wrapper :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+  .templates-popover-content {
+    padding: 16px;
+    margin: 0;
+  }
+  .templates-popover-content :global(p) {
+    margin: 0;
+  }
+  :global(.spectrum-Popover:has(.templates-popover-content)) {
+    background-color: var(--background);
   }
   .versionOptions {
     display: grid;
