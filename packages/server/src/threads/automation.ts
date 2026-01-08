@@ -866,7 +866,10 @@ class Orchestrator {
   }
 }
 
-export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
+export async function execute(
+  job: Job<AutomationData>,
+  callback: WorkerCallback
+) {
   const workspaceId = job.data.event.appId
   if (!workspaceId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
@@ -877,9 +880,9 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
     throw new Error("Unable to execute, event doesn't contain automation ID.")
   }
 
-  return tracer.trace("automation.execute", span => {
+  return await tracer.trace("automation.execute", async span => {
     span.addTags({ workspaceId, automationId: job.data.automation?._id })
-    return context.doInAutomationContext({
+    return await context.doInAutomationContext({
       workspaceId,
       automationId,
       task: async () => {
