@@ -15,7 +15,6 @@
   import Logo from "assets/bb-emblem.svg"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
-  // Capture store value for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
 
   let form

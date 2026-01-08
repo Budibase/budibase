@@ -35,7 +35,6 @@
     return true
   })
 
-  // Capture store value for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
 
   $: templatesValue = $restTemplates?.templates || []

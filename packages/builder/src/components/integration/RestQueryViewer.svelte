@@ -61,7 +61,6 @@
   $gotoStore
   $params
 
-  // Capture store value for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
 
   export let queryId

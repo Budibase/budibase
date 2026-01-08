@@ -21,7 +21,6 @@
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
 
-  // Capture store value for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
 
   let loaded = false

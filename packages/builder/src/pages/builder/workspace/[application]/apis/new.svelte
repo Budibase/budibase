@@ -40,7 +40,6 @@
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
 
-  // Capture store value for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
 
   let externalDatasourceModal: CreateExternalDatasourceModal
