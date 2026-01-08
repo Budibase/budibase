@@ -118,7 +118,6 @@
         goto("./datasource")
       }
     } catch (error) {
-      console.log(error)
       notifications.error("Error deleting datasource")
     }
   }
