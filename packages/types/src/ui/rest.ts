@@ -15,6 +15,7 @@ export type RestTemplateName =
   | "Ansible AWX"
   | "BambooHR"
   | "Confluence"
+  | "Discord"
   | "GitHub"
   | "Jira Cloud"
   | "Okta Management"

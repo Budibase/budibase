@@ -9,6 +9,7 @@ import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
 import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import ConfluenceLogo from "assets/rest-template-icons/confluence.svg"
+import DiscordLogo from "assets/rest-template-icons/discord.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
@@ -469,6 +470,17 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: ConfluenceLogo,
+    },
+    {
+      name: "Discord",
+      description: "Discord API for guilds, channels, messages, and webhooks",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
+        },
+      ],
+      icon: DiscordLogo,
     },
     {
       name: "GitHub",
