@@ -64,6 +64,13 @@
     datasource => datasource.source === IntegrationTypes.REST
   )
   $: hasRestDatasources = restDatasources.length > 0
+  $: restTemplatesList = $restTemplates.templates || []
+  $: verifiedRestTemplates = restTemplatesList.filter(
+    template => template.verified
+  )
+  $: unverifiedRestTemplates = restTemplatesList.filter(
+    template => !template.verified
+  )
 
   $: disabled = externalDatasourceLoading
   $: templateDisabled = disabled || templateLoading
@@ -319,15 +326,29 @@
     <div class="subHeading">
       <Body>Or choose a template</Body>
     </div>
-    <div class="options templateOptions">
-      {#each $restTemplates.templates as template (template.name)}
-        <RestTemplateOption
-          on:click={() => selectTemplate(template)}
-          {template}
-          disabled={templateDisabled}
-        />
-      {/each}
-    </div>
+    {#if verifiedRestTemplates.length}
+      <div class="options templateOptions templateGroup">
+        {#each verifiedRestTemplates as template (template.name)}
+          <RestTemplateOption
+            on:click={() => selectTemplate(template)}
+            {template}
+            disabled={templateDisabled}
+          />
+        {/each}
+      </div>
+    {/if}
+    {#if unverifiedRestTemplates.length}
+      <br />
+      <div class="options templateOptions templateGroup">
+        {#each unverifiedRestTemplates as template (template.name)}
+          <RestTemplateOption
+            on:click={() => selectTemplate(template)}
+            {template}
+            disabled={templateDisabled}
+          />
+        {/each}
+      </div>
+    {/if}
   {:else}
     <p class="empty-state">REST API integration is unavailable.</p>
   {/if}

@@ -485,18 +485,6 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      name: "Ansible AWX",
-      description:
-        "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
-      specs: [
-        {
-          version: "v2",
-          url: "https://s3.amazonaws.com/awx-public-ci-files/devel/schema.json",
-        },
-      ],
-      icon: AnsibleLogo,
-    },
-    {
       name: "Attio",
       description:
         "CRM platform API for objects, records, lists, tasks, and webhooks",
@@ -601,6 +589,45 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true
     },
     {
+      name: "VirusTotal",
+      description:
+        "Analyze files, URLs, IPs, or domains and pull threat intelligence verdicts from VirusTotal",
+      specs: [
+        {
+          version: "3.0",
+          url: "https://github.com/VirusTotal/vt-py/files/13278605/vt-api-v3-openapi.json",
+        },
+      ],
+      icon: VirusTotalLogo,
+      verified: true
+    },
+    /**
+     * UNVERIFIED
+     */
+    {
+      name: "Gitlab",
+      description: "The most comprehensive DevSecOps platform.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/gitlab/openapi.yaml",
+        },
+      ],
+      icon: GitlabLogo,
+    },
+    {
+      name: "Mastercard",
+      description:
+        "Open Banking solutions in the US are provided by Finicity, a Mastercard company.",
+      specs: [
+        {
+          version: "1.16.2",
+          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/mastercard/openapi.yaml",
+        },
+      ],
+      icon: MastercardLogo,
+    },
+    {
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
@@ -613,17 +640,16 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: StripeLogo,
     },
     {
-      name: "VirusTotal",
+      name: "Ansible AWX",
       description:
-        "Analyze files, URLs, IPs, or domains and pull threat intelligence verdicts from VirusTotal",
+        "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
       specs: [
         {
-          version: "3.0",
-          url: "https://github.com/VirusTotal/vt-py/files/13278605/vt-api-v3-openapi.json",
+          version: "v2",
+          url: "https://s3.amazonaws.com/awx-public-ci-files/devel/schema.json",
         },
       ],
-      icon: VirusTotalLogo,
-      verified: true
+      icon: AnsibleLogo,
     },
     {
       name: "Ashby",
@@ -812,17 +838,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FountainLogo,
     },
     {
-      name: "Gitlab",
-      description: "The most comprehensive DevSecOps platform.",
-      specs: [
-        {
-          version: "v4",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/gitlab/openapi.yaml",
-        },
-      ],
-      icon: GitlabLogo,
-    },
-    {
       name: "Goody",
       description:
         "Goody is a new way to send personal and business gifts as easily as a text message.",
@@ -993,18 +1008,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: LogisticsosLogo,
-    },
-    {
-      name: "Mastercard",
-      description:
-        "Open Banking solutions in the US are provided by Finicity, a Mastercard company.",
-      specs: [
-        {
-          version: "1.16.2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/mastercard/openapi.yaml",
-        },
-      ],
-      icon: MastercardLogo,
     },
     {
       name: "Measureone",

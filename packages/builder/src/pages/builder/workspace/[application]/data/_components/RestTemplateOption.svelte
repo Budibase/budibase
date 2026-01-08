@@ -10,10 +10,18 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="header">
-    <div class="icon">
-      <img src={template.icon} alt={template.name} />
+    <div class="header-main">
+      <div class="icon">
+        <img src={template.icon} alt={template.name} />
+      </div>
+      <Body>{template.name}</Body>
     </div>
-    <Body>{template.name}</Body>
+    {#if template.verified}
+      <i
+        class="ph ph-seal-check verified-icon"
+        aria-label="Verified template"
+      ></i>
+    {/if}
   </div>
   <div class="description">
     <Body size="XS">{template.description}</Body>
@@ -57,6 +65,14 @@
     margin-bottom: 12px;
     align-items: center;
     flex-shrink: 0;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   .icon {
@@ -70,6 +86,12 @@
   .icon img {
     width: 100%;
     height: 100%;
+  }
+
+  .verified-icon {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 16px;
+    flex-shrink: 0;
   }
 
   .disabled {
