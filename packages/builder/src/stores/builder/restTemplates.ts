@@ -610,7 +610,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/gitlab/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gitlab/openapi.yaml",
         },
       ],
       icon: GitlabLogo,
@@ -622,7 +622,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.16.2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/mastercard/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/mastercard/openapi.yaml",
         },
       ],
       icon: MastercardLogo,
@@ -658,7 +658,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/ashby/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ashby/openapi.yaml",
         },
       ],
       icon: AshbyLogo,
@@ -669,7 +669,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/banksapi/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/banksapi/openapi.yaml",
         },
       ],
       icon: BanksapiLogo,
@@ -681,7 +681,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/baremetrics/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/baremetrics/openapi.yaml",
         },
       ],
       icon: BaremetricsLogo,
@@ -693,7 +693,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.3.5",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/billsby/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/billsby/openapi.yaml",
         },
       ],
       icon: BillsbyLogo,
@@ -705,7 +705,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/breezy-hr/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/breezy-hr/openapi.yaml",
         },
       ],
       icon: BreezyHRLogo,
@@ -717,7 +717,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/brevo/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/brevo/openapi.yaml",
         },
       ],
       icon: BrevoLogo,
@@ -728,7 +728,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/bulksms-com/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/bulksms-com/openapi.yaml",
         },
       ],
       icon: BulksmsComLogo,
@@ -739,7 +739,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/buttondown/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/buttondown/openapi.yaml",
         },
       ],
       icon: ButtondownLogo,
@@ -750,7 +750,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clever/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/clever/openapi.yaml",
         },
       ],
       icon: CleverLogo,
@@ -762,7 +762,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/clickup/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/clickup/openapi.yaml",
         },
       ],
       icon: ClickupLogo,
@@ -773,7 +773,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.25.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/deel/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/deel/openapi.yaml",
         },
       ],
       icon: DeelLogo,
@@ -785,7 +785,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/dixa/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/dixa/openapi.yaml",
         },
       ],
       icon: DixaLogo,
@@ -796,7 +796,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/dots/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/dots/openapi.yaml",
         },
       ],
       icon: DotsLogo,
@@ -808,7 +808,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/factorial/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/factorial/openapi.yaml",
         },
       ],
       icon: FactorialLogo,
@@ -820,7 +820,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fastspring/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/fastspring/openapi.yaml",
         },
       ],
       icon: FastspringLogo,
@@ -832,7 +832,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/fountain/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/fountain/openapi.yaml",
         },
       ],
       icon: FountainLogo,
@@ -844,7 +844,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/goody/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/goody/openapi.yaml",
         },
       ],
       icon: GoodyLogo,
@@ -855,7 +855,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/helcim/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/helcim/openapi.yaml",
         },
       ],
       icon: HelcimLogo,
@@ -866,7 +866,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hibob/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hibob/openapi.yaml",
         },
       ],
       icon: HibobLogo,
@@ -877,7 +877,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/homerun/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/homerun/openapi.yaml",
         },
       ],
       icon: HomerunLogo,
@@ -888,7 +888,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.15.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/hypatos/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hypatos/openapi.yaml",
         },
       ],
       icon: HypatosLogo,
@@ -899,7 +899,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.9",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/intercom/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/intercom/openapi.yaml",
         },
       ],
       icon: IntercomLogo,
@@ -910,7 +910,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/ironclad/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ironclad/openapi.yaml",
         },
       ],
       icon: IroncladLogo,
@@ -922,7 +922,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "0.0.89",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/jina-ai/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/jina-ai/openapi.yaml",
         },
       ],
       icon: JinaAILogo,
@@ -934,7 +934,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/jobsoid/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/jobsoid/openapi.yaml",
         },
       ],
       icon: JobsoidLogo,
@@ -946,7 +946,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/keatext-ai/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/keatext-ai/openapi.yaml",
         },
       ],
       icon: KeatextAILogo,
@@ -958,7 +958,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/kenjo/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/kenjo/openapi.yaml",
         },
       ],
       icon: KenjoLogo,
@@ -969,7 +969,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.5.3",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/lambda/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/lambda/openapi.yaml",
         },
       ],
       icon: LambdaLogo,
@@ -981,7 +981,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.19.28",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/lob/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/lob/openapi.yaml",
         },
       ],
       icon: LobLogo,
@@ -992,7 +992,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.2.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/localizely/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/localizely/openapi.yaml",
         },
       ],
       icon: LocalizelyLogo,
@@ -1004,7 +1004,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/logisticsos/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/logisticsos/openapi.yaml",
         },
       ],
       icon: LogisticsosLogo,
@@ -1016,7 +1016,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/measureone/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/measureone/openapi.yaml",
         },
       ],
       icon: MeasureoneLogo,
@@ -1027,7 +1027,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/nanonets/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/nanonets/openapi.yaml",
         },
       ],
       icon: NanonetsLogo,
@@ -1039,7 +1039,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/notion/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/notion/openapi.yaml",
         },
       ],
       icon: NotionLogo,
@@ -1051,7 +1051,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/oyster/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/oyster/openapi.yaml",
         },
       ],
       icon: OysterLogo,
@@ -1062,7 +1062,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/peach-payments/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/peach-payments/openapi.yaml",
         },
       ],
       icon: PeachPaymentsLogo,
@@ -1073,7 +1073,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.23",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/pinpoint/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pinpoint/openapi.yaml",
         },
       ],
       icon: PinpointLogo,
@@ -1084,7 +1084,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2021.04.01",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/podium/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/podium/openapi.yaml",
         },
       ],
       icon: PodiumLogo,
@@ -1095,7 +1095,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "0.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/remote/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/remote/openapi.yaml",
         },
       ],
       icon: RemoteLogo,
@@ -1106,7 +1106,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/resend/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/resend/openapi.yaml",
         },
       ],
       icon: ResendLogo,
@@ -1118,7 +1118,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/rivery/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/rivery/openapi.yaml",
         },
       ],
       icon: RiveryLogo,
@@ -1130,7 +1130,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/sage/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/sage/openapi.yaml",
         },
       ],
       icon: SageLogo,
@@ -1142,7 +1142,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/secoda/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/secoda/openapi.yaml",
         },
       ],
       icon: SecodaLogo,
@@ -1154,7 +1154,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.1.202403211903",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shipengine/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/shipengine/openapi.yaml",
         },
       ],
       icon: ShipengineLogo,
@@ -1165,7 +1165,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2018-02-08",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shippo/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/shippo/openapi.yaml",
         },
       ],
       icon: ShippoLogo,
@@ -1176,7 +1176,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/shortcut/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/shortcut/openapi.yaml",
         },
       ],
       icon: ShortcutLogo,
@@ -1187,7 +1187,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "201911.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/smartrecruiters/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/smartrecruiters/openapi.yaml",
         },
       ],
       icon: SmartrecruitersLogo,
@@ -1199,7 +1199,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/softledger/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/softledger/openapi.yaml",
         },
       ],
       icon: SoftledgerLogo,
@@ -1211,7 +1211,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/spotdraft/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/spotdraft/openapi.yaml",
         },
       ],
       icon: SpotdraftLogo,
@@ -1223,7 +1223,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/sumsub/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/sumsub/openapi.yaml",
         },
       ],
       icon: SumsubLogo,
@@ -1235,7 +1235,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.2.1",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/suprsend/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/suprsend/openapi.yaml",
         },
       ],
       icon: SuprsendLogo,
@@ -1247,7 +1247,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/terminal/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/terminal/openapi.yaml",
         },
       ],
       icon: TerminalLogo,
@@ -1258,7 +1258,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/theirstack/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/theirstack/openapi.yaml",
         },
       ],
       icon: TheirstackLogo,
@@ -1269,7 +1269,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tilled/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/tilled/openapi.yaml",
         },
       ],
       icon: TilledLogo,
@@ -1280,7 +1280,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/trello/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/trello/openapi.yaml",
         },
       ],
       icon: TrelloLogo,
@@ -1292,7 +1292,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/tremendous/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/tremendous/openapi.yaml",
         },
       ],
       icon: TremendousLogo,
@@ -1303,7 +1303,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "24.14.3.683",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/verifiable/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/verifiable/openapi.yaml",
         },
       ],
       icon: VerifiableLogo,
@@ -1314,7 +1314,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2024.04.11",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/volt-io/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/volt-io/openapi.yaml",
         },
       ],
       icon: VoltIOLogo,
@@ -1326,7 +1326,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.8",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/workable/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/workable/openapi.yaml",
         },
       ],
       icon: WorkableLogo,
@@ -1337,7 +1337,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.62",
-          url: "https://raw.githubusercontent.com/konfig-sdks/openapi-examples/main/x/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/x/openapi.yaml",
         },
       ],
       icon: XLogo,
