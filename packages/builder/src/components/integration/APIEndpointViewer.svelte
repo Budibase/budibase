@@ -973,7 +973,7 @@
       class="underlay"
       transition:fade={{ duration: 260 }}
       on:click={() => sidebarExpanded.set(false)}
-    />
+    ></div>
   {/if}
   {#if $sidebarExpanded}
     <div
