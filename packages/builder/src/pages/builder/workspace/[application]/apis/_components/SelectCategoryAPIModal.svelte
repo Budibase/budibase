@@ -228,10 +228,10 @@
           <div class="pagination">
             <Pagination
               page={currentPage}
-              hasPrevPage={hasPrevPage}
-              hasNextPage={hasNextPage}
-              goToPrevPage={goToPrevPage}
-              goToNextPage={goToNextPage}
+              {hasPrevPage}
+              {hasNextPage}
+              {goToPrevPage}
+              {goToNextPage}
             />
           </div>
         {/if}
