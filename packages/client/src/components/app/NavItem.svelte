@@ -20,6 +20,8 @@
   const dispatch = createEventDispatcher()
 
   let renderKey
+  let previousCollapsedState = collapsed
+  let savedExpandedState = {}
 
   $: isBuilderActive = testUrl => {
     return (
@@ -34,6 +36,37 @@
   $: renderLeftNav = leftNav || mobile
   $: caret = !renderLeftNav || expanded ? "caret-down" : "caret-right"
   $: collapsedText = getShortText(text)
+
+  // Watch for navbar collapse state changes
+  $: if (collapsed !== previousCollapsedState) {
+    handleCollapsedStateChange(collapsed)
+    previousCollapsedState = collapsed
+  }
+
+  const handleCollapsedStateChange = isCollapsed => {
+    if (type === "sublinks" && subLinks?.length) {
+      if (isCollapsed) {
+        // Save the current expanded state before collapsing
+        if ($navStateStore[text]) {
+          savedExpandedState[text] = true
+        }
+        // Close all menus by updating the store
+        navStateStore.update(state => ({
+          ...state,
+          [text]: false,
+        }))
+      } else {
+        // Restore the previous expanded state when expanding
+        if (savedExpandedState[text]) {
+          navStateStore.update(state => ({
+            ...state,
+            [text]: true,
+          }))
+          delete savedExpandedState[text]
+        }
+      }
+    }
+  }
 
   const getShortText = text => {
     if (!text) {
