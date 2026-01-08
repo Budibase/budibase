@@ -137,6 +137,7 @@ export interface RestTemplate {
   description: string
   specs: RestTemplateSpec[]
   icon: string
+  verified?: true
 }
 
 export interface RestTemplateWithoutIcon<Name> {

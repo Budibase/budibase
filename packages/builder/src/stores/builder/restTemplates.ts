@@ -507,6 +507,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: AttioLogo,
+      verified: true
     },
     {
       name: "BambooHR",
@@ -519,6 +520,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: BambooHRLogo,
+      verified: true
     },
     {
       name: "GitHub",
@@ -531,6 +533,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: GitHubLogo,
+      verified: true
     },
     {
       name: "Jira Cloud",
@@ -543,6 +546,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: JiraLogo,
+      verified: true
     },
     {
       name: "Okta Management",
@@ -555,6 +559,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: OktaLogo,
+      verified: true
     },
     {
       name: "PagerDuty",
@@ -567,6 +572,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: PagerDutyLogo,
+      verified: true
     },
     {
       name: "Slack Web API",
@@ -579,6 +585,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: SlackLogo,
+      verified: true
     },
     {
       name: "ServiceNow",
@@ -591,6 +598,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: ServiceNowLogo,
+      verified: true
     },
     {
       name: "Stripe",
@@ -615,6 +623,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: VirusTotalLogo,
+      verified: true
     },
     {
       name: "Ashby",
