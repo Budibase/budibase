@@ -5,6 +5,17 @@
   import { onDestroy } from "svelte"
   import ViewNavBar from "./_components/ViewNavBar.svelte"
 
+  // Extract stores from namespace for Svelte 5 compatibility
+  const { goto, params, url, redirect, isActive, page, layout } = routify
+
+  $goto
+  $params
+  $url
+  $redirect
+  $isActive
+  $page
+  $layout
+
   $: tableId = $tables.selectedTableId
   $: builderStore.selectResource(tableId)
 

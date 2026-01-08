@@ -17,6 +17,7 @@
     type UIIntegration,
   } from "@budibase/types"
   import { goto } from "@roxi/routify"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()
@@ -30,6 +31,7 @@
   let templatesValue: RestTemplate[] = []
   let templateGroupsValue: RestTemplateGroup<RestTemplateGroupName>[] = []
 
+  $goto
   $beforeUrlChange(() => {
     return true
   })
@@ -66,11 +68,12 @@
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
-    if (!spec?.url) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return undefined
     }
     try {
-      return await queries.fetchImportInfo({ url: spec.url })
+      return await queries.fetchImportInfo(request)
     } catch (err) {
       console.warn("Failed to load template metadata", err)
       return undefined

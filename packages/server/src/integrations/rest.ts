@@ -25,12 +25,11 @@ import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
 import sdk from "../sdk"
-import { getProxyDispatcher } from "../utilities"
+import { getDispatcher } from "../utilities"
 import {
   fetch,
   Response,
   RequestInit,
-  Agent,
   Headers,
   FormData,
   getGlobalDispatcher,
@@ -698,33 +697,11 @@ export class RestIntegration implements IntegrationBase {
     const isHttpMockingActive = globalDispatcher instanceof MockAgent
 
     if (!isHttpMockingActive) {
-      const proxyDispatcher = getProxyDispatcher({
+      // Cast needed due to undici version differences between packages
+      input.dispatcher = getDispatcher({
         rejectUnauthorized,
-      })
-      if (proxyDispatcher) {
-        console.log("[rest integration] Using proxy for request", {
-          url,
-          hasDispatcher: true,
-          isHttpsUrl: url.startsWith("https://"),
-          rejectUnauthorized,
-          configRejectUnauthorized: this.config.rejectUnauthorized,
-          proxyUri:
-            process.env.GLOBAL_AGENT_HTTPS_PROXY ||
-            process.env.GLOBAL_AGENT_HTTP_PROXY ||
-            process.env.HTTPS_PROXY ||
-            process.env.HTTP_PROXY,
-        })
-        // @ts-expect-error - ProxyAgent is compatible with Dispatcher but types don't align perfectly
-        input.dispatcher = proxyDispatcher
-      } else if (!rejectUnauthorized) {
-        // No proxy, but need to disable TLS verification for self-signed certificates
-        const agent = new Agent({
-          connect: {
-            rejectUnauthorized: false,
-          },
-        })
-        input.dispatcher = agent
-      }
+        url,
+      }) as unknown as typeof input.dispatcher
     }
 
     let response: Response

@@ -26,6 +26,8 @@
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
 
+  $goto
+
   export let query
   let queryHash
 

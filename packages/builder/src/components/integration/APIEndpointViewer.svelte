@@ -53,6 +53,7 @@
     buildAuthConfigs,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
@@ -363,12 +364,13 @@
   }
 
   const loadEndpoints = async (spec?: RestTemplateSpec) => {
-    if (!spec) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return
     }
     try {
       endpointsLoading = true
-      const resp = await queries.fetchImportInfo({ url: spec.url })
+      const resp = await queries.fetchImportInfo(request)
       const { endpoints: respEndpoints, url } = resp || {}
       if (respEndpoints) {
         endpoints = respEndpoints
@@ -971,7 +973,7 @@
       class="underlay"
       transition:fade={{ duration: 260 }}
       on:click={() => sidebarExpanded.set(false)}
-    />
+    ></div>
   {/if}
   {#if $sidebarExpanded}
     <div

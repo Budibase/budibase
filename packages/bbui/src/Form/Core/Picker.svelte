@@ -83,7 +83,6 @@
 
   let button: HTMLButtonElement | null = null
   let component: HTMLUListElement | null = null
-  let optionIconDescriptor: ResolvedIcon | null = null
   let virtualizedOptions: Array<{ option: O; idx: number }> = []
   let virtualPaddingTop = 0
   let virtualPaddingBottom = 0
@@ -337,9 +336,10 @@
             class="virtual-spacer"
             aria-hidden="true"
             style={`height:${virtualPaddingTop}px`}
-          />
+          ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
+          {@const optionIcon = resolveIcon(getOptionIcon(option, idx))}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -351,9 +351,9 @@
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
-            {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
+            {#if optionIcon}
               <span class="option-extra icon">
-                <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
+                <PickerIcon icon={optionIcon} {useOptionIconImage} />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
@@ -396,7 +396,7 @@
             class="virtual-spacer"
             aria-hidden="true"
             style={`height:${virtualPaddingBottom}px`}
-          />
+          ></li>
         {/if}
       {/if}
     </ul>

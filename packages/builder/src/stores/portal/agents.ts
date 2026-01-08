@@ -2,7 +2,6 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
-  AgentChat,
   CreateAgentRequest,
   UpdateAgentRequest,
   ToolMetadata,
@@ -12,8 +11,6 @@ import { derived } from "svelte/store"
 interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
-  chats: AgentChat[]
-  currentChatId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
 }
@@ -22,14 +19,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
     super({
       agents: [],
-      chats: [],
       tools: [],
       agentsLoaded: false,
     })
   }
 
   init = async () => {
-    await Promise.all([this.fetchAgents(), this.fetchTools()])
+    await this.fetchAgents()
   }
 
   fetchAgents = async () => {
@@ -42,60 +38,17 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return agents
   }
 
-  fetchChats = async (agentId: string) => {
+  selectAgent = async (agentId: string | undefined) => {
     if (!agentId) {
       this.update(state => {
-        state.chats = []
+        state.currentAgentId = undefined
         return state
       })
-      return []
+      return
     }
-    const chats = await API.fetchChats(agentId)
-    this.update(state => {
-      state.chats = chats
-      return state
-    })
-    return chats
-  }
 
-  removeChat = async (chatId: string, agentId?: string) => {
-    await API.removeChat(chatId)
-    if (agentId) {
-      await this.fetchChats(agentId)
-    }
-  }
-
-  selectAgent = (agentId: string | undefined) => {
     this.update(state => {
       state.currentAgentId = agentId
-      if (agentId) {
-        this.fetchChats(agentId)
-      } else {
-        state.chats = []
-      }
-      return state
-    })
-  }
-
-  fetchTools = async () => {
-    const tools = await API.fetchTools()
-    this.update(state => {
-      state.tools = tools
-      return state
-    })
-    return tools
-  }
-
-  setCurrentChatId = (chatId: string) => {
-    this.update(state => {
-      state.currentChatId = chatId
-      return state
-    })
-  }
-
-  clearCurrentChatId = () => {
-    this.update(state => {
-      state.currentChatId = undefined
       return state
     })
   }
@@ -124,6 +77,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
     await this.fetchAgents()
+  }
+
+  fetchTools = async (aiconfigId?: string) => {
+    const tools = await API.fetchTools(aiconfigId)
+    this.update(state => {
+      state.tools = tools
+      return state
+    })
+    return tools
   }
 }
 export const agentsStore = new AgentsStore()

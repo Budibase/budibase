@@ -181,6 +181,8 @@ export interface QueryJson {
     oldTable?: Table
     // can specify something that columns could be prefixed with
     columnPrefix?: string
+    // internal tables can opt into SQLite LIKE without LOWER for unicode
+    sqliteUseLikeWithoutLower?: boolean
   }
   extra?: {
     idFilter?: SearchFilters

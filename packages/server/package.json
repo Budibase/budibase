@@ -40,7 +40,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.68",
+    "@ai-sdk/openai": "^3.0.1",
     "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "12.1.0",
     "@aws-sdk/client-dynamodb": "3.709.0",
@@ -65,7 +65,7 @@
     "@octokit/rest": "^20.0.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
-    "ai": "^5.0.93",
+    "ai": "^6.0.3",
     "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",
@@ -120,11 +120,12 @@
     "pouchdb-all-dbs": "1.1.1",
     "pouchdb-find": "9.0.0",
     "redis": "4",
+    "semver": "^7.5.4",
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
     "snowflake-sdk": "^1.15.0",
     "socket.io": "4.8.1",
-    "svelte": "4.2.19",
+    "svelte": "^5.38.2",
     "tar": "6.2.1",
     "tmp": "0.2.3",
     "to-json-schema": "0.2.5",
@@ -154,6 +155,7 @@
     "@types/oracledb": "6.5.1",
     "@types/pg": "8.6.6",
     "@types/pouchdb": "6.4.2",
+    "@types/semver": "7.3.7",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",
     "@types/swagger-jsdoc": "^6.0.4",
@@ -178,7 +180,7 @@
     "tsconfig-paths": "4.0.0",
     "undici": "^5.28.4",
     "yargs": "^17.7.2",
-    "zod": "^4.1.12"
+    "zod": "^4.2.1"
   },
   "resolutions": {
     "@budibase/pro": "npm:@budibase/pro@latest"

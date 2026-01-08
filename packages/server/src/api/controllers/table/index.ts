@@ -36,6 +36,7 @@ import {
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
+  Row,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import {
@@ -79,6 +80,30 @@ function checkDefaultFields(table: Table) {
       )
     }
   }
+}
+
+function stripIgnoreTimezoneSuffix(rows: Row[], table: Table): Row[] {
+  const columns = Object.entries(table.schema)
+    .filter(
+      ([_, schema]) =>
+        schema.type === FieldType.DATETIME &&
+        schema.ignoreTimezones &&
+        !schema.timeOnly
+    )
+    .map(([name]) => name)
+  if (!columns.length) {
+    return rows
+  }
+  return rows.map(row => {
+    const updates = columns.reduce<Row>((acc, column) => {
+      const value = row[column]
+      if (typeof value === "string" && value.endsWith("Z")) {
+        acc[column] = value.slice(0, -1)
+      }
+      return acc
+    }, {})
+    return Object.keys(updates).length ? { ...row, ...updates } : row
+  })
 }
 
 async function guardTable(table: Table, isCreate: boolean) {
@@ -355,8 +380,9 @@ export async function publish(
           }
 
           const prodTable = await sdk.tables.getTable(tableId)
+          const sanitizedRows = stripIgnoreTimezoneSuffix(importRows, prodTable)
           await handleDataImport(prodTable, {
-            importRows,
+            importRows: sanitizedRows,
             userId: ctx.user._id,
             identifierFields: ["_id"],
           })

@@ -23,7 +23,7 @@
   // This is needed because display: contents is considered "invisible".
   // It should only ever be an action button, so should be fine.
   function getAnchor(node: HTMLDivElement) {
-    anchor = (node.firstChild as HTMLElement) ?? undefined
+    anchor = (node.firstElementChild as HTMLElement) ?? undefined
   }
 
   export const show = () => {
@@ -81,8 +81,16 @@
   borderRadius={roundedPopover ? "12px" : undefined}
   on:open
   on:close
-  on:mouseenter={openOnHover ? cancelHide : null}
-  on:mouseleave={openOnHover ? queueHide : null}
+  on:mouseenter={() => {
+    if (openOnHover) {
+      cancelHide()
+    }
+  }}
+  on:mouseleave={() => {
+    if (openOnHover) {
+      queueHide()
+    }
+  }}
   bind:open
 >
   <Menu>

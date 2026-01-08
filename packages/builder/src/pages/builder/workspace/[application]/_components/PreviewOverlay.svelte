@@ -29,13 +29,14 @@
 >
   <div
     class="container spectrum {$themeStore.theme}"
+    class:mobile={$previewStore.modalDevice === "mobile"}
     transition:fly={{ duration: 260, y: 130 }}
   >
-    <div class="header placeholder" />
+    <div class="header placeholder"></div>
     <div class="loading placeholder">
       <ProgressCircle />
     </div>
-    <iframe title="Budibase App Preview" {src} />
+    <iframe title="Budibase App Preview" {src}></iframe>
   </div>
 </div>
 
@@ -61,6 +62,12 @@
     overflow: hidden;
     position: relative;
     box-shadow: 0 0 80px 0 rgba(0, 0, 0, 0.5);
+  }
+  .container.mobile {
+    flex: 0 0 auto;
+    width: min(520px, calc(100% - 96px));
+    height: min(960px, calc(100% - 96px));
+    margin: auto;
   }
   iframe {
     position: absolute;

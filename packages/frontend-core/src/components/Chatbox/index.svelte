@@ -1,6 +1,10 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type { AgentChat } from "@budibase/types"
+  import type {
+    ChatConversation,
+    ChatConversationRequest,
+  } from "@budibase/types"
+  import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { onDestroy } from "svelte"
@@ -10,14 +14,21 @@
   import type { UIMessage } from "ai"
   import { v4 as uuidv4 } from "uuid"
 
-  export let API = createAPIClient()
-
   export let workspaceId: string
-  export let chat: AgentChat
+  export let API = createAPIClient({
+    attachHeaders: headers => {
+      if (workspaceId) {
+        headers[Header.APP_ID] = workspaceId
+      }
+    },
+  })
+  type ChatConversationLike = ChatConversation | ChatConversationRequest
+
+  export let chat: ChatConversationLike
   export let loading: boolean = false
 
   const dispatch = createEventDispatcher<{
-    chatSaved: { chatId?: string; chat: AgentChat }
+    chatSaved: { chatId?: string; chat: ChatConversationLike }
   }>()
 
   let inputValue = ""
@@ -25,10 +36,30 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
   let lastFocusedChatId: string | undefined
-  let lastFocusedNewChat: AgentChat | undefined
+  let lastFocusedNewChat: ChatConversationLike | undefined
 
   $: if (chat?.messages?.length) {
     scrollToBottom()
+  }
+
+  const ensureChatApp = async (): Promise<string | undefined> => {
+    if (chat?.chatAppId) {
+      return chat.chatAppId
+    }
+    try {
+      const chatApp = await API.fetchChatApp(workspaceId)
+      if (chatApp?._id) {
+        const baseChat = chat || { title: "", messages: [], chatAppId: "" }
+        chat = {
+          ...baseChat,
+          chatAppId: chatApp._id,
+        }
+        return chatApp._id
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    return undefined
   }
 
   async function scrollToBottom() {
@@ -46,8 +77,41 @@
   }
 
   async function prompt() {
+    const resolvedChatAppId = await ensureChatApp()
+
     if (!chat) {
-      chat = { title: "", messages: [] }
+      chat = { title: "", messages: [], chatAppId: "" }
+    }
+
+    const chatAppId = chat.chatAppId || resolvedChatAppId
+
+    if (!chatAppId) {
+      notifications.error("Chat app could not be created")
+      return
+    }
+
+    if (!chat._id && (!chat.messages || chat.messages.length === 0)) {
+      try {
+        const newChat = await API.createChatConversation(
+          {
+            chatAppId,
+            title: chat.title,
+          },
+          workspaceId
+        )
+
+        chat = {
+          ...chat,
+          ...newChat,
+          chatAppId,
+        }
+      } catch (err: any) {
+        console.error(err)
+        notifications.error(
+          err?.message || "Could not start a new chat conversation"
+        )
+        return
+      }
     }
 
     const userMessage: UIMessage = {
@@ -56,8 +120,9 @@
       parts: [{ type: "text", text: inputValue }],
     }
 
-    const updatedChat: AgentChat = {
+    const updatedChat: ChatConversationLike = {
       ...chat,
+      chatAppId: chat.chatAppId,
       messages: [...chat.messages, userMessage],
     }
 
@@ -68,14 +133,39 @@
     loading = true
 
     try {
-      const messageStream = await API.agentChatStream(updatedChat, workspaceId)
+      const messageStream = await API.streamChatConversation(
+        updatedChat,
+        workspaceId
+      )
+
+      let streamedMessages: UIMessage[] = [...updatedChat.messages]
 
       for await (const message of messageStream) {
+        streamedMessages = [...streamedMessages, message]
         chat = {
           ...updatedChat,
-          messages: [...updatedChat.messages, message],
+          messages: streamedMessages,
         }
         scrollToBottom()
+      }
+
+      // When a chat is created for the first time the server generates the ID.
+      // If we don't have it locally yet, retrieve the saved conversation so
+      // subsequent prompts append to the same document instead of creating a new one.
+      if (!chat._id && chat.chatAppId) {
+        try {
+          const history = await API.fetchChatHistory(chat.chatAppId)
+          const lastMessageId = chat.messages[chat.messages.length - 1]?.id
+          const savedConversation =
+            history?.find(convo =>
+              convo.messages.some(message => message.id === lastMessageId)
+            ) || history?.[0]
+          if (savedConversation) {
+            chat = savedConversation
+          }
+        } catch (historyError) {
+          console.error(historyError)
+        }
       }
 
       loading = false
@@ -93,6 +183,8 @@
   }
 
   onMount(async () => {
+    await ensureChatApp()
+
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {
       await tick()
@@ -211,7 +303,7 @@
       on:keydown={handleKeyDown}
       placeholder="Ask anything"
       disabled={loading}
-    />
+    ></textarea>
   </div>
 </div>
 

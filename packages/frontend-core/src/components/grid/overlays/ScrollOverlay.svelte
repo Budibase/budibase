@@ -123,7 +123,7 @@
     on:mousedown={startVDragging}
     on:touchstart={startVDragging}
     class:dragging={isDraggingV}
-  />
+  ></div>
 {/if}
 {#if $showHScrollbar}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -133,7 +133,7 @@
     on:mousedown={startHDragging}
     on:touchstart={startHDragging}
     class:dragging={isDraggingH}
-  />
+  ></div>
 {/if}
 
 <style>

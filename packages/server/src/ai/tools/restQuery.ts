@@ -1,7 +1,8 @@
-import { Query, ToolType } from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import { Query, ToolType } from "@budibase/types"
+import { tool } from "ai"
 import { z } from "zod"
-import type { ExecutableTool } from "."
+import { type AiToolDefinition } from "."
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "../../automations/steps/utils"
 
@@ -10,6 +11,17 @@ export interface RestQueryToolsConfig {
   datasourceName?: string
 }
 
+type RestQueryToolResult =
+  | {
+      success: true
+      data: unknown
+      info: Record<string, unknown>
+    }
+  | {
+      success: false
+      error: string
+    }
+
 const sanitiseToolName = (name: string): string => {
   if (name.length > 64) {
     return name.substring(0, 64) + "..."
@@ -17,7 +29,7 @@ const sanitiseToolName = (name: string): string => {
   return name.replace(/[^a-zA-Z0-9_-]/g, "_")
 }
 
-const buildParametersSchema = (query: Query): z.ZodObject<any> => {
+const buildParametersSchema = (query: Query) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {}
 
   for (const param of query.parameters || []) {
@@ -33,7 +45,7 @@ const buildParametersSchema = (query: Query): z.ZodObject<any> => {
 export const createRestQueryTool = (
   query: Query,
   datasourceName?: string
-): ExecutableTool => {
+): AiToolDefinition => {
   const toolName = sanitiseToolName(query.name)
   const parametersSchema = buildParametersSchema(query)
 
@@ -44,34 +56,38 @@ export const createRestQueryTool = (
   return {
     name: toolName,
     description,
-    parameters: parametersSchema,
     sourceType: ToolType.REST_QUERY,
     sourceLabel: datasourceName || "API",
-    handler: async (params: unknown) => {
-      const workspaceId = context.getWorkspaceId()
-      if (!workspaceId) {
-        return { error: "No app context available" }
-      }
-
-      const ctx: any = buildCtx(workspaceId, null, {
-        body: {
-          parameters: params,
-        },
-        params: {
-          queryId: query._id,
-        },
-      })
-
-      try {
-        await queryController.executeV2AsAutomation(ctx)
-        const { data, ...rest } = ctx.body
-        return { success: true, data, info: rest }
-      } catch (err: any) {
-        return {
-          success: false,
-          error: err.message || "Query execution failed",
+    tool: tool({
+      description,
+      inputSchema: parametersSchema,
+      execute: async (params): Promise<RestQueryToolResult> => {
+        const workspaceId = context.getWorkspaceId()
+        if (!workspaceId) {
+          return { success: false, error: "No app context available" }
         }
-      }
-    },
+
+        const ctx: any = buildCtx(workspaceId, null, {
+          body: {
+            parameters: params,
+          },
+          params: {
+            queryId: query._id,
+          },
+        })
+
+        try {
+          await queryController.executeV2AsAutomation(ctx)
+          const { data, ...info } = (ctx.body || {}) as Record<string, unknown>
+          return { success: true, data, info }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err)
+          return {
+            success: false,
+            error: message || "Query execution failed",
+          }
+        }
+      },
+    }),
   }
 }

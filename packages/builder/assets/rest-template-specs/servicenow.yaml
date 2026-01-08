@@ -1,0 +1,963 @@
+openapi: 3.0.1
+info:
+  title: ServiceNow SCIM API
+  description: |
+    System for Cross-domain Identity Management (SCIM) endpoints expose the
+    provisioning operations for users, groups, and supporting resources such as
+    companies, cost centers, departments, and locations. These endpoints mirror
+    ServiceNow's SCIM implementation so you can import ready-made queries into
+    your workspace once the `SCIM v2 - ServiceNow® Cross-domain Identity Management`
+    plugin is activated.
+  version: 1.0.0
+  termsOfService: https://www.servicenow.com/
+  contact:
+    name: ServiceNow Developer Program
+    url: https://developer.servicenow.com/
+externalDocs:
+  description: ServiceNow SCIM API reference for Zurich
+  url: https://developer.servicenow.com/dev.do#!/reference/api/zurich/rest/scim-api
+servers:
+  - url: https://{instance}.service-now.com/api/now
+    description: Instance-specific base URL for SCIM
+    variables:
+      instance:
+        description: ServiceNow subdomain
+        default: example
+tags:
+  - name: SCIM Groups
+    description: CRUD operations for groups (`sys_user_group`) and SCIM-specific metadata.
+  - name: SCIM Users
+    description: CRUD operations for users (`sys_user`) including ServiceNow extensions.
+  - name: SCIM Resources
+    description: Lookup endpoints for companies, cost centers, departments, locations, schemas, and resource types.
+security:
+  - BasicAuth: []
+paths:
+  /scim/Groups:
+    get:
+      tags: [SCIM Groups]
+      summary: List SCIM group records
+      description: >
+        Returns one or more `sys_user_group` rows. Query, sorting, and filtering
+        follow the RFC7644 SCIM standard with a maximum of 500 records per page.
+      operationId: listScimGroups
+      parameters:
+        - $ref: '#/components/parameters/Attributes'
+        - $ref: '#/components/parameters/ExcludedAttributes'
+        - $ref: '#/components/parameters/Count'
+        - $ref: '#/components/parameters/Filter'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/StartIndex'
+      responses:
+        '200':
+          description: SCIM group list response
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimGroupListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [SCIM Groups]
+      summary: Create SCIM group
+      description: Creates group metadata plus optional members and external identifiers.
+      operationId: createScimGroup
+      requestBody:
+        $ref: '#/components/requestBodies/ScimGroupBody'
+      responses:
+        '201':
+          description: Created group
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /scim/Groups/{group_id}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [SCIM Groups]
+      summary: Fetch SCIM group
+      description: Retrieve the specified `sys_user_group`.
+      operationId: getScimGroup
+      parameters:
+        - $ref: '#/components/parameters/Attributes'
+        - $ref: '#/components/parameters/ExcludedAttributes'
+      responses:
+        '200':
+          description: Group record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimGroup'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [SCIM Groups]
+      summary: Patch SCIM group
+      description: >
+        Partially update a group. The patch body must include
+        `urn:ietf:params:scim:api:messages:2.0:PatchOp` schema with operations.
+      operationId: patchScimGroup
+      requestBody:
+        $ref: '#/components/requestBodies/ScimPatchBody'
+      responses:
+        '200':
+          description: Updated group record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    put:
+      tags: [SCIM Groups]
+      summary: Replace SCIM group
+      description: Fully update the specified group. Omitted fields are cleared unless set to null.
+      operationId: replaceScimGroup
+      requestBody:
+        $ref: '#/components/requestBodies/ScimGroupBody'
+      responses:
+        '200':
+          description: Updated group record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [SCIM Groups]
+      summary: Delete SCIM group
+      description: Removes the `sys_user_group`.
+      operationId: deleteScimGroup
+      responses:
+        '204':
+          description: No content
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/Users:
+    get:
+      tags: [SCIM Users]
+      summary: List SCIM users
+      description: >
+        Returns `sys_user` rows with RFC7644 style filtering. Supports dot-walking
+        attributes and ServiceNow extension paths.
+      operationId: listScimUsers
+      parameters:
+        - $ref: '#/components/parameters/Attributes'
+        - $ref: '#/components/parameters/ExcludedAttributes'
+        - $ref: '#/components/parameters/Count'
+        - $ref: '#/components/parameters/Filter'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/StartIndex'
+      responses:
+        '200':
+          description: SCIM user list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimUserListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [SCIM Users]
+      summary: Create SCIM user
+      description: >
+        Creates a new `sys_user`. Extended schema attributes (company, location, etc.)
+        map to ServiceNow lookup fields.
+      operationId: createScimUser
+      requestBody:
+        $ref: '#/components/requestBodies/ScimUserBody'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /scim/Users/{user_id}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [SCIM Users]
+      summary: Get SCIM user
+      description: Retrieve a single `sys_user`.
+      operationId: getScimUser
+      parameters:
+        - $ref: '#/components/parameters/Attributes'
+        - $ref: '#/components/parameters/ExcludedAttributes'
+      responses:
+        '200':
+          description: User record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimUser'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [SCIM Users]
+      summary: Patch SCIM user
+      description: Perform partial updates via PatchOp operations.
+      operationId: patchScimUser
+      requestBody:
+        $ref: '#/components/requestBodies/ScimPatchBody'
+      responses:
+        '200':
+          description: Updated user record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    put:
+      tags: [SCIM Users]
+      summary: Replace SCIM user
+      description: Replace the `sys_user`. Omitted fields will be cleared.
+      operationId: replaceScimUser
+      requestBody:
+        $ref: '#/components/requestBodies/ScimUserBody'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [SCIM Users]
+      summary: Delete SCIM user
+      description: Removes the `sys_user` record.
+      operationId: deleteScimUser
+      responses:
+        '204':
+          description: No content
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/ResourceTypes:
+    get:
+      tags: [SCIM Resources]
+      summary: List SCIM resource types
+      description: Public endpoint listing published resource types (User, Group, Company, etc.).
+      operationId: listScimResourceTypes
+      responses:
+        '200':
+          description: Resource type list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimResourceTypeList'
+  /scim/ResourceTypes/{ResourceName}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceName'
+    get:
+      tags: [SCIM Resources]
+      summary: Get SCIM resource type metadata
+      description: Returns the schema and endpoint for the requested resource type.
+      operationId: getScimResourceType
+      responses:
+        '200':
+          description: Resource type detail
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimResourceType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/Schemas:
+    get:
+      tags: [SCIM Resources]
+      summary: List SCIM schemas
+      description: Returns all supported resource schemas (core, extension, custom).
+      operationId: listScimSchemas
+      responses:
+        '200':
+          description: Schema list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimSchemaList'
+  /scim/Schemas/{SchemaName}:
+    parameters:
+      - $ref: '#/components/parameters/SchemaName'
+    get:
+      tags: [SCIM Resources]
+      summary: Get SCIM schema
+      description: Returns the attribute definitions for the requested schema URI.
+      operationId: getScimSchema
+      responses:
+        '200':
+          description: Schema detail
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimSchema'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/ServiceProviderConfig:
+    get:
+      tags: [SCIM Resources]
+      summary: Retrieve SCIM service provider configuration
+      description: Returns protocol-level capabilities and limits (filter, bulk, patch, etc.).
+      operationId: getScimServiceProviderConfig
+      responses:
+        '200':
+          description: Configuration metadata
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimServiceProviderConfig'
+  /scim/Companies:
+    get:
+      tags: [SCIM Resources]
+      summary: List companies
+      description: Returns `core_company` records.
+      operationId: listScimCompanies
+      parameters:
+        - $ref: '#/components/parameters/Attributes'
+        - $ref: '#/components/parameters/ExcludedAttributes'
+        - $ref: '#/components/parameters/Count'
+        - $ref: '#/components/parameters/Filter'
+        - $ref: '#/components/parameters/StartIndex'
+      responses:
+        '200':
+          description: Company list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimCompanyList'
+  /scim/Companies/{company_id}:
+    parameters:
+      - $ref: '#/components/parameters/CompanyId'
+    get:
+      tags: [SCIM Resources]
+      summary: Get company
+      operationId: getScimCompany
+      responses:
+        '200':
+          description: Company record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimCompany'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/CostCenters:
+    get:
+      tags: [SCIM Resources]
+      summary: List cost centers
+      operationId: listScimCostCenters
+      responses:
+        '200':
+          description: Cost center list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimCostCenterList'
+  /scim/CostCenters/{cost_center_id}:
+    parameters:
+      - $ref: '#/components/parameters/CostCenterId'
+    get:
+      tags: [SCIM Resources]
+      summary: Get cost center
+      operationId: getScimCostCenter
+      responses:
+        '200':
+          description: Cost center record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimCostCenter'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/Departments:
+    get:
+      tags: [SCIM Resources]
+      summary: List departments
+      operationId: listScimDepartments
+      responses:
+        '200':
+          description: Department list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimDepartmentList'
+  /scim/Departments/{department_id}:
+    parameters:
+      - $ref: '#/components/parameters/DepartmentId'
+    get:
+      tags: [SCIM Resources]
+      summary: Get department
+      operationId: getScimDepartment
+      responses:
+        '200':
+          description: Department record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimDepartment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /scim/Locations:
+    get:
+      tags: [SCIM Resources]
+      summary: List locations
+      operationId: listScimLocations
+      responses:
+        '200':
+          description: Location list
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimLocationList'
+  /scim/Locations/{location_id}:
+    parameters:
+      - $ref: '#/components/parameters/LocationId'
+    get:
+      tags: [SCIM Resources]
+      summary: Get location
+      operationId: getScimLocation
+      responses:
+        '200':
+          description: Location record
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ScimLocation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Use ServiceNow credentials with the SCIM plugin enabled.
+  parameters:
+    Attributes:
+      name: attributes
+      in: query
+      description: Comma-separated list of attributes to include.
+      schema:
+        type: string
+    ExcludedAttributes:
+      name: excludedAttributes
+      in: query
+      description: Comma-separated list of attributes to exclude.
+      schema:
+        type: string
+    Count:
+      name: count
+      in: query
+      description: Maximum number of records to return (max 500).
+      schema:
+        type: integer
+        maximum: 500
+    Filter:
+      name: filter
+      in: query
+      description: RFC7644 filter expression.
+      schema:
+        type: string
+    SortBy:
+      name: sortBy
+      in: query
+      description: Field to sort results.
+      schema:
+        type: string
+    SortOrder:
+      name: sortOrder
+      in: query
+      description: Sort order; requires `sortBy`.
+      schema:
+        type: string
+        enum: [ascending, descending]
+    StartIndex:
+      name: startIndex
+      in: query
+      description: One-based index to start returning records.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    GroupId:
+      name: group_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: SCIM group sys_id
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: SCIM user sys_id
+    CompanyId:
+      name: company_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Company sys_id
+    CostCenterId:
+      name: cost_center_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Cost center sys_id
+    DepartmentId:
+      name: department_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Department sys_id
+    LocationId:
+      name: location_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Location sys_id
+    ResourceName:
+      name: ResourceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ResourceType identifier (User, Group, etc.)
+    SchemaName:
+      name: SchemaName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Schema URI (core, extension, custom)
+  requestBodies:
+    ScimGroupBody:
+      required: true
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimGroup'
+    ScimUserBody:
+      required: true
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimUser'
+    ScimPatchBody:
+      required: true
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimPatch'
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimError'
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimError'
+    NotFound:
+      description: Resource not found
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimError'
+    Conflict:
+      description: Resource conflict
+      content:
+        application/scim+json:
+          schema:
+            $ref: '#/components/schemas/ScimError'
+  schemas:
+    ScimError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              scimType:
+                type: string
+              detail:
+                type: string
+              status:
+                type: string
+              schemas:
+                type: array
+                items:
+                  type: string
+    ScimMeta:
+      type: object
+      properties:
+        created:
+          type: string
+        lastModified:
+          type: string
+        resourceType:
+          type: string
+        location:
+          type: string
+    ScimMember:
+      type: object
+      properties:
+        value:
+          type: string
+        display:
+          type: string
+        $ref:
+          type: string
+    ScimGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+        displayName:
+          type: string
+        company:
+          type: object
+          properties:
+            value:
+              type: string
+            name:
+              type: string
+            $ref:
+              type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimMember'
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemas:
+          type: array
+          items:
+            type: string
+        urn:ietf:params:scim:schemas:extension:servicenow:2.0:Group:
+          type: object
+          properties:
+            company:
+              type: object
+              properties:
+                value:
+                  type: string
+                name:
+                  type: string
+                $ref:
+                  type: string
+    ScimGroupListResponse:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimGroup'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimUser:
+      type: object
+      properties:
+        id:
+          type: string
+        userName:
+          type: string
+        displayName:
+          type: string
+        externalId:
+          type: string
+        active:
+          type: boolean
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        name:
+          type: object
+          properties:
+            familyName:
+              type: string
+            givenName:
+              type: string
+            middleName:
+              type: string
+            honorificPrefix:
+              type: string
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              type:
+                type: string
+      additionalProperties: true
+    ScimUserListResponse:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimUser'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimCompany:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemas:
+          type: array
+          items:
+            type: string
+    ScimCompanyList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimCompany'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimCostCenter:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemas:
+          type: array
+          items:
+            type: string
+    ScimCostCenterList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimCostCenter'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimDepartment:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemas:
+          type: array
+          items:
+            type: string
+    ScimDepartmentList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimDepartment'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemas:
+          type: array
+          items:
+            type: string
+    ScimLocationList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimLocation'
+        totalResults:
+          type: integer
+        itemsPerPage:
+          type: integer
+        startIndex:
+          type: integer
+    ScimResourceType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        endpoint:
+          type: string
+        schema:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        schemaExtensions:
+          type: array
+          items:
+            type: object
+            properties:
+              schema:
+                type: string
+              required:
+                type: boolean
+    ScimResourceTypeList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimResourceType'
+        totalResults:
+          type: integer
+    ScimSchema:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+              multiValued:
+                type: boolean
+              description:
+                type: string
+              required:
+                type: boolean
+    ScimSchemaList:
+      type: object
+      properties:
+        Resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScimSchema'
+        totalResults:
+          type: integer
+    ScimServiceProviderConfig:
+      type: object
+      properties:
+        schemas:
+          type: array
+          items:
+            type: string
+        patch:
+          type: object
+          properties:
+            supported:
+              type: boolean
+        bulk:
+          type: object
+        filter:
+          type: object
+        sort:
+          type: object
+        authenticationSchemes:
+          type: array
+          items:
+            type: object
+    ScimPatch:
+      type: object
+      properties:
+        schemas:
+          type: array
+          items:
+            type: string
+        Operations:
+          type: array
+          items:
+            type: object
+            properties:
+              op:
+                type: string
+              path:
+                type: string
+              value:
+                type: object

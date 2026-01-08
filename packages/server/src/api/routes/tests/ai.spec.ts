@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { zodResponseFormat } from "openai/helpers/zod"
 import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
@@ -21,6 +20,7 @@ import {
   PlanType,
   ProviderConfig,
   RelationshipType,
+  WebSearchProvider,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
@@ -32,6 +32,17 @@ import {
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 import environment from "../../../environment"
+
+function toResponseFormat(schema: any, name = "response") {
+  return {
+    type: "json_schema" as const,
+    json_schema: {
+      name,
+      strict: false,
+      schema: schema.toJSONSchema({ target: "draft-7" }),
+    },
+  }
+}
 
 function dedent(str: string) {
   return str
@@ -458,7 +469,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = zodResponseFormat(
+      const structuredOutput = toResponseFormat(
         z.object({
           [generator.word()]: z.string(),
         }),
@@ -578,6 +589,51 @@ describe("BudibaseAI", () => {
       expect(configsResponse[0].apiKey).toBe(PASSWORD_REPLACEMENT)
     })
 
+    it("updates web search config without calling LiteLLM", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-ws-update", key: "secret-ws-update" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-ws-update" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "WebSearch Update Config",
+        webSearchConfig: {
+          provider: WebSearchProvider.EXA,
+          apiKey: "old-ws-key",
+        },
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      nock.cleanAll()
+      nock(environment.LITELLM_URL).post(/.*/).reply(500)
+      nock(environment.LITELLM_URL).patch(/.*/).reply(500)
+
+      const newWebSearchApiKey = "new-ws-key"
+      const updated = await config.api.ai.updateConfig({
+        ...created,
+        apiKey: PASSWORD_REPLACEMENT,
+        webSearchConfig: {
+          provider: WebSearchProvider.EXA,
+          apiKey: newWebSearchApiKey,
+        },
+      })
+
+      expect(updated.webSearchConfig?.apiKey).toBe(PASSWORD_REPLACEMENT)
+
+      const storedConfig = await config.doInTenant(async () => {
+        return await context
+          .getGlobalDB()
+          .tryGet<CustomAIProviderConfig>(created._id!)
+      })
+      expect(storedConfig?.webSearchConfig?.apiKey).toBe(newWebSearchApiKey)
+    })
+
     it("deletes a custom config and syncs LiteLLM models", async () => {
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -637,6 +693,47 @@ describe("BudibaseAI", () => {
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(0)
     })
+
+    it("sanitizes web search config API key", async () => {
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-web", key: "secret-web" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-web" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const webSearchApiKey = "exa-secret-key-12345"
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "WebSearch Config",
+        webSearchConfig: {
+          provider: WebSearchProvider.EXA,
+          apiKey: webSearchApiKey,
+        },
+      })
+
+      expect(liteLLMScope.isDone()).toBe(true)
+      expect(created._id).toBeDefined()
+      expect(created.webSearchConfig).toBeDefined()
+      expect(created.webSearchConfig?.provider).toBe(WebSearchProvider.EXA)
+      expect(created.webSearchConfig?.apiKey).toBe(PASSWORD_REPLACEMENT)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(1)
+      expect(configsResponse[0].webSearchConfig?.apiKey).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const storedConfig = await config.doInTenant(async () => {
+        return await context
+          .getGlobalDB()
+          .tryGet<CustomAIProviderConfig>(created._id!)
+      })
+      expect(storedConfig?.webSearchConfig?.apiKey).toBe(webSearchApiKey)
+    })
   })
 
   describe("POST /api/ai/tables", () => {
@@ -650,21 +747,21 @@ describe("BudibaseAI", () => {
 
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
-    ) =>
+    ) => {
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: zodResponseFormat(ai.generationStructure, "key"),
+        format: toResponseFormat(ai.generationStructure),
       })
+    }
 
     const mockAIColumnGeneration = (
       generationStructure: ai.GenerationStructure,
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: zodResponseFormat(
+        format: toResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
-          ),
-          "key"
+          )
         ),
       })
 
@@ -672,7 +769,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
+        format: toResponseFormat(ai.tableDataStructuredOutput([])),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -1148,6 +1245,53 @@ describe("BudibaseAI", () => {
 
       const employees = await config.api.row.fetch(createdTables[1].id)
       expect(employees).toHaveLength(5)
+    })
+
+    // This scenario emerged when generated tables contained self-referential
+    // relationship. On delete, updates to the table caused conflicts and blocked
+    // deletion.
+    it("rejects self-referential relationships", async () => {
+      const prompt = "Create me a table for managing employees"
+      const generationStructure: ai.GenerationStructure = {
+        tables: [
+          {
+            name: "Employees",
+            primaryDisplay: "Name",
+            schema: [
+              {
+                name: "Name",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Manager",
+                type: FieldType.LINK,
+                tableId: "Employees",
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                reverseFieldName: "Reports",
+                relationshipId: "EmployeeManager",
+              },
+            ],
+          },
+        ],
+      }
+      mockAIGenerationStructure(generationStructure)
+
+      const aiColumnGeneration: ai.AIColumnSchemas = {
+        Employees: [],
+      }
+      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
+
+      const dataGeneration: Record<string, Record<string, any>[]> = {
+        Employees: [],
+      }
+      mockDataGeneration(dataGeneration)
+
+      await expect(config.api.ai.generateTables({ prompt })).rejects.toThrow(
+        "Self-referential relationships are not supported. Table Employees cannot link to itself."
+      )
     })
   })
 

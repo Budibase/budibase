@@ -7,7 +7,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="dropdown-item" class:disabled on:click {...$$restProps}>
-  {#if icon}<i class={icon} />{/if}
+  {#if icon}<i class={icon}></i>{/if}
   <div class="content">
     <div class="title">{title}</div>
     {#if subtitle != null}
