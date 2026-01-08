@@ -9121,6 +9121,63 @@
       }
     ]
   },
+  "slider": {
+    "name": "Slider field",
+    "icon": "sliders-horizontal",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Minimum",
+        "key": "min"
+      },
+      {
+        "type": "number",
+        "label": "Maximum",
+        "key": "max"
+      },
+      {
+        "type": "number",
+        "label": "Step",
+        "key": "step"
+      },
+      {
+        "type": "number",
+        "label": "Value",
+        "key": "value"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
+  },
   "gauge": {
     "name": "Gauge Chart",
     "description": "Gauge chart",
