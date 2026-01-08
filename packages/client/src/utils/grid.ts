@@ -77,11 +77,9 @@ export const isGridEvent = (e: Event): e is GridEvent => {
   if (!(e.target instanceof HTMLElement)) {
     return false
   }
-  // Check if the event target is an indicator (label or resize anchor)
   if (e.target.dataset?.indicator === "true") {
     return true
   }
-  // Find the component wrapper and check if its parent is a grid
   const componentParent = e.target.closest?.(".component")?.parentNode
   if (!(componentParent instanceof HTMLElement)) {
     return false
