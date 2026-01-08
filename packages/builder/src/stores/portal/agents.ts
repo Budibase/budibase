@@ -25,7 +25,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   init = async () => {
-    await Promise.all([this.fetchAgents(), this.fetchTools()])
+    await this.fetchAgents()
   }
 
   fetchAgents = async () => {
