@@ -1123,7 +1123,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     {
       name: "Sage",
       description:
-        "All requests are required to be sent to your subdomain. To learn how to enable API in your Sage HR account, please visit",
+        "All requests are required to be sent to your subdomain.",
       specs: [
         {
           version: "1.0",
@@ -1228,7 +1228,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     {
       name: "SuprSend",
       description:
-        "SuprSend is a central communication stack for easily creating, managing and delivering notifications to your end users on multiple channels. Our si...",
+        "SuprSend is a central communication stack for easily creating, managing and delivering notifications to your end users on multiple channels.",
       specs: [
         {
           version: "1.2.1",
@@ -1262,7 +1262,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Tilled",
-      description: "The Tilled API is organized around REST.",
+      description: "PayFac-as-a-Service combines easy-to-integrate payment technology, full-service offerings...",
       specs: [
         {
           version: "1.0",
@@ -1285,7 +1285,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     {
       name: "Tremendous",
       description:
-        "Deliver monetary rewards and incentives to employees, customers, survey participants, and more through the Tremendous API. For organizational tasks...",
+        "Deliver monetary rewards and incentives to employees, customers, survey participants, and more.",
       specs: [
         {
           version: "2",
