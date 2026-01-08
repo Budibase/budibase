@@ -4,6 +4,7 @@
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
+  $goto
   export const show = () => {
     modal.show()
   }

@@ -40,6 +40,7 @@
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
 
+  $goto
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
   let templateVersionModal: Modal
