@@ -561,6 +561,9 @@
 
   onMount(async () => {
     await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    if (draft.aiconfig) {
+      agentsStore.fetchTools(draft.aiconfig)
+    }
   })
 
   onDestroy(() => {
