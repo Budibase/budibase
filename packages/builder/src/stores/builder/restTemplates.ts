@@ -634,7 +634,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2022-11-15",
-          url: "https://raw.githubusercontent.com/APIs-guru/openapi-directory/refs/heads/main/APIs/stripe.com/2022-11-15/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/stripe/openapi.yaml",
         },
       ],
       icon: StripeLogo,
@@ -646,7 +646,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "v2",
-          url: "https://s3.amazonaws.com/awx-public-ci-files/devel/schema.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ansible-awx/openapi.json",
         },
       ],
       icon: AnsibleLogo,
