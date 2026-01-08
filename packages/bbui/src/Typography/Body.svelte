@@ -24,7 +24,6 @@
 <style>
   p {
     text-wrap: pretty;
-    letter-spacing: -0.01em !important;
     text-rendering: optimizelegibility;
   }
 </style>

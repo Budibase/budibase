@@ -2,31 +2,26 @@
   import { Body, Label } from "@budibase/bbui"
 
   export let title
-  export let description = undefined
   export let disabled
-  export let centered = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click class:disabled class:centred={centered} class="option">
+<div on:click class:disabled class="option">
   <div class="header">
     <div class="icon">
       <slot />
     </div>
-    <Body>{title}</Body>
+    <Body size="SM" color="var(--spectrum-global-color-gray-900)">{title}</Body>
   </div>
-  {#if description}
-    <Label>{description}</Label>
-  {/if}
 </div>
 
 <style>
   .option {
     background-color: var(--background);
-    border: 1px solid var(--grey-4);
-    padding: 10px 16px 14px;
-    border-radius: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
   }
 
@@ -40,7 +35,6 @@
 
   .header {
     display: flex;
-    margin-bottom: 8px;
     align-items: center;
   }
 
@@ -49,17 +43,14 @@
     margin-right: 8px;
   }
 
+  .header :global(p) {
+    margin: 0;
+  }
+
   .disabled {
     opacity: 0.5;
     pointer-events: none;
   }
 
-  .option.centred {
-    padding: 12px;
-  }
 
-  .option.centred .header {
-    justify-content: center;
-    margin-bottom: 0;
-  }
 </style>

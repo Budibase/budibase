@@ -27,7 +27,7 @@
   h1 {
     text-wrap: balance;
     letter-spacing: -0.02em;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 24px;
   }
 </style>

@@ -14,26 +14,22 @@
       <div class="icon">
         <img src={template.icon} alt={template.name} />
       </div>
-      <Body>{template.name}</Body>
+      <Body size="SM" color="var(--spectrum-global-color-gray-900)">{template.name}</Body>
     </div>
     {#if template.verified}
       <i class="ph ph-seal-check verified-icon" aria-label="Verified template"
       ></i>
     {/if}
   </div>
-  <div class="description">
-    <Body size="XS">{template.description}</Body>
-  </div>
 </div>
 
 <style>
   .option {
     background-color: var(--background);
-    border: 1px solid var(--grey-4);
-    padding: 16px;
-    border-radius: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    min-height: 100px;
     display: flex;
     flex-direction: column;
   }
@@ -60,11 +56,11 @@
 
   .header {
     display: flex;
-    margin-bottom: 12px;
     align-items: center;
     flex-shrink: 0;
     justify-content: space-between;
     gap: 12px;
+    text-rendering: renderingoptimizelegibility !important;
   }
 
   .header-main {
@@ -77,8 +73,8 @@
     display: flex;
     margin-right: 8px;
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
   }
 
   .icon img {

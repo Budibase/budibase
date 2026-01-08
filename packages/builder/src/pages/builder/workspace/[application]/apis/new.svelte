@@ -18,6 +18,10 @@
     ProgressCircle,
     keepOpen,
     ModalCancelFrom,
+    Popover,
+    Icon,
+    PopoverAlignment,
+    type PopoverAPI,
   } from "@budibase/bbui"
   import {
     sortedIntegrations as integrations,
@@ -56,6 +60,10 @@
   let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
+  let templatesInfoPopover: PopoverAPI | undefined
+  let templatesInfoAnchor: HTMLElement | undefined
+  let templatesInfoOpen = false
+  let templatesInfoTimeout: ReturnType<typeof setTimeout> | undefined
   $: selectedEndpoint = templateEndpoints.find(
     endpoint => endpoint.id === selectedEndpointId
   )
@@ -343,27 +351,23 @@
   heading="Add new API"
 >
   {#if restIntegration}
-    <div class="subHeading">
-      <Body>Connect to an external API</Body>
-    </div>
+  <Body size="SM" color="var(--spectrum-global-color-gray-900)">Custom API templates</Body>
     <div class="options bb-options">
       <DatasourceOption
         on:click={openRestModal}
         title="Custom REST API"
         disabled={templateDisabled}
-        centered
       >
         <IntegrationIcon
           integrationType={restIntegration.name}
           schema={restIntegration}
-          size="32"
+          size="20"
         />
       </DatasourceOption>
     </div>
-    <div class="subHeading">
-      <Body>Or choose a template</Body>
-    </div>
+
     {#if verifiedRestTemplates.length}
+    <Body size="SM" color="var(--spectrum-global-color-gray-900)">Verified templates</Body>
       <div class="options templateOptions templateGroup">
         {#each verifiedRestTemplates as template (template.name)}
           <RestTemplateOption
@@ -375,7 +379,30 @@
       </div>
     {/if}
     {#if unverifiedRestTemplates.length}
-      <br />
+    <div class="templates-header">
+      <Body size="SM" color="var(--spectrum-global-color-gray-900)">Templates</Body>
+      <div
+        class="info-icon-wrapper"
+        bind:this={templatesInfoAnchor}
+        on:mouseenter={() => {
+          if (templatesInfoTimeout) {
+            clearTimeout(templatesInfoTimeout)
+          }
+          templatesInfoPopover?.show()
+        }}
+        on:mouseleave={() => {
+          templatesInfoTimeout = setTimeout(() => {
+            templatesInfoPopover?.hide()
+          }, 100)
+        }}
+      >
+        <Icon
+          name="info"
+          size="S"
+          color="var(--spectrum-global-color-gray-600)"
+        />
+      </div>
+    </div>
       <div class="options templateOptions templateGroup">
         {#each unverifiedRestTemplates as template (template.name)}
           <RestTemplateOption
@@ -390,6 +417,39 @@
     <p class="empty-state">REST API integration is unavailable.</p>
   {/if}
 </CreationPage>
+
+<Popover
+  bind:this={templatesInfoPopover}
+  bind:open={templatesInfoOpen}
+  anchor={templatesInfoAnchor}
+  align={PopoverAlignment.Left}
+  minWidth={400}
+  maxWidth={400}
+  dismissible={false}
+  clickOutsideOverride={true}
+  on:mouseenter={() => {
+    if (templatesInfoTimeout) {
+      clearTimeout(templatesInfoTimeout)
+    }
+  }}
+  on:mouseleave={() => {
+    templatesInfoTimeout = setTimeout(() => {
+      templatesInfoPopover?.hide()
+    }, 100)
+  }}
+>
+  <Body size="S">
+    These templates are not verified by Budibase and we cannot guarantee the
+    validity of them. You can review all specs using the following link:{" "}
+    <a
+      href="https://github.com/Budibase/openapi-rest-templates"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      https://github.com/Budibase/openapi-rest-templates
+    </a>
+  </Body>
+</Popover>
 
 <Modal
   bind:this={templateVersionModal}
@@ -484,36 +544,17 @@
 />
 
 <style>
-  .subHeading {
-    display: flex;
-    align-items: center;
-    margin-top: 12px;
-    margin-bottom: 24px;
-    justify-content: center;
-    gap: 8px;
-  }
-  .subHeading :global(p) {
-    color: var(--spectrum-global-color-gray-600) !important;
-  }
+
   .options {
     width: 100%;
     display: grid;
-    column-gap: 24px;
-    row-gap: 24px;
+    gap: 16px;
     grid-template-columns: repeat(auto-fit, 235px);
-    justify-content: center;
-    margin-bottom: 48px;
+    margin-bottom: 20px;
     max-width: 1050px;
   }
-  .bb-options {
-    max-width: calc(3 * 235px + 2 * 24px);
-    margin-bottom: 12px;
-  }
-  .bb-options + .subHeading {
-    margin-top: 8px;
-  }
   .templateOptions {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
   .templateModalHeader {
     display: flex;
@@ -529,8 +570,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border: 1px solid var(--grey-4);
-    border-radius: 4px;
+    border: 0.5px solid var(--grey-2);
+    border-radius: 8px;
     background: var(--background);
     cursor: pointer;
     transition: background 130ms ease-out;

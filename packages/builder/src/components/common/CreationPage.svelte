@@ -13,21 +13,22 @@
     </div>
   {/if}
   <div class="heading">
-    <Heading weight="light">{heading}</Heading>
+    <Heading size="S" weight="400">{heading}</Heading>
   </div>
   <slot />
 </section>
 
 <style>
   .page {
-    width: 100%;
+    max-width: 1050px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    margin: 0 auto;
   }
 
   .heading {
-    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
   }
 
   .closeButton {
