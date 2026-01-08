@@ -477,7 +477,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "3.0",
-          url: "https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/jira-cloud/openapi.json",
         },
       ],
       icon: JiraLogo,
