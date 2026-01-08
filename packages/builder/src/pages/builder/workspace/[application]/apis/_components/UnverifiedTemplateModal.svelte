@@ -1,0 +1,58 @@
+<script lang="ts">
+  import { createEventDispatcher } from "svelte"
+  import {
+    Body,
+    Heading,
+    Layout,
+    Link,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
+
+  export let templateUrl = ""
+
+  const dispatch = createEventDispatcher()
+  let modal: Modal
+  let didConfirm = false
+
+  const show = () => modal?.show()
+  const hide = () => modal?.hide()
+
+  export { show, hide }
+</script>
+
+<Modal
+  bind:this={modal}
+  on:hide={() => {
+    if (didConfirm) {
+      didConfirm = false
+      return
+    }
+    dispatch("cancel")
+  }}
+>
+  <ModalContent
+    size="M"
+    confirmText="Continue"
+    cancelText="Cancel"
+    onConfirm={() => {
+      didConfirm = true
+      dispatch("confirm")
+    }}
+    onCancel={() => dispatch("cancel")}
+  >
+    <Layout noPadding gap="M">
+      <Heading size="S">External template source</Heading>
+      <Body size="S">
+        This template comes from an external source. 
+        <p><b>Please review the template before importing</b></p>
+          <Link
+            href={templateUrl}
+            target="_blank"
+          >
+            {templateUrl}
+          </Link>
+      </Body>
+    </Layout>
+  </ModalContent>
+</Modal>
