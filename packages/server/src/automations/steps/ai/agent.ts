@@ -127,7 +127,7 @@ export async function run({
           },
         })
 
-        console.log("Agent step failed", {
+        console.error("Agent step failed", {
           agentId,
           appId,
           liteLLMUrl: env.LITELLM_URL,
