@@ -472,7 +472,7 @@
     onCancel={cancelEndpointSelection}
     disabled={!selectedEndpointId || templateLoading}
   >
-    <Layout noPadding gap="M">
+    <Layout noPadding gap="S">
       <div class="endpoint-heading">
         <IntegrationIcon
           iconUrl={pendingTemplate?.icon}
@@ -481,9 +481,9 @@
           size="32"
         />
       </div>
-      <Heading size="S">Select action</Heading>
-      <Body size="XS">
-        Choose the action you want to import from {pendingTemplate?.name}.
+      <Heading size="S">{pendingTemplate?.name}</Heading>
+      <Body size="M">
+        Select the action/endpoint you want to import from {pendingTemplate?.name}:
       </Body>
       {#if templateLoading && templateLoadingPhase === "info"}
         <div class="endpoint-loading">
@@ -497,7 +497,7 @@
         </div>
       {:else if templateEndpoints.length > 0}
         <Select
-          label="Action"
+          size="L"
           value={selectedEndpointId}
           options={templateEndpoints}
           getOptionValue={endpoint => endpoint.id}
