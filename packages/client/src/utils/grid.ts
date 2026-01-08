@@ -77,15 +77,16 @@ export const isGridEvent = (e: Event): e is GridEvent => {
   if (!(e.target instanceof HTMLElement)) {
     return false
   }
-  const componentParent = e.target.closest?.(".component")?.parentNode as
-    | HTMLElement
-    | undefined
-  const gridDOMCandidate = componentParent?.closest(".component")
-    ?.childNodes[0] as HTMLElement | undefined
-  return (
-    e.target.dataset?.indicator === "true" ||
-    !!gridDOMCandidate?.classList?.contains("grid")
-  )
+  // Check if the event target is an indicator (label or resize anchor)
+  if (e.target.dataset?.indicator === "true") {
+    return true
+  }
+  // Find the component wrapper and check if its parent is a grid
+  const componentParent = e.target.closest?.(".component")?.parentNode
+  if (!(componentParent instanceof HTMLElement)) {
+    return false
+  }
+  return componentParent.classList.contains("grid")
 }
 
 // Svelte action to apply required class names and styles to our component
