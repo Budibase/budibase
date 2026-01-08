@@ -886,23 +886,23 @@ export async function execute(
       workspaceId,
       automationId,
       task: async () => {
-        await reloadAutomation(job)
-        await context.ensureSnippetContext()
-        const envVars = await sdkUtils.getEnvironmentVariables()
-        await context.doInEnvironmentContext(envVars, async () => {
-          const orchestrator = new Orchestrator(job)
-          try {
+        try {
+          await reloadAutomation(job)
+          await context.ensureSnippetContext()
+          const envVars = await sdkUtils.getEnvironmentVariables()
+          await context.doInEnvironmentContext(envVars, async () => {
+            const orchestrator = new Orchestrator(job)
             callback(null, await orchestrator.execute())
-          } catch (err) {
-            console.error(
-              "automation worker failed",
-              { _logKey: "automation", ...getAutomationLogContext(job) },
-              { _logKey: "bull", jobId: job.id },
-              { _logKey: "error", ...getErrorLogDetails(err) }
-            )
-            callback(err)
-          }
-        })
+          })
+        } catch (err) {
+          console.error(
+            "automation worker failed",
+            { _logKey: "automation", ...getAutomationLogContext(job) },
+            { _logKey: "bull", jobId: job.id },
+            { _logKey: "error", ...getErrorLogDetails(err) }
+          )
+          callback(err)
+        }
       },
     })
   })
