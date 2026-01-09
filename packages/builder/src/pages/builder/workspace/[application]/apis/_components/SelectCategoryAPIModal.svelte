@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button, Divider, Pagination, Select } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { Button, Divider, Select } from "@budibase/bbui"
+  import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type {
     ConnectorCard,
     GroupTemplateName,
@@ -23,12 +23,15 @@
   }>()
 
   let scrolling = false
-  let page: HTMLDivElement | undefined
+  let scrollContainer: HTMLDivElement | undefined
+  let loadTrigger: HTMLDivElement | undefined
+  let observer: IntersectionObserver | null = null
+  let loadingMore = false
   let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
   let activeGroupTemplateName: GroupTemplateName | null = null
   let currentPage = 1
   let lastConnectorCount = 0
-  const itemsPerPage = 12
+  const itemsPerPage = 15
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
@@ -65,11 +68,7 @@
   $: if (currentPage > totalPages) {
     currentPage = totalPages
   }
-  $: pagedConnectorCards = connectorCards.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-  $: hasPrevPage = currentPage > 1
+  $: pagedConnectorCards = connectorCards.slice(0, currentPage * itemsPerPage)
   $: hasNextPage = currentPage < totalPages
   $: activeGroupOptions = activeGroup
     ? activeGroup.templates.map(template => ({
@@ -127,17 +126,39 @@
     dispatch("custom")
   }
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      currentPage -= 1
+  const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
+    if (loadingMore || !hasNextPage) {
+      return
     }
+    const isVisible = entries.some(entry => entry.isIntersecting)
+    if (!isVisible) {
+      return
+    }
+    loadingMore = true
+    currentPage += 1
+    await tick()
+    loadingMore = false
   }
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      currentPage += 1
+  onMount(() => {
+    if (!scrollContainer || !loadTrigger) {
+      return
     }
-  }
+    observer = new IntersectionObserver(handleIntersect, {
+      root: scrollContainer,
+      rootMargin: "80px",
+      threshold: 0.1,
+    })
+    observer.observe(loadTrigger)
+  })
+
+  onDestroy(() => {
+    if (observer) {
+      observer.disconnect()
+      observer = null
+    }
+  })
+
 </script>
 
 <div class="api-main" class:scrolling>
@@ -157,9 +178,13 @@
     {/if}
   </div>
   <Divider size={"S"} noMargin />
-  <div class="contents-wrap" on:scroll={handleScroll}>
+  <div
+    class="contents-wrap"
+    bind:this={scrollContainer}
+    on:scroll={handleScroll}
+  >
     <div class="shadow"></div>
-    <div bind:this={page} class="contents">
+    <div class="contents">
       {#if activeGroup}
         <div class="group-step">
           <div class="group-step-summary">
@@ -224,17 +249,7 @@
             </div>
           {/each}
         </div>
-        {#if totalPages > 1}
-          <div class="pagination">
-            <Pagination
-              page={currentPage}
-              {hasPrevPage}
-              {hasNextPage}
-              {goToPrevPage}
-              {goToNextPage}
-            />
-          </div>
-        {/if}
+        <div class="load-trigger" bind:this={loadTrigger}></div>
       {/if}
     </div>
   </div>
@@ -315,6 +330,7 @@
     padding-top: var(--spacing-xl);
     padding-left: var(--spectrum-dialog-confirm-padding);
     padding-right: var(--spectrum-dialog-confirm-padding);
+    padding-bottom: var(--spacing-l);
   }
 
   .api-main :global(hr) {
@@ -326,13 +342,9 @@
     overflow-y: auto;
     min-height: 0;
     position: relative;
-  }
-
-  .pagination {
-    margin-top: var(--spacing-l);
-    display: flex;
-    justify-content: center;
-    padding-bottom: var(--spacing-l);
+    height: calc(
+      (5 * 51px) + (4 * 12px) + var(--spacing-xl) + var(--spacing-l)
+    );
   }
 
   .group-step {
@@ -384,5 +396,9 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-l);
+  }
+
+  .load-trigger {
+    height: 1px;
   }
 </style>
