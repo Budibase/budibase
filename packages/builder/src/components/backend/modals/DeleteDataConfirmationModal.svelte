@@ -9,10 +9,11 @@
     views,
     viewsV2,
   } from "@/stores/builder"
+  import { themeStore } from "@/stores/portal"
   import { markSkipUnsavedPrompt } from "@/stores/builder/queries"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { helpers, utils } from "@budibase/shared-core"
-  import { SourceType } from "@budibase/types"
+  import { SourceType, Theme } from "@budibase/types"
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { get } from "svelte/store"
@@ -23,6 +24,7 @@
 
   $: goto = $gotoStore
   $: params = $paramsStore
+  $: isDarkTheme = ![Theme.LIGHTEST, Theme.LIGHT].includes($themeStore.theme)
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
 
@@ -206,8 +208,10 @@
             <ul class="screens-list">
               {#each affectedScreens as item}
                 <li>
-                  <Link overBackground target="_blank" href={item.url}
-                    >{item.text}</Link
+                  <Link
+                    overBackground={isDarkTheme}
+                    target="_blank"
+                    href={item.url}>{item.text}</Link
                   >
                 </li>
               {/each}
