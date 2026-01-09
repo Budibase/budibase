@@ -1,9 +1,5 @@
 export interface RestTemplateSpec {
-  version:
-    | `${number}`
-    | `${number}-${number}-${number}`
-    | `${number}.${number}.${number}`
-    | `v${number}`
+  version: string
   url?: string
   data?: string
 }
@@ -88,11 +84,13 @@ export type RestTemplateName =
   | "Workable"
   | "X"
   | TwilioRestTemplateName
+  | ZendeskRestTemplateName
 
-export type RestTemplateGroupName = "Twilio"
+export type RestTemplateGroupName = "Twilio" | "Zendesk"
 
 export type RestTemplateGroups = {
   Twilio: TwilioRestTemplateName
+  Zendesk: ZendeskRestTemplateName
 }
 
 export type TwilioRestTemplateName =
@@ -135,6 +133,8 @@ export type TwilioRestTemplateName =
   | "Twilio Voice"
   | "Twilio Wireless"
 
+export type ZendeskRestTemplateName = "Sunshine Conversations"
+
 export interface RestTemplate {
   name: RestTemplateName
   description: string
@@ -155,6 +155,7 @@ export interface RestTemplateGroup<
   name: TemplateGroupName
   description: string
   icon: string
+  verified?: true
   templates: RestTemplateWithoutIcon<RestTemplateGroups[TemplateGroupName]>[]
 }
 

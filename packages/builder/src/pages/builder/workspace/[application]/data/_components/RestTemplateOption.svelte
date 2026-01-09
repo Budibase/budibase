@@ -1,8 +1,12 @@
 <script lang="ts">
   import { Body } from "@budibase/bbui"
-  import { type RestTemplate } from "@budibase/types"
+  import type {
+    RestTemplate,
+    RestTemplateGroup,
+    RestTemplateGroupName,
+  } from "@budibase/types"
 
-  export let template: RestTemplate
+  export let template: RestTemplate | RestTemplateGroup<RestTemplateGroupName>
   export let disabled = false
 </script>
 

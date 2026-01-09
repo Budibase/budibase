@@ -233,7 +233,7 @@
           </div>
           <div class="group-step-body">
             <Select
-              label={`Select category`}
+              label="Select category"
               options={activeGroupOptions}
               bind:value={activeGroupTemplateName}
               disabled={loading}
