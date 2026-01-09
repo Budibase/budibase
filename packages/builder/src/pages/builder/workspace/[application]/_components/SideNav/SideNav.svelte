@@ -4,7 +4,6 @@
     Icon,
     Body,
     Link,
-    Divider,
     Modal,
     PopoverAlignment,
     TooltipPosition,
@@ -112,7 +111,7 @@
   const datasourceLookup = datasources.lookup
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
-  const navLogoSize = 20
+  const navLogoSize = 18
 
   let ignoreFocus = false
   let focused = false
@@ -408,13 +407,22 @@
       <div class="links core">
         {#if appId}
           <div>
-            <SideNavLink
-              icon="browser"
-              text="Apps"
-              url={$url("./design")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
+            {#if $featureFlags.AI_AGENTS}
+              <SideNavLink
+                icon="memory"
+                text="Agents"
+                url={$url("./agent")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <SideNavLink
+                icon="chat-circle"
+                text="Chat"
+                url={$url("./chat")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+            {/if}
             <span class="root-nav" class:selected={$isActive("./automation")}>
               {#if collapsed && automationErrorCount}
                 <span class="status-indicator">
@@ -441,9 +449,20 @@
                 </svelte:fragment>
               </SideNavLink>
             </span>
-
             <SideNavLink
-              icon="webhooks-logo"
+              icon="browser"
+              text="Apps"
+              url={$url("./design")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+          </div>
+          <div class="nav-section-title">
+            <hr />
+          </div>
+          <div>
+            <SideNavLink
+              icon="cube"
               text="APIs"
               url={$url("./apis")}
               {collapsed}
@@ -456,39 +475,39 @@
               {collapsed}
               on:click={keepCollapsed}
             />
-            {#if $featureFlags.AI_AGENTS}
-              <SideNavLink
-                icon="cpu"
-                text="Agents"
-                url={$url("./agent")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-              <SideNavLink
-                icon="chat"
-                text="Chat"
-                url={$url("./chat")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-            {/if}
+            <SideNavLink
+              icon="user"
+              text="Users"
+              {collapsed}
+              on:click={() => {
+                bb.settings("/people/users")
+                keepCollapsed()
+              }}
+            />
+            <SideNavLink
+              icon="sparkle"
+              text="AI models"
+              url={$url("./ai-models")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
           </div>
-          <Divider size="S" />
           <div class="favourite-wrapper">
-            <div class="favourite-title">
-              <Body color="var(--spectrum-global-color-gray-700)" size="XS">
-                FAVOURITES
-              </Body>
-            </div>
+            <hr />
             {#if !favourites?.length || !resourceLookup}
               <div class="favourite-empty-state">
                 <div>
-                  <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
+                  <Icon
+                    name="star"
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                    weight="regular"
+                  />
                 </div>
                 <Body
                   color="var(--spectrum-global-color-gray-700)"
                   size="XS"
-                  textAlign="center"
+                  textAlign="left"
                 >
                   You have no favourites yet! Favourite an automation, app,
                   table or API for quicker access.
@@ -595,7 +614,7 @@
         {#if $appStore.appId}
           <SideNavLink
             icon="user-plus"
-            text="Invite member"
+            text="Invite new user"
             on:click={() => {
               builderStore.showBuilderSidePanel()
               keepCollapsed()
@@ -695,7 +714,6 @@
     flex: 0 0 50px;
     padding: 0 var(--nav-padding);
     gap: var(--spacing-m);
-    border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
   }
   .nav_header > div :global(> svg) {
@@ -780,18 +798,27 @@
     flex: 1;
     overflow: hidden;
     flex: 1 1 auto;
+    margin-top: 10px;
+  }
+  .favourite-wrapper hr {
+    border: none;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    margin: 0 0 10px 0;
   }
 
-  .favourite-title {
-    padding: 0 calc(var(--nav-padding) / 2);
-    margin-bottom: 8px;
+  .nav-section-title {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .nav-section-title hr {
+    border: none;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    margin: 0;
   }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    border: 1px dashed var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    align-items: flex-start;
     padding: 12px;
     gap: 8px;
     transition: all 130ms ease-out;
@@ -813,12 +840,13 @@
   }
 
   @container (max-width: 239px) {
-    .favourite-wrapper {
+    .nav-section-title {
       display: none;
       transition: all 130ms ease-in-out;
     }
-    .favourite-title {
-      display: all 130ms ease-in-out;
+    .favourite-wrapper {
+      display: none;
+      transition: all 130ms ease-in-out;
     }
     .favourite-empty-state {
       display: all 130ms ease-in-out;
