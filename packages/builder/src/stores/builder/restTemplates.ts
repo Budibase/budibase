@@ -10,6 +10,7 @@ import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import ConfluenceLogo from "assets/rest-template-icons/confluence.svg"
 import DiscordLogo from "assets/rest-template-icons/discord.svg"
+import FigmaLogo from "assets/rest-template-icons/figma.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
@@ -528,11 +529,25 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
         {
-          version: "1.0.0",
+          version: "10",
           url: "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
         },
       ],
       icon: DiscordLogo,
+      verified: true,
+    },
+    {
+      name: "Figma",
+      description:
+        "Design platform API for files, projects, teams, and comments",
+      specs: [
+        {
+          version: "0.35.0",
+          url: "https://raw.githubusercontent.com/figma/rest-api-spec/main/openapi/openapi.yaml",
+        },
+      ],
+      icon: FigmaLogo,
+      verified: true,
     },
     {
       name: "GitHub",
