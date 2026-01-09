@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Divider, Select } from "@budibase/bbui"
+  import { Button, Divider, Pagination, Select } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import type {
     ConnectorCard,
@@ -26,6 +26,9 @@
   let page: HTMLDivElement | undefined
   let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
   let activeGroupTemplateName: GroupTemplateName | null = null
+  let currentPage = 1
+  let lastConnectorCount = 0
+  const itemsPerPage = 12
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
@@ -51,6 +54,23 @@
       template,
     })),
   ].sort((a, b) => a.name.localeCompare(b.name))
+  $: if (connectorCards.length !== lastConnectorCount) {
+    lastConnectorCount = connectorCards.length
+    currentPage = 1
+  }
+  $: if (activeGroup) {
+    currentPage = 1
+  }
+  $: totalPages = Math.max(1, Math.ceil(connectorCards.length / itemsPerPage))
+  $: if (currentPage > totalPages) {
+    currentPage = totalPages
+  }
+  $: pagedConnectorCards = connectorCards.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+  $: hasPrevPage = currentPage > 1
+  $: hasNextPage = currentPage < totalPages
   $: activeGroupOptions = activeGroup
     ? activeGroup.templates.map(template => ({
         label: template.name,
@@ -105,6 +125,18 @@
 
   const handleCustomClick = () => {
     dispatch("custom")
+  }
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      currentPage -= 1
+    }
+  }
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      currentPage += 1
+    }
   }
 </script>
 
@@ -170,7 +202,7 @@
         </div>
       {:else}
         <div class="grid">
-          {#each connectorCards as card (card.key)}
+          {#each pagedConnectorCards as card (card.key)}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
@@ -192,6 +224,17 @@
             </div>
           {/each}
         </div>
+        {#if totalPages > 1}
+          <div class="pagination">
+            <Pagination
+              page={currentPage}
+              {hasPrevPage}
+              {hasNextPage}
+              {goToPrevPage}
+              {goToNextPage}
+            />
+          </div>
+        {/if}
       {/if}
     </div>
   </div>
@@ -283,6 +326,13 @@
     overflow-y: auto;
     min-height: 0;
     position: relative;
+  }
+
+  .pagination {
+    margin-top: var(--spacing-l);
+    display: flex;
+    justify-content: center;
+    padding-bottom: var(--spacing-l);
   }
 
   .group-step {
