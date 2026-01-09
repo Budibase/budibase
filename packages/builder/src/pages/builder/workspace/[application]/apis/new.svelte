@@ -305,7 +305,6 @@
     await handleTemplateSelection(template, spec)
   }
 
-
   const close = () => {
     if (restDatasources.length) {
       goto(`./datasource/${restDatasources[0]._id}`)
@@ -332,7 +331,7 @@
   heading="Add new API"
 >
   {#if restIntegration}
-  <Body size="SM" color="var(--spectrum-global-color-gray-900)">Custom API templates</Body>
+  <br />
     <div class="options bb-options">
       <DatasourceOption
         on:click={openRestModal}
@@ -348,8 +347,12 @@
     </div>
 
     {#if verifiedRestTemplates.length}
-    <Body size="SM" color="var(--spectrum-global-color-gray-900)">Verified templates</Body>
-      <div class="options templateOptions templateGroup">
+      <div class="templates-header">
+        <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)"
+          >Verified templates</Body
+        >
+      </div>
+      <div class="options templateOptions">
         {#each verifiedRestTemplates as template (template.name)}
           <RestTemplateOption
             on:click={() => selectTemplate(template)}
@@ -360,33 +363,35 @@
       </div>
     {/if}
     {#if unverifiedRestTemplates.length}
-    <div class="templates-header">
-      <Body size="SM" color="var(--spectrum-global-color-gray-900)">Templates</Body>
-      <div
-        class="info-icon-wrapper"
-        bind:this={templatesInfoAnchor}
-        role="button"
-        tabindex="0"
-        on:mouseenter={() => {
-          if (templatesInfoTimeout) {
-            clearTimeout(templatesInfoTimeout)
-          }
-          templatesInfoPopover?.show()
-        }}
-        on:mouseleave={() => {
-          templatesInfoTimeout = setTimeout(() => {
-            templatesInfoPopover?.hide()
-          }, 100)
-        }}
-      >
-        <Icon
-          name="info"
-          size="S"
-          color="var(--spectrum-global-color-gray-600)"
-        />
+      <div class="templates-header">
+        <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)"
+          >Templates</Body
+        >
+        <div
+          class="info-icon-wrapper"
+          bind:this={templatesInfoAnchor}
+          role="button"
+          tabindex="0"
+          on:mouseenter={() => {
+            if (templatesInfoTimeout) {
+              clearTimeout(templatesInfoTimeout)
+            }
+            templatesInfoPopover?.show()
+          }}
+          on:mouseleave={() => {
+            templatesInfoTimeout = setTimeout(() => {
+              templatesInfoPopover?.hide()
+            }, 100)
+          }}
+        >
+          <Icon
+            name="info"
+            size="S"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
       </div>
-    </div>
-      <div class="options templateOptions templateGroup">
+      <div class="options templateOptions">
         {#each unverifiedRestTemplates as template (template.name)}
           <RestTemplateOption
             on:click={() => selectTemplate(template)}
@@ -422,7 +427,7 @@
   }}
 >
   <div class="templates-popover-content">
-    <Body size="SM" color="var(--spectrum-global-color-gray-700)">
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
       These templates are not verified by Budibase and we cannot guarantee the
       validity of them. You can review all specs using the following link:{" "}
       <Link
@@ -521,7 +526,6 @@
 </Modal>
 
 <style>
-
   .options {
     width: 100%;
     display: grid;
@@ -542,6 +546,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    margin: 12px 0;
+    font-weight: 600;
   }
   .info-icon-wrapper {
     display: flex;
