@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Divider, Search, Select } from "@budibase/bbui"
+  import { Button, CollapsibleSearch, Divider, Select } from "@budibase/bbui"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type {
     ConnectorCard,
@@ -195,13 +195,11 @@
     <div>API connectors</div>
     {#if !activeGroup}
       <div class="api-header-actions">
-        <div class="api-search">
-          <Search
-            placeholder="Search templates"
-            value={searchValue}
-            on:change={event => (searchValue = event.detail)}
-          />
-        </div>
+        <CollapsibleSearch
+          placeholder="Search templates"
+          value={searchValue}
+          on:change={event => (searchValue = event.detail)}
+        />
         <Button
           secondary
           icon="plus"
@@ -368,9 +366,6 @@
     gap: var(--spacing-m);
   }
 
-  .api-search {
-    width: 220px;
-  }
 
   .api-main .contents {
     padding-top: var(--spacing-xl);

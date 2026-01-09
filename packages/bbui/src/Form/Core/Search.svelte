@@ -18,6 +18,11 @@
     dispatch("change", value)
   }
 
+  const clearValue = () => {
+    updateValue("")
+    dispatch("clear")
+  }
+
   const onFocus = () => {
     focus = true
   }
@@ -71,7 +76,7 @@
     />
   </div>
   <button
-    on:click={() => updateValue("")}
+    on:click={clearValue}
     type="reset"
     class="spectrum-ClearButton spectrum-Search-clearButton"
   >
