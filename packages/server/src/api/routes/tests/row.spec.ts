@@ -99,17 +99,40 @@ function prepareManifestFormula(hbs: string) {
   return { formula: hbs, rowValues }
 }
 
+function wrapJsWithFixedDate(js: string, isoDate: string) {
+  return `
+  const __RealDate = Date;
+  const __fixed = new __RealDate("${isoDate}");
+  class __MockDate extends __RealDate {
+    constructor(...args) {
+      return args.length ? new __RealDate(...args) : new __RealDate(__fixed);
+    }
+    static now() {
+      return __fixed.getTime();
+    }
+    static parse = __RealDate.parse;
+    static UTC = __RealDate.UTC;
+  }
+  Date = __MockDate;
+  const __fn = () => {
+${js}
+  };
+  let __result;
+  try {
+    __result = __fn();
+  } finally {
+    Date = __RealDate;
+  }
+  return __result;
+  `
+}
+
 function assertManifestResult(
   key: string,
   hbs: string,
   result: unknown,
   expected: unknown
 ) {
-  if (key === "durationFromNow") {
-    expect(String(result)).toMatch(/^\d (years|months)$/)
-    return
-  }
-
   if (key === "random") {
     const match = hbs.match(/{{\s*random\s+([-\d.]+)\s+([-\d.]+)\s*}}/)
     const min = match ? Number(match[1]) : 0
@@ -3993,7 +4016,14 @@ if (descriptions.length) {
               examplesToRun.length &&
                 it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
                   const { formula, rowValues } = prepareManifestFormula(hbs)
-                  const jsFormula = encodeJS(convertToJS(formula))
+                  let jsBody = convertToJS(formula)
+                  if (
+                    hbs.includes("durationFromNow") ||
+                    hbs.includes("date now")
+                  ) {
+                    jsBody = wrapJsWithFixedDate(jsBody, manifestTimestamp)
+                  }
+                  const jsFormula = encodeJS(jsBody)
                   const schema: TableSchema = {
                     formula: {
                       name: "formula",
