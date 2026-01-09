@@ -10,6 +10,7 @@
     TooltipType,
     notifications,
     StatusLight,
+    Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto, isActive } from "@roxi/routify"
@@ -407,22 +408,13 @@
       <div class="links core">
         {#if appId}
           <div>
-            {#if $featureFlags.AI_AGENTS}
-              <SideNavLink
-                icon="memory"
-                text="Agents"
-                url={$url("./agent")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-              <SideNavLink
-                icon="chat-circle"
-                text="Chat"
-                url={$url("./chat")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-            {/if}
+            <SideNavLink
+              icon="browser"
+              text="Apps"
+              url={$url("./design")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
             <span class="root-nav" class:selected={$isActive("./automation")}>
               {#if collapsed && automationErrorCount}
                 <span class="status-indicator">
@@ -449,13 +441,34 @@
                 </svelte:fragment>
               </SideNavLink>
             </span>
-            <SideNavLink
-              icon="browser"
-              text="Apps"
-              url={$url("./design")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
+            {#if $featureFlags.AI_AGENTS}
+              <SideNavLink
+                icon="memory"
+                text="Agents"
+                url={$url("./agent")}
+                {collapsed}
+                on:click={keepCollapsed}
+              >
+                <svelte:fragment slot="right">
+                  <div class="beta-tag-wrapper">
+                    <Tag emphasized>Beta</Tag>
+                  </div>
+                </svelte:fragment>
+              </SideNavLink>
+              <SideNavLink
+                icon="chat-circle"
+                text="Chat"
+                url={$url("./chat")}
+                {collapsed}
+                on:click={keepCollapsed}
+              >
+                <svelte:fragment slot="right">
+                  <div class="beta-tag-wrapper">
+                    <Tag emphasized>Alpha</Tag>
+                  </div>
+                </svelte:fragment>
+              </SideNavLink>
+            {/if}
           </div>
           <div class="nav-section-title">
             <hr />
@@ -487,9 +500,11 @@
             <SideNavLink
               icon="sparkle"
               text="AI models"
-              url={$url("./ai-models")}
               {collapsed}
-              on:click={keepCollapsed}
+              on:click={() => {
+                bb.settings("/ai")
+                keepCollapsed()
+              }}
             />
           </div>
           <div class="favourite-wrapper">
@@ -851,5 +866,9 @@
     .favourite-empty-state {
       display: all 130ms ease-in-out;
     }
+  }
+
+  .beta-tag-wrapper :global(.spectrum-Tags-itemLabel) {
+    font-size: 12px;
   }
 </style>
