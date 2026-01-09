@@ -14,7 +14,9 @@
       <div class="icon">
         <img src={template.icon} alt={template.name} />
       </div>
-      <Body size="SM" color="var(--spectrum-global-color-gray-900)">{template.name}</Body>
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >{template.name}</Body
+      >
     </div>
     {#if template.verified}
       <i class="ph ph-seal-check verified-icon" aria-label="Verified template"

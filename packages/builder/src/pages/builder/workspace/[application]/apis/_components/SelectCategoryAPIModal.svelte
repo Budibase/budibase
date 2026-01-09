@@ -187,7 +187,6 @@
       observer = null
     }
   })
-
 </script>
 
 <div class="api-main" class:scrolling>
@@ -365,7 +364,6 @@
     align-items: center;
     gap: var(--spacing-m);
   }
-
 
   .api-main .contents {
     padding-top: var(--spacing-xl);

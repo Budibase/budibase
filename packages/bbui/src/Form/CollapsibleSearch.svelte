@@ -49,10 +49,7 @@
   }
 </script>
 
-<div
-  class="collapsible-search"
-  style={`--collapsible-search-width: ${width}`}
->
+<div class="collapsible-search" style={`--collapsible-search-width: ${width}`}>
   {#if !open}
     <button
       class="search-toggle"
@@ -94,7 +91,9 @@
     overflow: hidden;
     pointer-events: none;
     visibility: hidden;
-    transition: width 200ms ease, opacity 200ms ease;
+    transition:
+      width 200ms ease,
+      opacity 200ms ease;
   }
 
   .collapsible-search-input.open {
