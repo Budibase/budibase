@@ -1,5 +1,5 @@
 <script>
-  import { Body, Label } from "@budibase/bbui"
+  import { Body } from "@budibase/bbui"
 
   export let title
   export let disabled
