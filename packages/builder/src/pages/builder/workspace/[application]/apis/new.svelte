@@ -31,7 +31,7 @@
     getRestTemplateImportInfoRequest,
   } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import type {
     RestTemplate,
     ImportEndpoint,
@@ -39,6 +39,8 @@
     ImportRestQueryRequest,
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
@@ -215,7 +217,7 @@
 
       notifications.success(`${pendingTemplate.name} imported successfully`)
       await templateEndpointModal?.hide()
-      $goto(`./datasource/${importResult.datasourceId}`)
+      goto(`./datasource/${importResult.datasourceId}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -281,9 +283,9 @@
 
   const close = () => {
     if (restDatasources.length) {
-      $goto(`./datasource/${restDatasources[0]._id}`)
+      goto(`./datasource/${restDatasources[0]._id}`)
     } else {
-      $goto("../")
+      goto("../")
     }
   }
 </script>
