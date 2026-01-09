@@ -632,7 +632,7 @@
           />
         </div>
         <Heading size="S">{pendingTemplate?.name}</Heading>
-        <Body size="M">
+        <Body size="S">
           Select the action you want to import from {pendingTemplate?.name}:
         </Body>
         {#if templateLoading && templateLoadingPhase === "info"}
@@ -751,10 +751,42 @@
     gap: 16px;
     min-width: 0;
     max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .endpoint-modal > * {
+    min-width: 0;
+  }
+
+  .endpoint-modal :global(.spectrum-Field) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .endpoint-modal :global(.spectrum-FieldGroup),
+  .endpoint-modal :global(.spectrum-InputGroup),
+  .endpoint-modal :global(.spectrum-Textfield) {
+    width: 100%;
+    max-width: 100%;
   }
 
   .endpoint-modal :global(.description-viewer) {
     max-width: 100%;
+  }
+
+  .endpoint-modal :global(.description-content),
+  .endpoint-modal :global(.description-content p),
+  .endpoint-modal :global(.description-content a),
+  .endpoint-modal :global(.description-content code),
+  .endpoint-modal :global(.description-content pre) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .endpoint-modal :global(.description-content pre),
+  .endpoint-modal :global(.description-content code) {
+    white-space: pre-wrap;
   }
 
   .endpoint-heading {
