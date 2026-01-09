@@ -24,7 +24,7 @@
 
   $: goto = $gotoStore
   $: params = $paramsStore
-  $: isDarkTheme = $themeStore.theme !== Theme.LIGHT
+  $: isDarkTheme = ![Theme.LIGHTEST, Theme.LIGHT].includes($themeStore.theme)
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
 
