@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32">
+  <path d="M16.052 12.801a.75.75 0 101.366.62l-1.366-.62zM21.326 3l.683.31a.75.75 0 00-1.186-.865l.503.555zM7 16l-.504-.555A.75.75 0 007 16.75V16zm18 0l.47.584A.75.75 0 0025 15.25V16zM8.837 29l-.664-.35a.75.75 0 001.134.934L8.837 29zm5.99-9.762a.75.75 0 10-1.327-.699l1.327.7zm2.59-5.817l4.592-10.11-1.365-.621-4.592 10.11 1.366.62zm3.405-10.976l-14.326 13 1.008 1.11 14.327-13-1.008-1.11zM7 16.75h18v-1.5H7v1.5zm17.53-1.334l-16.163 13 .94 1.168 16.163-13-.94-1.168zM9.5 29.35l5.327-10.112-1.327-.699L8.173 28.65l1.327.7z" fill="url(#logisticsos-gradient)"/>
+  <defs>
+    <linearGradient id="logisticsos-gradient" x1="16" y1="3" x2="16" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EE2D45"/>
+      <stop offset="1" stop-color="#FFAB00"/>
+    </linearGradient>
+  </defs>
+</svg>
