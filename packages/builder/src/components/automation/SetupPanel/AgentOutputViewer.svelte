@@ -34,40 +34,45 @@
   }
 
   let { outputs }: Props = $props()
-  let { message, response, usage } = outputs
   let modal = $state<ChainOfThoughtModal>()
 
-  let reasoningParts = message?.parts.filter(isReasoningUIPart)
-  let toolParts = message?.parts.filter(isToolUIPart)
+  let message = $derived(outputs.message)
+  let response = $derived(outputs.response)
+  let usage = $derived(outputs.usage)
 
-  let chainSteps = toolParts?.map((part): ChainStep => {
-    const toolName = getToolName(part)
+  let reasoningParts = $derived(message?.parts.filter(isReasoningUIPart))
+  let toolParts = $derived(message?.parts.filter(isToolUIPart))
 
-    let status: ChainStep["status"]
-    if (part.state === "output-error") {
-      status = "error"
-    } else if (part.state === "output-available") {
-      status = "completed"
-    } else if (
-      part.state === "input-streaming" ||
-      part.state === "input-available"
-    ) {
-      status = "pending"
-    } else {
-      status = "failed"
-    }
+  let chainSteps = $derived(
+    toolParts?.map((part): ChainStep => {
+      const toolName = getToolName(part)
 
-    return {
-      id: part.toolCallId,
-      name: toolName,
-      displayName: humanizeToolName(toolName),
-      status,
-      reasoning: getReasoning(),
-      input: part.input,
-      output: part.state === "output-available" ? part.output : undefined,
-      usage,
-    }
-  })
+      let status: ChainStep["status"]
+      if (part.state === "output-error") {
+        status = "error"
+      } else if (part.state === "output-available") {
+        status = "completed"
+      } else if (
+        part.state === "input-streaming" ||
+        part.state === "input-available"
+      ) {
+        status = "pending"
+      } else {
+        status = "failed"
+      }
+
+      return {
+        id: part.toolCallId,
+        name: toolName,
+        displayName: humanizeToolName(toolName),
+        status,
+        reasoning: getReasoning(),
+        input: part.input,
+        output: part.state === "output-available" ? part.output : undefined,
+        usage,
+      }
+    })
+  )
 
   function humanizeToolName(toolName: string): string {
     return toolName
