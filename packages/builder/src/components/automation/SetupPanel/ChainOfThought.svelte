@@ -9,8 +9,8 @@
   import { type ChainStep } from "./AgentOutputViewer.svelte"
 
   interface Props {
-    steps: ChainStep[] | undefined
-    simple: boolean
+    steps?: ChainStep[]
+    simple?: boolean
   }
 
   let { steps = [], simple = false }: Props = $props()
