@@ -58,6 +58,10 @@
     filterOptions.push({ label: "Datasources", value: "datasource" })
   }
 
+  if (!$admin.cloud) {
+    filterOptions.push({ label: "Automation", value: "automation" })
+  }
+
   $: filteredPlugins = $plugins
     .filter((plugin: any) => {
       return filter === "all" || plugin.schema.type === filter
