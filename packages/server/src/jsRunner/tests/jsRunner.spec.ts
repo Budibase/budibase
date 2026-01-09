@@ -29,6 +29,26 @@ describe("jsRunner (using isolated-vm)", () => {
     )
   }
 
+  const setIsolateTime = async (isoDate: string) => {
+    await processJS(
+      `
+      const fixed = new Date("${isoDate}");
+      const RealDate = globalThis.Date;
+      class MockDate extends RealDate {
+        constructor(...args) {
+          return args.length ? new RealDate(...args) : new RealDate(fixed);
+        }
+        static now() {
+          return fixed.getTime();
+        }
+        static parse = RealDate.parse;
+        static UTC = RealDate.UTC;
+      }
+      globalThis.Date = MockDate;
+    `
+    )
+  }
+
   it("can run a basic javascript", async () => {
     const output = await processJS(`return 1 + 2`)
     expect(output).toBe(3)
@@ -75,6 +95,10 @@ describe("jsRunner (using isolated-vm)", () => {
   })
 
   describe("helpers", () => {
+    beforeAll(async () => {
+      await setIsolateTime(DATE)
+    })
+
     runJsHelpersTests({
       funcWrap: (func: any) =>
         config.doInContext(config.getDevWorkspaceId(), func),
