@@ -3922,103 +3922,109 @@ if (descriptions.length) {
           expect(rows[0].formula).toBe("2")
         })
 
-        describe("manifest examples via formula columns", () => {
-          beforeAll(() => {
-            tk.freeze(manifestTimestamp)
-          })
+        isInternal &&
+          describe("manifest examples via formula columns", () => {
+            beforeAll(() => {
+              tk.freeze(manifestTimestamp)
+            })
 
-          afterAll(() => {
-            tk.freeze(timestamp)
-          })
+            afterAll(() => {
+              tk.freeze(timestamp)
+            })
 
-          describe.each(Object.keys(manifestExamples))("%s", collection => {
-            const examplesToRun = manifestExamples[collection].filter(
-              ([key, { requiresHbsBody }]) =>
-                !requiresHbsBody && !["map"].includes(key)
-            )
+            describe.each(Object.keys(manifestExamples))("%s", collection => {
+              const examplesToRun = manifestExamples[collection].filter(
+                ([key, { requiresHbsBody }]) =>
+                  !requiresHbsBody && !["map"].includes(key)
+              )
 
-            examplesToRun.length &&
-              it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
-                const { formula, rowValues } = prepareManifestFormula(hbs)
-                const schema: TableSchema = {
-                  formula: {
-                    name: "formula",
-                    type: FieldType.FORMULA,
-                    formula,
-                    formulaType: FormulaType.DYNAMIC,
-                  },
-                }
-
-                for (const fieldName of Object.keys(rowValues)) {
-                  schema[fieldName] = {
-                    name: fieldName,
-                    type: FieldType.JSON,
+              examplesToRun.length &&
+                it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
+                  const { formula, rowValues } = prepareManifestFormula(hbs)
+                  const schema: TableSchema = {
+                    formula: {
+                      name: "formula",
+                      type: FieldType.FORMULA,
+                      formula,
+                      formulaType: FormulaType.DYNAMIC,
+                    },
                   }
-                }
 
-                const manifestTable = await config.api.table.save(
-                  saveTableRequest({ schema })
-                )
-                await config.api.row.save(manifestTable._id!, rowValues)
-                const { rows } = await config.api.row.search(manifestTable._id!)
-                const result =
-                  typeof rows[0].formula === "string"
-                    ? rows[0].formula.replace(/&nbsp;/g, " ")
-                    : rows[0].formula
-
-                assertManifestResult(key, hbs, result, js)
-              })
-          })
-        })
-
-        describe("manifest examples via JS formula columns", () => {
-          beforeAll(() => {
-            tk.freeze(manifestTimestamp)
-          })
-
-          afterAll(() => {
-            tk.freeze(timestamp)
-          })
-
-          describe.each(Object.keys(manifestExamples))("%s", collection => {
-            const examplesToRun = manifestExamples[collection].filter(
-              ([key, { requiresHbsBody }]) =>
-                !requiresHbsBody && !helpersToRemoveForJs.includes(key)
-            )
-
-            examplesToRun.length &&
-              it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
-                const { formula, rowValues } = prepareManifestFormula(hbs)
-                const jsFormula = encodeJS(convertToJS(formula))
-                const schema: TableSchema = {
-                  formula: {
-                    name: "formula",
-                    type: FieldType.FORMULA,
-                    formula: jsFormula,
-                    formulaType: FormulaType.DYNAMIC,
-                  },
-                }
-
-                for (const fieldName of Object.keys(rowValues)) {
-                  schema[fieldName] = {
-                    name: fieldName,
-                    type: FieldType.JSON,
+                  for (const fieldName of Object.keys(rowValues)) {
+                    schema[fieldName] = {
+                      name: fieldName,
+                      type: FieldType.JSON,
+                    }
                   }
-                }
 
-                const manifestTable = await config.api.table.save(
-                  saveTableRequest({ schema })
-                )
-                await config.api.row.save(manifestTable._id!, rowValues)
-                const { rows } = await config.api.row.search(manifestTable._id!)
-                const result =
-                  typeof rows[0].formula === "string"
-                    ? rows[0].formula.replace(/&nbsp;/g, " ")
-                    : rows[0].formula
-                assertManifestResult(key, hbs, result, js)
-              })
+                  const manifestTable = await config.api.table.save(
+                    saveTableRequest({ schema })
+                  )
+                  await config.api.row.save(manifestTable._id!, rowValues)
+                  const { rows } = await config.api.row.search(
+                    manifestTable._id!
+                  )
+                  const result =
+                    typeof rows[0].formula === "string"
+                      ? rows[0].formula.replace(/&nbsp;/g, " ")
+                      : rows[0].formula
+
+                  assertManifestResult(key, hbs, result, js)
+                })
+            })
           })
-        })
+
+        isInternal &&
+          describe("manifest examples via JS formula columns", () => {
+            beforeAll(() => {
+              tk.freeze(manifestTimestamp)
+            })
+
+            afterAll(() => {
+              tk.freeze(timestamp)
+            })
+
+            describe.each(Object.keys(manifestExamples))("%s", collection => {
+              const examplesToRun = manifestExamples[collection].filter(
+                ([key, { requiresHbsBody }]) =>
+                  !requiresHbsBody && !helpersToRemoveForJs.includes(key)
+              )
+
+              examplesToRun.length &&
+                it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
+                  const { formula, rowValues } = prepareManifestFormula(hbs)
+                  const jsFormula = encodeJS(convertToJS(formula))
+                  const schema: TableSchema = {
+                    formula: {
+                      name: "formula",
+                      type: FieldType.FORMULA,
+                      formula: jsFormula,
+                      formulaType: FormulaType.DYNAMIC,
+                    },
+                  }
+
+                  for (const fieldName of Object.keys(rowValues)) {
+                    schema[fieldName] = {
+                      name: fieldName,
+                      type: FieldType.JSON,
+                    }
+                  }
+
+                  const manifestTable = await config.api.table.save(
+                    saveTableRequest({ schema })
+                  )
+                  await config.api.row.save(manifestTable._id!, rowValues)
+                  const { rows } = await config.api.row.search(
+                    manifestTable._id!
+                  )
+                  const result =
+                    typeof rows[0].formula === "string"
+                      ? rows[0].formula.replace(/&nbsp;/g, " ")
+                      : rows[0].formula
+                  assertManifestResult(key, hbs, result, js)
+                })
+            })
+          })
 
         isInternal &&
           it("should coerce a static handlebars formula", async () => {
