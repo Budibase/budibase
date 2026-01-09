@@ -12,7 +12,7 @@
     <div class="icon">
       <slot />
     </div>
-    <Body size="SM" color="var(--spectrum-global-color-gray-900)">{title}</Body>
+    <Body size="S" color="var(--spectrum-global-color-gray-900)">{title}</Body>
   </div>
 </div>
 

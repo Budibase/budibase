@@ -62,7 +62,7 @@
     flex-shrink: 0;
     justify-content: space-between;
     gap: 12px;
-    text-rendering: renderingoptimizelegibility !important;
+    text-rendering: optimizeLegibility !important;
   }
 
   .header-main {

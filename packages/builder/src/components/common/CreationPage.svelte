@@ -13,7 +13,7 @@
     </div>
   {/if}
   <div class="heading">
-    <Heading size="S" weight="400">{heading}</Heading>
+    <Heading size="S">{heading}</Heading>
   </div>
   <slot />
 </section>
