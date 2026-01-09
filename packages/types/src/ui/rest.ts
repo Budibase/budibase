@@ -1,9 +1,5 @@
 export interface RestTemplateSpec {
-  version:
-    | `${number}-${number}-${number}`
-    | `${number}.${number}`
-    | `${number}.${number}.${number}`
-    | `v${number}`
+  version: string
   url?: string
   data?: string
 }
@@ -11,11 +7,12 @@ export interface RestTemplateSpec {
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
-  | "Attio"
   | "Ansible AWX"
+  | "Attio"
   | "BambooHR"
   | "Confluence"
   | "Discord"
+  | "Figma"
   | "GitHub"
   | "Jira Cloud"
   | "Okta Management"
@@ -24,12 +21,76 @@ export type RestTemplateName =
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"
+  | "Ashby"
+  | "Banksapi"
+  | "Baremetrics"
+  | "Billsby"
+  | "Breezy HR"
+  | "Brevo"
+  | "BulkSMS"
+  | "Buttondown"
+  | "Clever"
+  | "Clickup"
+  | "Deel"
+  | "Dixa"
+  | "Dots"
+  | "Factorial"
+  | "Fastspring"
+  | "Fountain"
+  | "Gitlab"
+  | "Goody"
+  | "Helcim"
+  | "Hibob"
+  | "Homerun"
+  | "Hypatos"
+  | "Intercom"
+  | "Ironclad"
+  | "Jina AI"
+  | "Jobsoid"
+  | "Keatext AI"
+  | "Kenjo"
+  | "Lambda"
+  | "Lob"
+  | "Localizely"
+  | "LogisticsOS"
+  | "Mastercard"
+  | "Measureone"
+  | "Nanonets"
+  | "Notion"
+  | "Oyster HR"
+  | "Peach Payments"
+  | "Pinpoint"
+  | "Podium"
+  | "Remote"
+  | "Resend"
+  | "Rivery"
+  | "Sage"
+  | "Secoda"
+  | "Shipengine"
+  | "Shippo"
+  | "Shortcut"
+  | "Smartrecruiters"
+  | "SoftLedger"
+  | "SpotDraft"
+  | "Sumsub"
+  | "SuprSend"
+  | "Terminal"
+  | "Theirstack"
+  | "Tilled"
+  | "Trello"
+  | "Tremendous"
+  | "Verifiable"
+  | "Volt IO"
+  | "Workable"
+  | "X"
   | TwilioRestTemplateName
+  | ZendeskRestTemplateName
 
-export type RestTemplateGroupName = "Twilio"
+export type RestTemplateGroupName = "Twilio" | "Zendesk"
 
 export type RestTemplateGroups = {
   Twilio: TwilioRestTemplateName
+  Zendesk: ZendeskRestTemplateName
 }
 
 export type TwilioRestTemplateName =
@@ -72,11 +133,14 @@ export type TwilioRestTemplateName =
   | "Twilio Voice"
   | "Twilio Wireless"
 
+export type ZendeskRestTemplateName = "Sunshine Conversations"
+
 export interface RestTemplate {
   name: RestTemplateName
   description: string
   specs: RestTemplateSpec[]
   icon: string
+  verified?: true
 }
 
 export interface RestTemplateWithoutIcon<Name> {
@@ -91,6 +155,7 @@ export interface RestTemplateGroup<
   name: TemplateGroupName
   description: string
   icon: string
+  verified?: true
   templates: RestTemplateWithoutIcon<RestTemplateGroups[TemplateGroupName]>[]
 }
 

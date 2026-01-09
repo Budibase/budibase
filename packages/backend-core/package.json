@@ -47,7 +47,7 @@
     "bull": "4.10.1",
     "correlation-id": "4.0.0",
     "csvtojson": "2.0.10",
-    "dd-trace": "5.56.0",
+    "dd-trace": "5.63.0",
     "dotenv": "16.0.1",
     "google-auth-library": "^8.0.1",
     "google-spreadsheet": "npm:@budibase/google-spreadsheet@4.1.5",

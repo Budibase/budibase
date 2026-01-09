@@ -80,7 +80,7 @@
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.56.0",
+    "dd-trace": "5.63.0",
     "dotenv": "8.2.0",
     "extract-zip": "^2.0.1",
     "form-data": "4.0.4",
