@@ -28,7 +28,7 @@ import {
 } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
-import { JsTimeoutError } from "@budibase/string-templates"
+import { convertToJS, JsTimeoutError } from "@budibase/string-templates"
 import { getParsedManifest } from "@budibase/string-templates/test/utils"
 import {
   AIOperationEnum,
@@ -3926,6 +3926,55 @@ if (descriptions.length) {
                     name: "formula",
                     type: FieldType.FORMULA,
                     formula,
+                    formulaType: FormulaType.DYNAMIC,
+                  },
+                }
+
+                for (const fieldName of Object.keys(rowValues)) {
+                  schema[fieldName] = {
+                    name: fieldName,
+                    type: FieldType.JSON,
+                  }
+                }
+
+                const manifestTable = await config.api.table.save(
+                  saveTableRequest({ schema })
+                )
+                await config.api.row.save(manifestTable._id!, rowValues)
+                const { rows } = await config.api.row.search(manifestTable._id!)
+                const result =
+                  typeof rows[0].formula === "string"
+                    ? rows[0].formula.replace(/&nbsp;/g, " ")
+                    : rows[0].formula
+                expect(result).toEqual(js)
+              })
+          })
+        })
+
+        describe("manifest examples via JS formula columns", () => {
+          beforeAll(() => {
+            tk.freeze(manifestTimestamp)
+          })
+
+          afterAll(() => {
+            tk.freeze(timestamp)
+          })
+
+          describe.each(Object.keys(manifestExamples))("%s", collection => {
+            const examplesToRun = manifestExamples[collection].filter(
+              ([key, { requiresHbsBody }]) =>
+                !requiresHbsBody && !manifestHelpersToSkip.has(key)
+            )
+
+            examplesToRun.length &&
+              it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
+                const { formula, rowValues } = prepareManifestFormula(hbs)
+                const jsFormula = encodeJS(convertToJS(formula))
+                const schema: TableSchema = {
+                  formula: {
+                    name: "formula",
+                    type: FieldType.FORMULA,
+                    formula: jsFormula,
                     formulaType: FormulaType.DYNAMIC,
                   },
                 }
