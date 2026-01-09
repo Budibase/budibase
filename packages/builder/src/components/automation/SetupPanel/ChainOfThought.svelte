@@ -13,7 +13,7 @@
     simple: boolean
   }
 
-  let { steps, simple }: Props = $props()
+  let { steps = [], simple = false }: Props = $props()
 </script>
 
 <div class="timeline" class:simple>
