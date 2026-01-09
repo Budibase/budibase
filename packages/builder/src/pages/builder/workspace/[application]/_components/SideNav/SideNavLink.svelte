@@ -126,6 +126,9 @@
     justify-content: space-between;
     min-width: 0;
   }
+  .link.collapsed {
+    justify-content: center;
+  }
   .link.collapsed .link_content {
     display: none;
   }

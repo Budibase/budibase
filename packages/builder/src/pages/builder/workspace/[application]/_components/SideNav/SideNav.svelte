@@ -679,9 +679,7 @@
   .nav_wrapper {
     display: contents;
     --nav-padding: 12px;
-    --nav-collapsed-width: calc(
-      var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
-    );
+    --nav-collapsed-width: 42px;
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
   }
@@ -856,7 +854,6 @@
 
   @container (max-width: 239px) {
     .nav-section-title {
-      display: none;
       transition: all 130ms ease-in-out;
     }
     .favourite-wrapper {
