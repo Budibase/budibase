@@ -1,12 +1,21 @@
 import { Readable } from "svelte/store"
 import { FieldSchema, FieldType, UIFieldValidationRule } from "@budibase/types"
 
+export type FieldDefaultValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Record<string, unknown>
+  | Array<unknown>
+
 export interface FormContext {
   formApi?: {
     registerField: (
       field: string,
       type: FieldType,
-      defaultValue: string | string[] | undefined,
+      defaultValue: FieldDefaultValue,
       disabled: boolean,
       readonly: boolean,
       validation: UIFieldValidationRule[] | undefined,
