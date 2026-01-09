@@ -1,5 +1,5 @@
 import { Table } from "@budibase/types"
-import type { StepResult, ToolSet } from "ai"
+import type { UIMessage, LanguageModelUsage } from "ai"
 import { SortOrder } from "../../../api"
 import {
   SearchFilters,
@@ -270,7 +270,8 @@ export type AgentStepInputs = {
 export type AgentStepOutputs = {
   success: boolean
   response?: string
-  steps?: Array<StepResult<ToolSet>>
+  message?: UIMessage
+  usage?: LanguageModelUsage
 }
 
 export type LoopV2StepInputs = {

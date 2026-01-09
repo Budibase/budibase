@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs } from "ai"
+import { ToolLoopAgent, stepCountIs, readUIMessageStream, UIMessage } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 
@@ -66,16 +66,20 @@ export async function run({
       },
     })
 
-    const result = await agent.generate({
-      prompt,
-    })
+    const streamResult = await agent.stream({ prompt })
 
-    const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
+    let assistantMessage: UIMessage | undefined
+    for await (const uiMessage of readUIMessageStream({
+      stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+    })) {
+      assistantMessage = uiMessage
+    }
 
     return {
       success: true,
-      response: result.text,
-      steps,
+      response: await streamResult.text,
+      usage: await streamResult.usage,
+      message: assistantMessage,
     }
   } catch (err: any) {
     return {
