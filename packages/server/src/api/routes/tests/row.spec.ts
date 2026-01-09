@@ -1,3 +1,20 @@
+jest.mock("@budibase/handlebars-helpers/lib/math", () => {
+  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
+
+  return {
+    ...actual,
+    random: () => 10,
+  }
+})
+jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
+  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/uuid")
+
+  return {
+    ...actual,
+    uuid: () => "f34ebc66-93bd-4f7c-b79b-92b5569138bc",
+  }
+})
+
 import * as setup from "./utilities"
 
 import { datasourceDescribe } from "../../../integrations/tests/utils"
@@ -12,6 +29,7 @@ import {
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
 import { JsTimeoutError } from "@budibase/string-templates"
+import { getParsedManifest } from "@budibase/string-templates/test/utils"
 import {
   AIOperationEnum,
   AutoFieldSubType,
@@ -50,6 +68,9 @@ import { outputProcessing } from "../../../utilities/rowProcessor"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
+const manifestTimestamp = "2021-01-21T12:00:00"
+const manifestExamples = getParsedManifest()
+const manifestHelpersToSkip = new Set(["map", "some"])
 interface WaitOptions {
   name: string
   matchFn?: (event: any) => boolean
@@ -75,6 +96,21 @@ async function waitForEvent(
 
 function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
+}
+
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
+}
+
+function prepareManifestFormula(hbs: string) {
+  const rowValues: Record<string, any> = {}
+  const arrays = hbs.match(/\[[^/\]]+\]/g)
+  arrays?.forEach((arrayString, index) => {
+    const fieldName = `array${index}`
+    rowValues[fieldName] = JSON.parse(arrayString.replace(/'/g, '"'))
+    hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), fieldName)
+  })
+  return { formula: hbs, rowValues }
 }
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -3866,6 +3902,53 @@ if (descriptions.length) {
           })
           const { rows } = await config.api.row.search(table._id!)
           expect(rows[0].formula).toBe("2")
+        })
+
+        describe("manifest examples via formula columns", () => {
+          beforeAll(() => {
+            tk.freeze(manifestTimestamp)
+          })
+
+          afterAll(() => {
+            tk.freeze(timestamp)
+          })
+
+          describe.each(Object.keys(manifestExamples))("%s", collection => {
+            const examplesToRun = manifestExamples[collection].filter(
+              ([key]) => !manifestHelpersToSkip.has(key)
+            )
+
+            examplesToRun.length &&
+              it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
+                const { formula, rowValues } = prepareManifestFormula(hbs)
+                const schema: TableSchema = {
+                  formula: {
+                    name: "formula",
+                    type: FieldType.FORMULA,
+                    formula,
+                    formulaType: FormulaType.DYNAMIC,
+                  },
+                }
+
+                for (const fieldName of Object.keys(rowValues)) {
+                  schema[fieldName] = {
+                    name: fieldName,
+                    type: FieldType.JSON,
+                  }
+                }
+
+                const manifestTable = await config.api.table.save(
+                  saveTableRequest({ schema })
+                )
+                await config.api.row.save(manifestTable._id!, rowValues)
+                const { rows } = await config.api.row.search(manifestTable._id!)
+                const result =
+                  typeof rows[0].formula === "string"
+                    ? rows[0].formula.replace(/&nbsp;/g, " ")
+                    : rows[0].formula
+                expect(result).toEqual(js)
+              })
+          })
         })
 
         isInternal &&
