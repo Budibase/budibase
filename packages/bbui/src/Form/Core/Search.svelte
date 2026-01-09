@@ -11,7 +11,12 @@
   export let quiet = false
   export let inputRef: HTMLElement | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  interface SearchEvents {
+    change: any
+    clear: void
+  }
+
+  const dispatch = createEventDispatcher<SearchEvents>()
   let focus = false
 
   const updateValue = (value: any) => {
