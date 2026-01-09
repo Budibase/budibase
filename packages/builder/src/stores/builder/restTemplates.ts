@@ -82,6 +82,7 @@ import VerifiableLogo from "assets/rest-template-icons/verifiable.svg"
 import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
 import WorkableLogo from "assets/rest-template-icons/workable.svg"
 import XLogo from "assets/rest-template-icons/x.svg"
+import ZendeskLogo from "assets/rest-template-icons/zendesk.svg"
 import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
 interface RestTemplatesState {
@@ -92,6 +93,7 @@ interface RestTemplatesState {
 const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   name: "Twilio",
   icon: TwilioLogo,
+  verified: true,
   description:
     "Combines powerful communications APIs with AI and first-party data.",
   templates: [
@@ -485,6 +487,25 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   ],
 }
 
+const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
+  name: "Zendesk",
+  icon: ZendeskLogo,
+  verified: true,
+  description: "Customer support and messaging APIs from Zendesk.",
+  templates: [
+    {
+      name: "Sunshine Conversations",
+      description: "Messaging and conversation APIs for Zendesk Sunshine.",
+      specs: [
+        {
+          version: "17.2.1",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/zendesk/sunshine-conversations/openapi.yaml",
+        },
+      ],
+    },
+  ],
+}
+
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
@@ -523,6 +544,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: ConfluenceLogo,
+      verified: true,
     },
     {
       name: "Discord",
@@ -1393,7 +1415,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: XLogo,
     },
   ],
-  templateGroups: [twilioRestTemplateGroup],
+  templateGroups: [twilioRestTemplateGroup, zendeskRestTemplateGroup],
 }
 
 export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
