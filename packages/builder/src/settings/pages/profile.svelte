@@ -16,12 +16,13 @@
     ButtonGroup,
     Modal,
   } from "@budibase/bbui"
-  import { auth } from "@/stores/portal/auth"
-  import { admin } from "@/stores/portal/admin"
-  import { themeStore } from "@/stores/portal/theme"
-  import { type UpdateSelfRequest } from "@budibase/types"
-  import { ThemeOptions, helpers } from "@budibase/shared-core"
-  import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
+import { auth } from "@/stores/portal/auth"
+import { admin } from "@/stores/portal/admin"
+import { themeStore } from "@/stores/portal/theme"
+import { userPreferences } from "@/stores/preferences"
+import { type UpdateSelfRequest, type ScreenLayoutType } from "@budibase/types"
+import { ThemeOptions, helpers } from "@budibase/shared-core"
+import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
 
   const { accountPortalAccountUrl } = helpers
 
@@ -29,6 +30,10 @@
   let updating = false
   let apiKey: string | undefined = undefined
   let updatePasswordModal: Modal
+  const layoutOptions: { label: string; value: ScreenLayoutType }[] = [
+    { label: "Grid", value: "grid" },
+    { label: "Flex", value: "flex" },
+  ]
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: user = $auth.user
@@ -78,6 +83,16 @@
       notifications.error("Unable to fetch API key")
     }
   })
+
+  const updateDefaultLayout = async (layout: ScreenLayoutType) => {
+    try {
+      await userPreferences.updateDefaultLayout(layout)
+      notifications.success("Default layout updated")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to update default layout")
+    }
+  }
 </script>
 
 <Layout gap="S" noPadding>
@@ -136,6 +151,23 @@
         bind:value={$themeStore.theme}
         getOptionLabel={x => x.name}
         getOptionValue={x => x.id}
+      />
+    </div>
+  </Layout>
+  <Divider noMargin />
+  <Layout gap="S" noPadding>
+    <Heading size="XS">Layout</Heading>
+    <Body size="S">Default layout type for screens and containers</Body>
+    <div class="form">
+      <Select
+        placeholder={false}
+        options={layoutOptions}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        value={$userPreferences.defaultLayout}
+        loading={$userPreferences.savingDefaultLayout}
+        disabled={$userPreferences.savingDefaultLayout}
+        on:change={event => updateDefaultLayout(event.detail)}
       />
     </div>
   </Layout>
