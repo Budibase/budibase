@@ -38,7 +38,7 @@ const externalCollections = {
   uuid,
 }
 
-export const helpersToRemoveForJs = ["sortBy"]
+export const helpersToRemoveForJs = ["sortBy", "map"]
 
 const addedHelpers = {
   date: date,

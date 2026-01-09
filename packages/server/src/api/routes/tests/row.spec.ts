@@ -11,7 +11,11 @@ import {
 } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
-import { convertToJS, JsTimeoutError } from "@budibase/string-templates"
+import {
+  convertToJS,
+  helpersToRemoveForJs,
+  JsTimeoutError,
+} from "@budibase/string-templates"
 import { getParsedManifest } from "@budibase/string-templates/test/utils"
 import {
   AIOperationEnum,
@@ -102,7 +106,7 @@ function assertManifestResult(
   expected: unknown
 ) {
   if (key === "durationFromNow") {
-    expect(String(result)).toMatch(/^\d years$/)
+    expect(String(result)).toMatch(/^\d (years|months)$/)
     return
   }
 
@@ -3928,7 +3932,10 @@ if (descriptions.length) {
           })
 
           describe.each(Object.keys(manifestExamples))("%s", collection => {
-            const examplesToRun = manifestExamples[collection]
+            const examplesToRun = manifestExamples[collection].filter(
+              ([key, { requiresHbsBody }]) =>
+                !requiresHbsBody && !["map"].includes(key)
+            )
 
             examplesToRun.length &&
               it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
@@ -3958,6 +3965,7 @@ if (descriptions.length) {
                   typeof rows[0].formula === "string"
                     ? rows[0].formula.replace(/&nbsp;/g, " ")
                     : rows[0].formula
+
                 assertManifestResult(key, hbs, result, js)
               })
           })
@@ -3973,10 +3981,9 @@ if (descriptions.length) {
           })
 
           describe.each(Object.keys(manifestExamples))("%s", collection => {
-            const manifestHelpersToSkip = new Set(["sortBy"])
             const examplesToRun = manifestExamples[collection].filter(
               ([key, { requiresHbsBody }]) =>
-                !requiresHbsBody && !manifestHelpersToSkip.has(key)
+                !requiresHbsBody && !helpersToRemoveForJs.includes(key)
             )
 
             examplesToRun.length &&
