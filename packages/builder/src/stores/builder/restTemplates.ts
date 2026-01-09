@@ -529,7 +529,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
         {
-          version: "1.0.0",
+          version: "10",
           url: "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
         },
       ],
@@ -537,10 +537,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
     {
       name: "Figma",
-      description: "Design platform API for files, projects, teams, and comments",
+      description:
+        "Design platform API for files, projects, teams, and comments",
       specs: [
         {
-          version: "1.0.0",
+          version: "0.35.0",
           url: "https://raw.githubusercontent.com/figma/rest-api-spec/main/openapi/openapi.yaml",
         },
       ],
