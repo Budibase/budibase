@@ -56,9 +56,6 @@
 
   if (!$admin.cloud) {
     filterOptions.push({ label: "Datasources", value: "datasource" })
-  }
-
-  if (!$admin.cloud) {
     filterOptions.push({ label: "Automation", value: "automation" })
   }
 
