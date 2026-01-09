@@ -16,6 +16,7 @@ export type RestTemplateName =
   | "BambooHR"
   | "Confluence"
   | "Discord"
+  | "Figma"
   | "GitHub"
   | "Jira Cloud"
   | "Okta Management"
