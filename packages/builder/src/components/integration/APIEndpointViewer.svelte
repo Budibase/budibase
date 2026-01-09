@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { flags } from "@/stores/builder"
   import { datasources } from "@/stores/builder/datasources"
   import { queries } from "@/stores/builder/queries"
@@ -64,6 +64,8 @@
 
   export let queryId
   export let datasourceId
+
+  $: goto = $gotoStore
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -525,7 +527,7 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       const updatedQuery = getSelectedQuery(_id!, builtQuery.datasourceId)

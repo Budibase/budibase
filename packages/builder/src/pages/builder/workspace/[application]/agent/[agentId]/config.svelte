@@ -54,7 +54,7 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
-
+  $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
