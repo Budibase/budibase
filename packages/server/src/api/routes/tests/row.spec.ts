@@ -53,7 +53,6 @@ const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 const manifestTimestamp = "2021-01-21T12:00:00"
 const manifestExamples = getParsedManifest()
-const manifestHelpersToSkip = new Set(["map", "some"])
 interface WaitOptions {
   name: string
   matchFn?: (event: any) => boolean
@@ -102,6 +101,11 @@ function assertManifestResult(
   result: unknown,
   expected: unknown
 ) {
+  if (key === "durationFromNow") {
+    expect(String(result)).toMatch(/^\d years$/)
+    return
+  }
+
   if (key === "random") {
     const match = hbs.match(/{{\s*random\s+([-\d.]+)\s+([-\d.]+)\s*}}/)
     const min = match ? Number(match[1]) : 0
@@ -3924,9 +3928,7 @@ if (descriptions.length) {
           })
 
           describe.each(Object.keys(manifestExamples))("%s", collection => {
-            const examplesToRun = manifestExamples[collection].filter(
-              ([key]) => !manifestHelpersToSkip.has(key)
-            )
+            const examplesToRun = manifestExamples[collection]
 
             examplesToRun.length &&
               it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
@@ -3971,6 +3973,7 @@ if (descriptions.length) {
           })
 
           describe.each(Object.keys(manifestExamples))("%s", collection => {
+            const manifestHelpersToSkip = new Set(["sortBy"])
             const examplesToRun = manifestExamples[collection].filter(
               ([key, { requiresHbsBody }]) =>
                 !requiresHbsBody && !manifestHelpersToSkip.has(key)
