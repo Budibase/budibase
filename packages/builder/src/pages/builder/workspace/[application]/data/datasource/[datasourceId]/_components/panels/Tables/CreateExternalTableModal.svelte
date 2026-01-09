@@ -1,9 +1,11 @@
 <script>
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { DataEnvironmentMode } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   export let datasource
 
@@ -38,7 +40,7 @@
       dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
       const table = await tables.save(buildDefaultTable(name, datasource._id))
       await datasources.fetch()
-      $goto(`../../table/${table._id}`)
+      goto(`../../table/${table._id}`)
     } catch (error) {
       notifications.error(
         `Error saving table - ${error?.message || "unknown error"}`

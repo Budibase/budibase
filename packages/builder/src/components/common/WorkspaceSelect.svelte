@@ -10,6 +10,9 @@
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
   import type { EnrichedApp } from "@/types"
 
+  // Manually subscribe - https://github.com/roxiness/routify/issues/563
+  $goto
+
   const SORT_OPTIONS = [
     { key: "name", label: "Alphabetical" },
     { key: "updated", label: "Last edited" },
@@ -187,7 +190,7 @@
           }}
         />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true" />
+        <span class="header-actions-spacer" aria-hidden="true"></span>
       {/if}
       <WorkspaceSortMenu
         {currentSort}

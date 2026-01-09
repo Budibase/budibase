@@ -33,6 +33,10 @@ export const definition: AutomationStepDefinition = {
           customType: AutomationCustomIOType.TABLE,
           title: "Table",
         },
+        rowId: {
+          type: AutomationIOType.STRING,
+          title: "Row ID",
+        },
         filters: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.FILTERS,

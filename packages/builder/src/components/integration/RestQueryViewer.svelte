@@ -1,5 +1,5 @@
 <script>
-  import { beforeUrlChange, goto, params } from "@roxi/routify"
+  import { beforeUrlChange, goto as gotoStore, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
@@ -56,6 +56,12 @@
     prettifyQueryRequestBody,
     keyValueArrayToRecord,
   } from "./query"
+
+  $beforeUrlChange
+  $gotoStore
+  $params
+
+  $: goto = $gotoStore
 
   export let queryId
   let lastViewedQueryId = null
@@ -235,7 +241,7 @@
       notifications.success(`Request saved successfully`)
       if (isNew && redirectIfNew) {
         isModified = false
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       query = getSelectedQuery()
@@ -697,7 +703,7 @@
             </Layout>
           </Tab>
           <div class="auth-container">
-            <div />
+            <div></div>
             <!-- spacer -->
 
             <AuthPicker

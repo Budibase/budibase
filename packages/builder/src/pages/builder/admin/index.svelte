@@ -9,11 +9,13 @@
     FancyInput,
   } from "@budibase/bbui"
   import { BUILDER_URLS } from "@budibase/shared-core"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { API } from "@/api"
   import { admin, auth } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
+
+  $: goto = $gotoStore
 
   let form
   let errors = {}
@@ -37,7 +39,7 @@
       notifications.success("Admin user created")
       await admin.init()
       await auth.login(formData?.email.trim(), formData?.password)
-      $goto(BUILDER_URLS.WORKSPACES)
+      goto(BUILDER_URLS.WORKSPACES)
     } catch (error) {
       submitted = false
       notifications.error(error.message || "Failed to create admin user")

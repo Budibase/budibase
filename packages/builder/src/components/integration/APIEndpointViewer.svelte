@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { flags } from "@/stores/builder"
   import { datasources } from "@/stores/builder/datasources"
   import { queries } from "@/stores/builder/queries"
@@ -53,6 +53,7 @@
     buildAuthConfigs,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
@@ -63,6 +64,8 @@
 
   export let queryId
   export let datasourceId
+
+  $: goto = $gotoStore
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -363,12 +366,13 @@
   }
 
   const loadEndpoints = async (spec?: RestTemplateSpec) => {
-    if (!spec) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return
     }
     try {
       endpointsLoading = true
-      const resp = await queries.fetchImportInfo({ url: spec.url })
+      const resp = await queries.fetchImportInfo(request)
       const { endpoints: respEndpoints, url } = resp || {}
       if (respEndpoints) {
         endpoints = respEndpoints
@@ -523,7 +527,7 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       const updatedQuery = getSelectedQuery(_id!, builtQuery.datasourceId)
@@ -971,7 +975,7 @@
       class="underlay"
       transition:fade={{ duration: 260 }}
       on:click={() => sidebarExpanded.set(false)}
-    />
+    ></div>
   {/if}
   {#if $sidebarExpanded}
     <div

@@ -47,7 +47,7 @@
     on:click={onClick}
     class:hoverable={onClick != null}
     style="width: {size}px; height: {size}px; display: inline-flex; align-items: center; justify-content: center;"
-  />
+  ></i>
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles} style="width: {size}px; height: {size}px;">
     <Placeholder />

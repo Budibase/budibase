@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import {
     keepOpen,
     ModalContent,
@@ -19,6 +19,8 @@
     ImportRestQueryRequest,
     UIFile,
   } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
@@ -118,7 +120,7 @@
       await queries.fetch()
 
       if (navigateDatasource) {
-        $goto(`./datasource/${datasourceId}`)
+        goto(`./datasource/${datasourceId}`)
       }
 
       notifications.success("Imported successfully")

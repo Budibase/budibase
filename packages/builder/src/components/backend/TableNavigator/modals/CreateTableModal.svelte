@@ -1,5 +1,5 @@
 <script>
-  import { goto, url } from "@roxi/routify"
+  import { goto as gotoStore, url } from "@roxi/routify"
   import { DataEnvironmentMode } from "@budibase/types"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import { tables, datasources, dataEnvironmentStore } from "@/stores/builder"
@@ -9,6 +9,9 @@
     BUDIBASE_DATASOURCE_TYPE,
     DB_TYPE_INTERNAL,
   } from "@/constants/backend"
+
+  $: goto = $gotoStore
+  $url
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(
@@ -31,7 +34,7 @@
     const path = currentUrl.endsWith("data")
       ? `./table/${table._id}`
       : `../../table/${table._id}`
-    $goto(path)
+    goto(path)
   }
 
   let error = ""

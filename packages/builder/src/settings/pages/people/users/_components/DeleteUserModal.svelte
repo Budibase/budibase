@@ -1,7 +1,9 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
+
+  $: goto = $gotoStore
 
   export let user
 
@@ -9,7 +11,7 @@
     try {
       await users.delete(user._id)
       notifications.success(`User ${user?.email} deleted.`)
-      $goto("./")
+      goto("./")
     } catch (error) {
       notifications.error("Error deleting user")
     }

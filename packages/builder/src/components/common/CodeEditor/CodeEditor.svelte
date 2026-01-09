@@ -53,7 +53,12 @@
   import { html } from "@codemirror/lang-html"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import { type EnrichedBinding, type EditorMode } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    type EditorMode,
+    type CaretPositionFn,
+    type InsertAtPositionFn,
+  } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
@@ -78,6 +83,11 @@
   export let aiEnabled = true
   export let lineWrapping = true
   export let renderBindingsAsTags = false
+  export let getCaretPosition: CaretPositionFn = () => ({
+    start: 0,
+    end: 0,
+  })
+  export let insertAtPos: InsertAtPositionFn = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -152,35 +162,31 @@
     }
   }
 
-  // Export a function to expose caret position
-  export const getCaretPosition = () => {
-    const selection_range = editor.state.selection.ranges[0]
-    return {
-      start: selection_range?.from,
-      end: selection_range?.to,
+  const exposeEditorApi = () => {
+    getCaretPosition = () => {
+      const selection_range = editor.state.selection.ranges[0]
+      return {
+        start: selection_range?.from,
+        end: selection_range?.to,
+      }
     }
-  }
 
-  export const insertAtPos = (opts: {
-    start: number
-    end?: number
-    value: string
-    cursor: { anchor: number }
-  }) => {
-    // Updating the value inside.
-    // Retain focus
-    editor.dispatch({
-      changes: {
-        from: opts.start || editor.state.doc.length,
-        to: opts.end || editor.state.doc.length,
-        insert: opts.value,
-      },
-      selection: opts.cursor
-        ? {
-            anchor: opts.start + opts.value.length,
-          }
-        : undefined,
-    })
+    insertAtPos = opts => {
+      // Updating the value inside.
+      // Retain focus
+      editor.dispatch({
+        changes: {
+          from: opts.start || editor.state.doc.length,
+          to: opts.end || editor.state.doc.length,
+          insert: opts.value,
+        },
+        selection: opts.cursor
+          ? {
+              anchor: opts.start + opts.value.length,
+            }
+          : undefined,
+      })
+    }
   }
 
   // Match decoration for HBS bindings
@@ -419,6 +425,7 @@
       ]),
       parent: textarea,
     })
+    exposeEditorApi()
   }
 
   const handleAICodeUpdate = (event: CustomEvent<{ code: string }>) => {
@@ -459,7 +466,7 @@
   }`}
   bind:this={editorEle}
 >
-  <div tabindex="-1" bind:this={textarea} />
+  <div tabindex="-1" bind:this={textarea}></div>
 </div>
 
 {#if aiGenEnabled}

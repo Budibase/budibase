@@ -26,15 +26,21 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { configFromIntegration } from "@/stores/selectors"
   import { customQueryIconColor } from "@/helpers/data/utils"
-  import { formatEndpointLabel } from "@/helpers/restTemplates"
+  import {
+    formatEndpointLabel,
+    getRestTemplateImportInfoRequest,
+  } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import type {
     RestTemplate,
     ImportEndpoint,
     Datasource,
+    ImportRestQueryRequest,
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
@@ -95,7 +101,11 @@
     templateLoading = true
     templateLoadingPhase = "info"
     try {
-      const info = await queries.fetchImportInfo({ url: spec.url })
+      const request = getRestTemplateImportInfoRequest(spec)
+      if (!request) {
+        throw new Error("Template metadata is unavailable")
+      }
+      const info = await queries.fetchImportInfo(request)
 
       if (!info.endpoints?.length) {
         throw new Error("No endpoints found in this template")
@@ -191,17 +201,23 @@
         restTemplateVersion: pendingSpec.version,
       }
 
-      const importResult = await queries.importQueries({
-        url: pendingSpec.url,
+      const importBody: ImportRestQueryRequest = {
         datasource: datasourcePayload,
         selectedEndpointId,
-      })
+      }
+      if (pendingSpec.url) {
+        importBody.url = pendingSpec.url
+      }
+      if (pendingSpec.data) {
+        importBody.data = pendingSpec.data
+      }
+      const importResult = await queries.importQueries(importBody)
 
       await Promise.all([datasources.fetch(), queries.fetch()])
 
       notifications.success(`${pendingTemplate.name} imported successfully`)
       await templateEndpointModal?.hide()
-      $goto(`./datasource/${importResult.datasourceId}`)
+      goto(`./datasource/${importResult.datasourceId}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -267,9 +283,9 @@
 
   const close = () => {
     if (restDatasources.length) {
-      $goto(`./datasource/${restDatasources[0]._id}`)
+      goto(`./datasource/${restDatasources[0]._id}`)
     } else {
-      $goto("../")
+      goto("../")
     }
   }
 </script>

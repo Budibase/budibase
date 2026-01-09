@@ -37,6 +37,8 @@
   import NoResults from "../_components/NoResults.svelte"
   import { appsStore } from "@/stores/portal"
 
+  $url
+
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">
@@ -363,11 +365,6 @@
     border: 1px solid transparent;
     padding: 3px 10px;
     height: auto;
-
-    &.is-selected {
-      background: var(--spectrum-global-color-gray-200);
-      border-color: var(--spectrum-global-color-gray-300);
-    }
   }
   .action-buttons {
     display: flex;

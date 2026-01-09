@@ -1,4 +1,4 @@
-import { Document } from "../../"
+import { Document, WebSearchConfig } from "../../"
 
 export interface CustomAIProviderConfig extends Document {
   name: string
@@ -8,4 +8,5 @@ export interface CustomAIProviderConfig extends Document {
   model: string
   apiKey?: string
   liteLLMModelId: string
+  webSearchConfig?: WebSearchConfig
 }

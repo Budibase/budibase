@@ -33,6 +33,9 @@
   import { configFromIntegration } from "@/stores/selectors"
   import { goto, params } from "@roxi/routify"
 
+  $goto
+  $params
+
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let block: AutomationStep | undefined = undefined
   export let context: AutomationContext | undefined

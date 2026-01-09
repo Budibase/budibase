@@ -178,7 +178,7 @@
         class="underlay"
         class:hidden={!$modal}
         transition:drawerFade|local
-      />
+      ></div>
       <div
         class="drawer"
         class:stacked={depth > 0}
@@ -211,7 +211,7 @@
           </div>
         </header>
         <slot name="body" />
-        <div class="overlay" class:hidden={$modal || depth === 0} />
+        <div class="overlay" class:hidden={$modal || depth === 0}></div>
       </div>
     </div>
   </Portal>

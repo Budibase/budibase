@@ -65,7 +65,7 @@
   }
 </script>
 
-<div bind:this={anchor} {style} class="menu-anchor" />
+<div bind:this={anchor} {style} class="menu-anchor"></div>
 
 {#if $menu.visible}
   {#key style}

@@ -5,6 +5,9 @@ import {
   FetchPluginResponse,
   UploadPluginRequest,
   UploadPluginResponse,
+  PluginUpdateCheckResponse,
+  PluginUpdateApplyRequest,
+  PluginUpdateApplyResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -13,6 +16,11 @@ export interface PluginEndpoins {
   createPlugin: (data: CreatePluginRequest) => Promise<CreatePluginResponse>
   getPlugins: () => Promise<FetchPluginResponse>
   deletePlugin: (pluginId: string) => Promise<DeletePluginResponse>
+  checkPluginUpdates: (token?: string) => Promise<PluginUpdateCheckResponse>
+  applyPluginUpdates: (
+    data: PluginUpdateApplyRequest,
+    token?: string
+  ) => Promise<PluginUpdateApplyResponse>
 }
 
 export const buildPluginEndpoints = (API: BaseAPIClient): PluginEndpoins => ({
@@ -56,6 +64,22 @@ export const buildPluginEndpoints = (API: BaseAPIClient): PluginEndpoins => ({
   deletePlugin: async pluginId => {
     return await API.delete({
       url: `/api/plugin/${encodeURIComponent(pluginId)}`,
+    })
+  },
+
+  checkPluginUpdates: async token => {
+    const url = token
+      ? `/api/plugin/updates?token=${encodeURIComponent(token)}`
+      : "/api/plugin/updates"
+    return await API.get({
+      url,
+    })
+  },
+
+  applyPluginUpdates: async (data, token) => {
+    return await API.post({
+      url: "/api/plugin/updates",
+      body: { ...data, token },
     })
   },
 })

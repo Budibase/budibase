@@ -8,13 +8,15 @@
     viewsV2,
   } from "@/stores/builder"
   import { TriggerStepID } from "@/constants/backend/automations"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import MagicWand from "./magic-wand.svg"
   import { AutoScreenTypes } from "@/constants"
   import CreateScreenModal from "@/pages/builder/workspace/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
   import { BlockDefinitionTypes } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   const { datasource } = getContext("grid")
 
@@ -70,7 +72,7 @@
         "/builder/workspace/:application/data",
         window.location.pathname
       )
-      $goto(`/builder/workspace/${response.appId}/automation/${response._id}`)
+      goto(`/builder/workspace/${response.appId}/automation/${response._id}`)
       notifications.success(`Automation created successfully`)
     } catch (e) {
       console.error(e)

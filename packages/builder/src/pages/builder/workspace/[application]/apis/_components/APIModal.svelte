@@ -16,7 +16,8 @@
     type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
   export const show = () => modal.show()
@@ -33,6 +34,8 @@
   $beforeUrlChange(() => {
     return true
   })
+
+  $: goto = $gotoStore
 
   $: templatesValue = $restTemplates?.templates || []
   $: templateGroupsValue = $restTemplates?.templateGroups || []
@@ -53,7 +56,7 @@
         await datasources.fetch()
 
         // Go to the new query page.
-        $goto(`./query/new/${ds._id}`)
+        goto(`./query/new/${ds._id}`)
       }
     } catch {
       notifications.error("There was a problem creating your new api")
@@ -66,11 +69,12 @@
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
-    if (!spec?.url) {
+    const request = getRestTemplateImportInfoRequest(spec)
+    if (!request) {
       return undefined
     }
     try {
-      return await queries.fetchImportInfo({ url: spec.url })
+      return await queries.fetchImportInfo(request)
     } catch (err) {
       console.warn("Failed to load template metadata", err)
       return undefined
@@ -167,7 +171,7 @@
       await datasources.fetch()
 
       // Go to the newly created datasource page.
-      $goto(`./datasource/${ds._id}`)
+      goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
     } catch (error: any) {
