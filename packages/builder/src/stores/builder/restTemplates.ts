@@ -694,11 +694,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "Secure payment processing, subscriptions, billing, and reporting APIs",
       specs: [
         {
-          version: "2022-11-15",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/stripe/openapi.yaml",
+          version: "2026-01-28.clover",
+          url: "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml",
         },
       ],
       icon: StripeLogo,
+      verified: true,
     },
     {
       name: "Ansible AWX",

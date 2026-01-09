@@ -1,9 +1,5 @@
 export interface RestTemplateSpec {
-  version:
-    | `${number}`
-    | `${number}-${number}-${number}`
-    | `${number}.${number}.${number}`
-    | `v${number}`
+  version: string
   url?: string
   data?: string
 }
