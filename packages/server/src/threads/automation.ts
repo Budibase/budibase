@@ -1,4 +1,3 @@
-// Initialize dd-trace with llmobs config before any other imports
 if (process.env.DD_APM_ENABLED) {
   require("../ddApm")
 }
