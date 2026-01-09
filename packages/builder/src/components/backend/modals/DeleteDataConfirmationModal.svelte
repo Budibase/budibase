@@ -208,8 +208,10 @@
             <ul class="screens-list">
               {#each affectedScreens as item}
                 <li>
-                  <Link overBackground={isDarkTheme} target="_blank" href={item.url}
-                    >{item.text}</Link
+                  <Link
+                    overBackground={isDarkTheme}
+                    target="_blank"
+                    href={item.url}>{item.text}</Link
                   >
                 </li>
               {/each}
