@@ -1,20 +1,3 @@
-jest.mock("@budibase/handlebars-helpers/lib/math", () => {
-  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
-
-  return {
-    ...actual,
-    random: () => 10,
-  }
-})
-jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
-  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/uuid")
-
-  return {
-    ...actual,
-    uuid: () => "f34ebc66-93bd-4f7c-b79b-92b5569138bc",
-  }
-})
-
 import * as setup from "./utilities"
 
 import { datasourceDescribe } from "../../../integrations/tests/utils"
@@ -111,6 +94,33 @@ function prepareManifestFormula(hbs: string) {
     hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), fieldName)
   })
   return { formula: hbs, rowValues }
+}
+
+function assertManifestResult(
+  key: string,
+  hbs: string,
+  result: unknown,
+  expected: unknown
+) {
+  if (key === "random") {
+    const match = hbs.match(/{{\s*random\s+([-\d.]+)\s+([-\d.]+)\s*}}/)
+    const min = match ? Number(match[1]) : 0
+    const max = match ? Number(match[2]) : 0
+    const numericResult = Number(result)
+    expect(numericResult).toBeGreaterThanOrEqual(min)
+    expect(numericResult).toBeLessThanOrEqual(max)
+    return
+  }
+
+  if (key === "uuid") {
+    const UUID_REGEX =
+      /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
+
+    expect(String(result)).toMatch(UUID_REGEX)
+    return
+  }
+
+  expect(result).toEqual(expected)
 }
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -3919,7 +3929,7 @@ if (descriptions.length) {
             )
 
             examplesToRun.length &&
-              it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
+              it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
                 const { formula, rowValues } = prepareManifestFormula(hbs)
                 const schema: TableSchema = {
                   formula: {
@@ -3946,7 +3956,7 @@ if (descriptions.length) {
                   typeof rows[0].formula === "string"
                     ? rows[0].formula.replace(/&nbsp;/g, " ")
                     : rows[0].formula
-                expect(result).toEqual(js)
+                assertManifestResult(key, hbs, result, js)
               })
           })
         })
@@ -3967,7 +3977,7 @@ if (descriptions.length) {
             )
 
             examplesToRun.length &&
-              it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
+              it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
                 const { formula, rowValues } = prepareManifestFormula(hbs)
                 const jsFormula = encodeJS(convertToJS(formula))
                 const schema: TableSchema = {
@@ -3995,7 +4005,7 @@ if (descriptions.length) {
                   typeof rows[0].formula === "string"
                     ? rows[0].formula.replace(/&nbsp;/g, " ")
                     : rows[0].formula
-                expect(result).toEqual(js)
+                assertManifestResult(key, hbs, result, js)
               })
           })
         })
