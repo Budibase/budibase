@@ -534,6 +534,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: DiscordLogo,
+      verified: true,
     },
     {
       name: "Figma",
