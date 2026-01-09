@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Divider, Select } from "@budibase/bbui"
+  import { Button, Divider, Search, Select } from "@budibase/bbui"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type {
     ConnectorCard,
@@ -31,7 +31,22 @@
   let activeGroupTemplateName: GroupTemplateName | null = null
   let currentPage = 1
   let lastConnectorCount = 0
+  let searchValue = ""
+  let lastSearchValue = ""
   const itemsPerPage = 15
+
+  $: normalizedSearchValue = searchValue.trim().toLowerCase()
+  $: if (normalizedSearchValue !== lastSearchValue) {
+    lastSearchValue = normalizedSearchValue
+    currentPage = 1
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0
+    }
+    if (observer && loadTrigger) {
+      observer.disconnect()
+      observer.observe(loadTrigger)
+    }
+  }
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
@@ -41,15 +56,29 @@
   $: visibleTemplates = (templates || []).filter(
     template => !groupedTemplateNames.has(template.name)
   )
+  $: filteredTemplateGroups = normalizedSearchValue
+    ? templateGroups.filter(
+        group =>
+          group.name.toLowerCase().includes(normalizedSearchValue) ||
+          group.templates.some(template =>
+            template.name.toLowerCase().includes(normalizedSearchValue)
+          )
+      )
+    : templateGroups
+  $: filteredTemplates = normalizedSearchValue
+    ? visibleTemplates.filter(template =>
+        template.name.toLowerCase().includes(normalizedSearchValue)
+      )
+    : visibleTemplates
   $: connectorCards = [
-    ...templateGroups.map<ConnectorCard>(group => ({
+    ...filteredTemplateGroups.map<ConnectorCard>(group => ({
       type: "group",
       name: group.name,
       icon: group.icon,
       key: `group-${group.name}`,
       group,
     })),
-    ...visibleTemplates.map<ConnectorCard>(template => ({
+    ...filteredTemplates.map<ConnectorCard>(template => ({
       type: "template",
       name: template.name,
       icon: template.icon,
@@ -165,7 +194,14 @@
   <div class="api-header">
     <div>API connectors</div>
     {#if !activeGroup}
-      <div>
+      <div class="api-header-actions">
+        <div class="api-search">
+          <Search
+            placeholder="Search templates"
+            value={searchValue}
+            on:change={event => (searchValue = event.detail)}
+          />
+        </div>
         <Button
           secondary
           icon="plus"
@@ -324,6 +360,16 @@
     color: var(--spectrum-global-color-gray-800);
     font-size: 16px;
     font-weight: 600;
+  }
+
+  .api-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .api-search {
+    width: 220px;
   }
 
   .api-main .contents {
