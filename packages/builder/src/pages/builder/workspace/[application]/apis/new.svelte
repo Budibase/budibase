@@ -331,7 +331,7 @@
   heading="Add new API"
 >
   {#if restIntegration}
-  <br />
+    <br />
     <div class="options bb-options">
       <DatasourceOption
         on:click={openRestModal}
@@ -348,8 +348,10 @@
 
     {#if verifiedRestTemplates.length}
       <div class="templates-header">
-        <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)"
-          >Verified templates</Body
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)">Verified templates</Body
         >
       </div>
       <div class="options templateOptions">
@@ -364,8 +366,10 @@
     {/if}
     {#if unverifiedRestTemplates.length}
       <div class="templates-header">
-        <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)"
-          >Templates</Body
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)">Templates</Body
         >
         <div
           class="info-icon-wrapper"
