@@ -693,6 +693,7 @@
                     mode={EditorModes.Handlebars}
                     bind:insertAtPos
                     renderBindingsAsTags={true}
+                    renderMarkdownDecorations={true}
                     placeholder=""
                     on:change={event => {
                       draft.promptInstructions = event.detail || ""
