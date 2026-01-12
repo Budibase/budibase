@@ -77,6 +77,16 @@
     },
   ]
 
+  const valueTypeToFieldTypeMap: Record<
+    ComponentCondition["valueType"],
+    FieldType
+  > = {
+    string: FieldType.STRING,
+    number: FieldType.NUMBER,
+    datetime: FieldType.DATETIME,
+    boolean: FieldType.BOOLEAN,
+  }
+
   let dragDisabled = true
 
   let settings: ExtendedComponentSetting[] = []
@@ -182,14 +192,8 @@
   ) => {
     condition.referenceValue = null
     condition.valueType = newValueType
-    condition.type =
-      newValueType === "string"
-        ? FieldType.STRING
-        : newValueType === "number"
-          ? FieldType.NUMBER
-          : newValueType === "datetime"
-            ? FieldType.DATETIME
-            : FieldType.BOOLEAN
+
+    condition.type = valueTypeToFieldTypeMap[newValueType]
 
     // Ensure a valid operator is set
     const validOperators = QueryUtils.getValidOperatorsForType({
