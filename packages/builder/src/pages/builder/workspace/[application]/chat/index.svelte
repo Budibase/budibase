@@ -1,6 +1,4 @@
 <script lang="ts">
-  import NavHeader from "@/components/common/NavHeader.svelte"
-  import NavItem from "@/components/common/NavItem.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { agentsStore, chatAppsStore } from "@/stores/portal"
@@ -29,8 +27,6 @@
     messages: [],
     chatAppId: "",
   }
-  const NO_MESSAGES_TEXT = "No messages"
-  const NO_PREVIEW_TEXT = "No preview available"
 
   type EnabledAgent = { agentId: string; isDefault?: boolean }
   type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
@@ -115,22 +111,6 @@
       chatAppId: $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.clearCurrentConversationId()
-  }
-
-  const getChatPreview = (chat: ChatConversationLike): string => {
-    const messageCount = chat.messages.length
-    if (!messageCount) {
-      return NO_MESSAGES_TEXT
-    }
-
-    let lastMessage = chat.messages[messageCount - 1].parts
-    const msg = lastMessage.some(part => part.type === "text")
-      ? lastMessage
-          .filter(part => part.type === "text")
-          .map(part => part.text)
-          .join("")
-      : NO_PREVIEW_TEXT
-    return typeof msg === "string" ? msg : NO_PREVIEW_TEXT
   }
 
   const handleChatSaved = async (
@@ -316,30 +296,48 @@
       </Panel>
 
       <Panel customWidth={260} borderRight noHeaderBorder>
-        <NavHeader
-          slot="panel-title-content"
-          title="Recent Chats"
-          onAdd={startNewChat}
-          searchable={false}
-        />
-
-        {#each conversationHistory as conversation}
-          <NavItem
-            text={conversation.title || "Untitled Chat"}
-            subtext={getChatPreview(conversation)}
-            on:click={() => selectChat(conversation)}
-            selected={$chatAppsStore.currentConversationId === conversation._id}
-            withActions={false}
-          />
-        {/each}
-        {#if !conversationHistory.length}
-          <div class="empty-state">
-            <Body size="S">
-              No chat history yet.<br />
-              Start a new conversation!
+        <div class="list-section list-actions">
+          <button
+            class="list-item list-item-button list-item-action"
+            on:click={startNewChat}
+          >
+            <Icon name="plus" size="S" />
+            <span>New chat</span>
+          </button>
+        </div>
+        <div class="list-section">
+          <div class="list-title">Agents</div>
+          {#if enabledAgents.length}
+            {#each enabledAgents as agent (agent.agentId)}
+              {#if !agent.isDefault}
+                <div class="list-item">{getAgentName(agent.agentId)}</div>
+              {/if}
+            {/each}
+          {:else}
+            <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+              No agents
             </Body>
-          </div>
-        {/if}
+          {/if}
+        </div>
+        <div class="list-section">
+          <div class="list-title">Recent Chats</div>
+          {#if conversationHistory.length}
+            {#each conversationHistory as conversation}
+              <button
+                class="list-item list-item-button"
+                class:selected={$chatAppsStore.currentConversationId ===
+                  conversation._id}
+                on:click={() => selectChat(conversation)}
+              >
+                {conversation.title || "Untitled Chat"}
+              </button>
+            {/each}
+          {:else}
+            <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+              No recent chats
+            </Body>
+          {/if}
+        </div>
       </Panel>
 
       <div class="chat-wrapper">
@@ -435,6 +433,67 @@
 
   .agent-selector {
     min-width: 200px;
+  }
+
+  .list-section {
+    padding: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+  }
+
+  .list-section + .list-section {
+    padding-top: 0;
+  }
+
+  .list-actions {
+    padding-bottom: var(--spacing-s);
+  }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    background: transparent;
+    border: none;
+    padding: var(--spacing-xs) 0;
+    font: inherit;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: left;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .list-item-button {
+    cursor: pointer;
+  }
+
+  .list-item-button:hover {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .list-item.selected {
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 600;
+  }
+
+  .list-item-action {
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .list-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--spectrum-global-color-gray-500);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .list-item-action span {
+    padding-top: 1px;
   }
 
   .settings-header {
