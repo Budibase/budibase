@@ -10,9 +10,6 @@ const ensureEnabledAgents = (chatApp: ChatApp) => {
   if (!chatApp.enabledAgents?.length) {
     throw new HTTPError("enabledAgents is required", 400)
   }
-  if (!chatApp.enabledAgents.some(agent => agent.isDefault)) {
-    throw new HTTPError("default agent is required", 400)
-  }
 }
 
 export async function getSingle(): Promise<ChatApp | undefined> {

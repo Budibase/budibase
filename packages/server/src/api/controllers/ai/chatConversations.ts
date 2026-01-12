@@ -47,6 +47,7 @@ export const prepareChatConversationForSave = ({
     _id: chatId,
     ...(rev && { _rev: rev }),
     chatAppId,
+    agentId: existingChat?.agentId || chat.agentId || "",
     userId,
     title: title ?? chat.title,
     messages,
@@ -101,8 +102,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("Chat app not found", 404)
   }
 
+  let existingChat: ChatConversation | undefined
   if (chat._id) {
-    const existingChat = await db.tryGet<ChatConversation>(chat._id)
+    existingChat = await db.tryGet<ChatConversation>(chat._id)
     if (!existingChat) {
       throw new HTTPError("chat not found", 404)
     }
@@ -112,15 +114,23 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (existingChat.userId && existingChat.userId !== userId) {
       throw new HTTPError("Forbidden", 403)
     }
+    if (chat.agentId && chat.agentId !== existingChat.agentId) {
+      throw new HTTPError("agentId cannot be changed", 400)
+    }
   }
 
-  const defaultAgentId = chatApp.enabledAgents?.find(
-    agent => agent.isDefault
-  )?.agentId
-  const agentId = defaultAgentId || chatApp.enabledAgents?.[0]?.agentId
+  const agentId = existingChat?.agentId || chat.agentId
 
   if (!agentId) {
-    throw new HTTPError("default agent is required", 400)
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+
+  if (!chat.agentId) {
+    chat.agentId = agentId
   }
 
   ctx.status = 200
@@ -208,7 +218,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 export async function createChatConversation(
   ctx: UserCtx<CreateChatConversationRequest, ChatConversation>
 ) {
-  const { title } = ctx.request.body
+  const { title, agentId } = ctx.request.body
   const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
   const userId = getGlobalUserId(ctx)
 
@@ -216,7 +226,14 @@ export async function createChatConversation(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
 
   const db = context.getWorkspaceDB()
   const chatId = docIds.generateChatConversationID()
@@ -230,6 +247,7 @@ export async function createChatConversation(
     chat: {
       _id: chatId,
       chatAppId,
+      agentId,
       title,
       messages: [],
     },

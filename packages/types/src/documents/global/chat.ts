@@ -3,7 +3,6 @@ import type { UIMessage } from "ai"
 
 export interface ChatAppEnabledAgent {
   agentId: string
-  isDefault?: boolean
 }
 
 export interface ChatApp extends Document {
@@ -18,13 +17,14 @@ export interface ChatApp extends Document {
 
 export interface ChatConversationRequest extends Document {
   chatAppId: string
+  agentId: string
   title?: string
   messages: UIMessage[]
 }
 
 export type CreateChatConversationRequest = Pick<
   ChatConversationRequest,
-  "chatAppId" | "title"
+  "chatAppId" | "agentId" | "title"
 >
 
 export interface ChatConversation extends ChatConversationRequest {

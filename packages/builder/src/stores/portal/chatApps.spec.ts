@@ -78,12 +78,12 @@ describe("chatAppsStore", () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      enabledAgents: [{ agentId: "agent-1", isDefault: true }],
+      enabledAgents: [{ agentId: "agent-1" }],
     }
     const updated: ChatApp = {
       ...chatApp,
       _rev: "2",
-      enabledAgents: [{ agentId: "agent-2", isDefault: true }],
+      enabledAgents: [{ agentId: "agent-2" }],
     }
     fetchChatApp.mockResolvedValue(chatApp)
     setChatAppAgent.mockResolvedValue(updated)

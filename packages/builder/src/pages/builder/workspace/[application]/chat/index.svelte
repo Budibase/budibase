@@ -26,15 +26,17 @@
     title: "",
     messages: [],
     chatAppId: "",
+    agentId: "",
   }
 
-  type EnabledAgent = { agentId: string; isDefault?: boolean }
+  type EnabledAgent = { agentId: string }
   type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
+  let autoSelected: boolean = false
 
   type ChatAppsStoreWithAgents = typeof chatAppsStore & {
     updateEnabledAgents: (enabledAgents: EnabledAgent[]) => Promise<unknown>
@@ -51,11 +53,18 @@
   const selectAgent = async (agentId: string | null) => {
     selectedAgentId = agentId
     if (agentId) {
+      autoSelected = true
       await agentsStore.selectAgent(agentId)
-      await chatAppsStore.ensureChatApp(agentId)
-      if (!chat.chatAppId && $chatAppsStore.chatAppId) {
-        chat = { ...chat, chatAppId: $chatAppsStore.chatAppId }
+      const chatApp = await chatAppsStore.ensureChatApp()
+      if (!chatApp?._id) {
+        return
       }
+      chat = {
+        ...INITIAL_CHAT,
+        chatAppId: chatApp._id,
+        agentId,
+      }
+      chatAppsStore.clearCurrentConversationId()
     } else {
       await agentsStore.selectAgent(undefined)
       chatAppsStore.reset()
@@ -64,6 +73,9 @@
   }
 
   const selectChat = async (selectedChat: ChatConversation) => {
+    autoSelected = true
+    selectedAgentId = selectedChat.agentId
+    await agentsStore.selectAgent(selectedChat.agentId)
     chat = {
       ...selectedChat,
       chatAppId: selectedChat.chatAppId || $chatAppsStore.chatAppId || "",
@@ -104,13 +116,12 @@
     }
   }
 
-  const startNewChat = () => {
-    if (!selectedAgentId) return
-    chat = {
-      ...INITIAL_CHAT,
-      chatAppId: $chatAppsStore.chatAppId || "",
+  const startNewChat = async () => {
+    const firstEnabledAgentId = getFirstEnabledAgentId(enabledAgents)
+    if (!firstEnabledAgentId) {
+      return
     }
-    chatAppsStore.clearCurrentConversationId()
+    await selectAgent(firstEnabledAgentId)
   }
 
   const handleChatSaved = async (
@@ -151,21 +162,14 @@
 
   const getAgentOptionValue = (agent: Agent) => agent._id!
   const getAgentOptionLabel = (agent: Agent) => agent.name || "Unnamed Agent"
-  const getDefaultAgentId = (agentsList: EnabledAgent[]) =>
-    agentsList.find((agent: EnabledAgent) => agent.isDefault)?.agentId ||
-    agentsList[0]?.agentId ||
-    null
+  const getFirstEnabledAgentId = (agentsList: EnabledAgent[]) =>
+    agentsList[0]?.agentId || null
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name || "Unknown agent"
 
   const isAgentAvailable = (agentId: string) =>
     enabledAgents.some((agent: EnabledAgent) => agent.agentId === agentId)
-
-  const isDefaultAgent = (agentId: string) =>
-    enabledAgents.some(
-      (agent: EnabledAgent) => agent.agentId === agentId && agent.isDefault
-    )
 
   const handleAvailabilityToggle = async (
     agentId: string,
@@ -187,24 +191,15 @@
     let nextEnabledAgents: EnabledAgent[] = []
 
     if (enabled) {
-      const hasDefault = current.some(agent => agent.isDefault)
-      nextEnabledAgents = [...current, { agentId, isDefault: !hasDefault }]
+      nextEnabledAgents = [...current, { agentId }]
     } else {
       nextEnabledAgents = current.filter(agent => agent.agentId !== agentId)
       if (!nextEnabledAgents.length) {
         notifications.error("At least one agent must remain enabled")
         return
       }
-      if (!nextEnabledAgents.some(agent => agent.isDefault)) {
-        nextEnabledAgents = nextEnabledAgents.map((agent, index) => ({
-          ...agent,
-          isDefault: index === 0,
-        }))
-      }
       if (selectedAgentId === agentId) {
-        const fallbackAgentId =
-          nextEnabledAgents.find(agent => agent.isDefault)?.agentId ||
-          nextEnabledAgents[0]?.agentId
+        const fallbackAgentId = nextEnabledAgents[0]?.agentId
         await selectAgent(fallbackAgentId || null)
       }
     }
@@ -212,31 +207,40 @@
     await chatAppsStoreWithAgents.updateEnabledAgents(nextEnabledAgents)
   }
 
+  const maybeAutoSelect = async () => {
+    if (autoSelected || selectedAgentId) {
+      return
+    }
+
+    const firstEnabledAgentId = getFirstEnabledAgentId(enabledAgents)
+    if (firstEnabledAgentId) {
+      await selectAgent(firstEnabledAgentId)
+      return
+    }
+
+    const fallbackAgent = agents.find(agent => agent._id)
+    if (fallbackAgent?._id) {
+      await handleAvailabilityToggle(fallbackAgent._id, true)
+      await selectAgent(fallbackAgent._id)
+    }
+  }
+
   onMount(async () => {
     await agentsStore.init()
     await chatAppsStore.initConversations()
-    let initialAgentId = getDefaultAgentId(enabledAgents)
-    if (!initialAgentId) {
-      const fallbackAgent = agents.find(agent => agent._id)
-      if (fallbackAgent?._id) {
-        await handleAvailabilityToggle(fallbackAgent._id, true)
-        initialAgentId = fallbackAgent._id
-      } else {
-        return
-      }
-    }
-
-    await selectAgent(initialAgentId)
 
     const initialChat = $chatAppsStore.conversations[0]
     if (initialChat) {
-      chat = {
-        ...initialChat,
-        chatAppId: initialChat.chatAppId || $chatAppsStore.chatAppId || "",
-      }
-      chatAppsStore.setCurrentConversationId(initialChat._id!)
+      await selectChat(initialChat)
+      return
     }
+
+    await maybeAutoSelect()
   })
+
+  $: if ($chatAppsStore.chatAppId && !autoSelected && !selectedAgentId) {
+    void maybeAutoSelect()
+  }
 </script>
 
 <div class="wrapper">
@@ -253,138 +257,115 @@
     </div>
   </TopBar>
   <div class="page">
-    {#if selectedAgentId}
-      <Panel customWidth={260} borderRight noHeaderBorder>
-        <div class="settings-header">
-          <Body size="S" color="var(--spectrum-global-color-gray-800)">
-            Settings
-          </Body>
-        </div>
-        <div class="settings-section">
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            Agents
-          </Body>
-          {#if agents.length}
-            {#each agents as agent (agent._id)}
-              <div class="settings-agent">
-                <div class="settings-agent-info">
-                  <Body size="S">{getAgentOptionLabel(agent)}</Body>
-                  {#if agent._id && isDefaultAgent(agent._id)}
-                    <Body
-                      size="XS"
-                      color="var(--spectrum-global-color-gray-500)"
-                    >
-                      Default
-                    </Body>
-                  {/if}
-                </div>
-                {#if agent._id && !isDefaultAgent(agent._id)}
-                  <Toggle
-                    value={isAgentAvailable(agent._id)}
-                    on:change={event =>
-                      handleAvailabilityToggle(agent._id!, event.detail)}
-                  />
-                {/if}
+    <Panel customWidth={260} borderRight noHeaderBorder>
+      <div class="settings-header">
+        <Body size="S" color="var(--spectrum-global-color-gray-800)">
+          Settings
+        </Body>
+      </div>
+      <div class="settings-section">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          Agents
+        </Body>
+        {#if agents.length}
+          {#each agents as agent (agent._id)}
+            <div class="settings-agent">
+              <div class="settings-agent-info">
+                <Body size="S">{getAgentOptionLabel(agent)}</Body>
               </div>
-            {/each}
-          {:else}
-            <Body size="S" color="var(--spectrum-global-color-gray-500)">
-              No agents found
-            </Body>
-          {/if}
-        </div>
-      </Panel>
-
-      <Panel customWidth={260} borderRight noHeaderBorder>
-        <div class="list-section list-actions">
-          <button
-            class="list-item list-item-button list-item-action"
-            on:click={startNewChat}
-          >
-            <Icon name="plus" size="S" />
-            <span>New chat</span>
-          </button>
-        </div>
-        <div class="list-section">
-          <div class="list-title">Agents</div>
-          {#if enabledAgents.length}
-            {#each enabledAgents as agent (agent.agentId)}
-              {#if !agent.isDefault}
-                <div class="list-item">{getAgentName(agent.agentId)}</div>
+              {#if agent._id}
+                <Toggle
+                  value={isAgentAvailable(agent._id)}
+                  on:change={event =>
+                    handleAvailabilityToggle(agent._id!, event.detail)}
+                />
               {/if}
-            {/each}
-          {:else}
-            <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-              No agents
-            </Body>
-          {/if}
-        </div>
-        <div class="list-section">
-          <div class="list-title">Recent Chats</div>
-          {#if conversationHistory.length}
-            {#each conversationHistory as conversation}
-              <button
-                class="list-item list-item-button"
-                class:selected={$chatAppsStore.currentConversationId ===
-                  conversation._id}
-                on:click={() => selectChat(conversation)}
-              >
-                {conversation.title || "Untitled Chat"}
-              </button>
-            {/each}
-          {:else}
-            <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-              No recent chats
-            </Body>
-          {/if}
-        </div>
-      </Panel>
-
-      <div class="chat-wrapper">
-        {#if chat._id}
-          <div class="chat-header">
-            <Button
-              quiet
-              warning
-              disabled={deletingChat || loading}
-              on:click={deleteCurrentChat}
-            >
-              <span class="delete-button-content">
-                {#if deletingChat}
-                  <ProgressCircle size="S" />
-                  Deleting...
-                {:else}
-                  <Icon name="trash" size="S" />
-                  Delete chat
-                {/if}
-              </span>
-            </Button>
-          </div>
+            </div>
+          {/each}
+        {:else}
+          <Body size="S" color="var(--spectrum-global-color-gray-500)">
+            No agents found
+          </Body>
         {/if}
-        <Chatbox
-          bind:chat
-          {loading}
-          workspaceId={$params.application}
-          on:chatSaved={handleChatSaved}
-        />
       </div>
-    {:else}
-      <div class="empty-state-container">
-        <div class="empty-state">
-          <Icon
-            name="chat"
-            size="XL"
-            color="var(--spectrum-global-color-gray-400)"
-          />
-          <Body size="M" color="var(--spectrum-global-color-gray-700)">
-            Select an agent to start chatting
+    </Panel>
+
+    <Panel customWidth={260} borderRight noHeaderBorder>
+      <div class="list-section list-actions">
+        <button
+          class="list-item list-item-button list-item-action"
+          on:click={startNewChat}
+        >
+          <Icon name="plus" size="S" />
+          <span>New chat</span>
+        </button>
+      </div>
+      <div class="list-section">
+        <div class="list-title">Agents</div>
+        {#if enabledAgents.length}
+          {#each enabledAgents as agent (agent.agentId)}
+            <button
+              class="list-item list-item-button"
+              on:click={() => selectAgent(agent.agentId)}
+            >
+              {getAgentName(agent.agentId)}
+            </button>
+          {/each}
+        {:else}
+          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+            No agents
           </Body>
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Choose an agent from the dropdown above to begin a conversation
+        {/if}
+      </div>
+      <div class="list-section">
+        <div class="list-title">Recent Chats</div>
+        {#if conversationHistory.length}
+          {#each conversationHistory as conversation}
+            <button
+              class="list-item list-item-button"
+              class:selected={$chatAppsStore.currentConversationId ===
+                conversation._id}
+              on:click={() => selectChat(conversation)}
+            >
+              {conversation.title || "Untitled Chat"}
+            </button>
+          {/each}
+        {:else}
+          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+            No recent chats
           </Body>
+        {/if}
+      </div>
+    </Panel>
+
+    <div class="chat-wrapper">
+      {#if chat._id}
+        <div class="chat-header">
+          <Button
+            quiet
+            warning
+            disabled={deletingChat || loading}
+            on:click={deleteCurrentChat}
+          >
+            <span class="delete-button-content">
+              {#if deletingChat}
+                <ProgressCircle size="S" />
+                Deleting...
+              {:else}
+                <Icon name="trash" size="S" />
+                Delete chat
+              {/if}
+            </span>
+          </Button>
         </div>
-      </div>
-    {/if}
+      {/if}
+      <Chatbox
+        bind:chat
+        {loading}
+        workspaceId={$params.application}
+        on:chatSaved={handleChatSaved}
+      />
+    </div>
   </div>
 </div>
 
@@ -519,25 +500,5 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xxs);
-  }
-
-  .empty-state-container {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-xxl);
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-m);
-    text-align: center;
-  }
-
-  .empty-state :global(p) {
-    margin: 0;
   }
 </style>

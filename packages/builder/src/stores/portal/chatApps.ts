@@ -63,12 +63,13 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       return null
     }
 
-    const defaultAgentId = chatApp.enabledAgents?.find(
-      agent => agent.isDefault
-    )?.agentId
-
-    if (agentId && defaultAgentId !== agentId) {
-      chatApp = await API.setChatAppAgent(chatApp._id, agentId)
+    if (agentId) {
+      const isEnabled = chatApp.enabledAgents?.some(
+        agent => agent.agentId === agentId
+      )
+      if (!isEnabled) {
+        chatApp = await API.setChatAppAgent(chatApp._id, agentId)
+      }
     }
 
     this.update(state => {

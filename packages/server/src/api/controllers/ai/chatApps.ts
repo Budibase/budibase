@@ -6,9 +6,6 @@ const ensureEnabledAgents = (chatApp: ChatApp) => {
   if (!chatApp.enabledAgents?.length) {
     throw new HTTPError("enabledAgents is required", 400)
   }
-  if (!chatApp.enabledAgents.some(agent => agent.isDefault)) {
-    throw new HTTPError("default agent is required", 400)
-  }
 }
 
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
@@ -20,11 +17,11 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
 
   const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
   if (!fallbackAgentId) {
-    throw new HTTPError("default agent is required to create a chat app", 400)
+    throw new HTTPError("agentId is required to create a chat app", 400)
   }
 
   const created = await sdk.ai.chatApps.create({
-    enabledAgents: [{ agentId: fallbackAgentId, isDefault: true }],
+    enabledAgents: [{ agentId: fallbackAgentId }],
   })
   ctx.body = created
 }
@@ -72,14 +69,9 @@ export async function setChatAppAgent(
 
   const existingAgents = chatApp.enabledAgents || []
   const matched = existingAgents.some(agent => agent.agentId === agentId)
-  const enabledAgents = existingAgents.map(agent => ({
-    ...agent,
-    isDefault: agent.agentId === agentId,
-  }))
-
-  if (!matched) {
-    enabledAgents.push({ agentId, isDefault: true })
-  }
+  const enabledAgents = matched
+    ? existingAgents
+    : [...existingAgents, { agentId }]
 
   const updated = await sdk.ai.chatApps.update({
     ...chatApp,

@@ -49,10 +49,19 @@
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
       if (chatApp?._id) {
-        const baseChat = chat || { title: "", messages: [], chatAppId: "" }
+        const baseChat = chat || {
+          title: "",
+          messages: [],
+          chatAppId: "",
+          agentId: "",
+        }
+        const fallbackAgentId = chatApp.enabledAgents?.[0]?.agentId
         chat = {
           ...baseChat,
           chatAppId: chatApp._id,
+          ...(fallbackAgentId && !baseChat.agentId
+            ? { agentId: fallbackAgentId }
+            : {}),
         }
         return chatApp._id
       }
@@ -80,13 +89,19 @@
     const resolvedChatAppId = await ensureChatApp()
 
     if (!chat) {
-      chat = { title: "", messages: [], chatAppId: "" }
+      chat = { title: "", messages: [], chatAppId: "", agentId: "" }
     }
 
     const chatAppId = chat.chatAppId || resolvedChatAppId
+    const agentId = chat.agentId
 
     if (!chatAppId) {
       notifications.error("Chat app could not be created")
+      return
+    }
+
+    if (!agentId) {
+      notifications.error("Agent is required to start a chat")
       return
     }
 
@@ -95,6 +110,7 @@
         const newChat = await API.createChatConversation(
           {
             chatAppId,
+            agentId,
             title: chat.title,
           },
           workspaceId
