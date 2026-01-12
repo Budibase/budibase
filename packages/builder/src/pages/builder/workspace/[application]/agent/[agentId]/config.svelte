@@ -19,7 +19,6 @@
     type InsertAtPositionFn,
     WebSearchProvider,
   } from "@budibase/types"
-  import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
@@ -30,7 +29,7 @@
     queries,
   } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onDestroy, onMount } from "svelte"
+  import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import type { IconInfo } from "@/helpers/integrationIcons"
@@ -59,12 +58,11 @@
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
+  const AUTO_SAVE_DEBOUNCE_MS = 800
 
-  let currentAgent: Agent | undefined
-  let draftAgentId: string | undefined
-  let togglingLive = false
-  let modelOptions: { label: string; value: string }[] = []
-  let draft = {
+  // Agent state
+  let draftAgentId: string | undefined = $state()
+  let draft = $state({
     name: "",
     description: "",
     aiconfig: "",
@@ -72,87 +70,200 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-  }
+  })
 
-  let insertAtPos: InsertAtPositionFn | undefined
-  let toolSearch = ""
-  let promptBindings: EnrichedBinding[] = []
-  let promptCompletions: BindingCompletion[] = []
+  let insertAtPos: InsertAtPositionFn | undefined = $state()
+  let toolSearch = $state("")
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
-  let saving = false
-  const AUTO_SAVE_DEBOUNCE_MS = 800
-  const clearAutoSave = () => {
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout)
-      autoSaveTimeout = undefined
-    }
-  }
+  let saving = $state(false)
+  let togglingLive = $state(false)
 
-  let availableTools: AgentTool[] = []
-  let filteredTools: AgentTool[] = []
-  let toolSections: Record<string, AgentTool[]> = {}
-  let readableToRuntimeBinding: Record<string, string> = {}
-  let readableToIcon: Record<string, string | undefined> = {}
-  let includedToolRuntimeBindings: string[] = []
-  let includedToolsWithDetails: AgentTool[] = []
-  let webSearchConfigModal: WebSearchConfigModal
-  let lastWebSearchConfigId: string | undefined
-  let pendingWebSearchInsert = false
-
-  $: currentAgent = $selectedAgent
-  $: webSearchConfig = $aiConfigsStore.customConfigs.find(
-    config => config._id === draft.aiconfig
-  )?.webSearchConfig
-  $: webSearchConfigured = Boolean(
-    webSearchConfig?.apiKey && webSearchConfig.provider
+  let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let modelOptions = $derived(
+    $aiConfigsStore.customConfigs.map(config => ({
+      label: config.name || config._id || "Unnamed",
+      value: config._id || "",
+    }))
   )
 
-  const getWebSearchRuntimeBinding = () => {
-    if (!webSearchConfigured || !webSearchConfig) {
-      return undefined
-    }
-    if (webSearchConfig.provider === WebSearchProvider.EXA) {
-      return "exa_search"
-    }
-    if (webSearchConfig.provider === WebSearchProvider.PARALLEL) {
-      return "parallel_search"
-    }
-    return undefined
-  }
+  // Web search Config
+  let webSearchConfigModal = $state<WebSearchConfigModal>()
+  let lastWebSearchConfigId: string | undefined = $state()
+  let pendingWebSearchInsert = $state(false)
+  let webSearchConfig = $derived(
+    $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
+      ?.webSearchConfig
+  )
+  let webSearchConfigured = $derived(
+    !!webSearchConfig?.apiKey && !!webSearchConfig.provider
+  )
 
-  $: if (currentAgent && currentAgent._id !== draftAgentId) {
-    draft = {
-      name: currentAgent.name || "",
-      description: currentAgent.description || "",
-      aiconfig: currentAgent.aiconfig || "",
-      goal: currentAgent.goal || "",
-      promptInstructions: currentAgent.promptInstructions || "",
-      icon: currentAgent.icon || "",
-      iconColor: currentAgent.iconColor || "",
+  let availableTools: AgentTool[] = $derived.by(() => {
+    const tools = $agentsStore.tools || []
+    const mappedTools = tools.map(tool => {
+      const sourceType = tool.sourceType
+      const sourceLabel = tool.sourceLabel
+
+      const prefix = getBindingPrefix(sourceType, sourceLabel)
+      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+        sourceType,
+        sourceLabel,
+      })
+
+      return {
+        ...tool,
+        sourceLabel,
+        sourceType,
+        readableBinding: `${prefix}.${tool.name}`,
+        runtimeBinding: tool.name,
+        icon,
+        tagIconUrl,
+      }
+    })
+
+    // Add a synthetic web search tool as we want it to always appear
+    const webSearchTool: ToolMetadata = {
+      name: "web_search",
+      description: "Configure web search",
+      sourceType: ToolType.SEARCH,
+      sourceLabel: "Search",
     }
-    draftAgentId = currentAgent._id
-  }
+    const prefix = getBindingPrefix(
+      webSearchTool.sourceType,
+      webSearchTool.sourceLabel
+    )
+    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
+      sourceType: webSearchTool.sourceType,
+      sourceLabel: webSearchTool.sourceLabel,
+    })
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
-    label: config.name || config._id || "Unnamed",
-    value: config._id || "",
-  }))
+    return [
+      {
+        ...webSearchTool,
+        readableBinding: `${prefix}.web_search`,
+        runtimeBinding:
+          getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) ||
+          "",
+        icon,
+        tagIconUrl,
+      },
+      ...mappedTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
+    ]
+  })
 
-  $: {
+  let toolMaps = $derived(buildToolMaps(availableTools))
+  let readableToRuntimeBinding = $derived(toolMaps.readableToRuntimeBinding)
+  let readableToIcon = $derived(toolMaps.readableToIcon)
+  let includedToolRuntimeBindings = $derived(
+    getIncludedToolRuntimeBindings(
+      draft.promptInstructions,
+      readableToRuntimeBinding
+    )
+  )
+  let promptCompletions = $derived.by(() => {
+    return promptBindings.length > 0
+      ? [
+          hbAutocomplete([
+            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+          ]),
+        ]
+      : []
+  })
+  let includedToolsWithDetails = $derived(
+    includedToolRuntimeBindings
+      .map(runtimeBinding =>
+        availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
+      )
+      .filter((tool): tool is AgentTool => !!tool)
+  )
+
+  let filteredTools = $derived.by(() => {
+    return availableTools.filter(tool => {
+      const query = toolSearch.toLowerCase()
+      return (
+        tool.name?.toLowerCase().includes(query) ||
+        tool.readableBinding?.toLowerCase().includes(query)
+      )
+    })
+  })
+  let toolSections = $derived(
+    filteredTools.reduce<Record<string, AgentTool[]>>((acc, tool) => {
+      const key = getSectionName(tool.sourceType)
+      acc[key] = acc[key] || []
+      acc[key].push(tool)
+      return acc
+    }, {})
+  )
+
+  let promptBindings: EnrichedBinding[] = $derived.by(() => {
+    return availableTools
+      .filter(tool => !!tool.name)
+      .filter(
+        tool =>
+          tool.sourceType !== ToolType.SEARCH ||
+          (webSearchConfigured && tool.runtimeBinding)
+      )
+      .map(tool => ({
+        runtimeBinding: tool.runtimeBinding,
+        readableBinding: tool.readableBinding,
+        category: getSectionName(tool.sourceType),
+        display: {
+          name:
+            tool.sourceType === ToolType.SEARCH
+              ? "Web search"
+              : formatToolLabel(tool),
+          type: "tool",
+          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
+        },
+        icon: tool.tagIconUrl,
+      }))
+  })
+
+  $effect(() => {
+    const agent = currentAgent
+    if (agent && agent._id !== draftAgentId) {
+      draft = {
+        name: agent.name || "",
+        description: agent.description || "",
+        aiconfig: agent.aiconfig || "",
+        goal: agent.goal || "",
+        promptInstructions: agent.promptInstructions || "",
+        icon: agent.icon || "",
+        iconColor: agent.iconColor || "",
+      }
+      draftAgentId = agent._id
+    }
+  })
+
+  $effect(() => {
     const nextAiconfigId = draft.aiconfig || undefined
     if (nextAiconfigId !== lastWebSearchConfigId) {
       lastWebSearchConfigId = nextAiconfigId
       agentsStore.fetchTools(nextAiconfigId)
     }
-  }
+  })
 
-  const resolveAgentToolIcons = (
+  $effect(() => {
+    if (pendingWebSearchInsert && webSearchConfigured) {
+      const searchTool = availableTools.find(
+        tool => tool.sourceType === ToolType.SEARCH
+      )
+      if (searchTool?.readableBinding) {
+        untrack(() => {
+          insertToolBinding(searchTool.readableBinding!)
+          pendingWebSearchInsert = false
+        })
+      }
+    }
+  })
+
+  function resolveAgentToolIcons(
     tool: ToolMetadata,
     {
       sourceType,
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
-  ): { icon?: IconInfo; tagIconUrl?: string } => {
+  ): { icon?: IconInfo; tagIconUrl?: string } {
     if (sourceType === ToolType.BUDIBASE) {
       return {
         icon: { icon: BudibaseLogo },
@@ -183,60 +294,8 @@
     return {}
   }
 
-  $: {
-    const tools = $agentsStore.tools || []
-    availableTools = tools.map(tool => {
-      const sourceType = tool.sourceType
-      const sourceLabel = tool.sourceLabel
-
-      const prefix = getBindingPrefix(sourceType, sourceLabel)
-      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
-        sourceType,
-        sourceLabel,
-      })
-
-      return {
-        ...tool,
-        sourceLabel,
-        sourceType,
-        readableBinding: `${prefix}.${tool.name}`,
-        runtimeBinding: tool.name,
-        icon,
-        tagIconUrl,
-      }
-    })
-
-    // Below we add a synthetic web search tool as we want it to always appear
-    // and it may not always be configured..
-    const webSearchTool: ToolMetadata = {
-      name: "web_search",
-      description: "Configure web search",
-      sourceType: ToolType.SEARCH,
-      sourceLabel: "Search",
-    }
-    const prefix = getBindingPrefix(
-      webSearchTool.sourceType,
-      webSearchTool.sourceLabel
-    )
-    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
-      sourceType: webSearchTool.sourceType,
-      sourceLabel: webSearchTool.sourceLabel,
-    })
-
-    availableTools = [
-      {
-        ...webSearchTool,
-        readableBinding: `${prefix}.web_search`,
-        runtimeBinding: getWebSearchRuntimeBinding() || "",
-        icon,
-        tagIconUrl,
-      },
-      ...availableTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
-    ]
-  }
-
-  const buildToolMaps = (tools: AgentTool[]) =>
-    tools.reduce(
+  function buildToolMaps(tools: AgentTool[]) {
+    return tools.reduce(
       (acc, tool) => {
         if (tool.readableBinding) {
           acc.readableToIcon[tool.readableBinding] = tool.tagIconUrl
@@ -252,82 +311,18 @@
         readableToIcon: {} as Record<string, string | undefined>,
       }
     )
+  }
 
-  $: ({ readableToRuntimeBinding, readableToIcon } =
-    buildToolMaps(availableTools))
-
-  $: filteredTools = availableTools.filter(tool => {
-    const query = toolSearch.toLowerCase()
-    return (
-      tool.name?.toLowerCase().includes(query) ||
-      tool.readableBinding?.toLowerCase().includes(query)
-    )
-  })
-
-  $: toolSections = filteredTools.reduce<Record<string, AgentTool[]>>(
-    (acc, tool) => {
-      const key = getSectionName(tool.sourceType)
-      acc[key] = acc[key] || []
-      acc[key].push(tool)
-      return acc
-    },
-    {}
-  )
-
-  $: promptBindings = (() => {
-    return availableTools
-      .filter(tool => !!tool.name)
-      .filter(
-        tool =>
-          tool.sourceType !== ToolType.SEARCH ||
-          (webSearchConfigured && tool.runtimeBinding)
-      )
-      .map(tool => ({
-        runtimeBinding: tool.runtimeBinding,
-        readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType),
-        display: {
-          name:
-            tool.sourceType === ToolType.SEARCH
-              ? "Web search"
-              : formatToolLabel(tool),
-          type: "tool",
-          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
-        },
-        icon: tool.tagIconUrl,
-      }))
-  })()
-
-  $: promptCompletions =
-    promptBindings.length > 0
-      ? [
-          hbAutocomplete([
-            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
-          ]),
-        ]
-      : []
-
-  $: includedToolRuntimeBindings = getIncludedToolRuntimeBindings(
-    draft.promptInstructions,
-    readableToRuntimeBinding
-  )
-
-  $: includedToolsWithDetails = includedToolRuntimeBindings
-    .map(runtimeBinding =>
-      availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
-    )
-    .filter((tool): tool is AgentTool => !!tool)
-
-  const slugify = (str: string) =>
-    str
+  function slugify(str: string) {
+    return str
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_|_$/g, "")
-
-  const getBindingPrefix = (
+  }
+  function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
-  ): string => {
+  ): string {
     if (sourceType === ToolType.BUDIBASE) {
       return "budibase"
     }
@@ -340,7 +335,7 @@
     return "tool"
   }
 
-  const getSectionName = (sourceType: ToolType | undefined): string => {
+  function getSectionName(sourceType: ToolType | undefined): string {
     if (sourceType === ToolType.BUDIBASE) {
       return "Budibase"
     }
@@ -353,7 +348,7 @@
     return "Tools"
   }
 
-  const normaliseToolNameForMatch = (name: string) => {
+  function normaliseToolNameForMatch(name: string) {
     const sanitised = name.replace(/[^a-zA-Z0-9_-]/g, "_")
     return sanitised.length > 64
       ? `${sanitised.substring(0, 64)}...`
@@ -438,16 +433,17 @@
     insertToolBinding(tool.readableBinding)
   }
 
-  const normaliseBinding = (binding: string) =>
-    binding
+  function normaliseBinding(binding: string) {
+    return binding
       .replace(/^\s*\{\{\s*/, "")
       .replace(/\s*\}\}\s*$/, "")
       .trim()
+  }
 
-  const getIncludedToolRuntimeBindings = (
+  function getIncludedToolRuntimeBindings(
     prompt: string | undefined | null,
     bindingsMap: Record<string, string>
-  ) => {
+  ) {
     const matches = (prompt || "").match(/\{\{[^}]+\}\}/g) || []
     return Array.from(
       new Set(
@@ -457,6 +453,22 @@
           .filter(Boolean)
       )
     )
+  }
+
+  function getWebSearchRuntimeBinding(
+    configured: boolean,
+    config: typeof webSearchConfig
+  ) {
+    if (!configured || !config) {
+      return undefined
+    }
+    if (config.provider === WebSearchProvider.EXA) {
+      return "exa_search"
+    }
+    if (config.provider === WebSearchProvider.PARALLEL) {
+      return "parallel_search"
+    }
+    return undefined
   }
 
   const escapeRegExp = (str: string) =>
@@ -475,16 +487,6 @@
 
   const configureWebSearch = () => {
     webSearchConfigModal?.show()
-  }
-
-  $: if (pendingWebSearchInsert && webSearchConfigured) {
-    const searchTool = availableTools.find(
-      tool => tool.sourceType === ToolType.SEARCH
-    )
-    if (searchTool?.readableBinding) {
-      insertToolBinding(searchTool.readableBinding)
-    }
-    pendingWebSearchInsert = false
   }
 
   async function saveAgent({
@@ -556,6 +558,13 @@
       )
     } finally {
       togglingLive = false
+    }
+  }
+
+  const clearAutoSave = () => {
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout)
+      autoSaveTimeout = undefined
     }
   }
 
