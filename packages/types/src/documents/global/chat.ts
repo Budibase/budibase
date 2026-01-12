@@ -1,6 +1,13 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
 
+export interface ChatSuggestedQuestion {
+  id: string
+  text: string
+  enabled?: boolean
+  order?: number
+}
+
 export interface ChatApp extends Document {
   title?: string
   greeting?: string
@@ -9,6 +16,7 @@ export interface ChatApp extends Document {
   agentId: string
   live?: boolean
   settings?: Record<string, any>
+  suggestedQuestions?: ChatSuggestedQuestion[]
 }
 
 export interface ChatConversationRequest extends Document {
