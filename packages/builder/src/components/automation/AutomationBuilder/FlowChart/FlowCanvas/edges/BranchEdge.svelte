@@ -5,23 +5,19 @@
     useSvelteFlow,
     type Position,
   } from "@xyflow/svelte"
-  import { getContext } from "svelte"
-  import { type Writable } from "svelte/store"
   import { type LayoutDirection } from "@budibase/types"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     ViewMode,
-    type EdgeData,
     type BranchEdgeData,
     type FlowBlockContext,
   } from "@/types/automations"
   import { selectedAutomation, automationStore } from "@/stores/builder"
-  import StandardEdgeLabel from "./StandardEdgeLabel.svelte"
   import BranchEdgeLabels from "./BranchEdgeLabels.svelte"
-  import type { DragView } from "../FlowChartDnD"
+  import { dragState } from "../DragState"
 
   interface Props {
-    data: EdgeData
+    data: BranchEdgeData
     sourceX: number
     sourceY: number
     targetX: number
@@ -42,11 +38,10 @@
     target,
   }: Props = $props()
 
-  const view = getContext<Writable<DragView>>("draggableView")
   const flow = useSvelteFlow()
 
   const deriveBlockContext = (
-    edgeData: EdgeData | undefined
+    edgeData: BranchEdgeData | undefined
   ): FlowBlockContext | undefined => {
     if (edgeData && "loopStepId" in edgeData) {
       const loopChildInsertIndex = edgeData.loopChildInsertIndex
@@ -60,16 +55,9 @@
     return edgeData?.block
   }
 
-  const isBranchEdgeData = (d: EdgeData): d is BranchEdgeData =>
-    "isBranchEdge" in d && d.isBranchEdge === true
-
   const resolveBlockId = (ctx: FlowBlockContext | undefined) => {
-    if (!ctx) {
-      return undefined
-    }
-    if ("branchNode" in ctx && ctx.branchNode) {
-      return ctx.branchStepId
-    }
+    if (!ctx) return undefined
+    if ("branchNode" in ctx && ctx.branchNode) return ctx.branchStepId
     return ctx.id
   }
 
@@ -99,7 +87,6 @@
 
   let labelX = $derived(basePath[1])
   let labelY = $derived(basePath[2])
-
   let path = $derived(basePath)
 
   let blockId = $derived(
@@ -118,21 +105,19 @@
       : false
   )
   let hideEdge = $derived(viewMode === ViewMode.EDITOR && collectBlockExists)
-  let isPrimaryBranchEdge = $derived(
-    isBranchEdgeData(data) && data.isPrimaryEdge
-  )
+  let isPrimaryBranchEdge = $derived(data.isPrimaryEdge)
 
   let showEdgeActions = $derived(
     viewMode === ViewMode.EDITOR &&
       !isBranchTarget &&
-      !$view?.dragging &&
+      !$dragState.isDragging &&
       !isSubflowEdge
   )
 
   let showEdgeDrop = $derived(
     viewMode === ViewMode.EDITOR &&
       !isBranchTarget &&
-      $view?.dragging &&
+      $dragState.isDragging &&
       !isSubflowEdge
   )
 
@@ -140,14 +125,14 @@
     viewMode === ViewMode.EDITOR &&
       isBranchTarget &&
       isPrimaryBranchEdge &&
-      !$view?.dragging
+      !$dragState.isDragging
   )
 
   let showPreBranchDrop = $derived(
     viewMode === ViewMode.EDITOR &&
       isBranchTarget &&
       isPrimaryBranchEdge &&
-      $view?.dragging
+      $dragState.isDragging
   )
 
   let isLR = $derived(direction === "LR")
@@ -179,7 +164,6 @@
   }
 
   const handleAddBranch = () => {
-    if (!isBranchEdgeData(data)) return
     const targetRef = $selectedAutomation?.blockRefs?.[data.branchStepId]
     if (targetRef && automation) {
       automationStore.actions.branchAutomation(targetRef.pathTo, automation)
@@ -192,42 +176,25 @@
   <BaseEdge path={path[0]} />
 {/if}
 
-<!-- Branch edge -->
-{#if isBranchEdgeData(data)}
-  <BranchEdgeLabels
-    {data}
-    {labelX}
-    {labelY}
-    {preBranchLabelX}
-    {preBranchLabelY}
-    {showEdgeActions}
-    {showEdgeDrop}
-    {showPreBranchActions}
-    {showPreBranchDrop}
-    {collectBlockExists}
-    {sourcePathForDrop}
-    {block}
-    {handleBranch}
-    {handleAddBranch}
-    {viewMode}
-    {isPrimaryBranchEdge}
-    edgeDzWidth={dzWidth}
-    edgeDzOffsetY={dzOffsetY}
-    {preDzWidth}
-    {preDzOffsetY}
-  />
-  <!-- Standard and Loop edges -->
-{:else}
-  <StandardEdgeLabel
-    {labelX}
-    {labelY}
-    {showEdgeActions}
-    {showEdgeDrop}
-    {collectBlockExists}
-    {sourcePathForDrop}
-    {block}
-    {handleBranch}
-    {dzWidth}
-    {dzOffsetY}
-  />
-{/if}
+<BranchEdgeLabels
+  {data}
+  {labelX}
+  {labelY}
+  {preBranchLabelX}
+  {preBranchLabelY}
+  {showEdgeActions}
+  {showEdgeDrop}
+  {showPreBranchActions}
+  {showPreBranchDrop}
+  {collectBlockExists}
+  {sourcePathForDrop}
+  {block}
+  {handleBranch}
+  {handleAddBranch}
+  {viewMode}
+  {isPrimaryBranchEdge}
+  edgeDzWidth={dzWidth}
+  edgeDzOffsetY={dzOffsetY}
+  {preDzWidth}
+  {preDzOffsetY}
+/>

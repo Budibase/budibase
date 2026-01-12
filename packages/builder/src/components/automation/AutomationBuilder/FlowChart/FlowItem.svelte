@@ -6,7 +6,6 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
-  import { type Writable } from "svelte/store"
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
@@ -17,7 +16,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  import { type DragView } from "./FlowCanvas/FlowChartDnD"
+  import { dragState, type DragState } from "./FlowCanvas/DragState"
 
   export let block: AutomationStep | AutomationTrigger
   export let automation: Automation | undefined
@@ -32,15 +31,9 @@
   export let onStepSelect: (
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
-  const view = getContext<Writable<DragView>>("draggableView")
-  const pos = getContext<Writable<{ x: number; y: number }>>("viewPos")
-  const contentPos =
-    getContext<Writable<{ scrollX: number; scrollY: number }>>("contentPos")
 
   let webhookModal: Modal | undefined
   let blockEle: HTMLDivElement | null
-  let positionStyles: string | undefined
-  let blockDims: DOMRect | undefined
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
@@ -65,81 +58,29 @@
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
       : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
-  $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
 
-  $: if (dragging && blockEle) {
-    updateBlockDims()
-  }
+  // Drag state derived values
+  $: isDragging = $dragState.isDragging && $dragState.draggedStepId === block.id
+  $: anyDragging = $dragState.isDragging
 
-  $: placeholderDims = buildPlaceholderStyles(blockDims)
+  $: positionStyles = isDragging && $dragState.dragPosition
+    ? `--blockPosX: ${Math.round($dragState.dragPosition.x)}px; --blockPosY: ${Math.round($dragState.dragPosition.y)}px;`
+    : ""
 
-  // Move the selected item
-  // Listen for scrolling in the content. As its scrolled this will be updated
-  $: move(
-    blockEle,
-    $view?.dragSpot,
-    dragging,
-    $contentPos?.scrollX,
-    $contentPos?.scrollY
-  )
-
-  function updateBlockDims() {
-    if (!blockEle) return
-    const rect = blockEle.getBoundingClientRect()
-    blockDims = rect
-  }
-
-  function move(
-    block: HTMLElement | null,
-    dragPos: { x: number; y: number } | null,
-    dragging: boolean | null,
-    scrollX: number,
-    scrollY: number
-  ) {
-    if ((!block && !dragging) || !dragPos) {
-      return
-    }
-    positionStyles = `
-      --blockPosX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
-      --blockPosY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
-    `
-  }
-
-  function buildPlaceholderStyles(dims?: DOMRect) {
-    if (!dims) {
-      return ""
-    }
-    const { width, height } = dims
-    return `--pswidth: ${Math.round(width)}px;
-            --psheight: ${Math.round(height)}px;`
-  }
+  $: placeholderStyles = isDragging && $dragState.elementDims
+    ? `--pswidth: ${Math.round($dragState.elementDims.width)}px; --psheight: ${Math.round($dragState.elementDims.height)}px;`
+    : ""
 
   function onHandleMouseDown(e: MouseEvent) {
-    // Only prevent dragging for the trigger node
     if (isTrigger) {
       e.preventDefault()
       return
     }
-
     e.stopPropagation()
 
-    updateBlockDims()
-
-    const { clientX, clientY } = e
-    view.update((state: DragView) => ({
-      ...state,
-      moveStep: {
-        id: block.id,
-        offsetX: $pos.x,
-        offsetY: $pos.y,
-        w: blockDims?.width,
-        h: blockDims?.height,
-        mouse: {
-          x: Math.max(Math.round(clientX - (blockDims?.left || 0)), 0),
-          y: Math.max(Math.round(clientY - (blockDims?.top || 0)), 0),
-        },
-      },
-    }))
+    if (!blockEle) return
+    const rect = blockEle.getBoundingClientRect()
+    dragState.startDrag(block.id, e.clientX, e.clientY, rect)
   }
 
   function handleHeaderUpdate(e: CustomEvent) {
@@ -153,26 +94,26 @@
   <div
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
-    class:dragging
+    class:dragging={isDragging}
     class:draggable
     class:selected
     class:unexecuted
   >
     <div class="wrap">
-      {#if $view?.dragging && dragging}
-        <div class="drag-placeholder" style={placeholderDims}></div>
+      {#if isDragging}
+        <div class="drag-placeholder" style={placeholderStyles}></div>
       {/if}
       <div
         bind:this={blockEle}
         class="block-content"
-        class:dragging={$view?.dragging && dragging}
+        class:dragging={isDragging}
         style={positionStyles}
       >
         <div class="block-float">
           <FlowItemStatus
             {block}
             branch={undefined}
-            hideStatus={$view?.dragging}
+            hideStatus={anyDragging}
             {logStepData}
             {viewMode}
           />
@@ -180,7 +121,7 @@
         {#if draggable && !isTrigger}
           <div
             class="handle nodrag"
-            class:grabbing={dragging}
+            class:grabbing={isDragging}
             onmousedown={onHandleMouseDown}
           >
             <Icon name="dots-six-vertical" weight="bold" />

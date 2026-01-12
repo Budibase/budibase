@@ -23,8 +23,6 @@
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
   import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash/fp"
-  import { getContext } from "svelte"
-  import { type Writable } from "svelte/store"
   import BlockHeader from "../../../../SetupPanel/BlockHeader.svelte"
   import type {
     Automation,
@@ -35,7 +33,7 @@
     Branch,
     EnrichedBinding,
   } from "@budibase/types"
-  import { type DragView } from "../FlowChartDnD"
+  import { dragState } from "../DragState"
 
   export let branchIdx
   export let step
@@ -44,8 +42,6 @@
   export let onStepSelect: (
     _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
-
-  const view = getContext<Writable<DragView>>("draggableView")
   const memoContext = memo({})
   const memoEnvVariables = memo($environment.variables)
 
@@ -309,7 +305,7 @@
     }}
   >
     <div class="block-float">
-      <FlowItemStatus block={step} {branch} hideStatus={$view?.dragging} />
+      <FlowItemStatus block={step} {branch} hideStatus={$dragState.isDragging} />
     </div>
     <div class="blockSection">
       <div class="heading">

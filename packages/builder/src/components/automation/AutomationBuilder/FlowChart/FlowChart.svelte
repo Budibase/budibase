@@ -40,10 +40,11 @@
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
+  import { dragState } from "./FlowCanvas/DragState"
   import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
-  import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
+  import StandardEdge from "./FlowCanvas/edges/StandardEdge.svelte"
+  import BranchEdge from "./FlowCanvas/edges/BranchEdge.svelte"
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
   import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
 
@@ -76,7 +77,8 @@
     "loop-subflow-node": LoopV2Node as any,
   }
   const edgeTypes: EdgeTypes = {
-    "add-item": CustomEdge as any,
+    "standard-edge": StandardEdge as any,
+    "branch-edge": BranchEdge as any,
   }
 
   let testDataModal: Modal
@@ -97,18 +99,15 @@
 
   const { getViewport, setViewport } = useSvelteFlow()
 
-  // DnD helper and context stores
-  const dnd = createFlowChartDnD({
-    getViewport,
-    setViewport,
+  // Initialize simplified DnD state
+  dragState.init({
     moveBlock: ({ sourcePath, destPath, automationData }) =>
       automationStore.actions.moveBlock(sourcePath, destPath, automationData),
-    getSelectedAutomation: () => get(selectedAutomation),
+    getBlockRefs: () => get(selectedAutomation)?.blockRefs,
+    getAutomation: () => get(selectedAutomation)?.data,
+    getViewportZoom: () => getViewport()?.zoom ?? 1,
   })
-  const { view, viewPos, contentPos } = dnd
-  setContext("draggableView", view)
-  setContext("viewPos", viewPos)
-  setContext("contentPos", contentPos)
+  setContext("dragState", dragState)
 
   let viewMode = $derived($automationStore.viewMode)
 
@@ -387,6 +386,12 @@
     }
   }
 
+  const updateContainerRect = () => {
+    if (paneEl) {
+      dragState.setContainerRect(paneEl.getBoundingClientRect())
+    }
+  }
+
   onMount(async () => {
     try {
       await automationStore.actions.initAppSelf()
@@ -400,12 +405,11 @@
     } catch (error) {
       console.error(error)
     }
-    dnd.setPaneEl(paneEl)
-    dnd.initDnD()
+    updateContainerRect()
   })
 
   onDestroy(() => {
-    dnd.destroyDnD()
+    dragState.cancelDrag()
     if (layoutSaveTimeout) {
       clearTimeout(layoutSaveTimeout)
     }
@@ -481,8 +485,7 @@
     <div
       class="wrapper"
       bind:this={paneEl}
-      onmousemove={dnd.handlePointerMove}
-      onmousedown={dnd.updatePaneRect}
+      onmousedown={updateContainerRect}
     >
       <SvelteFlow
         bind:nodes

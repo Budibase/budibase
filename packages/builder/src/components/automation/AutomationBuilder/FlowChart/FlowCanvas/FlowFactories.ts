@@ -84,7 +84,7 @@ export const edgeAddItem = (
   }
   return {
     id: `edge-${source}-${target}`,
-    type: "add-item",
+    type: "standard-edge",
     source,
     target,
     data,
@@ -124,7 +124,7 @@ export const edgeBranchAddItem = (
   }
   return {
     id: `edge-${source}-${target}`,
-    type: "add-item",
+    type: "branch-edge",
     source,
     target,
     data,
@@ -152,7 +152,7 @@ export const edgeLoopAddItem = (
   }
   return {
     id: `edge-${source}-${target}`,
-    type: "add-item",
+    type: "standard-edge",
     source,
     target,
     data,

@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { getContext, onDestroy, onMount } from "svelte"
-  import { type Writable } from "svelte/store"
+  import { onDestroy, onMount } from "svelte"
   import { generate } from "shortid"
-  import type { DragView } from "./FlowCanvas/FlowChartDnD"
+  import { dragState } from "./FlowCanvas/DragState"
 
   export let path: any
   export let variant = "inline"
@@ -10,44 +9,26 @@
   export let width: number | undefined = undefined
   export let height: number | undefined = undefined
 
-  let dropEle: HTMLDivElement | null = null
   let dzid = generate()
 
-  const view = getContext<Writable<DragView>>("draggableView")
+  // Reactive drag state
+  $: isDropTarget = $dragState.dropTarget === dzid
+  $: showDropZone = $dragState.isDragging
 
   onMount(() => {
-    // Always return up-to-date values
-    view.update((state: DragView) => {
-      return {
-        ...state,
-        dropzones: {
-          ...(state.dropzones || {}),
-          [dzid]: {
-            get dims() {
-              return dropEle ? dropEle.getBoundingClientRect() : new DOMRect()
-            },
-            path,
-          },
-        },
-      }
-    })
+    dragState.registerDropZone(dzid, { path })
   })
 
   onDestroy(() => {
-    view.update((state: DragView) => {
-      const { [dzid]: _removed, ...remaining } = state.dropzones
-      const droptarget = state.droptarget === dzid ? null : state.droptarget
-      return { ...state, dropzones: remaining, droptarget }
-    })
+    dragState.unregisterDropZone(dzid)
   })
 </script>
 
 <div
   id={`dz-${dzid}`}
-  bind:this={dropEle}
   class="drag-zone"
   class:edge={variant === "edge"}
-  class:drag-over={$view?.droptarget === dzid}
+  class:drag-over={isDropTarget}
   style={variant === "edge" && (width || height)
     ? `width: ${width ? Math.round(width) + "px" : "auto"}; height: ${
         height ? Math.round(height) + "px" : "auto"
