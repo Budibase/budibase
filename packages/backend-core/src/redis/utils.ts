@@ -66,11 +66,13 @@ export function getRedisConnectionDetails() {
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
-  // check for a password etc
+  // check for credentials in URL (format: user:pass@host or :pass@host)
   url = url.split("@")
   if (url.length > 1) {
-    // get the password
-    password = url[0].split(":")[1]
+    const credentials = url[0].split(":")
+    // handle both "user:pass@host" and ":pass@host" formats
+    username = username || credentials[0] || undefined
+    password = credentials[1]
     url = url[1]
   } else {
     url = url[0]
