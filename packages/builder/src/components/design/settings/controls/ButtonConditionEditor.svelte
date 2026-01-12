@@ -31,6 +31,7 @@
   interface ExtendedComponentSetting extends ComponentSetting {
     options?: any[]
     placeholder?: string
+    supportsConditions?: boolean
   }
 
   export let componentInstance
@@ -51,6 +52,10 @@
     {
       label: "Show component",
       value: "show",
+    },
+    {
+      label: "Update setting",
+      value: "update",
     },
   ]
   const valueTypeOptions = [
@@ -74,20 +79,29 @@
 
   let dragDisabled = true
 
+  let settings: ExtendedComponentSetting[] = []
+
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
 
-  $: settings = componentStore
-    .getComponentSettings(componentInstance?._component)
-    ?.concat({
-      label: "Custom CSS",
-      key: "_css",
-      type: "text",
-    })
-  $: settingOptions = settings.map(setting => ({
-    label: makeLabel(setting),
-    value: setting.key,
-  }))
+  $: settings = (
+    (componentStore.getComponentSettings(componentInstance?._component) as
+      | ExtendedComponentSetting[]
+      | undefined) ?? []
+  ).concat({
+    label: "Custom CSS",
+    key: "_css",
+    type: "text",
+  })
+  $: settingOptions = settings
+    .filter(
+      setting =>
+        setting.supportsConditions !== false && setting.key !== "conditions"
+    )
+    .map(setting => ({
+      label: makeLabel(setting),
+      value: setting.key,
+    }))
 
   const makeLabel = (setting: ComponentSetting) => {
     const { section, label } = setting
@@ -101,7 +115,7 @@
   const getSettingDefinition = (
     key: string | undefined
   ): ExtendedComponentSetting | undefined => {
-    return settings.find(setting => setting.key === key) as
+    return settings?.find(setting => setting.key === key) as
       | ExtendedComponentSetting
       | undefined
   }
@@ -157,19 +171,29 @@
     condition.noValue = noValueOptions.includes(newOperator)
     if (condition.noValue || newOperator === "oneOf") {
       condition.referenceValue = null
+      condition.valueType = "string"
       condition.type = FieldType.STRING
     }
   }
 
   const onValueTypeChange = (
     condition: ComponentCondition,
-    newType: FieldType
+    newValueType: ComponentCondition["valueType"]
   ) => {
     condition.referenceValue = null
+    condition.valueType = newValueType
+    condition.type =
+      newValueType === "string"
+        ? FieldType.STRING
+        : newValueType === "number"
+          ? FieldType.NUMBER
+          : newValueType === "datetime"
+            ? FieldType.DATETIME
+            : FieldType.BOOLEAN
 
     // Ensure a valid operator is set
     const validOperators = QueryUtils.getValidOperatorsForType({
-      type: newType,
+      type: condition.type,
     }).map(x => x.value)
     if (!validOperators.includes(condition.operator)) {
       condition.operator =
@@ -306,11 +330,11 @@
                 <Select
                   disabled={condition.noValue || condition.operator === "oneOf"}
                   options={valueTypeOptions}
-                  bind:value={condition.type}
+                  bind:value={condition.valueType}
                   placeholder={false}
                   on:change={e => onValueTypeChange(condition, e.detail)}
                 />
-                {#if ["string", "number"].includes(condition.type)}
+                {#if ["string", "number"].includes(condition.valueType)}
                   <DrawerBindableInput
                     disabled={condition.noValue}
                     {bindings}
@@ -318,13 +342,13 @@
                     value={condition.referenceValue}
                     on:change={e => (condition.referenceValue = e.detail)}
                   />
-                {:else if condition.type === "datetime"}
+                {:else if condition.valueType === "datetime"}
                   <DatePicker
                     placeholder="Value"
                     disabled={condition.noValue}
                     bind:value={condition.referenceValue}
                   />
-                {:else if condition.type === "boolean"}
+                {:else if condition.valueType === "boolean"}
                   <Select
                     placeholder="Value"
                     disabled={condition.noValue}
