@@ -80,11 +80,12 @@
     const validationResult = validator.safeParse(config)
     errors = {}
     if (!validationResult.success) {
-      errors = Object.entries(
-        validationResult.error.formErrors.fieldErrors
-      ).reduce<Record<string, string>>((acc, [field, errors]) => {
-        if (errors[0]) {
-          acc[field] = errors[0]
+      const flattened = validationResult.error.flatten()
+      errors = Object.entries(flattened.fieldErrors).reduce<
+        Record<string, string>
+      >((acc, [field, fieldErrors]) => {
+        if (fieldErrors?.[0]) {
+          acc[field] = fieldErrors[0]
         }
         return acc
       }, {})
