@@ -224,7 +224,22 @@
   }
 
   const openDrawer = () => {
-    conditions = cloneDeep(value || [])
+    conditions = cloneDeep(value || []).map((condition: ComponentCondition) => {
+      // Migrate old conditions that only have 'type' to also have 'valueType'
+      if (condition.valueType === undefined && condition.type) {
+        const typeToValueTypeMap: Record<
+          string,
+          ComponentCondition["valueType"]
+        > = {
+          string: "string",
+          number: "number",
+          boolean: "boolean",
+          datetime: "datetime",
+        }
+        condition.valueType = typeToValueTypeMap[condition.type] || "string"
+      }
+      return condition
+    })
     drawer.show()
   }
   const save = async () => {
