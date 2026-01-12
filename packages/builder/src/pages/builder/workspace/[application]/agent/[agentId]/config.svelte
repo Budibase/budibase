@@ -13,11 +13,12 @@
   } from "@budibase/bbui"
   import {
     ToolType,
+    WebSearchProvider,
     type Agent,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
-    WebSearchProvider,
+    type CaretPositionFn,
   } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
@@ -77,6 +78,7 @@
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let togglingLive = $state(false)
+  let getCaretPosition: CaretPositionFn | undefined = $state.raw()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let modelOptions = $derived(
@@ -96,6 +98,9 @@
   )
   let webSearchConfigured = $derived(
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
+  )
+  let toolsLoaded = $derived(
+    $agentsStore.tools && $agentsStore.tools.length > 0
   )
 
   let availableTools: AgentTool[] = $derived.by(() => {
@@ -160,6 +165,31 @@
       readableToRuntimeBinding
     )
   )
+
+  let promptBindings: EnrichedBinding[] = $derived.by(() => {
+    return availableTools
+      .filter(tool => !!tool.name)
+      .filter(
+        tool =>
+          tool.sourceType !== ToolType.SEARCH ||
+          (webSearchConfigured && tool.runtimeBinding)
+      )
+      .map(tool => ({
+        runtimeBinding: tool.runtimeBinding,
+        readableBinding: tool.readableBinding,
+        category: getSectionName(tool.sourceType),
+        display: {
+          name:
+            tool.sourceType === ToolType.SEARCH
+              ? "Web search"
+              : formatToolLabel(tool),
+          type: "tool",
+          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
+        },
+        icon: tool.tagIconUrl,
+      }))
+  })
+
   let promptCompletions = $derived.by(() => {
     return promptBindings.length > 0
       ? [
@@ -169,6 +199,7 @@
         ]
       : []
   })
+
   let includedToolsWithDetails = $derived(
     includedToolRuntimeBindings
       .map(runtimeBinding =>
@@ -194,30 +225,6 @@
       return acc
     }, {})
   )
-
-  let promptBindings: EnrichedBinding[] = $derived.by(() => {
-    return availableTools
-      .filter(tool => !!tool.name)
-      .filter(
-        tool =>
-          tool.sourceType !== ToolType.SEARCH ||
-          (webSearchConfigured && tool.runtimeBinding)
-      )
-      .map(tool => ({
-        runtimeBinding: tool.runtimeBinding,
-        readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType),
-        display: {
-          name:
-            tool.sourceType === ToolType.SEARCH
-              ? "Web search"
-              : formatToolLabel(tool),
-          type: "tool",
-          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
-        },
-        icon: tool.tagIconUrl,
-      }))
-  })
 
   $effect(() => {
     const agent = currentAgent
@@ -404,8 +411,12 @@
 
   const insertToolBinding = (readableBinding: string) => {
     const currentValue = draft.promptInstructions || ""
-    const start = currentValue.length
-    const end = start
+    const caretPos = getCaretPosition?.() ?? {
+      start: currentValue.length,
+      end: currentValue.length,
+    }
+    const start = caretPos.start
+    const end = caretPos.end
     const wrapped = hbInsert(currentValue, start, end, readableBinding)
 
     if (insertAtPos) {
@@ -569,7 +580,10 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    if (!$agentsStore.agentsLoaded) {
+      await agentsStore.init()
+    }
+    await aiConfigsStore.fetch()
     if (draft.aiconfig) {
       agentsStore.fetchTools(draft.aiconfig)
     }
@@ -670,20 +684,23 @@
             <Heading size="XS">Instructions</Heading>
             <div class="prompt-editor-wrapper">
               <div class="prompt-editor">
-                <CodeEditor
-                  value={draft.promptInstructions || ""}
-                  bindings={promptBindings}
-                  bindingIcons={readableToIcon}
-                  completions={promptCompletions}
-                  mode={EditorModes.Handlebars}
-                  bind:insertAtPos
-                  renderBindingsAsTags={true}
-                  placeholder=""
-                  on:change={event => {
-                    draft.promptInstructions = event.detail || ""
-                    scheduleSave()
-                  }}
-                />
+                {#if toolsLoaded}
+                  <CodeEditor
+                    value={draft.promptInstructions || ""}
+                    bindings={promptBindings}
+                    bindingIcons={readableToIcon}
+                    completions={promptCompletions}
+                    mode={EditorModes.Handlebars}
+                    bind:insertAtPos
+                    renderBindingsAsTags={true}
+                    placeholder=""
+                    on:change={event => {
+                      draft.promptInstructions = event.detail || ""
+                      scheduleSave()
+                    }}
+                    bind:getCaretPosition
+                  />
+                {/if}
               </div>
               <div class="bindings-bar">
                 <span class="bindings-bar-text"
@@ -1016,6 +1033,7 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
+    margin-bottom: var(--spacing-xs);
   }
 
   .tool-label {

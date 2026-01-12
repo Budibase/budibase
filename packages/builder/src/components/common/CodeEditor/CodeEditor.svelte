@@ -277,6 +277,14 @@
     ]
   }
 
+  const getCompletionIcon = (completion: unknown) => {
+    if (typeof completion !== "object" || completion === null) {
+      return undefined
+    }
+    const icon = (completion as { icon?: unknown }).icon
+    return typeof icon === "string" ? icon : undefined
+  }
+
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
@@ -289,6 +297,21 @@
           override: [...completions],
           closeOnBlur: true,
           icons: false,
+          addToOptions: [
+            {
+              render: completion => {
+                const icon = getCompletionIcon(completion)
+                if (icon) {
+                  const img = document.createElement("img")
+                  img.src = icon
+                  img.className = "completion-icon"
+                  return img
+                }
+                return null
+              },
+              position: 20,
+            },
+          ],
           optionClass: completion =>
             "simple" in completion && completion.simple
               ? "autocomplete-option-simple"
@@ -516,9 +539,10 @@
   :global(.hbs-tag) {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 5px;
-    border-radius: 4px;
+    vertical-align: middle;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 6px;
     background: #215f9e33;
     opacity: 1;
     font-size: 12px;
@@ -633,6 +657,7 @@
   /* Completion item container */
   .code-editor :global(.autocomplete-option),
   .code-editor :global(.autocomplete-option-simple) {
+    position: relative;
     padding: var(--spacing-s) var(--spacing-m) !important;
     padding-left: calc(16px + 2 * var(--spacing-m)) !important;
     display: flex;
@@ -642,6 +667,16 @@
   }
   .code-editor :global(.autocomplete-option-simple) {
     padding-left: var(--spacing-s) !important;
+  }
+
+  /* Completion item icon */
+  .code-editor :global(.completion-icon) {
+    position: absolute;
+    left: var(--spacing-m);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
   }
 
   /* Highlighted completion item */
